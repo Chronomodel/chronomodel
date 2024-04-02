@@ -14,78 +14,78 @@
     <message>
         <location filename="../src/ui/dialogs/AppSettingsDialog.cpp" line="49"/>
         <source>Application Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Paramètre</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/AppSettingsDialog.cpp" line="56"/>
         <source>Language is used to define how number input should be typed (using comma or dot as decimal separator). This is not related to the application translation which is not available yet!</source>
-        <translation type="unfinished"></translation>
+        <translation>Language est utilisé pour déterminer la saisie des nombre (utilisation du point ou de la virgule comme séparateur décimal). Ce n&apos;est pas encore en relation avec la traduction de l&apos;application</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/AppSettingsDialog.cpp" line="61"/>
         <source>Keyboard Language</source>
-        <translation type="unfinished"></translation>
+        <translation>Langue du clavier</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/AppSettingsDialog.cpp" line="68"/>
         <source>Model Icons Size</source>
-        <translation type="unfinished"></translation>
+        <translation>Taille des icones</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/AppSettingsDialog.cpp" line="73"/>
         <source>Auto Save Project</source>
-        <translation type="unfinished"></translation>
+        <translation>Sauvegarde automatique</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/AppSettingsDialog.cpp" line="75"/>
         <source>Auto Save Interval (in minutes)</source>
-        <translation type="unfinished"></translation>
+        <translation>Temps entre les sauvegardes (en minutes)</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/AppSettingsDialog.cpp" line="82"/>
         <source>CSV Cell Separator</source>
-        <translation type="unfinished"></translation>
+        <translation>CSV séparateur de champs</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/AppSettingsDialog.cpp" line="85"/>
         <source>CSV Decimal Separator</source>
-        <translation type="unfinished"></translation>
+        <translation>CSV séparateur de décimal</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/AppSettingsDialog.cpp" line="99"/>
         <source>Open Last Project at Launch</source>
-        <translation type="unfinished"></translation>
+        <translation>Ouvrir le dernier projet au démarrage</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/AppSettingsDialog.cpp" line="102"/>
         <source>Images Export Pixel Ratio</source>
-        <translation type="unfinished"></translation>
+        <translation>Rapport entre les pixels poiur l&apos;expport d&apos;image</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/AppSettingsDialog.cpp" line="115"/>
         <source>Image Export Quality (0 to 100)</source>
-        <translation type="unfinished"></translation>
+        <translation>Qualité d&apos;image à l&apos;export (0 à 100)</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/AppSettingsDialog.cpp" line="119"/>
         <source>0 for small compressed files, 100 for large uncompressed files</source>
-        <translation type="unfinished"></translation>
+        <translation>0 pour une faible compression, 100 pour une forte compression</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/AppSettingsDialog.cpp" line="121"/>
         <source>Time Scale</source>
-        <translation type="unfinished"></translation>
+        <translation>Echelle de temps</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/AppSettingsDialog.cpp" line="130"/>
         <source>Decimal Precision</source>
-        <translation type="unfinished"></translation>
+        <translation>Précision des décimals</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/AppSettingsDialog.cpp" line="234"/>
         <location filename="../src/ui/dialogs/AppSettingsDialog.cpp" line="235"/>
         <source>General</source>
-        <translation type="unfinished"></translation>
+        <translation>Globale</translation>
     </message>
 </context>
 <context>
@@ -93,78 +93,78 @@
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="76"/>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Enregistrer</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="79"/>
         <source>Save image as file</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Enregistrer l&apos;image sous</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="82"/>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="88"/>
         <source>Copy</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Copier</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="85"/>
         <source>Copy image to clipboard</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Copier l&apos;image das le presse-papier</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="91"/>
         <source>Copy text results to clipboard</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Copier les résultats dans le presse-papier</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="94"/>
         <source>HPD (%)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">HPD (%)</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="110"/>
         <source>Start</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Début</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="120"/>
         <source>End</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Fin</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="130"/>
         <source>Study Period Display</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Affichage période d&apos;étude</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="131"/>
         <source>Restore view with the study period span</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">retour de la vue sur l&apos;étendu de la période d&apos;étude</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="135"/>
         <source>Maj. Int</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Maj. Int</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="143"/>
         <source>Enter a interval for the main division of the axes under the curves, upper than 1</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Entrer un intervalle pour la division principale de l&apos;axe sous les courbes, supérieur à 1</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="146"/>
         <source>Min. Cnt</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Min. Div</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="154"/>
         <source>Enter a interval for the subdivision of the Major Interval for the scale under the curves, upper than 1</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Entrer un intervalle de sous division de l&apos;intervalle Majeur pour l&apos;échelle sous les courbes, supérieur à 1</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="176"/>
         <source>No Result to display</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Pas de résultat à afficher</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="265"/>
@@ -180,42 +180,42 @@
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="303"/>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="312"/>
         <source>Outside study period</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Hors période d&apos;étude</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="427"/>
         <source>Individual calibration not digitally computable ...</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Calibration individuelle numériquement non calculable</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="466"/>
         <source>Calibration process</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Processus de calibration</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="470"/>
         <source>Overlay densities</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Superposistion des densités</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="482"/>
         <source>Distribution of calibrated date</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Distribution de date calibrée</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="486"/>
         <source>No calibration process to display</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Pas d&apos;affichage du processus de calibration</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="488"/>
         <source>Uniforme date</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Date uniforme</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/CalibrationView.cpp" line="604"/>
         <source>Save calibration image as...</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Enrtegistrement de l&apos;image de la calibration sous</translation>
     </message>
 </context>
 <context>
@@ -223,7 +223,7 @@
     <message>
         <location filename="../src/ui/widgets/ColorPicker.cpp" line="72"/>
         <source>Select Colour</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Sélect. couleur</translation>
     </message>
 </context>
 <context>
@@ -231,42 +231,42 @@
     <message>
         <location filename="../src/ui/dialogs/ConstraintDialog.cpp" line="54"/>
         <source>Constraint</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Contrainte</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/ConstraintDialog.cpp" line="58"/>
         <source>Min hiatus</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Min hiatus</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/ConstraintDialog.cpp" line="59"/>
         <source>Min value</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Valuer mini</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/ConstraintDialog.cpp" line="62"/>
         <source>Unknown</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Inconnu</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/ConstraintDialog.cpp" line="63"/>
         <source>Known</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Connu</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/ConstraintDialog.cpp" line="73"/>
         <source>OK</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">OK</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/ConstraintDialog.cpp" line="74"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Echap</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/ConstraintDialog.cpp" line="75"/>
         <source>Delete constraint</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Suppression contrainte</translation>
     </message>
 </context>
 <context>
@@ -274,72 +274,72 @@
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="52"/>
         <source>Curve Parameters</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Paramètres des courbes</translation>
     </message>
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="62"/>
         <source>These parameters give you controls over the way curves are built. MCMC (Bayesian) can be activated for event time, VG or global lambda spline factor, etc. </source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Ces paramètres vous donne le contrôle sur le processus de calcul des courbes.Le MCMC (Bayésien) peut être activé pour la date d&apos;Event, VG ou Lambda Global du facteur de la spline, etc ...</translation>
     </message>
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="70"/>
         <source>Process</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Processus</translation>
     </message>
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="72"/>
         <source>None</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Aucun</translation>
     </message>
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="81"/>
         <source>Inclination</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Inclinaison</translation>
     </message>
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="82"/>
         <source>Declination</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Déclinaison</translation>
     </message>
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="78"/>
         <source>Depth</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Profondeur</translation>
     </message>
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="94"/>
         <source>Event Date</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">date d&apos;évènement</translation>
     </message>
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="103"/>
         <source>Interpolation (λ=0)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Interpolation (λ=0)</translation>
     </message>
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="105"/>
         <source>log 10 Smoothing Value</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">log10 paramètre de lissage</translation>
     </message>
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="109"/>
         <source>Std gi</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Std  gi</translation>
     </message>
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="114"/>
         <source>Individual Std gi</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Std gi individuel</translation>
     </message>
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="117"/>
         <source>Std gi = Global Value</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Std gi = Valeur globale</translation>
     </message>
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="88"/>
         <source>Minimal Rate of Change</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Taux minimal de varation</translation>
     </message>
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="73"/>
@@ -359,46 +359,46 @@
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="83"/>
         <source>Field Intensity</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Champs intensité</translation>
     </message>
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="84"/>
         <source>Spherical (I, D)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Sphérique (I, D)</translation>
     </message>
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="85"/>
         <source>Unknown Dec (I, F)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Dec Inconnu (I, F)</translation>
     </message>
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="86"/>
         <source>Vector (I, D, F)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Vectoriel (I, D, F)</translation>
     </message>
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="91"/>
         <source>Use Measurement Err.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Utilise erreur sur mesure</translation>
     </message>
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="96"/>
         <location filename="../src/curve/CurveSettingsView.cpp" line="101"/>
         <location filename="../src/curve/CurveSettingsView.cpp" line="111"/>
         <source>Fixed</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Fixée</translation>
     </message>
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="97"/>
         <location filename="../src/curve/CurveSettingsView.cpp" line="102"/>
         <location filename="../src/curve/CurveSettingsView.cpp" line="112"/>
         <source>Bayesian</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Bayesien</translation>
     </message>
     <message>
         <location filename="../src/curve/CurveSettingsView.cpp" line="99"/>
         <source>Smoothing</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Lissage</translation>
     </message>
 </context>
 <context>
@@ -406,47 +406,47 @@
     <message>
         <location filename="../src/ui/dialogs/DateDialog.cpp" line="62"/>
         <source>Create / Modify Data</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Créer / Modifier Donnée</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/DateDialog.cpp" line="67"/>
         <source>Name</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Nom</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/DateDialog.cpp" line="82"/>
         <source>Advanced</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Avancé</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/DateDialog.cpp" line="89"/>
         <source>Method</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Méthode</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/DateDialog.cpp" line="95"/>
         <source>Wiggle Matching</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Wiggle Matching</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/DateDialog.cpp" line="97"/>
         <source>None</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Aucun</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/DateDialog.cpp" line="98"/>
         <source>Fixed</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Fixée</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/DateDialog.cpp" line="99"/>
         <source>Range</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Plage</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/DateDialog.cpp" line="100"/>
         <source>Gaussian</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Gaussien</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/DateDialog.cpp" line="112"/>
@@ -456,32 +456,32 @@
     <message>
         <location filename="../src/ui/dialogs/DateDialog.cpp" line="116"/>
         <source>Value</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Valeur</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/DateDialog.cpp" line="117"/>
         <source>Min</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Min</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/DateDialog.cpp" line="118"/>
         <source>Max</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Max</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/DateDialog.cpp" line="119"/>
         <source>Mean</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Moyenne</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/DateDialog.cpp" line="120"/>
         <source>Error (sd)</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Erreur (sd)</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/DateDialog.cpp" line="224"/>
         <source>Create %1 Data</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Création donnée %1</translation>
     </message>
 </context>
 <context>
@@ -489,17 +489,18 @@
     <message>
         <location filename="../src/ui/panel_model/scenes/DateItem.cpp" line="92"/>
         <source>Insufficient resolution for the Event %1 <byte value="xd"/> Decrease the step in the study period box to %2</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Résolution insuffisante pour l&apos;Event %1 
+ Diminuer le pas dans la boite de la prériode d&apos;étude à %2</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/scenes/DateItem.cpp" line="227"/>
         <source>Outside study period</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Hors préiode d&apos;étude</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/scenes/DateItem.cpp" line="229"/>
         <source>Not computable</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Non calculable</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/scenes/DateItem.cpp" line="277"/>
@@ -512,7 +513,7 @@
     <message>
         <location filename="../src/ui/panel_model/data/DatesList.cpp" line="113"/>
         <source>Error : %1</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Erreur : %1</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/DatesList.cpp" line="174"/>
@@ -526,12 +527,12 @@
         <location filename="../src/ui/panel_model/data/DatesListItemDelegate.h" line="147"/>
         <location filename="../src/ui/panel_model/data/DatesListItemDelegate.h" line="153"/>
         <source>Type : %1 | Method : %2</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Type : %1 | Méthode : %2</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/data/DatesListItemDelegate.h" line="159"/>
         <source>Individual calibration not digitally computable ...</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Calibration individuelle numériquement non calculable</translation>
     </message>
 </context>
 <context>
@@ -539,27 +540,27 @@
     <message>
         <location filename="../src/ui/dialogs/EventDialog.cpp" line="56"/>
         <source>Name</source>
-        <translation type="unfinished"></translation>
+        <translation>Nom</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/EventDialog.cpp" line="59"/>
         <source>Color</source>
-        <translation type="unfinished"></translation>
+        <translation>Couleur</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/EventDialog.cpp" line="63"/>
         <source>No name</source>
-        <translation type="unfinished"></translation>
+        <translation>Sans Nom</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/EventDialog.cpp" line="81"/>
         <source>OK</source>
-        <translation type="unfinished"></translation>
+        <translation>OK</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/EventDialog.cpp" line="82"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Echap</translation>
     </message>
 </context>
 <context>
@@ -567,7 +568,7 @@
     <message>
         <location filename="../src/ui/panel_model/scenes/EventItem.cpp" line="668"/>
         <source>No Phase</source>
-        <translation type="unfinished"></translation>
+        <translation>Aucune phase</translation>
     </message>
 </context>
 <context>
@@ -575,7 +576,7 @@
     <message>
         <location filename="../src/ui/panel_model/scenes/EventKnownItem.cpp" line="213"/>
         <source>Invalid bound</source>
-        <translation type="unfinished"></translation>
+        <translation>Borne incorrecte</translation>
     </message>
 </context>
 <context>
@@ -583,17 +584,17 @@
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="77"/>
         <source>Name</source>
-        <translation type="unfinished"></translation>
+        <translation>Nom</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="81"/>
         <source>Color</source>
-        <translation type="unfinished"></translation>
+        <translation>Couleur</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="85"/>
         <source>Method</source>
-        <translation type="unfinished"></translation>
+        <translation>Méthode</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="88"/>
@@ -611,7 +612,7 @@
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="408"/>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="853"/>
         <source>Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="165"/>
@@ -621,33 +622,33 @@
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="175"/>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation>Effacer</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="178"/>
         <source>Delete Data</source>
-        <translation type="unfinished"></translation>
+        <translation>Effacer donnée</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="183"/>
         <source>Restore</source>
-        <translation type="unfinished"></translation>
+        <translation>Remettre</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="186"/>
         <source>Restore Deleted Data</source>
-        <translation type="unfinished"></translation>
+        <translation>Remettre la donnée effacée</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="192"/>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="196"/>
         <source>Calibrate</source>
-        <translation type="unfinished"></translation>
+        <translation>Calibrer</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="198"/>
         <source>Combine</source>
-        <translation type="unfinished"></translation>
+        <translation>Combiner</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="538"/>
@@ -677,48 +678,48 @@
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="850"/>
         <source>Alpha95</source>
-        <translation type="unfinished"></translation>
+        <translation>Alpha95</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="204"/>
         <source>Split</source>
-        <translation type="unfinished"></translation>
+        <translation>Eclatter</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="106"/>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="375"/>
         <source>Inclination</source>
-        <translation type="unfinished"></translation>
+        <translation>Inclinaison</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="108"/>
         <source>Declination</source>
-        <translation type="unfinished"></translation>
+        <translation>Déclinaison</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="110"/>
         <source>Field</source>
-        <translation type="unfinished"></translation>
+        <translation>Champ</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="202"/>
         <source>Combine data from the same plugin</source>
-        <translation type="unfinished"></translation>
+        <translation>Combinaison de donnée d&apos;un même plugin</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="208"/>
         <source>Split Combined Data</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Eclatter données combinées</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="244"/>
         <source>Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Valeur</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="484"/>
         <source>Event name updated</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/EventPropertiesView.cpp" line="493"/>
@@ -842,7 +843,7 @@ You can also edit constraints by double clicking on the arrow</source>
     <message>
         <location filename="../src/ui/panel_model/scenes/EventsScene.cpp" line="1367"/>
         <source>Automatic Link</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Liaisons automatiques</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/scenes/EventsScene.cpp" line="1368"/>
@@ -870,12 +871,12 @@ You can also edit constraints by double clicking on the arrow</source>
     <message>
         <location filename="../src/ui/graphs/GraphView.cpp" line="367"/>
         <source>Nothing to display</source>
-        <translation type="unfinished"></translation>
+        <translation>Rien à afficher</translation>
     </message>
     <message>
         <location filename="../src/ui/graphs/GraphView.cpp" line="835"/>
         <source>Min = %1  /  Max = %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Min = %1  /  Max = %2</translation>
     </message>
     <message>
         <location filename="../src/ui/graphs/GraphView.cpp" line="2368"/>
@@ -887,7 +888,7 @@ You can also edit constraints by double clicking on the arrow</source>
         <location filename="../src/ui/graphs/GraphView.cpp" line="2137"/>
         <location filename="../src/ui/graphs/GraphView.cpp" line="2216"/>
         <source>Save graph data as...</source>
-        <translation type="unfinished"></translation>
+        <translation>Enregistrement données du graphe sous ...</translation>
     </message>
     <message>
         <location filename="../src/ui/graphs/GraphView.cpp" line="2115"/>
@@ -902,7 +903,7 @@ You can also edit constraints by double clicking on the arrow</source>
     <message>
         <location filename="../src/ui/panel_results/GraphViewCurve.cpp" line="349"/>
         <source>t</source>
-        <translation type="unfinished"></translation>
+        <translation>t</translation>
     </message>
 </context>
 <context>
@@ -910,7 +911,7 @@ You can also edit constraints by double clicking on the arrow</source>
     <message>
         <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="105"/>
         <source>Nothing to Display</source>
-        <translation type="unfinished"></translation>
+        <translation>Rien à afficher</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="134"/>
@@ -919,13 +920,13 @@ You can also edit constraints by double clicking on the arrow</source>
         <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="321"/>
         <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="332"/>
         <source>Data : %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Donnée : %1</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="199"/>
         <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="207"/>
         <source>Outside study period</source>
-        <translation type="unfinished"></translation>
+        <translation>Hors période d&apos;étude</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="222"/>
@@ -933,34 +934,34 @@ You can also edit constraints by double clicking on the arrow</source>
         <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="302"/>
         <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="325"/>
         <source>Individual Std : %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Std individuel : %1</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="270"/>
         <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="292"/>
         <source>Iterations</source>
-        <translation type="unfinished"></translation>
+        <translation>Itérations</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="391"/>
         <source>sigma</source>
-        <translation type="unfinished"></translation>
+        <translation>sigma</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="412"/>
         <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="430"/>
         <source>Iteration</source>
-        <translation type="unfinished"></translation>
+        <translation>Itération</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="431"/>
         <source>Rate</source>
-        <translation type="unfinished"></translation>
+        <translation>Taux</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewDate.cpp" line="454"/>
         <source>Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Valeur</translation>
     </message>
 </context>
 <context>
@@ -970,61 +971,61 @@ You can also edit constraints by double clicking on the arrow</source>
         <location filename="../src/ui/panel_results/GraphViewEvent.cpp" line="136"/>
         <location filename="../src/ui/panel_results/GraphViewEvent.cpp" line="138"/>
         <source>Bound</source>
-        <translation type="unfinished"></translation>
+        <translation>Borne</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewEvent.cpp" line="132"/>
         <location filename="../src/ui/panel_results/GraphViewEvent.cpp" line="138"/>
         <source>Event</source>
-        <translation type="unfinished"></translation>
+        <translation>Event</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewEvent.cpp" line="136"/>
         <source>Std Compilation</source>
-        <translation type="unfinished"></translation>
+        <translation>Std compil.</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewEvent.cpp" line="107"/>
         <source>Nothing to Display</source>
-        <translation type="unfinished"></translation>
+        <translation>Rien à afficher</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewEvent.cpp" line="141"/>
         <location filename="../src/ui/panel_results/GraphViewEvent.cpp" line="461"/>
         <source>Event Shrinkage</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Event Shrinkage</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewEvent.cpp" line="144"/>
         <location filename="../src/ui/panel_results/GraphViewEvent.cpp" line="473"/>
         <source>Std gi</source>
-        <translation type="unfinished"></translation>
+        <translation>Std gi</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewEvent.cpp" line="436"/>
         <source>Sigma</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewEvent.cpp" line="449"/>
         <source>Std S02 Vg</source>
-        <translation type="unfinished"></translation>
+        <translation>Std S02 Vg</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewEvent.cpp" line="501"/>
         <location filename="../src/ui/panel_results/GraphViewEvent.cpp" line="525"/>
         <source>Iteration</source>
-        <translation type="unfinished"></translation>
+        <translation>Itération</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewEvent.cpp" line="526"/>
         <source>Rate</source>
-        <translation type="unfinished"></translation>
+        <translation>Taux</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewEvent.cpp" line="552"/>
         <source>Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Valeur</translation>
     </message>
 </context>
 <context>
@@ -1033,38 +1034,38 @@ You can also edit constraints by double clicking on the arrow</source>
         <location filename="../src/ui/panel_results/GraphViewLambda.cpp" line="110"/>
         <location filename="../src/ui/panel_results/GraphViewLambda.cpp" line="194"/>
         <source>Smoothing</source>
-        <translation type="unfinished"></translation>
+        <translation>Lissage</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewLambda.cpp" line="159"/>
         <source>Smoothing Trace</source>
-        <translation type="unfinished"></translation>
+        <translation>Lissage Trace</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewLambda.cpp" line="172"/>
         <source>Smoothing Acceptation</source>
-        <translation type="unfinished"></translation>
+        <translation>Lissage Acceptation</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewLambda.cpp" line="185"/>
         <source>Smoothing Autocorrelation</source>
-        <translation type="unfinished"></translation>
+        <translation>Lissage autocorellation</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewLambda.cpp" line="238"/>
         <location filename="../src/ui/panel_results/GraphViewLambda.cpp" line="256"/>
         <source>Iteration</source>
-        <translation type="unfinished"></translation>
+        <translation>Itération</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewLambda.cpp" line="257"/>
         <source>Rate</source>
-        <translation type="unfinished"></translation>
+        <translation>Taux</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewLambda.cpp" line="280"/>
         <source>Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Valeur</translation>
     </message>
 </context>
 <context>
@@ -1074,45 +1075,45 @@ You can also edit constraints by double clicking on the arrow</source>
         <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="388"/>
         <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="410"/>
         <source>Phase : %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Phase  : %1</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="328"/>
         <source>Years</source>
-        <translation type="unfinished"></translation>
+        <translation>Années</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="333"/>
         <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="399"/>
         <source>Phase Duration : %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Durée de phase : %1</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="104"/>
         <source>Nothing to Display</source>
-        <translation type="unfinished"></translation>
+        <translation>Rien à afficher</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="240"/>
         <source>Phase Tempo : %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Tempo de phase : %1</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="281"/>
         <source>Phase Activity : %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Activité de phase : %1</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="384"/>
         <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="395"/>
         <source>Iterations</source>
-        <translation type="unfinished"></translation>
+        <translation>Itérations</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="555"/>
         <location filename="../src/ui/panel_results/GraphViewPhase.cpp" line="570"/>
         <source>Iteration</source>
-        <translation type="unfinished"></translation>
+        <translation>Itération</translation>
     </message>
 </context>
 <context>
@@ -1120,52 +1121,52 @@ You can also edit constraints by double clicking on the arrow</source>
     <message>
         <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="106"/>
         <source>Nothing to display</source>
-        <translation type="unfinished"></translation>
+        <translation>Rien à afficher</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="203"/>
         <source>Save graph image as...</source>
-        <translation type="unfinished"></translation>
+        <translation>Enregistrement de l&apos;image du graphe sous ...</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="290"/>
         <source>Save all trace</source>
-        <translation type="unfinished"></translation>
+        <translation>Enregistrement de toute la trace</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="291"/>
         <source>Do you want the entire trace from the beginning of the process or only the acquisition part</source>
-        <translation type="unfinished"></translation>
+        <translation>Voulez vous la trace entière depuis le début du processus ou seulement la partie acquisition</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="292"/>
         <source>All trace</source>
-        <translation type="unfinished"></translation>
+        <translation>Toute la trace</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="293"/>
         <source>Only acquired part</source>
-        <translation type="unfinished"></translation>
+        <translation>Partie acquisition seule</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="327"/>
         <source>Save curve</source>
-        <translation type="unfinished"></translation>
+        <translation>Enregistrement courbe</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="328"/>
         <source>Do you want a reference curve to reused with ChronoModel or data of the graphic</source>
-        <translation type="unfinished"></translation>
+        <translation>Voulez-vous une courbe de référence à reprendre avec ChronoModel ou les données du graphique</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="329"/>
         <source>Reference Curve</source>
-        <translation type="unfinished"></translation>
+        <translation>Courbe de référence</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewResults.cpp" line="330"/>
         <source>Graphics data</source>
-        <translation type="unfinished"></translation>
+        <translation>Données graphiques</translation>
     </message>
 </context>
 <context>
@@ -1174,38 +1175,39 @@ You can also edit constraints by double clicking on the arrow</source>
         <location filename="../src/ui/panel_results/GraphViewS02.cpp" line="109"/>
         <location filename="../src/ui/panel_results/GraphViewS02.cpp" line="194"/>
         <source>Curve Shrinkage</source>
-        <translation type="unfinished"></translation>
+        <translation>Shrinkage courbe</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewS02.cpp" line="157"/>
         <source>Curve Shrinkage Trace</source>
-        <translation type="unfinished"></translation>
+        <translatorcomment>ge courbe</translatorcomment>
+        <translation>Shrinkage courbe Trace</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewS02.cpp" line="170"/>
         <source>Curve Shrinkage Acceptation</source>
-        <translation type="unfinished"></translation>
+        <translation>Shrinkage courbe Acceptation</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewS02.cpp" line="185"/>
         <source>Curve Shrinkage Autocorrelation</source>
-        <translation type="unfinished"></translation>
+        <translation>Shrinkage courbe autocorrelation</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewS02.cpp" line="235"/>
         <location filename="../src/ui/panel_results/GraphViewS02.cpp" line="253"/>
         <source>Iteration</source>
-        <translation type="unfinished"></translation>
+        <translation>Itération</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewS02.cpp" line="254"/>
         <source>Rate</source>
-        <translation type="unfinished"></translation>
+        <translation>Taux</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/GraphViewS02.cpp" line="276"/>
         <source>Value</source>
-        <translation type="unfinished"></translation>
+        <translation>Valeur</translation>
     </message>
 </context>
 <context>
@@ -1213,12 +1215,12 @@ You can also edit constraints by double clicking on the arrow</source>
     <message>
         <location filename="../src/ui/panel_model/ImportDataView.cpp" line="56"/>
         <source>Load CSV file...</source>
-        <translation type="unfinished"></translation>
+        <translation>Chargement fichier CSV</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/ImportDataView.cpp" line="57"/>
         <source>Export all project data as CSV</source>
-        <translation type="unfinished"></translation>
+        <translation>Export de toutes les données du projet en CSV</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/ImportDataView.cpp" line="61"/>
@@ -1229,32 +1231,32 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_model/ImportDataView.cpp" line="124"/>
         <source>Open CSV File</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Ouvrir fichier CSV</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/ImportDataView.cpp" line="275"/>
         <source>Bad file</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Mauvais fichier</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/ImportDataView.cpp" line="275"/>
         <source>Maybe you need to check the manual to build your CSV file !</source>
-        <translation type="unfinished"></translation>
+        <translation>Peut-être avez-vous besoin de regarder le manuel pour construire votre fichier CSV !</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/ImportDataView.cpp" line="275"/>
         <source>More...</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">plus...</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/ImportDataView.cpp" line="306"/>
         <source>Save as CSV</source>
-        <translation type="unfinished"></translation>
+        <translation>Enregistrer sous CSV</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/ImportDataView.cpp" line="391"/>
         <source>Error : %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur : %1</translation>
     </message>
 </context>
 <context>
@@ -2040,7 +2042,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_model/ModelView.cpp" line="117"/>
         <source>Curve Building :</source>
-        <translation type="unfinished"></translation>
+        <translation>Fabrique de courbe:</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/ModelView.cpp" line="118"/>
@@ -2087,7 +2089,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_model/ModelView.cpp" line="171"/>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
+        <translation>Effacer</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/ModelView.cpp" line="172"/>
@@ -2097,7 +2099,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_model/ModelView.cpp" line="176"/>
         <source>Restore</source>
-        <translation type="unfinished"></translation>
+        <translation>Remettre</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/ModelView.cpp" line="177"/>
@@ -2130,7 +2132,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
         <location filename="../src/ui/panel_model/ModelView.cpp" line="192"/>
         <location filename="../src/ui/panel_model/ModelView.cpp" line="276"/>
         <source>Grid</source>
-        <translation type="unfinished"></translation>
+        <translation>Grille</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/ModelView.cpp" line="193"/>
@@ -2156,7 +2158,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_model/ModelView.cpp" line="213"/>
         <source>MultiCalib</source>
-        <translation type="unfinished"></translation>
+        <translation>Multicalib</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/ModelView.cpp" line="214"/>
@@ -2166,7 +2168,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_model/ModelView.cpp" line="221"/>
         <source>Data</source>
-        <translation type="unfinished"></translation>
+        <translation>Donnée</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/ModelView.cpp" line="222"/>
@@ -2176,7 +2178,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_model/ModelView.cpp" line="255"/>
         <source>New Phase</source>
-        <translation type="unfinished"></translation>
+        <translation>Nouvelle Phase</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/ModelView.cpp" line="256"/>
@@ -2186,7 +2188,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_model/ModelView.cpp" line="260"/>
         <source>Delete Phase</source>
-        <translation type="unfinished"></translation>
+        <translation>Effacer phase</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/ModelView.cpp" line="261"/>
@@ -2226,7 +2228,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_model/ModelView.cpp" line="1579"/>
         <source>Curve Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Paramètre de courbe</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/ModelView.cpp" line="1582"/>
@@ -2236,7 +2238,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_model/ModelView.cpp" line="1585"/>
         <source>Import Data</source>
-        <translation type="unfinished"></translation>
+        <translation>Import. données</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/ModelView.cpp" line="1588"/>
@@ -2249,7 +2251,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationDrawing.cpp" line="284"/>
         <source>No Calibration</source>
-        <translation type="unfinished"></translation>
+        <translation>Pas de calibration</translation>
     </message>
 </context>
 <context>
@@ -2257,129 +2259,129 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="81"/>
         <source>Nothing to display</source>
-        <translation type="unfinished"></translation>
+        <translation>Rien à afficher</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="85"/>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Enregistrer</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="88"/>
         <source>Save image as file</source>
-        <translation type="unfinished"></translation>
+        <translation>Enregistrement de l&apos;image sous ...</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="91"/>
         <source>Copy</source>
-        <translation type="unfinished"></translation>
+        <translation>Copier</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="94"/>
         <source>Copy image to clipboard</source>
-        <translation type="unfinished"></translation>
+        <translation>Copier l&apos;image dans le presse-papier</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="97"/>
         <source>Stat</source>
-        <translation type="unfinished"></translation>
+        <translation>Stat</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="100"/>
         <source>Show Stats for calibrated dates</source>
-        <translation type="unfinished"></translation>
+        <translation>Afficher les stats des dates calibrées</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="105"/>
         <source>Scatter</source>
-        <translation type="unfinished"></translation>
+        <translation>Nuage</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="108"/>
         <source>Show Scatter plot for selected dates</source>
-        <translation type="unfinished"></translation>
+        <translation>Afficher le nuage de point pour les dates sélectionnées</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="114"/>
         <source>CSV</source>
-        <translation type="unfinished"></translation>
+        <translation>CSV</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="119"/>
         <source>Export stats to a CSV file</source>
-        <translation type="unfinished"></translation>
+        <translation>Export. des stats dans un fichier CSV</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="122"/>
         <source>Y Zoom</source>
-        <translation type="unfinished"></translation>
+        <translation>Y Zoom</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="138"/>
         <source>Zoom</source>
-        <translation type="unfinished"></translation>
+        <translation>Zoom</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="140"/>
         <source>Color</source>
-        <translation type="unfinished"></translation>
+        <translation>Couleur</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="143"/>
         <source>Set Personal Densities Color</source>
-        <translation type="unfinished"></translation>
+        <translation>Définir une couleur personnelle aux densités</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="150"/>
         <source>Start</source>
-        <translation type="unfinished"></translation>
+        <translation>Début</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="160"/>
         <source>End</source>
-        <translation type="unfinished"></translation>
+        <translation>Fin</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="170"/>
         <source>Maj. Int</source>
-        <translation type="unfinished"></translation>
+        <translation>Maj. Int</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="178"/>
         <source>Enter a interval for the main division of the axes under the curves</source>
-        <translation type="unfinished"></translation>
+        <translation>Saisir un intervalle pour la division principale de l&apos;axe sous les courbes</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="181"/>
         <source>Min. Cnt</source>
-        <translation type="unfinished"></translation>
+        <translation>Min. Div</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="189"/>
         <source>Enter a interval for the subdivision of the Major Interval for the scale under the curves</source>
-        <translation type="unfinished"></translation>
+        <translation>Saisir un nombre pour la sous-division de l&apos;axe principale sous les courbes</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="192"/>
         <source>HPD (%)</source>
-        <translation type="unfinished"></translation>
+        <translation>HPD (%)</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="460"/>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="1928"/>
         <source>Bound : %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Borne : %1</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="522"/>
         <source>Event : %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Event : %1</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="1505"/>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="1514"/>
         <source>Outside study period</source>
-        <translation type="unfinished"></translation>
+        <translation>Hors période d&apos;étude</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="1551"/>
@@ -2394,17 +2396,17 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="1660"/>
         <source>Select Colour</source>
-        <translation type="unfinished"></translation>
+        <translation>Sélect. couleur</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="1703"/>
         <source>Export to file...</source>
-        <translation type="unfinished"></translation>
+        <translation>Export sous...</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/MultiCalibrationView.cpp" line="1983"/>
         <source>Not  computable</source>
-        <translation type="unfinished"></translation>
+        <translation>Non calculable</translation>
     </message>
 </context>
 <context>
@@ -2412,57 +2414,57 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/dialogs/PhaseDialog.cpp" line="57"/>
         <source>Create / Modify phase</source>
-        <translation type="unfinished"></translation>
+        <translation>Créer / Modifier la phase</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/PhaseDialog.cpp" line="60"/>
         <source>Phase name</source>
-        <translation type="unfinished"></translation>
+        <translation>nom de la phase</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/PhaseDialog.cpp" line="62"/>
         <source>Phase colour</source>
-        <translation type="unfinished"></translation>
+        <translation>couleur de phase</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/PhaseDialog.cpp" line="64"/>
         <source>Max duration</source>
-        <translation type="unfinished"></translation>
+        <translation>Durée max</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/PhaseDialog.cpp" line="66"/>
         <source>Max duration value</source>
-        <translation type="unfinished"></translation>
+        <translation>Valeur de durée max</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/PhaseDialog.cpp" line="74"/>
         <source>Unknown</source>
-        <translation type="unfinished"></translation>
+        <translation>Inconnu</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/PhaseDialog.cpp" line="75"/>
         <source>Known</source>
-        <translation type="unfinished"></translation>
+        <translation>Connu</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/PhaseDialog.cpp" line="76"/>
         <source>Span Uniform</source>
-        <translation type="unfinished"></translation>
+        <translation>Etendu uniforme</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/PhaseDialog.cpp" line="82"/>
         <source>OK</source>
-        <translation type="unfinished"></translation>
+        <translation>OK</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/PhaseDialog.cpp" line="83"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Echap</translation>
     </message>
     <message>
         <location filename="../src/ui/dialogs/PhaseDialog.cpp" line="179"/>
         <source>Phase fixed duration must be more than 1 !</source>
-        <translation type="unfinished"></translation>
+        <translation>La durée fixe d&apos;une phase doit être supérieur à 1 !</translation>
     </message>
 </context>
 <context>
@@ -2470,12 +2472,12 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_model/scenes/PhaseItem.cpp" line="409"/>
         <source>Duration ≤ %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Durée ≤ %1</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_model/scenes/PhaseItem.cpp" line="412"/>
         <source>Span Uniform</source>
-        <translation type="unfinished"></translation>
+        <translation>Etendu uniforme</translation>
     </message>
 </context>
 <context>
@@ -2549,7 +2551,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/plugins/plugin_14C/Plugin14CForm.cpp" line="56"/>
         <source>Reference curve</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../src/plugins/plugin_14C/Plugin14CForm.cpp" line="173"/>
@@ -3227,7 +3229,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/project/Project.cpp" line="724"/>
         <source>Error %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur : %1</translation>
     </message>
     <message>
         <location filename="../src/project/Project.cpp" line="791"/>
@@ -3244,7 +3246,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
         <location filename="../src/project/Project.cpp" line="824"/>
         <location filename="../src/project/Project.cpp" line="1453"/>
         <source>Error : %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur : %1</translation>
     </message>
     <message>
         <location filename="../src/project/Project.cpp" line="822"/>
@@ -3332,24 +3334,24 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/project/Project.cpp" line="2422"/>
         <source>Cannot combine</source>
-        <translation type="unfinished"></translation>
+        <translation>Combinaison impossible</translation>
     </message>
     <message>
         <location filename="../src/project/Project.cpp" line="2551"/>
         <location filename="../src/project/Project.cpp" line="2606"/>
         <location filename="../src/project/Project.cpp" line="2972"/>
         <source>Invalid value</source>
-        <translation type="unfinished"></translation>
+        <translation>Valeur incorrecte</translation>
     </message>
     <message>
         <location filename="../src/project/Project.cpp" line="2973"/>
         <source>The fixed value must be positive!</source>
-        <translation type="unfinished"></translation>
+        <translation>La valeur fixe doit être positive!</translation>
     </message>
     <message>
         <location filename="../src/project/Project.cpp" line="2983"/>
         <source>Invalid values</source>
-        <translation type="unfinished"></translation>
+        <translation>Valeur incorrecte</translation>
     </message>
     <message>
         <location filename="../src/project/Project.cpp" line="2984"/>
@@ -3376,7 +3378,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
         <location filename="../src/project/Project.cpp" line="3048"/>
         <location filename="../src/project/Project.cpp" line="3158"/>
         <source>I agree to continue</source>
-        <translation type="unfinished"></translation>
+        <translation>J&apos;accepte de continuer</translation>
     </message>
     <message>
         <location filename="../src/project/Project.cpp" line="3077"/>
@@ -3388,7 +3390,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
         <location filename="../src/project/Project.cpp" line="3113"/>
         <location filename="../src/project/Project.cpp" line="3237"/>
         <source>Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur</translation>
     </message>
     <message>
         <location filename="../src/project/Project.cpp" line="3155"/>
@@ -3398,7 +3400,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/project/Project.cpp" line="3157"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Echap</translation>
     </message>
 </context>
 <context>
@@ -3407,25 +3409,25 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
         <location filename="../src/ui/window/ProjectView.cpp" line="85"/>
         <location filename="../src/ui/window/ProjectView.cpp" line="338"/>
         <source>Model Description</source>
-        <translation type="unfinished"></translation>
+        <translation>Description du modèle</translation>
     </message>
     <message>
         <location filename="../src/ui/window/ProjectView.cpp" line="86"/>
         <location filename="../src/ui/window/ProjectView.cpp" line="346"/>
         <source>MCMC Initialisation</source>
-        <translation type="unfinished"></translation>
+        <translation>MCMC Initialisation</translation>
     </message>
     <message>
         <location filename="../src/ui/window/ProjectView.cpp" line="87"/>
         <location filename="../src/ui/window/ProjectView.cpp" line="354"/>
         <source>MCMC Adaptation</source>
-        <translation type="unfinished"></translation>
+        <translation>MCMC Adaptation</translation>
     </message>
     <message>
         <location filename="../src/ui/window/ProjectView.cpp" line="88"/>
         <location filename="../src/ui/window/ProjectView.cpp" line="362"/>
         <source>Posterior Distrib. Stats</source>
-        <translation type="unfinished"></translation>
+        <translation>Posterior Distrib. Stat.</translation>
     </message>
 </context>
 <context>
@@ -4736,60 +4738,60 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="115"/>
         <source>Posterior Distrib.</source>
-        <translation type="unfinished"></translation>
+        <translation>Distrib. Posterior</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="116"/>
         <source>History Plot</source>
-        <translation type="unfinished"></translation>
+        <translation>Trace</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="117"/>
         <source>Acceptance Rate</source>
-        <translation type="unfinished"></translation>
+        <translation>Taux d&apos;acceptation</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="118"/>
         <source>Autocorrelation</source>
-        <translation type="unfinished"></translation>
+        <translation>Autocorrelation</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="218"/>
         <source>Begin-End</source>
-        <translation type="unfinished"></translation>
+        <translation>Début-Fin</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="222"/>
         <source>Unfold Events</source>
-        <translation type="unfinished"></translation>
+        <translation>Déplie Event</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="167"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="226"/>
         <source>Unfold Data</source>
-        <translation type="unfinished"></translation>
+        <translation>Déplie Données</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="169"/>
         <source>Display Events&apos; data</source>
-        <translation type="unfinished"></translation>
+        <translation>Affichage données des Events</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="184"/>
         <source>Individual Calib. Dates</source>
-        <translation type="unfinished"></translation>
+        <translation>Dates calibrées individuelles</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="188"/>
         <source>Wiggle shifted</source>
-        <translation type="unfinished"></translation>
+        <translation>Décallage Wiggle</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="191"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="246"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="310"/>
         <source>Show Stat.</source>
-        <translation type="unfinished"></translation>
+        <translation>Affichage Stat.</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="193"/>
@@ -4807,7 +4809,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="3052"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="4570"/>
         <source>Events</source>
-        <translation type="unfinished"></translation>
+        <translation>Events</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="382"/>
@@ -4818,12 +4820,12 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="3117"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="4574"/>
         <source>Phases</source>
-        <translation type="unfinished"></translation>
+        <translation>Phases</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="230"/>
         <source>Tempo</source>
-        <translation type="unfinished"></translation>
+        <translation>Tempo</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="224"/>
@@ -4838,22 +4840,22 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="233"/>
         <source>Activity</source>
-        <translation type="unfinished"></translation>
+        <translation>Activité</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="236"/>
         <source>Unif Theo</source>
-        <translation type="unfinished"></translation>
+        <translation>Unif. Théo.</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="239"/>
         <source>Error</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="242"/>
         <source>Duration</source>
-        <translation type="unfinished"></translation>
+        <translation>Durée</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="383"/>
@@ -4866,7 +4868,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="3195"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="4578"/>
         <source>Curves</source>
-        <translation type="unfinished"></translation>
+        <translation>Courbes</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="393"/>
@@ -4876,19 +4878,19 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="1566"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="3264"/>
         <source>Display</source>
-        <translation type="unfinished"></translation>
+        <translation>Affichage</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="394"/>
         <source>Distrib. Options</source>
-        <translation type="unfinished"></translation>
+        <translation>Options d&apos;affichage</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="410"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="1577"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="3281"/>
         <source>Study Period Display</source>
-        <translation type="unfinished"></translation>
+        <translation>Affichage période d&apos;étude</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="412"/>
@@ -4899,7 +4901,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="414"/>
         <source>Span</source>
-        <translation type="unfinished"></translation>
+        <translation>Etendu</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="420"/>
@@ -4920,7 +4922,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="521"/>
         <source>X</source>
-        <translation type="unfinished"></translation>
+        <translation>X</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="442"/>
@@ -4930,7 +4932,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="444"/>
         <source>Major Interval</source>
-        <translation type="unfinished"></translation>
+        <translation>Int. principal</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="451"/>
@@ -4940,7 +4942,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="453"/>
         <source>Minor Interval Count</source>
-        <translation type="unfinished"></translation>
+        <translation>Nb int.second.</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="460"/>
@@ -4950,12 +4952,12 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="654"/>
         <source>Graphic Options</source>
-        <translation type="unfinished"></translation>
+        <translation>Options graphiques</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="569"/>
         <source>Y</source>
-        <translation type="unfinished"></translation>
+        <translation>Y</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="178"/>
@@ -4965,28 +4967,28 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="294"/>
         <source>Ind. Calib. Dates</source>
-        <translation type="unfinished"></translation>
+        <translation>Dates calibrées ind</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="307"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="1984"/>
         <source>Curve Shrinkage</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Lissage courbe</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="406"/>
         <source>Time Scale</source>
-        <translation type="unfinished"></translation>
+        <translation>Echelle de temps</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="426"/>
         <source>time</source>
-        <translation type="unfinished"></translation>
+        <translation>temps</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="513"/>
         <source>X Scale</source>
-        <translation type="unfinished"></translation>
+        <translation>Echelle sur X</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="517"/>
@@ -4996,7 +4998,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="561"/>
         <source>Y Scale</source>
-        <translation type="unfinished"></translation>
+        <translation>Echelle sur Y</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="565"/>
@@ -5011,7 +5013,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="609"/>
         <source>Z Scale</source>
-        <translation type="unfinished"></translation>
+        <translation>Echelle sur Z</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="613"/>
@@ -5026,7 +5028,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="660"/>
         <source>Zoom</source>
-        <translation type="unfinished"></translation>
+        <translation>Zoom</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="671"/>
@@ -5036,7 +5038,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="673"/>
         <source>Font</source>
-        <translation type="unfinished"></translation>
+        <translation>Police</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="678"/>
@@ -5046,7 +5048,7 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="680"/>
         <source>Thickness</source>
-        <translation type="unfinished"></translation>
+        <translation>Epaisseur</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="689"/>
@@ -5056,262 +5058,262 @@ Comments are allowed in your CSV. They must start with  # or // and can be place
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="692"/>
         <source>Opacity</source>
-        <translation type="unfinished"></translation>
+        <translation>Opacité</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="707"/>
         <source>Select to change the opacity of the drawing</source>
-        <translation type="unfinished"></translation>
+        <translation>Sélect. pour changer l&apos;opacité des traits</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="768"/>
         <source>MCMC Chains</source>
-        <translation type="unfinished"></translation>
+        <translation>MCMC Chaînes</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="774"/>
         <source>Chain Concatenation</source>
-        <translation type="unfinished"></translation>
+        <translation>Chaînes concaténées</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="789"/>
         <source>Density Options</source>
-        <translation type="unfinished"></translation>
+        <translation>Options des densités</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="795"/>
         <source>Show Confidence Bar</source>
-        <translation type="unfinished"></translation>
+        <translation>Affiche la bar de confiance</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="799"/>
         <source>Confidence Level (%)</source>
-        <translation type="unfinished"></translation>
+        <translation>Niveau de confiance (%)</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="811"/>
         <source>Time Range Level (%)</source>
-        <translation type="unfinished"></translation>
+        <translation>Niveau du Time Range (%)</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="823"/>
         <source>Grid Length</source>
-        <translation type="unfinished"></translation>
+        <translation>Longueur de grille</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="840"/>
         <source>FFTW Bandwidth</source>
-        <translation type="unfinished"></translation>
+        <translation>Fenêtre de FFTW</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="847"/>
         <source>Activity Bandwidth</source>
-        <translation type="unfinished"></translation>
+        <translation>Fenêtre de l&apos;activité</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="920"/>
         <source>Prev.</source>
-        <translation type="unfinished"></translation>
+        <translation>Préc.</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="923"/>
         <source>Display previous data</source>
-        <translation type="unfinished"></translation>
+        <translation>Affiche données précédentes</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="932"/>
         <source>Next</source>
-        <translation type="unfinished"></translation>
+        <translation>Suivant</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="935"/>
         <source>Display next data</source>
-        <translation type="unfinished"></translation>
+        <translation>Affiche données suivantes</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="938"/>
         <source>Nb Densities / Page</source>
-        <translation type="unfinished"></translation>
+        <translation>Nb densités / Page</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="944"/>
         <source>Enter the maximum densities to display on a sheet</source>
-        <translation type="unfinished"></translation>
+        <translation>Saisir le maximum de densité à afficher sur une page.</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="969"/>
         <source>Capture</source>
-        <translation type="unfinished"></translation>
+        <translation>Capture</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="972"/>
         <source>Save all currently visible results as an image.&lt;br&gt;&lt;u&gt;Note&lt;/u&gt; : If you want to copy textual results, see the Log tab.</source>
-        <translation type="unfinished"></translation>
+        <translation>enregistre les courbes courrantes visibles sous une image.&lt;br&gt;&lt;u&gt;Note&lt;/u&gt; : ISi vous voulez les résultats sous forme de texte, regarder l&apos;onglet Log.</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="974"/>
         <source>Results</source>
-        <translation type="unfinished"></translation>
+        <translation>Résultats</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="977"/>
         <source>Export all result in several files</source>
-        <translation type="unfinished"></translation>
+        <translation>Exporte tous les résultats dans plusieurs fichiers</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="993"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="1008"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="4195"/>
         <source>Save</source>
-        <translation type="unfinished"></translation>
+        <translation>Enregistrer</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="996"/>
         <source>Save image as file</source>
-        <translation type="unfinished"></translation>
+        <translation>Enregistrement de l&apos;image sous ...</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="998"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="1003"/>
         <source>Copy</source>
-        <translation type="unfinished"></translation>
+        <translation>Copier</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="1001"/>
         <source>Copy image to clipboard</source>
-        <translation type="unfinished"></translation>
+        <translation>Copier l&apos;image dans le presse-papier</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="1006"/>
         <source>Copy text results to clipboard</source>
-        <translation type="unfinished"></translation>
+        <translation>Copier les résultats dans le presse-papier</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="1011"/>
         <source>Save graph data to file</source>
-        <translation type="unfinished"></translation>
+        <translation>Enregistrement données du graphe sous ...</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="1036"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="3466"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="4172"/>
         <source>Page</source>
-        <translation type="unfinished"></translation>
+        <translation>Page</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="1037"/>
         <source>Saving</source>
-        <translation type="unfinished"></translation>
+        <translation>Enregist.</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="1171"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="1180"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="1189"/>
         <source>Scale</source>
-        <translation type="unfinished"></translation>
+        <translation>Echelle</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="1173"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="1182"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="1191"/>
         <source>Optimal</source>
-        <translation type="unfinished"></translation>
+        <translation>Optimal</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="1577"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="3281"/>
         <source>Fit Display</source>
-        <translation type="unfinished"></translation>
+        <translation>Ajust. affichage</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="1676"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="1683"/>
         <source>Chain %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Chaîne %1</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="2196"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="2582"/>
         <source>Var. Rate</source>
-        <translation type="unfinished"></translation>
+        <translation>Taux de Var.</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="171"/>
         <source>Event Date</source>
-        <translation type="unfinished"></translation>
+        <translation>Date d&apos;Event</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="175"/>
         <source>Std ti</source>
-        <translation type="unfinished"></translation>
+        <translation>Std ti</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="181"/>
         <source>Std gi</source>
-        <translation type="unfinished"></translation>
+        <translation>Std gi</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="278"/>
         <source>Mean Curve</source>
-        <translation type="unfinished"></translation>
+        <translation>Courbe moyenne</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="282"/>
         <source>Error (at 95%)</source>
-        <translation type="unfinished"></translation>
+        <translation>Erreur (à 95%)</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="286"/>
         <source>Density Plot</source>
-        <translation type="unfinished"></translation>
+        <translation>Densité</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="290"/>
         <source>Event Dates (HPD)</source>
-        <translation type="unfinished"></translation>
+        <translation>Dates d&apos;Event (HPD)</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="298"/>
         <source>Curve Var. Rate</source>
-        <translation type="unfinished"></translation>
+        <translation>Courbe du taux de var.</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="301"/>
         <source>Curve Acceleration</source>
-        <translation type="unfinished"></translation>
+        <translation>Courbe d&apos;Accélaration</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="304"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="1968"/>
         <source>Smoothing</source>
-        <translation type="unfinished"></translation>
+        <translation>Lissage</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="2197"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="2583"/>
         <source>Acceleration</source>
-        <translation type="unfinished"></translation>
+        <translation>Accélération</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="617"/>
         <source>Z</source>
-        <translation type="unfinished"></translation>
+        <translation>Z</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="4289"/>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="4656"/>
         <source>Save graph image as...</source>
-        <translation type="unfinished"></translation>
+        <translation>Enregistrement de l&apos;image du graphe sous ...</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="4415"/>
         <source>Export to directory...</source>
-        <translation type="unfinished"></translation>
+        <translation>Export dans le dossier...</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="4417"/>
         <source>Directory</source>
-        <translation type="unfinished"></translation>
+        <translation>Dossier</translation>
     </message>
     <message>
         <location filename="../src/ui/panel_results/ResultsView.cpp" line="4431"/>

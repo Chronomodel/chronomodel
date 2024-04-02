@@ -458,7 +458,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
     int i = 0;
     QString HTMLText = stateDescript;
     HTMLText += "<hr><br>";
-    HTMLText +=  textBold("Events  (with their data)")+"<br>";
+    HTMLText +=  textBold("Events  (with their data)") +"<br>";
     for (auto& event : model->mEvents) {
         ++i;
         HTMLText += "<hr>";

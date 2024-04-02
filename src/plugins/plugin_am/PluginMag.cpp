@@ -966,7 +966,7 @@ PluginSettingsViewAbstract* PluginMag::getSettingsView()
 //Date validity
 bool PluginMag::isDateValid(const QJsonObject& data, const StudyPeriodSettings& settings)
 {
-    qDebug() <<"PluginMag::isDateValid for="<< data.value(STATE_NAME).toString();
+    qDebug() <<"[PluginMag::isDateValid]";
     // check valid curve
 
     const ProcessTypeAM pta = static_cast<ProcessTypeAM> (data.value(DATE_AM_PROCESS_TYPE_STR).toInt());

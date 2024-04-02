@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -55,20 +55,20 @@ MainController::MainController(const QString& filePath)
 
     mMainWindow = MainWindow::getInstance();
     try {
-       // AppSettings();
+        // AppSettings();
         AppSettings::readSettings();
+
         QString path;
-       if (filePath != "" ) {
+        if (filePath != "" ) {
               path = filePath;
 
-       } else  if ((filePath == "" ) && AppSettings::mOpenLastProjectAtLaunch) {
+        } else  if ((filePath == "" ) && AppSettings::mOpenLastProjectAtLaunch) {
            const QString dir = AppSettings::mLastDir;
            const QString filename = AppSettings::mLastFile;
            if ((dir != "") && (filename !=""))
                path = dir + "/" + filename;
 
-       }
-
+        }
 
         mMainWindow->readSettings(path); // le problème est ici pour macOS
 
@@ -76,7 +76,7 @@ MainController::MainController(const QString& filePath)
         mMainWindow->resize(AppSettings::mLastSize);
 
     }  catch(...) {
-        qDebug() << "MainController:: Caught Exception!\n";
+        qDebug() << "[MainController] Caught Exception!\n";
     }
 
     mMainWindow->show();

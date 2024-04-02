@@ -131,17 +131,17 @@ int main(int argc, char *argv[])
     QLocale::setDefault(locale);
 
   //  qApp->setFont(QApplication::font("QMenu"));
-
-    /*QTranslator qtTranslator;
-    qtTranslator.load("qt_" + QLocale::system().name(), QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+/*
+    QTranslator qtTranslator;
+    qtTranslator.load("qt_" + QLocale::system().name(), QLibraryInfo::path(QLibraryInfo::TranslationsPath));
     a.installTranslator(&qtTranslator);
 
     QTranslator translator;
     if(translator.load(locale, ":/Chronomodel", "_")){
         qDebug() << "Locale set to : " << QLocale::languageToString(locale.language());
         a.installTranslator(&translator);
-    }*/
-
+    }
+*/
     //qInstallMessageHandler(customMessageHandler);
 #ifdef DEBUG
    // std::cout<<"in main filePath ="<<filePath.toStdString()<<"\t";
