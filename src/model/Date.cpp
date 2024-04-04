@@ -546,7 +546,7 @@ void Date::reset()
  * @param truncate Restrict the calib and repartition vectors to where data are
  */
 
-void Date::calibrate(const StudyPeriodSettings priod_settings, Project &project, bool truncate)
+void Date::calibrate(const StudyPeriodSettings &priod_settings, Project &project, bool truncate)
 {
   // Check if the ref curve is in the plugin list
 
@@ -603,7 +603,7 @@ void Date::calibrate(const StudyPeriodSettings priod_settings, Project &project,
 
     int nb_step_frac = 0;
 
-    while ((std::count_if (mCalibration->mVector.begin(), mCalibration->mVector.end(), [](double v){return std::isnormal(v);})) < 100 && nb_step_frac < 20) {
+    while (std::count_if (mCalibration->mVector.begin(), mCalibration->mVector.end(), [](double v){return std::isnormal(v);}) < 22 && nb_step_frac < 50) {
         ++nb_step_frac;
         mCalibration->mStep = refMinStep / (double)nb_step_frac;
         const int nbStep = floor((mTmaxRefCurve - mTminRefCurve) / mCalibration->mStep);
@@ -714,7 +714,7 @@ void Date::calibrate(const StudyPeriodSettings priod_settings, Project &project,
  * @param settings
  * @param project
  */
-void Date::calibrateWiggle(const StudyPeriodSettings settings, Project &project)
+void Date::calibrateWiggle(const StudyPeriodSettings &settings, Project &project)
 {
     // Check if the ref curve is in the plugin list
     if (mDeltaType == Date::eDeltaNone) {

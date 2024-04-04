@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -50,7 +50,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 
 #include <cstdlib>
-#include <iostream>
 #include <stdio.h>
 
 PluginGauss::PluginGauss()
@@ -500,7 +499,26 @@ QPair<double, double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject &data)
         const double v1 = age - k * error;
         const double v2 = age + k * error;
 
-        if (a == 0.) {
+        auto s1 = solve_quadratic(v1, a, b, c);
+        auto s2 = solve_quadratic(v2, a, b, c);
+
+        if (isinf(s1.first)) {
+            if (isinf(s2.first)) {
+                tmin = -INFINITY;
+                tmax = INFINITY;
+            } else {
+                tmin = s2.first;
+                tmax = s2.second;
+            }
+        } else if (isinf(s2.first)) {
+            tmin = s1.first;
+            tmax = s1.second;
+        } else {
+            tmin = std::min({s1.first, s2.first});
+            tmax = std::max({s1.second, s2.second});
+        }
+
+       /* if (a == 0.) {
             if (b == 0.) {
                 // Error!
             } else {
@@ -538,33 +556,53 @@ QPair<double, double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject &data)
                     tmax = qMax(t21, t22);
                 }
             }
-        }
+        }*/
     }
     return QPair<double,double>(tmin, tmax);
 }
 
 double PluginGauss::getMinStepRefsCurve(const QJsonObject &data) const
 {
+    const double k = 10.;
+    const int frac = 21;
     const QString &ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
     const QString &mode = data.value(DATE_GAUSS_MODE_STR).toString();
 
     if (mode == DATE_GAUSS_MODE_NONE) {
         const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
-        return error/ 11.;
+        return error/ frac;
 
     } else if (mode == DATE_GAUSS_MODE_EQ) {
-        QPair<double,double> tMinMax = getTminTmaxRefsCurve(data);
-        /*const double a = data.value(DATE_GAUSS_A_STR).toDouble();
-        const double b = data.value(DATE_GAUSS_B_STR).toDouble();
-        const double c = data.value(DATE_GAUSS_C_STR).toDouble();
-        const double mean = data.value(DATE_GAUSS_AGE_STR).toDouble();
+        const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
         const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
 
-        const double tmin = a *pow(mean - 2.*error, 2.) + b * (mean - 2.*error) + c;
-        const double tmax = a *pow(mean + 2.*error, 2.) + b * (mean + 2.*error) + c;*/
-        const double tmin = tMinMax.first;
-        const double tmax = tMinMax.second;
-        return std::abs(tmax-tmin)/ 51.;
+        const double a = data.value(DATE_GAUSS_A_STR).toDouble();
+        const double b = data.value(DATE_GAUSS_B_STR).toDouble();
+        const double c = data.value(DATE_GAUSS_C_STR).toDouble();
+
+        const double v1 = age - k * error;
+        const double v2 = age + k * error;
+
+        const auto s1 = solve_quadratic(v1, a, b, c);
+        const auto s2 = solve_quadratic(v2, a, b, c);
+
+        if (isinf(s1.first)) {
+            if (isinf(s2.first)) {
+                return INFINITY;
+
+            } else {
+                return (s2.second - s2.first)/frac;
+            }
+        } else if (isinf(s2.first)) {
+           return (s1.second - s1.first)/frac;
+
+        } else {
+            const auto sp1 = std::abs(s2.first - s1.first);
+            const auto sp2 = std::abs(s2.second - s1.second);
+
+            return std::min(sp1, sp2)/frac;
+        }
+
 
     } else  if (mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
         return mRefCurves.value(ref_curve).mMinStep;

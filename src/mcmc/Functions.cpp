@@ -3051,3 +3051,47 @@ std::pair<Matrix2D, Matrix2D> householderQR(Matrix2D& A)
 
  return std::pair<Matrix2D, Matrix2D>(Q, R);
 }
+
+/**
+ * @brief solve_quadratic y = ax^2 + bx + c
+ * @param a
+ * @param b
+ * @param c
+ * @return y1, y2
+ */
+std::pair<double, double> solve_quadratic(const double y, const double a, const double b, const double c)
+{
+    double y1, y2;
+
+    if (a == 0.) { // linear equation
+        if (b == 0.) { //constant line
+            y1 = INFINITY;
+            y2 = INFINITY;
+
+        } else { // linear
+            y1 = (y - c) / b;
+            y2 = y1;
+        }
+
+    } else {
+        const double delta = std::pow(b, 2.) - 4*a*(c - y);
+        if (delta > 0) {
+
+            const double s1 = (- b - sqrt(delta)) / (2 * a);
+            const double s2 = (- b + sqrt(delta)) / (2 * a);
+            if (s1<s2) {
+                y1 = s1;
+                y2 = s2;
+
+            } else {
+                y1 = s2;
+                y2 = s1;
+            }
+
+        }
+
+    }
+
+
+    return std::pair<double, double>{y1, y2};
+}

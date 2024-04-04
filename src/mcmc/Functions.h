@@ -408,6 +408,6 @@ Quartiles quantilesType(const C<T>& trace, const int quartileType, const double 
     return Q;
 }
 
-
+std::pair<double, double> solve_quadratic(const double y, const double a, const double b, const double c);
 
 #endif

@@ -187,13 +187,19 @@ PluginSettingsViewAbstract* PluginUniform::getSettingsView()
     return nullptr;
 }
 
-QPair<double,double> PluginUniform::getTminTmaxRefsCurve(const QJsonObject &data) const
+QPair<double, double> PluginUniform::getTminTmaxRefsCurve(const QJsonObject &data) const
 {
     const double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
     const double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
     return QPair<double, double>(min, max);
 }
 
+double PluginUniform::getMinStepRefsCurve(const QJsonObject &data) const
+{
+    const double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
+    const double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
+    return std::abs(max-min)/51.;
+}
 
 long double PluginUniform::getLikelihoodCombine(const double t, const QJsonArray &subData)
 {
@@ -201,7 +207,7 @@ long double PluginUniform::getLikelihoodCombine(const double t, const QJsonArray
     double max (INFINITY);
 
    for (auto&& d : subData) {
-       const QJsonObject data = d.toObject().value(STATE_DATE_DATA).toObject();
+       const QJsonObject &data = d.toObject().value(STATE_DATE_DATA).toObject();
 
        min = std::max(min, data.value(DATE_UNIFORM_MIN_STR).toDouble() );
        max = std::min(max, data.value(DATE_UNIFORM_MAX_STR).toDouble() );
@@ -252,7 +258,7 @@ QJsonObject PluginUniform::mergeDates(const QJsonArray& dates)
             withWiggle = withWiggle || hasWiggle;
 
             if (hasWiggle) {
-                QString toFind = "WID::" + d.toObject().value(STATE_DATE_UUID).toString();
+                const QString toFind = "WID::" + d.toObject().value(STATE_DATE_UUID).toString();
                 QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
 
                 if ( it!=project->mCalibCurves.end()) {
@@ -268,7 +274,7 @@ QJsonObject PluginUniform::mergeDates(const QJsonArray& dates)
 
             } else {
 
-                const QJsonObject data = d.toObject().value(STATE_DATE_DATA).toObject();
+                const QJsonObject &data = d.toObject().value(STATE_DATE_DATA).toObject();
                 min = std::max(min, data.value(DATE_UNIFORM_MIN_STR).toDouble() );
                 max = std::min(max, data.value(DATE_UNIFORM_MAX_STR).toDouble() );
 
