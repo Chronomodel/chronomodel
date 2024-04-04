@@ -57,7 +57,10 @@ ImportDataView::ImportDataView(QWidget* parent, const bool show_help, Qt::Window
     mExportBut = new Button(tr("Export all project data as CSV"), this);
 
     mHelp = new HelpWidget(this);
-    setHelpVisible(show_help);
+    mHelp->setLink("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=31"); //chapter 3.4.2.1 Radiocarbon dating (14C)
+    mHelp->setText(tr("Your CSV file must contain 1 data per row. Each row must start with an Event name, the second row is the dating method to use : 14C, AM, Gauss, etc.\nComments are allowed in your CSV. They must start with  # or // and can be placed at the end of a data row. When placed at the begining of a row, the whole row is ignored.\r Be careful, cell separator and decimal separator of the CSV file should be those defined in the Application Settings, otherwise the CSV file will not be correctly opened"));
+    mHelp->setVisible(show_help);
+    //setHelpVisible(show_help);
 
     mTable = new ImportDataTable(this, this);
     mTable->setAlternatingRowColors(true);
@@ -77,14 +80,26 @@ ImportDataView::~ImportDataView()
 
 void ImportDataView::setHelpVisible(const bool visible)
 {
+    mHelp->setVisible(visible);
+    /*int helpH = 0;
+    const int butH = 25;
+    const int m = 5;
     if (visible) {
-        mHelp->setLink("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=31"); //chapter 3.4.2.1 Radiocarbon dating (14C)
-        mHelp->setText(tr("Your CSV file must contain 1 data per row. Each row must start with an Event name, the second row is the datation method to use. Allowed datation methods are : 14C, AM, Gauss, Unif, TL/OSL.\nComments are allowed in your CSV. They must start with  # or // and can be placed at the end of a data row. When placed at the begining of a row, the whole row is ignored.\r Be careful, cell separator and decimal separator of the CSV file should be those defined in the Application Settings, otherwise the CSV file will not be opened"));
+       // mHelp->setLink("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=31"); //chapter 3.4.2.1 Radiocarbon dating (14C)
+       // mHelp->setText(tr("Your CSV file must contain 1 data per row. Each row must start with an Event name, the second row is the dating method to use : 14C, AM, Gauss, etc.\nComments are allowed in your CSV. They must start with  # or // and can be placed at the end of a data row. When placed at the begining of a row, the whole row is ignored.\r Be careful, cell separator and decimal separator of the CSV file should be those defined in the Application Settings, otherwise the CSV file will not be correctly opened"));
+
+        mHelp->setGeometry(m, height() - helpH - m, width() - 2*m, helpH);
         mHelp->setVisible(visible);
+        helpH = mHelp->heightForWidth(width() - 2*m);
+
     } else {
         mHelp->setText("");
+        mHelp->setGeometry(0, 0, 0, 0);
         mHelp->setVisible(visible);
     }
+
+    mTable->setGeometry(0, 2*m + butH, width(), height() - 4*m - butH - helpH);*/
+    update();
 }
 
 /**
@@ -104,17 +119,17 @@ Structure;Event 1;
 ""gaussian""";wiggle value 1;Wiggle value 2;;;;X_Inc_Depth;Err X- apha95- Err depth;Y_Declinaison;Err Y;Z_Field;Err Z_Err F;
 Event name 1;14C;14C_Ly_5212;1370;50;intcal20.14c;0;0;none;;;;;;74;5;50;-10;2;;
 Event name 2;14C;14C_Ly_5212;1370;50;intcal20.14c;0;0;gaussian;30;5;;;;;;;;;;
-// Event name;methode;dating name/code;Age;error;"reference year
+// Event name;method;dating name/code;Age;error;"reference year
 (for measurement)";;;;;;;;;prof;err prof;;;;;
 Event name 3;TL/OSL;TL-CLER-202a;987;120;1990;;;;;;;;;220;3;;;;;
 Event name 4;TL/OSL;TL-CLER-202b;1170;140;1990;;;;;;;;;;;;;;;
 Event name 5;TL/OSL;TL-CLER-203;1280;170;1990;;;;;;;;;;;;;;;
-// Event name;methode;dating name/code;measurement type;mean value;Inclination  value corresponding to declination;colonne inutile !;"std error
+// Event name;method;dating name/code;measurement type;mean value;Inclination  value corresponding to declination;colonne inutile !;"std error
 alpha95";Reference Curve;;;;;;;;;;;;
 Event name 6;AM;kiln A;inclination;65;0;0;2,5;FranceInc;;;;;;;;;;;;
 Event name 7;AM;kiln A;declination;-20;65;0;2,5;FranceDec;;;;;;;;;;;;
 Event name 8;AM;kiln A;intensity;53;0;53;5;FranceInt;;;;;;;;;;;;
-// Event name;methode;dating name/code;mean;error;calibration curve;param a;param b;param c;"wiggle matching
+// Event name;method;dating name/code;mean;error;calibration curve;param a;param b;param c;"wiggle matching
 ""fixed""
 ""range""
 ""gaussian""";wiggle value 1;Wiggle value 2;;;;;;;;;
@@ -123,7 +138,7 @@ Event name 10;GAUSS;date 1;1000;50;none;;;;;;;;;;;;;;;
 Event name 11;GAUSS;date 1;1000;50;ReferenceCurveName;;;;;;;;;;;;;;;
 Event name 12;GAUSS;date 2;1000;50;equation;0,01;-1;-1000;fixed;20;;;;;;;;;;
 Event name 13;GAUSS;date 2;1000;50;equation;0,01;-1;-1000;range;10;15;;;;;;;;;
-// Event name;methode;dating name/code;date t1;date t2;;;;;;;;;;;;;;;;
+// Event name;method;dating name/code;date t1;date t2;;;;;;;;;;;;;;;;
 Event name 14;UNIF;date archéo ;300;500;;;;;;;;;;;;;;;;
 // Bound
 Bound name;Bound;1800;;;;;;;;;;;;0;2;0;0;0;0
@@ -443,8 +458,24 @@ void ImportDataView::paintEvent(QPaintEvent* )
 {
     QPainter p(this);
     p.fillRect(rect(), QColor(200, 200, 200));
-}
+    const int m = 5;
+    const int butH = 25;
+    int helpH = -2*m;
 
+    mBrowseBut->setGeometry(m, m, (width() - 3*m)/2, butH);
+    mExportBut->setGeometry(2*m + (width() - 3*m)/2, m, (width() - 3*m)/2, butH);
+
+    if (mHelp->isVisible()) {
+        helpH = mHelp->heightForWidth(width() - 2*m);
+        mHelp->setGeometry(m, height() - helpH - m, width() - 2*m, helpH);
+
+    } else {
+       mHelp->setGeometry(0, 0, 0 ,0);
+    }
+
+    mTable->setGeometry(0, 2*m + butH, width(), height() - 4*m - butH - helpH);
+}
+/*
 void ImportDataView::resizeEvent(QResizeEvent*)
 {
     const int m = 5;
@@ -454,7 +485,7 @@ void ImportDataView::resizeEvent(QResizeEvent*)
     mBrowseBut->setGeometry(m, m, (width() - 3*m)/2, butH);
     mExportBut->setGeometry(2*m + (width() - 3*m)/2, m, (width() - 3*m)/2, butH);
 
-    if (mHelp->text().isEmpty()) {
+    if (mHelp->isVisible()) {
         mHelp->setGeometry(0, 0, 0 ,0);
     } else {
         helpH = mHelp->heightForWidth(width() - 2*m);
@@ -463,7 +494,7 @@ void ImportDataView::resizeEvent(QResizeEvent*)
 
     mTable->setGeometry(0, 2*m + butH, width(), height() - 4*m - butH - helpH);
 }
-
+*/
 // ------------------------------------------------------------------------------------
 
 // Table

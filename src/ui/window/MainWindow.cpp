@@ -247,7 +247,7 @@ void MainWindow::createActions()
     mRunAction->setIconVisibleInMenu(true);
     mRunAction->setToolTip(tr("Run Model"));
 
-    mResetMCMCAction = new QAction(tr("Reset Events and Data methods"), this);
+    mResetMCMCAction = new QAction(tr("Reset Events and Data samplers"), this);
 
     //-----------------------------------------------------------------
     // View Actions
@@ -293,10 +293,10 @@ void MainWindow::createActions()
     mEventsColorAction = new QAction(tr("Selected Events: Change Colour"), this);
     connect(mEventsColorAction, &QAction::triggered, this, &MainWindow::changeEventsColor);
 
-    mEventsMethodAction = new QAction(tr("Selected Events: Change Method"), this);
+    mEventsMethodAction = new QAction(tr("Selected Events: Change Event Sampler"), this);
     connect(mEventsMethodAction, &QAction::triggered, this, &MainWindow::changeEventsMethod);
 
-    mDatesMethodAction = new QAction(tr("Selected Events: Change Data Method"), this);
+    mDatesMethodAction = new QAction(tr("Selected Events: Change Data Sampler"), this);
     connect(mDatesMethodAction, &QAction::triggered, this, &MainWindow::changeDatesMethod);
 
     mSelectEventsAction = new QAction(tr("Select All Events of the Selected Phases"), this);
@@ -1064,8 +1064,8 @@ void MainWindow::changeEventsMethod()
 
     bool ok;
     QString methodStr = QInputDialog::getItem(qApp->activeWindow(),
-                                          tr("Change Events Method"),
-                                          tr("Change Selected Events MCMC Method") + " :",
+                                          tr("Change Events MCMC"),
+                                          tr("Change MCMC Sampler"),
                                           opts, 0, false, &ok);
     if (ok && !methodStr.isEmpty()) {
         MHVariable::SamplerProposal method = MHVariable::getSamplerProposalFromText(methodStr);
@@ -1085,8 +1085,8 @@ void MainWindow::changeDatesMethod()
 
     bool ok;
     QString pluginName = QInputDialog::getItem(qApp->activeWindow(),
-                                             tr("Change Data Method"),
-                                             tr("For what type of data do you want to change the method ?"),
+                                             tr("Change Data MCMC"),
+                                             tr("For which type of data do you want to change the sampler ?"),
                                              opts, 0, false, &ok);
     if (ok) {
         opts.clear();
@@ -1095,8 +1095,8 @@ void MainWindow::changeDatesMethod()
         opts.append(MHVariable::getSamplerProposalText(MHVariable::eMHAdaptGauss));
 
         QString methodStr = QInputDialog::getItem(qApp->activeWindow(),
-                                                  tr("Change Data Method"),
-                                                  tr("Change MCMC method of data in selected events") + " :",
+                                                  tr("Change Data MCMC"),
+                                                  tr("Change MCMC sampler"),
                                                   opts, 0, false, &ok);
         if (ok && !methodStr.isEmpty()) {
             MHVariable::SamplerProposal method = MHVariable::getSamplerProposalFromText(methodStr);

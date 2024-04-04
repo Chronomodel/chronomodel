@@ -603,14 +603,15 @@ void Date::calibrate(const StudyPeriodSettings priod_settings, Project &project,
 
     int nb_step_frac = 0;
 
-    while (mCalibration->mVector.size() < 12 && nb_step_frac < 20) {
+    while ((std::count_if (mCalibration->mVector.begin(), mCalibration->mVector.end(), [](double v){return std::isnormal(v);})) < 100 && nb_step_frac < 20) {
         ++nb_step_frac;
         mCalibration->mStep = refMinStep / (double)nb_step_frac;
         const int nbStep = floor((mTmaxRefCurve - mTminRefCurve) / mCalibration->mStep);
+        // correction de mStep apres arrondi
+        mCalibration->mStep = (mTmaxRefCurve - mTminRefCurve) / nbStep;
 
         QList<double> calibrationTemp;
         QList<double> repartitionTemp;
-
 
         const long double v0 = getLikelihood(mTminRefCurve);
         calibrationTemp.append(v0);
@@ -645,6 +646,7 @@ void Date::calibrate(const StudyPeriodSettings priod_settings, Project &project,
         if (repartitionTemp.last() > 0.) {
             if (truncate && repartitionTemp.size() > 10) {
                 const double threshold = threshold_limit;
+
                 const int minIdx = int (floor(vector_interpolate_idx_for_value(double(threshold * lastRepVal), repartitionTemp)));
                 const int maxIdx = int (ceil(vector_interpolate_idx_for_value(double ((1. - threshold) * lastRepVal), repartitionTemp)));
 

@@ -45,13 +45,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #define FixeStr QObject::tr("Fixed value")
 
-#define MHAdaptGaussStr QObject::tr("Adapt. Gaussian random walk")
-#define BoxMullerStr QObject::tr("Event Prior")
-#define DoubleExpStr QObject::tr("Double-Exponential")
-
-#define MHDatePriorStr QObject::tr("Date Prior")
-#define InversionStr QObject::tr("Distribution of Calibrated Date")
-#define MHSymGaussAdaptStr QObject::tr("Adapt. Gaussian random walk")
+#define MHAdaptGaussStr QObject::tr("Proposal : Adapt. Gaussian random walk")
+// Only for Event
+#define BoxMullerStr QObject::tr("Proposal : Gaussian (Event Prior)")
+#define DoubleExpStr QObject::tr("Proposal : Double-Exponential")
+// Only for Date
+#define MHDatePriorStr QObject::tr("Proposal : Gaussian (Date Prior)")
+#define InversionStr QObject::tr("Proposal : Distribution of Calibrated Date")
+//#define MHSymGaussAdaptStr QObject::tr("Adapt. Gaussian random walk") // Obsolete
 
 /** Default constructor */
 MHVariable::MHVariable():

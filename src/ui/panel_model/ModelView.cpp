@@ -725,6 +725,8 @@ void ModelView::setSettingsValid(bool valid)
 void ModelView::showHelp(bool show)
 {
     mEventsScene->showHelp(show);
+    if (mImportDataView->isVisible())
+        mImportDataView->setHelpVisible(show);
 }
 
 void ModelView::searchEvent()
@@ -739,8 +741,8 @@ void ModelView::searchEvent()
         mLastSearch = search;
         mSearchIds.clear();
 
-        QJsonObject state = mProject->state();
-        QJsonArray events = state.value(STATE_EVENTS).toArray();
+        const QJsonObject &state = mProject->state();
+        const QJsonArray &events = state.value(STATE_EVENTS).toArray();
 
         for (auto&& evJSON : events) {
             const QJsonObject event = evJSON.toObject();
@@ -753,15 +755,15 @@ void ModelView::searchEvent()
             else {
                 const QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
 
-                 for (auto&& datJSON : dates) {
-                     const QJsonObject data = datJSON.toObject();
-                     const QString dataName = data.value(STATE_NAME).toString();
+                for (auto&& datJSON : dates) {
+                    const QJsonObject data = datJSON.toObject();
+                    const QString dataName = data.value(STATE_NAME).toString();
 
-                     if (dataName.contains(search, Qt::CaseInsensitive)) {
+                    if (dataName.contains(search, Qt::CaseInsensitive)) {
                          mSearchIds.push_back(eventId);
                          continue;
-                     }
-                 }
+                    }
+                }
              }
 
         }

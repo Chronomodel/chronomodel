@@ -404,8 +404,14 @@ QList<float> equal_areas(const QList<float>& data, const float step, const float
 
 QMap<double, double> vector_to_map(const QList<double> &data, const double min, const double max, const double step)
 {
-    Q_ASSERT(max>=min && !data.isEmpty());
+   // Q_ASSERT(max>=min && !data.isEmpty());
+    Q_ASSERT(max>=min);
+
     QMap<double, double> map;
+
+    if (data.isEmpty())
+        return map;
+
     if (min == max)
         map.insert(min, data.at(0));
 

@@ -89,7 +89,7 @@ bool PluginUniform::wiggleAllowed() const
 
 MHVariable::SamplerProposal PluginUniform::getDataMethod() const
 {
-    return MHVariable::eMHPrior;
+    return MHVariable::eInversion;
 }
 
 QList<MHVariable::SamplerProposal> PluginUniform::allowedDataMethods() const

@@ -303,7 +303,7 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
                                                                                                                          QString::number(event->mPhases.size()),
                                                                                                                          QString::number(event->mConstraintsBwd.size()),
                                                                                                                          QString::number(event->mConstraintsFwd.size()))
-                                 + "<br>" + QObject::tr("- Method : %1").arg(MHVariable::getSamplerProposalText(event->mTheta.mSamplerProposal))));
+                                 + "<br>" + QObject::tr("- MCMC %1").arg(MHVariable::getSamplerProposalText(event->mTheta.mSamplerProposal))));
         }
 
         if (model->is_curve) {
@@ -357,7 +357,7 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
             log += "<br>";
             log += line(textBlack(QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j+1), QString::number(event->mDates.size()), date.mName)
                                   + "<br>" + QObject::tr("- Type : %1").arg(date.mPlugin->getName())
-                                  + "<br>" + QObject::tr("- Method : %1").arg(MHVariable::getSamplerProposalText(date.mTi.mSamplerProposal))
+                                  + "<br>" + QObject::tr("- MCMC %1").arg(MHVariable::getSamplerProposalText(date.mTi.mSamplerProposal))
                                   + "<br>" + QObject::tr("- Params : %1").arg(date.getDesc())));
             ++j;
         }

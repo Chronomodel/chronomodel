@@ -87,7 +87,7 @@ private slots:
 
 protected:
     void paintEvent(QPaintEvent*);
-    void resizeEvent(QResizeEvent*);
+   // void resizeEvent(QResizeEvent*);
 
 private:
     Button* mBrowseBut;

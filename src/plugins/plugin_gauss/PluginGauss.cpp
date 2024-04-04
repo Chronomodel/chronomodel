@@ -553,15 +553,18 @@ double PluginGauss::getMinStepRefsCurve(const QJsonObject &data) const
         return error/ 11.;
 
     } else if (mode == DATE_GAUSS_MODE_EQ) {
-        const double a = data.value(DATE_GAUSS_A_STR).toDouble();
+        QPair<double,double> tMinMax = getTminTmaxRefsCurve(data);
+        /*const double a = data.value(DATE_GAUSS_A_STR).toDouble();
         const double b = data.value(DATE_GAUSS_B_STR).toDouble();
         const double c = data.value(DATE_GAUSS_C_STR).toDouble();
         const double mean = data.value(DATE_GAUSS_AGE_STR).toDouble();
         const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
 
         const double tmin = a *pow(mean - 2.*error, 2.) + b * (mean - 2.*error) + c;
-        const double tmax = a *pow(mean + 2.*error, 2.) + b * (mean + 2.*error) + c;
-        return std::abs(tmax-tmin)/ 44.;
+        const double tmax = a *pow(mean + 2.*error, 2.) + b * (mean + 2.*error) + c;*/
+        const double tmin = tMinMax.first;
+        const double tmax = tMinMax.second;
+        return std::abs(tmax-tmin)/ 51.;
 
     } else  if (mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
         return mRefCurves.value(ref_curve).mMinStep;

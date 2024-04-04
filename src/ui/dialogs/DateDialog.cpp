@@ -87,7 +87,7 @@ DateDialog::DateDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, f
     mAdvancedWidget->setFlat(false);
     connect(mAdvancedCheck, &QCheckBox::toggled, this, &DateDialog::setAdvancedVisible);
 
-    mMethodLab = new QLabel(tr("Method"), mAdvancedWidget);
+    mMethodLab = new QLabel(tr("MCMC"), mAdvancedWidget);
     mMethodCombo = new QComboBox(mAdvancedWidget);
     mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eMHPrior));
     mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eInversion));

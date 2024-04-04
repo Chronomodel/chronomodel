@@ -89,10 +89,10 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mColorLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mColorPicker = new ColorPicker(Qt::black, mTopView);
 
-    mMethodLab = new QLabel(tr("Method"), mTopView);
+    mMethodLab = new QLabel(tr("MCMC"), mTopView);
     mMethodLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mMethodCombo = new QComboBox(mTopView);
-    mMethodInfo = new QLabel(tr("Adapt. Gaussian random walk"), mTopView);
+    mMethodInfo = new QLabel(MHVariable::getSamplerProposalText(MHVariable::eMHAdaptGauss), mTopView);
 
     mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eDoubleExp));
     mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eBoxMuller));

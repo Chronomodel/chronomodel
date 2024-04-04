@@ -1543,17 +1543,17 @@ Structure;Event 1;
 ""gaussian""";wiggle value 1;Wiggle value 2;;;;X_Inc_Depth;Err X- apha95- Err depth;Y_Declinaison;Err Y;Z_Field;Err Z_Err F;
 Event name 1;14C;14C_Ly_5212;1370;50;intcal20.14c;0;0;none;;;;;;74;5;50;-10;2;;
 Event name 2;14C;14C_Ly_5212;1370;50;intcal20.14c;0;0;gaussian;30;5;;;;;;;;;;
-// Event name;methode;dating name/code;Age;error;"reference year
+// Event name;method;dating name/code;Age;error;"reference year
 (for measurement)";;;;;;;;;prof;err prof;;;;;
 Event name 3;TL/OSL;TL-CLER-202a;987;120;1990;;;;;;;;;220;3;;;;;
 Event name 4;TL/OSL;TL-CLER-202b;1170;140;1990;;;;;;;;;;;;;;;
 Event name 5;TL/OSL;TL-CLER-203;1280;170;1990;;;;;;;;;;;;;;;
-// Event name;methode;dating name/code;measurement type;mean value;Inclination  value corresponding to declination;colonne inutile !;"std error
+// Event name;method;dating name/code;measurement type;mean value;Inclination  value corresponding to declination;colonne inutile !;"std error
 alpha95";Reference Curve;;;;;;;;;;;;
 Event name 6;AM;kiln A;inclination;65;0;0;2,5;FranceInc;;;;;;;;;;;;
 Event name 7;AM;kiln A;declination;-20;65;0;2,5;FranceDec;;;;;;;;;;;;
 Event name 8;AM;kiln A;intensity;53;0;53;5;FranceInt;;;;;;;;;;;;
-// Event name;methode;dating name/code;mean;error;calibration curve;param a;param b;param c;"wiggle matching
+// Event name;method;dating name/code;mean;error;calibration curve;param a;param b;param c;"wiggle matching
 ""fixed""
 ""range""
 ""gaussian""";wiggle value 1;Wiggle value 2;;;;;;;;;
@@ -1562,7 +1562,7 @@ Event name 10;GAUSS;date 1;1000;50;none;;;;;;;;;;;;;;;
 Event name 11;GAUSS;date 1;1000;50;ReferenceCurveName;;;;;;;;;;;;;;;
 Event name 12;GAUSS;date 2;1000;50;equation;0,01;-1;-1000;fixed;20;;;;;;;;;;
 Event name 13;GAUSS;date 2;1000;50;equation;0,01;-1;-1000;range;10;15;;;;;;;;;
-// Event name;methode;dating name/code;date t1;date t2;;;;;;;;;;;;;;;;
+// Event name;method;dating name/code;date t1;date t2;;;;;;;;;;;;;;;;
 Event name 14;UNIF;date archéo ;300;500;;;;;;;;;;;;;;;;
  * @return
  */

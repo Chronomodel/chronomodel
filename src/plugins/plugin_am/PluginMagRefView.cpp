@@ -473,14 +473,8 @@ RefCurve PluginMagRefView::combine_curve_ID(double incl,  double decl, const dou
     result.mTmin = min_ti;
     result.mTmax = max_ti;
 
-    //result.mDataMean = window_filter(result.mDataMean, (max_ti-min_ti)/100.);
-    //result.mDataError = window_filter(result.mDataError, (max_ti-min_ti)/100.);
-
-    result.mDataMean = gaussian_filter(result.mDataMean, (max_ti-min_ti)/500.);
-    result.mDataError = gaussian_filter(result.mDataError, (max_ti-min_ti)/500.);
-
-    //result.mDataMean = low_pass_filter(result.mDataMean, 20.);
-    //result.mDataError = low_pass_filter(result.mDataError, 20);
+    result.mDataMean = gaussian_filter(result.mDataMean, (max_ti-min_ti)/1000.);
+    result.mDataError = gaussian_filter(result.mDataError, (max_ti-min_ti)/1000.);
 
     return result;
 }
@@ -590,14 +584,8 @@ RefCurve PluginMagRefView::combine_curve_IF(double incl, const double alpha95, c
     }
 
 
-    //result.mDataMean = window_filter(result.mDataMean, (max_ti-min_ti)/200.);
-    //result.mDataError = window_filter(result.mDataError, (max_ti-min_ti)/200.);
-
-    result.mDataMean = gaussian_filter(result.mDataMean, (max_ti-min_ti)/500.);
-    result.mDataError = gaussian_filter(result.mDataError, (max_ti-min_ti)/500.);
-
-    //result.mDataMean = low_pass_filter(result.mDataMean, 100.);
-    //result.mDataError = low_pass_filter(result.mDataError, 100.);
+    result.mDataMean = gaussian_filter(result.mDataMean, (max_ti-min_ti)/1000.);
+    result.mDataError = gaussian_filter(result.mDataError, (max_ti-min_ti)/1000.);
 
     result.mMinStep = min_step;
     result.mTmin = min_ti;
@@ -715,15 +703,8 @@ RefCurve PluginMagRefView::combine_curve_IDF(double incl, double decl, const dou
         result.mDataError[t] = sqrt(variance);
     }
 
-
-    //result.mDataMean = window_filter(result.mDataMean, (max_ti-min_ti)/100);
-    //result.mDataError = window_filter(result.mDataError, (max_ti-min_ti)/100);
-
-    result.mDataMean = gaussian_filter(result.mDataMean, (max_ti-min_ti)/100.);
-    result.mDataError = gaussian_filter(result.mDataError, (max_ti-min_ti)/100.);
-
-    //result.mDataMean = low_pass_filter(result.mDataMean, 20.);
-    //result.mDataError = low_pass_filter(result.mDataError, 20);
+    result.mDataMean = gaussian_filter(result.mDataMean, (max_ti-min_ti)/1000.);
+    result.mDataError = gaussian_filter(result.mDataError, (max_ti-min_ti)/1000.);
 
     result.mMinStep = min_step;
     result.mTmin = min_ti;
@@ -758,7 +739,7 @@ QMap<double, double> gaussian_filter(QMap<double, double> &map, const double sig
 
 
 
-    qDebug() <<"filtre Gaussian";
+    //qDebug() <<"filtre Gaussian";
     //  data
     const int inputSize = curve_input.size();
 
@@ -784,13 +765,13 @@ QMap<double, double> gaussian_filter(QMap<double, double> &map, const double sig
 
     // we could use std::copy
     for (int i  = 0; i< paddingSize; i++) {
-        inputReal[i] = 0.;
+        inputReal[i] = curve_input[0];//0.;
     }
     for (int i = 0; i< inputSize; i++) {
         inputReal[i+paddingSize] = curve_input[i];
     }
     for (int i ( inputSize+paddingSize); i< N; i++) {
-        inputReal[i] = 0.;
+        inputReal[i] = curve_input[inputSize-1];//0.;
     }
     fftw_plan plan_input = fftw_plan_dft_r2c_1d(N, inputReal, inputComplex, FFTW_ESTIMATE);
 

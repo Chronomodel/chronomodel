@@ -108,7 +108,7 @@ bool PluginTL::wiggleAllowed() const
 
 MHVariable::SamplerProposal PluginTL::getDataMethod() const
 {
-    return MHVariable::eMHAdaptGauss;
+    return MHVariable::eMHPrior;
 }
 
 QList<MHVariable::SamplerProposal> PluginTL::allowedDataMethods() const
