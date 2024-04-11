@@ -684,31 +684,36 @@ QList<double> calculRepartition(const QMap<double, double>  &calib)
 
     // we use long double type because
     // after several sums, the repartion can be in the double type range
-    long double lastV = calib.value(calib.firstKey());
-    double lastT = calib.firstKey();
+    long double lastV = 0;
+    //long double lastT = calib.firstKey();
     QMap<double, double>::const_iterator it (calib.cbegin());
-    long double lastRepVal (0.);
+
+    long double lastRepVal (lastV);
 
     while (it != calib.cend()) {
-        const double v = it.value();
-        const double t = it.key();
+        const long double v = it.value();
+        const long double t = it.key();
         long double rep = lastRepVal;
         if(v != 0. && lastV != 0.)
-            rep = lastRepVal + (t-lastT)*(lastV + v) / 2.;
+            //rep = lastRepVal + (t-lastT)*(lastV + v) / 2.l;
+            rep = lastRepVal + (lastV + v); // step is constant
 
         lastV = v;
-        lastT = t;
+        //lastT = t;
 
         repartitionTemp.append((double)rep);
         lastRepVal = rep;
         ++it;
     }
-    // normalize repartition
-    for (auto&& v : repartitionTemp)
-        v = v/lastRepVal;
 
-    return repartitionTemp;
+    // Normalize repartition
+    QList<double> repartition;
+    for (auto&& v : repartitionTemp)
+        repartition.append((double)(v/lastRepVal));
+
+    return repartition;
 }
+
 Quartiles quartilesForRepartition(const QList<double> &repartition, const double tmin, const double step)
 {
     Quartiles quartiles;
@@ -3091,7 +3096,6 @@ std::pair<double, double> solve_quadratic(const double y, const double a, const 
         }
 
     }
-
 
     return std::pair<double, double>{y1, y2};
 }

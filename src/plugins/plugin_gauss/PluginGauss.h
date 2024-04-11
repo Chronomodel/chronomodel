@@ -106,7 +106,7 @@ public:
     QString getRefsPath() const;
     RefCurve loadRefFile(QFileInfo refFile);
 
-    double getRefValueAt(const QJsonObject &data, const double t);
+    long double getRefValueAt(const QJsonObject &data, const double t);
     double getRefErrorAt(const QJsonObject &data, const double t, const QString mode);
 
 

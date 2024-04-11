@@ -302,6 +302,14 @@ QString unsignedListToString(const QList<unsigned> &intList, const QString &sepa
     return list.join(separator);
 }
 
+QString long_double_to_str(const long double value)
+{
+    std::stringstream stream;
+    stream << std::fixed << std::setprecision(std::numeric_limits<long double>::max_digits10 + 1) << value;
+
+    return QString::fromStdString(stream.str());
+}
+
 QFileInfo saveWidgetAsImage(QObject* wid, const QRect &r, const QString &dialogTitle, const QString &defaultPath)
 {
     QFileInfo fileInfo;

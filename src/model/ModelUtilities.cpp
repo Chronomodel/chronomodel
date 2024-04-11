@@ -1151,11 +1151,11 @@ double sample_in_repartition (const CalibrationCurve* calibrateCurve, const doub
 
         double prop = (min - calibrateCurve->mTmin) / (calibrateCurve->mTmax - calibrateCurve->mTmin);
         const int rep_idx_max = calibrateCurve->mRepartition.size() - 1;
-        //const double ixN = prop * rep_idx_max;
+
         const int idxUnder = std::clamp((int)floor(prop * rep_idx_max), 0, rep_idx_max);
 
         prop = (max - calibrateCurve->mTmin) / (calibrateCurve->mTmax - calibrateCurve->mTmin);
-        //const double ixP = prop * rep_idx_max;
+
         const int idxUpper = std::clamp( (int)ceil(prop * rep_idx_max), 0, rep_idx_max);
 
         const double idx = vector_interpolate_idx_for_value(value, calibrateCurve->mRepartition, idxUnder, idxUpper);
@@ -1188,9 +1188,14 @@ void sampleInCumulatedRepartition_thetaFixe (Event *event, const StudyPeriodSett
 
     const double maxRepartition = calib.mRepartition.last();
     const double minRepartition = calib.mRepartition.first();
+
+    const long double t_min_long = calib.mTmin;
+    const long double t_max_long = calib.mTmax;
+    const long double step_long = (t_max_long - t_min_long)/(calib.mRepartition.size()-1);
+
     if ( (minRepartition != 0. || maxRepartition != 0.) &&  (calib.mRepartition.size() > 1)) {
         const double idx = vector_interpolate_idx_for_value(0.5*(maxRepartition - minRepartition) + minRepartition, calib.mRepartition);
-        event->mTheta.mX = calib.mTmin + idx * calib.mStep;
+        event->mTheta.mX = t_min_long + idx * step_long;
 
     } else {
         event->mTheta.mX = Generator::randomUniform(settings.mTmin, settings.mTmax);

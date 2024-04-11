@@ -526,8 +526,8 @@ QString MCMCLoop::initialize_time()
 
                 qDebug() << QString("[MCMCLoop::initialize_time] Init for event theta fixed : %1 : min = %2 : max = %3  ->theta = %4 thetaRed = %5-------").arg(ev->mName, QString::number(min, 'f', 3), QString::number(max, 'f', 3), QString::number(ev->mTheta.mX, 'f', 3), QString::number(ev->mThetaReduced, 'f', 3));
 
-                if (ev->mTheta.mX<min || ev->mTheta.mX> max) {
-                    throw QObject::tr("Error for event theta fixed : %1 : min = %2 : max = %3 but Theta = %4" ).arg(ev->mName, QString::number(min), QString::number(max), QString::number(ev->mThetaReduced, 'f', 3));
+                if (ev->mTheta.mX < min || ev->mTheta.mX > max) {
+                    throw QObject::tr("Error for event theta fixed : %1 : min = %2 : max = %3 but Theta = %4" ).arg(ev->mName, QString::number(min), QString::number(max), QString::number(ev->mTheta.mX, 'f', 3));
                 }
             }
         }  catch (const QString e) {

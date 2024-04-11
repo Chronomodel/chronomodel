@@ -545,8 +545,6 @@ double surface_on_theta (std::map<double, double>::const_iterator iter_on_theta)
 
     if (next_iter->second >0)
         S2 = (3.*iter_on_theta->second + next_iter->second) * (next_iter->first - iter_on_theta->first) /8.;
-    //auto surface = (3.*iter_on_theta->second + prev_iter->second) * (iter_on_theta->first - prev_iter->first) / 8.;
-    //surface += (3.*iter_on_theta->second + next_iter->second) * (next_iter->first - iter_on_theta->first) /8.;
 
     return S1+S2;
 

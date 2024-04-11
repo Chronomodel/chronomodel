@@ -63,6 +63,35 @@ QStringList unsignedListToStringList(const QList<unsigned>& unsignedList);
 QString intListToString(const QList<int>& intList, const QString& separator = ",");
 QString unsignedListToString(const QList<unsigned>& intList, const QString& separator);
 
+QString long_double_to_str(const long double value);
+
+#ifdef DEBUG
+template <typename U>
+void show_QList(const QList<U> &list, QString description)
+{
+    qDebug() << description;
+
+    for (auto v: list) {
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision(std::numeric_limits<U>::max_digits10 + 1) << v ;
+
+       qDebug()<< QString::fromStdString(stream.str()) ;
+    }
+
+
+}
+
+template <typename U, typename V>
+void show_QMap(const QMap<U, V> &map, QString description)
+{
+    qDebug() << description;
+    for (auto [key, value]: map.asKeyValueRange()) {
+        qDebug()<< key << value;
+    }
+
+}
+#endif
+
 QFileInfo saveWidgetAsImage(QObject* widget, const QRect& r, const QString& dialogTitle, const QString& defaultPath);
 bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName);
 

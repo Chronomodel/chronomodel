@@ -811,29 +811,29 @@ void ModelView::showProperties()
     mAnimationHide->setEndValue(mRightHiddenRect);
 
     if (mButProperties->isChecked() && mButProperties->isEnabled()) {
-       if (mButMultiCalib->isChecked()) {
-           // hide mMultiCalibrationView
+        if (mButMultiCalib->isChecked()) {
+            // hide mMultiCalibrationView
 
-           mAnimationHide->setTargetObject(mMultiCalibrationView);
-           mAnimationHide->start();
+            mAnimationHide->setTargetObject(mMultiCalibrationView);
+            mAnimationHide->start();
 
-           mButMultiCalib->setChecked(false);
+            mButMultiCalib->setChecked(false);
 
-       } else  if (mCurveSettingsVisible) {
-           // hide mMultiCalibrationView
+        } else if (mCurveSettingsVisible) {
+
            mAnimationHide->setTargetObject(mCurveSettingsView);
            mAnimationHide->start();
 
            mButCurve->setChecked(false);
 
-       } else  if (mButImport->isChecked()) {
-           // hide mMultiCalibrationView
+       } else if (mButImport->isChecked()) {
+
            mAnimationHide->setTargetObject(mImportDataView);
            mAnimationHide->start();
 
            mButImport->setChecked(false);
 
-       } else  {
+       } else {
            // hide mPhasesView
 
            mAnimationHide->setTargetObject(mPhasesView);
@@ -1413,7 +1413,10 @@ void ModelView::showCalibration(bool show)
 {
    updateLayout();
    if (show) {
-        mEventPropertiesView->updateEvent(); //emit calibRequested(date);
+
+       blockSignals(true);
+       mEventPropertiesView->updateEvent(); //emit calibRequested(date);
+       blockSignals(false);
         mCalibrationView->setVisible(true);
         mCalibrationView->repaint();
         mCalibrationView->raise();
