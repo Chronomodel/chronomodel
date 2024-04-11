@@ -619,27 +619,24 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, Project &project
             QList<double> calibrationTemp;
             QList<double> repartitionTemp;
 
-            long double lastRepVal = 0;
-
             /* We use long double type because
              * after several sums, the repartition can be in the double type range
              */
 
             long double lastV = 0;
-            long double rep;
+            long double rep = 0.;
 
             for (int i = 0; i <= nbStep; ++i) {
                 const long double t = mTminRefCurve + i * long_step;
                 const long double v =  getLikelihood(t);
 
-                calibrationTemp.append(double(v));
-                rep = lastRepVal;
+                calibrationTemp.append(v);
+
                 if (v != 0.l && lastV != 0.l)
-                    rep = lastRepVal +  (lastV + v);
+                    rep += (lastV + v); //step is constant
 
-                repartitionTemp.append(double (rep));
+                repartitionTemp.append(rep);
 
-                lastRepVal = rep;
                 lastV = v;
             }
 
@@ -651,8 +648,9 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, Project &project
                 if (truncate && repartitionTemp.size() > 10) {
                     const long double threshold = threshold_limit;
 
-                    const int minIdx = int (floor(vector_interpolate_idx_for_value(double(threshold * lastRepVal), repartitionTemp)));
-                    const int maxIdx = int (ceil(vector_interpolate_idx_for_value(double ((1. - threshold) * lastRepVal), repartitionTemp)));
+                    const int minIdx = int (floor(vector_interpolate_idx_for_value(double(threshold * rep), repartitionTemp)));
+                    const int maxIdx = int (ceil(vector_interpolate_idx_for_value(double ((1. - threshold) * rep), repartitionTemp)));
+
 
                     tminCal = mTminRefCurve + minIdx * long_step;
                     tmaxCal = mTminRefCurve + maxIdx * long_step;

@@ -129,7 +129,7 @@ inline double dnorm (const double x, const double mu = 0., const double std = 1.
 Quartiles quartilesForTrace(const QList<type_data> &trace);
 TraceStat traceStatistic(const QList<type_data> &trace);
 
-QList<double> calculRepartition (const QList<double> &calib);
+// QList<double> calculRepartition (const QList<double> &calib);
 QList<double> calculRepartition (const QMap<double, double> &calib);
 Quartiles quartilesForRepartition(const QList<double> &repartition, const double tmin, const double step);
 std::pair<double, double> credibilityForTrace(const QList<double> &trace, double thresh, double &exactThresholdResult, const QString description = "Credibility computation");

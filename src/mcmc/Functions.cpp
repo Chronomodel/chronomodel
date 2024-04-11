@@ -657,7 +657,7 @@ Quartiles quartilesForTrace(const QList<type_data> &trace)
     Quartiles quartiles = quantilesType(trace, 8, 0.25);
     return quartiles;
 }
-
+/*
 QList<double> calculRepartition(const QList<double> &calib)
 {
     QList<double> repartitionTemp;
@@ -677,6 +677,44 @@ QList<double> calculRepartition(const QList<double> &calib)
     }
     return repartitionTemp;
 }
+*/
+/*
+QList<double> calculRepartition(const QMap<double, double>  &calib)
+{
+    QList<double> repartitionTemp;
+
+    // we use long double type because
+    // after several sums, the repartion can be in the double type range
+    long double lastV = 0;
+    QMap<double, double>::const_iterator it (calib.cbegin());
+
+    //long double lastRepVal (lastV);
+    long double rep = 0.;
+
+
+    for (auto [key, value] : calib.asKeyValueRange()) {
+        //const long double v = it.value();
+
+        if(value != 0. && lastV != 0.)
+            //rep = lastRepVal + (t-lastT)*(lastV + v) / 2.l;
+            // rep = lastRepVal + (lastV + v); // step is constant
+            rep +=  (lastV + value); // step is constant
+
+        lastV = value;
+
+        repartitionTemp.append((double)rep);
+    }
+
+
+//lastRepVal = rep;
+    // Normalize repartition
+    QList<double> repartition;
+    for (auto&& v : repartitionTemp)
+        repartition.append(v/rep);
+
+    return repartition;
+}
+*/
 
 QList<double> calculRepartition(const QMap<double, double>  &calib)
 {
@@ -685,31 +723,22 @@ QList<double> calculRepartition(const QMap<double, double>  &calib)
     // we use long double type because
     // after several sums, the repartion can be in the double type range
     long double lastV = 0;
-    //long double lastT = calib.firstKey();
-    QMap<double, double>::const_iterator it (calib.cbegin());
+    long double rep = 0.;
 
-    long double lastRepVal (lastV);
 
-    while (it != calib.cend()) {
-        const long double v = it.value();
-        const long double t = it.key();
-        long double rep = lastRepVal;
-        if(v != 0. && lastV != 0.)
-            //rep = lastRepVal + (t-lastT)*(lastV + v) / 2.l;
-            rep = lastRepVal + (lastV + v); // step is constant
+    for (auto [key, value] : calib.asKeyValueRange()) {
+        if (value != 0. && lastV != 0.)
+            rep += (lastV + value); // step is constant
 
-        lastV = v;
-        //lastT = t;
+        lastV = value;
 
-        repartitionTemp.append((double)rep);
-        lastRepVal = rep;
-        ++it;
+        repartitionTemp.append(rep);
     }
 
     // Normalize repartition
     QList<double> repartition;
     for (auto&& v : repartitionTemp)
-        repartition.append((double)(v/lastRepVal));
+        repartition.append(v/rep);
 
     return repartition;
 }
