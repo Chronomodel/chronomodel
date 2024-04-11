@@ -895,7 +895,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             ptsX.Ymin = X - errX;
             ptsX.Ymax = X + errX;
             ptsX.color = color;
-            ptsX.type = CurveRefPts::eRoundLine;
+            ptsX.type = processType == CurveSettings::eProcess_None ?  CurveRefPts::ePoint : CurveRefPts::eRoundLine;
 
             ptsX.pen = QPen(Qt::black, 1, Qt::SolidLine);
             ptsX.brush = Qt::black;
@@ -1005,11 +1005,14 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
 
                         if (intervals.size() == 1) {
-                            typePts = CurveRefPts::eCross;
+                            //typePts = CurveRefPts::eCross;
+                            typePts = processType == CurveSettings::eProcess_None ?  CurveRefPts::eLine : CurveRefPts::eCross;
+
 
                         } else {
 
-                            typePts = CurveRefPts::eDotLineCross;
+                            //typePts = CurveRefPts::eDotLineCross;
+                            typePts = processType == CurveSettings::eProcess_None ?  CurveRefPts::eDotLine : CurveRefPts::eDotLineCross;
                             ptsX.Xmin = tmin;
                             ptsX.Xmax = tmax;
 
@@ -2133,12 +2136,8 @@ void MultiCalibrationView::updateGraphsZoom()
             // Bound doesn't have curve named "Calibration", this curve name is "Bound"
 
             const GraphCurve* calibCurve = gr->getCurve("Calibration");
-          //  if (!calibCurve)
-            //    calibCurve = gr->getCurve("Bound");
-
-          //  else {
-           if (calibCurve) {
-               type_data yMax;
+            if (calibCurve) {
+                type_data yMax;
                 const QMap<type_data, type_data> &subDisplay = getMapDataInRange(calibCurve->mData, mTminDisplay, mTmaxDisplay);
                 if (subDisplay.isEmpty()) {
                     yMax = 0;
