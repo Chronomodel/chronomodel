@@ -344,7 +344,7 @@ QString MCMCLoop::initialize_time()
 
                         // 5 - Init Sigma_i and its Sigma_MH
                         date.mSigmaTi.mX = std::abs(date.mTi.mX - (uEvent->mTheta.mX - date.mDelta));
-                        //date.mSigmaTi.mX = uEvent->mS02Theta.mX/2.; // pour test v4
+
 
                         if (date.mSigmaTi.mX <= 1E-6) {
                             date.mSigmaTi.mX = 1E-6; // Add control the 2015/06/15 with PhL

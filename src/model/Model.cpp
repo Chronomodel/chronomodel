@@ -1393,14 +1393,17 @@ void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftL
     const double tmax = mSettings.getTmaxFormated();
 
     for (const auto& event : mEvents) {
-        event->mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+        if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+            event->mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
 
+        }
         if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
             event->mS02Theta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
 
-        //if (event->mTheta.mSamplerProposal != MHVariable::eFixe)
-        for (auto&& d : event->mDates)
-            d.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+        if (event->type() != Event::eBound) {
+            for (auto&& d : event->mDates)
+                d.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+        }
     }
 
     for (const auto& phase : mPhases)

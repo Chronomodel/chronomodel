@@ -113,15 +113,13 @@ void ModelCurve::settings_from_Json(const QJsonObject &json)
                event->mTheta.mSamplerProposal = MHVariable::eFixe;
 
         else if (event->type() ==  Event::eDefault) {
-                if (mCurveSettings.mTimeType == CurveSettings::eModeFixed) {
+                if (is_curve && mCurveSettings.mTimeType == CurveSettings::eModeFixed) {
                     event->mTheta.mSamplerProposal = MHVariable::eFixe;
                     for (Date &d : event->mDates) {
                         d.mTi.mSamplerProposal = MHVariable::eFixe;
                         d.mSigmaTi.mSamplerProposal = MHVariable::eFixe;
                     }
-                } /*else if (is_curve) {
-                    event->mTheta.mSamplerProposal = MHVariable::eMHAdaptGauss;
-                }*/
+                }
 
         }
 
