@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -2531,14 +2531,17 @@ void ResultsView::updateGraphsMinMax()
 {
     QList<GraphViewResults*> listGraphs = currentGraphs(false);
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
-        if (mMainVariable == GraphViewResults::eSigma ||
-            mMainVariable == GraphViewResults::eDuration ||
+        if (mMainVariable == GraphViewResults::eDuration ||
             mMainVariable == GraphViewResults::eS02 ||
             mMainVariable == GraphViewResults::eVg ||
             mMainVariable == GraphViewResults::eS02Vg
             ) {
             mResultMinT = 0.;
             mResultMaxT = getGraphsMax(listGraphs, "Post Distrib", 1.);
+
+        } else if (mMainVariable == GraphViewResults::eSigma) {
+            mResultMinT = 0;
+            mResultMaxT = getGraphsMax(listGraphs, "Post Distrib", 1.) / 10;
 
         } else if (mMainVariable == GraphViewResults::eLambda) {
             mResultMinT = getGraphsMin(listGraphs, "Lambda", -20.);
@@ -2575,7 +2578,7 @@ double ResultsView::getGraphsMax(const QList<GraphViewResults*> &graphs, const Q
     for (const auto& graphWrapper : graphs) {
         const QList<GraphCurve> &curves = graphWrapper->getGraph()->getCurves();
         for (const auto& curve : curves) {
-              if (!curve.mData.isEmpty() && curve.mName.contains(title)) {// && (curve.mVisible == true)) {
+            if (!curve.mData.isEmpty() && curve.mName.contains(title)) {
                 max = std::max(max, curve.mData.lastKey());
             }
         }
@@ -2589,7 +2592,7 @@ double ResultsView::getGraphsMin(const QList<GraphViewResults*> &graphs, const Q
     double min = 0.;
 
     for (const auto& graphWrapper : graphs) {
-        const QList<GraphCurve> curves = graphWrapper->getGraph()->getCurves();
+        const QList<GraphCurve> &curves = graphWrapper->getGraph()->getCurves();
         for (const auto& curve : curves) {
             if (!curve.mData.isEmpty() && curve.mName.contains(title) && (curve.mVisible == true)) {
                 min = std::min(min, curve.mData.firstKey());
