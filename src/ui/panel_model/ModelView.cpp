@@ -299,9 +299,10 @@ ModelView::ModelView(std::shared_ptr<Project> &project, QWidget* parent, Qt::Win
 
     mCalibrationView = new CalibrationView(mLeftWrapper);
 
-     // ------------- Windows Multi-calibration ---------------------
-     mMultiCalibrationView = new MultiCalibrationView(mRightWrapper);
-     mMultiCalibrationView->hide();
+    // ------------- Windows Multi-calibration ---------------------
+
+    mMultiCalibrationView = new MultiCalibrationView(mRightWrapper);
+    mMultiCalibrationView->hide();
     // -------- Animation -------------------------------
 
     mAnimationHide = new QPropertyAnimation();
@@ -317,7 +318,7 @@ ModelView::ModelView(std::shared_ptr<Project> &project, QWidget* parent, Qt::Win
 
     mAnimationCalib = new QPropertyAnimation();
     mAnimationCalib->setPropertyName("geometry");
-    mAnimationCalib->setDuration(400);
+    mAnimationCalib->setDuration(300);
     mAnimationCalib->setEasingCurve(QEasingCurve::OutCubic);
 
     // ---- update and paint with the appSettingsFont
@@ -345,25 +346,17 @@ void ModelView::setProject(std::shared_ptr<Project> &project)
     mEventsScene->setProject(mProject);
 
     mCurveSettingsView->setProject(mProject);
+
+    mMultiCalibrationView->setProject(mProject);
     updateCurveButton();
     connectScenes();
 
-    /*if (mProject!=nullptr && !projectExist) {
-        connectScenes();
-
-    } else if (projectExist && !mProject) {
-        disconnectScenes();
-    }*/
-
-    // if there is no phase, we must show all events
-    //const QJsonArray phases = mProject->state().value(STATE_PHASES).toArray();
-    // if (phases.size() == 0 )
     mEventsScene->setShowAllThumbs(true);
     mPhasesScene->setShowAllEvents(true);
 
     mCalibrationView->setVisible(false);
     mCalibrationView->resetDate();
-    //showCalibration(false);
+
     hideProperties();
     const StudyPeriodSettings settings = StudyPeriodSettings::fromJson(mProject->mState[STATE_SETTINGS].toObject());
 
@@ -436,7 +429,7 @@ void ModelView::connectScenes()
     connect(mButDeletePhase,  static_cast<void (Button::*)(bool)> (&Button::clicked), mPhasesScene, &PhasesScene::deleteSelectedItems);
     connect(mButPhasesGlobaliew, &Button::toggled, mPhasesGlobalView, &SceneGlobalView::setVisible);
 
-     connect(mEventsScene, &EventsScene::noSelection, this, &ModelView::noEventSelected);
+    connect(mEventsScene, &EventsScene::noSelection, this, &ModelView::noEventSelected);
     connect(mEventsScene, &EventsScene::eventsAreSelected, this, &ModelView::eventsAreSelected);
 
     connect(mEventsScene, &EventsScene::eventDoubleClicked, this, &ModelView::togglePropeties);
@@ -455,7 +448,8 @@ void ModelView::connectScenes()
     connect(mEventPropertiesView, &EventPropertiesView::showCalibRequested, this, &ModelView::showCalibration);
 
     connect(mButMultiCalib,   static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ModelView::showMultiCalib);
-    mMultiCalibrationView->setProject(mProject);
+
+    //mMultiCalibrationView->setProject(mProject);
     connect(mProject.get(), &Project::projectStateChanged, this, &ModelView::updateMultiCalibrationAndEventProperties);
 
     connect(mButCurve, &Button::toggled, MainWindow::getInstance(), &MainWindow::toggleCurve);
@@ -476,7 +470,7 @@ void ModelView::disconnectScenes()
     disconnect(mButProperties, &Button::clicked, this, &ModelView::showProperties);
 
     disconnect(mButMultiCalib,  &Button::clicked, this, &ModelView::showMultiCalib);
-    mMultiCalibrationView->setProject(nullptr);
+    //mMultiCalibrationView->setProject(nullptr);
 
     //disconnect(mButNewPhase, &Button::clicked, mProject, &Project::createPhase);
     disconnect(mButNewPhase, &Button::clicked, this, &ModelView::createPhaseInPlace);
@@ -1261,7 +1255,8 @@ void ModelView::updateLayout()
 
     mEventPropertiesView->setGeometry(mButProperties->isChecked() ? mRightRect : mRightHiddenRect);
 
-    mMultiCalibrationView->setGeometry(mButMultiCalib->isChecked() ? mRightRect : mRightHiddenRect);
+    if (mMultiCalibrationView)
+        mMultiCalibrationView->setGeometry(mButMultiCalib->isChecked() ? mRightRect : mRightHiddenRect);
 
     mImportDataView->setGeometry(mButImport->isChecked() ? mRightRect : mRightHiddenRect);
 
@@ -1306,6 +1301,7 @@ void ModelView::updateLayout()
             mCalibrationView->setGeometry(0, 0, 0, 0);
     }
     // ----------
+
     if (mButProperties->isChecked() || mButMultiCalib->isChecked() || mButCurve->isChecked()) {
 
         mPhasesView->hide();
@@ -1318,7 +1314,7 @@ void ModelView::updateLayout()
         mButPhasesGrid    ->hide();
         mPhasesGlobalZoom ->hide();
 
-     }  else {
+    }  else {
         mCurveSettingsView->hide();
 
         mPhasesView->show();
@@ -1343,7 +1339,8 @@ void ModelView::updateLayout()
         mButPhasesGrid->setGeometry(mPhasesView->width() -2, 4*mButtonHeigth, mButtonWidth, mButtonHeigth);
         mPhasesGlobalZoom->show();
         mPhasesGlobalZoom->setGeometry(mPhasesView->width() -2, 5*mButtonHeigth, mButtonWidth, mRightRect.height() - 5*mButtonHeigth);
-     }
+    }
+
     update();
 }
 

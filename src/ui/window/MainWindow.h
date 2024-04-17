@@ -64,7 +64,7 @@ class MainWindow : public QMainWindow, public Singleton<MainWindow>
     friend class Singleton<MainWindow>;
 
 public:
-    MainWindow(QWidget* aParent = nullptr);
+    MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 
     const std::shared_ptr<Project>& getProject();

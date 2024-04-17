@@ -57,7 +57,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-    mDrawing(nullptr),
+    mDrawing (nullptr),
     mMajorScale (100),
     mMinorScale (4),
     mTminDisplay(-HUGE_VAL),
@@ -65,7 +65,6 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mThreshold(95),
     mGraphHeight(120),
     mCurveColor(Painting::mainColorDark)
-
 {
     QPalette palette_BW;
     palette_BW.setColor(QPalette::Base, Qt::white);
@@ -75,7 +74,6 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     setMouseTracking(true);
     mDrawing = new MultiCalibrationDrawing(this);
-    mDrawing->setMouseTracking(true);
 
     mStatArea = new QTextEdit(this);
     mStatArea->setFrameStyle(QFrame::HLine);
@@ -244,6 +242,14 @@ MultiCalibrationView::~MultiCalibrationView()
 {
 }
 
+void MultiCalibrationView::setProject(std::shared_ptr<Project> project)
+{
+    mProject = project;
+    const QJsonObject &settings = mProject->state().value(STATE_SETTINGS).toObject();
+    mSettings = StudyPeriodSettings::fromJson(settings);
+
+}
+
 void MultiCalibrationView::resizeEvent(QResizeEvent* )
 {
     updateLayout();
@@ -382,7 +388,8 @@ void MultiCalibrationView::updateLayout()
         mStatArea->show();
         mStatArea->setGeometry(0, 0, graphWidth, yPosBottomBar0);
 
-        mDrawing->hide();
+        if (mDrawing)
+            mDrawing->hide();
 
         mColorClipBut->setEnabled(false);
         mScatterClipBut->setEnabled(false);
@@ -428,39 +435,52 @@ void MultiCalibrationView::updateLayout()
 
 void MultiCalibrationView::updateGraphList()
 {
-    const QJsonObject &state = mProject->state();
-    mSettings = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+    if (mStatClipBut->isChecked()) {
 
-    mTminDisplay = mSettings.getTminFormated() ;
-    mTmaxDisplay = mSettings.getTmaxFormated();
+        mDrawing->setVisible(false);
+        mStatArea->setVisible(true);
+        showStat();
+        updateLayout();
 
-    // setText doesn't emit signal textEdited, when the text is changed programmatically
-    mStartEdit->setText(locale().toString(mTminDisplay));
-    mEndEdit->setText(locale().toString(mTmaxDisplay));
+    } else {
 
-    mDrawing->setVisible(true);
-    mStatArea->setVisible(false);
+        const QJsonObject &state = mProject->state();
+        mSettings = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
-    if (mDrawing) {
-        delete mDrawing;
-        mDrawing = nullptr;
+        mTminDisplay = mSettings.getTminFormated() ;
+        mTmaxDisplay = mSettings.getTmaxFormated();
+
+        // setText doesn't emit signal textEdited, when the text is changed programmatically
+        mStartEdit->setText(locale().toString(mTminDisplay));
+        mEndEdit->setText(locale().toString(mTmaxDisplay));
+
+
+        mDrawing->setVisible(true);
+        mStatArea->setVisible(false);
+
+        if (mDrawing) {
+            delete mDrawing;
+            mDrawing = nullptr;
+        }
+
+        if (mScatterClipBut->isChecked()) {
+            mDrawing = scatterPlot(mThreshold);
+
+        } else if (mFitClipBut->isChecked()) {
+            mDrawing = fitPlot(mThreshold);
+
+        }  else {
+            mDrawing = multiCalibrationPlot(mThreshold);
+
+        }
+
+        mDrawing->show();
+        mDrawing->setVisible(true);
+
+        updateLayout();
+
+        updateScroll();
     }
-
-    if (mScatterClipBut->isChecked())
-        mDrawing = scatterPlot(mThreshold);
-
-    else if (mFitClipBut->isChecked())
-        mDrawing = fitPlot(mThreshold);
-
-    else
-        mDrawing = multiCalibrationPlot(mThreshold);
-
-    mDrawing->show();
-    mDrawing->setVisible(true);
-    updateLayout();
-
-
-    updateScroll();
 
 }
 
@@ -479,7 +499,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
     QList<GraphViewAbstract*> graphList;
     QList<QColor> colorList;
     QList<bool> listAxisVisible;
-    const QJsonArray events = state.value(STATE_EVENTS).toArray();
+    const QJsonArray &events = state.value(STATE_EVENTS).toArray();
 
     QList<QJsonObject> selectedEvents;
 
@@ -498,7 +518,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
 
     QJsonObject* preEvent = nullptr;
 
-    for (QJsonObject& ev : selectedEvents) {
+    for (QJsonObject &ev : selectedEvents) {
 
         const QColor color = QColor(ev.value(STATE_COLOR_RED).toInt(),
                               ev.value(STATE_COLOR_GREEN).toInt(),
@@ -598,7 +618,6 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                     hpdCurve.mName = "Calibration HPD";
                     hpdCurve.mPen = brushColor;
                     hpdCurve.mBrush = brushColor;
-                    //hpdCurve.mType = GraphCurve::CurveType::eDensityData; //it's default
 
                     hpdCurve.mIsRectFromZero = true;
                     hpdCurve.mData = hpd;
@@ -636,7 +655,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
    MultiCalibrationDrawing* multiDraw = new MultiCalibrationDrawing(this);
 
    multiDraw->showMarker();
-   //updateGraphsSize(mGraphHeightEdit->text());
+
    mGraphHeightEdit->blockSignals(true);
    mGraphHeightEdit->setText(mGraphHeightEdit->text());
    mGraphHeightEdit->blockSignals(false);
@@ -674,14 +693,13 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
     QList<QJsonObject> selectedEvents;
 
     const CurveSettings cs (state.value(STATE_CURVE).toObject());
-    CurveSettings::ProcessType processType = cs.mProcessType; //static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
+    CurveSettings::ProcessType processType = cs.mProcessType;
 
     for (const auto&& ev : events) {
        const QJsonObject jsonEv = ev.toObject();
        if (jsonEv.value(STATE_IS_SELECTED).toBool())
             selectedEvents.append(jsonEv);
     }
-
 
     GraphView* graph1 = nullptr;
     GraphView* graph2 = nullptr;
@@ -759,7 +777,6 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             graph1->changeXScaleDivision(mMajorScale, mMinorScale);
             graph1->setOverArrow(GraphView::eNone);
             graph1->setTipXLab("t");
-
 
             //graph1->setYAxisMode( GraphView::eAllTicks); // dans ce cas, c'est fait plus bas, car besoin des données
             graph1->showYAxisSubTicks(processType != CurveSettings::eProcess_None);
@@ -2419,11 +2436,11 @@ void MultiCalibrationView::exportResults()
                                                           currentPath, "CSV (*.csv)");
     if (!filePath.isEmpty()) {
 
-        const QJsonObject state = mProject->state();
+        const QJsonObject &state = mProject->state();
         const bool isCurve = mProject->isCurve();
         const CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
 
-        const QJsonArray events = state.value(STATE_EVENTS).toArray();
+        const QJsonArray &events = state.value(STATE_EVENTS).toArray();
         QList<QJsonObject> selectedEvents;
 
         for (auto &&ev : events) {
@@ -2524,14 +2541,15 @@ void MultiCalibrationView::exportResults()
                 if (isCurve) {
                     statLine.append(curveParamList);
                 }
-                statLine<<"Bound"<< locale().toString(bound) + " BC/AD";
+                //statLine<<"Bound"<< locale().toString(bound) + " BC/AD";
+                statLine<<"Bound"<< DateUtils::convertToAppSettingsFormatStr(bound, true);// + " " + DateUtils::getAppSettingsFormatStr();
                 stats.append(statLine);
 
             } else {
                 const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
 
                 for (const auto &date : dates) {
-                    const QJsonObject jdate = date.toObject();
+                    const QJsonObject &jdate = date.toObject();
 
                     Date d (jdate);
                     QStringList statLine;
@@ -2539,7 +2557,7 @@ void MultiCalibrationView::exportResults()
                     if (isCurve) {
                         statLine.append(curveParamList);
                     }
-                    statLine << d.mPlugin->getName() << d.mName << d.getDesc();
+                    statLine << d.mPlugin->getName() << d.mName << QChar(34) + d.getDesc() + QChar(34); // For CSV mode, text recognition
 
                     const bool isUnif = false;// (d.mPlugin->getName() == "Unif");
                     if (d.mIsValid && !d.mCalibration->mVector.isEmpty() && !isUnif) {
@@ -2561,7 +2579,7 @@ void MultiCalibrationView::exportResults()
                             // hpd results
                             QList<QPair<double, QPair<double, double> > > formated_intervals;
                             create_HPD_by_dichotomy(periodCalib, formated_intervals, mThreshold);
-                            const QString hpdStr = get_HPD_text(formated_intervals, DateUtils::getAppSettingsFormatStr(), DateUtils::convertFromAppSettingsFormat, true);
+                            const QString hpdStr = get_HPD_text(formated_intervals, DateUtils::getAppSettingsFormatStr(), nullptr, true);
 
                             const int nh = int(hpdStr.count(AppSettings::mCSVCellSeparator));
                             maxHpd = std::max(maxHpd, nh);
@@ -2577,7 +2595,6 @@ void MultiCalibrationView::exportResults()
                     stats.append(statLine);
                 }
             }
-
 
         }
         //
@@ -2599,7 +2616,9 @@ void MultiCalibrationView::exportResults()
 void MultiCalibrationView::showStat()
 {
     if (mStatClipBut ->isChecked()) {
-        mDrawing->setVisible(false);
+        if (mDrawing)
+            mDrawing->setVisible(false);
+
         mStatArea->setVisible(true);
         mStatArea->setFont(font());
 
@@ -2635,7 +2654,8 @@ void MultiCalibrationView::showStat()
 
             if ( Event::Type (ev.value(STATE_EVENT_TYPE).toInt()) == Event::eBound) {
                 const double bound = ev.value(STATE_EVENT_KNOWN_FIXED).toDouble();
-                resultsStr += " <br><strong>"+ tr("Bound : %1").arg(locale().toString(bound)) +" BC/AD </strong><br>";
+                //resultsStr += " <br><strong>"+ tr("Bound : %1").arg(locale().toString(bound)) +" BC/AD </strong><br>";
+                resultsStr += " <br><strong>"+ tr("Bound : %1").arg(DateUtils::convertToAppSettingsFormatStr(bound)) +" " + DateUtils::getAppSettingsFormatStr() + "</strong><br>";
 
             } else {
                 const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
@@ -2652,7 +2672,7 @@ void MultiCalibrationView::showStat()
                         resultsStr += "<hr>";
                     }
 
-                    resultsStr += "<br><strong>"+ d.mName + "</strong> (" + d.mPlugin->getName() + ")" +"<br> <i>" + d.getDesc() + "</i><br> ";
+                    resultsStr += "<br><strong>" + d.mName + "</strong> (" + d.mPlugin->getName() + ")" +"<br> <i>" + d.getDesc() + "</i><br> ";
 
                     if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.isEmpty()) {
 
@@ -2694,11 +2714,13 @@ void MultiCalibrationView::showStat()
             mResultText += resultsStr ;
         }
 
-    mStatArea->setHtml(mResultText);
+        mStatArea->setHtml(mResultText);
+
 
     } else {
-       mDrawing->setVisible(true);
-       mStatArea->setVisible(false);
+        updateGraphList(); // update appSettings
+        mDrawing->setVisible(true);
+        mStatArea->setVisible(false);
     }
 
    updateLayout();

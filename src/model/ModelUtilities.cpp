@@ -295,7 +295,7 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
                                                                                                                QString::number(bound->mPhases.size()),
                                                                                                                QString::number(bound->mConstraintsBwd.size()),
                                                                                                                QString::number(bound->mConstraintsFwd.size()))));
-            log += line(textRed(QObject::tr("- Fixed Value : %1 ").arg(stringForLocal(bound->mFixed))));
+            log += line(textRed(QObject::tr("- Fixed Value : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(bound->mFixed), DateUtils::getAppSettingsFormatStr() )));
 
         } else {
             log += line(textBlue(QObject::tr("Event ( %1 / %2 ) : %3 ( %4 data, %5 phases,  %6 const. back.,  %7 const. fwd.)").arg(QString::number(i+1), QString::number(model->mEvents.size()), event->mName,

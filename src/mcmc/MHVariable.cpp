@@ -320,7 +320,7 @@ QString MHVariable::resultsString(const QString &noResultMessage, const QString 
         return result + "<br>" + QObject::tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(globalTxt, getSamplerProposalText(mSamplerProposal));
 
     } else {
-        return QObject::tr("Fixed value : %1").arg(stringForLocal(mFormatedTrace->at(0))); // for VG mX is Variance and we need Std gi
+        return QObject::tr("Fixed value : %1 %2").arg(stringForLocal(mFormatedTrace->at(0)), unit); // for VG mX is Variance and we need Std gi
     }
 
 }

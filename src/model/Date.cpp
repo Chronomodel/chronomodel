@@ -469,6 +469,7 @@ QString Date::getDesc() const
 
             else if (iter.value().isBool())
                 val = iter.value().toBool() ? QObject::tr("yes") : QObject::tr("no");
+
             params << iter.key() + " = " + val;
         }
         res = params.join(", ");
@@ -564,7 +565,7 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, Project &project
     QMap<QString, CalibrationCurve>::iterator it = project.mCalibCurves.find (mUUID);
 
     if ( it == project.mCalibCurves.end()) {
-        qDebug()<<"Curve to create mUUID: "<< mUUID ;
+        qDebug()<<"[Date::calibrate] Curve to create mUUID: "<< mUUID ;
         project.mCalibCurves.insert(mUUID, CalibrationCurve());
 
     } else if ( it->mDescription == getDesc() ) {
@@ -574,13 +575,13 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, Project &project
         return;
     }
 
-  // Update of the new calibration curve
+    // Update of the new calibration curve
 
-    mCalibration = & (project.mCalibCurves[mUUID]);
+    mCalibration = std::move( &project.mCalibCurves[mUUID]);
     mCalibration -> mDescription = getDesc();
     if(priod_settings.mStepForced)
         refMinStep = priod_settings.mStep;
-    //refMinStep = std::min(priod_settings.mStep, refMinStep);
+
     mCalibration->mStep = refMinStep;
     mCalibration->mPluginId = mPlugin->getId();
     mCalibration->mPlugin = mPlugin;
@@ -602,10 +603,10 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, Project &project
      *  Calibrate on the whole calibration period (= ref curve definition domain)
      * -------------------------------------------------- */
 
-    if(!priod_settings.mStepForced) {
+    if (!priod_settings.mStepForced) {
         int nb_step_frac = 0;
 
-        while (std::count_if (mCalibration->mVector.begin(), mCalibration->mVector.end(), [](double v){return std::isnormal(v);}) < 22 && nb_step_frac < 50) {
+        while ( mCalibration->mVector.isEmpty() && std::count_if (mCalibration->mVector.begin(), mCalibration->mVector.end(), [](double v){return std::isnormal(v);}) < 22 && nb_step_frac < 50) {
             ++nb_step_frac;
             mCalibration->mStep = refMinStep / (double)nb_step_frac;
 
@@ -613,7 +614,7 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, Project &project
 
             const long double long_step = (long double)(mTmaxRefCurve - mTminRefCurve) / nbStep; // Very usefull for loop precision
 
-            // correction de mStep apres arrondi
+            // Correction de mStep apres arrondi
             mCalibration->mStep = long_step;
 
             QList<double> calibrationTemp;
@@ -648,8 +649,8 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, Project &project
                 if (truncate && repartitionTemp.size() > 10) {
                     const long double threshold = threshold_limit;
 
-                    const int minIdx = int (floor(vector_interpolate_idx_for_value(double(threshold * rep), repartitionTemp)));
-                    const int maxIdx = int (ceil(vector_interpolate_idx_for_value(double ((1. - threshold) * rep), repartitionTemp)));
+                    const int minIdx = floor(vector_interpolate_idx_for_value(double(threshold * rep), repartitionTemp));
+                    const int maxIdx = ceil(vector_interpolate_idx_for_value(double ((1. - threshold) * rep), repartitionTemp));
 
 
                     tminCal = mTminRefCurve + minIdx * long_step;

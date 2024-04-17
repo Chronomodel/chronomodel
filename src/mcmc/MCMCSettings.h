@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -107,4 +107,4 @@ public:
 QDataStream &operator<<( QDataStream &stream, const MCMCSettings &data );
 QDataStream &operator>>( QDataStream &stream, MCMCSettings &data );
 
-#endif // endif MCMCSettings_H
+#endif

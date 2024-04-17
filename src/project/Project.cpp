@@ -3167,7 +3167,7 @@ void Project::runCurve()
         messageBox.addButton(tr("I agree to continue"), QMessageBox::YesRole);
         messageBox.exec();
         
-        if (messageBox.clickedButton() == stopButton){
+        if (messageBox.clickedButton() == stopButton) {
             return;
         }
     }

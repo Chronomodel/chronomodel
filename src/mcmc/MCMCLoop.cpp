@@ -505,7 +505,7 @@ QString MCMCLoop::initialize_time()
 
             phase->mDuration.mX = phase->mBeta.mX - phase->mAlpha.mX;
             phase->mTau.mX = phase->mBeta.mX - phase->mAlpha.mX;
-*/
+            */
             if (isInterruptionRequested())
                 return ABORTED_BY_USER;
 

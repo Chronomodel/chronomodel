@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -55,7 +55,7 @@ CalibrationCurve::CalibrationCurve():
 
 }
 
-CalibrationCurve::CalibrationCurve(const CalibrationCurve& other)
+CalibrationCurve::CalibrationCurve(const CalibrationCurve &other)
 {
     mName = other.mName;
     mPluginId = other.mPluginId;

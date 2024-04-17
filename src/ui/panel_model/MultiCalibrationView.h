@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -64,7 +64,7 @@ public:
 
     ~MultiCalibrationView();
 
-    void setProject(std::shared_ptr<Project> project) {mProject = project;}
+    void setProject(std::shared_ptr<Project> project);
 
     void updateGraphList();
     void initScale (const double majorScale, const int minorScale) { mMajorScale = majorScale; mMinorScale = minorScale;}

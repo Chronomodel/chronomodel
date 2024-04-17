@@ -213,7 +213,7 @@ QString PluginDensity::getRefExt() const
 
 QString PluginDensity::getRefsPath() const
 {
-    qDebug()<< "[PluginDensity::getRefsPath()] " << AppPluginLibrary() + "/Calib/Density";
+    //qDebug()<< "[PluginDensity::getRefsPath()] " << AppPluginLibrary() + "/Calib/Density";
     return AppPluginLibrary() + "/Calib/Density";
 }
 
@@ -290,7 +290,6 @@ RefCurve PluginDensity::loadRefFile(QFileInfo refFile)
         }
         curve.mMinStep = step;
 
-        qDebug()<<"[pluginDensity::loadRefFile]:: normalization";
         curve.mDataMean = equal_areas(curve.mDataMean, 1.);
     }
 

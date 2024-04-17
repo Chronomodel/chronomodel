@@ -56,8 +56,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 // Constructor / Destructor
-MainWindow::MainWindow(QWidget* aParent):
-    QMainWindow(aParent),
+MainWindow::MainWindow(QWidget* parent):
+    QMainWindow(parent),
     undo_action(false),
     redo_action(false)
 {

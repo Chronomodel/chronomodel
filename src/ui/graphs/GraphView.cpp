@@ -619,7 +619,9 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
                 const qreal Xmid = (ref.Xmin + ref.Xmax) / 2.;
                 const qreal Ymid = (ref.Ymin + ref.Ymax) / 2.;
 
-                if ((ref.Xmin<=Xpos && Xpos<=ref.Xmax && Ymid<=errYp && errYm<=Ymid) || (ref.Ymin<=Ypos && Ypos<=ref.Ymax && Xmid<=errXp && errXm<=Xmid) )  {
+                if ((ref.Xmin<=Xpos && Xpos<=ref.Xmax && Ymid<=errYp && errYm<=Ymid)
+                    || (Xmid<=errXp && errXm<=Xmid && Ymid<=errYp && errYm<=Ymid )
+                    || (ref.Ymin<=Ypos && Ypos<=ref.Ymax && Xmid<=errXp && errXm<=Xmid) )  {
                     mTipComment = ref.comment;
                 }
             }
@@ -787,7 +789,7 @@ void GraphView::paintEvent(QPaintEvent* )
                 else
                     p.drawText(mTipRect.adjusted(0, mTipRect.height()*1./3., 0, -mTipRect.height()*1./3.), Qt::AlignCenter, mTipYLab + stringForLocal(mTipY));
 
-                p.drawText(mTipRect.adjusted(0, mTipRect.height()*2./3., 0, 0), Qt::AlignCenter,tr("Event") + ": " + mTipComment);
+                p.drawText(mTipRect.adjusted(0, mTipRect.height()*2./3., 0, 0), Qt::AlignCenter, " ⇨ " + mTipComment);
 
             }
 
@@ -804,7 +806,7 @@ void GraphView::paintEvent(QPaintEvent* )
                 else
                     p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + stringForLocal(mTipX));
 
-                p.drawText(mTipRect.adjusted(0, mTipRect.height()/2., 0, 0), Qt::AlignCenter,tr("Event") + ": " + mTipComment);
+                p.drawText(mTipRect.adjusted(0, mTipRect.height()/2., 0, 0), Qt::AlignCenter, " ⇨ " + mTipComment);
             }
         } else if (!mTipYLab.isEmpty()) {
             if (mUnitFunctionY)
