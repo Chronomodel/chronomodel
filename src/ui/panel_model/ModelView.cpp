@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -71,22 +71,21 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <assert.h>
 
 ModelView::ModelView(std::shared_ptr<Project> &project, QWidget* parent, Qt::WindowFlags flags):
-    QWidget(parent, flags),
-    mEventsScene(nullptr),
-    mCurSearchIdx(0),
-    mPhasesScene(nullptr),
-    mCurrentRightWidget(nullptr),
-    mTmin(0.),
-    mTmax(2000.),
-    mProject(project),
-    mSplitProp(0.6),
-    mHandlerW ( int (0.25 *AppSettings::widthUnit())),
-    mIsSplitting(false),
-    mCalibVisible(false),
-    mCurveSettingsVisible(false)
+    QWidget (parent, flags),
+    mEventsScene (nullptr),
+    mCurSearchIdx (0),
+    mPhasesScene (nullptr),
+    mCurrentRightWidget (nullptr),
+    mTmin (0.),
+    mTmax (2000.),
+    mProject (project),
+    mSplitProp (0.6),
+    mHandlerW (0.25 *AppSettings::widthUnit()),
+    mIsSplitting (false),
+    mCalibVisible (false),
+    mCurveSettingsVisible (false)
 {
     setMouseTracking(true);
-    //setFont(AppSettings::font());
 
     mTopRect = QRect(0, 0, width(), int (0.5 * AppSettings::heigthUnit()));
     mTopWrapper = new QWidget(this);
@@ -109,11 +108,8 @@ ModelView::ModelView(std::shared_ptr<Project> &project, QWidget* parent, Qt::Win
     // ---- Header Top Bar with Study period --------------
     // ----------- on mTopWrapper ------------------
 
-    //mButModifyPeriod = new Button(tr("STUDY PERIOD") , mTopWrapper);
     mButModifyPeriod = new QPushButton(tr("STUDY PERIOD") , mTopWrapper);
 
-  // mButModifyPeriod->setStyleSheet("QPushButton:active {background-color: rgb(230, 230, 230); border: none;}  "); // bug QT 5.15
-    //ButCurve = new SwitchWidget(this);
     mButCurve = new Button(tr("ChronoCurve :"), mTopWrapper);
     mButCurve->setToolTip(tr("Define curve parameters"));
     mButCurve->setFlatHorizontal();
@@ -153,7 +149,6 @@ ModelView::ModelView(std::shared_ptr<Project> &project, QWidget* parent, Qt::Win
     mEventsSearchEdit->setVisible(false);
    // mEventsSearchEdit->setStyleSheet("QLineEdit {background-color: rgb(100, 100, 100); color: white;}");
     mEventsSearchEdit->setPlaceholderText(tr("Search Event or Data..."));
-
 
     mEventsSearchEdit->setGeometry(mEventsView->x() + 5, 5, radarW, searchH);
     mEventsGlobalView->setGeometry(mEventsView->x() + 5, mEventsSearchEdit->y() + mEventsSearchEdit->height(), radarW, radarH);
@@ -1431,26 +1426,49 @@ void ModelView::showCalibration(bool show)
 // Mouse Events
 void ModelView::mousePressEvent(QMouseEvent* e)
 {
-    if (mHandlerRect.contains(e->pos()))
+    if (mHandlerRect.contains(e->pos())) {
         mIsSplitting = true;
+       /* setCursor(Qt::ClosedHandCursor);
+    } else {
+        setCursor(Qt::ArrowCursor);*/
+    }
+    qDebug()<<"ModelView::mousePressEvent";
 }
 
 void ModelView::mouseReleaseEvent(QMouseEvent* e)
 {
     (void) e;
-    mIsSplitting = false;
+    if (mIsSplitting) {
+        setCursor(Qt::ArrowCursor);
+        mIsSplitting = false;
+
+    } /*else if (mHandlerRect.contains(e->pos())) {
+        setCursor(Qt::SplitHCursor);
+
+    } else {
+        setCursor(Qt::ArrowCursor);
+    }*/
+qDebug()<<"ModelView::mouseReleaseEvent";
 }
 
 void ModelView::mouseMoveEvent(QMouseEvent* e)
 {
     if (mIsSplitting) {
+        setCursor(Qt::ClosedHandCursor);
         const qreal x = std::clamp(e->pos().x(), 200, width() - 450);
 
         mSplitProp = x / (width() - mHandlerW/2);
         mHandlerRect.moveTo(int(x + mHandlerW/2), mTopRect.height());
 
         updateLayout();
-    }
+    } /*else if (mHandlerRect.contains(e->pos())) {
+            setCursor(Qt::SplitHCursor);
+
+    } else {
+            setCursor(Qt::SplitHCursor);
+    }*/
+    qDebug()<<"ModelView::mouseMoveEvent";
+
 }
 
 void ModelView::keyPressEvent(QKeyEvent* event)
