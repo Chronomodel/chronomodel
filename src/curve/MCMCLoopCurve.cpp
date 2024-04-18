@@ -6,6 +6,7 @@ Authors :
     Philippe LANOS
     Helori LANOS
     Philippe DUFRESNE
+    Komlan NOUKPOAPE
 
 This software is a computer program whose purpose is to
 create chronological models of archeological data using Bayesian statistics.
