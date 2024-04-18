@@ -2042,7 +2042,8 @@ void ResultsView::createByCurveGraph()
 
         // insert refpoints for X
         //  const double thresh = 68.4; //80;
-        double pt_Y, pt_Ymin, pt_Ymax;
+
+        double pt_Ymin, pt_Ymax;
         QList<CurveRefPts> eventsPts;
         QList<CurveRefPts> dataPts;
         // Stock the number of ref points per Event and Data
@@ -2062,23 +2063,19 @@ void ResultsView::createByCurveGraph()
                     switch (model->mCurveSettings.mProcessType) {
                     case CurveSettings::eProcess_Inclination :
                         verr = event->mS_XA95Depth / 2.448;
-                        pt_Y = event->mXIncDepth;
                         pt_Ymin = event->mXIncDepth - 1.96*verr;
                         pt_Ymax = event->mXIncDepth + 1.96*verr;
                         break;
                     case CurveSettings::eProcess_Declination :
                         verr = (event->mS_XA95Depth/2.448) / cos(event->mXIncDepth * M_PI /180.);
-                        pt_Y = event->mYDec;
                         pt_Ymin = event->mYDec - 1.96*verr;
                         pt_Ymax = event->mYDec + 1.96*verr;
                         break;
                     case CurveSettings::eProcess_Field :
-                        pt_Y = event->mZField;
                         pt_Ymin = event->mZField - 1.96*event->mS_ZField;
                         pt_Ymax = event->mZField + 1.96*event->mS_ZField;
                         break;
                     case CurveSettings::eProcess_Depth :
-                        pt_Y = event->mXIncDepth;
                         pt_Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
                         pt_Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
                         break;
@@ -2087,7 +2084,6 @@ void ResultsView::createByCurveGraph()
                     case CurveSettings::eProcess_2D:
                     case CurveSettings::eProcess_Univariate :
                     case CurveSettings::eProcess_Unknwon_Dec:
-                        pt_Y = event->mXIncDepth;
                         pt_Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
                         pt_Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
                         break;
@@ -2095,7 +2091,6 @@ void ResultsView::createByCurveGraph()
                     case CurveSettings::eProcess_Spherical:
                     case CurveSettings::eProcess_Vector:
                         verr = event->mS_XA95Depth / 2.448;
-                        pt_Y = event->mXIncDepth;
                         pt_Ymin = event->mXIncDepth - 1.96*verr;
                         pt_Ymax = event->mXIncDepth + 1.96*verr;
                         break;
@@ -2118,15 +2113,9 @@ void ResultsView::createByCurveGraph()
                             // hpd is calculate only on the study Period
 
                             // hpd results
-                           /* std::map<double, double> mapping;
-                            create_HPD_mapping(calibMap, mapping, date.mTi.mThresholdUsed);
-                            double real_thresh;
-                            const QList<QPair<double, QPair<double, double> > > &intervals = intervals_hpd_from_mapping(mapping, real_thresh);
-                           */
-                            // hpd results
                             QList<QPair<double, QPair<double, double> > > intervals ;
                             create_HPD_by_dichotomy(calibMap, intervals, date.mTi.mThresholdUsed);
-                             // -- Post Distrib of Ti
+                            // -- Post Distrib of Ti
 
                             if (intervals.size() > 1) {
                                 for (const auto& h : intervals) {

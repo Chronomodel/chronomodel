@@ -1393,10 +1393,10 @@ void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftL
     const double tmax = mSettings.getTmaxFormated();
 
     for (const auto& event : mEvents) {
-        if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+       // if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
             event->mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
 
-        }
+      //  }
         if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
             event->mS02Theta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
 
@@ -1569,7 +1569,7 @@ void Model::generateCredibility(const double thresh)
     thPhasesConst.join();
 #else
     for (const auto& ev : mEvents) {
-        if (ev->mTheta.mSamplerProposal != MHVariable::eFixe)
+        if (ev->type() != Event::eBound)//(ev->mTheta.mSamplerProposal != MHVariable::eFixe)
             ev->mTheta.generateCredibility(mChains, thresh);
 
         if (ev->mS02Theta.mSamplerProposal != MHVariable::eFixe)
