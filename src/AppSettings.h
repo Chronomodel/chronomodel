@@ -95,8 +95,11 @@ public:
     static void setHeigthUnit(int &heigth) {mHeigthUnit = heigth;}
 
     static QLocale::Language mLanguage;
+#if QT_DEPRECATED_SINCE(6, 6)
+    static QLocale::Territory mCountry;
+#else
     static QLocale::Country mCountry;
-
+#endif
     static bool mAutoSave;
     static int mAutoSaveDelay;
     static bool mShowHelp;

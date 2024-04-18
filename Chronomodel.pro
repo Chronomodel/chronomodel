@@ -83,10 +83,9 @@ QT += core gui widgets svg
 
 # Resource file (for images)
 RESOURCES = $$PRO_PATH/Chronomodel.qrc
-#RESOURCES = Chronomodel.qrc
 
 # Compilation warning flags
- QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas -Wno-unused-parameter # invalid option for MSVC2015
+QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas -Wno-unused-parameter # invalid option for MSVC2015
 # QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-parameter
 
 
@@ -94,8 +93,6 @@ RESOURCES = $$PRO_PATH/Chronomodel.qrc
 # C++ 2a
 # Config must use C++ 11 for random number generator
 # This works for Windows, Linux & Mac 10.7 and +
-# In the future we'll need to increase to C++17
-# which offered namespace std::experimental::parallel;
 #########################################
 CONFIG += c++2a
 QMAKE_CXXFLAGS += -std=c++2a
@@ -120,7 +117,12 @@ macx{
 
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
         #QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14 # OS X 10.9 	Mavericks oct 2013  # essai sinon 10.14
-        QMAKE_MACOSX_DEPLOYMENT_TARGET = 12 # depuis le 2022-10-11
+        #QMAKE_MACOSX_DEPLOYMENT_TARGET = 12 # Since 2022-10-11 work with fftw 3.3.2
+
+        QMAKE_MACOSX_DEPLOYMENT_TARGET = 13 # work with fftw 3.3.10
+
+        message("QMAKE_MACOSX_DEPLOYMENT_TARGET = $$QMAKE_MACOSX_DEPLOYMENT_TARGET")
+
 	# Define a set of resources to deploy inside the bundle :
 	RESOURCES_FILES.path = Contents/Resources
         # RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib // used for older version <3.1.6
@@ -174,7 +176,7 @@ DEFINES += "USE_PLUGIN_DENSITY=$${USE_PLUGIN_DENSITY}"
 #########################################
 # FFTW
 #########################################
-
+message("----- FFTW -----")
 macx{
 	# IMPORTANT NOTE :
 	# We use FFTW 3.2.2 on Mac to support Mac OS X versions from 10.7.
@@ -183,11 +185,11 @@ macx{
 
 	# this is to include fftw.h in the code :
 	# INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac
-        INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.2.2/mac # for macos 12
-        LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.2.2/mac" -lfftw3
+        #INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.2.2/mac # for macos 12
+        #LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.2.2/mac" -lfftw3
 
-        #INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac # with intel and arm, for macos 13
-        #LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac" -lfftw3
+        INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac # with intel and arm, for macos 13
+        LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac" -lfftw3
 
 	# Link the application with FFTW library
 	# If no dylib are present, static libs (.a) are used => that's why we moved .dylib files in a "dylib" folder.

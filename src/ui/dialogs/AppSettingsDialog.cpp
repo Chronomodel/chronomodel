@@ -317,10 +317,13 @@ void AppSettingsDialog::setSettings()
 void AppSettingsDialog::getSettings()
 {
     AppSettings::mLanguage = QLocale::Language (mLanguageCombo->currentData().toInt());
+#if QT_DEPRECATED_SINCE(6, 6)
+    AppSettings::mCountry = locale().territory();
+#else
     AppSettings::mCountry = locale().country();
-    //AppSettings::setFont(mFont);
-    AppSettings::mIconSize = mIconSize->value();
+#endif
 
+    AppSettings::mIconSize = mIconSize->value();
     AppSettings::mAutoSave = mAutoSaveCheck->isChecked();
     AppSettings::mAutoSaveDelay = mAutoSaveDelayEdit->text().toInt() * 60;
     AppSettings::mCSVCellSeparator = mCSVCellSepEdit->text();
@@ -336,8 +339,12 @@ void AppSettingsDialog::getSettings()
 void AppSettingsDialog::changeSettings()
 {
     QLocale::Language newLanguage = AppSettings::mLanguage;
-    QLocale::Country newCountry= AppSettings::mCountry;
 
+#if QT_DEPRECATED_SINCE(6, 6)
+    QLocale::Territory newCountry= AppSettings::mCountry;
+#else
+    QLocale::Country newCountry= AppSettings::mCountry;
+#endif
     QLocale newLoc = QLocale(newLanguage, newCountry);
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);

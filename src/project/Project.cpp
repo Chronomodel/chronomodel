@@ -763,17 +763,10 @@ bool Project::load(const QString &path, bool force)
                     qDebug() << "[Project::load] Loading model file.res : " << dataPath << " size=" << dataFile.size();
 
                     try {
-                        //delete mModel;
-
-                      //  if (isCurve()) {
-                            mModel = std::shared_ptr<ModelCurve>(new ModelCurve (mState));
+                         mModel = std::shared_ptr<ModelCurve>(new ModelCurve (mState));
                             qDebug() << "[Project::load] Create a ModelCurve";
 
-                      //  } else
-                        //    mModelChrono = std::shared_ptr<Model>(new Model (mState));
-
-                       // mModel->fromJson(mState);
-                     }
+                    }
                     catch (const std::exception & e) {
                         QMessageBox message(QMessageBox::Warning,
                                             tr("Error loading project"),

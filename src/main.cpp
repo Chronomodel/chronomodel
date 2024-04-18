@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -124,7 +124,12 @@ int main(int argc, char *argv[])
     }
     
     QLocale::Language newLanguage = QLocale::system().language();
+#if QT_DEPRECATED_SINCE(6, 6)
+    QLocale::Territory newCountry= QLocale::system().territory();
+#else
     QLocale::Country newCountry= QLocale::system().country();
+#endif
+
     QLocale locale = QLocale(newLanguage, newCountry);
     
     locale.setNumberOptions(QLocale::OmitGroupSeparator);

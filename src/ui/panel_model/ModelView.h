@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -158,7 +158,6 @@ private:
     QRect mRightRect;
     QRect mRightHiddenRect;
 
-    //Project* mProject;
     std::shared_ptr<Project> mProject;
 
     int mMargin;
@@ -198,7 +197,7 @@ public slots:
     void updateMultiCalibrationAndEventProperties();
 
     void eventsAreSelected(); //connect with EventAreSelected
-    //void phasesAreSelected();
+
     void noEventSelected();
     void applyAppSettings();
 

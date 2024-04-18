@@ -115,7 +115,12 @@ MainWindow::MainWindow(QWidget* parent):
 
     QLocale newLoc(QLocale::system());
     AppSettings::mLanguage = newLoc.language();
+
+#if QT_DEPRECATED_SINCE(6, 6)
+    AppSettings::mCountry = newLoc.territory();
+#else
     AppSettings::mCountry = newLoc.country();
+#endif
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
 
@@ -737,7 +742,12 @@ void MainWindow::appSettings()
 void MainWindow::setAppFilesSettings()
 {
     QLocale::Language newLanguage = AppSettings::mLanguage;
+
+#if QT_DEPRECATED_SINCE(6, 6)
+    QLocale::Territory newCountry= AppSettings::mCountry;
+#else
     QLocale::Country newCountry= AppSettings::mCountry;
+#endif
 
     QLocale newLoc = QLocale(newLanguage, newCountry);
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
@@ -759,7 +769,12 @@ void MainWindow::setAppFilesSettings()
 void MainWindow::setAppSettings()
 {
     QLocale::Language newLanguage = AppSettings::mLanguage;
+
+#if QT_DEPRECATED_SINCE(6, 6)
+    QLocale::Territory newCountry= AppSettings::mCountry;
+#else
     QLocale::Country newCountry= AppSettings::mCountry;
+#endif
 
     QLocale newLoc = QLocale(newLanguage, newCountry);
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
@@ -781,7 +796,12 @@ void MainWindow::setAppSettings()
 void MainWindow::updateAppSettings()
 {
     QLocale::Language newLanguage = AppSettings::mLanguage;
+
+#if QT_DEPRECATED_SINCE(6, 6)
+    QLocale::Territory newCountry= AppSettings::mCountry;
+#else
     QLocale::Country newCountry= AppSettings::mCountry;
+#endif
 
     QLocale newLoc = QLocale(newLanguage, newCountry);
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);

@@ -50,7 +50,15 @@ int AppSettings::mWidthUnit;
 int AppSettings::mHeigthUnit;
 
 QLocale::Language AppSettings::mLanguage;
-QLocale::Country AppSettings::mCountry;
+
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+   QLocale::Territory AppSettings::mCountry;
+#else
+   QLocale::Country AppSettings::mCountry;
+#endif
+
+
 
 bool AppSettings::mAutoSave;
 int AppSettings::mAutoSaveDelay;
@@ -76,7 +84,12 @@ AppSettings::AppSettings()
 {
     QLocale newLoc(QLocale::system());
     AppSettings::mLanguage = newLoc.language();
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+    AppSettings::mCountry = newLoc.territory();
+#else
     AppSettings::mCountry = newLoc.country();
+#endif
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
 
