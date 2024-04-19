@@ -62,7 +62,7 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     mAverageEdit->setValidator(RValidator);
 
     mErrorEdit = new QLineEdit(this);
-    mErrorEdit->setText("50");
+    mErrorEdit->setText("30");
     mErrorEdit->setAlignment(Qt::AlignHCenter);
     QDoubleValidator* RplusValidator = new QDoubleValidator();
     RplusValidator->setBottom(0.000001);
@@ -83,7 +83,7 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     for (int i = 0; i<refCurves.size(); ++i)
         mRefCombo->addItem(refCurves.at(i));
 
-    QString defCurve = QString("intcal13.14c").toLower();
+    QString defCurve = QString("intcal20.14c").toLower();
     if (mSelectedRefCurve.isEmpty() && refCurves.contains(defCurve, Qt::CaseInsensitive))
        mSelectedRefCurve = defCurve;
 
