@@ -48,7 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #define APP_SETTINGS_DEFAULT_ICON_SIZE 3
 
-#define APP_SETTINGS_DEFAULT_AUTO_SAVE false
+#define APP_SETTINGS_DEFAULT_AUTO_SAVE true
 #define APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC 300
 #define APP_SETTINGS_DEFAULT_SHOW_HELP false
 #define APP_SETTINGS_DEFAULT_CELL_SEP ","

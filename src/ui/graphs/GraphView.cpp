@@ -1415,7 +1415,7 @@ void GraphView::drawCurves(QPainter& painter)
                     xMaxPlot = xMean + penWidth;
                 }
 
-                const qreal rayPlot = 2.*penWidth;
+                const qreal rayPlot = 1.5*penWidth;
 
                 QColor bg (getBackgroundColor());
                 bg.setAlpha(100);
@@ -1467,6 +1467,8 @@ void GraphView::drawCurves(QPainter& painter)
                     break;
 
                 case CurveRefPts::eDotLineCross:
+                    painter.drawEllipse(QRectF( xPlot - penWidth, yPlot - penWidth,  penWidth*2., penWidth*2.));
+
                     pathPoint.moveTo( xMinPlot, yPlot);
                     pathPoint.lineTo( xMaxPlot, yPlot);
 

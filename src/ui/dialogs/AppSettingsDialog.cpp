@@ -43,6 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AppSettings.h"
 
 #include <QtWidgets>
+#include <QPushButton>
 
 AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QDialog(parent, flags)
 {
@@ -140,8 +141,12 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
 
     connect(mAutoSaveCheck, &QCheckBox::toggled, mAutoSaveDelayEdit, &QLineEdit::setEnabled);
 
-    mRestoreBox = new QDialogButtonBox(QDialogButtonBox::RestoreDefaults);
-    connect(mRestoreBox, &QDialogButtonBox::clicked, this, &AppSettingsDialog::buttonClicked);
+    mApplyButton = new QDialogButtonBox(QDialogButtonBox::Apply);
+    connect(mApplyButton, &QDialogButtonBox::clicked, this, &AppSettingsDialog::buttonClicked);
+
+    mRestoreBox = new QPushButton(tr("Restore Default"), this);
+
+    connect(mRestoreBox, &QPushButton::clicked, this, &AppSettingsDialog::restore);
 
     QGridLayout* grid = new QGridLayout();
     grid->setContentsMargins(0, 0, 0, 0);
@@ -199,6 +204,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
 
     QVBoxLayout* mainLayout = new QVBoxLayout();
 
+    mainLayout->addWidget(mApplyButton);
     mainLayout->addWidget(mRestoreBox);
     mainLayout->addLayout(grid);
     
@@ -273,15 +279,8 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
 
 AppSettingsDialog::~AppSettingsDialog()
 {
-    qDebug()<<"end AppSettingsDialog::~AppSettingsDialog()";
-    getSettings();
+    qDebug()<<"[AppSettingsDialog::~AppSettingsDialog]";
 
-    if (filesChanged)
-        emit settingsFilesChanged();
-    else
-        emit settingsChanged();
-
-    filesChanged = false;
 }
 
 void AppSettingsDialog::needCalibration()
@@ -351,13 +350,24 @@ void AppSettingsDialog::changeSettings()
 }
 
 /**
- * @brief AppSettingsDialog::buttonClicked Corresponding to the restore Default Button
+ * @brief AppSettingsDialog::buttonClicked Corresponding to the Apply Button
  * @param button
  */
-void AppSettingsDialog::buttonClicked(QAbstractButton* button)
+void AppSettingsDialog::buttonClicked(QAbstractButton*)
 {
-    (void) button;
+    getSettings();
 
+    if (filesChanged)
+        emit settingsFilesChanged();
+    else
+        emit settingsChanged();
+
+    filesChanged = false;
+    close();
+}
+
+void AppSettingsDialog::restore()
+{
     mIconSize->setValue(APP_SETTINGS_DEFAULT_ICON_SIZE);
 
     mLanguageCombo->setCurrentText(QLocale::languageToString(QLocale::system().language()));

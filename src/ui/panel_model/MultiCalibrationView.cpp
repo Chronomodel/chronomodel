@@ -914,7 +914,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             ptsX.color = color;
             ptsX.type = processType == CurveSettings::eProcess_None ?  CurveRefPts::ePoint : CurveRefPts::eRoundLine;
 
-            ptsX.pen = QPen(Qt::black, 1, Qt::SolidLine);
+            ptsX.pen = QPen(Qt::black, 2, Qt::SolidLine);
             ptsX.brush = Qt::black;
             ptsX.name = "Ref Points";
             ptsX.comment = sEvent.value(STATE_NAME).toString();
@@ -926,7 +926,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             ptsY.Ymin = Y - errY;
             ptsY.Ymax = Y + errY;
 
-            ptsY.pen = QPen(Qt::black, 1, Qt::SolidLine);
+            ptsY.pen = QPen(Qt::black, 2, Qt::SolidLine);
             ptsY.brush = Qt::black;
             ptsY.setVisible(true);
             curveDataPointsY.push_back(ptsY);
@@ -934,7 +934,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             ptsZ = ptsX;
             ptsZ.Ymin = Z - errZ;
             ptsZ.Ymax = Z + errZ;
-            ptsZ.pen = QPen(Qt::black, 1, Qt::SolidLine);
+            ptsZ.pen = QPen(Qt::black, 2, Qt::SolidLine);
             ptsZ.brush = Qt::black;
             ptsZ.setVisible(true);
             curveDataPointsZ.push_back(ptsZ);
@@ -1040,7 +1040,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                             ptsX.Ymax = X + errX;
                             ptsX.color = color;
                             ptsX.type = typePts;
-                            ptsX.pen = QPen(Qt::black, 1, Qt::SolidLine);
+                            ptsX.pen = QPen(Qt::black, 2, Qt::SolidLine);
                             ptsX.brush = Qt::black;
                             ptsX.name = "Ref Points";
                             ptsX.comment = sEvent.value(STATE_NAME).toString();
@@ -1050,7 +1050,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                             ptsY = ptsX;
                             ptsY.Ymin = Y - errY;
                             ptsY.Ymax = Y + errY;
-                            ptsY.pen = QPen(Qt::black, 1, Qt::SolidLine);
+                            ptsY.pen = QPen(Qt::black, 2, Qt::SolidLine);
                             ptsY.brush = Qt::black;
                             ptsY.name = "Ref Points";
                             ptsY.setVisible(true);
@@ -1060,7 +1060,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                             ptsZ = ptsX;
                             ptsZ.Ymin = Z - errZ;
                             ptsZ.Ymax = Z + errZ;
-                            ptsZ.pen = QPen(Qt::black, 1, Qt::SolidLine);
+                            ptsZ.pen = QPen(Qt::black, 2, Qt::SolidLine);
                             ptsZ.brush = Qt::black;
                             ptsZ.name = "Ref Points";
                             ptsZ.setVisible(true);
@@ -1084,7 +1084,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                             ptsX.Ymax = X + errX;
                             ptsX.color = color;
                             ptsX.type = typePts;
-                            ptsX.pen = QPen(Qt::black, 1, Qt::SolidLine);
+                            ptsX.pen = QPen(Qt::black, 2, Qt::SolidLine);
                             ptsX.brush = Qt::black;
                             ptsX.name = "Ref Points";
                             ptsX.comment = sEvent.value(STATE_NAME).toString();
@@ -1094,7 +1094,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                             ptsY = ptsX;
                             ptsY.Ymin = Y - errY;
                             ptsY.Ymax = Y + errY;
-                            ptsY.pen = QPen(Qt::black, 1, Qt::SolidLine);
+                            ptsY.pen = QPen(Qt::black, 2, Qt::SolidLine);
                             ptsY.brush = Qt::black;
                             ptsY.name = "Ref Points";
                             ptsY.setVisible(true);
@@ -1103,7 +1103,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                             ptsZ = ptsX;
                             ptsZ.Ymin = Z - errZ;
                             ptsZ.Ymax = Z + errZ;
-                            ptsZ.pen = QPen(Qt::black, 1, Qt::SolidLine);
+                            ptsZ.pen = QPen(Qt::black, 2, Qt::SolidLine);
                             ptsZ.brush = Qt::black;
                             ptsZ.name = "Ref Points";
                             ptsZ.setVisible(true);

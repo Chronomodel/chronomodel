@@ -632,7 +632,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
             if (acceptRate < 0.46 &&  acceptRate > 0.42 )
                 HTMLText += line(textGreen(QObject::tr(". . . . . Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(acceptRate*100.), MHVariable::getSamplerProposalText(samplerType))));
             else
-                HTMLText += line(textGreen(QObject::tr(". . . . . Current Acceptance Rate : ") + textRed(stringForLocal(acceptRate*100.)) +" % (" + MHVariable::getSamplerProposalText(samplerType)) + ")");
+                HTMLText += line(textGreen(QObject::tr(". . . . . Current Acceptance Rate : ") + textBold(textRed(stringForLocal(acceptRate*100.)+" %"))  + " ("+ MHVariable::getSamplerProposalText(samplerType)) + ")");
 
             HTMLText +=  line(textGreen(QObject::tr(" - Sigma_MH on Shrinkage param. : %1").arg(stringForLocal(model->mS02Vg.mSigmaMH))));
         }

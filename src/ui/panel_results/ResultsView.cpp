@@ -288,7 +288,7 @@ ResultsView::ResultsView(std::shared_ptr<Project> project, QWidget* parent, Qt::
     mCurveMapCheck->setFixedHeight(h);
     mCurveMapCheck->setChecked(true);
 
-    mCurveDataPointsCheck = new CheckBox(tr("References Points (HPD)"), mCurvesGroup);
+    mCurveDataPointsCheck = new CheckBox(tr("Reference Points (HPD)"), mCurvesGroup);
     mCurveDataPointsCheck->setFixedHeight(h);
     mCurveDataPointsCheck->setChecked(true);
 

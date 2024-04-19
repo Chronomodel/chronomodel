@@ -76,6 +76,7 @@ private slots:
     void changeSettings();
     void buttonClicked(QAbstractButton*);
     void needCalibration();
+    void restore();
    // void fontButtonClicked();
 
 signals:
@@ -133,7 +134,8 @@ private:
     QLabel* mPrecisionLab;
     QSpinBox* mPrecision;
 
-    QDialogButtonBox* mRestoreBox;
+    QDialogButtonBox* mApplyButton;
+    QPushButton *mRestoreBox;
 };
 
 #endif
