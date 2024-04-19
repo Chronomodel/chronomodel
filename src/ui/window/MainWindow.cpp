@@ -1169,8 +1169,8 @@ void MainWindow::closeEvent(QCloseEvent* e)
 
                 // This is a temporary Qt bug fix (should be corrected by Qt 5.6 when released)
                 // The close event is called twice on Mac when closing with "cmd + Q" key or with the "Quit Chronomodel" menu.
-                //QCoreApplication::exit(0);
-                QGuiApplication::exit(0);
+                QApplication::exit(0);
+                //QGuiApplication::exit(0);
             } else
                 e->ignore();
 
@@ -1181,8 +1181,8 @@ void MainWindow::closeEvent(QCloseEvent* e)
 
         // This is a temporary Qt bug fix (should be corrected by Qt 5.6 when released)
         // The close event is called twice on Mac when closing with "cmd + Q" key or with the "Quit Chronomodel" menu.
-        //QCoreApplication::exit(0);
-        QGuiApplication::exit(0);
+        QApplication::exit(0);
+        //QGuiApplication::exit(0);
     }
 
 }

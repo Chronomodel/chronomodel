@@ -169,7 +169,7 @@ int defaultDpiX()
     //if(!qt_is_gui_used)
       //  return 75;
 
-    if (const QScreen* screen = QGuiApplication::primaryScreen())
+    if (const QScreen* screen = QApplication::primaryScreen())
         return qRound(screen->logicalDotsPerInchX());
 
     //PI has not been initialized, or it is being initialized. Give a default dpi
@@ -474,7 +474,7 @@ bool saveWidgetAsSVG(QWidget* widget, const QRect &r, const QString &fileName)
 
     const int heightText= fm.descent() + fm.ascent() + 10;
 
-    const QRect viewBox = QRect( 0, 0,r.width(), r.height() + heightText );
+    const QRect viewBox = QRect(0, 0, r.width(), r.height() + heightText);
     QSvgGenerator svgGenFile;
     svgGenFile.setFileName(fileName);
     svgGenFile.setViewBox(viewBox);
@@ -576,7 +576,7 @@ QColor randomColor()
 bool constraintIsCircular(QJsonArray constraints, const int fromId, const int toId)
 {
     for (int i = 0; i<constraints.size(); ++i) {
-        QJsonObject constraint = constraints.at(i).toObject();
+        const QJsonObject &constraint = constraints.at(i).toObject();
 
         // Detect circularity
         if (constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == toId && constraint.value(STATE_CONSTRAINT_FWD_ID).toInt() == fromId)

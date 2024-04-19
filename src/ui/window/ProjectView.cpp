@@ -133,7 +133,7 @@ void ProjectView::setScreenDefinition()
       //  numScreen = 0;
     }
     */
-    screen =  QGuiApplication::primaryScreen();
+    screen =  QApplication::primaryScreen();
     //qreal mm_per_cm = 10;
 
     qreal cm_per_in = 2.54;

@@ -78,5 +78,5 @@ bool ChronoApp::event(QEvent* e)
         w = nullptr;
 
     }
-    return QApplication::event(e);
+    return QGuiApplication::event(e);
 }
