@@ -1,4 +1,4 @@
-QFrame, QLabel, QToolTip {
-    border: 0px;
+QFrame {
+    border: 5px;
     background-color: transparent;
 }

@@ -14,19 +14,24 @@
        <RunProgram>@TargetDir@/Chronomodel.exe</RunProgram>
        } -->
         <!--@TargetDir@/-->
-        <!--  <WizardStyle>Modern</WizardStyle> --> <!--  Aero; Classic -->
+        <!--  <WizardStyle>Modern</WizardStyle> --> <!--  Aero; Classic; Mac; Modern -->
 
     <InstallerWindowIcon>Chronomodel_Installer</InstallerWindowIcon> <!-- for windows and linux-->
     <InstallerApplicationIcon>Chronomodel_Installer</InstallerApplicationIcon>
          <!-- The actual file is looked up by attaching a '.icns' (OS X), '.ico' (Windows). No functionality on Unix.-->
     <Logo>Chronomodel.png</Logo>
     <MaintenanceToolName>Chronomodel_uninstaller</MaintenanceToolName>
-        
-        <!-- Le fond d'écran fonction avec les options suivantes
-        <WizardStyle>Mac</WizardStyle>
+    
+        <!-- Le fond d'écran fonction avec les options suivantes... ne fonctionne pas
+         <StyleSheet>style.qss</StyleSheet> 
+         <Background>fond_ecran</Background>
+	
+         -->
+        <Watermark>fond_ecran</Watermark>
         <WizardShowPageList>true</WizardShowPageList>
-		<Background>fond_ecran.png</Background>
-		-->
+        <WizardStyle>Modern</WizardStyle>
+        
+		
 		
      <StartMenuDir>ChronoModel</StartMenuDir> <!--Only available on Windows.-->
         if (installer.value("os") === "win") {
