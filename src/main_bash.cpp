@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -39,12 +39,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ChronoApp.h"
 #include "MainController_bash.h"
-//#include "StdUtilities.h"
-//#include "CurveUtilities.h"
-//#include "fftw3.h"
 
 #include "QtCore/qlogging.h"
-//#include "QtCore/qstring.h"
+
 
 #include <QtWidgets>
 #include <iostream>
@@ -114,7 +111,11 @@ int main(int argc, char *argv[])
     QString filePath = "";
 
     QLocale::Language newLanguage = QLocale::system().language();
+#if QT_DEPRECATED_SINCE(6, 6)
+    QLocale::Territory newCountry= QLocale::system().territory();
+#else
     QLocale::Country newCountry= QLocale::system().country();
+#endif
     QLocale locale = QLocale(newLanguage, newCountry);
     
     locale.setNumberOptions(QLocale::OmitGroupSeparator);

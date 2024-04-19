@@ -114,7 +114,12 @@ MainWindow::MainWindow(QWidget* aParent):
 */
     QLocale newLoc(QLocale::system());
     AppSettings::mLanguage = newLoc.language();
+
+#if QT_DEPRECATED_SINCE(6, 6)
+    AppSettings::mCountry = newLoc.territory();
+#else
     AppSettings::mCountry = newLoc.country();
+#endif
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
 

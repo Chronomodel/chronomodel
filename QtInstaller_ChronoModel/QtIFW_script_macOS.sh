@@ -12,16 +12,17 @@ echo " 1 - Script compile intaller "
 # -------------------------------------------------------
 #	Vérifier que le chemin de Qt est bien celui de la machine
 # -------------------------------------------------------
-ROOT_PATH=$(dirname $0)
+#ROOT_PATH=$(dirname $0)
 # _________________________
 echo " 2 - Copy the ChronoModel BUNDLE "
 
-# make -j12 in /Users/dufresne/ChronoModel-SoftWare/build-Chronomodel-Qt_6_4_3_for_macOS-Release
+# make -j12 in /Users/dufresne/ChronoModel-SoftWare/build-Chronomodel-Qt_6_7_0_for_macOS-Release
 
-RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/build-Chronomodel-Qt_6_5_3_for_macOS-Release/build/release/
+# RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/build-Chronomodel-Qt_6_5_3_for_macOS-Release/build/release/
+RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_7_0_for_macOS-Release/build/release/
 
 BUNDLE="$RELEASE_PATH"chronomodel.app
-#BUNDLE=/Users/dufresne/ChronoModel-SoftWare/build-Chronomodel-Qt_6_5_3_for_macOS-Release/build/release/chronomodel.app
+
 #/Users/dufresne/ChronoModel-SoftWare/chronomodel/QtIFW_src/installer-packages/chronomodel_QtIFW.composant2/data
 
 cp -R $BUNDLE installer-packages-macOS/chronomodel_QtIFW.composant1/data
@@ -29,7 +30,8 @@ cp -R $BUNDLE installer-packages-macOS/chronomodel_QtIFW.composant1/data
 # _________________________
 echo " 2 - Copy the ChronoModel_bash BUNDLE "
 
-BASH_RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/build-Chronomodel_bash-Qt_6_5_3_for_macOS-Release/build/release/
+#BASH_RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/build-Chronomodel_bash-Qt_6_5_3_for_macOS-Release/build/release/
+BASH_RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/bash/Qt_6_7_0_for_macOS-Release/build/release/
 BASH_BUNDLE="$BASH_RELEASE_PATH"chronomodel_bash.app
 #/Users/dufresne/ChronoModel-SoftWare/chronomodel/QtIFW_src/installer-packages/chronomodel_QtIFW.composant2/data
 cp -R $BASH_BUNDLE installer-packages-macOS/chronomodel_QtIFW.composant1/data
@@ -37,14 +39,19 @@ cp -R $BASH_BUNDLE installer-packages-macOS/chronomodel_QtIFW.composant1/data
 # _________________________
 echo " 3 - Execution de binarycreator"
 
-QT_BIN_PATH=/Users/dufresne/Qt/Tools/QtInstallerFramework/4.5/bin
+QT_BIN_PATH=/Users/dufresne/Qt/Tools/QtInstallerFramework/4.7/bin
 
 VERSION=3.2.7
 
+DATE_FILE=$(date '+%Y%m%d')
 
-${QT_BIN_PATH}/binarycreator --offline-only -c installer-config/config.xml -p installer-packages-macOS ChronoModel_v${VERSION}_Installer
+INSTALLER=ChronoModel_v${VERSION}_Qt6.7.0_macOS13_${DATE_FILE}_Installer
+
+echo " 4 - Created file : " $INSTALLER
+${QT_BIN_PATH}/binarycreator --offline-only -c installer-config/config.xml -p installer-packages-macOS $INSTALLER
+#${QT_BIN_PATH}/binarycreator --offline-only -c installer-config/config.xml -p installer-packages-macOS ChronoModel_v${VERSION}_Qt6.7.0_macOS13_"(date '+%Y%m%d')"_Installer
 
 # _________________________
-echo " 4 - view the BUNDLE : /Users/dufresne/ChronoModel-SoftWare/chronomodel/QtInstaller_ChronoModel"
+echo " 5 - view the BUNDLE : /Users/dufresne/ChronoModel-SoftWare/chronomodel/QtInstaller_ChronoModel"
 # -------------------------------------------------------
 
