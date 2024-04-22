@@ -474,6 +474,7 @@ void MultiCalibrationView::updateGraphList()
 
         }
 
+        mDrawing->setGraphHeight(mGraphHeight);
         mDrawing->show();
         mDrawing->setVisible(true);
 

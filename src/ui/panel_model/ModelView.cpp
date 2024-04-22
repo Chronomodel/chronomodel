@@ -456,7 +456,6 @@ void ModelView::disconnectScenes()
     disconnect(mButNewEventKnown, &Button::clicked, this, &ModelView::createEventKnownInPlace);
     disconnect(mButDeleteEvent,  static_cast<void (Button::*)(bool)> (&Button::clicked), mEventsScene, &EventsScene::deleteSelectedItems);
 
-    disconnect(mButRecycleEvent, &Button::clicked, mProject.get(), &Project::recycleEvents);
     disconnect(mButEventsGlobalView, &Button::toggled, mEventsGlobalView, &SceneGlobalView::setVisible);
     disconnect(mButEventsGlobalView, &Button::toggled, mEventsSearchEdit, &QLineEdit::setVisible);
     disconnect(mEventsSearchEdit, &QLineEdit::returnPressed, this, &ModelView::searchEvent);
@@ -465,9 +464,7 @@ void ModelView::disconnectScenes()
     disconnect(mButProperties, &Button::clicked, this, &ModelView::showProperties);
 
     disconnect(mButMultiCalib,  &Button::clicked, this, &ModelView::showMultiCalib);
-    //mMultiCalibrationView->setProject(nullptr);
 
-    //disconnect(mButNewPhase, &Button::clicked, mProject, &Project::createPhase);
     disconnect(mButNewPhase, &Button::clicked, this, &ModelView::createPhaseInPlace);
     disconnect(mButDeletePhase, &Button::clicked, mPhasesScene, &PhasesScene::deleteSelectedItems);
     disconnect(mButPhasesGlobaliew, &Button::toggled, mPhasesGlobalView, &SceneGlobalView::setVisible);
@@ -480,15 +477,19 @@ void ModelView::disconnectScenes()
     disconnect(mPhasesScene, &PhasesScene::noSelection, mEventsScene, &EventsScene::noHide);
     disconnect(mPhasesScene, &PhasesScene::phasesAreSelected, mEventsScene, &EventsScene::phasesSelected);
 
-    disconnect(mProject.get(), &Project::currentEventChanged, mEventPropertiesView, &EventPropertiesView::setEvent);
     // Properties View
-    disconnect(mEventPropertiesView, &EventPropertiesView::combineDatesRequested, mProject.get(), &Project::combineDates);
-    disconnect(mEventPropertiesView, &EventPropertiesView::splitDateRequested, mProject.get(), &Project::splitDate);
+
     disconnect(mEventPropertiesView, &EventPropertiesView::updateCalibRequested, this, &ModelView::updateCalibration);
     disconnect(mEventPropertiesView, &EventPropertiesView::showCalibRequested, this, &ModelView::showCalibration);
 
     disconnect(mButCurve, &Button::toggled, MainWindow::getInstance(), &MainWindow::toggleCurve);
 
+    if (mProject) {
+        disconnect(mButRecycleEvent, &Button::clicked, mProject.get(), &Project::recycleEvents);
+        disconnect(mProject.get(), &Project::currentEventChanged, mEventPropertiesView, &EventPropertiesView::setEvent);
+        disconnect(mEventPropertiesView, &EventPropertiesView::combineDatesRequested, mProject.get(), &Project::combineDates);
+        disconnect(mEventPropertiesView, &EventPropertiesView::splitDateRequested, mProject.get(), &Project::splitDate);
+    }
 }
 
 std::shared_ptr<Project> &ModelView::getProject()
@@ -513,7 +514,8 @@ void ModelView::resetInterface()
 
   //  noEventSelected();
     disconnectScenes();
-   // mProject = nullptr;
+
+    mProject.reset(new Project());
     mEventsScene->clean();
     mPhasesScene->clean();
     mCalibrationView->setDate(QJsonObject());
