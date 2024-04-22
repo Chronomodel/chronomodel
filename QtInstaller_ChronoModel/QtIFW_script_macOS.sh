@@ -45,7 +45,7 @@ VERSION=3.2.7
 
 DATE_FILE=$(date '+%Y%m%d')
 
-INSTALLER=ChronoModel_v${VERSION}_Qt6.7.0_macOS13_${DATE_FILE}_Installer
+INSTALLER=ChronoModel_v${VERSION}_Qt6.7.0_macOS12_${DATE_FILE}_Installer
 
 echo " 4 - Created file : " $INSTALLER
 ${QT_BIN_PATH}/binarycreator --offline-only -c installer-config/config.xml -p installer-packages-macOS $INSTALLER
