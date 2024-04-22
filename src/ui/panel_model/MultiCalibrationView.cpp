@@ -473,6 +473,10 @@ void MultiCalibrationView::updateGraphList()
             mDrawing = multiCalibrationPlot(mThreshold);
 
         }
+        const double origin = GraphViewResults::mHeightForVisibleAxis; //Same value in ResultsView::applyAppSettings()
+        const double prop = mYZoom->getProp();
+
+        mGraphHeight = mScatterClipBut->isChecked() || mFitClipBut->isChecked()?  3*prop * origin * 2 : prop * origin * 2;
 
         mDrawing->setGraphHeight(mGraphHeight);
         mDrawing->show();
