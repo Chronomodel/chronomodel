@@ -444,7 +444,7 @@ long double PluginGauss::getRefValueAt(const QJsonObject &data, const double t)
         const long double b = data.value(DATE_GAUSS_B_STR).toDouble();
         const long double c = data.value(DATE_GAUSS_C_STR).toDouble();
 
-        return a * std::powl(std::abs(t), 2.l) + b * t + c;
+        return a * powl(std::abs(t), 2.l) + b * t + c;
 
     } else if (mode == DATE_GAUSS_MODE_CURVE) {
         const QString &ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
