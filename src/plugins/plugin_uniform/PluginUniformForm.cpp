@@ -83,13 +83,17 @@ PluginUniformForm::~PluginUniformForm()
 
 void PluginUniformForm::setData(const QJsonObject& data, bool isCombined)
 {
-    (void) isCombined;
-    const QLocale locale;
-    const double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
-    const double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
+    mMinEdit->setEnabled(!isCombined);
+    mMaxEdit->setEnabled(!isCombined);
 
-    mMinEdit->setText(locale.toString(min));
-    mMaxEdit->setText(locale.toString(max));
+    if (!isCombined) {
+        const QLocale locale;
+        const double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
+        const double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
+
+        mMinEdit->setText(locale.toString(min));
+        mMaxEdit->setText(locale.toString(max));
+    }
 }
 
 QJsonObject PluginUniformForm::getData()

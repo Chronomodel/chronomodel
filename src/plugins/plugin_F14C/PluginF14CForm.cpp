@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -108,7 +108,7 @@ PluginF14CForm::~PluginF14CForm()
 
 void PluginF14CForm::setData(const QJsonObject& data, bool isCombined)
 {
-    if ( isCombined) {
+    if (isCombined) {
         mAverageEdit->setText("Combined data");
         mErrorEdit->setText("Combined data");
         emit PluginFormAbstract::OkEnabled(true );
@@ -123,10 +123,10 @@ void PluginF14CForm::setData(const QJsonObject& data, bool isCombined)
         mErrorEdit->setText(locale.toString(e));
         mRefCombo->setCurrentText(c);
 
-        mAverageEdit->setEnabled(!isCombined);
-        mErrorEdit->setEnabled(!isCombined);
-        mRefCombo->setEnabled(!isCombined);
     }
+    mAverageEdit->setEnabled(!isCombined);
+    mErrorEdit->setEnabled(!isCombined);
+    mRefCombo->setEnabled(!isCombined);
 }
 
 QJsonObject PluginF14CForm::getData()

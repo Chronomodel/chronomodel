@@ -362,7 +362,7 @@ void CalibrationView::updateGraphs()
             const double thresh = std::clamp(locale().toDouble(input), 0., 100.);
 
             if (thresh>(100. - 2*mDate.threshold_limit)) {
-                // Dans le cas des unif, ou des calibrations d'une longueur de moins de 10, il n'y a pas de réduction de support pour la calibré (voir Date::calibrate)
+                // In the case of uniform, or calibrations with a length of less than 10, there is no reduction in support for the calibrate (see Date::calibrate).
                 hpd = getMapDataInRange(mDate.getFormatedCalibMap(), mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
                 if (periodCalib.size()<10)

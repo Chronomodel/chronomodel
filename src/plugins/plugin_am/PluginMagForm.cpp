@@ -211,56 +211,77 @@ PluginMagForm::~PluginMagForm()
 
 void PluginMagForm::setData(const QJsonObject &data, bool isCombined)
 {
-    if (isCombined)
-        return;
 
-    ProcessTypeAM pta = static_cast<ProcessTypeAM> (data.value(DATE_AM_PROCESS_TYPE_STR).toInt());
+    mIncEdit->setEnabled(!isCombined); // Inclinaison pour la direction
+    mDecEdit->setEnabled(!isCombined);    // Déclinaison pour la direction
+    mAlpha95Edit->setEnabled(!isCombined);
 
-    switch (pta) {
-    case eInc:
-        mIncRadio->setChecked(true);
-        break;
-    case eDec:
-        mDecRadio->setChecked(true);
-        break;
-    case eField:
-        mFieldRadio->setChecked(true);
-        break;
-    case eID:
-        mIDRadio->setChecked(true);
-        break;
-    case eIF:
-        mIFRadio->setChecked(true);
-        break;
-    case eIDF:
-        mIDFRadio->setChecked(true);
-        break;
-    default:
-        break;
+    mFieldEdit ->setEnabled(!isCombined);
+    mFieldErrorEdit ->setEnabled(!isCombined);
+
+    mMCMCIterationEdit->setEnabled(!isCombined);
+
+    mRefICombo->setEnabled(!isCombined);
+    mRefDCombo->setEnabled(!isCombined);
+    mRefFCombo->setEnabled(!isCombined);
+
+    mIncRadio->setEnabled(!isCombined);
+    mDecRadio->setEnabled(!isCombined);
+    mFieldRadio->setEnabled(!isCombined);
+    mIDRadio->setEnabled(!isCombined);
+    mIFRadio->setEnabled(!isCombined);
+    mIDFRadio->setEnabled(!isCombined);
+
+
+    if (!isCombined) {
+        ProcessTypeAM pta = static_cast<ProcessTypeAM> (data.value(DATE_AM_PROCESS_TYPE_STR).toInt());
+
+        switch (pta) {
+        case eInc:
+            mIncRadio->setChecked(true);
+            break;
+        case eDec:
+            mDecRadio->setChecked(true);
+            break;
+        case eField:
+            mFieldRadio->setChecked(true);
+            break;
+        case eID:
+            mIDRadio->setChecked(true);
+            break;
+        case eIF:
+            mIFRadio->setChecked(true);
+            break;
+        case eIDF:
+            mIDFRadio->setChecked(true);
+            break;
+        default:
+            break;
+        }
+
+        const double incl = data.value(DATE_AM_INC_STR).toDouble();
+        const double decl = data.value(DATE_AM_DEC_STR).toDouble();
+        const double alpha95 = data.value(DATE_AM_ALPHA95_STR).toDouble();
+        const double field = data.value(DATE_AM_FIELD_STR).toDouble();
+        const double error_f = data.value(DATE_AM_ERROR_F_STR).toDouble();
+        const int iter = data.value(DATE_AM_ITERATION_STR).toInt();
+
+        QLocale locale  =QLocale();
+        mIncEdit->setText(locale.toString(incl)); // Inclinaison pour la direction
+        mDecEdit->setText(locale.toString(decl));    // Déclinaison pour la direction
+        mAlpha95Edit->setText(locale.toString(alpha95));
+
+        mFieldEdit ->setText(locale.toString(field));
+        mFieldErrorEdit ->setText(locale.toString(error_f));
+
+        mMCMCIterationEdit->setText(locale.toString(iter));
+
+        mRefICombo->setCurrentText(data.value(DATE_AM_REF_CURVEI_STR).toString().toLower());
+        mRefDCombo->setCurrentText(data.value(DATE_AM_REF_CURVED_STR).toString().toLower());
+        mRefFCombo->setCurrentText(data.value(DATE_AM_REF_CURVEF_STR).toString().toLower());
+
+        updateOptions();
     }
-
-    const double incl = data.value(DATE_AM_INC_STR).toDouble();
-    const double decl = data.value(DATE_AM_DEC_STR).toDouble();
-    const double alpha95 = data.value(DATE_AM_ALPHA95_STR).toDouble();
-    const double field = data.value(DATE_AM_FIELD_STR).toDouble();
-    const double error_f = data.value(DATE_AM_ERROR_F_STR).toDouble();
-    const int iter = data.value(DATE_AM_ITERATION_STR).toInt();
-
-    QLocale locale  =QLocale();
-    mIncEdit->setText(locale.toString(incl)); // Inclinaison pour la direction
-    mDecEdit->setText(locale.toString(decl));    // Déclinaison pour la direction
-    mAlpha95Edit->setText(locale.toString(alpha95));
-
-    mFieldEdit ->setText(locale.toString(field));
-    mFieldErrorEdit ->setText(locale.toString(error_f));
-
-    mMCMCIterationEdit->setText(locale.toString(iter));
-
-    mRefICombo->setCurrentText(data.value(DATE_AM_REF_CURVEI_STR).toString().toLower());
-    mRefDCombo->setCurrentText(data.value(DATE_AM_REF_CURVED_STR).toString().toLower());
-    mRefFCombo->setCurrentText(data.value(DATE_AM_REF_CURVEF_STR).toString().toLower());
-
-    updateOptions();
     emit PluginFormAbstract::OkEnabled(true );
 }
 

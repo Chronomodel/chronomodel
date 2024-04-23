@@ -67,6 +67,7 @@ PluginDensityForm::~PluginDensityForm()
 
 void PluginDensityForm::setData(const QJsonObject& data, bool isCombined)
 {
+    mCurveCombo->setEnabled(!isCombined);
     if ( isCombined) {
         emit PluginFormAbstract::OkEnabled(true );
         
