@@ -422,6 +422,9 @@ QString MCMCLoop::initialize_time()
 
                     // 2 - Init Delta Wiggle matching and Clear mLastAccepts array
                     date.initDelta(uEvent);
+                    date.mWiggle.mSamplerProposal = MHVariable::eFixe;
+                    date.mWiggle.mX = date.mTi.mX + date.mDelta;
+                    date.mWiggle.memo();
                     date.mWiggle.mLastAccepts.clear();
                     //date.mWiggle.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
 

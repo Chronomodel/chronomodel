@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -326,12 +326,14 @@ void Date::fromJson(const QJsonObject& json)
                     if (sd.mCalibration) {
                         tmin = std::min(sd.mCalibration->mTmin, tmin);
                         tmax = std::max(sd.mCalibration->mTmax, tmax);
+
                     }
                 }
 
             }
             mTminRefCurve = tmin;
             mTmaxRefCurve = tmax;
+
         }
     }
 
@@ -549,6 +551,23 @@ void Date::reset()
 
 void Date::calibrate(const StudyPeriodSettings &priod_settings, Project &project, bool truncate)
 {
+    // add the calibration
+    QMap<QString, CalibrationCurve>::iterator it = project.mCalibCurves.find (mUUID);
+
+    if ( it == project.mCalibCurves.end()) {
+        qDebug()<<"[Date::calibrate] Curve to create mUUID: "<< mUUID ;
+        project.mCalibCurves.insert(mUUID, CalibrationCurve());
+
+    } else {
+        CalibrationCurve* d_mCalibration = & it.value();
+        if ( d_mCalibration->mDescription == getDesc() ) {
+            // Controls whether the curve has already been calculated using the description
+            calibrateWiggle(priod_settings, project);
+
+            return;
+        }
+    }
+
   // Check if the ref curve is in the plugin list
 
     double refMinStep = INFINITY;
@@ -559,21 +578,28 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, Project &project
         if (!dateRefName.isEmpty() && !refsNames.contains(dateRefName) )
             return;
         refMinStep = mPlugin->getMinStepRefsCurve(mData);
+
+    } else if (mOrigin == eCombination) {
+        if ( it != project.mCalibCurves.end()) {
+            CalibrationCurve* d_mCalibration = & it.value();
+            refMinStep = std::min(refMinStep, d_mCalibration->mStep);
+
+        } else {
+            for (auto&& sd : mSubDates) {
+                const QString toFind = sd.toObject().value(STATE_DATE_UUID).toString();
+                QMap<QString, CalibrationCurve>::iterator it = project.mCalibCurves.find (toFind);
+
+                if ( it != project.mCalibCurves.end()) {
+                    CalibrationCurve* d_mCalibration = & it.value();
+                    refMinStep = std::min(refMinStep, d_mCalibration->mStep);
+                }
+
+            }
+        }
+
     }
 
-    // add the calibration
-    QMap<QString, CalibrationCurve>::iterator it = project.mCalibCurves.find (mUUID);
 
-    if ( it == project.mCalibCurves.end()) {
-        qDebug()<<"[Date::calibrate] Curve to create mUUID: "<< mUUID ;
-        project.mCalibCurves.insert(mUUID, CalibrationCurve());
-
-    } else if ( it->mDescription == getDesc() ) {
-        // Controls whether the curve has already been calculated using the description
-        calibrateWiggle(priod_settings, project);
-
-        return;
-    }
 
     // Update of the new calibration curve
 

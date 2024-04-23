@@ -340,7 +340,7 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
                 break;
             case CurveSettings::eProcess_Unknwon_Dec:
                 log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
-                    log += line(textGreen(QObject::tr("- Field : %1").arg(stringForLocal(event->mYDec))));
+                log += line(textGreen(QObject::tr("- Field : %1").arg(stringForLocal(event->mYDec))));
                 break;
             case CurveSettings::eProcess_Vector:
                 log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
@@ -358,11 +358,14 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
             log += line(textBlack(QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j+1), QString::number(event->mDates.size()), date.mName)
                                   + "<br>" + QObject::tr("- Type : %1").arg(date.mPlugin->getName())
                                   + "<br>" + QObject::tr("- MCMC %1").arg(MHVariable::getSamplerProposalText(date.mTi.mSamplerProposal))
-                                  + "<br>" + QObject::tr("- Params : %1").arg(date.getDesc())));
+                                  + "<br>" + QObject::tr("- Params : %1").arg(date.getDesc()))
+                        + (date.mDeltaType != Date::eDeltaNone ? textBlack("<br> - "+ date.getWiggleDesc()): ""));
+            /*if (date.mDeltaType != Date::eDeltaNone) {
+                log += line(textBlack("<br>"+ date.getWiggleDesc()));
+            }*/
             ++j;
         }
         log += "<hr>";
-        //log += "<br>";
         ++i;
     }
 
@@ -387,7 +390,6 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
 
 
     for (auto&& phaseConst : model->mPhaseConstraints) {
-        //log += "<hr>";
         log += line(textBold(textGreen( QObject::tr("Succession from %1 to %2").arg(phaseConst->mPhaseFrom->mName, phaseConst->mPhaseTo->mName))));
 
         switch(phaseConst->mGammaType) {
@@ -508,7 +510,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
                 if (acceptRate < 0.46 &&  acceptRate > 0.42 )
                     HTMLText += line(textGreen(QObject::tr(". . . . . Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(acceptRate*100.), MHVariable::getSamplerProposalText(samplerType))));
                 else
-                    HTMLText += line(textGreen(QObject::tr(". . . . . Current Acceptance Rate : ") + textBold(textRed(stringForLocal(acceptRate*100.)+" %")) + " ("  + MHVariable::getSamplerProposalText(samplerType)) + ")");
+                    HTMLText += line(textGreen(QObject::tr(". . . . . Current Acceptance Rate : ") + textBold(textRed(stringForLocal(acceptRate*100.)+" %")) + " ("  + MHVariable::getSamplerProposalText(samplerType) + ")"));
 
                 HTMLText += line(textGreen(QObject::tr(" - Sigma_MH on Std gi : %1").arg(stringForLocal(event->mVg.mSigmaMH))));
             }
@@ -522,10 +524,10 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
             }
 
             if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Univariate) {
-                    HTMLText += line(textGreen(QObject::tr(" - G : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
+                HTMLText += line(textGreen(QObject::tr(" - G : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
 
             } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Depth) {
-                    HTMLText += line(textGreen(QObject::tr(" - Depth : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
+                HTMLText += line(textGreen(QObject::tr(" - Depth : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
 
             } else {
                 HTMLText += line(textGreen(QObject::tr(" - Gx : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));

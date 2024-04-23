@@ -138,6 +138,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
 
             // Calibration
             const QMap<double,double> &formatedCalib = mDate->getFormatedCalibToShow();
+            const double max_formatedCalib = map_max(formatedCalib).value();
 
             const GraphCurve &curveCalib = densityCurve(formatedCalib,
                                                         "Calibration",
@@ -148,14 +149,14 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
 
             // HPD All Chains
             //usefull for fixed value and display calibration
-            const QMap<double, double> &norm = mDate->mTi.mFormatedHPD.size() == 1 ? QMap<double, double> {{mDate->mTi.mFormatedHPD.firstKey(), map_max(formatedCalib).value()}} : mDate->mTi.mFormatedHPD;
+            const QMap<double, double> &norm = mDate->mTi.mFormatedHPD.size() == 1 ? QMap<double, double> {{mDate->mTi.mFormatedHPD.firstKey(), max_formatedCalib}} : mDate->mTi.mFormatedHPD;
             const GraphCurve &curveHPD = HPDCurve(norm,
                                                   "HPD All Chains",
                                                   color);
             mGraph->add_curve(curveHPD);
 
             //  Post Distrib All Chains
-            const QMap<double, double> &normPostDistrib = mDate->mTi.mFormatedHisto.size() == 1 ? QMap<double, double> {{mDate->mTi.mFormatedHisto.firstKey(), map_max(formatedCalib).value()}} : mDate->mTi.mFormatedHisto;
+            const QMap<double, double> &normPostDistrib = mDate->mTi.mFormatedHisto.size() == 1 ? QMap<double, double> {{mDate->mTi.mFormatedHisto.firstKey(), max_formatedCalib}} : mDate->mTi.mFormatedHisto;
             const GraphCurve &curvePostDistrib = densityCurve(normPostDistrib,
                                                               "Post Distrib All Chains",
                                                               color,
@@ -167,7 +168,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
             // Post Distrib Chain i
             if (!mDate->mTi.mChainsHistos.isEmpty())
                 for (int i=0; i<mChains.size(); ++i) {
-                    const QMap<double, double> &normPostDistribChain = mDate->mTi.mChainsHistos.at(i).size() == 1 ? QMap<double, double> {{mDate->mTi.mChainsHistos.at(i).firstKey(), map_max(formatedCalib).value()}} : mDate->mTi.mChainsHistos.at(i);
+                    const QMap<double, double> &normPostDistribChain = mDate->mTi.mChainsHistos.at(i).size() == 1 ? QMap<double, double> {{mDate->mTi.mChainsHistos.at(i).firstKey(), max_formatedCalib}} : mDate->mTi.mChainsHistos.at(i);
                     const GraphCurve &curvePostDistribChain = densityCurve(normPostDistribChain,
                                                                            "Post Distrib Chain " + QString::number(i),
                                                                            Painting::chainColors.at(i),
@@ -175,7 +176,9 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
                                                                            Qt::NoBrush);
                     mGraph->add_curve(curvePostDistribChain);
                     if (!mDate->mWiggle.mChainsHistos.isEmpty()) {
-                        const GraphCurve &curveWiggle = densityCurve(mDate->mWiggle.mChainsHistos.at(i),
+                        const QMap<double, double> &normPostWiggleChain = mDate->mWiggle.mChainsHistos.at(i).size() == 1 ? QMap<double, double> {{mDate->mWiggle.mChainsHistos.at(i).firstKey(), max_formatedCalib}} : mDate->mWiggle.mChainsHistos.at(i);
+
+                        const GraphCurve &curveWiggle = densityCurve(normPostWiggleChain,
                                                                      "Wiggle Post Distrib Chain " + QString::number(i),
                                                                      Painting::chainColors.at(i),
                                                                      Qt::DashLine,
@@ -188,7 +191,9 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
             // ---- Wiggle
 
             //  Post Distrib All Chains
-            const GraphCurve &curveWiggle = densityCurve( mDate->mWiggle.mFormatedHisto,
+            const QMap<double, double> &normPostWiggleChain = mDate->mWiggle.mFormatedHisto.size() == 1 ? QMap<double, double> {{mDate->mWiggle.mFormatedHisto.firstKey(), max_formatedCalib}} : mDate->mWiggle.mFormatedHisto;
+
+            const GraphCurve &curveWiggle = densityCurve( normPostWiggleChain,
                                                           "Wiggle Post Distrib All Chains",
                                                           mColor,
                                                           Qt::DashLine,
@@ -196,7 +201,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
             mGraph->add_curve(curveWiggle);
 
             // Calibration
-            const QMap<double,double> &formatedWiggle = mDate->getFormatedWiggleCalibToShow();
+            const QMap<double, double> &formatedWiggle = mDate->getFormatedWiggleCalibToShow();
 
             const GraphCurve &curveWiggleCal = densityCurve(formatedWiggle,
                                                         "Wiggle Calibration",
