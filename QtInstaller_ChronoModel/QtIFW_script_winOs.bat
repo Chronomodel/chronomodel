@@ -21,10 +21,13 @@ echo " 3 - Copy ABOUT.html files"
 copy C:\Users\Lanos\Documents\github\chronomodel\deploy\ABOUT.html C:\Users\Lanos\Documents\github\chronomodel\QtInstaller_ChronoModel\installer-packages-winOS\chronomodel_QtIFW.composant1\data
 
 echo " 4 - Copy file chronomodel.exe in the installer-packages-winOS\chronomodel_QtIFW.composant1"
-copy C:\Users\Lanos\Documents\github\chronomodel\build\build-Chronomodel-Desktop_Qt_6_6_3_MinGW_64_bit-Release\build\release\chronomodel.exe C:\Users\Lanos\Documents\github\chronomodel\QtInstaller_ChronoModel\installer-packages-winOS\chronomodel_QtIFW.composant1\data
+#C:\Users\Lanos\Documents\github\chronomodel\build\Desktop_Qt_6_6_3_MinGW_64_bit-Release\build\release
+C:\Users\Lanos\Documents\github\chronomodel\QtInstaller_ChronoModel\installer-packages-winOS\chronomodel_QtIFW.composant1\data
+copy C:\Users\Lanos\Documents\github\chronomodel\build\Desktop_Qt_6_6_3_MinGW_64_bit-Release\build\release\chronomodel.exe C:\Users\Lanos\Documents\github\chronomodel\QtInstaller_ChronoModel\installer-packages-winOS\chronomodel_QtIFW.composant1\data
 
 echo " 5 - Copy file chronomodel_bash.exe in the installer-packages-winOS\chronomodel_QtIFW.composant2"
-copy C:\Users\Lanos\Documents\github\chronomodel\build\bash\build-chronomodel-Desktop_Qt_6_6_3_MinGW_64_bit-Release\build\release\chronomodel_bash.exe C:\Users\Lanos\Documents\github\chronomodel\QtInstaller_ChronoModel\installer-packages-winOS\chronomodel_QtIFW.composant2\data
+#C:\Users\Lanos\Documents\github\chronomodel\build\bash\Desktop_Qt_6_6_3_MinGW_64_bit-Release\build\release
+copy C:\Users\Lanos\Documents\github\chronomodel\build\bash\Desktop_Qt_6_6_3_MinGW_64_bit-Release\build\release\chronomodel_bash.exe C:\Users\Lanos\Documents\github\chronomodel\QtInstaller_ChronoModel\installer-packages-winOS\chronomodel_QtIFW.composant2\data
 
 
 set VERSION=3.2.7
