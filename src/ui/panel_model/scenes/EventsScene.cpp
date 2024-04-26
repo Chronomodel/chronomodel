@@ -1358,6 +1358,15 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
     QJsonObject previousEvent = QJsonObject();
     QJsonObject currentEvent;
 
+    QProgressDialog *progress = new QProgressDialog("Creation","Wait" , 1, 10);//, qApp->activeWindow(), Qt::Window);
+    progress->setWindowModality(Qt::WindowModal);
+    progress->setCancelButton(nullptr);
+    progress->setMinimumDuration(4);
+    progress->setMinimum(1);
+
+    //progress->setMinimumWidth(int (progress->fontMetrics().horizontalAdvance(progress->labelText()) * 1.5));
+    progress->setMaximum(listEvent_Data.size()-1);
+
     for (int i = 0; i < listEvent_Data.size(); ++i) {
         // We must regenerate the variables "state" and "events" after event or data inclusion
       //  QJsonObject state = project->state();
@@ -1486,8 +1495,13 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
 
         }
         previousEvent = currentEvent;
-    } // for()
 
+
+        progress->setLabelText(QString(" Item : %1 (%2/%3)").arg(eventName, QString::number(i+1), QString::number(listEvent_Data.size())));
+        progress->setValue(i);
+    } // for()
+    delete progress;
+    progress = nullptr;
     project->pushProjectState(state, NEW_EVEN_BY_CSV_DRAG_REASON, true);
 }
 

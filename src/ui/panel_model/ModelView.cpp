@@ -916,12 +916,14 @@ void ModelView::showMultiCalib()
 {
     //updateLayout();
     const bool showAnim = mEventsScene->getItemsList().size() < 21;
-    if (showAnim) {
+
+   if (showAnim) {
         mAnimationHide->setStartValue(mRightRect);
         mAnimationHide->setEndValue(mRightHiddenRect);
     }
     if (mButMultiCalib->isChecked() && mButMultiCalib->isEnabled()) {
         mPhasesGlobalZoom->hide();
+
         if (mButProperties->isChecked()) {
             // hide mEventPropertiesView
             if (showAnim) {
@@ -1434,7 +1436,7 @@ void ModelView::mousePressEvent(QMouseEvent* e)
     } else {
         setCursor(Qt::ArrowCursor);*/
     }
-    qDebug()<<"ModelView::mousePressEvent";
+    qDebug()<<"[ModelView::mousePressEvent]";
 }
 
 void ModelView::mouseReleaseEvent(QMouseEvent* e)
@@ -1450,7 +1452,7 @@ void ModelView::mouseReleaseEvent(QMouseEvent* e)
     } else {
         setCursor(Qt::ArrowCursor);
     }*/
-qDebug()<<"ModelView::mouseReleaseEvent";
+    qDebug()<<"[ModelView::mouseReleaseEvent]";
 }
 
 void ModelView::mouseMoveEvent(QMouseEvent* e)
@@ -1469,7 +1471,7 @@ void ModelView::mouseMoveEvent(QMouseEvent* e)
     } else {
             setCursor(Qt::SplitHCursor);
     }*/
-    qDebug()<<"ModelView::mouseMoveEvent";
+    qDebug()<<"[ModelView::mouseMoveEvent]";
 
 }
 

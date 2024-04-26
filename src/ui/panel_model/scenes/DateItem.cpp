@@ -262,7 +262,7 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
 
 void DateItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
-    qDebug()<<"DateItem::mousePressEvent___________________ "<<e->modifiers();
+    qDebug()<<"[DateItem::mousePressEvent]--->"<<e->modifiers();
     /* REMARK
      * On macOS Qt::MetaModifier map to the keyboard key "Ctrl"
      * and      Qt::ControlModifier to the keyboard key " cmd" = Command key (⌘)
