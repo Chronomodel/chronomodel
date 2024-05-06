@@ -86,6 +86,10 @@ ModelView::ModelView(std::shared_ptr<Project> &project, QWidget* parent, Qt::Win
     mCurveSettingsVisible (false)
 {
     setMouseTracking(true);
+    QPalette tooltipPalette;
+    tooltipPalette.setColor(QPalette::ToolTipBase, Qt::white);
+    tooltipPalette.setColor(QPalette::ToolTipText, Qt::black);
+    QToolTip::setPalette(tooltipPalette);
 
     mTopRect = QRect(0, 0, width(), int (0.5 * AppSettings::heigthUnit()));
     mTopWrapper = new QWidget(this);
@@ -109,9 +113,12 @@ ModelView::ModelView(std::shared_ptr<Project> &project, QWidget* parent, Qt::Win
     // ----------- on mTopWrapper ------------------
 
     mButModifyPeriod = new QPushButton(tr("STUDY PERIOD") , mTopWrapper);
+    mButModifyPeriod->setToolTip(tr("Define the study Period"));
+    mButModifyPeriod->setWhatsThis(tr("Define the study Period"));
 
     mButCurve = new Button(tr("ChronoCurve :"), mTopWrapper);
     mButCurve->setToolTip(tr("Define curve parameters"));
+    mButCurve->setWhatsThis(tr("Define curve parameters"));
     mButCurve->setFlatHorizontal();
     mButCurve->setCheckable(true);
     mButCurve->setIconOnly(false);
@@ -269,7 +276,7 @@ ModelView::ModelView(std::shared_ptr<Project> &project, QWidget* parent, Qt::Win
     mButPhasesGlobaliew->setFlatVertical();
 
     mButPhasesGrid = new Button(tr("Grid"), mRightWrapper);
-    mButEventsGrid->setToolTip(tr("Drawing a grid under the Phases scene to organize"));
+    mButPhasesGrid->setToolTip(tr("Drawing a grid under the Phases scene to organize"));
     mButPhasesGrid->setIcon(QIcon(":grid2.png"));
     mButPhasesGrid->setCheckable(true);
     mButPhasesGrid->setFlatVertical();

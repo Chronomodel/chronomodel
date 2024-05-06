@@ -73,7 +73,6 @@ Button::Button(const QString &text, QWidget* parent):QPushButton(text, parent),
 {
     setAutoRepeat(false);
     setCursor(Qt::PointingHandCursor);
-
     QPushButton::setFlat(false);
 
     QIcon ic = icon();
@@ -187,12 +186,21 @@ void Button::setColorState(ColorState state)
     update();
 }
 
+bool Button::event(QEvent* event)
+{
+   /* if (event->type() == 110) {
+        QToolTip::showText(mapToGlobal(rect().center()), toolTip());
+    }*/
+    return QPushButton::event(event);
+}
+
 void Button::enterEvent(QEnterEvent *e)
 {
     mMouseOver = true;
-    QPushButton::QWidget::enterEvent(e);
     update();
+    QPushButton::QWidget::enterEvent(e);
 }
+
 void Button::leaveEvent(QEvent * e)
 {
     mMouseOver = false;
@@ -247,23 +255,6 @@ void Button::setCheckable(const bool checkable)
 void Button::setText(const QString& text)
 {
     QPushButton::setText(text);
-/*
-    QIcon ic = icon();
-    bool textOnly = !mIconOnly && ic.isNull();
-
-    mFont = QPushButton::font();
-    if (textOnly)
-        mFont.setBold(true);
-
-    QFontMetricsF fm (mFont);
-    qreal textSize = fm.horizontalAdvance(text);
-
-    while (textSize > (rect().width() - 5. )) {
-        mFont.setPointSizeF(mFont.pointSizeF() - 1);
-        fm = QFontMetricsF(mFont);
-        textSize = fm.horizontalAdvance(text);
-    }
-*/
 }
 
 void Button::paintEvent(QPaintEvent* e)
@@ -479,6 +470,10 @@ void Button::paintEvent(QPaintEvent* e)
         painter.setPen(penCol);
         painter.drawText(r, Qt::AlignCenter, text());
 
+    }
+
+    if (mMouseOver) {
+        QToolTip::showText(mapToGlobal(rect().center()), toolTip());
     }
 
     painter.restore();

@@ -106,6 +106,7 @@ protected:
     virtual void enterEvent(QEnterEvent * e);
     virtual void leaveEvent(QEvent *e);
     virtual void keyPressEvent(QKeyEvent* event);
+    virtual bool event(QEvent* event); //Pour essaie des toolTips qui ne fonctionnent plus
 
     bool mFlatVertical;
     bool mFlatHorizontal;

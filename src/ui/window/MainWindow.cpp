@@ -66,7 +66,7 @@ MainWindow::MainWindow(QWidget* parent):
 #else
     setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() );
 #endif
-
+    setMouseTracking(true);
     QPalette tooltipPalette;
     tooltipPalette.setColor(QPalette::ToolTipBase, Qt::white);
     tooltipPalette.setColor(QPalette::ToolTipText, Qt::black);
@@ -178,6 +178,7 @@ void MainWindow::setCurrentPath(const QString& path)
 void MainWindow::createActions()
 {
     //QWhatsThis::createAction();
+    setMouseTracking(true);
 
     mAppSettingsAction = new QAction(QIcon(":settings_p.png"), tr("Settings"), this);
     connect(mAppSettingsAction, &QAction::triggered, this, &MainWindow::appSettings);
@@ -298,10 +299,10 @@ void MainWindow::createActions()
     mEventsColorAction = new QAction(tr("Selected Events: Change Colour"), this);
     connect(mEventsColorAction, &QAction::triggered, this, &MainWindow::changeEventsColor);
 
-    mEventsMethodAction = new QAction(tr("Selected Events: Change Event Sampler"), this);
+    mEventsMethodAction = new QAction(tr("Selected Events: Change Event MCMC"), this);
     connect(mEventsMethodAction, &QAction::triggered, this, &MainWindow::changeEventsMethod);
 
-    mDatesMethodAction = new QAction(tr("Selected Events: Change Data Sampler"), this);
+    mDatesMethodAction = new QAction(tr("Selected Events: Change Data MCMC"), this);
     connect(mDatesMethodAction, &QAction::triggered, this, &MainWindow::changeDatesMethod);
 
     mSelectEventsAction = new QAction(tr("Select All Events of the Selected Phases"), this);
@@ -831,10 +832,12 @@ void MainWindow::openManual()
 
 void MainWindow::showHelp(bool show)
 {
-   /* if (show)
+    /*
+    if (show)
         QWhatsThis::enterWhatsThisMode();
     else
         QWhatsThis::leaveWhatsThisMode();*/
+
     AppSettings::mShowHelp = show;
     mProjectView->showHelp(show);
 
@@ -1085,7 +1088,7 @@ void MainWindow::changeEventsMethod()
     bool ok;
     QString methodStr = QInputDialog::getItem(qApp->activeWindow(),
                                           tr("Change Events MCMC"),
-                                          tr("Change MCMC Sampler"),
+                                          tr("Change Event MCMC"),
                                           opts, 0, false, &ok);
     if (ok && !methodStr.isEmpty()) {
         MHVariable::SamplerProposal method = MHVariable::getSamplerProposalFromText(methodStr);
@@ -1116,7 +1119,7 @@ void MainWindow::changeDatesMethod()
 
         QString methodStr = QInputDialog::getItem(qApp->activeWindow(),
                                                   tr("Change Data MCMC"),
-                                                  tr("Change MCMC sampler"),
+                                                  tr("Change Data MCMC"),
                                                   opts, 0, false, &ok);
         if (ok && !methodStr.isEmpty()) {
             MHVariable::SamplerProposal method = MHVariable::getSamplerProposalFromText(methodStr);

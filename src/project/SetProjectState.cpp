@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -63,7 +63,7 @@ void SetProjectState::undo()
     qDebug()<<"[SetProjectState::undo] notify=" << mNotify << " reason=" << mReason;
     mProject->mState = mPrevState;
     emit mProject->currentEventChanged(nullptr);
-    emit mProject->noResult();
+   // emit mProject->noResult();
     emit mProject->projectStateChanged();
 }
 
