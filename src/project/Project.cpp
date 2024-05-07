@@ -1313,19 +1313,33 @@ bool Project::recenterProject()
 
     QJsonObject newState = mState;
     QJsonArray newPhases = newState.value(STATE_PHASES).toArray();
+
+    double shift_X_phase = (maxXPhase + minXPhase)/2.;
+    double shift_Y_phase = (maxYPhase + minYPhase)/2.;
+
+    const qreal delta (180); //= AbstractItem::mItemWidth
+    shift_X_phase = ceil(shift_X_phase/delta) * delta;
+    shift_Y_phase = ceil(shift_Y_phase/delta) * delta;
+
     for (auto&& phaseJSON : newPhases) {
         QJsonObject phase = phaseJSON.toObject();
-        phase[STATE_ITEM_X] =  phase[STATE_ITEM_X].toDouble() - (maxXPhase + minXPhase)/2.;
-        phase[STATE_ITEM_Y] = phase[STATE_ITEM_Y].toDouble() - (maxYPhase + minYPhase)/2.;
+        phase[STATE_ITEM_X] = phase[STATE_ITEM_X].toDouble() - shift_X_phase;
+        phase[STATE_ITEM_Y] = phase[STATE_ITEM_Y].toDouble() - shift_Y_phase;
         phaseJSON = phase;
     }
     newState[STATE_PHASES] = newPhases;
 
+    double shift_X_event = (maxXEvent + minXEvent)/2.;
+    double shift_Y_event = (maxYEvent + minYEvent)/2.;
+
+    shift_X_event = ceil(shift_X_event/delta) * delta;
+    shift_Y_event = ceil(shift_Y_event/delta) * delta;
+
     QJsonArray newEvents = newState.value(STATE_EVENTS).toArray();
     for (auto&& eventJSON : newEvents) {
        QJsonObject event = eventJSON.toObject();
-       event[STATE_ITEM_X] = event[STATE_ITEM_X].toDouble() - (maxXEvent + minXEvent)/2. ;
-       event[STATE_ITEM_Y] = event[STATE_ITEM_Y].toDouble() - (maxYEvent + minYEvent)/2. ;
+       event[STATE_ITEM_X] = event[STATE_ITEM_X].toDouble() - shift_X_event ;
+       event[STATE_ITEM_Y] = event[STATE_ITEM_Y].toDouble() - shift_Y_event ;
        eventJSON = event;
     }
     newState[STATE_EVENTS] = newEvents;
