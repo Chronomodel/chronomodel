@@ -51,7 +51,7 @@ ConstraintDialog::ConstraintDialog(QWidget* parent, ConstraintDialog::Type type,
     mDeleteRequested(false)
 {
     setWindowTitle(tr("Constraint"));
-
+    setMouseTracking(true);
     // -----------
 
     mTypeLab = new Label(tr("Min hiatus"), this);
@@ -66,7 +66,12 @@ ConstraintDialog::ConstraintDialog(QWidget* parent, ConstraintDialog::Type type,
     QIntValidator* positiveValidator = new QIntValidator();
 
     positiveValidator->setBottom(1);
-    mFixedEdit->setValidator(positiveValidator);
+    QDoubleValidator* RplusValidator = new QDoubleValidator();
+    RplusValidator->setBottom(0.000001);
+
+    mFixedEdit->setValidator(RplusValidator);
+    mFixedEdit->setToolTip(tr("The min phase hiatus must be greater than %1!").arg(QLocale().toString(RplusValidator->bottom())));
+
 
 
     mOkBut = new Button(tr("OK"), this);
@@ -92,20 +97,15 @@ ConstraintDialog::ConstraintDialog(QWidget* parent, ConstraintDialog::Type type,
 
 ConstraintDialog::~ConstraintDialog()
 {
-
 }
 
 void ConstraintDialog::setConstraint(const QJsonObject &constraint)
 {
     mConstraint = constraint;
 
-    if (mType == eEvent) {
-        /*mTypeCombo->setCurrentIndex(mConstraint[STATE_EVENT_CONSTRAINT_PHI_TYPE].toInt());
-        mMinEdit->setText(QString::number(mConstraint[STATE_EVENT_CONSTRAINT_PHI_MIN].toDouble()));
-        mMaxEdit->setText(QString::number(mConstraint[STATE_EVENT_CONSTRAINT_PHI_MAX].toDouble()));*/
-    } else if (mType == ePhase) {
+    if (mType == ePhase) {
         mTypeCombo->setCurrentIndex(mConstraint[STATE_CONSTRAINT_GAMMA_TYPE].toInt());
-        mFixedEdit->setText(QString::number(mConstraint[STATE_CONSTRAINT_GAMMA_FIXED].toDouble()));
+        mFixedEdit->setText(QLocale().toString(mConstraint[STATE_CONSTRAINT_GAMMA_FIXED].toDouble()));
     }
     showAppropriateOptions();
 }
@@ -113,15 +113,10 @@ void ConstraintDialog::setConstraint(const QJsonObject &constraint)
 QJsonObject ConstraintDialog::constraint() const
 {
     QJsonObject c = mConstraint;
-    if (mType == eEvent) {
-        /*mConstraint[STATE_EVENT_CONSTRAINT_PHI_TYPE] = mTypeCombo->currentIndex();
-        mConstraint[STATE_EVENT_CONSTRAINT_PHI_MIN] = mMinEdit->text().toDouble();
-        mConstraint[STATE_EVENT_CONSTRAINT_PHI_MAX] = mMaxEdit->text().toDouble();*/
-    } else if (mType == ePhase) {
+    if (mType == ePhase) {
         c[STATE_CONSTRAINT_GAMMA_TYPE] = mTypeCombo->currentIndex();
-        c[STATE_CONSTRAINT_GAMMA_FIXED] = mFixedEdit->text().toDouble();
-        //c[STATE_CONSTRAINT_GAMMA_MIN] = mMinEdit->text().toDouble();
-        //c[STATE_CONSTRAINT_GAMMA_MAX] = mMaxEdit->text().toDouble();
+        c[STATE_CONSTRAINT_GAMMA_FIXED] = QLocale().toDouble(mFixedEdit->text());
+
     }
     return c;
 }
