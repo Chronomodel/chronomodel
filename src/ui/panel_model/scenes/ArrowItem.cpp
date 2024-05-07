@@ -573,10 +573,10 @@ QString ArrowItem::getBubbleText() const
     else if (mType == ePhase) {
             PhaseConstraint::GammaType gammaType = PhaseConstraint::GammaType (mData.value(STATE_CONSTRAINT_GAMMA_TYPE).toInt());
             if (gammaType == PhaseConstraint::eGammaFixed)
-                bubbleText = "hiatus ≥ " + QString::number(mData.value(STATE_CONSTRAINT_GAMMA_FIXED).toDouble());
+                bubbleText = "hiatus ≥ " + QLocale().toString(mData.value(STATE_CONSTRAINT_GAMMA_FIXED).toDouble());
             else if (gammaType == PhaseConstraint::eGammaRange)
-                bubbleText = "min hiatus ∈ [" + QString::number(mData.value(STATE_CONSTRAINT_GAMMA_MIN).toDouble()) +
-                "; " + QString::number(mData.value(STATE_CONSTRAINT_GAMMA_MAX).toDouble()) + "]";
+                bubbleText = "min hiatus ∈ [" + QLocale().toString(mData.value(STATE_CONSTRAINT_GAMMA_MIN).toDouble()) +
+                "; " + QLocale().toString(mData.value(STATE_CONSTRAINT_GAMMA_MAX).toDouble()) + "]";
         }
 
     return bubbleText;

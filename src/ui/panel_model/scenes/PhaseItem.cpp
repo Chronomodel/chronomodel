@@ -45,6 +45,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ArrowTmpItem.h"
 
 #include <QtWidgets>
+#include <QLocale>
 
 PhaseItem::PhaseItem(AbstractScene* scene, const QJsonObject& phase, QGraphicsItem* parent):
     AbstractItem(scene, parent),
@@ -384,9 +385,9 @@ QJsonArray PhaseItem::getEvents() const
 QString PhaseItem::getTauString() const
 {
     QString tauStr;
-    Phase::TauType type = Phase::TauType (mData.value(STATE_PHASE_TAU_TYPE).toInt());
+    const Phase::TauType type = Phase::TauType (mData.value(STATE_PHASE_TAU_TYPE).toInt());
     if (type == Phase::eTauFixed)
-        tauStr += tr("Duration ≤ %1").arg(QString::number(mData.value(STATE_PHASE_TAU_FIXED).toDouble()));
+        tauStr += tr("Duration ≤ %1").arg(QLocale().toString(mData.value(STATE_PHASE_TAU_FIXED).toDouble()));
 
     else if (type == Phase::eZOnly)
         tauStr += tr("Uniform Span");
