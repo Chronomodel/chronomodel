@@ -140,10 +140,9 @@ GraphCurve topLineSection(const std::pair<double, double> &section, const QStrin
     curve.mName = name;
     curve.mSections.push_back(section);
     curve.mPen.setColor(color);
-    curve.mPen.setWidth(3);
+    curve.mPen.setWidth(1);
     curve.mPen.setStyle(Qt::SolidLine);
     curve.mType = GraphCurve::eTopLineSections;
-
     return curve;
 }
 
@@ -154,9 +153,8 @@ GraphCurve horizontalSection(const std::pair<double, double> &section, const QSt
     curve.mSections.push_back(section);
     curve.mBrush = brush;
     curve.mPen = QPen(QBrush(color), 2.);
-      curve.mType = GraphCurve::eHorizontalSections;
+    curve.mType = GraphCurve::eHorizontalSections;
     curve.mIsRectFromZero = true;
-
     return curve;
 }
 
