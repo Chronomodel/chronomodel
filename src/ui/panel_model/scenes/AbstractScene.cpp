@@ -337,7 +337,6 @@ void AbstractScene::keyReleaseEvent(QKeyEvent* keyEvent)
 
 void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
 {
-    //painter->fillRect(rect, QColor(230, 230, 230));
     painter->fillRect(rect, Qt::white);
 
     painter->setBrush(Qt::white);
@@ -346,7 +345,7 @@ void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
 
     if (mShowGrid) {
         painter->setPen(QColor(220, 220, 220));
-        const  qreal x (sceneRect().x());
+        const qreal x (sceneRect().x());
         const qreal y (sceneRect().y());
         const qreal w (sceneRect().width());
         const qreal h (sceneRect().height());
@@ -358,7 +357,7 @@ void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
             xi += delta;
         }
 
-        qreal yi (floor(y/delta) * delta);
+        qreal yi (ceil(y/delta) * delta);
         while (yi< y + h) {
             painter->drawLine(QLineF(x , yi, x + w, yi));
             yi += delta;
@@ -366,9 +365,4 @@ void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
 
     }
 
-    // Cross for origin :
-   /* painter->setPen(QColor(100, 100, 100));
-    painter->drawLine(-10, 0, 10, 0);
-    painter->drawLine(0, -10, 0, 10);
-    */
 }
