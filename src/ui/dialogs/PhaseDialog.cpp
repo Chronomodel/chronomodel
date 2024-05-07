@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -48,6 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 PhaseDialog::PhaseDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags)
 {
     setWindowTitle(tr("Create / Modify phase"));
+    setMouseTracking(true);
 
     mNameLab = new QLabel(tr("Phase Name"), this);
     mNameLab->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
@@ -70,13 +71,17 @@ PhaseDialog::PhaseDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
     mTauTypeCombo->addItem(tr("Known"));
     mTauTypeCombo->addItem(tr("Uniform Span")); //z-only
 
+    QDoubleValidator* RplusValidator = new QDoubleValidator();
+    RplusValidator->setBottom(0.000001);
+
     mTauFixedEdit = new LineEdit(this);
+    mTauFixedEdit->setValidator(RplusValidator);
+    mTauFixedEdit->setToolTip(tr("The max phase duration must be greater than %1!").arg(QLocale().toString(RplusValidator->bottom())));
 
     QDialogButtonBox* buttonBox = new QDialogButtonBox();
     buttonBox->addButton(tr("OK"), QDialogButtonBox::AcceptRole);
     buttonBox->addButton(tr("Cancel"), QDialogButtonBox::RejectRole);
     
-
     connect(mTauTypeCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &PhaseDialog::showAppropriateTauOptions);
     
     connect(buttonBox, &QDialogButtonBox::accepted, this, &PhaseDialog::accept);
@@ -137,7 +142,7 @@ void PhaseDialog::setPhase(const QJsonObject& phase)
                                   mPhase.value(STATE_COLOR_GREEN).toInt(),
                                   mPhase.value(STATE_COLOR_BLUE).toInt()));
     mTauTypeCombo->setCurrentIndex(mPhase.value(STATE_PHASE_TAU_TYPE).toInt());
-    mTauFixedEdit->setText(QString::number(mPhase.value(STATE_PHASE_TAU_FIXED).toDouble()));
+    mTauFixedEdit->setText(locale().toString(mPhase.value(STATE_PHASE_TAU_FIXED).toDouble()));
 
     showAppropriateTauOptions(mTauTypeCombo->currentIndex());
 }
@@ -149,18 +154,14 @@ QJsonObject PhaseDialog::getPhase()
     mPhase[STATE_COLOR_GREEN] = mColorPicker->getColor().green();
     mPhase[STATE_COLOR_BLUE] = mColorPicker->getColor().blue();
     mPhase[STATE_PHASE_TAU_TYPE] = Phase::TauType (mTauTypeCombo->currentIndex());
-    mPhase[STATE_PHASE_TAU_FIXED] = mTauFixedEdit->text().toDouble();
+    mPhase[STATE_PHASE_TAU_FIXED] = locale().toDouble(mTauFixedEdit->text());
     return mPhase;
 }
 
 bool PhaseDialog::isValid()
 {
     if (mTauTypeCombo->currentIndex() == 1) {
-        const double tau = mTauFixedEdit->text().toDouble();
-        if (tau < 1) {
-            mError = tr("The fixed phase duration must be greater than 1!");
-            return false;
-        }
+        return mTauFixedEdit->hasAcceptableInput();
     }
 
     return true;

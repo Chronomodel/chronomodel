@@ -1189,10 +1189,7 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
 
     if (min > max)
         throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(mName, QString::number(min), QString::number(max));
-    else if (min == max) {
-        const double theta = min;
-        mTheta.tryUpdate(theta, 1.);
-    }
+
     // -------------------------------------------------------------------------------------------------
     //  Evaluer theta.
     //  Le cas Wiggle est inclus ici car on utilise une formule générale.
@@ -1210,8 +1207,12 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
     const double theta_avg = sum_t / sum_p;
     const double sigma = 1. / sqrt(sum_p);
 
-    switch(mTheta.mSamplerProposal)
-    {
+    if (min == max) {
+        const double theta = min;
+        mTheta.tryUpdate(theta, 1.);
+    } else {
+        switch(mTheta.mSamplerProposal)
+        {
         case MHVariable::eDoubleExp:
         {
             try {
@@ -1225,7 +1226,7 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
             break;
         }
 
-        // Event Prior
+            // Event Prior
         case MHVariable::eBoxMuller:
         {
             double theta;
@@ -1256,8 +1257,8 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
 
         default:
             break;
+        }
     }
-
 }
 
 
