@@ -864,7 +864,7 @@ void MCMCLoop::run()
 #ifdef DEBUG
     QTime endTime = QTime::currentTime();
 
-    qDebug()<<"Model computed";
+    qDebug()<<"[MCMCLoop::run] Model computed";
     qDebug()<<tr("finish at %1").arg(endTime.toString("hh:mm:ss.zzz")) ;
     qDebug()<<tr("Total time elapsed %1").arg(QString(DHMS(startTime.elapsed())));
 #endif

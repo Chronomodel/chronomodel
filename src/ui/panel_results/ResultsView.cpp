@@ -1139,7 +1139,7 @@ void ResultsView::initModel(const std::shared_ptr<ModelCurve> model)
 
     connect(mModel.get(), &Model::newCalculus, this, &ResultsView::generateCurves);
 
-    Scale timeScale;
+    /*Scale timeScale;
     timeScale.findOptimalMark(mModel->mSettings.getTminFormated(), mModel->mSettings.getTmaxFormated(), 7);
     mMajorScale = timeScale.mark;
     mMinorCountScale = 4;
@@ -1150,7 +1150,7 @@ void ResultsView::initModel(const std::shared_ptr<ModelCurve> model)
 
     QLocale locale = QLocale();
     mMajorScaleEdit->setText(locale.toString(mMajorScale));
-    mMinorScaleEdit->setText(locale.toString(mMinorCountScale));
+    mMinorScaleEdit->setText(locale.toString(mMinorCountScale));*/ // done by applystudyPeriod
 
     mHasPhases = (mModel->mPhases.size() > 0);
 
@@ -1547,8 +1547,8 @@ void ResultsView::updateMainVariable()
             if (mCurveDataPointsCheck->isChecked())
                 mCurrentVariableList.append(GraphViewResults::eGDatesPts);
 
-            mCurrentTypeGraph = GraphViewResults::ePostDistrib;
-            mGraphTypeTabs->setTab(0, false);
+            //mCurrentTypeGraph = GraphViewResults::ePostDistrib;
+            //mGraphTypeTabs->setTab(0, false);
 
         } else if (mCurveGPRadio->isChecked()) {
             mMainVariable = GraphViewResults::eGP;
@@ -1556,16 +1556,18 @@ void ResultsView::updateMainVariable()
             if (mCurveMapCheck->isChecked())
                 mCurrentVariableList.append(GraphViewResults::eMap);
 
-            mCurrentTypeGraph = GraphViewResults::ePostDistrib;
-            mGraphTypeTabs->setTab(0, false);
+            //mCurrentTypeGraph = GraphViewResults::ePostDistrib;
+            //mGraphTypeTabs->setTab(0, false);
 
         } else if (mCurveGSRadio->isChecked()) {
             mMainVariable = GraphViewResults::eGS;
-            mCurrentTypeGraph = GraphViewResults::ePostDistrib;
-            mGraphTypeTabs->setTab(0, false);
+            //mCurrentTypeGraph = GraphViewResults::ePostDistrib;
+            //mGraphTypeTabs->setTab(0, false);
         }
 
     }
+    mCurrentTypeGraph = GraphViewResults::ePostDistrib;
+    mGraphTypeTabs->setTab(0, false);
 
     mCurrentVariableList.append(mMainVariable);
 }
