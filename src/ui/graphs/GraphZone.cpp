@@ -47,6 +47,11 @@ mColor(Qt::black)
 
 }
 
+GraphZone::GraphZone(const double XMin, const double XMax, const QString text, const QColor color):mXStart(XMin), mXEnd(XMax),
+    mColor(color), mText(text)
+{
+}
+
 GraphZone::~GraphZone()
 {
 

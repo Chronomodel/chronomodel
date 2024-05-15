@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #if USE_PLUGIN_14C
 
-#include "../PluginAbstract.h"
+#include "PluginAbstract.h"
 
 #define DATE_14C_AGE_STR "age"
 #define DATE_14C_ERROR_STR "error"
@@ -54,28 +54,29 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class DATATION_SHARED_EXPORT Plugin14C : public PluginAbstract
 {
     Q_OBJECT
-    //Q_PLUGIN_METADATA(IID "chronomodel.PluginAbstract.Plugin14C")
-    //Q_INTERFACES(PluginAbstract)
+
 public:
     Plugin14C();
     virtual ~Plugin14C();
 
-    long double getLikelihood(const double& t, const QJsonObject& data);
+    long double getLikelihood(const double t, const QJsonObject &data);
     bool withLikelihoodArg() {return true; }
-    QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data);
-
+    QPair<long double, long double > getLikelihoodArg(const double t, const QJsonObject &data);
+    
     // virtual function
     QString getName() const;
     QIcon getIcon() const;
     bool doesCalibration() const;
     bool wiggleAllowed() const;
-    Date::DataMethod getDataMethod() const;
-    QList<Date::DataMethod> allowedDataMethods() const;
+
+    virtual MHVariable::SamplerProposal getDataMethod() const;
+    virtual QList<MHVariable::SamplerProposal> allowedDataMethods() const;
+
     QStringList csvColumns() const;
-    int csvMinColumns() const;
-    int csvOptionalColumns() const {return 2;} // Corresponding to  "ΔR" and "ΔR Error"
-    QJsonObject fromCSV(const QStringList& list, const QLocale& csvLocale) ;
-    QStringList toCSV(const QJsonObject& data, const QLocale& csvLocale) const;
+    qsizetype csvMinColumns() const;
+    qsizetype csvOptionalColumns() const {return 2;} // Corresponding to  "ΔR" and "ΔR Error"
+    QJsonObject fromCSV(const QStringList &list, const QLocale &csvLocale) ;
+    QStringList toCSV(const QJsonObject &data, const QLocale &csvLocale) const;
     QString getDateDesc(const Date* date) const;
     QString getDateRefCurveName(const Date* date) ;
 
@@ -85,8 +86,8 @@ public:
     PluginSettingsViewAbstract* getSettingsView();
     QList<QHash<QString, QVariant>> getGroupedActions();
 
-    QJsonObject checkValuesCompatibility(const QJsonObject& values);
-    bool isDateValid(const QJsonObject& data, const ProjectSettings& settings);
+    QJsonObject checkValuesCompatibility(const QJsonObject &values);
+    bool isDateValid(const QJsonObject &data, const StudyPeriodSettings &settings);
 
     bool areDatesMergeable(const QJsonArray& dates);
     QJsonObject mergeDates(const QJsonArray& dates);
@@ -101,8 +102,18 @@ public:
     double getRefErrorAt(const QJsonObject& data, const double& t);
 
     QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
+    double getMinStepRefsCurve(const QJsonObject &data) const;
 };
 
+template <typename T>
+T F14CtoCRA ( const T F14C) { return( -8033*log(F14C) );}
+template <typename T>
+T errF14CtoErrCRA (const T errF14C, const T F14C) {return( -8033*log(F14C-errF14C) + 8033*log(F14C)); }
+
+//template <typename T>
+//T CRAtoF14C (const T CRA) { return(exp(-CRA/8033)); }
+//template <typename T>
+//T errCRAtoErrF14C (const T errCRA, const T CRA) { return( exp(-CRA/8033) -exp(-(CRA+ errCRA)/8033)); }
 #endif
 
 #endif

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -41,77 +41,39 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "MHVariable.h"
 #include "Date.h"
-#include "StateKeys.h"
+#include "CurveSettings.h"
+
 
 #include <QMap>
 #include <QColor>
 #include <QJsonObject>
 
+class Model;
 class Phase;
 class EventConstraint;
-class Date;
+
+#define NotS02_BAYESIAN
 
 class Event
 {
 public:
-    enum Type{
-        eDefault = 0,   /**<  The classic type of Event with variance */
-        eKnown = 1     /**< The Bound type */
-    };
-    enum Method{
-        eFixe = -1,  /**<  use with Type==eKnown */
-        eDoubleExp = 0, /**<  The default method */
-        eBoxMuller = 1,
-        eMHAdaptGauss = 2,
-
+    enum Type {
+        eDefault = 0,  /*  The classic/default type of Event with mS02*/
+        eBound = 1     /* The Bound type, with no mS02 */
     };
 
-    Event();
-    Event(const Event& event);
-    Event& operator=(const Event& event);
-    void copyFrom(const Event& event);
-    virtual ~Event();
+    enum PointType {
+        ePoint = 0,   /*  The classic type of Event with mVg != 0 */
+        eNode = 1     /* The Node type with mVg = 0 */
+    };
 
-    static Event fromJson(const QJsonObject& json);
-    virtual QJsonObject toJson() const;
-
-    Type type() const;
-
-    void reset();
-
-
-    /// Functions used within the MCMC process ( not in the init part!) :
-    double getThetaMin(double defaultValue);
-    double getThetaMax(double defaultValue);
-
-
-    ///  Functions used within the init MCMC process
-    double getThetaMinRecursive_old(const double defaultValue,
-                                const QVector<QVector<Event*> >& eventBranches,
-                                const QVector<QVector<Phase*> >& phaseBranches);
-
-    double getThetaMaxRecursive_old(const double defaultValue,
-                                const QVector<QVector<Event*> >& eventBranches,
-                                const QVector<QVector<Phase*> >& phaseBranches);
-
-    bool getThetaMinPossible(const Event *originEvent, QString &circularEventName,  QList<Event *> &startEvents, QString &linkStr);
-    bool getThetaMaxPossible(const Event *originEvent, QString &circularEventName,  QList<Event *> &startEvents);
-
-    double getThetaMinRecursive(const double defaultValue, const QList<Event *> startEvents= QList<Event*>());
-    double getThetaMaxRecursive(const double defaultValue, const QList<Event *> startEvents = QList<Event*>());
-
-    virtual void updateTheta(const double& min, const double& max);
-
-    void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
-
-public:
     Type mType;
     int mId;
+    //const Model *mModel;
+    std::shared_ptr<Model> mModel;
 
     QString mName; //must be public, to be defined by dialogbox
     QColor mColor;
-
-    Method mMethod;
 
     double mItemX;
     double mItemY;
@@ -130,15 +92,123 @@ public:
     QList<EventConstraint*> mConstraintsBwd;
 
     MHVariable mTheta;
-    double mS02;
+    MHVariable mS02Theta;
+
     double mAShrinkage;
+    double mBetaS02;
     bool mInitialized;
 
-    bool mNodeInitialized;
+    // Used with Event::getThetaMinRecursive_v2 and Event::getThetaMaxRecursive_v2 and Event::getThetaMaxPossible
+    bool mIsNode; // Used with getThetaMinRecursive_v3 and getThetaMaxRecursive_v3
     double mThetaNode;
-    int mLevel; // used to init mcmc
 
-    double mMixingLevel;
+    int mLevel; // Used to init mcmc
+
+    // --------------------------------------------------------
+    //  Curve
+    // --------------------------------------------------------
+
+    // Values entered by the user
+    PointType mPointType;
+    double mXIncDepth;
+    double mYDec;
+    double mZField;
+
+    double mS_XA95Depth;
+    double mS_Y;
+    double mS_ZField;
+
+    // Prepared (projected) values
+    double mYx;
+    double mYy;
+    double mYz;
+
+    // Splines values
+    double mGx;
+    double mGy;
+    double mGz;
+
+    // Values used for the calculations
+    t_reduceTime mThetaReduced;
+
+    double mSy;
+    double mW;
+
+    MHVariable mVg; // sigma G of the event (relative to G(t) that we are trying to estimate)
+
+    CalibrationCurve* mMixingCalibrations; // prepare the future
+
+#pragma mark Functions
+
+    Event (std::shared_ptr<Model> model = nullptr);
+
+    explicit Event (const QJsonObject& json, std::shared_ptr<Model> model);
+    virtual ~Event();
+
+    virtual void copyFrom(const Event& event);
+
+    static Event fromJson(const QJsonObject& json);
+    virtual QJsonObject toJson() const;
+
+    inline Type type() const { return mType;}
+
+    void reset();
+    
+    static void setCurveCsvDataToJsonEvent(QJsonObject &event, const QMap<QString, double> &CurveData);
+    static QString curveDescriptionFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType = CurveSettings::eProcess_None);
+    static QList<double> curveParametersFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType = CurveSettings::eProcess_None);
+
+#pragma mark Functions used within the MCMC process ( not in the init part!)
+
+    double getThetaMin(double defaultValue);
+    double getThetaMax(double defaultValue);
+
+#pragma mark  Functions used within the init MCMC process
+
+    // bool getThetaMinPossible(const Event* originEvent, QString &circularEventName,  const QList<Event*> &startEvents, QString &linkStr); // useless
+    bool getThetaMaxPossible(const Event* originEvent, QString &circularEventName,  const QList<Event*> &startEvents);
+
+    bool is_direct_older(const Event &origin);
+    bool is_direct_younger(const Event &origin);
+    double getThetaMinRecursive_v2(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
+    double getThetaMaxRecursive_v2(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
+
+    double getThetaMinRecursive_v3(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
+    double getThetaMaxRecursive_v3(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
+
+    virtual void updateTheta(const double tmin, const double tmax) {updateTheta_v3(tmin, tmax);};
+
+    void updateTheta_v3(const double tmin, const double tmax);
+
+    void updateTheta_v4(const double tmin, const double tmax, const double rate_theta = 1.);
+    /*obsolete
+    void updateTheta_v41(const double tmin, const double tmax, const double rate_theta = 1.);
+    void updateTheta_v42(const double tmin, const double tmax, const double rate_theta = 1.);
+    */
+    void generate_mixingCalibration();
+
+    void updateS02();
+    double h_S02(const double S02);
+
+    void generateHistos(const QList<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
+
+    void updateW();
+
 };
+
+inline double get_Yx(Event* e) {return e->mYx;};
+inline double get_Yy(Event* e) {return e->mYy;};
+inline double get_Yz(Event* e) {return e->mYz;};
+inline double get_Sy(Event* e) {return e->mSy;};
+
+inline double get_Gx(Event* e) {return e->mGx;};
+inline double get_Gy(Event* e) {return e->mGy;};
+inline double get_Gz(Event* e) {return e->mGz;};
+
+inline double get_Theta(Event* e) {return e->mTheta.mX;};
+inline double get_ThetaReduced(Event* e) {return e->mThetaReduced;};
+
+std::vector<double> get_vector(const std::function <double (Event*)> &fun, const QList<Event *> &events);
+
 
 #endif

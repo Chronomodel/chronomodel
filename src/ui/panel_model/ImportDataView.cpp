@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -39,25 +39,28 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ImportDataView.h"
 #include "PluginManager.h"
-#include "../PluginAbstract.h"
+#include "PluginAbstract.h"
 #include "QtUtilities.h"
 #include "HelpWidget.h"
 #include "Button.h"
-#include "Label.h"
 #include "MainWindow.h"
 #include "Project.h"
+#include "CurveSettings.h"
+#include "AppSettings.h"
 
 #include <QtWidgets>
 
 
-ImportDataView::ImportDataView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
+ImportDataView::ImportDataView(QWidget* parent, const bool show_help, Qt::WindowFlags flags):QWidget(parent, flags)
 {
     mBrowseBut = new Button(tr("Load CSV file..."), this);
     mExportBut = new Button(tr("Export all project data as CSV"), this);
-    mHelp = new HelpWidget(this);
-    mHelp->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=31"); //chapter 3.4.2.1 Radiocarbon dating (14C)
 
-    mHelp->setText(tr("Your CSV file must contain 1 data per row. Each row must start with an Event name, the second row is the datation method to use. Allowed datation methods are : 14C, AM, Gauss, Unif, TL/OSL.\nComments are allowed in your CSV. They must start with  # or // and can be placed at the end of a data row. When placed at the begining of a row, the whole row is ignored.\r Be careful, cell separator and decimal separator of the CSV file should be those defined in the Application Settings, otherwise the CSV file will not be opened"));
+    mHelp = new HelpWidget(this);
+    mHelp->setLink("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=31"); //chapter 3.4.2.1 Radiocarbon dating (14C)
+    mHelp->setText(tr("Your CSV file must contain 1 data per row. Each row must start with an Event name, the second row is the dating method to use : 14C, AM, Gauss, etc.\nComments are allowed in your CSV. They must start with  # or // and can be placed at the end of a data row. When placed at the begining of a row, the whole row is ignored.\r Be careful, cell separator and decimal separator of the CSV file should be those defined in the Application Settings, otherwise the CSV file will not be correctly opened"));
+    mHelp->setVisible(show_help);
+    //setHelpVisible(show_help);
 
     mTable = new ImportDataTable(this, this);
     mTable->setAlternatingRowColors(true);
@@ -67,7 +70,7 @@ ImportDataView::ImportDataView(QWidget* parent, Qt::WindowFlags flags):QWidget(p
     mTable->setDragDropMode(QAbstractItemView::DragOnly);
 
     connect(mBrowseBut, &Button::pressed, this, &ImportDataView::browse);
-    connect(mExportBut, &Button::pressed, this,  &ImportDataView::exportDates);
+    connect(mExportBut, &Button::pressed, this, &ImportDataView::exportDates);
 }
 
 ImportDataView::~ImportDataView()
@@ -75,41 +78,71 @@ ImportDataView::~ImportDataView()
 
 }
 
-/**
- * @brief Import data from a CSV file in the table
- * @todo File encoding must be UTF8, Unix LF !!
- * Title; toy csv file
- *  Structure; Terrestrial
- *  // just comment
- *  14C;onshore;1200;30;intcal13.14c;
- *  14C;WithWiggle;50000;5;intcal13.14c;0;0;range;5;10
- *  Structure; Event : Oceanic
- *  14C;shell;2900;36;marine04.14c;-150;20
- *  14C;oyster;3000;30;marine13.14c;200;10
- *
- * Since version 1.6.4_alpha
- * example of csv file below
- *
-// this is a comment :test file for csv with Event's name
-Title; Toy
-EVENT1;AM;mesure_inclinaison_a_Paris;inclination;68,5;0;0;0,98;gal2002sph2014_i.ref
-EventAM;AM;mesure_Declinaison_a_Paris;declination;60;10;0;3;gal2002sph2014_d.ref
-Event14C;14C;14C1;1225;30;intcal13.14c;0;0
-// No event name
-;Gauss;Gauss_ss_event;0;50;equation;0;1;0;none
-// event with data name missing
-Event9;Gauss;;650;50;none;none
-Event1;Gauss; New Data;24;50;none;none
-Event1;14C;New 14C;1600;35;intcal13.14c;0;0;none
-Event1;14C;With Wiggle;50000;5;intcal13.14c;0;0;range;5;10
-# test info
-Structure; Terrestrial
-Event8;Gauss; New Data;-79;50;none;none
+void ImportDataView::setHelpVisible(const bool visible)
+{
+    mHelp->setVisible(visible);
+    /*int helpH = 0;
+    const int butH = 25;
+    const int m = 5;
+    if (visible) {
+       // mHelp->setLink("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=31"); //chapter 3.4.2.1 Radiocarbon dating (14C)
+       // mHelp->setText(tr("Your CSV file must contain 1 data per row. Each row must start with an Event name, the second row is the dating method to use : 14C, AM, Gauss, etc.\nComments are allowed in your CSV. They must start with  # or // and can be placed at the end of a data row. When placed at the begining of a row, the whole row is ignored.\r Be careful, cell separator and decimal separator of the CSV file should be those defined in the Application Settings, otherwise the CSV file will not be correctly opened"));
 
-EventAM;AM;incli;inclination;60;0;0;1;gal2002sph2014_i.ref;none
-Event14C;14C;shell;2900;36;marine04.14c;-150;20;none
-Event1;14C;onshore;1600;35;intcal13.14c;0;0;none
- *
+        mHelp->setGeometry(m, height() - helpH - m, width() - 2*m, helpH);
+        mHelp->setVisible(visible);
+        helpH = mHelp->heightForWidth(width() - 2*m);
+
+    } else {
+        mHelp->setText("");
+        mHelp->setGeometry(0, 0, 0, 0);
+        mHelp->setVisible(visible);
+    }
+
+    mTable->setGeometry(0, 2*m + butH, width(), height() - 4*m - butH - helpH);*/
+    update();
+}
+
+/**
+ * @brief EventsScene::decodeDataDrop insert Event when drop a CSV line from the table importCSV
+ * the table may be come from ImportDataView::exportDates()
+ *  Since version 3.1.3
+ * @param e
+ * @example
+ * Maximal number of columns used in ChronoModel;
+ * // this is a comment :test file for csv with Event's name
+Title; Toy
+//1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20
+Structure;Event 1;
+// Event name;Dating method;dating name/code;Age;error;calibration curve;Reservoir R;delta R;"wiggle matching
+""fixed""
+""range""
+""gaussian""";wiggle value 1;Wiggle value 2;;;;X_Inc_Depth;Err X- apha95- Err depth;Y_Declinaison;Err Y;Z_Field;Err Z_Err F;
+Event name 1;14C;14C_Ly_5212;1370;50;intcal20.14c;0;0;none;;;;;;74;5;50;-10;2;;
+Event name 2;14C;14C_Ly_5212;1370;50;intcal20.14c;0;0;gaussian;30;5;;;;;;;;;;
+// Event name;method;dating name/code;Age;error;"reference year
+(for measurement)";;;;;;;;;prof;err prof;;;;;
+Event name 3;TL/OSL;TL-CLER-202a;987;120;1990;;;;;;;;;220;3;;;;;
+Event name 4;TL/OSL;TL-CLER-202b;1170;140;1990;;;;;;;;;;;;;;;
+Event name 5;TL/OSL;TL-CLER-203;1280;170;1990;;;;;;;;;;;;;;;
+// Event name;method;dating name/code;measurement type;mean value;Inclination  value corresponding to declination;colonne inutile !;"std error
+alpha95";Reference Curve;;;;;;;;;;;;
+Event name 6;AM;kiln A;inclination;65;0;0;2,5;FranceInc;;;;;;;;;;;;
+Event name 7;AM;kiln A;declination;-20;65;0;2,5;FranceDec;;;;;;;;;;;;
+Event name 8;AM;kiln A;intensity;53;0;53;5;FranceInt;;;;;;;;;;;;
+// Event name;method;dating name/code;mean;error;calibration curve;param a;param b;param c;"wiggle matching
+""fixed""
+""range""
+""gaussian""";wiggle value 1;Wiggle value 2;;;;;;;;;
+Event name 9;GAUSS;date 1;1000;50;none;;;;;;;;;;;;;;;
+Event name 10;GAUSS;date 1;1000;50;none;;;;;;;;;;;;;;;
+Event name 11;GAUSS;date 1;1000;50;ReferenceCurveName;;;;;;;;;;;;;;;
+Event name 12;GAUSS;date 2;1000;50;equation;0,01;-1;-1000;fixed;20;;;;;;;;;;
+Event name 13;GAUSS;date 2;1000;50;equation;0,01;-1;-1000;range;10;15;;;;;;;;;
+// Event name;method;dating name/code;date t1;date t2;;;;;;;;;;;;;;;;
+Event name 14;UNIF;date archéo ;300;500;;;;;;;;;;;;;;;;
+// Bound
+Bound name;Bound;1800;;;;;;;;;;;;0;2;0;0;0;0
+ * @return
  */
 void ImportDataView::browse()
 {
@@ -121,7 +154,7 @@ void ImportDataView::browse()
         mPath = info.absolutePath();
         MainWindow::getInstance()->setCurrentPath(mPath);
 
-        while(mTable->rowCount() > 0)
+        while (mTable->rowCount() > 0)
             mTable->removeRow(0);
 
         QFile file(path);
@@ -138,7 +171,8 @@ void ImportDataView::browse()
             int cols (0);
 
             QStringList headers;
-            const QStringList pluginNames = PluginManager::getPluginsNames();
+            QStringList pluginNames = PluginManager::getPluginsNames();
+            pluginNames.append("bound");
 
             const QString csvSep = AppSettings::mCSVCellSeparator;
 
@@ -196,14 +230,15 @@ void ImportDataView::browse()
                 const QString line = stream.readLine();
                 QStringList values = line.split(csvSep);
                 if (values.size() > 0) {
-                    qDebug()<<"ImportDataView::browse() "<<values.at(0).toUpper();
+
                     if (values.size() > 2 && values.at(0) == "") {
                         values[0]="No Name "+ QString::number(noNameCount);
                         ++noNameCount;
                     }
                     if (isComment(values.at(0))) {
                         continue;
-                    } else if (values.at(0).contains("title", Qt::CaseInsensitive) && !values.at(0).contains("ntitle", Qt::CaseInsensitive)) {
+
+                    } else if (values.at(0).contains("title", Qt::CaseInsensitive)) {
                         headers << "TITLE";
 
                         QStringList titleText;
@@ -215,6 +250,7 @@ void ImportDataView::browse()
                         data << titleText;
                         cols = (values.size() > cols) ? values.size() : cols;
                         ++rows;
+
                     } else if (values.at(0).contains("structure", Qt::CaseInsensitive)) {
                         headers << "STRUCTURE";
                         QStringList titleText;
@@ -227,10 +263,14 @@ void ImportDataView::browse()
                         data << titleText;
                         cols = (values.size() > cols) ? values.size() : cols;
                         ++rows;
+
                     } else if (values.size() > 2) {
                         // Display the line only if we have a plugin to import it !
                         const QString EventName = values.at(0);
-                        const QString pluginName = values.at(1);
+                        QString pluginName = values.at(1);
+                        if (pluginName.toLower() =="c14")
+                            pluginName = "14c";
+
                         if (pluginNames.contains(pluginName, Qt::CaseInsensitive)) {
                             headers << EventName;
                             data << values;
@@ -238,14 +278,7 @@ void ImportDataView::browse()
                             // Adapt max columns count if necessary
                             cols = (values.size() > cols) ? values.size() : cols;
                             ++rows;
-                        }
-                        else if (pluginName.contains("bound", Qt::CaseInsensitive)) {
-                            headers << values.at(0);
-                            data << values;
 
-                            // Adapt max columns count if necessary
-                            cols = (values.size() > cols) ? values.size() : cols;
-                            ++rows;
                         }
                     }
                 } else {
@@ -265,7 +298,7 @@ void ImportDataView::browse()
              */
             if (data.isEmpty()){
                 // to have a \ char in string, in C++ you must use two char
-                QMessageBox message(QMessageBox::Warning, tr("Bad file"), tr("Maybe you need to check the manual to build your CSV file !") + " <a href='https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=29 '>"+ tr("More...")+"</a> ",
+                QMessageBox message(QMessageBox::Warning, tr("Bad file"), tr("Maybe you need to check the manual to build your CSV file !") + " <a href='https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=29 '>"+ tr("More...")+"</a> ",
                                     QMessageBox::Ok, qApp->activeWindow());
                 message.exec();
             } else {
@@ -291,13 +324,14 @@ void ImportDataView::browse()
 /**
  * @brief Export all data inside event, in a compatible csv file to import them later
  *  the bound are insert as Structure but they are not importable
+ *  We can insert the dates later with EventsScene::decodeDataDrop
  */
 void ImportDataView::exportDates()
 {
     QString currentDir = MainWindow::getInstance()->getCurrentPath();
     QString path = QFileDialog::getSaveFileName(qApp->activeWindow(), tr("Save as CSV"), currentDir, "CSV File (*.csv)");
 
-    if (!path.isEmpty())  {
+    if (!path.isEmpty()) {
         QFileInfo info(path);
         mPath = info.absolutePath();
         MainWindow::getInstance()->setCurrentPath(mPath);
@@ -310,38 +344,82 @@ void ImportDataView::exportDates()
         if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
             QTextStream stream(&file);
 
-            Project* project = MainWindow::getInstance()->getProject();
-            QJsonArray events = project->mState[STATE_EVENTS].toArray();
-            stream << "Title"<< sep << AppSettings::mLastFile<< endl;
-            for (int i(0); i<events.size(); ++i) {
-                QJsonObject event = events[i].toObject();
-                QJsonArray dates = event[STATE_EVENT_DATES].toArray();
+            const auto &project = MainWindow::getInstance()->getProject();
+            QJsonArray events = project->mState.value(STATE_EVENTS).toArray();
 
-                int type = event[STATE_EVENT_TYPE].toInt();
-                const QString eventName = event[STATE_NAME].toString();
-                if (type == Event::eKnown) {
-                    stream << eventName << sep << "Bound" <<  sep << event.value(STATE_EVENT_KNOWN_FIXED).toDouble() << endl;
+            stream << "Title" << sep << AppSettings::mLastFile << Qt::endl;
+            stream <<"#Event name"<<sep<<"method"<<sep<<"dating name/code"<<sep<<"method param a"<<sep<<"method param b"<<sep<<"method param c"<<sep<<"wiggle type"<<sep<<"wiggle param a"<<sep<<"wiggle param b";
+            stream <<sep<<sep<<sep<<sep<<sep<<sep<<"X_Inc_Depth"<<sep<<"Err X- apha95- Err depth"<<sep<<"Y_Declinaison"<<sep<<"Err Y"<<sep<<"Z_Field"<<sep<<"Err Z_Err F" <<Qt::endl;
+             bool isCurve = (project->mState.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt() != CurveSettings::eProcess_None);
+
+            for (auto&& ev : events) {
+                QJsonObject event = ev.toObject();
+                QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
+
+                const int type = event.value(STATE_EVENT_TYPE).toInt();
+                const QString eventName = event.value(STATE_NAME).toString();
+
+
+                if (type == Event::eBound) {
+                    QList<QString> dateCsv;
+                    dateCsv.append("Bound");
+                    dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_KNOWN_FIXED).toDouble()));
+
+                    if (isCurve) {
+                        // Curve values start at column 15.
+                        // They must be put from column 14 in dateCsv,
+                        // because the row is shifted by one column at inserting eventName (see below)
+                        const int CurveStartColumn = 13;
+                        while (dateCsv.count() < CurveStartColumn) {
+                            dateCsv.append("");
+                        }
+                        dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_X_INC_DEPTH).toDouble()));
+                        dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble()));
+                        dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_Y_DEC).toDouble()));
+                        dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_SY).toDouble()));
+                        dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_Z_F).toDouble()));
+                        dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_SZ_SF).toDouble()));
+
+                        stream << eventName << sep;
+                        stream << dateCsv.join(sep) << Qt::endl;
+                    }
                 } else {
-                   for (int j=0; j<dates.size(); ++j) {
-                        QJsonObject date = dates.at(j).toObject();
-
-                        try{
-                            Date d;
-                            d.fromJson(date);
+                   for (auto&& iDate : dates) {
+                        QJsonObject date = iDate.toObject();
+                        try {
+                            Date d (date);
                             if (!d.isNull()) {
                                 QStringList dateCsv = d.toCSV(csvLocal);
-                                stream <<eventName<<sep;
-                                stream << dateCsv.join(sep) << endl;
+                                
+                                if (isCurve) {
+                                    // Curve values start at column 15.
+                                    // They must be put from column 14 in dateCsv,
+                                    // because the row is shifted by one column at inserting eventName (see below)
+                                    const int CurveStartColumn = 13;
+                                    while (dateCsv.count() < CurveStartColumn) {
+                                        dateCsv.append("");
+                                    }
+                                    dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_X_INC_DEPTH).toDouble()));
+                                    dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble()));
+                                    dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_Y_DEC).toDouble()));
+                                    dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_SY).toDouble()));
+                                    dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_Z_F).toDouble()));
+                                    dateCsv.append(csvLocal.toString(event.value(STATE_EVENT_SZ_SF).toDouble()));
+                                }
+
+                                stream << eventName << sep;
+                                stream << dateCsv.join(sep) << Qt::endl;
                             }
                         }
-                        catch(QString error){
-                        QMessageBox message(QMessageBox::Critical,
-                                            qApp->applicationName() + " " + qApp->applicationVersion(),
-                                            tr("Error : %1").arg(error),
-                                            QMessageBox::Ok,
-                                            qApp->activeWindow());
-                        message.exec();
-                    }
+                        catch (QString error) {
+                            QMessageBox message(QMessageBox::Critical,
+                                qApp->applicationName() + " " + qApp->applicationVersion(),
+                                tr("Error : %1").arg(error),
+                                QMessageBox::Ok,
+                                qApp->activeWindow());
+
+                            message.exec();
+                        }
                     }
                 }
 
@@ -353,15 +431,12 @@ void ImportDataView::exportDates()
 
 void ImportDataView::removeCsvRows(QList<int> rows)
 {
-    sortIntList(rows);
-    for (int i=rows.size()-1; i>=0; --i) {
-        //qDebug() << "Removing row : " << rows[i];
-        //mTable->removeRow(rows[i]);
-
-        for (int c(0); c<mTable->columnCount(); ++c) {
+    std::ranges::sort(rows);
+    for (auto i = rows.size()-1; i >= 0; --i) {
+        for (int c = 0; c < mTable->columnCount(); ++c) {
             QTableWidgetItem* item = mTable->item(rows.at(i), c);
             if (item)
-                item->setBackgroundColor(QColor(100, 200, 100));
+                item->setBackground(QColor(100, 200, 100));
 
         }
     }
@@ -369,38 +444,57 @@ void ImportDataView::removeCsvRows(QList<int> rows)
 
 void ImportDataView::errorCsvRows(QList<int> rows)
 {
-    sortIntList(rows);
-    for (int i=rows.size()-1; i>=0; --i) {
-        for (int c(0); c<mTable->columnCount(); ++c) {
+    std::ranges::sort(rows);
+    for (auto i = rows.size()-1; i >= 0; --i) {
+        for (int c = 0; c < mTable->columnCount(); ++c) {
             QTableWidgetItem* item = mTable->item(rows.at(i), c);
             if (item)
-                item->setBackgroundColor(QColor(220, 110, 94));
+                item->setBackground(QColor(220, 110, 94));
         }
     }
 }
 
-void ImportDataView::paintEvent(QPaintEvent* e)
+void ImportDataView::paintEvent(QPaintEvent* )
 {
-    Q_UNUSED(e);
     QPainter p(this);
     p.fillRect(rect(), QColor(200, 200, 200));
-}
-
-void ImportDataView::resizeEvent(QResizeEvent* e)
-{
-    Q_UNUSED(e);
-
-    int m (5);
-    int butH (25);
-    int helpH = mHelp->heightForWidth(width() - 2*m);
+    const int m = 5;
+    const int butH = 25;
+    int helpH = -2*m;
 
     mBrowseBut->setGeometry(m, m, (width() - 3*m)/2, butH);
     mExportBut->setGeometry(2*m + (width() - 3*m)/2, m, (width() - 3*m)/2, butH);
 
-    mTable->setGeometry(0, 2*m + butH, width(), height() - 4*m - butH - helpH);
-    mHelp->setGeometry(m, height() - helpH - m, width() - 2*m, helpH);
-}
+    if (mHelp->isVisible()) {
+        helpH = mHelp->heightForWidth(width() - 2*m);
+        mHelp->setGeometry(m, height() - helpH - m, width() - 2*m, helpH);
 
+    } else {
+       mHelp->setGeometry(0, 0, 0 ,0);
+    }
+
+    mTable->setGeometry(0, 2*m + butH, width(), height() - 4*m - butH - helpH);
+}
+/*
+void ImportDataView::resizeEvent(QResizeEvent*)
+{
+    const int m = 5;
+    const int butH = 25;
+    int helpH = 0;
+
+    mBrowseBut->setGeometry(m, m, (width() - 3*m)/2, butH);
+    mExportBut->setGeometry(2*m + (width() - 3*m)/2, m, (width() - 3*m)/2, butH);
+
+    if (mHelp->isVisible()) {
+        mHelp->setGeometry(0, 0, 0 ,0);
+    } else {
+        helpH = mHelp->heightForWidth(width() - 2*m);
+        mHelp->setGeometry(m, height() - helpH - m, width() - 2*m, helpH);
+    }
+
+    mTable->setGeometry(0, 2*m + butH, width(), height() - 4*m - butH - helpH);
+}
+*/
 // ------------------------------------------------------------------------------------
 
 // Table
@@ -421,19 +515,19 @@ ImportDataTable::~ImportDataTable()
  * @param items
  * @return a pointer on table data
  */
-QMimeData* ImportDataTable::mimeData(const QList<QTableWidgetItem*> items) const
+QMimeData* ImportDataTable::mimeData(const QList<QTableWidgetItem *> &items) const
 {
     QMimeData* mimeData = new QMimeData();
 
     QByteArray encodedData;
     QDataStream stream(&encodedData, QIODevice::WriteOnly);
 
-    int row (-1);
+    int row = -1;
     QStringList itemStr;
 
     const QString csvSep = AppSettings::mCSVCellSeparator;
 
-    foreach (QTableWidgetItem* item, items) {
+    for (QTableWidgetItem* item : items) {
         if (item) {
             if (item->row() != row) {
                 if (!itemStr.empty())
@@ -443,13 +537,11 @@ QMimeData* ImportDataTable::mimeData(const QList<QTableWidgetItem*> items) const
                 row = item->row();
                 itemStr << QString::number(row);
 
-                //QString pluginName = verticalHeaderItem(row)->text();
-                // itemStr << pluginName;
-                QString evenName = verticalHeaderItem(row)->text();
+                const QString evenName = verticalHeaderItem(row)->text();
                 itemStr << evenName;
 
             }
-            QString text = item->text();
+            const QString text = item->text();
             itemStr << text;
         }
     }
@@ -465,11 +557,11 @@ void ImportDataTable::updateTableHeaders()
     QList<QTableWidgetItem*> items = selectedItems();
     QString pluginName;
     QString verticalHeader;
-    for (int i(0); i<items.size(); ++i) {
-        QString curPluginName = item(items[i]->row(), 0)->text();
+    for (QTableWidgetItem* it : items) {
+        const QString &curPluginName = item(it->row(), 0)->text();
         if (pluginName.isEmpty()) {
             pluginName = curPluginName;
-            verticalHeader = verticalHeaderItem(items[i]->row())->text();
+            verticalHeader = verticalHeaderItem(it->row())->text();
 
         } else if (pluginName != curPluginName) {
             pluginName = QString();
@@ -478,33 +570,74 @@ void ImportDataTable::updateTableHeaders()
     }
 
     QStringList headers;
-
     int numCols = columnCount();
 
-    if (!pluginName.isEmpty() && (verticalHeader!="TITLE")  && (verticalHeader!="STRUCTURE") && (pluginName.toLower()!="bound")) {
+    if (!pluginName.isEmpty() && (verticalHeader!="TITLE")  && (verticalHeader!="STRUCTURE") && (!pluginName.contains("bound", Qt::CaseInsensitive))) {
         PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
-        headers << "Method";
-        headers << plugin->csvColumns();
-        if (plugin->wiggleAllowed()) {
-            headers << "Wiggle Type (none | fixed | range | gaussian)";
-            headers << "Wiggle value 1 (fixed | Lower date | Average)";
-            headers << "Wiggle value 2 (Upper date | Error)";
+        if (plugin != nullptr) {
+            headers << "Method";
+            headers << plugin->csvColumns();
+            if (plugin->wiggleAllowed()) {
+                headers << "Wiggle Type (none | fixed | range | gaussian)";
+                headers << "Wiggle value 1 (fixed | Lower date | Average)";
+                headers << "Wiggle value 2 (Upper date | Error)";
+            }
+        } /*else {
+            return;
+        }*/
+        const int CurveStartIndex = 13; // +1 for index +1 begin = 15
+        while (headers.size() < numCols) {
+            if (headers.size() == CurveStartIndex) {
+                headers << "X_Inc_Depth";
+            } else if (headers.size() == (CurveStartIndex + 1)) {
+                headers << "Err X- apha95- Err depth";
+            } else if (headers.size() == (CurveStartIndex + 2)) {
+                headers << "Y_Dec";
+            } else if (headers.size() == (CurveStartIndex + 3)) {
+                headers << "Err Y";
+            } else if (headers.size() == (CurveStartIndex + 4)) {
+                headers << "Z_Field";
+            } else if (headers.size() == (CurveStartIndex + 5)) {
+                headers << "Err Z_Err F";
+            } else if (headers.size() > CurveStartIndex) {
+                headers << "Comment";
+            } else {
+                // Empty values between dates and Curve
+                headers << "";
+            }
         }
-        while (headers.size() < numCols)
-            headers << "Comment";
 
-    } else if (pluginName.toLower()=="bound") {
-        QStringList cols;
+    } else if (pluginName.contains("bound", Qt::CaseInsensitive)) {
+
         headers << "Bound";
         headers << "Value";
-        for (int i(1); i<numCols; i++)
-            cols<<"";
-        headers << cols;
 
-    } else if ((verticalHeader!="TITLE")  || (verticalHeader!="STRUCTURE")) {
+        const int CurveStartIndex = 13; // +1 for index +1 begin = 15
+        while (headers.size() < numCols) {
+            if (headers.size() == CurveStartIndex) {
+                headers << "X_Inc_Depth";
+            } else if (headers.size() == (CurveStartIndex + 1)) {
+                headers << "Err X- apha95- Err depth";
+            } else if (headers.size() == (CurveStartIndex + 2)) {
+                headers << "Y_Dec";
+            } else if (headers.size() == (CurveStartIndex + 3)) {
+                headers << "Err Y";
+            } else if (headers.size() == (CurveStartIndex + 4)) {
+                headers << "Z_Field";
+            } else if (headers.size() == (CurveStartIndex + 5)) {
+                headers << "Err Z_Err F";
+            } else if (headers.size() > CurveStartIndex) {
+                headers << "Comment";
+            } else {
+                // Empty values between dates and Curve
+                headers << "";
+            }
+        }
+
+    } else if ((verticalHeader != "TITLE")  || (verticalHeader != "STRUCTURE")) {
         QStringList cols;
         cols << "Info";
-        for (int i(1); i<numCols; i++)
+        for (int i = 1; i < numCols; i++)
             cols<<"";
         headers = cols;
 

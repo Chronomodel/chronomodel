@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -39,11 +39,59 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "RefCurve.h"
 
-RefCurve::RefCurve()
+RefCurve::RefCurve():
+    mMinStep (INFINITY)
 {
 
 }
 
-RefCurve::~RefCurve(){
+RefCurve::~RefCurve()
+{
 
+}
+
+double RefCurve::interpolate_mean(const double t) const
+{
+    if (t >= mTmin && t <= mTmax) {
+        // This actually return the iterator with the nearest greater key !!!
+        QMap<double, double>::const_iterator iter = mDataMean.lowerBound(t);
+        if (iter != mDataMean.constBegin())  {
+            const double t_upper = iter.key();
+            const double v_upper = iter.value();
+
+            --iter;
+            const double t_under = iter.key();
+            const double v_under = iter.value();
+
+            return std::lerp(v_under, v_upper, (t - t_under) / (t_upper - t_under));
+        }
+        else {
+            return iter.value();
+        }
+    }
+
+    return 0.;
+}
+
+double RefCurve::interpolate_error(const double t) const
+{
+    if (t >= mTmin && t <= mTmax) {
+        // This actually return the iterator with the nearest greater key !!!
+        QMap<double, double>::const_iterator iter = mDataError.lowerBound(t);
+        if (iter != mDataError.constBegin())  {
+            const double t_upper = iter.key();
+            const double v_upper = iter.value();
+
+            --iter;
+            const double t_under = iter.key();
+            const double v_under = iter.value();
+
+            return std::lerp(v_under, v_upper, (t - t_under) / (t_upper - t_under));
+        }
+        else {
+            return iter.value();
+        }
+    }
+
+    return 0.;
 }

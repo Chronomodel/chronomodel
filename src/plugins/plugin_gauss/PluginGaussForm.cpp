@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -38,13 +38,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "PluginGaussForm.h"
-#if USE_PLUGIN_GAUSS
 
+#if USE_PLUGIN_GAUSS
 #include "PluginGauss.h"
-#include "Label.h"
-#include "LineEdit.h"
-#include "RadioButton.h"
-#include "AppSettings.h"
 
 #include <QJsonObject>
 #include <QtWidgets>
@@ -52,19 +48,28 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("Gaussian measurement"), parent, flags)
 {
-   // setFont(AppSettings::font());
-
     mAverageLab = new QLabel(tr("Mean"), this);
     mErrorLab = new QLabel(tr("Error (sd)"), this);
     mCalibLab = new QLabel(tr("Calibration"), this);
 
+    QDoubleValidator* validator_R = new QDoubleValidator();
+    validator_R->setLocale(QLocale());
+
+    QDoubleValidator* validator_Rplus = new QDoubleValidator();
+    validator_Rplus->setBottom(0.0000001);
+    validator_Rplus->setLocale(QLocale());
+
     mAverageEdit = new QLineEdit(this);
-    mAverageEdit->setAlignment(Qt::AlignHCenter);
+    mAverageEdit->setAlignment(Qt::AlignHCenter);  
+    mAverageEdit->setValidator(validator_R);
 
     mErrorEdit = new QLineEdit(this);
     mErrorEdit->setAlignment(Qt::AlignHCenter);
+    mErrorEdit->setValidator(validator_Rplus);
 
     connect(mErrorEdit, &QLineEdit::textChanged, this, &PluginGaussForm::errorIsValid);
+    connect(mAverageEdit, &QLineEdit::textChanged, this, &PluginGaussForm::isValid);
+   //connect(mErrorEdit, &QLineEdit::editingFinished, this, &PluginGaussForm::validOK);
 
     mAverageEdit->setText("0");
     mErrorEdit->setText("50");
@@ -92,6 +97,9 @@ PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::Windo
     connect(mAEdit, &QLineEdit::textChanged, this, &PluginGaussForm::equationIsValid);
     connect(mBEdit, &QLineEdit::textChanged, this, &PluginGaussForm::equationIsValid);
 
+    connect(mAEdit, &QLineEdit::editingFinished, this, &PluginGaussForm::validOK);
+    connect(mBEdit, &QLineEdit::editingFinished, this, &PluginGaussForm::validOK);
+
     QHBoxLayout* eqLayout = new QHBoxLayout(this);
     eqLayout->setContentsMargins(0, 0, 0, 0);
     eqLayout->QLayout::addWidget(mEq1Lab);
@@ -110,23 +118,21 @@ PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::Windo
     mNoneRadio->setChecked(true);
 
     mCurveCombo = new QComboBox(this);
-    QStringList refCurves = plugin->getRefsNames();
+    const QStringList &refCurves = plugin->getRefsNames();
     for (int i = 0; i<refCurves.size(); ++i)
          mCurveCombo->addItem(refCurves[i]);
 
 
     connect(mEquationRadio, &QRadioButton::toggled, this, &PluginGaussForm::updateVisibleElements);
     connect(mNoneRadio, &QRadioButton::toggled, this, &PluginGaussForm::updateVisibleElements);
-    connect(mEquationRadio, &QRadioButton::toggled, this, &PluginGaussForm::updateVisibleElements);
+    connect(mCurveRadio, &QRadioButton::toggled, this, &PluginGaussForm::updateVisibleElements);
 
-    connect(mEquationRadio, &QRadioButton::toggled, this, &PluginGaussForm::equationIsValid);
-    connect(mNoneRadio, &QRadioButton::toggled, this, &PluginGaussForm::equationIsValid);
-    connect(mEquationRadio, &QRadioButton::toggled, this, &PluginGaussForm::equationIsValid);
-
-
+    connect(mEquationRadio, &QRadioButton::toggled, this, &PluginGaussForm::validOK);
+    connect(mNoneRadio, &QRadioButton::toggled, this, &PluginGaussForm::validOK);
+    connect(mCurveRadio, &QRadioButton::toggled, this, &PluginGaussForm::validOK);
 
     QGridLayout* grid = new QGridLayout();
-    grid->setContentsMargins(0, 5, 0, 0);
+    grid->setContentsMargins(0, 3, 0, 0);
     grid->addWidget(mAverageLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mAverageEdit, 0, 1);
 
@@ -153,28 +159,45 @@ PluginGaussForm::~PluginGaussForm()
 
 void PluginGaussForm::setData(const QJsonObject& data, bool isCombined)
 {
-    (void) isCombined;
-    const QLocale locale=QLocale();
-    const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
-    const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
-    const double a = data.value(DATE_GAUSS_A_STR).toDouble();
-    const double b = data.value(DATE_GAUSS_B_STR).toDouble();
-    const double c = data.value(DATE_GAUSS_C_STR).toDouble();
-    const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
-    const QString curve = data.value(DATE_GAUSS_CURVE_STR).toString();
+    mAverageEdit->setEnabled(!isCombined);
+    mErrorEdit->setEnabled(!isCombined);
+    mAEdit->setEnabled(!isCombined);
+    mBEdit->setEnabled(!isCombined);
+    mCEdit->setEnabled(!isCombined);
+    
+    mCurveRadio->setEnabled(!isCombined);
+    mEquationRadio->setEnabled(!isCombined);
+    mNoneRadio->setEnabled(!isCombined);
+   
+    
+    if ( isCombined) {
+        mAverageEdit->setText("Combined data");
+        mErrorEdit->setText("Combined data");
+        emit PluginFormAbstract::OkEnabled(true );
+        
+    } else {
+        const QLocale locale=QLocale();
+        const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
+        const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
+        const double a = data.value(DATE_GAUSS_A_STR).toDouble();
+        const double b = data.value(DATE_GAUSS_B_STR).toDouble();
+        const double c = data.value(DATE_GAUSS_C_STR).toDouble();
+        const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
+        const QString curve = data.value(DATE_GAUSS_CURVE_STR).toString();
 
-    mAverageEdit->setText(locale.toString(age));
-    mErrorEdit->setText(locale.toString(error));
-    mAEdit->setText(locale.toString(a));
-    mBEdit->setText(locale.toString(b));
-    mCEdit->setText(locale.toString(c));
+        mAverageEdit->setText(locale.toString(age));
+        mErrorEdit->setText(locale.toString(error));
+        mAEdit->setText(locale.toString(a));
+        mBEdit->setText(locale.toString(b));
+        mCEdit->setText(locale.toString(c));
 
-    mCurveRadio->setChecked(mode == DATE_GAUSS_MODE_CURVE);
-    mEquationRadio->setChecked(mode == DATE_GAUSS_MODE_EQ);
-    mNoneRadio->setChecked(mode == DATE_GAUSS_MODE_NONE);
+        mCurveRadio->setChecked(mode == DATE_GAUSS_MODE_CURVE);
+        mEquationRadio->setChecked(mode == DATE_GAUSS_MODE_EQ);
+        mNoneRadio->setChecked(mode == DATE_GAUSS_MODE_NONE);
 
-    mCurveCombo->setCurrentText(curve);
-    updateVisibleElements();
+        mCurveCombo->setCurrentText(curve);
+        updateVisibleElements();
+    }
 }
 
 void PluginGaussForm::updateVisibleElements()
@@ -182,6 +205,7 @@ void PluginGaussForm::updateVisibleElements()
     mCurveCombo->setVisible(mCurveRadio->isChecked());
     mEqWidget->setVisible(mEquationRadio->isChecked());
     mEqWidget->adjustSize();
+
     adjustSize();
     emit sizeChanged();
 }
@@ -217,16 +241,32 @@ QJsonObject PluginGaussForm::getData()
 
 void PluginGaussForm::errorIsValid(QString str)
 {
-    bool ok;
-    const QLocale locale;
-    const double value = locale.toDouble(str,&ok);
-
-    emit PluginFormAbstract::OkEnabled(ok && (value>0) );
+    (void) str;
+    emit PluginFormAbstract::OkEnabled(  mErrorEdit->hasAcceptableInput());
 }
 
 void PluginGaussForm::equationIsValid()
 {
     if (mEquationRadio->isChecked()) {
+        bool oka,okb;
+        const QLocale locale;
+        const double a = locale.toDouble(mAEdit->text(), &oka);
+        if(a == 0)
+            oka = false;
+
+        const double b = locale.toDouble(mBEdit->text(), &okb);
+        if (b == 0)
+            okb = false;
+
+        emit PluginFormAbstract::OkEnabled(oka || okb);
+    }
+    else emit PluginFormAbstract::OkEnabled(true);
+}
+
+void PluginGaussForm::validOK()
+{
+    bool ok = mErrorEdit->hasAcceptableInput() &&  mAverageEdit->hasAcceptableInput();
+    if (ok && mEquationRadio->isChecked()) {
         bool oka,okb;
         const QLocale locale;
         const double a = locale.toDouble(mAEdit->text(),&oka);
@@ -237,15 +277,16 @@ void PluginGaussForm::equationIsValid()
         if (b == 0)
             okb = false;
 
-        emit PluginFormAbstract::OkEnabled(oka || okb);
+        ok = ok && (oka || okb);
     }
-    else emit PluginFormAbstract::OkEnabled(true);
+
+    emit PluginFormAbstract::OkEnabled(ok);
+
 }
 
 bool PluginGaussForm::isValid()
 {
     return true;
 }
-
 
 #endif

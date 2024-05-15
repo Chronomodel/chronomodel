@@ -52,10 +52,9 @@ public:
     virtual ~GraphViewPhase();
 
     void setPhase(Phase* phase);
- //   void setGraphFont(const QFont& font);
 
-    void generateCurves(TypeGraph typeGraph, Variable variable);
-    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
+    void generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList);
+    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showVariableList);
 
 
 protected:

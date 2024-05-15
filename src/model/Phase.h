@@ -1,6 +1,5 @@
 /* ---------------------------------------------------------------------
-
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -40,15 +39,16 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef PHASE_H
 #define PHASE_H
 
-#include "StateKeys.h"
 #include "PhaseConstraint.h"
 #include "MetropolisVariable.h"
 
+#include <unordered_map>
 #include <QString>
 #include <QList>
 #include <QJsonObject>
 #include <QColor>
 
+class Model;
 class Event;
 
 class Phase
@@ -57,11 +57,13 @@ public:
     enum TauType{
         eTauUnknown = 0,
         eTauFixed = 1,
-        eTauRange = 2
+     //   eTauRange = 2, // usefull to convert old file in Project::checkDatesCompatibility()
+        eZOnly = 2
     };
 
-    Phase();
-    Phase(const Phase& phase);
+    Phase (const Model* model = nullptr);
+    Phase (const Phase& phase);
+    explicit Phase (const QJsonObject& json, const Model* model = nullptr);
     Phase& operator=(const Phase& phase);
     void copyFrom(const Phase& phase);
     virtual ~Phase();
@@ -69,42 +71,50 @@ public:
     static Phase fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
 
+    double sum_gamma_prev_phases();
+    double sum_gamma_next_phases();
+    void init_alpha_beta_phase(QList<Phase*> &phases);
+    void init_update_alpha_phase(double theta_max_phase_prev);
+    void init_update_beta_phase(double beta_sup);
+
     double getMaxThetaEvents(double tmax);
     double getMinThetaEvents(double tmin);
 
     double getMinThetaNextPhases(const double tmax);
     double getMaxThetaPrevPhases(const double tmin);
 
-    QPair<double,double> getFormatedTimeRange() const;
+    double init_max_theta(const double max_default);
+    double init_min_theta(const double min_default);
+
+    std::pair<double, double> getFormatedTimeRange() const;
 
     void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
+    void generateActivity(size_t gridLength, double h, const double threshold, const double timeRangeLevel = 95.);
 
-    void updateAll(const double tmin, const double tmax);
+    void update_AlphaBeta(const double tminPeriod, const double tmaxPeriod);
+    void update_All(const double tminPeriod, const double tmaxPeriod);
     void memoAll();
 
     QString getTauTypeText() const;
-    void initTau();
-    void updateTau();
+    void initTau(const double tminPeriod, const double tmaxPeriod);
+    void update_Tau(const double tminPeriod, const double tmaxPeriod);
 
 public:
     int mId;
+    const Model *mModel;
 
     QString mName; //must be public, to be setting by dialogbox
     QColor mColor;
 
     QList<Event*> mEvents;
-    QList<PhaseConstraint*> mConstraintsFwd;
-    QList<PhaseConstraint*> mConstraintsBwd;
+    QList<PhaseConstraint*> mConstraintsNextPhases;
+    QList<PhaseConstraint*> mConstraintsPrevPhases;
 
     MetropolisVariable mAlpha;
     MetropolisVariable mBeta;
-    double mTau;
-    QPair<double,double> mTimeRange;
 
-    // Used to display correctly if alpha or beta is a fixed bound
-   /* bool mIsAlphaFixed;
-    bool mIsBetaFixed;
-   */
+    std::pair<double, double> mTimeRange;
+
     MetropolisVariable mDuration;
     QString mDurationCredibility;
 
@@ -112,10 +122,11 @@ public:
     QMap<double, double> mTempoInf;
     QMap<double, double> mTempoSup;
 
-    QMap<double, double> mTempoCredibilityInf;
-    QMap<double, double> mTempoCredibilitySup;
-
     QMap<double, double> mActivity;
+    QMap<double, double> mActivityInf;
+    QMap<double, double> mActivitySup;
+    QMap<double, double> mActivityUnifTheo;
+
 
     // Raw curve without date format
 
@@ -123,11 +134,14 @@ public:
     QMap<double, double> mRawTempoInf;
     QMap<double, double> mRawTempoSup;
 
-    QMap<double, double> mRawTempoCredibilityInf;
-    QMap<double, double> mRawTempoCredibilitySup;
-
     QMap<double, double> mRawActivity;
+    QMap<double, double> mRawActivityInf;
+    QMap<double, double> mRawActivitySup;
+    QMap<double, double> mRawActivityUnifTheo;
 
+    std::unordered_map<std::string, TValueStack> mValueStack;
+
+    MetropolisVariable mTau;
     TauType mTauType;
     double mTauFixed;
     double mTauMin;
@@ -139,7 +153,7 @@ public:
     bool mIsSelected;
     bool mIsCurrent;
 
-    int mLevel;
+    int mLevel; // ?? is it usefull ??
 
 };
 

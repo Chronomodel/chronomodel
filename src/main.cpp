@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -38,19 +38,17 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "ChronoApp.h"
-#include <QtWidgets>
 #include "MainController.h"
-#include "StdUtilities.h"
 
-#include "fftw3.h"
 
+#include <QtWidgets>
 #include <iostream>
 #include <cmath>
-#include <errno.h>
 #include <fenv.h>
-
+#include <stdlib.h>
 
 // STDC FENV_ACCESS ON // not supported with Clang
+
 
 void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
@@ -71,7 +69,7 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
             break;
         case QtFatalMsg:
             txt += QString("{Fatal} \t\t %1").arg(msg);
-            abort();
+            exit (EXIT_FAILURE);
             break;
         default:
             return ;
@@ -80,7 +78,7 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
     QFile outFile("LogFile.log");
     if (outFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
         QTextStream textStream(&outFile);
-        textStream << txt << endl;
+        textStream << txt << Qt::endl;
     }
 }
 
@@ -97,61 +95,69 @@ int main(int argc, char *argv[])
 
 #endif
 
-    // --------------------------------------
-    //  OpenGL specific settings
-    // --------------------------------------
-    /*
-     * QSurfaceFormat format;
-    format.setRenderableType(QSurfaceFormat::OpenGL);
-    format.setProfile(QSurfaceFormat::CoreProfile);
-    format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
-    format.setSamples(4);
-    QSurfaceFormat::setDefaultFormat(format);
-    */
-    // --------------------------------------
+    QVersionNumber version(VERSION_NUMBER);  // 1.2.3
 
+//#pragma omp parallel
+  // std::cout <<"Hello from thread %d, nthreads %d\n"<< omp_get_thread_num()<< omp_get_num_threads() << std::endl;
+  // QFont guiFont = QGuiApplication::font();
     ChronoApp a(argc, argv);
 
     a.setApplicationName("ChronoModel");
     a.setApplicationDisplayName("ChronoModel");
-    a.setApplicationVersion("2.0.18");//VERSION_NUMBER);//"2.0.9-alpha");  // must match value in Chronomodel.pro
+    a.setApplicationVersion(version.toString());  // must match value in Chronomodel.pro
     a.setOrganizationDomain("http://www.chronomodel.com");
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel.png"));
 
-    qApp->setAttribute(Qt::AA_UseHighDpiPixmaps);
+    QFontInfo F_info(a.font());
+
+    //specify a new font. This happens, for instance, on macOS and iOS, where the system UI fonts are not accessible to the user
+    if (QFontDatabase::isPrivateFamily(F_info.family()))
+        a.setFont(QFont("Arial", F_info.pixelSize()));
+
 
     QString filePath = "";
-    for (int i=0; i<argc; ++i) {
+    for (int i = 0; i<argc; ++i) {
         QString arg(argv[i]);
         if (arg.contains(".chr", Qt::CaseInsensitive))
             filePath = arg;
     }
-
+    
     QLocale::Language newLanguage = QLocale::system().language();
+#if QT_DEPRECATED_SINCE(6, 6)
+    QLocale::Territory newCountry= QLocale::system().territory();
+#else
     QLocale::Country newCountry= QLocale::system().country();
-    QLocale locale = QLocale(newLanguage, newCountry);
+#endif
 
+    QLocale locale = QLocale(newLanguage, newCountry);
+    
     locale.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(locale);
 
   //  qApp->setFont(QApplication::font("QMenu"));
-
-    /*QTranslator qtTranslator;
-    qtTranslator.load("qt_" + QLocale::system().name(), QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+/*
+    QTranslator qtTranslator;
+    qtTranslator.load("qt_" + QLocale::system().name(), QLibraryInfo::path(QLibraryInfo::TranslationsPath));
     a.installTranslator(&qtTranslator);
 
     QTranslator translator;
     if(translator.load(locale, ":/Chronomodel", "_")){
         qDebug() << "Locale set to : " << QLocale::languageToString(locale.language());
         a.installTranslator(&translator);
-    }*/
-
+    }
+*/
     //qInstallMessageHandler(customMessageHandler);
-
+#ifdef DEBUG
+   // std::cout<<"in main filePath ="<<filePath.toStdString()<<"\t";
+#endif
     MainController* c = new MainController(filePath);
     (void) c;
 
-    return  a.exec();
+    a.exec();
+    
+    delete c;
+    
+    return 0;
 
 }

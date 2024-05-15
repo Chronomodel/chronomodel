@@ -41,9 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define EVENTCONSTRAINT_H
 
 #include "Constraint.h"
-
-class Event;
-
+#include "Event.h"
 
 class EventConstraint: public Constraint
 {

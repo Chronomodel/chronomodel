@@ -1,17 +1,18 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
 	Helori LANOS
  	Philippe DUFRESNE
+    Komlan NOUKPOAPE
 
 This software is a computer program whose purpose is to
 create chronological models of archeological data using Bayesian statistics.
 
 This software is governed by the CeCILL V2.1 license under French law and
-abiding by the rules of distribution of free software.  You can  use,
+abiding by the rules of distribution of free software. You can  use,
 modify and/ or redistribute the software under the terms of the CeCILL
 license as circulated by CEA, CNRS and INRIA at the following URL
 "http://www.cecill.info".

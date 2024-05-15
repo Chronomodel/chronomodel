@@ -68,10 +68,10 @@ public:
 
     void setDate(const QJsonObject& date);
     void setForm(PluginFormAbstract* form);
-    void setDataMethod(Date::DataMethod method);
+    void setDataMethod(MHVariable::SamplerProposal sp);
 
     QString getName() const;
-    Date::DataMethod getMethod() const;
+    MHVariable::SamplerProposal getMethod() const;
     Date::DeltaType getDeltaType() const;
     double getDeltaFixed() const;
     double getDeltaMin() const;
@@ -111,6 +111,7 @@ public:
 
 
     QLabel* mWiggleLab;
+    QRadioButton* mDeltaNoneRadio;
     QRadioButton* mDeltaFixedRadio;
     QRadioButton* mDeltaRangeRadio;
     QRadioButton* mDeltaGaussRadio;

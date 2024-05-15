@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -44,14 +44,21 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QLocale>
 #include <QFontMetrics>
 
+#include <QFile>
+
 int AppSettings::mWidthUnit;
 int AppSettings::mHeigthUnit;
-//QFont AppSettings::mFont;
-//int AppSettings::mFontDescent;
-//int AppSettings::mButtonWidth;
 
 QLocale::Language AppSettings::mLanguage;
-QLocale::Country AppSettings::mCountry;
+
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+   QLocale::Territory AppSettings::mCountry;
+#else
+   QLocale::Country AppSettings::mCountry;
+#endif
+
+
 
 bool AppSettings::mAutoSave;
 int AppSettings::mAutoSaveDelay;
@@ -66,8 +73,6 @@ int AppSettings::mImageQuality;
 DateUtils::FormatDate AppSettings::mFormatDate;
 int AppSettings::mPrecision;
 int AppSettings::mNbSheet;
-// QString AppSettings::mFontFamily;
-//int AppSettings::mFontPointSize;
 
 QString AppSettings:: mLastDir;
 QString AppSettings::mLastFile;
@@ -79,7 +84,12 @@ AppSettings::AppSettings()
 {
     QLocale newLoc(QLocale::system());
     AppSettings::mLanguage = newLoc.language();
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+    AppSettings::mCountry = newLoc.territory();
+#else
     AppSettings::mCountry = newLoc.country();
+#endif
     newLoc.setNumberOptions(QLocale::OmitGroupSeparator);
     QLocale::setDefault(newLoc);
 
@@ -111,9 +121,45 @@ AppSettings& AppSettings::operator=(const AppSettings& s)
 }
 */
 
+/*
+ * On macOS and iOS, if the file format is NativeFormat, these files are used by default:
+
+    $HOME/Library/Preferences/com.chronomodel.http:  www.ChronoModel.plist
+    $HOME/Library/Preferences/CNRS.chronomodel.plist
+    $HOME/Library/Preferences/com.yourcompany.chronomodel.plist
+
+/Users/dufresne/Library/Preferences/com.chronomodel.http:  www.ChronoModel.plist
+
+    $HOME/Library/Preferences/fr.CNRS.chronomodel.plist
+
+    /Library/Preferences/com.MySoft.Star Runner.plist
+    /Library/Preferences/com.MySoft.plist
+
+On Windows, NativeFormat settings are stored in the following registry paths:
+
+    HKEY_CURRENT_USER\Software\MySoft\Star Runner
+    HKEY_CURRENT_USER\Software\MySoft\OrganizationDefaults
+    HKEY_LOCAL_MACHINE\Software\MySoft\Star Runner
+    HKEY_LOCAL_MACHINE\Software\MySoft\OrganizationDefaults
+
+ *
+ */
+
+
 void AppSettings::readSettings()
 {
+
     QSettings settings;
+ //qDebug()<< settings.fileName();
+ QFile file(settings.fileName());
+
+#ifdef DEBUG
+ if (file.exists())
+     qDebug()<< settings.fileName() <<"exist";
+else
+       qDebug()<< settings.fileName() <<"n exist pas";
+#endif
+
     settings.beginGroup("MainWindow");
 
     AppSettings::mLastPosition = settings.value("pos",  QPoint(200, 200)).toPoint();
@@ -128,6 +174,7 @@ void AppSettings::readSettings()
     AppSettings::mAutoSaveDelay = settings.value(APP_SETTINGS_STR_AUTO_SAVE_DELAY_SEC, APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC).toInt();
     AppSettings::mShowHelp = settings.value(APP_SETTINGS_STR_SHOW_HELP, APP_SETTINGS_DEFAULT_SHOW_HELP).toBool();
     AppSettings::mCSVCellSeparator = settings.value(APP_SETTINGS_STR_CELL_SEP, APP_SETTINGS_DEFAULT_CELL_SEP).toString();
+
     AppSettings::mCSVDecSeparator = settings.value(APP_SETTINGS_STR_DEC_SEP, APP_SETTINGS_DEFAULT_DEC_SEP).toString();
     AppSettings::mOpenLastProjectAtLaunch = settings.value(APP_SETTINGS_STR_OPEN_PROJ, APP_SETTINGS_DEFAULT_OPEN_PROJ).toBool();
     AppSettings::mPixelRatio = settings.value(APP_SETTINGS_STR_PIXELRATIO, APP_SETTINGS_DEFAULT_PIXELRATIO).toInt();
@@ -138,9 +185,14 @@ void AppSettings::readSettings()
     AppSettings::mPrecision = settings.value(APP_SETTINGS_STR_PRECISION, APP_SETTINGS_DEFAULT_PRECISION).toInt();
     AppSettings::mNbSheet = settings.value(APP_SETTINGS_STR_SHEET, APP_SETTINGS_DEFAULT_SHEET).toInt();
 
-    AppSettings::mLastDir = settings.value("last_project_dir", "").toString();
-    AppSettings::mLastFile = settings.value("last_project_filename", "").toString();
+    try {
+        AppSettings::mLastDir = settings.value("last_project_dir", "").toString();
+        AppSettings::mLastFile = settings.value("last_project_filename", "").toString();
 
+    } catch (...) {
+        AppSettings::mLastDir = "";
+        AppSettings::mLastFile = "";
+    }
     settings.endGroup();
 
 }
@@ -156,8 +208,6 @@ void AppSettings::writeSettings()
     settings.beginGroup("AppSettings");
     settings.setValue(APP_SETTINGS_STR_AUTO_SAVE, AppSettings::mAutoSave);
     settings.setValue(APP_SETTINGS_STR_AUTO_SAVE_DELAY_SEC, AppSettings::mAutoSaveDelay);
-   // settings.setValue(APP_SETTINGS_STR_FONT_FAMILY, AppSettings::font().family());
-    //settings.setValue(APP_SETTINGS_STR_FONT_SIZE, AppSettings::font().pointSize());
 
     settings.setValue(APP_SETTINGS_STR_SHOW_HELP, AppSettings::mShowHelp);
     settings.setValue(APP_SETTINGS_STR_CELL_SEP, AppSettings::mCSVCellSeparator);
@@ -173,32 +223,12 @@ void AppSettings::writeSettings()
     settings.setValue("last_project_dir", AppSettings::mLastDir);
     settings.setValue("last_project_filename", AppSettings::mLastFile);
 
-   // settings.endGroup(); // Group AppSettings
+    settings.endGroup(); // Group AppSettings
 
     settings.endGroup();// Group MainWindows
 }
 
-/*
-void AppSettings::copyFrom(const AppSettings& s)
-{
-    mLanguage = s.mLanguage;
-    mCountry = s.mCountry;
-    mFont = s.mFont;
 
-    mAutoSave = s.mAutoSave;
-    mAutoSaveDelay = s.mAutoSaveDelay;
-    mShowHelp = s.mShowHelp;
-    mCSVCellSeparator = s.mCSVCellSeparator;
-    mCSVDecSeparator = s.mCSVDecSeparator;
-    mOpenLastProjectAtLaunch = s.mOpenLastProjectAtLaunch;
-    mPixelRatio = s.mPixelRatio;
-    mDpm = s.mDpm;
-    mImageQuality = s.mImageQuality;
-    mFormatDate = s.mFormatDate;
-    mPrecision = s.mPrecision;
-    mNbSheet = s.mNbSheet;
-}
-*/
 AppSettings::~AppSettings()
 {
 

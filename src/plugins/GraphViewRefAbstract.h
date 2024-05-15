@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -40,10 +40,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef GRAPHVIEWREFABSTRACT_H
 #define GRAPHVIEWREFABSTRACT_H
 
-#include "ProjectSettings.h"
+#include "StudyPeriodSettings.h"
 #include "StdUtilities.h"
+#include "QtUtilities.h"
 #include "Date.h"
 #include "CalibrationCurve.h"
+#include "MainWindow.h"
+#include "Project.h"
+#include "Painting.h"
+#include "GraphView.h"
 
 #include <QWidget>
 
@@ -92,10 +97,13 @@ public:
 
     }
 
-    virtual ~GraphViewRefAbstract() {}
+    virtual ~GraphViewRefAbstract() {
+        mGraph->removeAllCurves();
+        mGraph=nullptr;
+    }
 
 
-    virtual void setDate(const Date& date, const ProjectSettings& settings)
+    virtual void setDate(const Date& date, const StudyPeriodSettings& settings)
     {
         mSettings = settings;
 
@@ -110,14 +118,71 @@ public:
             mTminCalib = - HUGE_VAL;
             mTmaxCalib = + HUGE_VAL;
 
-            mTminDisplay =  double (mSettings.mTmin);
+            mTminDisplay = double (mSettings.mTmin);
             mTmaxDisplay = double (mSettings.mTmax);
         }
 
         mTminRef = date.getTminRefCurve();
         mTmaxRef = date.getTmaxRefCurve();
     }
+    
+    void drawSubDates(const QJsonArray& subDates, const StudyPeriodSettings& settings, const double tminDisplay, const double tmaxDisplay)
+    {
+        mSettings = settings;
+        mGraph->removeAllCurves();
+        
+        for (int i= 0; i < subDates.size(); ++i) {
+            QJsonObject subDate = subDates.at(i).toObject();
+            Date sd (subDate);
 
+            GraphCurve gCurve;
+            gCurve.mVisible = true;
+            gCurve.mName = sd.mName;
+
+            QColor curveColor( i<210 ? Painting::chainColors[i] : randomColor());
+
+            gCurve.mPen.setColor(Painting::mainColorDark);
+            
+            curveColor.setAlpha(100);
+            gCurve.mBrush = QBrush(curveColor);
+
+            //gCurve.mIsVertical = false;
+            //gCurve.mIsHisto = false;
+            gCurve.mIsRectFromZero = true;
+            
+            const auto &project = MainWindow::getInstance()->getProject();
+
+            QString toFind;
+            if (sd.mDeltaType == Date::eDeltaNone) {
+                toFind = sd.mUUID;
+
+            } else {
+                toFind = "WID::" + sd.mUUID;
+            }
+
+            QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find(toFind);
+
+            if ( it != project->mCalibCurves.end())
+                sd.mCalibration = & it.value();
+
+            QMap<double, double> calib;
+            if (sd.mDeltaType != Date::eDeltaNone) {
+                calib = normalize_map(getMapDataInRange(sd.getFormatedWiggleCalibMap(), tminDisplay, tmaxDisplay));
+
+            } else {
+                calib = normalize_map(getMapDataInRange(sd.getFormatedCalibMap(), tminDisplay, tmaxDisplay));
+            }
+
+            gCurve.mData = calib;
+            gCurve.mType = GraphCurve::CurveType::eDensityData;
+            mGraph->add_curve(gCurve);
+            mGraph->setRangeX(tminDisplay, tmaxDisplay);
+            mGraph->setCurrentX(tminDisplay, tmaxDisplay);
+        }
+    
+       
+        
+    }
     void setFormatFunctX(DateConversion f)
     {
         mFormatFuncX = f;
@@ -139,7 +204,7 @@ public slots:
     void changeXScaleDivision (const double &major, const int & minor) {mGraph->changeXScaleDivision(major, minor);}
 
 protected:
-    ProjectSettings mSettings;
+    StudyPeriodSettings mSettings;
     QColor mMeasureColor;
     DateConversion mFormatFuncX;
 

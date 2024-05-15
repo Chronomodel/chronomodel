@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -41,11 +41,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #if USE_PLUGIN_UNIFORM
 
 #include "PluginUniformForm.h"
+#include "PluginUniformRefView.h"
+#include "Generator.h"
 
-#include <cstdlib>
-#include <iostream>
 #include <QJsonObject>
 #include <QtWidgets>
+
+
 
 PluginUniform::PluginUniform()
 {
@@ -57,7 +59,7 @@ PluginUniform::~PluginUniform()
 
 }
 
-long double PluginUniform::getLikelihood(const double& t, const QJsonObject& data)
+long double PluginUniform::getLikelihood(const double t, const QJsonObject &data)
 {
     const double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
     const double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
@@ -82,29 +84,29 @@ bool PluginUniform::doesCalibration() const
 
 bool PluginUniform::wiggleAllowed() const
 {
-    return false;
+    return true;
 }
 
-Date::DataMethod PluginUniform::getDataMethod() const
+MHVariable::SamplerProposal PluginUniform::getDataMethod() const
 {
-    return Date::eMHSymetric;
+    return MHVariable::eInversion;
 }
 
-QList<Date::DataMethod> PluginUniform::allowedDataMethods() const
+QList<MHVariable::SamplerProposal> PluginUniform::allowedDataMethods() const
 {
-    QList<Date::DataMethod> methods;
-    methods.append(Date::eMHSymetric);
-    methods.append(Date::eMHSymGaussAdapt);
+    QList<MHVariable::SamplerProposal> methods;
+    methods.append(MHVariable::eMHPrior);
+    methods.append(MHVariable::eInversion); // since version v3.2.4
+    methods.append(MHVariable::eMHAdaptGauss);
     return methods;
 }
 
 QStringList PluginUniform::csvColumns() const
 {
     QStringList cols;
-    cols << "Name" << "Lower date" << "Upper date";
+    cols << "Name" << "Lower date" << "Upper date" <<"";
     return cols;
 }
-
 
 PluginFormAbstract* PluginUniform::getForm()
 {
@@ -112,7 +114,7 @@ PluginFormAbstract* PluginUniform::getForm()
     return form;
 }
 // Convert old project versions
-QJsonObject PluginUniform::checkValuesCompatibility(const QJsonObject& values)
+QJsonObject PluginUniform::checkValuesCompatibility(const QJsonObject &values)
 {
     QJsonObject result = values;
 
@@ -123,7 +125,7 @@ QJsonObject PluginUniform::checkValuesCompatibility(const QJsonObject& values)
     return result;
 }
 
-QJsonObject PluginUniform::fromCSV(const QStringList& list, const QLocale& csvLocale)
+QJsonObject PluginUniform::fromCSV(const QStringList &list, const QLocale &csvLocale)
 {
     QJsonObject json;
     if (list.size() >= csvMinColumns()) {
@@ -138,11 +140,12 @@ QJsonObject PluginUniform::fromCSV(const QStringList& list, const QLocale& csvLo
     return json;
 }
 
-QStringList PluginUniform::toCSV(const QJsonObject& data, const QLocale& csvLocale) const
+QStringList PluginUniform::toCSV(const QJsonObject &data, const QLocale &csvLocale) const
 {
     QStringList list;
     list << csvLocale.toString(data.value(DATE_UNIFORM_MIN_STR).toDouble());
     list << csvLocale.toString(data.value(DATE_UNIFORM_MAX_STR).toDouble());
+    list << "";
     return list;
 }
 
@@ -153,37 +156,170 @@ QString PluginUniform::getDateDesc(const Date* date) const
     QString result;
 
     const QJsonObject &data = date->mData;
-    result += QObject::tr("Interval") + QString(" : [ %1 ; %2 ] BC/AD").arg(locale.toString(data.value(DATE_UNIFORM_MIN_STR).toDouble()),
+    result += QObject::tr("Interval") + QString(" = [ %1 : %2 ] BC/AD").arg(locale.toString(data.value(DATE_UNIFORM_MIN_STR).toDouble()),
                                                                             locale.toString(data.value(DATE_UNIFORM_MAX_STR).toDouble()));
 
     return result;
 }
 
-bool PluginUniform::isDateValid(const QJsonObject& data, const ProjectSettings& settings)
+bool PluginUniform::isDateValid(const QJsonObject &, const StudyPeriodSettings &)
 {
-    (void) data;
-    (void) settings;
-
     return true;
  }
 // ------------------------------------------------------------------
 
+
 GraphViewRefAbstract* PluginUniform::getGraphViewRef()
 {
-    return nullptr;
+    mRefGraph = new PluginUniformRefView();
+    return mRefGraph;
 }
+void PluginUniform::deleteGraphViewRef(GraphViewRefAbstract* graph)
+{
+    if (graph)
+        delete static_cast<PluginUniformRefView*>(graph);
 
+    graph = nullptr;
+    mRefGraph = nullptr;
+}
 PluginSettingsViewAbstract* PluginUniform::getSettingsView()
 {
     return nullptr;
 }
 
-
-QPair<double,double> PluginUniform::getTminTmaxRefsCurve(const QJsonObject& data) const
+QPair<double, double> PluginUniform::getTminTmaxRefsCurve(const QJsonObject &data) const
 {
     const double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
     const double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
     return QPair<double, double>(min, max);
 }
 
+double PluginUniform::getMinStepRefsCurve(const QJsonObject &data) const
+{
+    const double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
+    const double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
+    return std::abs(max-min)/51.;
+}
+
+long double PluginUniform::getLikelihoodCombine(const double t, const QJsonArray &subData)
+{
+    double min (-INFINITY);
+    double max (INFINITY);
+
+   for (auto&& d : subData) {
+       const QJsonObject &data = d.toObject().value(STATE_DATE_DATA).toObject();
+
+       min = std::max(min, data.value(DATE_UNIFORM_MIN_STR).toDouble() );
+       max = std::min(max, data.value(DATE_UNIFORM_MAX_STR).toDouble() );
+   }
+
+    return (t >= min && t <= max) ? static_cast<long double>(1. / (max-min)) : 0.l;
+    
+    
+}
+
+bool PluginUniform::areDatesMergeable(const QJsonArray& dates)
+{
+    const int pluginID = dates.at(0).toObject().value(STATE_DATE_DATA).toObject().value(STATE_DATE_PLUGIN_ID).toInt();
+
+    for (auto&& d:dates) {
+        if (pluginID != d.toObject().value(STATE_DATE_DATA).toObject().value(STATE_DATE_PLUGIN_ID).toInt())
+            return false;
+    }
+    return true;
+}
+
+/**
+ * @brief Combine several Uniform Interval
+ **/
+QJsonObject PluginUniform::mergeDates(const QJsonArray& dates)
+{
+    QJsonObject result;
+    if (dates.size() > 1) {
+
+        bool withWiggle (false);
+
+        QJsonObject mergedData;
+        QStringList names;
+        double min (-INFINITY);
+        double max (+INFINITY);
+
+        double Wmin (+INFINITY);
+        double Wmax (-INFINITY);
+
+        const auto & project = MainWindow::getInstance()->getProject();
+
+        for (auto&& d : dates ) {
+            names.append(d.toObject().value(STATE_NAME).toString());
+
+            const bool hasWiggle (d.toObject().value(STATE_DATE_DELTA_TYPE).toInt() != Date::eDeltaNone);
+
+            // wiggle existence test
+            withWiggle = withWiggle || hasWiggle;
+
+            if (hasWiggle) {
+                const QString toFind = "WID::" + d.toObject().value(STATE_DATE_UUID).toString();
+                QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
+
+                if ( it!=project->mCalibCurves.end()) {
+                    CalibrationCurve* d_mCalibration = & it.value();
+                    min = std::max(d_mCalibration->mTmin, min);
+                    max = std::min(d_mCalibration->mTmax, max);
+
+                } else {
+                    min = +INFINITY;
+                    max = -INFINITY;
+                }
+
+
+            } else {
+
+                const QJsonObject &data = d.toObject().value(STATE_DATE_DATA).toObject();
+                min = std::max(min, data.value(DATE_UNIFORM_MIN_STR).toDouble() );
+                max = std::min(max, data.value(DATE_UNIFORM_MAX_STR).toDouble() );
+
+                Wmin = std::min(Wmin, data.value(DATE_UNIFORM_MIN_STR).toDouble() );
+                Wmax = std::max(Wmax, data.value(DATE_UNIFORM_MAX_STR).toDouble() );
+            }
+
+
+        }
+
+
+        if (min >= max) {
+            result["error"] = tr("Combine is not possible, not enough coincident densities");
+            return result;
+        }
+
+        // inherits the first data propeties as plug-in and method...
+        result = dates.at(0).toObject();
+        result[STATE_NAME] = names.join(" | ");
+        result[STATE_DATE_UUID] = QString::fromStdString( Generator::UUID());
+
+
+        if (withWiggle) {
+            result[STATE_DATE_ORIGIN] = Date::eCombination;
+
+            result[STATE_DATE_VALID] = (max>min ? true : false);
+            result[STATE_DATE_DELTA_TYPE] = Date::eDeltaNone;
+
+            mergedData[DATE_UNIFORM_MIN_STR] = Wmin;
+            mergedData[DATE_UNIFORM_MAX_STR] = Wmax;
+
+        } else {
+            result[STATE_DATE_ORIGIN] = Date::eSingleDate;
+            result[STATE_DATE_VALID] = (max>min ? true : false);
+            mergedData[DATE_UNIFORM_MIN_STR] = min;
+            mergedData[DATE_UNIFORM_MAX_STR] = max;
+        }
+        result[STATE_DATE_DATA] = mergedData;
+        result[STATE_DATE_SUB_DATES] = dates;
+
+    } else
+        result["error"] = tr("Combine needs at least 2 data !");
+
+    return result;
+
+}
 #endif
+

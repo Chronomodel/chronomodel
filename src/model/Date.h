@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -41,130 +41,51 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define DATE_H
 
 #include "MHVariable.h"
-#include "StateKeys.h"
-#include "../project/ProjectSettings.h"
-//#include "CalibrationCurve.h"
+#include "StudyPeriodSettings.h"
 
 #include <QMap>
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QString>
 #include <QPixmap>
 #include <QObject>
 
 class Event;
 class PluginAbstract;
-class Date;
 class CalibrationCurve;
-
 class Project;
-
-typedef void (*samplingFunction)(Date* date, Event* event);
-
-void fMHSymetric(Date* date, Event* event);
-void fInversion(Date* date, Event* event);
-void fMHSymGaussAdapt(Date* date,Event* event);
-
-void fMHSymetricWithArg(Date* date, Event* event);
-void fMHSymGaussAdaptWithArg(Date* date, Event* event);
-void fInversionWithArg(Date* date, Event* event);
-
-double fProposalDensity(const double t, const double t0, Date* date);
-
-
 
 class Date
 {
 
 public:
-    enum DataMethod{
-        eMHSymetric = 0,
-        eInversion = 1,
-        eMHSymGaussAdapt = 2
+    enum OriginType {
+        eSingleDate = 0,
+        eCombination = 1
     };
 
-    enum DeltaType{
+    enum DeltaType {
         eDeltaNone = -1,
         eDeltaFixed = 0,
         eDeltaGaussian = 1,
         eDeltaRange = 2
     };
 
-    Date();
-    Date(PluginAbstract* plugin);
-    Date(const Date& date);
-    Date& operator=(const Date& date);
-    void copyFrom(const Date& date);
-    virtual ~Date();
-
-    void init();
-    bool isNull() const;
-
-    void fromJson(const QJsonObject& json);
-    QJsonObject toJson() const;
-
-    static Date fromCSV(const QStringList &dataStr, const QLocale& csvLocale);
-    QStringList toCSV(const QLocale& csvLocale) const;
-
-    double getLikelihood(const double& t) const;
-    QPair<long double, long double> getLikelihoodArg(const double& t) const;
-    QString getDesc() const;
-    PluginAbstract* getPlugin() const {return mPlugin;}
-
-    void reset();
-    void calibrate(const ProjectSettings & settings, Project *project);
-    double getLikelihoodFromCalib(const double t);
-
-    const QMap<double, double> getFormatedCalibMap() const;
-    const QMap<double, double> getRawCalibMap() const;
-
-    QVector<double> getFormatedRepartition() const;
-
-    QPixmap generateCalibThumb();
-    QPixmap generateUnifThumb();
-
-    void initDelta(Event* event);
-
-    void updateTheta(Event* event);
-    void autoSetTiSampler(const bool bSet);
-
-    void updateDelta(Event* event);
-    void updateSigma(Event* event);
-    void updateWiggle();
-
-    QColor getEventColor() const;
-
-    double getTminRefCurve() const {return mTminRefCurve;}
-    double getTmaxRefCurve() const {return mTmaxRefCurve;}
-    void setTminRefCurve(const double tmin) { mTminRefCurve = tmin;}
-    void setTmaxRefCurve(const double tmax) { mTmaxRefCurve = tmax;}
-
-/*    double getTminCalib() const {return mCalibration->mTmin;}
-    double getTmaxCalib() const {return mCalibration->mTmax;}
-    void setTminCalib(const double tmin) { mCalibration->mTmin = tmin;}
-    void setTmaxCalib(const double tmax) { mCalibration->mTmax = tmax;}
-*/
-    double getFormatedTminRefCurve() const;
-    double getFormatedTmaxRefCurve() const;
-
-    double getFormatedTminCalib() const;
-    double getFormatedTmaxCalib() const;
-
-    void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
-
-public:
-    MHVariable mTheta; // theta i de la date
-    MHVariable mSigma; // sigma i de la date (par rapport au fait)
+    const Event* mEvent;
+    MHVariable mTi;// t i de la date
+    MHVariable mSigmaTi; // sigma i de la date (par rapport au fait)
     MHVariable mWiggle;
     double mDelta;
 
     int mId;
+    QString mUUID;
 
     QString mName; // must be public, to be setting by dialogbox
     QColor mColor;
 
     QJsonObject mData;
+    OriginType mOrigin;
     PluginAbstract* mPlugin;
-    DataMethod mMethod;
     bool mIsValid;
 
     DeltaType mDeltaType;
@@ -178,19 +99,124 @@ public:
     bool mIsSelected;
 
     CalibrationCurve* mCalibration;
+    CalibrationCurve* mWiggleCalibration;
 
     QMap<double, double> mCalibHPD;
-    ProjectSettings mSettings;
+    StudyPeriodSettings mSettings;
 
-    QList<Date> mSubDates;
+    QJsonArray mSubDates;
     double mMixingLevel;
 
-protected:
-    samplingFunction updateti;
+    constexpr static const double threshold_limit = 0.00001;
 
+public:
+
+    Date (const Event* event = nullptr);
+    virtual ~Date();
+    Date(const QJsonObject &json, const Event* event = nullptr);
+    Date(PluginAbstract* plugin);
+    Date(const Date& date);
+    Date& operator=(const Date& date);
+    void copyFrom(const Date& date);
+
+    void init();
+    bool isNull() const;
+
+    void fromJson(const QJsonObject& json);
+    QJsonObject toJson() const;
+
+    static Date fromCSV(const QStringList &dataStr, const QLocale& csvLocale, const StudyPeriodSettings settings);
+    QStringList toCSV(const QLocale& csvLocale) const;
+
+    long double getLikelihood(const double& t) const;
+    QPair<long double, long double> getLikelihoodArg(const double t) const;
+    QString getDesc() const;
+    QString getWiggleDesc() const;
+    static QString getWiggleDesc(const QJsonObject &json); // used in CalibrationView
+    PluginAbstract* getPlugin() const {return mPlugin;}
+
+    void reset();
+
+    void calibrate(const StudyPeriodSettings &priod_settings, Project &project, bool truncate); // used for item
+    inline void calibrate(Project &project, bool truncate = true) {calibrate(mSettings, project, truncate);};
+
+    void calibrateWiggle(const StudyPeriodSettings &settings, Project &project);
+    inline void calibrateWiggle(Project &project) {calibrateWiggle(mSettings, project);};
+
+    double getLikelihoodFromCalib(const double &t) const;
+    double getLikelihoodFromWiggleCalib(const double &t) const;
+
+    const QMap<double, double> getFormatedCalibMap() const;
+    const QMap<double, double> getFormatedWiggleCalibMap() const;
+    
+    const QMap<double, double> getFormatedCalibToShow() const;
+    const QMap<double, double> getFormatedWiggleCalibToShow() const;
+
+    const QMap<double, double> &getRawCalibMap() const ;
+    inline const QMap<double, double> &getRawWiggleCalibMap() const;
+
+    QList<double> getFormatedRepartition() const;
+
+    QPixmap generateCalibThumb(StudyPeriodSettings settings);
+    QPixmap generateUnifThumb(StudyPeriodSettings settings);
+
+    QColor getEventColor() const;
+
+    inline double getTminRefCurve() const {return mTminRefCurve;}
+    inline double getTmaxRefCurve() const {return mTmaxRefCurve;}
+    inline void setTminRefCurve(const double tmin) { mTminRefCurve = tmin;}
+    inline void setTmaxRefCurve(const double tmax) { mTmaxRefCurve = tmax;}
+
+    double getFormatedTminRefCurve() const;
+    double getFormatedTmaxRefCurve() const;
+
+    double getFormatedTminCalib() const;
+    double getFormatedTmaxCalib() const;
+
+    void initDelta(Event* event);
+
+    void updateDate(Event *event);
+
+    void updateTi(Event* event);
+   // void updateTi_v4(Event* event);
+
+    void autoSetTiSampler(const bool bSet);
+
+    void updateDelta(Event *event);
+    void updateSigmaShrinkage(Event *event);
+    void updateSigmaShrinkage_K(Event* event);
+   // void updateSigma_v4(Event* event);
+
+    void updateSigmaJeffreys(Event* event);
+    void updateSigmaReParam(Event* event);
+    inline void updateWiggle() { mWiggle.mX = mTi.mX + mDelta;};
+
+    void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
+
+    double fProposalDensity(const double t, const double t0);
+
+    // List of samplingFunction
+    void Prior(Event* event);//fMHSymetric(Event* event);
+    void Inversion(Event* event);
+
+    void MHAdaptGauss(Event* event);//void fMHSymGaussAdapt(Event *event);
+
+    void PriorWithArg(Event* event);//fMHSymetricWithArg(Event *event);
+    void MHAdaptGaussWithArg(Event* event);//void fMHSymGaussAdaptWithArg(Event* event);
+    void InversionWithArg(Event* event);
+
+    typedef void (Date::*samplingFunction)(Event* event);
+
+protected:
     double mTminRefCurve;
     double mTmaxRefCurve;
 
+    samplingFunction updateti;
+
 };
+
+
+CalibrationCurve generate_mixingCalibration(const QList<Date> &dates, const QString description = "Mixing Calibrations");
+
 
 #endif

@@ -48,6 +48,7 @@ class GraphZone
 {
 public:
     explicit GraphZone();
+    explicit GraphZone(const double XMin, const double XMax, const QString text = "Outside Study Period", const QColor color = QColor(217, 163, 69, 35));
     virtual ~GraphZone();
 
 public:

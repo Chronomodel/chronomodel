@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -40,14 +40,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef RESULTSWRAPPER_H
 #define RESULTSWRAPPER_H
 
-#include "MCMCLoopMain.h"
-#include "AxisTool.h"
 #include "GraphViewResults.h"
-#include "AppSettings.h"
 
 #include <QVBoxLayout>
 #include <QTabWidget>
 #include <QLabel>
+#include <QLineEdit>
+#include <qapplication.h>
+#include <QStyle>
 
 class QStackedWidget;
 class QScrollArea;
@@ -61,6 +61,7 @@ class QPushButton;
 
 class Project;
 class Model;
+class ModelCurve;
 class Tabs;
 class Ruler;
 class GraphView;
@@ -79,277 +80,418 @@ class ResultsView: public QWidget
 {
     Q_OBJECT
 public:
-    ResultsView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
+    ResultsView(std::shared_ptr<Project> project, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~ResultsView();
 
-    double mResultZoomX;
-    double mResultCurrentMinX;
-    double mResultCurrentMaxX;
-
-    // avalable for Event
-    double mResultMinX;
-    double mResultMaxX;
-
-    // avalable for Variance
-    double mResultMaxVariance;
-
-    double mResultMaxDuration;
-
-    bool mHasPhases;
-
-    Model* mModel;
-
-    void doProjectConnections(Project* project);
-
-    void updateFormatSetting(Model* model);
-    double getBandwidth() const;
-    int getFFTLength() const;
-    double getThreshold() const;
-
+    void setProject(const std::shared_ptr<Project> project);
+    void initModel(const std::shared_ptr<ModelCurve> model);
+    void updateModel(std::shared_ptr<ModelCurve> model);
 
 protected:
-    void setGraphFont(const QFont &font);
-
+    // ------------------------------------------------
+    //  Events & Layout
+    // ------------------------------------------------
+    virtual bool event(QEvent *e);
     void mouseMoveEvent(QMouseEvent* e);
     void resizeEvent(QResizeEvent* e);
 
-    void createEventsScrollArea(const int idx = 0);
-    void createPhasesScrollArea(const int idx = 0);
-    void createTempoScrollArea(const int idx = 0);
-    void generateCurves(const QList<GraphViewResults*>& listGraphs);
+    void updateMarkerGeometry(const int x);
+    void updateGraphsLayout();
+    void updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewResults*> graphs);
 
-    void updateTabDisplay(const int &i);
-    void updateTabByScene();
-    void updateTabByTempo();
-    void updateTabPageSaving();
-    void updateNbDensity(int i);
+    // ------------------------------------------------
+    //  Graphs UI
+    // ------------------------------------------------
+
+    void createByEventsGraphs();
+    void createByPhasesGraphs();
+
+    void createByCurveGraph();
+    void createByAlphaGraph();
+    
+    void deleteAllGraphsInList(QList<GraphViewResults*>& list);
+    QList<GraphViewResults*> allGraphs();
+    QList<GraphViewResults*> currentGraphs(bool onlySelected);
+    bool hasSelectedGraphs();
+    
+    void updateGraphsMinMax();
+    double getGraphsMax(const QList<GraphViewResults*>& graphs, const QString& title, const double maxFloor);
+    double getGraphsMin(const QList<GraphViewResults*>& graphs, const QString& title, const double minFloor);
+
+    
+    // ------------------------------------
+    //  Pagination
+    // ------------------------------------
+    bool graphIndexIsInCurrentPage(int graphIndex);
+
+    // ------------------------------------------------
+    //  Chains controls
+    // ------------------------------------------------
+    void createChainsControls();
+    void deleteChainsControls();
+
+    // ------------------------------------------------
+    //  Span options
+    // ------------------------------------------------
+    GraphViewResults::variable_t getMainVariable() const;
+    void setTimeRange();
+    void setTimeSlider(const int value);
+    void setTimeSpin(const double value);
+    void setTimeScale();
+
+    // ------------------------------------------------
+    //  Utilities
+    // ------------------------------------------------
+    inline bool isPostDistribGraph()
+    {
+        return (mCurrentTypeGraph == GraphViewResults::ePostDistrib);
+    }
+
+    inline bool xScaleRepresentsTime();
+    inline double sliderToZoom(const int coef);
+    inline int zoomToSlider(const double &zoom);
+
+    // ------------------------------------------------
+    //  Controls actions helpers
+    // ------------------------------------------------
+    void updateZoomT();
+    void updateGraphsZoomT();
+    void updateGraphsHeight();
+
+    // ------------------------------------------------
+    //  Curve
+    // ------------------------------------------------
+    std::shared_ptr<ModelCurve> modelCurve() const;
+    inline bool isCurve() const;
 
 public slots:
-    void updateResults(Model* model = nullptr);
-    void initResults(Model* model = nullptr);
 
-    void changeScrollArea();
-    void updateLayout();
-    void updateGraphsLayout();
-
-    void clearResults();
-    void updateCurves();
-
-
-    void updateControls();
-    void applyAppSettings();
-    void updateScales();
-
-    void updateModel();
-    void updateResultsLog();
+    void clearResults(); // connected to Project::mcmcStarted
 
 private slots:
-    void updateVisibleTabs(const int &index);
-    void graphTypeChange();
+
+    // ------------------------------------------------
+    //  Layout
+    // ------------------------------------------------
+    void updateLayout();
+    void showStats(bool);
+
+    // ------------------------------------------------
+    //  Graphs / Curves / Controls
+    // ------------------------------------------------
+    void updateMainVariable();
+    void createGraphs();
+    void generateCurves();
+
     void updateCurvesToShow();
+    void updateScales();
+    void updateOptionsWidget();
+    void updateTotalGraphs();
+    
+    // ------------------------------------
+    //  Controls actions
+    // ------------------------------------
+    void applyRuler(const double min, const double max);
 
-    void settingChange();
-    void updateZoomX(); // Connected to slider signals
-    void updateScroll(const double min, const double max); // Connected to ruler signals
-    void editCurrentMinX(); // Connected to min edit signals
-    void editCurrentMaxX(); // Connected to max edit signals
-    void setStudyPeriod(); // connected to study button
-    void updateZoomEdit();
-    void updateGraphsZoomX();
+    // ------------------------------------
+    //  Display / Distrib. Option
+    // ------------------------------------
+    void toggleDisplayDistrib();
 
-    void setXScaleSpin(const double value); // connected to mXScaleSpin
-    void XScaleSpinChanged(double value);
-    void setXScaleSlide(const int value);
-    void XScaleSliderChanged( int value);
+    void applyGraphTypeTab();
+    void applyGraphListTab();
 
-    void updateScaleY(int value);
-    // connected to mMajorScaleEdit and mMinorScaleEdit
-    void updateScaleX();
-    void updateScaleEdit();
+    void applyCurrentVariable();
 
 
-    void updateGraphFont();
-    void updateThickness(const int value);
-    void updateOpacity(const int value);
-   // void updateRendering(int index);
-    void showInfos(bool);
+    // Span options
+    void applyStudyPeriod();
+    void applyTimeRange();
+    void applyTimeSlider(int value);
+    void applyTimeSpin(double value);
+    void applyZoomScale();
+
+    // X, Y, Z options
+    void applyXRange();
+    void applyYRange();
+    void applyZRange();
+
+    void findOptimalX();
+    void findOptimalY();
+    void findOptimalZ();
+
+    void setXRange();
+    void setYRange();
+    void setZRange();
+
+    // Graphic options
+    void applyZoomSlider(int value);
+    void applyZoomSpin(int value);
+    void applyFont();
+    void applyThickness(const int value);
+    void applyOpacity(const int value);
+
+    // Density options
+    void applyFFTLength();
+    void applyBandwidth();
+    void applyThreshold();
+    void applyHActivity();
+
+
+    // ------------------------------------
+    //  Page / Save
+    // ------------------------------------
+
+    // Pagination tools
+    void applyGraphsPerPage(int i);
+    void applyPreviousPage();
+    void applyNextPage();
+
+    // Save tools
     void exportFullImage();
     void exportResults();
-
     void saveAsImage();
     void imageToClipboard();
     void resultsToClipboard();
     void saveGraphData();
 
-    void previousSheet();
-    void nextSheet();
-    void unfoldToggle();
-
-    // SETTER
-    void setFFTLength();
-    void setBandwidth();
-    void setThreshold();
-
 signals:
-
-    void curvesGenerated();
-
-    void controlsUpdated();
+    void wheelMove(QEvent *e);
     void resultsLogUpdated(const QString &log);
-
-    void scalesUpdated();
-
-    void updateScrollAreaRequested();
-    void generateCurvesRequested();
 
     void xSpinUpdate(const int value);
     void xSlideUpdate(const int value);
 
+public:
+    // mModel gives access to :
+    // - mModel->mSettings (StudyPeriodSettings)
+    // - mModel->mMCMCSettings (MCMCSettings)
+    // - mModel->mChains (QList<ChainSpecs>)
+    std::shared_ptr<ModelCurve> mModel;
 
 private:
-    void clearHisto();
-    void clearChainHistos();
-    double sliderToZoom(const int &coef);
-    int zoomToSlider(const double &zoom);
-    Ruler* mRuler;
 
-    ProjectSettings mSettings;
-    MCMCSettings mMCMCSettings;
-    QList<ChainSpecs> mChains;
-
-    // used for options side
+    // ---------------------------------------------------------------------
+    // UI useful values
+    // ---------------------------------------------------------------------
     int mMargin;
     int mOptionsW;
-   // int mLineH;
-    //used for graph
     qreal mMarginLeft;
     qreal mMarginRight;
-    int mRulerH;
-    int mTabsH;
     int mGraphHeight;
-
-    Tabs* mTabs;
-    int mTabEventsIndex;
-    int mTabPhasesIndex;
-    int mTabTempoIndex;
-
+    // The scroll bar extent (width or height depending on the orientation)
+    // depends on the native platform, and must be taken into account.
+    const int mSbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
+    // ---------------------------------------------------------------------
+    // Left part UI components
+    // ---------------------------------------------------------------------
+    Tabs* mGraphTypeTabs;
+    Ruler* mRuler;
     Marker* mMarker;
 
-    QStackedWidget* mStack;
     QScrollArea* mEventsScrollArea;
     QScrollArea* mPhasesScrollArea;
-    QScrollArea* mTempoScrollArea;
+    QScrollArea* mCurveScrollArea;
 
     QList<GraphViewResults*> mByEventsGraphs;
     QList<GraphViewResults*> mByPhasesGraphs;
-    QList<GraphViewResults*> mByTempoGraphs;
+    QList<GraphViewResults*> mByCurveGraphs;
 
+    QVBoxLayout* mOptionsLayout;
+    // ---------------------------------------------------------------------
+    // Right UI part components
+    // ---------------------------------------------------------------------
+    QScrollArea* mOptionsScroll;
     QWidget* mOptionsWidget;
+    Tabs* mGraphListTab;
 
+    // Tab Events
+    QWidget* mEventsGroup;
 
-    // --- Variables
-    Tabs* mTabByScene; // replace mByEventsBut and mByPhasesBut
-    QWidget* mResultsGroup;
-
-    CheckBox* mEventsfoldCheck;
-    CheckBox* mDatesfoldCheck;
-    RadioButton* mDataThetaRadio;
+    RadioButton* mEventThetaRadio;
+    CheckBox* mEventsDatesUnfoldCheck;
 
     CheckBox* mDataCalibCheck;
     CheckBox* mWiggleCheck;
     RadioButton* mDataSigmaRadio;
+#ifdef S02_BAYESIAN
+    RadioButton* mS02Radio;
+#endif
+    RadioButton* mEventVGRadio;
+
     CheckBox* mStatCheck;
 
-    QWidget* mTempoGroup;
+    // Tab Phases
+    QWidget* mPhasesGroup;
+    RadioButton* mBeginEndRadio;
+    CheckBox* mPhasesEventsUnfoldCheck;
+    CheckBox* mPhasesDatesUnfoldCheck;
+
     RadioButton* mDurationRadio;
     RadioButton* mTempoRadio;
-    CheckBox* mTempoCredCheck;
-    CheckBox* mTempoErrCheck;
     RadioButton* mActivityRadio;
-    CheckBox* mTempoStatCheck;
+    CheckBox* mActivityUnifCheck;
 
-    // -- tabs
+    CheckBox* mErrCheck;
+    CheckBox* mPhasesStatCheck;
 
-    Tabs *mTabDisplayMCMC;
-    QWidget* mTabDisplay;
-    QWidget* mTabMCMC;
+    // tab Curves
+    QWidget* mCurvesGroup;
+    RadioButton* mCurveGRadio;
+    RadioButton* mCurveGPRadio;
+    RadioButton* mCurveGSRadio;
+    RadioButton* mLambdaRadio;
+    RadioButton* mS02VgRadio;
 
-    // ------ Span Options -----
+    CheckBox* mCurveErrorCheck;
+    CheckBox* mCurveMapCheck;
+    CheckBox* mCurveEventsPointsCheck;
+    CheckBox* mCurveDataPointsCheck;
+    CheckBox* mCurveStatCheck;
+
+    // ---------------------------------------------------------------------
+    // Tabs : Display / Distrib. Options
+    // ---------------------------------------------------------------------
+    Tabs* mDisplayDistribTab;
+    QWidget* mDisplayWidget;
+    QWidget* mDistribWidget;
+
+    // ---------------------------------------------------------------------
+    //  Span options : UI components to manipulate X axis scale
+    // ---------------------------------------------------------------------
+
+    // ------------------------------------
+    //  Display / Time Options
+    // ------------------------------------
     QWidget* mSpanGroup;
     Label* mSpanTitle;
 
+    // Adjust the zoom on the study period
     Button* mDisplayStudyBut;
-    Label* mSpanLab;
+
+    // Force the min T and max T
+    QLabel* mSpanLab;
+    LineEdit* mCurrentTMinEdit;
+    LineEdit* mCurrentTMaxEdit;
+
+    // On the X Axis scale : choose to see the whole graph at once,
+    // or zoom on it adjusting the "XScale"
+    QLabel* mXLab;
+    QSlider* mXSlider;
+    QDoubleSpinBox* mTimeSpin;
+
+    // On the X Axis scale : choose the major interval between 2 displayed values
+    QLabel* mMajorScaleLab;
+    LineEdit* mMajorScaleEdit;
+
+    // On the X Axis scale : choose the number of subdivisions between 2 displyed values
+    QLabel* mMinorScaleLab;
+    LineEdit* mMinorScaleEdit;
+
+    // ------------------------------------
+    //  Display / X Options
+    // ------------------------------------
+    QWidget* mXOptionGroup;
+    Label* mXOptionTitle;
+
+    // Adjust the X scale
+    Button* mXOptionBut;
+
+    QLabel* mXOptionLab;
     LineEdit* mCurrentXMinEdit;
     LineEdit* mCurrentXMaxEdit;
 
-    Label* mXScaleLab;
-    QSlider* mXSlider;
-    QDoubleSpinBox* mXScaleSpin;
+    // ------------------------------------
+    //  Display / Y Options
+    // ------------------------------------
+    QWidget* mYOptionGroup;
+    Label* mYOptionTitle;
 
-    Label* mMajorScaleLab;
-    LineEdit* mMajorScaleEdit;
-    Label* mMinorScaleLab;
-    LineEdit* mMinorScaleEdit;
-    /* used to controle the signal XScaleSpin::valueChanged () when we need to change the value
-     * xScaleChanged(int value)
-     * emit xScaleUpdate(value);
-     */
-    bool forceXSpinSetValue;
-    bool forceXSlideSetValue;
+    // Adjust the X scale
+    Button* mYOptionBut;
 
-    // ------ Graphic options - (old mDisplayGroup) -----
+    QLabel* mYOptionLab;
+    LineEdit* mCurrentYMinEdit;
+    LineEdit* mCurrentYMaxEdit;
+
+    // ------------------------------------
+    //  Display / Z Options
+    // ------------------------------------
+    QWidget* mZOptionGroup;
+    Label* mZOptionTitle;
+
+    // Adjust the Z scale
+    Button* mZOptionBut;
+
+    QLabel* mZOptionLab;
+    LineEdit* mCurrentZMinEdit;
+    LineEdit* mCurrentZMaxEdit;
+    // ------------------------------------
+    //  Graphic Options
+    // ------------------------------------
     QWidget* mGraphicGroup;
     Label* mGraphicTitle;
 
-    Label* mYScaleLab;
+    QLabel* mZoomLab;
+    QSlider* mZoomSlider;
+    QSpinBox* mZoomSpin;
 
-    QSlider* mYSlider;
-    QSpinBox* mYScaleSpin;
-
-    QFont mGraphFont;
     Button* mFontBut;
     QComboBox* mThicknessCombo;
     QComboBox* mOpacityCombo;
 
     QLabel* mLabFont;
-    QLabel * mLabThickness;
-    QLabel * mLabOpacity;
+    QLabel* mLabThickness;
+    QLabel* mLabOpacity;
 
-    //------------ MCMC Chains---------
+    // ------------------------------------
+    //  MCMC Chains
+    // ------------------------------------
     QWidget* mChainsGroup;
     Label* mChainsTitle;
 
     CheckBox* mAllChainsCheck;
-    QList<CheckBox*> mCheckChainChecks;
+    QList<CheckBox*> mChainChecks;
     QList<RadioButton*> mChainRadios;
 
-
-    //--------- Density Options
+    // ------------------------------------
+    //  Density Options
+    // ------------------------------------
     QWidget* mDensityOptsGroup;
     Label* mDensityOptsTitle;
-
-    Label* mThreshLab;
+    QLabel* mThreshLab;
     CheckBox* mCredibilityCheck;
-    LineEdit* mHPDEdit;
-    Label* mFFTLenLab;
+    LineEdit* mThresholdEdit;
+
+    QLabel* mRangeThreshLab;
+    LineEdit* mRangeThresholdEdit; // Used with Activity
+    QLabel* mFFTLenLab;
     QComboBox* mFFTLenCombo;
-    Label* mBandwidthLab;
-    LineEdit* mBandwidthEdit;
+    QLabel* mBandwidthLab;
+    QDoubleSpinBox* mBandwidthSpin;
     Button* mUpdateDisplay;
 
+    QLabel* mHActivityLab;
+    LineEdit* mHActivityEdit;
 
-    Tabs* mTabPageSaving;
+    // ------------------------------------
+    //  Pagination / Exoprt Tools
+    // ------------------------------------
+    QWidget* mPageSavegWidget;
+
+    Tabs* mPageSaveTab;
     QWidget* mPageWidget;
-    // Page Navigator
-    Button* mNextSheetBut;
-    LineEdit* mSheetNum;
-    Button* mPreviousSheetBut;
 
-    Label* mNbDensityLab;
-    QSpinBox* mNbDensitySpin;
+    QWidget* mSaveAllWidget;
+    QWidget* mSaveSelectWidget;
 
-    QWidget* mToolsWidget;
+
+    Button* mNextPageBut;
+    Button* mPreviousPageBut;
+    QLineEdit* mPageEdit;
+    QLabel* mGraphsPerPageLab;
+    QSpinBox* mGraphsPerPageSpin;
+
     Button* mExportImgBut;
     Button* mExportResults;
 
@@ -358,31 +500,61 @@ private:
     Button* mResultsClipBut;
     Button* mDataSaveBut;
 
+    // ----------------------------------------
+    //  Useful Variables
+    // ----------------------------------------
+    GraphViewResults::graph_t mCurrentTypeGraph;
+    QList<GraphViewResults::variable_t> mCurrentVariableList;
+    GraphViewResults::variable_t mMainVariable;
+    bool mHasPhases;
 
-    int mComboH;
+    // ----------------------------------------
+    //  Time Span Variables
+    // ----------------------------------------
+    double mResultZoomT;
+    double mResultMinT;
+    double mResultMaxT;
+    double mResultCurrentMinT;
+    double mResultCurrentMaxT;
 
-    QMap<QPair<GraphViewResults::Variable, GraphViewResults::TypeGraph>, QPair<double, double>> mZooms;
-    QMap<QPair<GraphViewResults::Variable, GraphViewResults::TypeGraph>, QPair<double, int>> mScales;
-    //propreties
-    GraphViewResults::TypeGraph mCurrentTypeGraph;
-    GraphViewResults::Variable mCurrentVariable;
-    double mBandwidthUsed;
-    double mThresholdUsed;
-    int mNumberOfGraph;
-    int mMaximunNumberOfVisibleGraph;
+    // ----------------------------------------
+    //  Time Scale ticks intervals
+    // ----------------------------------------
     double mMajorScale;
     int mMinorCountScale;
 
+    // ----------------------------------------
+    //  X Span  Variables / First curve
+    // ----------------------------------------
+    double mResultCurrentMinX;
+    double mResultCurrentMaxX;
 
-    int titleHeight ;
-    int labelHeight ;
-    int lineEditHeight;
-    int checkBoxHeight;
-    int comboBoxHeight ;
-    int radioButtonHeight;
-    int spinBoxHeight;
-    int buttonHeight;
+    // ----------------------------------------
+    //  Y Span  Variables / Second Curve
+    // ----------------------------------------
+    double mResultCurrentMinY;
+    double mResultCurrentMaxY;
 
+    // ----------------------------------------
+    //  Z Span  Variables / Third curve
+    // ----------------------------------------
+    double mResultCurrentMinZ;
+    double mResultCurrentMaxZ;
+
+    // ----------------------------------------
+    //  Pagination variables
+    // ----------------------------------------
+    int mCurrentPage;
+    int mGraphsPerPage;
+    int mMaximunNumberOfVisibleGraph;
+
+    // ------------------------------------
+    QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, QPair<double, double>> mZooms;
+    QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, QPair<double, int>> mScales;
+
+    QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, QPair<double, double>> mZoomsX;
+    QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, QPair<double, double>> mZoomsY;
+    QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, QPair<double, double>> mZoomsZ;
 };
 
 #endif

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -41,50 +41,62 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define EVENTITEM_H
 
 #include "AbstractItem.h"
+#include "CurveSettings.h"
 
 class EventsScene;
 
 class EventItem : public AbstractItem
 {
+    Q_OBJECT
+protected:
+    //QSize mSize;
+    QJsonObject mStudyPeriodSettings;
+    bool mWithSelectedPhase;
+    bool mThumbVisible;
+
+    const qreal mNodeSkin;
+
+    qreal mPhasesHeight;
+    qreal mCurveLineHeight;
+    qreal mCurveTextHeight;
+
 public:
-    EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent = nullptr);
+    EventItem(EventsScene* scene, const QJsonObject &event, const QJsonObject &StudyPeriodSettings, QGraphicsItem* parent = nullptr);
     virtual ~EventItem();
 
     virtual void setGreyedOut(const bool greyedOut);
 
     void setWithSelectedPhase(const bool selected) {mWithSelectedPhase = selected;}
-    bool withSelectedPhase() { return mWithSelectedPhase;}
+    inline bool withSelectedPhase() { return mWithSelectedPhase;}
 
-    QJsonObject& getEvent();
-    virtual void setEvent(const QJsonObject& event, const QJsonObject& settings);
+    virtual void setEvent(const QJsonObject& event, const QJsonObject& StudyPeriodSettings);
 
-    virtual QRectF boundingRect() const;
     void handleDrop(QGraphicsSceneDragDropEvent* e);
     QJsonArray getPhases() const;
-    QJsonObject getSettings() const {return mSettings;}
-
-    virtual void updateItemPosition(const QPointF& pos);
+    inline const QJsonObject &getSettings() const {return mStudyPeriodSettings;}
 
     virtual void setDatesVisible(bool visible);
     void redrawEvent();
 
     bool withSelectedDate() const;
+    bool isCurveNode() const;
 
     void mousePressEvent(QGraphicsSceneMouseEvent* e);
+
+    void updateGreyedOut();
 
 protected:
     virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
     virtual void dropEvent(QGraphicsSceneDragDropEvent* e);
 
-    void updateGreyedOut();
+    int getNumberCurveLines(const CurveSettings &cs) const;
+    void paintBoxCurveParameter (QPainter *painter, const QRectF &rectBox, const CurveSettings &cs);
 
-    QSize mSize;
-    QJsonObject mSettings;
-    bool mWithSelectedPhase;
-    bool mShowAllThumbs;
+    void paintBoxPhases (QPainter *painter, const QRectF &rectBox);
 
-   private:
-     int mPhasesHeight;
+    void resizeEventItem();
+    void repositionDateItems();
+    
 };
 
 #endif

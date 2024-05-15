@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #if USE_PLUGIN_GAUSS
 
-#include "../GraphViewRefAbstract.h"
+#include "GraphViewRefAbstract.h"
 
 class PluginGauss;
 class GraphView;
@@ -56,7 +56,7 @@ public:
     explicit PluginGaussRefView(QWidget* parent = nullptr);
     virtual ~PluginGaussRefView();
 
-    void setDate(const Date& d, const ProjectSettings& settings);
+    void setDate(const Date& d, const StudyPeriodSettings& settings);
 
 public slots:
     void zoomX(const double min, const double max);

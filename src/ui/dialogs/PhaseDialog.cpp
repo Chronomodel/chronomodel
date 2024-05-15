@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -41,34 +41,26 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Phase.h"
 #include "ColorPicker.h"
 #include "LineEdit.h"
-#include "Label.h"
-#include "Button.h"
+
 #include <QtWidgets>
 
 
-PhaseDialog::PhaseDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags),
-mMargin(15),
-mLineH(20),
-mButH(25),
-mButW(80)
+PhaseDialog::PhaseDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags)
 {
-    QPalette Pal(palette());
-
-    // set black background
-    Pal.setColor(QPalette::Background, Qt::gray);
-    this->setAutoFillBackground(true);
-    this->setPalette(Pal);
-
     setWindowTitle(tr("Create / Modify phase"));
+    setMouseTracking(true);
 
-    mNameLab = new QLabel(tr("Phase name"), this);
-    mNameLab->setAlignment(Qt::AlignRight);
-    mColorLab = new QLabel(tr("Phase colour"), this);
-    mColorLab->setAlignment(Qt::AlignRight);
-    mTauTypeLab = new QLabel(tr("Max duration"), this);
-    mTauTypeLab->setAlignment(Qt::AlignRight);
-    mTauFixedLab = new QLabel(tr("Max duration value") , this);
-    mTauFixedLab->setAlignment(Qt::AlignRight);
+    mNameLab = new QLabel(tr("Phase Name"), this);
+    mNameLab->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
+
+    mColorLab = new QLabel(tr("Phase Color"), this);
+    mColorLab->setAlignment(Qt::AlignVCenter | Qt::AlignRight);
+
+    mTauTypeLab = new QLabel(tr("Max Duration"), this);
+    mTauTypeLab->setAlignment(Qt::AlignVCenter |Qt::AlignRight);
+
+    mTauFixedLab = new QLabel(tr("Max Duration Value") , this);
+    mTauFixedLab->setAlignment(Qt::AlignVCenter |Qt::AlignRight);
 
     mNameEdit = new LineEdit(this);
 
@@ -77,27 +69,46 @@ mButW(80)
     mTauTypeCombo = new QComboBox(this);
     mTauTypeCombo->addItem(tr("Unknown"));
     mTauTypeCombo->addItem(tr("Known"));
+    mTauTypeCombo->addItem(tr("Uniform Span")); //z-only
+
+    QDoubleValidator* RplusValidator = new QDoubleValidator();
+    RplusValidator->setBottom(0.000001);
 
     mTauFixedEdit = new LineEdit(this);
+    mTauFixedEdit->setValidator(RplusValidator);
+    mTauFixedEdit->setToolTip(tr("The max phase duration must be greater than %1!").arg(QLocale().toString(RplusValidator->bottom())));
 
-    mOkBut = new Button(tr("OK"), this);
-    mCancelBut = new Button(tr("Cancel"), this);
-
-    mOkBut->setAutoDefault(true);
-
+    QDialogButtonBox* buttonBox = new QDialogButtonBox();
+    buttonBox->addButton(tr("OK"), QDialogButtonBox::AcceptRole);
+    buttonBox->addButton(tr("Cancel"), QDialogButtonBox::RejectRole);
+    
     connect(mTauTypeCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &PhaseDialog::showAppropriateTauOptions);
-    connect(mOkBut, &Button::clicked, this, &PhaseDialog::accept);
-    connect(mCancelBut, &Button::clicked, this, &PhaseDialog::reject);
+    
+    connect(buttonBox, &QDialogButtonBox::accepted, this, &PhaseDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, this, &PhaseDialog::reject);
 
-    mComboH = mTauTypeCombo->height();
+    QGridLayout* gridLayout = new QGridLayout();
+    gridLayout->setContentsMargins(0, 0, 0, 0);
+    gridLayout->addWidget(mNameLab, 0, 0);
+    gridLayout->addWidget(mNameEdit, 0, 1);
+    gridLayout->addWidget(mColorLab, 1, 0);
+    gridLayout->addWidget(mColorPicker, 1, 1);
+    gridLayout->addWidget(mTauTypeLab, 2, 0);
+    gridLayout->addWidget(mTauTypeCombo, 2, 1);
+    gridLayout->addWidget(mTauFixedLab, 3, 0);
+    gridLayout->addWidget(mTauFixedEdit, 3, 1);
 
+    QVBoxLayout* layout = new QVBoxLayout();
+    layout->addLayout(gridLayout);
+    layout->addWidget(buttonBox);
+    setLayout(layout);
+    
     Phase phase;
     setPhase(phase.toJson());
 }
 
 PhaseDialog::~PhaseDialog()
 {
-
 }
 
 void PhaseDialog::showAppropriateTauOptions(int typeIndex)
@@ -105,24 +116,16 @@ void PhaseDialog::showAppropriateTauOptions(int typeIndex)
     Q_UNUSED(typeIndex)
     Phase::TauType type = Phase::TauType (mTauTypeCombo->currentIndex());
     switch (type) {
+        case Phase::eZOnly:
         case Phase::eTauUnknown:
-        {
             mTauFixedLab->setVisible(false);
             mTauFixedEdit->setVisible(false);
-
-            setFixedHeight(mComboH + 2*mLineH + 5*mMargin + mButH);
-
             break;
-        }
+
         case Phase::eTauFixed:
-        {
             mTauFixedLab->setVisible(true);
             mTauFixedEdit->setVisible(true);
-
-            setFixedHeight(mComboH + 3*mLineH + 6*mMargin + mButH);
-
             break;
-        }
 
         default:
             break;
@@ -139,7 +142,7 @@ void PhaseDialog::setPhase(const QJsonObject& phase)
                                   mPhase.value(STATE_COLOR_GREEN).toInt(),
                                   mPhase.value(STATE_COLOR_BLUE).toInt()));
     mTauTypeCombo->setCurrentIndex(mPhase.value(STATE_PHASE_TAU_TYPE).toInt());
-    mTauFixedEdit->setText(QString::number(mPhase.value(STATE_PHASE_TAU_FIXED).toDouble()));
+    mTauFixedEdit->setText(locale().toString(mPhase.value(STATE_PHASE_TAU_FIXED).toDouble()));
 
     showAppropriateTauOptions(mTauTypeCombo->currentIndex());
 }
@@ -151,61 +154,16 @@ QJsonObject PhaseDialog::getPhase()
     mPhase[STATE_COLOR_GREEN] = mColorPicker->getColor().green();
     mPhase[STATE_COLOR_BLUE] = mColorPicker->getColor().blue();
     mPhase[STATE_PHASE_TAU_TYPE] = Phase::TauType (mTauTypeCombo->currentIndex());
-    mPhase[STATE_PHASE_TAU_FIXED] = mTauFixedEdit->text().toDouble();
+    mPhase[STATE_PHASE_TAU_FIXED] = locale().toDouble(mTauFixedEdit->text());
     return mPhase;
 }
 
 bool PhaseDialog::isValid()
 {
     if (mTauTypeCombo->currentIndex() == 1) {
-        const int tau = mTauFixedEdit->text().toInt();
-        if (tau < 1) {
-            mError = tr("Phase fixed duration must be more than 1 !");
-            return false;
-        }
+        return mTauFixedEdit->hasAcceptableInput();
     }
 
     return true;
 }
 
-void PhaseDialog::resizeEvent(QResizeEvent* event)
-{
-    Q_UNUSED(event);
-    QFontMetrics fm (font());
-    int w1 (0);
-    Phase::TauType type = Phase::TauType (mTauTypeCombo->currentIndex());
-    switch (type) {
-        case Phase::eTauUnknown:
-        {
-            w1 = qMax(fm.boundingRect(mTauTypeLab->text()).width(),qMax(fm.boundingRect(mNameLab->text()).width(), fm.boundingRect(mColorLab->text()).width()));
-            break;
-        }
-        case Phase::eTauFixed:
-        {
-            w1 =  fm.boundingRect(mTauFixedLab->text()).width();
-            break;
-        }
-
-        default:
-            break;
-    }
-
-    int w2 = qMax( 200, fm.boundingRect(mNameEdit->text()).width()) + 2 * mMargin;
-
-    setFixedWidth( w1 + w2 + 3*mMargin);
-
-    mNameLab->setGeometry(mMargin, mMargin, w1, mLineH);
-    mColorLab->setGeometry(mMargin, 2*mMargin + mLineH, w1, mLineH);
-    mTauTypeLab->setGeometry(mMargin, 3*mMargin + 2*mLineH, w1, mLineH);
-    mTauFixedLab->setGeometry(mMargin, 4*mMargin + 2*mLineH + mLineH, w1, mLineH);
-
-    mNameEdit->setGeometry(2*mMargin + w1, mMargin, w2, mLineH);
-    mColorPicker->setGeometry(2*mMargin + w1, 2*mMargin + mLineH, w2, mLineH +3);
-
-    mTauTypeCombo->setGeometry(2*mMargin + w1, 3*mMargin + 2*mLineH  - 5, w2, mComboH);
-    mTauFixedEdit->setGeometry(2*mMargin + w1, 4*mMargin + 2*mLineH + mLineH, w2, mLineH);
-
-    mOkBut->setGeometry(width() - 2*mMargin - 2*mButW, height() - mMargin - mButH, mButW, mButH);
-    mCancelBut->setGeometry(width() - mMargin - mButW, height() - mMargin - mButH, mButW, mButH);
-
-}

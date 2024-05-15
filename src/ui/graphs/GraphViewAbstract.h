@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,20 +40,24 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef GRAPHVIEWABSTRACT_H
 #define GRAPHVIEWABSTRACT_H
 
+#include <QWidget>
 #include <qglobal.h>
 #include <QPainterPath>
 
+#define BLANK_SPACE_ON_TOP 5. //Space used to draw the credibility bar
+#define BLANK_SPACE_ON_RIGHT 5.
+
 typedef double type_data;
 
-class GraphViewAbstract
+class GraphViewAbstract:public QWidget
 {
+    Q_OBJECT
+
 public:
     GraphViewAbstract();
     virtual ~GraphViewAbstract();
 
-    QPainterPath mPainterPath;
-
-    // Getters
+#pragma mark Getters
     bool parameterChange() const;
     type_data rangeX() const;
     type_data rangeY() const;
@@ -70,33 +74,42 @@ public:
     qreal marginTop() const;
     qreal marginBottom() const;
 
-    // Setters
+ #pragma mark Setters
+    void setParent(QWidget *parent) {this->QWidget::setParent(parent);}
+
     void setPrevParameter();
 
-    virtual void setRangeX(const type_data &aMinX, const type_data &aMaxX);
-    virtual void setCurrentX(const type_data &aMinX, const type_data &aMaxX);
-    virtual void setRangeY(const type_data &aMinY, const type_data &aMaxY);
+    virtual void setRangeX(const type_data aMinX, const type_data aMaxX);
+    virtual void setCurrentX(const type_data aMinX, const type_data aMaxX);
+    virtual void setRangeY(const type_data aMinY, const type_data aMaxY);
 
-    void setMinimumX(const type_data &aMinX);
-    void setMaximumX(const type_data &aMaxX);
-    void setMinimumY(const type_data &aMinY);
-    void setMaximumY(const type_data &aMaxY);
+    void setMinimumX(const type_data aMinX);
+    void setMaximumX(const type_data aMaxX);
+    void setMinimumY(const type_data aMinY);
+    void setMaximumY(const type_data aMaxY);
 
-    void setMarginLeft(const qreal &aMarginLeft);
-    void setMarginRight(const qreal &aMarginRight);
-    void setMarginTop(const qreal &aMarginTop);
-    void setMarginBottom(const qreal &aMarginBottom);
-    void setMargins(const qreal &aMarginLeft, const qreal &aMarginRight, const qreal &aMarginTop, const qreal &aMarginBottom);
+    void setGraphHeight(const qreal h) {mGraphHeight = h;};
+
+    void setMarginLeft(const qreal aMarginLeft);
+    void setMarginRight(const qreal aMarginRight);
+    void setMarginTop(const qreal aMarginTop);
+    void setMarginBottom(const qreal aMarginBottom);
+    void setMargins(const qreal aMarginLeft, const qreal aMarginRight, const qreal aMarginTop, const qreal aMarginBottom);
 
 protected:
 	virtual void repaintGraph(const bool aAlsoPaintBackground) = 0;
 
-    virtual qreal getXForValue(const type_data &aValue, const bool &aConstainResult = true);
-    virtual type_data getValueForX(const qreal &x, const bool &aConstainResult = true);
-    virtual qreal getYForValue(const type_data &aValue, const bool &aConstainResult = true);
-    virtual type_data getValueForY(const qreal &y, const bool &aConstainResult = true);
+    virtual qreal getXForValue(const type_data aValue, const bool aConstainResult = true) const;
+    virtual type_data getValueForX(const qreal x, const bool aConstainResult = true) const;
+    virtual qreal getYForValue(const type_data aValue, const bool aConstainResult = true) const;
+    virtual type_data getValueForY(const qreal y, const bool aConstainResult = true) const;
 
 protected:
+    QPainterPath mPainterPath;
+
+    type_data   mCurrentMinX;
+    type_data   mCurrentMaxX;
+
     qreal		mGraphWidth;
     qreal		mGraphHeight;
 
@@ -109,9 +122,6 @@ protected:
     type_data	mMaxX;
     type_data	mMinY;
     type_data	mMaxY;
-
-    type_data   mCurrentMinX;
-    type_data   mCurrentMaxX;
 
     // previous parameter
     qreal		mPrevGraphWidth;
@@ -128,14 +138,14 @@ protected:
 };
 
 template <typename T>
-T valueForProportion(const T &value, const T &valMin, const T &valMax, const T &Pmin, const T &Pmax, const bool &resultInBounds)
+inline T valueForProportion(const T value, const T valMin, const T valMax, const T Pmin, const T Pmax, const bool resultInBounds)
 {
-    T v2 = Pmin + (value - valMin) * (Pmax - Pmin) / (valMax - valMin);
+    const T v2 = Pmin + (value - valMin) * (Pmax - Pmin) / (valMax - valMin);
 
     if (resultInBounds)
-        v2 = qBound(Pmin,v2,Pmax);
-
-    return v2;
+        return std::clamp(v2, Pmin, Pmax);
+    else
+        return v2;
 }
 
 

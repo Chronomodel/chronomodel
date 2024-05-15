@@ -57,21 +57,26 @@ public:
     PluginUniform();
     virtual ~PluginUniform();
 
-    long double getLikelihood(const double& t, const QJsonObject& data);
+    bool areDatesMergeable(const QJsonArray &dates);
+    QJsonObject mergeDates(const QJsonArray &dates);
+
+    long double getLikelihood(const double t, const QJsonObject &data);
     bool withLikelihoodArg() {return false; }
+    long double getLikelihoodCombine(const double t, const QJsonArray &data);
 
     QString getName() const;
     QIcon getIcon() const;
     bool doesCalibration() const;
     bool wiggleAllowed() const;
-    Date::DataMethod getDataMethod() const;
-    QList<Date::DataMethod> allowedDataMethods() const;
+
+    MHVariable::SamplerProposal getDataMethod() const;
+    QList<MHVariable::SamplerProposal> allowedDataMethods() const;
     QStringList csvColumns() const;
     QJsonObject fromCSV(const QStringList& list, const QLocale &csvLocale);
     QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale) const;
     QString getDateDesc(const Date* date) const;
     QJsonObject checkValuesCompatibility(const QJsonObject& values);
-    bool isDateValid(const QJsonObject& data, const ProjectSettings& settings);
+    bool isDateValid(const QJsonObject& , const StudyPeriodSettings& );
 
     PluginFormAbstract* getForm();
     GraphViewRefAbstract* getGraphViewRef();
@@ -79,6 +84,9 @@ public:
     PluginSettingsViewAbstract* getSettingsView();
 
     QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
+    double getMinStepRefsCurve(const QJsonObject &data) const;
+
+    void deleteGraphViewRef(GraphViewRefAbstract* graph);
 
 
 

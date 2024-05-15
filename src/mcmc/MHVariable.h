@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -42,11 +42,21 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "MetropolisVariable.h"
 
-
 class MHVariable: public MetropolisVariable
 {
-
 public:
+    enum SamplerProposal {
+        // Event
+        eFixe = -1,  //<  use with Type==eBound
+        eDoubleExp = 0, //<  The default method for Event->theta
+        eBoxMuller = 1,
+        eMHAdaptGauss = 2, // also for data
+        // Data
+        eMHPrior = 3,
+        eInversion = 4,
+        //eMHSymGaussAdapt = 5
+    };
+
     MHVariable();
     explicit MHVariable(const MHVariable &origin);
     virtual ~MHVariable();
@@ -56,19 +66,22 @@ public:
     MHVariable& copy(MHVariable const& origin);
     MHVariable& operator=(MHVariable const& origin);
 
-    double getCurrentAcceptRate();
+    double getCurrentAcceptRate() const;
     void saveCurrentAcceptRate();
 
-    bool tryUpdate(const double x, const double rapportToTry);
+    bool tryUpdate(const double x, const double rate);
+    bool adapt (const double coef_min = 0.42, const double coef_max = 0.46, const double delta = 0.01);
+    inline void memo_accept(const unsigned i_chain) {if (mLastAccepts.last()) ++mAllAccepts[i_chain];}
 
-    QVector<double> acceptationForChain(const QList<ChainSpecs>& chains, int index);
+    QList<double> acceptationForChain(const QList<ChainSpecs>& chains, int index);
     void generateGlobalRunAcceptation(const QList<ChainSpecs>& chains);
 
     void generateNumericalResults(const QList<ChainSpecs>& chains);
-    QString resultsString(const QString& nl = "<br>",
-                          const QString& noResultMessage = QObject::tr("No result to display"),
-                          const QString& unit = QString(),
-                          DateConversion formatFunc = nullptr, const bool forCSV = false) const;
+    QString resultsString(const QString &noResultMessage = QObject::tr("No result to display"),
+                          const QString &unit = QString()) const;
+
+    static QString getSamplerProposalText(const MHVariable::SamplerProposal sp);
+    static MHVariable::SamplerProposal getSamplerProposalFromText(const QString &text);
 
 public:
     double mSigmaMH;
@@ -76,7 +89,7 @@ public:
     // Buffer glissant de la taille d'un batch pour calculer la courbe d'évolution
     // du taux d'acceptation chaine par chaine
 
-    QVector<bool> mLastAccepts;
+    QList<bool> mLastAccepts;
 
     int mLastAcceptsLength;
 
@@ -84,18 +97,18 @@ public:
     // sur les parties acquisition uniquement.
     // A stocker dans le fichier résultats .res !
 
-    QVector<bool>* mAllAccepts;
-
+    QList<long long> mAllAccepts;
     // Computed at the end as numerical result :
-    double mGlobalAcceptation;
+    double mGlobalAcceptationPerCent;
 
     // Buffer contenant tous les taux d'acceptation calculés (1 par batch)
     // On en affiche des sous-parties (correspondant aux chaines) dans la vue des résultats
     // A stocker dans les résultats!
 
-    QVector<double>* mHistoryAcceptRateMH;
+    QList<double>* mHistoryAcceptRateMH;
 
-    QString mProposal;
+    SamplerProposal mSamplerProposal;
+
 };
 
 QDataStream &operator<<( QDataStream &stream, const MHVariable &data );

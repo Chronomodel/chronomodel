@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,10 +40,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef MODEL_H
 #define MODEL_H
 
-#include "ProjectSettings.h"
-#include "AppSettings.h"
+#include "StudyPeriodSettings.h"
 #include "MCMCSettings.h"
-#include "MHVariable.h"
 #include "Event.h"
 #include "Phase.h"
 #include "EventConstraint.h"
@@ -54,105 +52,142 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class Project;
 
 
-class Model:public QObject
+class Model: public QObject
 {
     Q_OBJECT
 public:
-    Model();
-    virtual ~Model();
-
-    void generateModelLog();
-    QString getModelLog() const;
-
-    void generateResultsLog();
-    QString getResultsLog() const;
-
-    QString getMCMCLog() const;
-
-    QList<QStringList> getStats(const QLocale locale, const int precision, const bool withDateFormat = false);
-    QList<QStringList> getPhasesTraces(QLocale locale, const bool withDateFormat = false);
-    QList<QStringList> getPhaseTrace(int phaseIdx, const QLocale locale, const bool withDateFormat = false);
-    QList<QStringList> getEventsTraces(const QLocale locale, const bool withDateFormat = false);
-
-    void updateFormatSettings();
-
-    QJsonObject toJson() const;
-    void fromJson( const QJsonObject& json);
-    void setProject(Project *project);
-
-    void updateDesignFromJson( const QJsonObject& json);
-
-    bool isValid();
-    void clear();
-
-    void initNodeEvents(); // use in MCMCLoopMain::initMCMC()
-
-    void saveToFile(const QString& fileName);
-    void restoreFromFile(const QString& fileName);
-
-    // Only trace needed for this :
-    void generateCorrelations(const QList<ChainSpecs>& chains);
-
-    void initThreshold(const double threshold);
-    double getThreshold() const ;
-    void initDensities(const int fftLength, const double bandwidth, const double threshold);
-    void updateDensities(const int fftLength, const double bandwidth, const double threshold);
-
-    // Computed from trace using FFT :
-    void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, double bandwidth);
-    // Trace and Posterior density needed for this :
-
-    void generateCredibility(const double threshold);
-    void generateHPD(const double threshold);
-    // Trace and Posterior density needed for this :
-    void generateNumericalResults(const QList<ChainSpecs>& chains);
-
-    void generateTempo();
-
-    void clearTraces();
-    void clearPosteriorDensities();
-    void clearCredibilityAndHPD();
-    void clearThreshold();
-
-public:
-    ProjectSettings mSettings;
+    StudyPeriodSettings mSettings;
     Project *mProject;
+
     MCMCSettings mMCMCSettings;
 
     QList<Event*> mEvents;
     QList<Phase*> mPhases;
+
     QList<EventConstraint*> mEventConstraints;
     QList<PhaseConstraint*> mPhaseConstraints;
 
     QList<ChainSpecs> mChains;
 
     QString mLogModel;
-    QString mLogMCMC;
+    QString mLogInit;
+    QString mLogAdapt;
     QString mLogResults;
 
     int mNumberOfPhases;
     int mNumberOfEvents;
     int mNumberOfDates;
 
-    // Members used in the next-previous sheet system
-    // they count all the Events and the Dates availables to display
-    // We could have the same Event and Date in several phases,
-    // so mNumberOfEventsInAllPhases is not egual to mNumberOfEvents
-    //int mNumberOfEventsInAllPhases;
-    //int mNumberOfDatesInAllPhases;
+    double mThreshold; // used for TimeRange + Credibility + transition Range + GapRange
+    double mBandwidth;
+    size_t mFFTLength;
+    double mHActivity;
+    // Stockage des courbes binomiales en fonction de n
+    std::unordered_map<int, std::vector<double>> mBinomiale_Gx;
+
+protected:
+    QStringList mCurveName;
+    QStringList mCurveLongName;
+
+public:
+    Model(QObject* parent = nullptr);
+    explicit Model(const QJsonObject& json, QObject* parent = nullptr);
+    virtual ~Model();
+
+    //void generateModelLog();
+    QString getModelLog() const;
+
+    virtual void generateResultsLog();
+    QString getResultsLog() const;
+
+    QString getInitLog() const;
+    QString getAdaptLog() const;
+
+    QList<QStringList> getStats(const QLocale locale, const int precision, const bool withDateFormat = false);
+    QList<QStringList> getPhasesTraces(QLocale locale, const bool withDateFormat = false);
+    QList<QStringList> getPhaseTrace(int phaseIdx, const QLocale locale, const bool withDateFormat = false);
+    QList<QStringList> getEventsTraces(const QLocale locale, const bool withDateFormat = false);
+
+    inline QStringList getCurvesName () const {return mCurveName;}
+    inline QStringList getCurvesLongName () const {return mCurveLongName;}
+    inline bool displayX () const {return !mCurveName.isEmpty();}
+    inline bool displayY () const {return mCurveName.size()>1;}
+    inline bool displayZ () const {return mCurveName.size()>2;}
+
+    virtual void updateFormatSettings();
+    void updateDesignFromJson();
+
+    virtual QJsonObject toJson() const;
+    virtual void fromJson( const QJsonObject& json);
+    
+    void setProject(Project *project);
+
+    bool isValid();
+    void clear();
+
+   // QString initialize_time();
+
+    void initNodeEvents(); // use in MCMCLoopChrono::initialize()
+    QString initializeTheta();
+
+    t_reduceTime reduceTime(double t) const;
+    std::vector<t_reduceTime> reduceTime(const std::vector<double> &vec_t) const;
+
+    double yearTime(t_reduceTime reduceTime);
+
+    virtual void saveToFile(QDataStream* out);
+    virtual void restoreFromFile(QDataStream* in) {return restoreFromFile_v323(in);};
+
+    void restoreFromFile_v323(QDataStream* in);
+    void restoreFromFile_v324(QDataStream *in);
+
+    // Only trace needed for this :
+    virtual void generateCorrelations(const QList<ChainSpecs>& chains);
+
+    double getThreshold() const;
+    double getBandwidth() const;
+    int getFFTLength() const;
+    
+    virtual void setThresholdToAllModel(const double threshold);
+    void initDensities();
+    void updateDensities(int fftLen, double bandwidth, double threshold);
+
+    // Computed from trace using FFT :
+    virtual void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, double bandwidth);
+    // Trace and Posterior density needed for this :
+
+    virtual void generateCredibility(const double threshold);
+    virtual void generateHPD(const double threshold);
+    // Trace and Posterior density needed for this :
+    virtual void generateNumericalResults(const QList<ChainSpecs>& chains);
+
+    void generateTempo(size_t gridLength);
+
+    void generateActivity(const size_t gridLenth, const double h, const double threshold, const double rangePercent = 95.);
+    void generateActivityBinomialeCurve(const int n, std::vector<double>& C1x, std::vector<double>& C2x, const double alpha = .05);
+
+    virtual void clearTraces();
+    virtual void clearPosteriorDensities();
+    virtual void clearCredibilityAndHPD();
+    virtual void clearThreshold();
+    
+    bool hasSelectedEvents();
+    bool hasSelectedPhases();
+
+#pragma mark Loop
+    virtual void memo_accept(const unsigned i_chain);
+    virtual void initVariablesForChain();
 
 public slots:
     void setThreshold(const double threshold);
     void setBandwidth(const double bandwidth);
-    void setFFTLength(const int FFTLength);
+    void setFFTLength(size_t FFTLength);
+    void setHActivity(const double h, const double rangePercent);
 
 signals:
     void newCalculus();
 
-private:
-     int mFFTLength;
-     double mBandwidth;
-     double mThreshold;
+
 };
 
 #endif

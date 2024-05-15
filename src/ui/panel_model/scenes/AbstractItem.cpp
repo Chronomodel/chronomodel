@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -40,11 +40,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AbstractItem.h"
 #include "ArrowTmpItem.h"
 #include "StateKeys.h"
+
 #include <QtWidgets>
 
- int AbstractItem::mBorderWidth  (2);
- int AbstractItem::mEltsMargin  (4);
- int AbstractItem::mItemWidth (180);
+int AbstractItem::mBorderWidth  (2);
+int AbstractItem::mEltsMargin  (4);
+int AbstractItem::mItemWidth (180);
+int AbstractItem::mTitleHeight (20);
 
 AbstractItem::AbstractItem(AbstractScene* scene, QGraphicsItem* parent):QGraphicsObject(parent),
     mScene(scene),
@@ -61,19 +63,37 @@ AbstractItem::AbstractItem(AbstractScene* scene, QGraphicsItem* parent):QGraphic
                      QGraphicsItem::ItemSendsScenePositionChanges |
                      QGraphicsItem::ItemSendsGeometryChanges);
 
-    // Not yet supported with retina display in Qt 5.3
-#ifndef Q_OS_MAC
-    QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect();
+    // Not supported with retina display in Qt 5.3
+    // but now we are in Qt 6
+//#ifndef Q_OS_MAC
+/*    QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect();
     shadow->setColor(Qt::black);
-    shadow->setBlurRadius(4);
-    shadow->setOffset(1, 1);
+    shadow->setBlurRadius(30);
+    shadow->setOffset(3, 3);
     setGraphicsEffect(shadow);
-#endif
+*/
+//#endif
 }
 
 AbstractItem::~AbstractItem()
 {
     mScene = nullptr;
+}
+
+QRectF AbstractItem::rectF() const
+{
+    return QRectF(-mSize.width()/2., -mSize.height()/2., mSize.width(), mSize.height());
+}
+
+QRectF AbstractItem::boundingRect() const
+{
+    return QRectF(-mSize.width()/2 - 10, -mSize.height()/2 - 10, mSize.width() + 20, mSize.height() + 20);
+}
+
+void AbstractItem::updateItemPosition(const QPointF& pos)
+{
+    mData[STATE_ITEM_X] = pos.x();
+    mData[STATE_ITEM_Y] = pos.y();
 }
 
 void AbstractItem::setMergeable(bool mergeable, bool shouldRepaint)
@@ -101,7 +121,7 @@ void AbstractItem::setCurrentInData(const bool current)
 // Events
 void AbstractItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
-    qDebug()<<"AbstractItem::mousePressEvent__________??";
+    //qDebug()<<"[AbstractItem::mousePressEvent]__________??";
 
     if (!mScene->itemClicked(this, e)) {
         setZValue(2.);
@@ -119,12 +139,17 @@ void AbstractItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
         qreal delta (mScene->deltaGrid());
         QPointF ptBefore = scenePos();
         ptBefore = QPointF(round(ptBefore.rx()/delta) * delta, round(ptBefore.ry()/delta) * delta);
+
+        updateItemPosition(ptBefore);
         setPos(ptBefore);
+        qDebug()<<" AbstractItem"<<ptBefore;
         e->setPos(ptBefore);
     }
-    mScene->itemReleased(this, e);
-    // Must be changed AFTER "itemReleased" because used by this function :
-    mMoving = false;
+    if (mMoving) {
+        mScene->itemReleased(this, e);
+        // Must be changed AFTER "itemReleased" because used by this function :
+        mMoving = false;
+    }
     QGraphicsItem::mouseReleaseEvent(e);
 }
 
@@ -136,24 +161,14 @@ void AbstractItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
 
 void AbstractItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 {
-    mMoving = true;
-
-    qDebug()<<"AbstractItem::mouseMoveEvent() e->pos avant mouseMove2"<<e->pos()<<e->scenePos()<<pos();
-    if (mScene->mShowGrid) {
+   /* if (mScene->mShowGrid) {
         QPointF ptBefore = pos();
         qreal delta (mScene->deltaGrid());
         ptBefore = QPointF(round(ptBefore.rx()/delta) * delta, floor(ptBefore.ry()/ delta) * delta);
-        setPos(ptBefore);
         e->setPos(ptBefore);
-    }
-
-    QGraphicsItem::mouseMoveEvent(e);
-
-
-  //  if (e->pos().x()==0 || e->pos().y()==0)
- qDebug()<<"AbstractItem::mouseMoveEvent() mData"<<this->mData.value(STATE_ITEM_X).toDouble()<<mData.value(STATE_ITEM_Y).toDouble();
- qDebug()<<"AbstractItem::mouseMoveEvent() e->pos3"<<e->pos()<<e->scenePos()<<pos();
-
+    }*/
+    mMoving = true;
+    QGraphicsItem::mouseMoveEvent(e); // move the graphic item, and change this position
 
 }
 
@@ -171,7 +186,7 @@ void AbstractItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* e)
 
 QVariant AbstractItem::itemChange(GraphicsItemChange change, const QVariant& value)
 {
-//qDebug()<<"AbstractItem::itemChange()"<<change<<value;
+
     if (change == ItemPositionChange && scene()) {
         // value is the new position.
         QPointF newPos = value.toPointF();
@@ -202,10 +217,11 @@ QVariant AbstractItem::itemChange(GraphicsItemChange change, const QVariant& val
 
       //  qDebug()<<"AbstractItem::itemChange() ItemPositionHasChanged "<<value.toPointF()<<"pos()"<<pos();
         updateItemPosition(value.toPointF());
-    }
+
+    } /*
     else if (change == ItemSelectedHasChanged || change == ItemSelectedChange) {
 
-            qDebug()<<"AbstractItem::itemChange() ItemSelectedHasChange  d "<<mData.value(STATE_NAME).toString()<<value.toBool();
+            //qDebug()<<"AbstractItem::itemChange() ItemSelectedHasChange  d "<<mData.value(STATE_NAME).toString()<<value.toBool();
            // mScene->updateStateSelectionFromItem(); // selection is manage in the scene unit
         }
     else if (change == ItemChildAddedChange ) {
@@ -214,6 +230,7 @@ QVariant AbstractItem::itemChange(GraphicsItemChange change, const QVariant& val
           // mScene->sendUpdateProject(tr("item move"), true, false);
             // mScene->updateStateSelectionFromItem(); // selection is manage in the scene unit
         }
+    */
 
     return QGraphicsItem::itemChange(change, value);
 }
@@ -234,3 +251,5 @@ QFont AbstractItem::adjustFont(const QFont &ft, const QString &str, const  QRect
     } else
         return ft;
 }
+
+

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -46,10 +46,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class RefCurve
 {
 public:
-    RefCurve();
-    virtual ~RefCurve();
-
-public:
     QString mName;
 
     QMap<double, double> mDataMean;
@@ -59,6 +55,8 @@ public:
 
     double mTmin;
     double mTmax;
+
+    double mMinStep;
 
     double mDataMeanMin;
     double mDataMeanMax;
@@ -71,6 +69,14 @@ public:
 
     double mDataInfMin;
     double mDataInfMax;
+
+public:
+    RefCurve();
+    virtual ~RefCurve();
+    double interpolate_mean(const double t) const;
+    double interpolate_error(const double t) const;
+
+
 };
 
 #endif

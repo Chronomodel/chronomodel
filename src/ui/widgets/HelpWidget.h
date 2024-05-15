@@ -48,19 +48,20 @@ class HelpWidget: public QWidget
 {
     Q_OBJECT
 public:
-    HelpWidget(QWidget* parent = 0);
-    HelpWidget(const QString& text, QWidget* parent = 0);
+    HelpWidget(QWidget* parent = nullptr);
+    HelpWidget(const QString& text, QWidget* parent = nullptr);
     void construct();
 
     ~HelpWidget();
 
     void setText(const QString& text);
+    inline QString text() const { return mText;};
     void setLink(const QString& url);
 
-    int heightForWidth(int w) const;
+    int heightForWidth(const int w) const;
 
 protected:
-    void paintEvent(QPaintEvent* e);
+    void paintEvent(QPaintEvent*);
     void resizeEvent(QResizeEvent* e);
 
 private:

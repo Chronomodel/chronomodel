@@ -41,14 +41,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Painting.h"
 
 Label::Label(QWidget* parent):QLabel(parent),
-mIsTitle(false),
+    mIsTitle(false),
 mAdjustText(true)
 {
     init();
 }
 
 Label::Label(const QString& text, QWidget* parent):QLabel(text, parent),
-mIsTitle(false)
+    mIsTitle(false)
 {
     init();
 }
@@ -75,7 +75,7 @@ void Label::adjustFont()
 void Label::init()
 {
     setAlignment(Qt::AlignVCenter | Qt::AlignRight);
-    mPalette = qApp->palette();//parentWidget()->palette();
+    mPalette = qApp->palette();
     setFont(qApp->font());
 }
 
@@ -86,7 +86,7 @@ void Label::setPalette(QPalette &palette)
 
 void Label::setBackground(QColor color)
 {
-    mPalette.setColor(QPalette::Background, color);
+    mPalette.setColor(QPalette::Window, color);
 }
 
 void Label::setIsTitle(bool isTitle)
@@ -95,7 +95,7 @@ void Label::setIsTitle(bool isTitle)
 
     if (mIsTitle) {
         mPalette.setColor(QPalette::Text, Qt::white);
-        mPalette.setColor(QPalette::Background, Painting::mainColorGrey);
+        mPalette.setColor(QPalette::Window, Painting::mainColorGrey);
         setAlignment(Qt::AlignCenter);
      }
     else {
@@ -122,7 +122,7 @@ void Label::paintEvent(QPaintEvent*)
     p.setFont(font());
     const QRectF r = rect();
 
-    p.fillRect(r, mPalette.background().color());
+    p.fillRect(r, mPalette.window().color());
     p.setPen(mPalette.text().color());
 
     p.drawText(r, alignment(), text());

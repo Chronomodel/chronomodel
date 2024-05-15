@@ -103,7 +103,7 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
 
     QFont adaptedFont (font());
     QFontMetricsF fm (adaptedFont);
-    qreal textSize = fm.boundingRect(mText).width();
+    qreal textSize = fm.horizontalAdvance(mText);
     if (!mIsVertical && textSize > (r.width() - 2. ) ) {
         const qreal fontRate = textSize / (r.width() - 2. );
         const qreal ptSiz = adaptedFont.pointSizeF() / fontRate;
@@ -136,7 +136,7 @@ void ScrollCompressor::paintEvent(QPaintEvent* e)
            // QString text = mText;// + "\r" + QString::number(qRound(mProp * 100)) + " %";
             p.setPen(QColor(200, 200, 200));
             p.rotate(-90); // coordonates are rotated
-            const int x = (- r.height() - fm.boundingRect(mText).width())/2;
+            const int x = (- r.height() - fm.horizontalAdvance(mText))/2;
             const int y = r.width()/2;
             p.drawText(x, y, mText);
             p.rotate(90);

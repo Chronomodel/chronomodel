@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,25 +40,29 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef MULTICALIBRATIONDRAWING_H
 #define MULTICALIBRATIONDRAWING_H
 
+#include "GraphView.h"
+#include "Marker.h"
+
 #include <QObject>
 #include <QWidget>
 #include <QLabel>
 #include <QScrollArea>
 
-#include "GraphView.h"
-#include "Marker.h"
-
 class ColoredBar: public QWidget
 {
     Q_OBJECT
-    Q_PROPERTY(QColor color READ color WRITE setColor)
+    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorsChanged)
 
 public:
     ColoredBar(QWidget *parent = nullptr);
     ~ColoredBar();
-    void setColor(const QColor & color) {mColor = color;}
+    void setColor(QColor &color) {mColor = color;}
     QColor color() const {return mColor;}
-static int mWidth;
+    static int mWidth;
+
+signals:
+    void colorsChanged(QColor color);
+
 protected:
     void paintEvent(QPaintEvent* e);
 
@@ -70,30 +74,42 @@ private:
 class MultiCalibrationDrawing: public QWidget
 {
     Q_OBJECT
-    Q_PROPERTY(int graphHeight READ graphHeight WRITE setGraphHeight)
+    Q_PROPERTY(int graphHeight READ graphHeight WRITE setGraphHeight NOTIFY graphHeightChanged)
+
 public:
     MultiCalibrationDrawing(QWidget *parent = nullptr);
     ~MultiCalibrationDrawing();
     virtual QPixmap grab();
 
-    void setGraphList(QList<GraphView*> &list);
+
+    void setGraphList(QList<GraphViewAbstract*> &list);
     void setEventsColorList(QList<QColor> &colorList);
-    QList<GraphView*> *getGraphList() {return &mListCalibGraph;}
+
+    QList<GraphViewAbstract*> *getGraphList() {return &mListCalibGraph;}
+    QList<GraphView*> getGraphViewList() const ;
+
+    inline void setListAxisVisible(QList<bool> &list) { mListAxisVisible = list;};
+
     void updateLayout();
     void forceRefresh();
-    void setGraphHeight(const int & height);
-    int graphHeight() const {return mGraphHeight;}
 
+    inline int graphHeight() const {return mGraphHeight;}
+    void setGraphHeight(int height);
     void hideMarker();
     void showMarker();
 
-    QWidget* getGraphWidget() const {return mGraphWidget;}
+    inline QWidget* getGraphWidget() const {return mGraphWidget;}
+
+signals:
+    void graphHeightChanged(int height);
 
 private:
 
-    QList<GraphView*> mListCalibGraph;
+    QList<GraphViewAbstract*> mListCalibGraph;
+
     QList<QColor> mListEventsColor;
     QList<ColoredBar*> mListBar;
+    QList<bool> mListAxisVisible;
 
     QScrollArea* mScrollArea;
     QWidget* mGraphWidget;
@@ -108,8 +124,8 @@ private:
 
     bool mMouseOverCurve;
 
+
 protected:
-  //  void paintEvent(QPaintEvent*);
     void mouseMoveEvent(QMouseEvent* e);
     void resizeEvent(QResizeEvent* e);
 

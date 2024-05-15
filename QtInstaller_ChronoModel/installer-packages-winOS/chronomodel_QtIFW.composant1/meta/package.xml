@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<Package>
+    <DisplayName>ChronoModel</DisplayName>
+    <Description>Chronological model software computation</Description>
+    <Version>3.2.7</Version>
+    <ReleaseDate>2024-02-06</ReleaseDate>
+    <Default>true</Default>
+    <Script>installscript.qs</Script>
+    <Licenses>
+        <License name="CeCILL FREE SOFTWARE LICENSE AGREEMENT Version 2.1 dated 2013-06-21" file="Licence_CeCILL_V2.1-en.html"/>
+    </Licenses>
+</Package>

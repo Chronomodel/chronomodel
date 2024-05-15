@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -38,125 +38,59 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "Model.h"
+
+#include "CalibrationCurve.h"
 #include "Date.h"
 #include "Project.h"
-#include "EventKnown.h"
-#include "MCMCLoopMain.h"
-#include "MCMCProgressDialog.h"
+#include "Bound.h"
+
 #include "ModelUtilities.h"
 #include "QtUtilities.h"
 #include "StdUtilities.h"
 #include "DateUtils.h"
-#include "MainWindow.h"
-#include "../PluginAbstract.h"
+
 #include "MetropolisVariable.h"
 
 #include <QJsonArray>
 #include <QtWidgets>
 #include <QtCore/QStringList>
 
-// Constructor...
-Model::Model():
-mProject(nullptr),
-mNumberOfPhases(0),
-mNumberOfEvents(0),
-mNumberOfDates(0)
-{
+#define NO_USE_THREAD
+#ifdef USE_THREAD
+#include <thread>
+#endif
 
+extern QString res_file_version;
+
+Model::Model(QObject *parent):
+    QObject(parent),
+    mProject(nullptr),
+    mNumberOfPhases(0),
+    mNumberOfEvents(0),
+    mNumberOfDates(0),
+    mThreshold(-1.),
+    mBandwidth(0.9),
+    mFFTLength(1024),
+    mHActivity(1)
+{
+    
 }
 
-Model::~Model()
+Model::Model(const QJsonObject &json, QObject* parent):
+    QObject(parent),
+    mProject(nullptr),
+    mNumberOfPhases(0),
+    mNumberOfEvents(0),
+    mNumberOfDates(0),
+    mThreshold(-1.),
+    mBandwidth(0.9),
+    mFFTLength(1024),
+    mHActivity(1)
 {
-
-}
-
-void Model::clear()
-{
-    clearTraces();
-    if (!mEvents.isEmpty()) {
-        for (Event* ev: mEvents) {
-            if (ev) {
-                ev->~Event();
-                ev = nullptr;
-            }
-        }
-        mEvents.clear();
-     }
-
-    if (!mPhases.isEmpty()) {
-        for (Phase* ph: mPhases) {
-            if (ph) {
-                ph->~Phase();
-                ph = nullptr;
-            }
-        }
-        mPhases.clear();
-    }
-
-    if (!mPhaseConstraints.isEmpty()) {
-        for (PhaseConstraint* pc : mPhaseConstraints) {
-            if (pc)
-                pc->~PhaseConstraint();
-
-        }
-        mPhaseConstraints.clear();
-    }
-
-    if (!mEventConstraints.isEmpty()) {
-        for (EventConstraint* ec : mEventConstraints) {
-            if (ec)
-                ec->~EventConstraint();
-        }
-        mEventConstraints.clear();
-    }
-
-    mChains.clear();
-    mLogModel.clear();
-    mLogMCMC.clear();
-    mLogResults.clear();
-}
-
-/**
- * @brief Model::updateFormatSettings, set all date format according to the Application Preference, date format
- * @param appSet
- */
-void Model::updateFormatSettings()
-{
-    for (auto&& event : mEvents) {
-        event->mTheta.setFormat(AppSettings::mFormatDate);
-
-        for (auto && date : event->mDates) {
-            date.mTheta.setFormat(AppSettings::mFormatDate);
-            date.mSigma.setFormat(DateUtils::eNumeric);
-            date.mWiggle.setFormat(AppSettings::mFormatDate);
-        }
-
-    }
-
-    for (auto && phase : mPhases) {
-        phase->mAlpha.setFormat(AppSettings::mFormatDate);
-        phase->mBeta.setFormat(AppSettings::mFormatDate);
-        phase->mDuration.setFormat(DateUtils::eNumeric);
-
-        // update Tempo and activity curves
-        phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
-        phase->mTempoInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoInf);
-        phase->mTempoSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoSup);
-        phase->mTempoCredibilityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilityInf);
-        phase->mTempoCredibilitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilitySup);
-
-        phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
-
-    }
-}
-
-// JSON conversion
-
-void Model::fromJson(const QJsonObject& json)
-{
+    // same code as fromJSON
     if (json.contains(STATE_SETTINGS)) {
         const QJsonObject settings = json.value(STATE_SETTINGS).toObject();
-        mSettings = ProjectSettings::fromJson(settings);
+        mSettings = StudyPeriodSettings::fromJson(settings);
     }
 
     if (json.contains(STATE_MCMC)) {
@@ -168,13 +102,9 @@ void Model::fromJson(const QJsonObject& json)
     if (json.contains(STATE_PHASES)) {
         const QJsonArray phases = json.value(STATE_PHASES).toArray();
         mNumberOfPhases = phases.size();
+        for (auto &json : phases)
+             mPhases.append(new Phase(json.toObject(), this));
 
-        for (int i=0; i<phases.size(); ++i) {
-            const QJsonObject phase = phases.at(i).toObject();
-            Phase* p = new Phase(Phase::fromJson(phase));
-            mPhases.append(p);
-            p = nullptr;
-        }
     }
 
     // Sort phases based on items y position
@@ -184,22 +114,14 @@ void Model::fromJson(const QJsonObject& json)
         QJsonArray events = json.value(STATE_EVENTS).toArray();
         mNumberOfEvents = events.size();
 
-        for (int i=0; i<events.size(); ++i) {
-            const QJsonObject event = events.at(i).toObject();
+        for (int i = 0; i < events.size(); ++i) {
+            const QJsonObject JSONevent = events.at(i).toObject();
 
-            if (event.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
+            if (JSONevent.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
                 try {
-                    Event* e = new Event();//Event::fromJson(event));
-                    e->copyFrom(Event::fromJson(event));
-                    e->mMixingLevel = mMCMCSettings.mMixingLevel;
-                    mNumberOfDates += e->mDates.size();
+                    mEvents.append(new Event(JSONevent, std::shared_ptr<Model>(this)));
+                    mNumberOfDates += JSONevent.value(STATE_EVENT_DATES).toArray().size();
 
-                    for (int j=0; j<e->mDates.size(); ++j) {
-                        e->mDates[j].mMixingLevel = e->mMixingLevel;
-                        e->mDates[j].mColor = e->mColor;
-                    }
-                    mEvents.append(e);
-                    e = nullptr;
                 }
                 catch(QString error){
                     QMessageBox message(QMessageBox::Critical,
@@ -210,9 +132,11 @@ void Model::fromJson(const QJsonObject& json)
                     message.exec();
                 }
             } else {
-                EventKnown* e = new EventKnown(EventKnown::fromJson(event));
-                e->updateValues(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
-                mEvents.append(e);
+                Bound* ek = new Bound(JSONevent, std::shared_ptr<Model>(this));
+                //*ek = Bound::fromJson(JSONevent);
+                ek->updateValues(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
+                mEvents.append(ek);
+                ek = nullptr;
             }
         }
     }
@@ -274,60 +198,365 @@ void Model::fromJson(const QJsonObject& json)
         for (int j=0; j<mPhaseConstraints.size(); ++j) {
             if (mPhaseConstraints.at(j)->mFromId == phaseId) {
                 mPhaseConstraints[j]->mPhaseFrom = mPhases[i];
-                mPhases[i]->mConstraintsFwd.append(mPhaseConstraints[j]);
+                mPhases[i]->mConstraintsNextPhases.append(mPhaseConstraints[j]);
             } else if (mPhaseConstraints.at(j)->mToId == phaseId) {
                 mPhaseConstraints[j]->mPhaseTo = mPhases[i];
-                mPhases[i]->mConstraintsBwd.append(mPhaseConstraints[j]);
+                mPhases[i]->mConstraintsPrevPhases.append(mPhaseConstraints[j]);
             }
         }
-       // int mNumberOfEventsInAllPhases;
-       // int mNumberOfDatesInAllPhases;
-        //mNumberOfEventsInAllPhases += mPhases.at(i)->mEvents.size();
-        //for (int k=0; k<mPhases.at(i)->mEvents.size();++k)
-        //    mNumberOfDatesInAllPhases += mPhases.at(i)->mEvents.at(k)->mDates.size();
 
     }
-    //return model;
 }
 
-void Model::setProject( Project * project)
+Model::~Model()
+{
+    mProject = nullptr;
+}
+
+void Model::clear()
+{
+    mCurveName.clear();
+    mCurveLongName.clear();
+    // Deleting an event executes these main following actions :
+    // - The Event MH variables are reset (freeing trace memory)
+    // - The Dates MH variables are reset (freeing trace memory)
+    // - The Dates are cleared
+    //for (Event* &ev: mEvents) {
+  /*  for (auto ev = mEvents.rbegin(); ev != mEvents.rend(); ev++) {
+        // Event can be an Event or an EventCurve.
+        // => do not delete it using ~Event(), because the appropriate destructor could be ~EventCurve().
+        //delete ev;
+        delete *ev;
+    }
+    
+    for (EventConstraint* &ec : mEventConstraints) {
+        delete ec;
+        ec = nullptr;
+    }
+ */
+    mEvents.clear();
+    mEventConstraints.clear();
+
+    mPhases.clear();
+    mPhaseConstraints.clear();
+
+    /*if (!mPhases.isEmpty()) {
+        for (Phase* &ph: mPhases) {
+           // if (ph) {
+                delete ph;
+                ph = nullptr;
+           // }
+        }
+        mPhases.clear();
+    }
+
+    if (!mPhaseConstraints.isEmpty()) {
+        for (PhaseConstraint* &pc : mPhaseConstraints) {
+           // if (pc) {
+                delete pc; //->~PhaseConstraint();
+                pc = nullptr;
+           // }
+        }
+        mPhaseConstraints.clear();
+    }*/
+
+    mChains.clear();
+    mLogModel.clear();
+    mLogInit.clear();
+    mLogAdapt.clear();
+    mLogResults.clear();
+}
+
+/**
+ * @brief Model::updateFormatSettings, set all date format according to the Application Preference, date format
+ * @param appSet
+ */
+void Model::updateFormatSettings()
+{
+    const auto appSetFormat = DateUtils::getAppSettingsFormat();
+
+    for (const auto& event : mEvents) {
+        event->mTheta.setFormat(appSetFormat);
+        event->mS02Theta.setFormat(DateUtils::eNumeric);
+
+        for (auto&& date : event->mDates) {
+            date.mTi.setFormat(appSetFormat);
+            date.mSigmaTi.setFormat(DateUtils::eNumeric);
+            date.mWiggle.setFormat(appSetFormat);
+        }
+
+    }
+
+    for (const auto& phase : mPhases) {
+        phase->mAlpha.setFormat(DateUtils::getAppSettingsFormat());
+        phase->mBeta.setFormat(DateUtils::getAppSettingsFormat());
+        phase->mDuration.setFormat(DateUtils::eNumeric);
+        phase->mTau.setFormat(DateUtils::eNumeric);
+
+        // update Tempo and activity curves
+        phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
+        phase->mTempoInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoInf);
+        phase->mTempoSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoSup);
+
+        phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
+        phase->mActivityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityInf);
+        phase->mActivitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivitySup);
+
+        phase->mActivityUnifTheo = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivityUnifTheo);
+
+    }
+}
+
+// JSON conversion
+
+void Model::fromJson(const QJsonObject& json)
+{
+    if (json.contains(STATE_SETTINGS)) {
+        const QJsonObject settings = json.value(STATE_SETTINGS).toObject();
+        mSettings = StudyPeriodSettings::fromJson(settings);
+    }
+
+    if (json.contains(STATE_MCMC)) {
+        const QJsonObject mcmc = json.value(STATE_MCMC).toObject();
+        mMCMCSettings = MCMCSettings::fromJson(mcmc);
+        mChains = mMCMCSettings.getChains();
+    }
+
+    if (json.contains(STATE_PHASES)) {
+        const QJsonArray phases = json.value(STATE_PHASES).toArray();
+        mNumberOfPhases = phases.size();
+        for (auto &json : phases)
+             mPhases.append(new Phase(json.toObject(), this));
+
+    }
+
+    // Sort phases based on items y position
+    std::sort(mPhases.begin(), mPhases.end(), sortPhases);
+
+    if (json.contains(STATE_EVENTS)) {
+        QJsonArray events = json.value(STATE_EVENTS).toArray();
+        mNumberOfEvents = events.size();
+
+        for (int i = 0; i < events.size(); ++i) {
+            const QJsonObject JSONevent = events.at(i).toObject();
+
+            if (JSONevent.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
+                try {
+                    mEvents.append(new Event(JSONevent, std::shared_ptr<Model>(this)));
+                    mNumberOfDates += JSONevent.value(STATE_EVENT_DATES).toArray().size();
+
+                }
+                catch(QString error){
+                    QMessageBox message(QMessageBox::Critical,
+                                        qApp->applicationName() + " " + qApp->applicationVersion(),
+                                        QObject::tr("Error : %1").arg(error),
+                                        QMessageBox::Ok,
+                                        qApp->activeWindow());
+                    message.exec();
+                }
+            } else {
+                Bound* ek = new Bound(JSONevent, std::shared_ptr<Model>(this));
+                //*ek = Bound::fromJson(JSONevent);
+                ek->updateValues(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
+                mEvents.append(ek);
+                ek = nullptr;
+            }
+        }
+    }
+
+
+    // Sort events based on items y position
+    std::sort(mEvents.begin(), mEvents.end(), sortEvents);
+
+    if (json.contains(STATE_EVENTS_CONSTRAINTS)) {
+        const QJsonArray constraints = json.value(STATE_EVENTS_CONSTRAINTS).toArray();
+        for (int i=0; i<constraints.size(); ++i) {
+            const QJsonObject constraint = constraints.at(i).toObject();
+            EventConstraint* c = new EventConstraint(EventConstraint::fromJson(constraint));
+            mEventConstraints.append(c);
+        }
+    }
+
+    if (json.contains(STATE_PHASES_CONSTRAINTS)) {
+        const QJsonArray constraints = json.value(STATE_PHASES_CONSTRAINTS).toArray();
+        for (int i=0; i<constraints.size(); ++i) {
+            const QJsonObject constraint = constraints.at(i).toObject();
+            PhaseConstraint* c = new PhaseConstraint(PhaseConstraint::fromJson(constraint));
+            mPhaseConstraints.append(c);
+        }
+    }
+
+    // ------------------------------------------------------------
+    //  Link objects to each other
+    //  Must be done here !
+    //  nb : Les data sont déjà linkées aux events à leur création
+    // ------------------------------------------------------------
+    for (int i=0; i<mEvents.size(); ++i) {
+        int eventId = mEvents.at(i)->mId;
+        QList<int> phasesIds = mEvents.at(i)->mPhasesIds;
+
+        // Link des events / phases
+        for (int j=0; j<mPhases.size(); ++j) {
+            const int phaseId = mPhases.at(j)->mId;
+            if (phasesIds.contains(phaseId)) {
+                mEvents[i]->mPhases.append(mPhases[j]);
+                mPhases[j]->mEvents.append(mEvents[i]);
+            }
+        }
+
+        // Link des events / contraintes d'event
+        for (int j=0; j<mEventConstraints.size(); ++j) {
+            if (mEventConstraints[j]->mFromId == eventId) {
+                mEventConstraints[j]->mEventFrom = mEvents[i];
+                mEvents[i]->mConstraintsFwd.append(mEventConstraints[j]);
+            } else if (mEventConstraints[j]->mToId == eventId) {
+                mEventConstraints[j]->mEventTo = mEvents[i];
+                mEvents[i]->mConstraintsBwd.append(mEventConstraints[j]);
+            }
+        }
+    }
+    // Link des phases / contraintes de phase
+    for (int i=0; i<mPhases.size(); ++i) {
+        const int phaseId = mPhases.at(i)->mId;
+        for (int j=0; j<mPhaseConstraints.size(); ++j) {
+            if (mPhaseConstraints.at(j)->mFromId == phaseId) {
+                mPhaseConstraints[j]->mPhaseFrom = mPhases[i];
+                mPhases[i]->mConstraintsNextPhases.append(mPhaseConstraints[j]);
+            } else if (mPhaseConstraints.at(j)->mToId == phaseId) {
+                mPhaseConstraints[j]->mPhaseTo = mPhases[i];
+                mPhases[i]->mConstraintsPrevPhases.append(mPhaseConstraints[j]);
+            }
+        }
+
+    }
+
+}
+
+void Model::setProject( Project* project)
 {
     mProject = project;
-}
+    mCurveName.clear();
+    mCurveLongName.clear();
 
-void Model::updateDesignFromJson(const QJsonObject& json)
-{
-    const QJsonArray phasesJSON = json.value(STATE_PHASES).toArray();
-    if (mPhases.size() != phasesJSON.size())
+    if (!mProject || !mProject->isCurve()) {
         return;
-
-    for (int i = 0; i < phasesJSON.size(); ++i) {
-        const QJsonObject phaseJS = phasesJSON.at(i).toObject();
-        Phase * p = mPhases[i];
-        p->mName = phaseJS.value(STATE_NAME).toString();
-        p->mColor = QColor(phaseJS.value(STATE_COLOR_RED).toInt(),phaseJS.value(STATE_COLOR_GREEN).toInt(),phaseJS.value(STATE_COLOR_BLUE ).toInt()) ;
-        p->mItemY = phaseJS.value(STATE_ITEM_Y).toDouble();
     }
 
-    const QJsonArray eventsJSON = json.value(STATE_EVENTS).toArray();
-    if (mEvents.size() != eventsJSON.size())
+    //ModelCurve* curveModel = dynamic_cast<ModelCurve*>(mProject->mModel.get());
+    const auto &curveModel = mProject->mModel;
+
+    const QString xLabel = curveModel->mCurveSettings.XLabel();
+    const QString yLabel = curveModel->mCurveSettings.YLabel();
+    const QString zLabel = curveModel->mCurveSettings.ZLabel();
+
+    const QString x_short_name = curveModel->mCurveSettings.X_short_name();
+    const QString y_short_name = curveModel->mCurveSettings.Y_short_name();
+    const QString z_short_name = curveModel->mCurveSettings.Z_short_name();
+
+    switch (curveModel->mCurveSettings.mProcessType) {
+
+    case CurveSettings::eProcess_2D:
+    case CurveSettings::eProcess_Spherical:
+    case CurveSettings::eProcess_Unknwon_Dec:
+        mCurveName.append({x_short_name, y_short_name});
+        mCurveLongName.append({xLabel, yLabel});
+        break;
+
+    case CurveSettings::eProcess_3D:
+    case CurveSettings::eProcess_Vector:
+        mCurveName.append({x_short_name, y_short_name, z_short_name});
+        mCurveLongName.append({xLabel, yLabel, zLabel});
+        break;
+
+    case CurveSettings::eProcess_None:
+    case CurveSettings::eProcess_Univariate:
+    case CurveSettings::eProcess_Inclination:
+    case CurveSettings::eProcess_Declination:
+    case CurveSettings::eProcess_Field:
+    case CurveSettings::eProcess_Depth:
+    default:
+        mCurveName.append(x_short_name);
+        mCurveLongName.append(xLabel);
+        break;
+    }
+
+}
+
+
+/**
+ * @brief ResultsView::updateModel Update Design
+ */
+void Model::updateDesignFromJson()
+{
+    if (!mProject)
         return;
+    setProject(mProject); // update mCurveName
+    const QJsonObject *state = mProject->state_ptr();
+    const QJsonArray events = state->value(STATE_EVENTS).toArray();
+    const QJsonArray phases = state->value(STATE_PHASES).toArray();
 
-    for (int i = 0; i < eventsJSON.size(); ++i) {
-        const QJsonObject eventJS = eventsJSON.at(i).toObject();
-        Event * e = mEvents[i];
-        e->mName = eventJS.value(STATE_NAME).toString();
-        e->mItemY = eventJS.value(STATE_ITEM_Y).toDouble();
-        e->mColor = QColor(eventJS.value(STATE_COLOR_RED).toInt(),eventJS.value(STATE_COLOR_GREEN).toInt(),eventJS.value(STATE_COLOR_BLUE ).toInt()) ;
+    QJsonArray::const_iterator iterJSONEvent = events.constBegin();
+    while (iterJSONEvent != events.constEnd()) {
+        const QJsonObject eventJSON = (*iterJSONEvent).toObject();
+        const int eventId = eventJSON.value(STATE_ID).toInt();
+        const QJsonArray dates = eventJSON.value(STATE_EVENT_DATES).toArray();
 
-        QJsonArray datesJS = eventJS.value(STATE_EVENT_DATES).toArray();
-        if (e->mDates.size() != datesJS.size())
-            return;
+        QList<Event *>::iterator iterEvent = mEvents.begin();
+        while (iterEvent != mEvents.end()) {
+            if ((*iterEvent)->mId == eventId) {
+                (*iterEvent)->mName  = eventJSON.value(STATE_NAME).toString();
+                (*iterEvent)->mItemX = eventJSON.value(STATE_ITEM_X).toDouble();
+                (*iterEvent)->mItemY = eventJSON.value(STATE_ITEM_Y).toDouble();
+                (*iterEvent)->mIsSelected = eventJSON.value(STATE_IS_SELECTED).toBool();
+                (*iterEvent)->mColor = QColor(eventJSON.value(STATE_COLOR_RED).toInt(),
+                                              eventJSON.value(STATE_COLOR_GREEN).toInt(),
+                                              eventJSON.value(STATE_COLOR_BLUE).toInt());
+                
+                for (int k = 0; k<(*iterEvent)->mDates.size(); ++k) {
+                    Date& d = (*iterEvent)->mDates[k];
+                    for (auto &&dateVal : dates) {
+                        const QJsonObject date = dateVal.toObject();
+                        const int dateId = date.value(STATE_ID).toInt();
 
-        for (int j = 0; j < datesJS.size(); ++j) {
-            QJsonObject dateJS = datesJS.at(j).toObject();
-            e->mDates[j].mName = dateJS.value(STATE_NAME).toString();
+                        if (dateId == d.mId) {
+                            d.mName = date.value(STATE_NAME).toString();
+                            d.mColor = (*iterEvent)->mColor;
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            ++iterEvent;
         }
+        ++iterJSONEvent;
+    }
+
+    QJsonArray::const_iterator iterJSONPhase = phases.constBegin();
+    while (iterJSONPhase != phases.constEnd()) {
+        const QJsonObject phaseJSON = (*iterJSONPhase).toObject();
+        const int phaseId = phaseJSON.value(STATE_ID).toInt();
+
+        for (const auto& p : mPhases) {
+            if (p->mId == phaseId) {
+                p->mName = phaseJSON.value(STATE_NAME).toString();
+                p->mItemX = phaseJSON.value(STATE_ITEM_X).toDouble();
+                p->mItemY = phaseJSON.value(STATE_ITEM_Y).toDouble();
+                p->mColor = QColor(phaseJSON.value(STATE_COLOR_RED).toInt(),
+                                   phaseJSON.value(STATE_COLOR_GREEN).toInt(),
+                                   phaseJSON.value(STATE_COLOR_BLUE).toInt());
+                p->mIsSelected = phaseJSON.value(STATE_IS_SELECTED).toBool();
+                break;
+            }
+        }
+        ++iterJSONPhase;
+    }
+
+    std::sort(mEvents.begin(), mEvents.end(), sortEvents);
+    std::sort(mPhases.begin(), mPhases.end(), sortPhases);
+
+    for (const auto& p : mPhases ) {
+        std::sort(p->mEvents.begin(), p->mEvents.end(), sortEvents);
     }
 }
 
@@ -339,26 +568,26 @@ QJsonObject Model::toJson() const
     json["mcmc"] = mMCMCSettings.toJson();
 
     QJsonArray events;
-    for (auto&& event : mEvents)
+    for (const auto& event : mEvents)
         events.append(event->toJson());
 
     json["events"] = events;
 
     QJsonArray phases;
-    for (auto&& pPhase : mPhases)
+    for (const auto& pPhase : mPhases)
         phases.append(pPhase->toJson());
 
     json["phases"] = phases;
 
     QJsonArray event_constraints;
-    for (auto&& eventConstraint : mEventConstraints)
+    for (const auto& eventConstraint : mEventConstraints)
         event_constraints.append(eventConstraint->toJson());
 
     json["event_constraints"] = event_constraints;
 
     QJsonArray phase_constraints;
 
-    for (auto&& pPhaseConstraint : mPhaseConstraints)
+    for (const auto& pPhaseConstraint : mPhaseConstraints)
         phase_constraints.append(pPhaseConstraint->toJson());
 
     json["phase_constraints"] = phase_constraints;
@@ -367,124 +596,64 @@ QJsonObject Model::toJson() const
 }
 
 // Logs
-QString Model::getMCMCLog() const{
-    return mLogMCMC;
-}
 
-QString Model::getModelLog() const{
+QString Model::getModelLog() const
+{
     return mLogModel;
 }
 
-/**
- * @brief Model::generateModelLog
- * @return Return a QString with the recall of the Model with the data MCMC Methode, and constraint
- */
-void Model::generateModelLog()
+QString Model::getInitLog() const
 {
     QString log;
-    // Study period
-    QLocale locale = QLocale();
-    log += line(textBold(textBlack(tr("Prior Study Period : [ %1 : %2 ] %3").arg(locale.toString(mSettings.getTminFormated()), locale.toString(mSettings.getTmaxFormated()), DateUtils::getAppSettingsFormatStr() ))));
-    log += "<br>";
-
-    int i(0);
-    for (auto&& pEvent : mEvents) {
-        if (pEvent->type() == Event::eKnown) {
-            log += line(textRed(tr("Bound ( %1 / %2 ) : %3 ( %4  phases, %5 const. back., %6 const.fwd.)").arg(QString::number(i+1), QString::number(mEvents.size()), pEvent->mName,
-                                                                                                               QString::number(pEvent->mPhases.size()),
-                                                                                                               QString::number(pEvent->mConstraintsBwd.size()),
-                                                                                                               QString::number(pEvent->mConstraintsFwd.size()))));
-        } else {
-            log += line(textBlue(tr("Event ( %1 / %2 ) : %3 ( %4 data, %5 phases, %6 const. back., %7 const. fwd.)").arg(QString::number(i+1), QString::number(mEvents.size()), pEvent->mName,
-                                                                                                                         QString::number(pEvent->mDates.size()),
-                                                                                                                         QString::number(pEvent->mPhases.size()),
-                                                                                                                         QString::number(pEvent->mConstraintsBwd.size()),
-                                                                                                                         QString::number(pEvent->mConstraintsFwd.size()))
-                                 + "<br>" + tr("- Method : %1").arg(ModelUtilities::getEventMethodText(pEvent->mMethod))));
-        }
-
-        int j(0);
-        for (auto&& date : pEvent->mDates) {
-            log += "<br>";
-            log += line(textBlack(tr("Data ( %1 / %2 ) : %3").arg(QString::number(j+1), QString::number(pEvent->mDates.size()), date.mName)
-                                  + "<br>" + tr("- Type : %1").arg(date.mPlugin->getName())
-                                  + "<br>" + tr("- Method : %1").arg(ModelUtilities::getDataMethodText(date.mMethod))
-                                  + "<br>" + tr("- Params : %1").arg(date.getDesc())));
-            ++j;
-        }
-        log += "<hr>";
-        log += "<br>";
+    int i = 1;
+    for (const auto& chain : mChains) {
+        log += line( QObject::tr("Elapsed init time %1 for chain %2").arg(DHMS(chain.mInitElapsedTime), QString::number(i)));
         ++i;
     }
-
-    i = 0;
-    for (auto &&pPhase : mPhases) {
-        log += line(textPurple(tr("Phase ( %1 / %2 ) : %3 ( %4 events, %5 const. back., %6 const. fwd.)").arg(QString::number(i+1), QString::number(mPhases.size()), pPhase->mName,
-                                                                                                              QString::number(pPhase->mEvents.size()),
-                                                                                                              QString::number(pPhase->mConstraintsBwd.size()),
-                                                                                                              QString::number(pPhase->mConstraintsFwd.size()))
-                               + "<br>" + tr("- Type : %1").arg(pPhase->getTauTypeText())));
-        log += "<br>";
-
-        for (auto &&pEvent : pPhase->mEvents)
-            log += line(textBlue(tr("Event : %1").arg(pEvent->mName)));
-
-        log += "<hr>";
-        log += "<br>";
-        ++i;
-    }
-
-   // i = 0;
-    for (auto&& pPhaseConst : mPhaseConstraints) {
-        log += "<hr>";
-        log += line(textBold(textGreen( QObject::tr("Succession from %1 to %2").arg(pPhaseConst->mPhaseFrom->mName, pPhaseConst->mPhaseTo->mName))));
-
-        switch(pPhaseConst->mGammaType) {
-            case PhaseConstraint::eGammaFixed :
-                log += line(textBold(textGreen( QObject::tr("Min Hiatus fixed = %1").arg(pPhaseConst->mGammaFixed))));
-                break;
-            case PhaseConstraint::eGammaUnknown :
-                log += line(textBold(textGreen( QObject::tr("Min Hiatus unknown") )));
-                break;
-            case PhaseConstraint::eGammaRange : //no longer used
-                 log += line(textBold(textGreen( QObject::tr("Min Hiatus between %1 and %2").arg(pPhaseConst->mGammaMin, pPhaseConst->mGammaMax))));
-                break;
-            default:
-                log += "Hiatus undefined -> ERROR";
-            break;
-        }
-
-        log += "<hr>";
-        log += "<br>";
-    }
-
-    mLogModel = log;
-
+    return log + mLogInit;
 }
 
-QString Model::getResultsLog() const{
+QString Model::getAdaptLog() const
+{
+    QString log;
+    int i = 1;
+    for (const auto& chain : mChains) {
+        log += line( QObject::tr("Elapsed adaptation time %1 for chain %2").arg(DHMS(chain.mAdaptElapsedTime), QString::number(i)));
+        ++i;
+    }
+    return log + mLogAdapt;
+}
+
+QString Model::getResultsLog() const
+{
     return mLogResults;
 }
 
 void Model::generateResultsLog()
 {
     QString log;
-
-    for (auto &&pPhase : mPhases) {
-        log += ModelUtilities::phaseResultsHTML(pPhase);
-        /** @todo delete repeted word phase */
-         QString tempoStr = ModelUtilities::tempoResultsHTML(pPhase);
-         tempoStr.remove(1, 41);
-         log += tempoStr;
-        log += "<hr>";
+    int i = 1;
+    for (const auto& chain : mChains) {
+        log += line( QObject::tr("Elapsed acquisition time %1 for chain %2").arg(DHMS(chain.mAcquisitionElapsedTime), QString::number(i)));
+        ++i;
     }
-
-    for (auto &&pPhaseConstraint : mPhaseConstraints) {
-        log += ModelUtilities::constraintResultsHTML(pPhaseConstraint);
+    log += "<hr>";
+    std::ranges::for_each(mPhases, [&log](Phase* phase) {
+        log += ModelUtilities::phaseResultsHTML(phase);
+        log += "<br>";
+        log += line(textBold(textOrange(QObject::tr("Duration (posterior distrib.)"))));
+        log += line(textOrange(phase->mDuration.resultsString(QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"))));
         log += "<hr>";
-    }
-    for (auto &&pEvent : mEvents) {
-        log += ModelUtilities::eventResultsHTML(pEvent, true, this);
+    });
+
+    std::ranges::for_each(mPhaseConstraints, [&log](PhaseConstraint* phase_constraint) {
+        log += ModelUtilities::constraintResultsHTML(phase_constraint);
+        log += "<hr>";
+    });
+
+    for (const auto& ev : mEvents) {
+        log += ModelUtilities::eventResultsHTML(ev, true, mSettings.getTminFormated(), mSettings.getTmaxFormated(), !getCurvesName().isEmpty());
+        //log += ModelUtilities::eventResultsHTML(ev, true, this);
         log += "<hr>";
     }
 
@@ -497,50 +666,69 @@ QList<QStringList> Model::getStats(const QLocale locale, const int precision, co
     (void) withDateFormat;
     QList<QStringList> rows;
 
-    int maxHpd (0);
+    int maxHpd = 0;
 
     // Phases
 
-    for (auto &&pPhase : mPhases) {
-        QStringList l = pPhase->mAlpha.getResultsList(locale, precision);
+    for (const auto& phase : mPhases) {
+        QStringList l = phase->mAlpha.getResultsList(locale, precision);
         maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
-        l.prepend(pPhase->mName + " Begin");
+        l.prepend(phase->mName + " Begin");
         rows << l;
 
-        l = pPhase->mBeta.getResultsList(locale, precision);
+        l = phase->mBeta.getResultsList(locale, precision);
         maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
-        l.prepend(pPhase->mName + " End");
+        l.prepend(phase->mName + " End");
         rows << l;
+
+        /*
+        l = pPhase->mTau.getResultsList(locale, precision);
+        maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
+        l.prepend(pPhase->mName + " Tau");
+        rows << l;
+        */
     }
 
     // Events
     rows << QStringList();
-     for (Event* event : mEvents) {
-        QStringList l = event->mTheta.getResultsList(locale, precision);
-        maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
-        l.prepend(event->mName);
-        rows << l;
+    for (Event*& event : mEvents) {
+        if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+             QStringList l = event->mTheta.getResultsList(locale, precision);
+             maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
+             l.prepend(event->mName);
+             rows << l;
+
+        } else {
+            QStringList l ;
+            l << locale.toString(event->mTheta.mFormatedTrace->at(0), 'f', precision);
+            l.prepend(event->mName);
+            rows << l;
+        }
     }
 
     // Dates
     rows << QStringList();
-    for (Event* event : mEvents) {
-        for (int j = 0; j < event->mDates.size(); ++j) {
-            Date& date = event->mDates[j];
+    for (Event*& event : mEvents) {
+        if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+            for (int j = 0; j < event->mDates.size(); ++j) {
+                Date& date = event->mDates[j];
 
-            QStringList l = date.mTheta.getResultsList(locale, precision);
-            maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
-            l.prepend(date.mName);
-            rows << l;
+                QStringList l = date.mTi.getResultsList(locale, precision);
+                maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
+                l.prepend(date.mName);
+                rows << l;
+            }
         }
     }
 
     // Headers
     QStringList list;
-    list << "Item" << "MAP" << "Mean" << "Std dev" << "Q1" << "Q2" << "Q3" << "Credibility %" << "Credibility start" << "Credibility end";
+    // list << "Item" << "MAP" << "Mean" << "Std dev" << "Q1" << "Q2" << "Q3" << "Credibility %" << "Credibility begin" << "Credibility end";
+    list << "Item" << "Trace:Mean" << "Trace:Std"  << "Trace:Q1"<< "Trace:Q2"<< "Trace:Q3" << "Trace:min value" << "Trace:max value";
+    list <<"Density:MAP"<< "Density:Mean" << "Density:Std"<< "Density:Q1"<< "Density:Q2"<< "Density:Q3" << "Credibility %" << "Credibility begin" << "Credibility end";
     for (int i = 0; i < maxHpd; ++i) {
         list << "HPD" + QString::number(i + 1) + " %";
-        list << "HPD" + QString::number(i + 1) + " start";
+        list << "HPD" + QString::number(i + 1) + " begin";
         list << "HPD" + QString::number(i + 1) + " end";
     }
     rows.prepend(list);
@@ -552,28 +740,23 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
 {
     QList<QStringList> rows;
 
-    int runSize (0);
-
-    for (auto &&ch :mChains)
-        runSize += ch.mNumRunIter / ch.mThinningInterval;
-
     QStringList headers;
     headers << "iter";
 
-    for (auto &&pPhase : mPhases)
+    for (const auto& pPhase : mPhases)
         headers << pPhase->mName + " Begin" << pPhase->mName + " End";
 
     rows << headers;
 
-    int shift (0);
+    int shift = 0;
     for (int i = 0; i < mChains.size(); ++i) {
-        int burnAdaptSize = 1 + mChains.at(i).mNumBurnIter + (mChains.at(i).mBatchIndex * mChains.at(i).mNumBatchIter);
-        int runSize = mChains.at(i).mNumRunIter / mChains.at(i).mThinningInterval;
+        int burnAdaptSize = 1 + mChains.at(i).mIterPerBurn + (mChains.at(i).mBatchIndex * mChains.at(i).mIterPerBatch);
+        int runSize = mChains.at(i).mRealyAccepted;
 
         for (int j = burnAdaptSize; j<burnAdaptSize + runSize; ++j) {
             QStringList l;
             l << QString::number(shift + j);
-            for (auto &&pPhase : mPhases) {
+            for (const auto& pPhase : mPhases) {
                 double valueAlpha = pPhase->mAlpha.mRawTrace->at(shift + j);
 
                 if (withDateFormat)
@@ -586,6 +769,9 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
                     valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
 
                 l << locale.toString(valueBeta, 'g', 15);
+
+                // double valueTau = pPhase->mTau.mRawTrace->at(shift + j);
+                // l << locale.toString(valueTau, 'g', 15);
 
             }
             rows << l;
@@ -607,23 +793,23 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
         return QList<QStringList>();
 
 
-    int runSize (0);
+ /*   int runSize = 0;
 
-    for (ChainSpecs chain : mChains)
-        runSize += chain.mNumRunIter / chain.mThinningInterval;
-
+    for (auto& chain : mChains)
+        runSize += chain.mRealyAccepted;
+*/
     QStringList headers;
     headers << "iter" << phase->mName + " Begin" << phase->mName + " End";
-    for (Event* event : phase->mEvents)
+    for (const auto& event : phase->mEvents)
         headers << event->mName;
 
     rows << headers;
 
-    int shift (0);
+    int shift = 0;
 
-    for (ChainSpecs chain : mChains) {
-        int burnAdaptSize = 1 + chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter);
-        int runSize = chain.mNumRunIter / chain.mThinningInterval;
+    for (const ChainSpecs& chain : mChains) {
+        int burnAdaptSize = 1 + chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
+        int runSize = chain.mRealyAccepted;
 
         for (int j = burnAdaptSize; j < (burnAdaptSize + runSize); ++j) {
             QStringList l;
@@ -640,8 +826,17 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
 
             l << locale.toString(valueBeta, 'g', 15);
 
-            for (Event* event : phase->mEvents) {
-                double value = event->mTheta.mRawTrace->at(shift + j);
+           /* double valueTau = phase->mTau.mRawTrace->at(shift + j);
+            l << locale.toString(valueTau, 'g', 15);
+*/
+            for (const auto& event : phase->mEvents) {
+                double value;;
+                if (event->mType == Event::eBound) {
+                    value = event->mTheta.mRawTrace->at(0);
+                } else {
+                   value = event->mTheta.mRawTrace->at(shift + j);
+                }
+
                 if (withDateFormat)
                     value = DateUtils::convertToAppSettingsFormat(value);
 
@@ -651,6 +846,7 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
         }
         shift += burnAdaptSize + runSize;
     }
+
     return rows;
 }
 
@@ -658,29 +854,30 @@ QList<QStringList> Model::getEventsTraces(QLocale locale,const bool withDateForm
 {
     QList<QStringList> rows;
 
-    int runSize = 0;
-    for ( auto&& chain : mChains)
-        runSize += chain.mNumRunIter / chain.mThinningInterval;
-
-
     QStringList headers;
     headers << "iter";
-    for (auto &&pEvent : mEvents)
-        headers << pEvent->mName;
+    for (const auto& event : mEvents)
+        headers << event->mName;
 
     rows << headers;
 
-    int shift (0);
-    for ( auto &&chain : mChains)  {
-        const int burnAdaptSize = 1+ chain.mNumBurnIter + (chain.mBatchIndex * chain.mNumBatchIter);
-        const int runSize = chain.mNumRunIter / chain.mThinningInterval;
+    int shift = 0;
+    for (const auto& chain : mChains)  {
+        const int burnAdaptSize = 1+ chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
+        const int runSize = chain.mRealyAccepted;
 
         for (int j = burnAdaptSize; j < burnAdaptSize + runSize; ++j) {
             QStringList l;
             l << QString::number(shift + j) ;
 
-            for (auto&& pEvent : mEvents) {
-                double value = pEvent->mTheta.mRawTrace->at(shift + j);
+            for (const auto& event : mEvents) {
+                double value;
+                if (event->mType == Event::eBound) {
+                    value = event->mTheta.mRawTrace->at(0);
+                } else {
+                   value = event->mTheta.mRawTrace->at(shift + j);
+                }
+
                 if (withDateFormat)
                     value = DateUtils::convertToAppSettingsFormat(value);
 
@@ -700,62 +897,72 @@ QList<QStringList> Model::getEventsTraces(QLocale locale,const bool withDateForm
  */
 bool Model::isValid()
 {
+    bool curveModel = mProject->isCurve();
     // 1 - At least one event is required in a model
-    if (mEvents.isEmpty())
+    // 3 events is needed for a curve
+    if (mEvents.isEmpty()) {
         throw QObject::tr("At least one event is required");
+        return false;
+
+     } else if (curveModel && mEvents.size() < 3) {
+            throw QObject::tr("The model must contain at least 3 Events");
+            return false;
+    }
 
     // 2 - The event must contain at least 1 data
     for (int i = 0; i < mEvents.size(); ++i) {
-        if (mEvents.at(i)->type() == Event::eDefault) {
-            if (mEvents.at(i)->mDates.size() == 0)
-                throw QObject::tr("The event  \" %1 \" must contain at least 1 data").arg(mEvents.at(i)->mName);
+        if (mEvents.at(i)->type() == Event::eDefault && mEvents.at(i)->mDates.size() == 0) {
+                    throw QObject::tr("The event  \" %1 \" must contain at least 1 data").arg(mEvents.at(i)->mName);
+                    return false;
+
         }
     }
 
     // 3 - The phase must contain at least 1 event
-    for (int i=0; i<mPhases.size(); ++i) {
-        if (mPhases.at(i)->mEvents.size() == 0)
-            throw QObject::tr("The phase \" %1 \" must contain at least 1 event").arg(mPhases.at(i)->mName);
+    for (const Phase* ph: mPhases) {
+        if (ph->mEvents.size() == 0) {
+            throw QObject::tr("The phase \" %1 \" must contain at least 1 event").arg(ph->mName);
+            return false;
+        }
     }
 
-    // 4 - Pas de circularité sur les contraintes de faits
-    QVector<QVector<Event*> > eventBranches;
+    // 4 - Pas de circularité sur les contraintes des Event
+    QList<QList<Event*> > eventBranches;
     try {
         eventBranches = ModelUtilities::getAllEventsBranches(mEvents);
-    } catch(QString error){
-        throw error;
+    } catch(QString &error){
+        throw &error;
     }
 
     // 5 - Pas de circularité sur les contraintes de phases
     // 6 - Gammas : sur toutes les branches, la somme des gamma min < plage d'étude :
-    QVector<QVector<Phase*> > phaseBranches;
+    QList<QList<Phase*> > phaseBranches;
     try {
         phaseBranches = ModelUtilities::getAllPhasesBranches(mPhases, mSettings.mTmax - mSettings.mTmin);
-    } catch(QString error){
-        throw error;
+    } catch(QString &error){
+        throw &error;
     }
 
-    // 7 - Un fait ne paut pas appartenir à 2 phases en contrainte
-    for (int i = 0; i < phaseBranches.size(); ++i) {
-        QVector<Event*> branchEvents;
-        for (int j = 0; j < phaseBranches.at(i).size(); ++j) {
-            Phase* phase = phaseBranches[i][j];
-             for (auto&& pEvent : phase->mEvents) {
-                if (!branchEvents.contains(pEvent)) {
-                    branchEvents.append(pEvent);
+    // 7 - Un Event ne peut pas appartenir à 2 phases en contrainte
+    for (const auto &branche_i :  phaseBranches) {
+        QList<Event*> branchEvents;
+        for (auto phase : branche_i ) {
+             for (const auto& ev : phase->mEvents) {
+                if (!branchEvents.contains(ev)) {
+                    branchEvents.append(ev);
                 } else
-                    throw QString(tr("The event \" %1 \" cannot belong to several phases in a same branch!").arg(pEvent->mName));
+                    throw QString(QObject::tr("The event \" %1 \" cannot belong to several phases in a same branch!").arg(ev->mName));
             }
         }
     }
 
-    // 8 - Bounds : verifier cohérence des bornes en fonction des contraintes de faits (page 2)
+    // 8 - Bounds : vérifier cohérence des bornes en fonction des contraintes de Events (page 2)
     //  => Modifier les bornes des intervalles des bounds !! (juste dans le modèle servant pour le calcul)
-    for (int i=0; i<eventBranches.size(); ++i) {
-        for (int j=0; j<eventBranches.at(i).size(); ++j) {
-            Event* event = eventBranches[i][j];
-            if (event->type() == Event::eKnown)  {
-                EventKnown* bound = dynamic_cast<EventKnown*>(event);
+    for (const auto &branche_i : eventBranches) {
+        for (auto j = 0; j<branche_i.size(); j++) {
+            Event* event = branche_i.at(j);
+            if (event->type() == Event::eBound)  {
+                Bound* bound = dynamic_cast<Bound*>(event);
 
                 // --------------------
                 // Check bound interval lower value
@@ -764,41 +971,31 @@ bool Model::isValid()
                 // On vérifie toutes les bornes avant et on prend le max
                 // de leurs valeurs fixes ou du début de leur intervalle :
                 double lower = double (mSettings.mTmin);
-                for (int k(0); k<j; ++k) {
-                    Event* evt = eventBranches[i][k];
-                    if (evt->mType == Event::eKnown) {
-                        EventKnown* bd = dynamic_cast<EventKnown*>(evt);
-                        //if(bd->mKnownType == EventKnown::eFixed)
-                        lower = qMax(lower, bd->mFixed);
-                        //else if(bd->mKnownType == EventKnown::eUniform)
-                        //    lower = qMax(lower, bd->mUniformStart);
+                for (auto k = 0; k<j; ++k) {
+                    Event* evt = branche_i.at(k);
+                    if (evt->type() == Event::eBound) {
+                        lower = qMax(lower, dynamic_cast<Bound*>(evt)->mFixed);
+
                     }
                 }
                 // Update bound interval
 
                 if (bound->mFixed < lower)
-                    throw QString(tr("The bound \" %1 \" has a fixed value inconsistent with previous bounds in chain!").arg(bound->mName));
-
-              /*  else if (bound->mKnownType == EventKnown::eUniform)
-                    bound->mUniformStart = qMax(bound->mUniformStart, lower);
-                */
+                    throw QString(QObject::tr("The bound \" %1 \" has a fixed value inconsistent with previous bounds in chain!").arg(bound->mName));
 
                 // --------------------
                 // Check bound interval upper value
                 // --------------------
                 double upper = mSettings.mTmax;
-                for (int k=j+1; k<eventBranches.at(i).size(); ++k) {
-                    Event* evt = eventBranches[i][k];
-                    if (evt->mType == Event::eKnown) {
-                        EventKnown* bd = dynamic_cast<EventKnown*>(evt);
-                        // if (bd->mKnownType == EventKnown::eFixed)
-                        upper = qMin(upper, bd->mFixed);
-
+                for (auto k = j+1; k<branche_i.size(); ++k) {
+                    Event* evt = branche_i.at(k);
+                    if (evt->type() == Event::eBound) {
+                        upper = qMin(upper, dynamic_cast<Bound*>(evt)->mFixed);
                     }
                 }
                 // Update bound interval
                 if (bound->mFixed > upper)
-                    throw QString(tr("The bound \" %1 \" has a fixed value inconsistent with next bounds in chain!").arg(bound->mName));
+                    throw QString(QObject::tr("The bound \" %1 \" has a fixed value inconsistent with next bounds in chain!").arg(bound->mName));
 
             }
             event = nullptr;
@@ -806,34 +1003,34 @@ bool Model::isValid()
     }
 
     // 9 - Gamma min (ou fixe) entre 2 phases doit être inférieur à la différence entre : le min des sups des intervalles des bornes de la phase suivante ET le max des infs des intervalles des bornes de la phase précédente
-    for (int i=0; i<mPhaseConstraints.size(); ++i) {
+    for (const auto &phase_const : mPhaseConstraints) {
         double gammaMin = 0.;
-        PhaseConstraint::GammaType gType = mPhaseConstraints.at(i)->mGammaType;
+        const PhaseConstraint::GammaType gType = phase_const->mGammaType;
         if (gType == PhaseConstraint::eGammaFixed)
-            gammaMin = mPhaseConstraints[i]->mGammaFixed;
+            gammaMin = phase_const->mGammaFixed;
 
         else if (gType == PhaseConstraint::eGammaRange)
-            gammaMin = mPhaseConstraints.at(i)->mGammaMin;
+            gammaMin = phase_const->mGammaMin;
 
         double lower = mSettings.mTmin;
-        Phase* phaseFrom = mPhaseConstraints.at(i)->mPhaseFrom;
-        for (int j=0; j<phaseFrom->mEvents.size(); ++j) {
-            EventKnown* bound = dynamic_cast<EventKnown*>(phaseFrom->mEvents[j]);
+        const Phase* phaseFrom = phase_const->mPhaseFrom;
+        for (const auto& ev : phaseFrom->mEvents) {
+            Bound* bound = dynamic_cast<Bound*>(ev);
             if (bound)
                 lower = qMax(lower, bound->mFixed);
 
         }
         double upper = double (mSettings.mTmax);
-        Phase* phaseTo = mPhaseConstraints.at(i)->mPhaseTo;
-        for (int j=0; j<phaseTo->mEvents.size(); ++j) {
-            EventKnown* bound = dynamic_cast<EventKnown*>(phaseTo->mEvents[j]);
+        Phase* phaseTo = phase_const->mPhaseTo;
+        for (const auto& ev : phaseTo->mEvents) {
+            Bound* bound = dynamic_cast<Bound*>(ev);
             if (bound)
                 upper = qMin(upper, bound->mFixed);
 
-            bound = nullptr;
+            //bound = nullptr;
         }
         if (gammaMin >= (upper - lower))
-            throw QString(tr("The constraint between phases \" %1 \" and \" %2 \" is not consistent with the bounds they contain!").arg(phaseFrom->mName, phaseTo->mName));
+            throw QString(QObject::tr("The constraint between phases \" %1 \" and \" %2 \" is not consistent with the bounds they contain!").arg(phaseFrom->mName, phaseTo->mName));
 
         phaseFrom = nullptr;
         phaseTo = nullptr;
@@ -844,72 +1041,64 @@ bool Model::isValid()
     //      - L'inf est le max entre : sa valeur courante ou (le max des infs des intervalles des bornes - tau max ou fixe)
     //      - Le sup est le min entre : sa valeur courante ou (le min des sups des intervalles des bornes + tau max ou fixe)
 
-    for (int i=0; i<mPhases.size(); ++i) {
-        if (mPhases.at(i)->mTauType != Phase::eTauUnknown) {
-            double tauMax = mPhases.at(i)->mTauFixed;
-            if (mPhases.at(i)->mTauType == Phase::eTauRange)
-                tauMax = mPhases.at(i)->mTauMax;
+    for (const auto &phase : mPhases) {
+        if (phase->mTauType != Phase::eTauUnknown) {
+            double tauMax = phase->mTauFixed;
 
             double min = mSettings.mTmin;
             double max = mSettings.mTmax;
             bool boundFound = false;
 
-            for (int j=0; j<mPhases.at(i)->mEvents.size(); ++j) {
-                if (mPhases.at(i)->mEvents.at(j)->mType == Event::eKnown) {
-                    EventKnown* bound = dynamic_cast<EventKnown*>(mPhases.at(i)->mEvents[j]);
+            for (const auto &ev : phase->mEvents) {
+                if (ev->type() == Event::eBound) {
+                    Bound* bound = dynamic_cast<Bound*>(ev);
                     if (bound) {
                         boundFound = true;
                         min = std::max(min, bound->mFixed);
                         max = std::min(max, bound->mFixed);
 
                     }
-                    bound = nullptr;
+                    //bound = nullptr;
                 }
             }
             if (boundFound){
                 if (tauMax < (max - min))
-                    throw QString(tr("The phase \" %1 \" has a duration inconsistent with the bounds it contains!").arg(mPhases.at(i)->mName));
+                    throw QString(QObject::tr("The phase \" %1 \" has a duration inconsistent with the bounds it contains!").arg(phase->mName));
             }
         }
     }
 
-    // 11 - Vérifier la cohérence entre les contraintes de faits et de phase
-    for (int i=0; i<phaseBranches.size(); ++i) {
-        for (int j=0; j<phaseBranches.at(i).size(); ++j) {
-            Phase* phase = phaseBranches[i][j];
-            for (int k=0; k<phase->mEvents.size(); ++k) {
-                Event* event = phase->mEvents[k];
-
+    // 11 - Vérifier la cohérence entre les contraintes d'Event et de Phase
+    for (const auto &branche_i : phaseBranches) {
+        for (const auto &phase : branche_i) {
+            for (const auto &event : phase->mEvents) {
                 bool phaseFound = false;
 
                 // On réinspecte toutes les phases de la branche et on vérifie que le fait n'a pas de contrainte en contradiction avec les contraintes de phase !
-                for (int l=0; l<phaseBranches.at(i).size(); ++l) {
-                    Phase* p = phaseBranches[i][l];
+                for (const Phase* p : branche_i) {
                     if (p == phase)
                         phaseFound = true;
 
                     else {
-                        for (int m=0; m<p->mEvents.size(); ++m) {
-                            Event* e = p->mEvents[m];
-
-                            // Si on regarde l'élément d'un phase d'avant, le fait ne peut pas être en contrainte vers un fait de cette phase
+                        for (const auto &e : p->mEvents) {
+                            // Si on regarde l'élément d'un phase d'avant, l'Event ne peut pas être en contrainte vers un Event de cette phase
                             if (!phaseFound) {
-                                for (int n=0; n<e->mConstraintsBwd.size(); ++n) {
-                                    if (e->mConstraintsBwd[n]->mEventFrom == event)
-                                        throw tr("The event %1  (in phase %2 ) is before the event %3 (in phase %4), BUT the phase %5 is after the phase %6 .\r=> Contradiction !").arg(event->mName, phase->mName, e->mName, p->mName, phase->mName, p->mName) ;
+                                for (const auto & evBwd : e->mConstraintsBwd) {
+                                    if (evBwd->mEventFrom == event)
+                                        throw QObject::tr("The event %1  (in phase %2 ) is before the event %3 (in phase %4), BUT the phase %5 is after the phase %6 .\r=> Contradiction !").arg(event->mName, phase->mName, e->mName, p->mName, phase->mName, p->mName) ;
 
                                 }
                             } else {
-                                for (int n=0; n<e->mConstraintsFwd.size(); ++n) {
-                                    if (e->mConstraintsFwd[n]->mEventTo == event)
-                                        throw tr("The event %1 ( in phase %2 ) is after the event %3  ( in phase %4 ), BUT the phase %4 is before the phase .\r=> Contradiction !").arg(event->mName, phase->mName, e->mName, p->mName, phase->mName, p->mName);
+                                for (const auto &evFwd : e->mConstraintsFwd) {
+                                    if (evFwd->mEventTo == event)
+                                        throw QObject::tr("The event %1 (in phase %2) is after the event %3  (in phase %4), BUT the phase %5 is before the phase %6 .\r=> Contradiction !").arg(event->mName, phase->mName, e->mName, p->mName, phase->mName, p->mName);
                                 }
                             }
                         }
                     }
-                    p = nullptr;
+
                 }
-                event = nullptr;
+
             }
         }
     }
@@ -920,290 +1109,130 @@ bool Model::isValid()
 // Generate model data
 void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 {
-
 #ifdef DEBUG
-    qDebug()<<"Model::generateCorrelations()";
-    QTime t = QTime::currentTime();
+    qDebug()<<"[Model::generateCorrelations] in progress";
+    QElapsedTimer t;
+    t.start();
 #endif
 
-#ifndef UNIT_TEST
-    // we can't use a progressBar here becasue ther is the finalyze bar on the top, and it's bug
-    // Display a progressBar if "long" set with setMinimumDuration()
- /*   QProgressDialog *progress = new QProgressDialog(tr("Correlation generation"), tr("Wait") , 1, 10);
-    progress->setWindowModality(Qt::NonModal);
-    progress->setCancelButton(0);
-    progress->setMinimumDuration(4);
-    progress->setMinimum(0);
+    for (const auto& event : mEvents ) {
 
-    int sum (0);
-    for (auto && event : mEvents )
-        sum += (event->mDates.size() + 1);
-
-    progress->setMaximum(mPhases.size() + sum);
-    int position(0);*/
-#endif
-
-
-    for (auto && event : mEvents ) {
-        event->mTheta.generateCorrelations(chains);
-#ifndef UNIT_TEST
-        //progress->setValue(++position);
-#endif
-        for (auto&& date : event->mDates ) {
-            date.mTheta.generateCorrelations(chains);
-            date.mSigma.generateCorrelations(chains);
-
-#ifndef UNIT_TEST
-            //progress->setValue(++position);
+        if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+#ifdef USE_THREAD
+            std::thread thTheta ([event] (QList<ChainSpecs> ch) {event->mTheta.generateCorrelations(ch);}, chains);
+#else
+            event->mTheta.generateCorrelations(chains);
 #endif
         }
+
+        if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
+            event->mS02Theta.generateCorrelations(chains);
+        }
+
+        for (auto&& date : event->mDates ) {
+#ifdef USE_THREAD
+            std::thread thTi ([date] (QList<ChainSpecs> ch) {date.mTi.generateCorrelations(ch);}, chains);
+            std::thread thSigmaTi ([*date] (QList<ChainSpecs> ch) {date.mSigmaTi.generateCorrelations(ch);}, chains);
+#else
+            date.mTi.generateCorrelations(chains);
+            date.mSigmaTi.generateCorrelations(chains);
+#endif
+
+
+        }
+#ifdef USE_THREAD
+        thTheta.join();
+#endif
     }
 
-    for (auto && phase : mPhases ) {
+    for (const auto& phase : mPhases ) {
+
+#ifdef USE_THREAD
+        std::thread thAlpha ([phase] (QList<ChainSpecs> ch) {phase->mAlpha.generateCorrelations(ch);}, chains);
+        std::thread thBeta ([phase] (QList<ChainSpecs> ch) {phase->mBeta.generateCorrelations(ch);}, chains);
+        thAlpha.join();
+        thBeta.join();
+#else
         phase->mAlpha.generateCorrelations(chains);
         phase->mBeta.generateCorrelations(chains);
-
-#ifndef UNIT_TEST
-    //    progress->setValue(++position);
 #endif
+        //phase->mTau.generateCorrelations(chains); // ??? is it useful?
     }
 
-#ifndef UNIT_TEST
-//    progress->~QProgressDialog();
-#endif
-
 #ifdef DEBUG
-    //QTime t2 = QTime::currentTime();
-    QTime timeDiff(0,0,0,1);
-    timeDiff = timeDiff.addMSecs(t.elapsed()).addMSecs(-1);
-//    qint64 timeDiff = t.msecsTo(t2);
-
-    qDebug() <<  QString("=> Model::generateCorrelations done in  %1 h %2 m %3 s %4 ms").arg(QString::number(timeDiff.hour()),
-                                                                QString::number(timeDiff.minute()),
-                                                                QString::number(timeDiff.second()),
-                                                                QString::number(timeDiff.msec()) );
+    qDebug() <<  "=> [Model::generateCorrelations] done in " + DHMS(t.elapsed());
 #endif
+
 }
+
+#pragma mark FFTLength, Threshold, bandwidth
 
 void Model::setBandwidth(const double bandwidth)
-{
-    qDebug()<<"Model::setBandwidth";
+{  
     if (mBandwidth != bandwidth) {
+        updateDensities(mFFTLength, bandwidth, mThreshold);
         mBandwidth = bandwidth;
 
-        clearPosteriorDensities();
-        generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
-        generateHPD(mThreshold);
-        generateNumericalResults(mChains);
         emit newCalculus();
     }
 }
 
-void Model::setFFTLength(const int FFTLength)
+void Model::setFFTLength(size_t FFTLength)
 {
-    qDebug()<<"Model::setFTLength";
     if (mFFTLength != FFTLength) {
-        mFFTLength = FFTLength;
-
-        clearPosteriorDensities();
-        generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
-        generateHPD(mThreshold);
-        generateNumericalResults(mChains);
-
+        updateDensities(FFTLength, mBandwidth, mThreshold);
         emit newCalculus();
     }
 }
 
-void Model::initNodeEvents()
+void Model::setHActivity(const double h, const double rangePercent)
 {
-    std::for_each(mEvents.begin(), mEvents.end(), [](Event* ev) {ev->mNodeInitialized = false; ev->mThetaNode = HUGE_VAL;});
-}
+   if (!mPhases.isEmpty()) {
+        generateActivity(mFFTLength, h, mThreshold, rangePercent);
+        mHActivity = h;
 
-/**
- * @brief Make all densities, credibilities and time range and set mFFTLength, mBandwidth and mThreshold
- * @param[in] fftLength
- * @param[in] bandwidth
- * @param[in] threshold
- */
-void Model::initDensities(const int fftLength, const double bandwidth, const double threshold)
-{
-    qDebug()<<"Model::initDensities"<<fftLength<<bandwidth<<threshold;
-    mFFTLength = fftLength;
-    mBandwidth = bandwidth;
-    // memo the new value of the Threshold inside all the part of the model: phases, events and dates
-    initThreshold(threshold);
-    clearPosteriorDensities();
-    generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
-    generateHPD(mThreshold);
-
-    generateCredibility(mThreshold);
-    generateNumericalResults(mChains);
-    if (!mPhases.isEmpty()) {
-        generateTempo();
+        emit newCalculus();
     }
-
- //   emit newCalculus();
-}
-
-void Model::updateDensities(const int fftLength, const double bandwidth, const double threshold)
-{
-    qDebug()<<"Model::updateDensities"<<fftLength<<bandwidth<<threshold;
-    bool newPosteriorDensities = false;
-    if ((mFFTLength != fftLength) || (mBandwidth != bandwidth)) {
-        mFFTLength = fftLength;
-        mBandwidth = bandwidth;
-
-        clearPosteriorDensities();
-        generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
-        newPosteriorDensities = true;
-    }
-    // memo the new value of the Threshold inside all the part of the model: phases, events and dates
-
-    if (mThreshold != threshold) {
-        initThreshold(threshold);
-        generateCredibility(mThreshold);
-    }
-
-    if (newPosteriorDensities)
-        generateHPD(mThreshold);
-
-    if (!mPhases.isEmpty()) {
-        generateTempo();
-
-    }
-    generateNumericalResults(mChains);
 
 }
-
-void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth)
-{
-#ifdef DEBUG
-    QTime t = QTime::currentTime();
-#endif
-    const double tmin = mSettings.getTminFormated();
-    const double tmax = mSettings.getTmaxFormated();
-
-    for (auto&& event : mEvents) {
-        event->mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
-
-        for (auto&& d : event->mDates)
-            d.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
-    }
-
-    for (auto && phase : mPhases)
-        phase->generateHistos(chains, fftLen, bandwidth, tmin, tmax);
-#ifdef DEBUG
-    QTime t2 = QTime::currentTime();
-    qint64 timeDiff = t.msecsTo(t2);
-    qDebug() <<  "=> Model::generatePosteriorDensities done in " + QString::number(timeDiff) + " ms";
-#endif
-}
-
-void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
-{
-#ifdef DEBUG
-    QTime t = QTime::currentTime();
-#endif
-
-    for (auto && event : mEvents) {
-        event->mTheta.generateNumericalResults(chains);
-
-        for (auto&& date : event->mDates) {
-            date.mTheta.generateNumericalResults(chains);
-            date.mSigma.generateNumericalResults(chains);
-        }
-
-    }
-
-    for (auto && phase : mPhases) {
-        phase->mAlpha.generateNumericalResults(chains);
-        phase->mBeta.generateNumericalResults(chains);
-        phase->mDuration.generateNumericalResults(chains);
-    }
-
-#ifdef DEBUG
-    QTime t2 = QTime::currentTime();
-    qint64 timeDiff = t.msecsTo(t2);
-    qDebug() <<  "=> Model::generateNumericalResults done in " + QString::number(timeDiff) + " ms";
-#endif
-}
-
-void Model::clearThreshold()
-{
-    mThreshold = -1.;
-
-    for (auto && event : mEvents) {
-        event->mTheta.mThresholdUsed = -1.;
-
-        for (auto && date : event->mDates) {
-            date.mTheta.mThresholdUsed = -1.;
-            date.mSigma.mThresholdUsed = -1.;
-        }
-    }
-
-    for (auto&& phase : mPhases) {
-        phase->mAlpha.mThresholdUsed = -1.;
-        phase->mBeta.mThresholdUsed = -1.;
-        phase->mDuration.mThresholdUsed = -1.;
-    }
-}
-
-void Model::initThreshold(const double threshold)
-{
-   // memo threshold used  value
-    mThreshold = threshold;
-
-    for (auto && event : mEvents) {
-        if (event->type() != Event::eKnown) {
-          event->mTheta.mThresholdUsed = threshold;
-
-          for (auto && date : event->mDates) {
-                date.mTheta.mThresholdUsed = threshold;
-                date.mSigma.mThresholdUsed = threshold;
-            }
-
-        }
-    }
-
-    for (auto && phase : mPhases) {
-       phase->mAlpha.mThresholdUsed = threshold;
-       phase->mBeta.mThresholdUsed = threshold;
-       phase->mDuration.mThresholdUsed = threshold;
-    }
-}
-
 /**
  * @brief Model::setThreshold this is a slot
  * @param threshold
  */
 void Model::setThreshold(const double threshold)
 {
-    qDebug()<<"Model::setThreshold"<<threshold<<" mThreshold"<<mThreshold;
-    if ( mThreshold != threshold) {
-        mThreshold = threshold;
+    if (mThreshold != threshold) {
+
         generateCredibility(threshold);
         generateHPD(threshold);
 
-        // memo threshold used  value
-
-        for (auto && pEvent : mEvents) {
-            if (pEvent->type() != Event::eKnown) {
-              pEvent->mTheta.mThresholdUsed = threshold;
-
-              for (auto && date : pEvent->mDates )  {
-                    date.mTheta.mThresholdUsed = threshold;
-                    date.mSigma.mThresholdUsed = threshold;
-                }
-            }
-        }
-        for (auto && pPhase :mPhases) {
-           pPhase->mAlpha.mThresholdUsed = threshold;
-           pPhase->mBeta.mThresholdUsed = threshold;
-           pPhase->mDuration.mThresholdUsed = threshold;
-        }
+        generateActivity(mFFTLength, mHActivity, threshold);
+        setThresholdToAllModel(threshold);
 
         emit newCalculus();
-   }
+    }
+}
+
+void Model::setThresholdToAllModel(const double threshold)
+{
+    mThreshold = threshold;
+    for (const auto& e : mEvents) {
+        if (e->type() != Event::eBound){
+          e->mTheta.mThresholdUsed = mThreshold;
+
+          for (auto&& date : e->mDates ) {
+                date.mTi.mThresholdUsed = mThreshold;
+                date.mSigmaTi.mThresholdUsed = mThreshold;
+            }
+        }
+    }
+
+    for (const auto& p : mPhases) {
+       p->mAlpha.mThresholdUsed = mThreshold;
+       p->mBeta.mThresholdUsed = mThreshold;
+       p->mTau.mThresholdUsed = mThreshold;
+       p->mDuration.mThresholdUsed = mThreshold;
+    }
 }
 
 double Model::getThreshold() const
@@ -1211,98 +1240,378 @@ double Model::getThreshold() const
     return mThreshold;
 }
 
+double Model::getBandwidth() const
+{
+    return mBandwidth;
+}
+
+int Model::getFFTLength() const
+{
+    return mFFTLength;
+}
+
+#pragma mark Loop
+void Model::memo_accept(const unsigned i_chain)
+{
+    for (const auto& event : mEvents) {
+       //--------------------- Memo Events -----------------------------------------
+       if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+            event->mTheta.memo_accept(i_chain);
+
+            event->mS02Theta.memo_accept(i_chain);
+
+            //--------------------- Memo Dates -----------------------------------------
+            for (auto&& date : event->mDates )   {
+                date.mTi.memo_accept(i_chain);
+                date.mSigmaTi.memo_accept(i_chain);
+                date.mWiggle.memo_accept(i_chain);
+
+            }
+       }
+    }
+}
+
+void Model::initVariablesForChain()
+{
+    // Today we have the same acceptBufferLen for every chain
+    const int acceptBufferLen =  mChains[0].mIterPerBatch;
+    int initReserve = 0;
+
+    for (auto&& c: mChains)
+       initReserve += ( 1 + (c.mMaxBatchs*c.mIterPerBatch) + c.mIterPerBurn + (c.mIterPerAquisition/c.mThinningInterval) );
+
+    for (auto&& event : mEvents) {
+       event->mTheta.reset();
+       event->mTheta.reserve(initReserve);
+       event->mTheta.mAllAccepts.resize(mChains.size());
+       event->mTheta.mLastAccepts.reserve(acceptBufferLen);
+       event->mTheta.mLastAcceptsLength = acceptBufferLen;
+
+       event->mS02Theta.reset();
+       event->mS02Theta.reserve(initReserve);
+       event->mS02Theta.mAllAccepts.resize(mChains.size());
+       event->mS02Theta.mLastAccepts.reserve(acceptBufferLen);
+       event->mS02Theta.mLastAcceptsLength = acceptBufferLen;
+
+       // event->mTheta.mAllAccepts.clear(); //don't clean, avalable for cumulate chain
+
+       for (auto&& date : event->mDates) {
+            date.mTi.reset();
+            date.mTi.reserve(initReserve);
+            date.mTi.mAllAccepts.resize(mChains.size());
+            date.mTi.mLastAccepts.reserve(acceptBufferLen);
+            date.mTi.mLastAcceptsLength = acceptBufferLen;
+
+            date.mSigmaTi.reset();
+            date.mSigmaTi.reserve(initReserve);
+            date.mSigmaTi.mAllAccepts.resize(mChains.size());
+            date.mSigmaTi.mLastAccepts.reserve(acceptBufferLen);
+            date.mSigmaTi.mLastAcceptsLength = acceptBufferLen;
+
+            date.mWiggle.reset();
+            date.mWiggle.reserve(initReserve);
+            date.mWiggle.mAllAccepts.resize(mChains.size());
+            date.mWiggle.mLastAccepts.reserve(acceptBufferLen);
+            date.mWiggle.mLastAcceptsLength = acceptBufferLen;
+       }
+    }
+
+    for (auto&& phase : mPhases) {
+       phase->mAlpha.reset();
+       phase->mBeta.reset();
+       //phase->mTau.reset();
+       phase->mDuration.reset();
+
+       phase->mAlpha.mRawTrace->reserve(initReserve);
+       phase->mBeta.mRawTrace->reserve(initReserve);
+       //phase->mTau.mRawTrace->reserve(initReserve);
+       phase->mDuration.mRawTrace->reserve(initReserve);
+    }
+}
+
+
+
+#pragma mark Densities
+
+void Model::initNodeEvents()
+{
+    std::ranges::for_each( mEvents, [](Event* ev) {
+        ev->mIsNode = false;
+        ev->mThetaNode = HUGE_VAL;
+    });
+}
+
+/**
+ * @brief Make all densities, credibilities and time range
+ */
+void Model::initDensities()
+{
+    mHActivity = std::max(1., abs(mSettings.mTmax - mSettings.mTmin) / 100.);
+    clearThreshold();
+    // memo the new value of the Threshold inside all the part of the model: phases, events and dates
+    updateDensities(mFFTLength, mBandwidth, 95.);
+
+}
+
+void Model::updateDensities(int fftLen, double bandwidth, double threshold)
+{
+    clearPosteriorDensities();
+
+    if (mProject->mLoop)
+        emit mProject->mLoop->setMessage(QObject::tr("Computing posterior distributions and numerical results"));
+    generateCredibility(threshold);
+
+    updateFormatSettings(); // update formatedCredibility and formatedTrace
+
+    generatePosteriorDensities(mChains, fftLen, bandwidth);
+
+    generateHPD(threshold);
+
+    // memo the new value of the Threshold inside all the part of the model: phases, events and dates
+    setThresholdToAllModel(threshold);
+
+    if (!mPhases.isEmpty()) {
+        generateTempo(fftLen);
+        generateActivity(fftLen, mHActivity, threshold);
+    }
+
+    generateNumericalResults(mChains);
+
+    mBandwidth = bandwidth;
+    mFFTLength = fftLen;
+
+}
+
+void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth)
+{
+#ifdef DEBUG
+    QElapsedTimer t;
+    t.start();
+#endif
+
+    const double tmin = mSettings.getTminFormated();
+    const double tmax = mSettings.getTmaxFormated();
+
+    for (const auto& event : mEvents) {
+       // if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+            event->mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+
+      //  }
+        if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+            event->mS02Theta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+
+        if (event->type() != Event::eBound) {
+            for (auto&& d : event->mDates)
+                d.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+        }
+    }
+
+    for (const auto& phase : mPhases)
+         phase->generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+
+#ifdef DEBUG
+    qDebug() <<  "=> Model::generatePosteriorDensities done in " + DHMS(t.elapsed());
+#endif
+}
+
+void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
+{
+#ifdef DEBUG
+    QElapsedTimer t;
+    t.start();
+#endif
+
+
+#ifdef USE_THREAD
+    std::thread thEvents ([this] (QList<ChainSpecs> chains)
+    {
+        for (const auto& event : mEvents) {
+            if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+                event->mTheta.generateNumericalResults(chains);
+
+                if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+                    event->mS02Theta.generateNumericalResults(chains);
+
+                for (auto&& date : event->mDates) {
+                    date.mTi.generateNumericalResults(chains);
+                    date.mSigmaTi.generateNumericalResults(chains);
+                }
+            }
+        }
+    } , chains);
+
+    std::thread thPhases ([this] (QList<ChainSpecs> chains)
+    {
+        for (const auto& phase : mPhases) {
+            phase->mAlpha.generateNumericalResults(chains);
+            phase->mBeta.generateNumericalResults(chains);
+            // phase->mTau.generateNumericalResults(chains);
+            phase->mDuration.generateNumericalResults(chains);
+        }
+    } , chains);
+
+    thEvents.join();
+    thPhases.join();
+#else
+
+    std::ranges::for_each( mEvents, [chains](Event* event) {
+         if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+            event->mTheta.generateNumericalResults(chains);
+
+            if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+                event->mS02Theta.generateNumericalResults(chains);
+
+            for (auto&& date : event->mDates) {
+                date.mTi.generateNumericalResults(chains);
+                date.mSigmaTi.generateNumericalResults(chains);
+            }
+         } else {
+            event->mTheta.MetropolisVariable::generateNumericalResults(chains);
+         }
+    });
+
+
+    std::ranges::for_each( mPhases, [chains](Phase* phase) {
+         phase->mAlpha.generateNumericalResults(chains);
+         phase->mBeta.generateNumericalResults(chains);
+         // phase->mTau.generateNumericalResults(chains);
+         phase->mDuration.generateNumericalResults(chains);
+    });
+
+
+#endif
+
+#ifdef DEBUG
+    qDebug() <<  "=> Model::generateNumericalResults done in " + DHMS(t.elapsed()) ;
+#endif
+}
+
+void Model::clearThreshold()
+{
+    std::ranges::for_each( mEvents, [](Event* ev) {
+         ev->mTheta.mThresholdUsed = -1.;
+         ev->mS02Theta.mThresholdUsed = -1.;
+
+         for (auto&& date : ev->mDates) {
+            date.mTi.mThresholdUsed = -1.;
+            date.mSigmaTi.mThresholdUsed = -1.;
+         }
+    });
+
+    std::ranges::for_each( mPhases, [](Phase* phase) {
+         phase->mAlpha.mThresholdUsed = -1.;
+         phase->mBeta.mThresholdUsed = -1.;
+         phase->mTau.mThresholdUsed = -1.;
+         phase->mDuration.mThresholdUsed = -1.;
+    });
+}
+
 void Model::generateCredibility(const double thresh)
 {
 #ifdef DEBUG
-    qDebug()<<QString("Model::generateCredibility( %1 %)").arg(thresh);
-    QTime t = QTime::currentTime();
+    qDebug()<<QString("[Model::generateCredibility] Treshold = %1 %; in progress").arg(thresh);
+    QElapsedTimer t;
+    t.start();
 #endif
-    for (auto && pEvent : mEvents) {
-        bool isFixedBound = false;
-        if (pEvent->type() == Event::eKnown)
-                isFixedBound = true;
+    if (mThreshold == thresh)
+        return;
 
-        if (!isFixedBound) {
-            pEvent->mTheta.generateCredibility(mChains, thresh);
 
-            for (auto && date : pEvent->mDates )  {
-                date.mTheta.generateCredibility(mChains, thresh);
-                date.mSigma.generateCredibility(mChains, thresh);
+#ifdef USE_THREAD
+    std::thread thEvents ([this] (double thresh)
+    {
+        for (const auto& event : mEvents) {
+             if (event->type() != Event::eBound) {
+                event->mTheta.generateCredibility(mChains, thresh);
+
+                for (auto&& date : event->mDates )  {
+                    date.mTi.generateCredibility(mChains, thresh);
+                    date.mSigmaTi.generateCredibility(mChains, thresh);
+                }
+            }
+
+        }
+    } , thresh);
+
+    std::thread thPhases ([this] (double thresh)
+    {
+        for (const auto& phase :mPhases) {
+            // if there is only one Event in the phase, there is no Duration
+            phase->mAlpha.generateCredibility(mChains, thresh); // in formated Date
+            phase->mBeta.generateCredibility(mChains, thresh);
+            //  pPhase->mTau.generateCredibility(mChains, thresh);
+            phase->mDuration.generateCredibility(mChains, thresh);
+            // TimeRange in Raw Date
+            phase->mTimeRange = timeRangeFromTraces( phase->mAlpha.fullRunRawTrace(mChains),
+                                                     phase->mBeta.fullRunRawTrace(mChains), thresh, "Time Range for Phase : " + phase->mName);
+            phase->mValueStack["TimeRange Threshold"] = TValueStack("TimeRange Threshold", thresh);
+        }
+    } , thresh);
+
+    std::thread thPhasesConst ([this] (double thresh)
+    {
+        for (const auto& phaseConstraint : mPhaseConstraints) {
+
+            Phase* phaseFrom = phaseConstraint->mPhaseFrom;
+            Phase* phaseTo  = phaseConstraint->mPhaseTo;
+
+            phaseConstraint->mGapRange = gapRangeFromTraces(phaseFrom->mBeta.fullRunRawTrace(mChains),
+                                                            phaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Gap Range : "+ phaseFrom->mName+ " to "+ phaseTo->mName);
+
+            phaseConstraint->mTransitionRange = transitionRangeFromTraces(phaseFrom->mBeta.fullRunRawTrace(mChains),
+                                                                          phaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Transition Range : "+ phaseFrom->mName+ " to "+ phaseTo->mName);
+
+        }
+    } , thresh);
+
+    thEvents.join();
+    thPhases.join();
+    thPhasesConst.join();
+#else
+    for (const auto& ev : mEvents) {
+        if (ev->type() != Event::eBound)//(ev->mTheta.mSamplerProposal != MHVariable::eFixe)
+            ev->mTheta.generateCredibility(mChains, thresh);
+
+        if (ev->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+            ev->mS02Theta.generateCredibility(mChains, thresh);
+
+        if (ev->type() != Event::eBound) {
+            for (auto&& date : ev->mDates )  {
+                date.mTi.generateCredibility(mChains, thresh);
+                date.mSigmaTi.generateCredibility(mChains, thresh);
             }
         }
 
     }
 
-    // Diplay a progressBar if "long" set with setMinimumDuration()
+    for (const auto& phase :mPhases) {
+        // If there is only one Event in the phase, there is no Duration
+        phase->mAlpha.generateCredibility(mChains, thresh);
+        phase->mBeta.generateCredibility(mChains, thresh);
+        //  pPhase->mTau.generateCredibility(mChains, thresh);
+        phase->mDuration.generateCredibility(mChains, thresh);
+        phase->mTimeRange = timeRangeFromTraces( phase->mAlpha.fullRunRawTrace(mChains),
+                                                  phase->mBeta.fullRunRawTrace(mChains), thresh, "Time Range for Phase : " + phase->mName);
+    }
 
-    QProgressDialog *progress = new QProgressDialog(tr("Time range & credibilities generation"), tr("Wait") , 1, 10);
-    progress->setWindowModality(Qt::WindowModal);
-    progress->setCancelButton(nullptr);
-    progress->setMinimumDuration(5);
-    progress->setMinimum(0);
-    progress->setMaximum(mPhases.size()*4);
-    //progress->setMinimumWidth(7 * AppSettings::widthUnit());
-    progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
 
+    for (const auto& phaseConstraint : mPhaseConstraints) {
+        const QString str = phaseConstraint->mPhaseFrom->mName + " to " + phaseConstraint->mPhaseTo->mName;
 
-    int position(0);
+        phaseConstraint->mGapRange = gapRangeFromTraces(phaseConstraint->mPhaseFrom->mBeta.fullRunRawTrace(mChains),
+                                                        phaseConstraint->mPhaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Gap Range : "+ str);
 
-    for (auto && pPhase :mPhases) {
+        qDebug()<<"[Model::generateCredibility] Gap Range "<<str;
 
-        // if there is only one Event in the phase, there is no Duration
-        pPhase->mAlpha.generateCredibility(mChains, thresh);
-        progress->setValue(++position);
-
-        pPhase->mBeta.generateCredibility(mChains, thresh);
-        progress->setValue(++position);
-
-        pPhase->mDuration.generateCredibility(mChains, thresh);
-        progress->setValue(++position);
-
-        pPhase->mTimeRange = timeRangeFromTraces(pPhase->mAlpha.fullRunRawTrace(mChains),
-                                                             pPhase->mBeta.fullRunRawTrace(mChains),thresh, "Time Range for Phase : "+pPhase->mName);
-
-        progress->setValue(++position);
+        phaseConstraint->mTransitionRange = transitionRangeFromTraces(phaseConstraint->mPhaseFrom->mBeta.fullRunRawTrace(mChains),
+                                                                      phaseConstraint->mPhaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Transition Range : " + str);
 
     }
-    progress->hide();
-    progress->~QProgressDialog();
 
-    QProgressDialog *progressGap = new QProgressDialog(tr("Gaps and transitions generation"), tr("Wait") , 1, 10);
-    progressGap->setWindowModality(Qt::WindowModal);
-    progressGap->setCancelButton(nullptr);
-    progressGap->setMinimumDuration(5);
-    progressGap->setMinimum(0);
-    progressGap->setMaximum(mPhases.size()*4);
-    progressGap->setMinimum(0);
-    progressGap->setMaximum(mPhaseConstraints.size()*2);
+#endif
 
-    progressGap->setMinimumWidth(int (progressGap->fontMetrics().boundingRect(progressGap->labelText()).width() *1.5));
-
-    position = 0;
-    for (auto && phaseConstraint : mPhaseConstraints) {
-
-        Phase* phaseFrom = phaseConstraint->mPhaseFrom;
-        Phase* phaseTo  = phaseConstraint->mPhaseTo;
-
-        phaseConstraint->mGapRange = gapRangeFromTraces(phaseFrom->mBeta.fullRunRawTrace(mChains),
-                                                             phaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Gap Range : "+phaseFrom->mName+ " to "+ phaseTo->mName);
-
-        qDebug()<<"Gap Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
-        progressGap->setValue(++position);
-
-        phaseConstraint->mTransitionRange = transitionRangeFromTraces(phaseFrom->mBeta.fullRunRawTrace(mChains),
-                                                             phaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Transition Range : "+phaseFrom->mName+ " to "+ phaseTo->mName);
-
-        qDebug()<<"Transition Range "<<phaseFrom->mName<<" to "<<phaseTo->mName;
-        progressGap->setValue(++position);
-
-    }
-    delete progressGap;
 #ifdef DEBUG
-    QTime t2 (QTime::currentTime());
-    qint64 timeDiff = t.msecsTo(t2);
-    qDebug() <<  "=> Model::generateCredibility done in " + QString::number(timeDiff) + " ms";
+    qDebug() <<  "[Model::generateCredibility] done in " + DHMS(t.elapsed());
 #endif
 
 }
@@ -1310,455 +1619,167 @@ void Model::generateCredibility(const double thresh)
 void Model::generateHPD(const double thresh)
 {
 #ifdef DEBUG
-    QTime t = QTime::currentTime();
+    qDebug()<<QString("[Model::generateHPD] Treshold =  %1 %; in progress").arg(thresh);
+    QElapsedTimer t;
+    t.start();
 #endif
 
-    QList<Event*>::iterator iterEvent = mEvents.begin();
-    while (iterEvent!=mEvents.end()) {
-        bool isFixedBound = false;
+    for (const auto& event : mEvents) {
+        event->mTheta.generateHPD(thresh);
 
-        if ((*iterEvent)->type() == Event::eKnown) {
-            //EventKnown* ek = dynamic_cast<EventKnown*>(*iterEvent);
-            //if(ek->knownType() == EventKnown::eFixed)
-                isFixedBound = true;
-        }
+        if (event->type() != Event::eBound) {
 
-        if (!isFixedBound) {
-            (*iterEvent)->mTheta.generateHPD(thresh);
+            if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+                event->mS02Theta.generateHPD(thresh);
 
-            for (int j=0; j<(*iterEvent)->mDates.size(); ++j) {
-                Date& date = (*iterEvent)->mDates[j];
-                date.mTheta.generateHPD(thresh);
-                date.mSigma.generateHPD(thresh);
+            for (int j = 0; j<event->mDates.size(); ++j) {
+                Date& date = event->mDates[j];
+                date.mTi.generateHPD(thresh);
+                date.mSigmaTi.generateHPD(thresh);
             }
         }
-        ++iterEvent;
     }
-    QList<Phase*>::iterator iterPhase = mPhases.begin();
-    while (iterPhase!=mPhases.end()) {
-       // if there is only one Event in the phase, there is no Duration
-       (*iterPhase)->mAlpha.generateHPD(thresh);
-       (*iterPhase)->mBeta.generateHPD(thresh);
-       (*iterPhase)->mDuration.generateHPD(thresh);
-        ++iterPhase;
+
+    for (const auto& ph : mPhases) {
+        ph->mAlpha.generateHPD(thresh);
+        ph->mBeta.generateHPD(thresh);
+        ph->mDuration.generateHPD(thresh);
     }
+
+
 #ifdef DEBUG
-    QTime t2 = QTime::currentTime();
-    qint64 timeDiff = t.msecsTo(t2);
-    qDebug() <<  "=> Model::generateHPD done in " + QString::number(timeDiff) + " ms";
+    qDebug() <<  "[Model::generateHPD] done in " + DHMS(t.elapsed()) ;
 #endif
 
 }
 
-//#define UNIT_TEST
 /**
  * @brief Model::generateTempo
  * The function check if the table mTempo exist. In this case, there is no calcul.
  * This calculus must be in date, not in age
  */
-void Model::generateTempo()
+
+void Model::generateTempo(size_t gridLength)
 {
 #ifdef DEBUG
-    qDebug()<<"Model::generateTempo()"<<mSettings.mTmin<<mSettings.mTmax;
-    QTime t = QTime::currentTime();
+    qDebug()<<QString("[Model::generateTempo] in progress");
+    QElapsedTimer tClock;
+    tClock.start();
 #endif
 
-// Avoid to redo calculation, when mTempo exist, it happen when the control is changed
-    int tempoToDo (0);
-    for (auto &&phase : mPhases) {
-        if (phase->mRawTempo.isEmpty())
-            ++tempoToDo;
-    }
+    for (const auto& phase : mPhases) {
+        const int n = phase->mEvents.size();
 
-    if(tempoToDo == 0) // no computation
-        return;
+        // Description des données
+        std::vector<double> concaAllTrace;
 
-
-#ifndef UNIT_TEST
-    // Display a progressBar if "long" set with setMinimumDuration()
-    QProgressDialog *progress = new QProgressDialog(tr("Tempo Plot generation"), tr("Wait") , 1, 10);//, qApp->activeWindow(), Qt::Window);
-    progress->setWindowModality(Qt::WindowModal);
-    progress->setCancelButton(nullptr);
-    progress->setMinimumDuration(5);
-    progress->setMinimum(0);
-    progress->setMaximum(mPhases.size() * 4);
-
-    progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
-    progress->show();
-    int position(0);
-#endif
-
-    double tmin (mSettings.mTmin);
-    double tmax (mSettings.mTmax);
-
-#ifdef UNIT_TEST
-    const int nbStep (20);
-#else
-    const int nbStep (1000); ///&< Number of point for the calulation table, if the size is too important, there is problem with the memory place
-#endif
-
-    /// We want an interval bigger than the maximun finded value, we need a point on tmin, tmax and tmax+deltat
-    const int nbPts (nbStep + 1);
-
-    const int totalIter = int (std::ceil(mChains[0].mNumRunIter / mChains[0].mThinningInterval));
-
-    // create Empty containers
-    QVector<int> N ;  // Tempo
-    N.resize(nbPts);
-
-    QVector<int> N2 ;
-    N2.resize(nbPts);
-
-    QVector<int> activity ; //mActivity
-    activity.resize(nbPts);
-
-    QVector<int> previousN ;
-    previousN.resize(nbPts);
-
-    QVector<int> previousN2 ;
-    previousN2.resize(nbPts);
-
-    QMap<double, QVector<int>> Ni; ///&< mTempoCredibility t, QVector(N)
-
-    for (auto &&phase : mPhases) {
-        // Avoid to redo calculation, when mTempo exist, it happen when the control is changed
-        if (!phase->mRawTempo.isEmpty()) {
-#ifndef UNIT_TEST
-            position += 4;
-            progress->setValue(position);
-#endif
-            continue;
+        for (const auto& ev : phase->mEvents) {
+            const auto &rawtrace = ev->mTheta.fullRunRawTrace(mChains);
+            concaAllTrace.resize(concaAllTrace.size() + rawtrace.size());
+            std::copy_backward( rawtrace.begin(), rawtrace.end(), concaAllTrace.end() );
         }
 
-         ///# 1 - Generate Event scenario
-         // We suppose, it is the same iteration number for all chains
-        QList<QVector<double>> listTrace;
-        for (auto &&ev : phase->mEvents)
-            listTrace.append(ev->mTheta.fullRunRawTrace(mChains));
-
-
-        /// Look for the maximum span containing values \f$ x=2 \f$
-        tmin = mSettings.mTmax;
-        tmax = mSettings.mTmin;
-
-#ifndef UNIT_TEST
-        for (auto &&l:listTrace) {
-            const double lmin = *std::min_element(l.cbegin(), l.cend());
-            tmin = std::min(tmin, lmin );
-            const double lmax = *std::max_element(l.cbegin(), l.cend());
-            tmax = std::max(tmax, lmax);
+        auto minmaxAll = std::minmax_element(concaAllTrace.begin(), concaAllTrace.end());
+        double t_min_data = *minmaxAll.first;
+        double t_max_data = *minmaxAll.second;
+        // cas d'une borne seule dans la phase
+        if (t_min_data >= t_max_data) {
+           // t_min_data = mSettings.mTmin;
+            t_max_data = mSettings.mTmax;
         }
-        tmin = std::floor(tmin);
-        tmax = std::ceil(tmax);
-#endif
-        if (tmin == tmax) {
+        phase->mValueStack["t_min"] = TValueStack("t_min", t_min_data);
+        phase->mValueStack["t_max"] = TValueStack("t_max", t_max_data);
 
-           qDebug()<<"Model::generateTempo() tmin == tmax : " <<phase->mName;
+        const double nr = concaAllTrace.size();
 
-            phase->mRawTempoCredibilityInf[tmax] = 1;
-
-            phase->mRawTempo[tmax] = 1;
-            phase->mRawTempoInf[tmax] = 1;
-            phase->mRawTempoSup[tmax] = 1;
-
-            phase->mRawTempo.insert(mSettings.mTmax, 1);
-
-            phase->mRawTempoCredibilityInf[tmax] = 1;
-            phase->mRawTempoCredibilitySup[tmax] = 1;
-
-            phase->mRawActivity[tmin] = 1;
-
-            // Convertion in the good Date format
-            phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
-            phase->mTempoInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoInf);
-            phase->mTempoSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoSup);
-            phase->mTempoCredibilityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilityInf);
-            phase->mTempoCredibilitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilitySup);
-
-            phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
-
-#ifndef UNIT_TEST
-            position += 4;
-            progress->setValue(position);
-#endif
-
-            continue;
-        }
 #ifdef DEBUG
-        if (tmax > mSettings.mTmax) {
-            qWarning("Model::generateTempo() tmax>mSettings.mTmax force tmax = mSettings.mTmax");
-            tmax = mSettings.mTmax;
+        if (t_max_data > mSettings.mTmax) {
+            qWarning("[Model::generateTempo] tmax>mSettings.mTmax force tmax = mSettings.mTmax");
+            //t_max_data = mSettings.mTmax;
         }
+
 #endif
 
-        /// \f$ \delta_t = (t_max - t_min)/(nbStep) \f$
-        const double deltat = (tmax-tmin)/ double(nbStep);
+        /// \f$ \delta_t = (t_max_data - t_min_data) / (gridLenth-1) \f$
+        const double delta_t = (t_max_data - t_min_data) / double(gridLength-1);
 
+        // Loop
+         std::vector<int> niTempo (gridLength);
+         const int iMax = gridLength-1;
+   try {
+        for (const auto& t : concaAllTrace) {
 
-        /// Erase containers
-        N.fill(0);
-        N2.fill(0);
-#ifdef ACTIVITY // used if we want to compute with the some vs derivative function
-        activity .fill(0); //mActivity
-#endif
+            const int iTempoMin = std::min(std::max (0, (int) ceil((t - t_min_data) / delta_t)), iMax);
+            ++*(niTempo.begin() + iTempoMin); // one item per grid
 
-        previousN .fill(0);
-        previousN2 .fill(0);
-
-        Ni.clear();
-        /// Loop
-        for (int i(0); i<totalIter; ++i) {
-            /// Create one scenario per iteration
-            QVector<double> scenario;
-
-            for (auto &&t : listTrace)
-                scenario.append(t.at(i));
-
-            /// Sort scenario trace
-            std::sort(scenario.begin(),scenario.end());
-
-            QVector<double>::const_iterator itScenario (scenario.begin());
-
-            QVector<int>::iterator itN (N.begin()); // for Tempo
-            QVector<int>::iterator itPrevN (previousN.begin());
-
-            QVector<int>::iterator itN2 (N2.begin()); // for Tempo Error
-            QVector<int>::iterator itPrevN2 (previousN2.begin());
-#ifdef ACTIVITY
-            QVector<int>::iterator itactivity (activity.begin()); // for Intensity/Activity
-#endif
-            int index (0); // index of table N corresponding to the first value // faster than used of Distance
-            double t (tmin);
-            int memoScenarioIdx (0);
-            int scenarioIdx (1);
-
-            while (itScenario != scenario.cend()) {
-
-                if (*itScenario > t && t <= tmax ) {
-                     if (itN != N.end()) {
-                             (*itN2) = (*itPrevN2) + (memoScenarioIdx * memoScenarioIdx);
-
-                            ++itN2;
-                            ++itPrevN2;
-                            (*itN) = (*itPrevN) + memoScenarioIdx;
-                            ++itN;
-                            ++itPrevN;
-                     }
-#ifdef ACTIVITY
-                     if (itactivity!= activity.end())
-                         ++itactivity;
-#endif
-                    Ni[t].append(memoScenarioIdx);
-
-                    ++index;
-                    t = tmin + index*deltat;
-
-                } else {
-                    (*itN2) = (*itPrevN2) + (scenarioIdx * scenarioIdx);
-
-                    (*itN) = (*itPrevN) + scenarioIdx;
-#ifdef ACTIVITY
-                    (*itactivity) = (*itactivity) + 1;
-#endif
-
-                   memoScenarioIdx = scenarioIdx;
-
-                   if (itScenario != scenario.cend()) {
-                        ++itScenario;
-                       ++scenarioIdx;
-                    }
-                }
-            }
-
-            while (index < nbPts) {
-                if (itN != N.end()) {
-                     (*itN) = (*itPrevN) + memoScenarioIdx;
-                    ++itN;
-                    ++itPrevN;
-                }
-                if (itN2 != N2.end()) {
-                    (*itN2) = (*itPrevN2) + (memoScenarioIdx * memoScenarioIdx);
-                    ++itN2;
-                    ++itPrevN2;
-                }
-
-                Ni[t].append(memoScenarioIdx);
-                ++index;
-                t = tmin + index*deltat;
-
-            }
-            std::copy(N2.begin(), N2.end(), previousN2.begin());
-            std::copy(N.begin(), N.end(), previousN.begin());
         }
-        /// Loop End
+        // calculation of distribution on niTempo
+        std::transform (niTempo.begin()+1, niTempo.end(), niTempo.begin(), niTempo.begin()+1, std::plus<double>());
 
+       } catch (std::exception& e) {
+        qWarning()<< "[Model::generateTempo] exception caught: " << e.what() << '\n';
 
-    ///# Calculation of the variance
-        QVector<double> inf;
-        QVector<double> sup;
-        QVector<double> mean;
-        QVector<int>::iterator itN2 (N2.begin());
-        const double di (totalIter);
-        for (auto &&x : N) {
+       } catch(...) {
+        qWarning() << "[Model::generateTempo] Caught Exception!\n";
 
-            const double m = x/di;
-            const double s2 = std::sqrt( (*itN2)/di - std::pow(m, 2.) );
+       }
 
-            mean.append(m);
+       ///# Calculation of the mean and variance
+
+        // Variable for Tempo
+        QList<double> infT;
+        QList<double> supT;
+
+        QList<double> espT;
+        double pT, eT, vT, infpT;
+
+        for (const auto& niT : niTempo) {
+
+            // Compute Tempo
+            pT = niT/ nr;
+            eT =  n * pT ;
+            vT = n * pT * (1-pT);
+
+            espT.append(eT);
             // Forbidden negative error
-            const double infp = ( m < 1.96*s2 ? 0. : m - 1.96*s2 );
-            inf.append( infp);
-            sup.append( m + 1.96*s2);
-            ++itN2;
+            infpT = ( eT < 1.96 * sqrt(vT) ? 0. : eT - 1.96 * sqrt(vT) );
+            infT.append( infpT );
+            supT.append( eT + 1.96 * sqrt(vT));
 
         }
-#ifndef UNIT_TEST
-        ++position;
-        progress->setValue(position);
-#endif
 
-       ///# 2 - Cumulate Nj and Nj2
-        /*QMap<double, double> tempo;
-        QMap<double, double> tempoInf;
-        QMap<double, double> tempoSup;
-*/
-        phase->mRawTempo = vector_to_map(mean, tmin, tmax, deltat);
-        phase->mRawTempoInf = vector_to_map(inf, tmin, tmax, deltat);
-        phase->mRawTempoSup = vector_to_map(sup, tmin, tmax, deltat);
+
+        phase->mRawTempo = vector_to_map(espT, t_min_data, t_max_data, delta_t);
+        phase->mRawTempoInf = vector_to_map(infT, t_min_data, t_max_data, delta_t);
+        phase->mRawTempoSup = vector_to_map(supT, t_min_data, t_max_data, delta_t);
 
         // close the error curve on mean value
-        const double tEnd (phase->mRawTempo.lastKey());
-        const double vEnd (phase->mRawTempo[tEnd]);
+        const double tEnd = phase->mRawTempo.lastKey();
+        const double vEnd = phase->mRawTempo[tEnd];
 
-        if ( (tEnd ) <= mSettings.mTmax) {
+        if ( tEnd <= mSettings.mTmax) {
             phase->mRawTempoInf[tEnd] = vEnd;
             phase->mRawTempoSup[tEnd ] = vEnd;
         }
         phase->mRawTempo.insert(mSettings.mTmax, vEnd);
 
-        const double tBegin (phase->mRawTempo.firstKey());
-        const double vBegin (0.);
-        // We need to add a point with the value 0 for the automatique Y scaling
-        if ((tBegin - deltat) >= mSettings.mTmin) {
-            phase->mRawTempo[tBegin - deltat] = vBegin;
-            phase->mRawTempoInf[tBegin - deltat] = vBegin;
-            phase->mRawTempoSup[tBegin - deltat] = vBegin;
-        }
+        const double tBegin = phase->mRawTempo.firstKey();
 
-        // Convertion in the good Date format
+        // We need to add a point with the value 0 for the automatique Y scaling
+        if ((tBegin) >= mSettings.mTmin) {
+            phase->mRawTempo[tBegin] = 0;
+            phase->mRawTempoInf[tBegin] = 0;
+            phase->mRawTempoSup[tBegin] = 0;
+        }
         phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
         phase->mTempoInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoInf);
         phase->mTempoSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoSup);
 
-#ifndef UNIT_TEST
-        ++position;
-        progress->setValue(position);
-#endif
-#ifndef ACTIVITY
-        ///# 3 - Derivative function
-        /**  compute the slope of a nearby secant line through the points (x-h,f(x-h)) and (x+h,f(x+h)).
-         *   https://en.wikipedia.org/wiki/Numerical_differentiation
-         */
-
-        QVector<double> dN;
-        // first value, we can't use the same formula for the beginning because we don't have f(x-h)
-        int Np (N[0]);
-        int Nm (0);
-        dN.append( (Np - Nm)/2. );
-        Nm = Np;
-        for (QVector<int>::const_iterator x = N.cbegin()+1;  x != N.cend()-1; ++x) {
-            Np = (* (x+1));
-            dN.append((Np - Nm )/2. );
-            Nm = (*x);
-        }
-        //last value
-        Np = N.last();
-        dN.append( (Np - Nm )/2. );
-
-        //QMap<double, double> activity;
-        phase->mRawActivity = vector_to_map(dN, tmin, tmax, deltat);
-
-        if ( tEnd  <= mSettings.mTmax)
-            phase->mRawActivity[tEnd] = 0.;
-
-        if ((tmin - deltat) >= mSettings.mTmin)
-            phase->mRawActivity[tmin - deltat] = 0.;
-
-        // Convertion in the good Date format
-        phase->mActivity = DateUtils::convertMapToAppSettingsFormat(phase->mRawActivity);
-
- #else
-       //phase->phase->mRawActivity = vector_to_map(activity, tmin, tmax, deltat);
-       // Convertion in the good Date format
-       phase->mActivity = DateUtils::convertMapToAppSettingsFormat(vector_to_map(phase->mRawActivity, tmin, tmax, deltat));
-
-#endif
-#ifndef UNIT_TEST
-        ++position;
-        progress->setValue(position);
-#endif
-        ///# 4 - Credibility
-        QVector<double> credInf (nbPts);
-        QVector<double> credSup (nbPts);
-
-        QVector<double>::iterator itCredInf (credInf.begin());
-        QVector<double>::iterator itCredSup (credSup.begin());
-        int index (0); // index of table N corresponding to the first value // faster than used of Distance
-        double t (tmin);
-        while (t <= tmax ) {
-            /* quartile for 95%,
-             * 2.5% on inferior curve
-             * and 2.5% on the superior curve */
-            Quartiles cred = quartilesType(Ni[t], 8, 0.025);
-            *itCredInf = cred.Q1;
-            *itCredSup = cred.Q3;
-            ++itCredInf;
-            ++itCredSup;
-
-            ++index;
-            t = tmin + index*deltat;
-        }
-        phase->mRawTempoCredibilityInf = vector_to_map(credInf, tmin, tmax, deltat);
-        phase->mRawTempoCredibilitySup = vector_to_map(credSup, tmin, tmax, deltat);
-
-        // Joining curves on the curve Tempo
-        if ( tmax  <= mSettings.mTmax) {
-            phase->mRawTempoCredibilityInf[tmax] = vEnd;
-            phase->mRawTempoCredibilitySup[tmax] = vEnd;
-        }
-
-        if ((tBegin - deltat) >= mSettings.mTmin) {
-            phase->mRawTempoCredibilityInf[tBegin - deltat] = vBegin;
-            phase->mRawTempoCredibilitySup[tBegin - deltat] = vBegin;
-        }
-        // Convertion in the good Date format
-        phase->mTempoCredibilityInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilityInf);
-        phase->mTempoCredibilitySup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoCredibilitySup);
-
-#ifndef UNIT_TEST
-        ++position;
-        progress->setValue(position);
-#endif
-
-    }
-
-#ifndef UNIT_TEST
-    progress->~QProgressDialog();
-#endif
+     } // Loop End on phase
 
 #ifdef DEBUG
-    //QTime t2 = QTime::currentTime();
-    //qint64 timeDiff = t.msecsTo(t2);
-
-    QTime timeDiff(0,0,0,1);
-    timeDiff = timeDiff.addMSecs(t.elapsed()).addMSecs(-1);
-
-    qDebug() <<  QString("=> Model::generateTempo() done in  %1 h %2 m %3 s %4 ms").arg(QString::number(timeDiff.hour()),
-                                                                QString::number(timeDiff.minute()),
-                                                                QString::number(timeDiff.second()),
-                                                                QString::number(timeDiff.msec()) );
+    qDebug() <<  QString("[Model::generateTempo] done in " + DHMS(tClock.elapsed()));
 #endif
-
 
 }
 
@@ -1769,84 +1790,262 @@ void Model::generateTempo()
 void Model::clearPosteriorDensities()
 {
     QList<Event*>::iterator iterEvent = mEvents.begin();
-    while (iterEvent!=mEvents.cend()) {
-        for(int j=0; j<(*iterEvent)->mDates.size(); ++j) {
-            Date& date = (*iterEvent)->mDates[j];
-            date.mTheta.mHisto.clear();
-            date.mSigma.mHisto.clear();
-            date.mTheta.mChainsHistos.clear();
-            date.mSigma.mChainsHistos.clear();
+    while (iterEvent != mEvents.end()) {
+        for (auto&& date : (*iterEvent)->mDates) {
+            date.mTi.mFormatedHisto.clear();
+            date.mSigmaTi.mFormatedHisto.clear();
+            date.mTi.mChainsHistos.clear();
+            date.mSigmaTi.mChainsHistos.clear();
         }
-        (*iterEvent)->mTheta.mHisto.clear();
+        (*iterEvent)->mTheta.mFormatedHisto.clear();
         (*iterEvent)->mTheta.mChainsHistos.clear();
+
+        (*iterEvent)->mS02Theta.mFormatedHisto.clear();
+        (*iterEvent)->mS02Theta.mChainsHistos.clear();
 
         ++iterEvent;
     }
 
     QList<Phase*>::iterator iterPhase = mPhases.begin();
-    while (iterPhase!=mPhases.cend()) {
-        (*iterPhase)->mAlpha.mHisto.clear();
-        (*iterPhase)->mBeta.mHisto.clear();
-        (*iterPhase)->mDuration.mHisto.clear();
+    while (iterPhase != mPhases.end()) {
+        (*iterPhase)->mAlpha.mFormatedHisto.clear();
+        (*iterPhase)->mBeta.mFormatedHisto.clear();
+       // (*iterPhase)->mTau.mFormatedHisto.clear();
+        (*iterPhase)->mDuration.mFormatedHisto.clear();
 
         (*iterPhase)->mAlpha.mChainsHistos.clear();
         (*iterPhase)->mBeta.mChainsHistos.clear();
+        //(*iterPhase)->mTau.mChainsHistos.clear();
         (*iterPhase)->mDuration.mChainsHistos.clear();
         ++iterPhase;
     }
 }
 
+void Model::generateActivityBinomialeCurve(const int n, std::vector<double>& C1x, std::vector<double>& C2x, const double alpha)
+{
+    const double p_frac = 100.;
+    const double x_frac = 100.;
+
+    const double alpha2 = alpha/2.;
+    const double one_alpha2 = (1-alpha/2.);
+
+    double p, proba, sum_p = 0.;
+
+    double x, qq;
+    double k1, k2;
+
+    /* Calcul de la courbe p=f(x) */
+    std::vector<double> C1;
+    std::vector<double> C2;
+
+    for (int i = 0; i< (p_frac-1); ++i) {
+           p = i/p_frac;
+
+           qq = p/(1-p);
+           k1 = 0;
+           k2 = 0;
+           double prev_sum = 0;
+           sum_p = 0;
+           for (int k = 0; k<n+1; ++k) {
+               if (k == 0) {
+                   proba = pow(1-p, n);
+
+               } else {
+                   proba *= (double)(n-k+1)/(double)k * qq;
+
+               }
+               sum_p += proba;
+
+                if (sum_p == alpha2) {
+                   k2 = k;
+
+               } else  if (prev_sum < alpha2 && alpha2< sum_p) {
+                   if ( k == 0) {
+                       k2 = 0;
+
+                   } else if (k<n) {
+                     k2 = (alpha2-prev_sum)/proba + k -1;
+
+                   } else {
+                       k2 = n;
+                   }
+               }
+
+               if (sum_p == one_alpha2) {
+                   k1 = k;
+
+               } else if (prev_sum < one_alpha2 && one_alpha2 < sum_p) {
+                   if ( k == 0) {
+                       k1 = 0;
+
+                   } else if (k<n) {
+                       k1 = (one_alpha2-prev_sum)/proba + k ;
+
+                   } else {
+                       k1 = n;
+                   }
+
+               }
+
+               prev_sum = sum_p;
+
+           }
+
+           C1.push_back(k1);
+           C2.push_back(k2);
+
+       }
+    // p = 100%
+    C1.push_back(n);
+    C2.push_back(n);
+
+    /* Inversion de la courbe pour obtenir x=f(p)  */
+
+    for (int i = 0; i<= x_frac; ++i) {
+        x = (double)(i*n) / x_frac;
+        p = 0.;
+        unsigned long j = 0;
+        while (C1[j] < x && j<C1.size()) {
+            p = j / p_frac;
+            ++j;
+          }
+        C1x.push_back(p);
+
+        j = 0;
+        p = 0;
+         while (C2[j] <= x && j<C2.size()) {
+            p = j /p_frac;
+            ++j;
+          }
+        C2x.push_back(p);
+    }
+}
+
+/**
+ * @brief Model::generateActivity. If there is only one Event, the activity is equal to it
+ * @param gridLenth
+ * @param h defined in year, if h<0 then h= delta_t \f$ \delta_t = (t_max - t_min + 4h )/(gridLenth) \f$
+ */
+void Model::generateActivity(const size_t gridLength, const double h, const double threshold, const double rangePercent)
+{
+    for (const auto& phase : mPhases) {
+        // Curves for error binomial
+        const int n = phase->mEvents.size();
+        if (n<2) {
+            phase->mActivity = phase->mEvents[0]->mTheta.mFormatedHisto;
+            phase->mActivityInf = phase->mEvents[0]->mTheta.mFormatedHisto;
+            phase->mActivitySup = phase->mEvents[0]->mTheta.mFormatedHisto;
+            phase->mActivityUnifTheo = phase->mEvents[0]->mTheta.mFormatedHisto;
+            continue;
+        }
+        if (!mBinomiale_Gx.contains(n) || threshold != mThreshold) {
+            const std::vector<double> &Rq = binomialeCurveByLog(n, 1. - threshold/100.); //  Détermine la courbe x = r (q)
+            mBinomiale_Gx[n] = inverseCurve(Rq); // Pour qActivity, détermine la courbe p = g (x)
+        }
+        phase->generateActivity(gridLength, h, threshold, rangePercent);
+    }
+
+}
+
+void generateBufferForHisto(double *input, const std::vector<double> &dataSrc, const int numPts, const double a, const double b)
+{
+    // Work with "double" precision here !
+    // Otherwise, "denum" can be very large and lead to infinity contribs!
+
+    const double delta = (b - a) / (numPts - 1);
+
+    const double denum = dataSrc.size();
+
+    for (int i=0; i<numPts; ++i)
+        input[i]= 0.;
+
+    std::vector<double>::const_iterator iter = dataSrc.cbegin();
+    for (; iter != dataSrc.cend(); ++iter) {
+        const double t = *iter;
+
+        const double idx = (t - a) / delta;
+        const double idx_under = std::clamp(floor(idx), 0., numPts-1.);
+        const double idx_upper = std::clamp(idx_under + 1., 0., numPts-1.);
+
+        const double contrib_under = (idx_upper - idx) / denum;
+        const double contrib_upper = (idx - idx_under) / denum;
+#ifdef DEBUG
+        if (std::isinf(contrib_under) || std::isinf(contrib_upper))
+            qDebug() << "FFT input : infinity contrib!";
+
+        if (idx_under < 0 || idx_under >= numPts || idx_upper < 0 || idx_upper > numPts)
+            qDebug() << "FFT input : Wrong index";
+#endif
+        if (idx_under < numPts)
+            input[(int)idx_under] += contrib_under;
+
+        if (idx_upper < numPts) // This is to handle the case when matching the last point index !
+            input[(int)idx_upper] += contrib_upper;
+    }
+
+}
+
 void Model::clearCredibilityAndHPD()
 {
-    QList<Event*>::iterator iterEvent = mEvents.begin();
-    while (iterEvent!=mEvents.cend()) {
-        foreach (Date date, (*iterEvent)->mDates) {
-            date.mTheta.mHPD.clear();
-            date.mTheta.mCredibility = QPair<double, double>();
-            date.mSigma.mHPD.clear();
-            date.mSigma.mCredibility= QPair<double, double>();
+    for (auto&& e : mEvents) {
+        for (auto&& date : e->mDates) {
+            date.mTi.mFormatedHPD.clear();
+            date.mTi.mRawCredibility = std::pair<double, double>(1, -1);
+            date.mTi.mFormatedCredibility = std::pair<double, double>(1, -1);
+            date.mSigmaTi.mFormatedHPD.clear();
+            date.mSigmaTi.mFormatedCredibility= std::pair<double, double>(1, -1);
         }
-        (*iterEvent)->mTheta.mHPD.clear();
-        (*iterEvent)->mTheta.mCredibility = QPair<double, double>();
-        ++iterEvent;
+        e->mTheta.mFormatedHPD.clear();
+        e->mTheta.mRawCredibility = std::pair<double, double>(1, -1);
+        e->mTheta.mFormatedCredibility = std::pair<double, double>(1, -1);
     }
-    QList<Phase*>::iterator iterPhase = mPhases.begin();
-    while (iterPhase!=mPhases.cend()) {
-        (*iterPhase)->mAlpha.mHPD.clear();
-        (*iterPhase)->mAlpha.mCredibility = QPair<double, double>();
-        //(*iterPhase)->mAlpha.mThresholdOld = 0;
 
-        (*iterPhase)->mBeta.mHPD.clear();
-        (*iterPhase)->mBeta.mCredibility = QPair<double, double>();
-        //(*iterPhase)->mBeta.mThresholdOld = 0;
+    for (auto&& p : mPhases) {
+        p->mAlpha.mFormatedHPD.clear();
+        p->mAlpha.mRawCredibility = std::pair<double, double>(1, -1);
+        p->mAlpha.mFormatedCredibility = std::pair<double, double>(1, -1);
 
-        (*iterPhase)->mDuration.mHPD.clear();
-        (*iterPhase)->mDuration.mCredibility = QPair<double, double>();
-        //(*iterPhase)->mDuration.mThresholdOld = 0;
-        (*iterPhase)->mTimeRange = QPair<double, double>();
-        ++iterPhase;
+        p->mBeta.mFormatedHPD.clear();
+        p->mBeta.mRawCredibility = std::pair<double, double>(1, -1);
+        p->mBeta.mFormatedCredibility = std::pair<double, double>(1, -1);
+
+        //(*iterPhase)->mTau.mFormatedHPD.clear();
+       // (*iterPhase)->mTau.mFormatedCredibility = QPair<double, double>();
+
+        p->mDuration.mFormatedHPD.clear();
+        p->mDuration.mRawCredibility = std::pair<double, double>(1, -1);
+        p->mDuration.mFormatedCredibility = std::pair<double, double>(1, -1);
+
+        p->mTimeRange = std::pair<double, double>();
+
     }
 }
 
 void Model::clearTraces()
 {
-    for (auto ev : mEvents) {
-        for (Date date : ev->mDates) {
+    for (const auto& ev : mEvents) {
+        for (auto&& date : ev->mDates) {
             date.reset();
         }
         ev->reset();
     }
 
-    for (auto ph : mPhases) {
+    for (const auto& ph : mPhases) {
         ph->mAlpha.reset();
         ph->mBeta.reset();
+        //ph->mTau.reset();
         ph->mDuration.reset();
 
         ph->mRawTempo.clear();
         ph->mRawTempoInf.clear();
         ph->mRawTempoSup.clear();
-        ph->mRawTempoCredibilityInf.clear();
-        ph->mRawTempoCredibilitySup.clear();
+
+        ph->mRawActivity.clear();
+        ph->mRawActivityInf.clear();
+        ph->mRawActivitySup.clear();
+
+        ph->mRawActivityUnifTheo.clear();
+
     }
 }
 
@@ -1855,350 +2054,411 @@ void Model::clearTraces()
 /** @Brief Save .res file, the result of computation and compress it
  *
  * */
-void Model::saveToFile(const QString& fileName)
+void Model::saveToFile(QDataStream *out)
 {
-    if (!mEvents.empty()) {
+
+    out->setVersion(QDataStream::Qt_6_4);
+
+    *out << quint32 (out->version());// we could add software version here << quint16(out.version());
+    *out << qApp->applicationVersion();
     // -----------------------------------------------------
-    //  Create file
+    //  Write info
     // -----------------------------------------------------
-    //QFileInfo info(fileName);
-   // QFile file(info.path() + info.baseName() + ".~res"); // when we could do a compressed file
-    //QFile file(info.path() + info.baseName() + ".res");
-    QFile file(fileName);
-    if (file.open(QIODevice::WriteOnly)) {
+    *out << quint32 (mChains.size());
+    for (ChainSpecs& ch : mChains) {
+        *out << ch.burnElapsedTime;
+        *out << ch.mAdaptElapsedTime;
+        *out << ch.mAcquisitionElapsedTime;
 
-        QDataStream out(&file);
-        out.setVersion(QDataStream::Qt_5_5);
-
-        int reserveInit = 0;
-        // compute reserve to estim the size of uncompresedData and magnify
-        foreach (Phase* phase, mPhases) {
-            reserveInit += phase->mAlpha.mRawTrace->size();
-            reserveInit += phase->mBeta.mRawTrace->size();
-            reserveInit += phase->mDuration.mRawTrace->size();
-        }
-
-        int numDates = 0;
-        foreach (Event* event, mEvents) {
-            reserveInit += event->mTheta.mRawTrace->size();
-            reserveInit += event->mTheta.mAllAccepts->size();
-            reserveInit += event->mTheta.mHistoryAcceptRateMH->size();
-            reserveInit += 4;
-
-            QList<Date>& dates = event->mDates;
-            numDates += event->mDates.size();
-            for (int j=0; j<dates.size(); ++j) {
-                reserveInit += dates.at(j).mTheta.mRawTrace->size();
-                reserveInit += dates.at(j).mTheta.mAllAccepts->size();
-                reserveInit += dates.at(j).mTheta.mHistoryAcceptRateMH->size();
-                reserveInit += 4;
-
-                reserveInit += dates.at(j).mSigma.mRawTrace->size();
-                reserveInit += dates.at(j).mSigma.mAllAccepts->size();
-                reserveInit += dates.at(j).mSigma.mHistoryAcceptRateMH->size();
-                reserveInit += 4;
-
-                if (dates.at(j).mWiggle.mRawTrace) {
-                    reserveInit += dates.at(j).mWiggle.mRawTrace->size();
-                    reserveInit += dates.at(j).mWiggle.mAllAccepts->size();
-                    reserveInit += dates.at(j).mWiggle.mHistoryAcceptRateMH->size();
-                    reserveInit += 4;
-                }
-
-             }
-        }
-        //uncompressedData.reserve(reserveInit);
-     /*   QBuffer buffer(&uncompressedData);
-            buffer.open(QIODevice::WriteOnly);
-
-            QDataStream out(&buffer);*/
-
-       // QDataStream out(&uncompressedData, QIODevice::WriteOnly);
-
-
-        out << quint32 (out.version());// we could add software version here << quint16(out.version());
-        out << qApp->applicationVersion();
-        // -----------------------------------------------------
-        //  Write info
-        // -----------------------------------------------------
-        out << quint32 (mPhases.size());
-        out << quint32 (mEvents.size());
-        out << quint32 (numDates);
-
-        out << quint32 (mChains.size());
-        for (ChainSpecs& ch : mChains) {
-            out << quint32 (ch.mBatchIndex);
-            out << quint32 (ch.mBatchIterIndex);
-            out << quint32 (ch.mBurnIterIndex);
-            out << quint32 (ch.mMaxBatchs);
-            out << ch.mMixingLevel;
-            out << quint32 (ch.mNumBatchIter);
-            out << quint32 (ch.mNumBurnIter);
-            out << quint32 (ch.mNumRunIter);
-            out << quint32 (ch.mRunIterIndex);
-            out << qint32 (ch.mSeed);
-            out << quint32 (ch.mThinningInterval);
-            out << quint32 (ch.mTotalIter);
-        }
-        // -----------------------------------------------------
-        //  Write phases data
-        // -----------------------------------------------------
-        foreach (Phase* phase, mPhases) {
-            out << phase->mAlpha;
-            out << phase->mBeta;
-            out << phase->mDuration;
-        }
-        // -----------------------------------------------------
-        //  Write events data
-        // -----------------------------------------------------
-        foreach (Event* event, mEvents)
-            out << event->mTheta;
-
-        // -----------------------------------------------------
-        //  Write dates data
-        // -----------------------------------------------------
-        for (const Event* event : mEvents) {
-            if (event->mType == Event::eDefault ){
-                QList<Date> dates (event->mDates);
-                 for ( Date d : dates) {
-                     out << d.mTheta;
-                     out << d.mSigma;
-                      if (d.mDeltaType != Date::eDeltaNone)
-                          out << d.mWiggle;
-
-                      out << d.mDeltaFixed;
-                      out << d.mDeltaMin;
-                      out << d.mDeltaMax;
-                      out << d.mDeltaAverage;
-                      out << d.mDeltaError;
-
-                      out << qint32 (d.mSettings.mTmin);
-                      out << qint32 (d.mSettings.mTmax);
-                      out <<  d.mSettings.mStep;
-                      out << quint8 (d.mSettings.mStepForced==true? 1: 0);
-
-
-                      out << d.getTminRefCurve();
-                      out << d.getTmaxRefCurve();
-
-                      //out << *d.mCalibration;
-
-                      out << quint32 (d.mCalibHPD.size());
-                      for (QMap<double, double>::const_iterator it = d.mCalibHPD.cbegin(); it!=d.mCalibHPD.cend();++it) {
-                          out << it.key();
-                          out << it.value();
-                       }
-                    }
-
-            }
-        }
-        out << mLogModel;
-        out << mLogMCMC;
-        out << mLogResults;
-
-      //  QByteArray compressedData (uncompressedData);// (qCompress(uncompressedData, 2));
-      //  file.write(compressedData);
-
-      /*  QDataStream outComp(&file);
-        outComp.setVersion(QDataStream::Qt_4_3);
-        outComp << qCompress(uncompressedData, 2);*/
-
-        //file.write(qCompress(uncompressedData, 2));
-        file.close();
-
-        // compress file
-      //  QFile infile(fileName+"_tmp");
-
-      /*     file.open(QIODevice::ReadOnly);
-
-           QByteArray uncompressedData (file.readAll());
-           file.close();
-           file.remove();
-
-          // QByteArray compressedData (qCompress(uncompressedData, 9));
-
-           QFile fileDat(fileName);
-           fileDat.open(QIODevice::WriteOnly);
-           fileDat.write(qCompress(uncompressedData, 9));
-
-           fileDat.close();
-           uncompressedData.clear();
-        */
+        *out << quint32 (ch.mBatchIndex);
+        *out << quint32 (ch.mBatchIterIndex);
+        *out << quint32 (ch.mBurnIterIndex);
+        *out << quint32 (ch.mMaxBatchs);
+        *out << ch.mMixingLevel;
+        *out << quint32 (ch.mIterPerBatch);
+        *out << quint32 (ch.mIterPerBurn);
+        *out << quint32 (ch.mIterPerAquisition);
+        *out << quint32 (ch.mAquisitionIterIndex);
+        *out << unsigned (ch.mSeed);
+        *out << quint32 (ch.mThinningInterval);
+        *out << quint32 (ch.mRealyAccepted);
+        *out << quint32 (ch.mTotalIter);
     }
-  }
+    // -----------------------------------------------------
+    //  Writing phase data
+    // -----------------------------------------------------
+    for (Phase*& phase : mPhases) {
+        *out << phase->mAlpha;
+        *out << phase->mBeta;
+        *out << phase->mTau;
+        *out << phase->mDuration;
+    }
+    // -----------------------------------------------------
+    //  Writing event data
+    // -----------------------------------------------------
+    for (Event*& event : mEvents){
+        *out << event->mTheta;
+        *out << event->mS02Theta;
+    }
+    // -----------------------------------------------------
+    //  Writing date data
+    // -----------------------------------------------------
+    for (Event*& event : mEvents) {
+        if (event->mType == Event::eDefault ) {
+            QList<Date> dates (event->mDates);
+            for (auto&& d  : dates) {
+                *out << d.mTi;
+                *out << d.mSigmaTi;
+                if (d.mDeltaType != Date::eDeltaNone)
+                    *out << d.mWiggle;
+
+                *out << d.mDeltaFixed;
+                *out << d.mDeltaMin;
+                *out << d.mDeltaMax;
+                *out << d.mDeltaAverage;
+                *out << d.mDeltaError;
+
+              /* obsolete since 3.2.0
+                *out << qint32 (d.mSettings.mTmin);
+                *out << qint32 (d.mSettings.mTmax);
+                *out <<  d.mSettings.mStep;
+                *out << quint8 (d.mSettings.mStepForced==true? 1: 0);
+*/
+
+                *out << d.getTminRefCurve();
+                *out << d.getTmaxRefCurve();
+
+                //mCalibration and mWiggleCalibration are saved in to *.cal file
+
+                *out << quint32 (d.mCalibHPD.size());
+                for (QMap<double, double>::const_iterator it = d.mCalibHPD.cbegin(); it!=d.mCalibHPD.cend();++it) {
+                    *out << it.key();
+                    *out << it.value();
+                }
+            }
+
+        }
+    }
+    *out << mLogModel;
+    *out << mLogInit;
+    *out << mLogAdapt;
+    *out << mLogResults;
+
 }
-/** @Brief Read the .res file, it's the result of the saved computation and uncompress it
+/** @Brief Read the .res file, it's the result of the saved computation
  *
  * */
-void Model::restoreFromFile(const QString& fileName)
+void Model::restoreFromFile_v323(QDataStream *in)
 {
-/*    QFile fileDat(fileName);
-    fileDat.open(QIODevice::ReadOnly);
-    QByteArray compressedData (fileDat.readAll());
-    fileDat.close();
-
-    QByteArray uncompressedData (qUncompress(compressedData));
-#ifdef DEBUG
-       qDebug() << "Lecture fichier :"<< fileName;
-       qDebug() << "TAILLE compressedData :" << compressedData.size();
-       qDebug() << "TAILLE uncompresedData :" << uncompressedData.size();
-#endif
-    compressedData.clear();
-*/
-/*    QFileInfo info(fileName);
-    QFile file(info.path() + info.baseName() + ".~dat"); // when we could compress the file
-
-    file.open(QIODevice::WriteOnly);
-    file.write(uncompressedData);
-    file.close();
-*/
-   // QFileInfo info(fileName);
-   // QFile file(info.path() + info.baseName() + ".res");
-
-    QFile file(fileName);
-    if (file.exists() && file.open(QIODevice::ReadOnly)){
-
-    //    if ( file.size()!=0 /* uncompressedData.size()!=0*/ ) {
- //           QDataStream in(&uncompressedData, QIODevice::ReadOnly);
-    QDataStream in(&file);
-
     int QDataStreamVersion;
-    in >> QDataStreamVersion;
-    in.setVersion(QDataStreamVersion);
+    *in >> QDataStreamVersion;
+    in->setVersion(QDataStreamVersion);
 
-    if (in.version()!= QDataStream::Qt_5_5)
+    if (in->version()!= QDataStream::Qt_6_4)
             return;
 
     QString appliVersion;
-    in >> appliVersion;
+    *in >> appliVersion;
     // prepare the future
     //QStringList projectVersionList = appliVersion.split(".");
+#ifdef DEBUG
     if (appliVersion != qApp->applicationVersion())
-        qDebug()<<file.fileName()<<" different version="<<appliVersion<<" actual="<<qApp->applicationVersion();
+        qDebug()<<" Different Model version ="<<appliVersion<<" actual ="<<qApp->applicationVersion();
 
 
+#endif
     // -----------------------------------------------------
     //  Read info
     // -----------------------------------------------------
 
     quint32 tmp32;
-    in >> tmp32;
-    //const int numPhases = (int)tmp32;
-    in >> tmp32;
-    //const int numEvents = (int)tmp32;
-    in >> tmp32;
-    //const int numdates = (int)tmp32;
+    *in >> tmp32;
 
-    in >> tmp32;
     mChains.clear();
     mChains.reserve(int (tmp32));
     for (quint32 i=0 ; i<tmp32; ++i) {
         ChainSpecs ch;
-        in >> ch.mBatchIndex;
-        in >> ch.mBatchIterIndex;
-        in >> ch.mBurnIterIndex;
-        in >> ch.mMaxBatchs;
-        in >> ch.mMixingLevel;
-        in >> ch.mNumBatchIter;
-        in >> ch.mNumBurnIter;
-        in >> ch.mNumRunIter;
-        in >> ch.mRunIterIndex;
-        in >> ch.mSeed;
-        in >> ch.mThinningInterval;
-        in >> ch.mTotalIter;
+        *in >> ch.burnElapsedTime;
+        *in >> ch.mAdaptElapsedTime;
+        *in >> ch.mAcquisitionElapsedTime;
+
+        *in >> ch.mBatchIndex;
+        *in >> ch.mBatchIterIndex;
+        *in >> ch.mBurnIterIndex;
+        *in >> ch.mMaxBatchs;
+        *in >> ch.mMixingLevel;
+        *in >> ch.mIterPerBatch;
+        *in >> ch.mIterPerBurn;
+        *in >> ch.mIterPerAquisition;
+        *in >> ch.mAquisitionIterIndex;
+        *in >> ch.mSeed;
+        *in >> ch.mThinningInterval;
+        *in >> ch.mRealyAccepted;
+        *in >> ch.mTotalIter;
         mChains.append(ch);
     }
 
-        // -----------------------------------------------------
-        //  Read phases data
-        // -----------------------------------------------------
+    // -----------------------------------------------------
+    //  Read phases data
+    // -----------------------------------------------------
 
-        for (auto &&p : mPhases) {
-               in >> p->mAlpha;
-               in >> p->mBeta;
-               in >> p->mDuration;
-            }
-        // -----------------------------------------------------
-        //  Read events data
-        // -----------------------------------------------------
+    for (Phase* &p : mPhases) {
+        *in >> p->mAlpha;
+        *in >> p->mBeta;
+        *in >> p->mTau;
+        *in >> p->mDuration;
+    }
+    // -----------------------------------------------------
+    //  Read events data
+    // -----------------------------------------------------
 
-        for (auto &&e:mEvents)
-            in >> e->mTheta;
+    for (Event* &e : mEvents) {
+        *in >> e->mTheta;
+        e->mS02Theta.mSamplerProposal = MHVariable::eFixe;
+        *in >> e->mS02Theta; // since 2023-06-01 v3.2.3
+    }
+    // -----------------------------------------------------
+    //  Read dates data
+    // -----------------------------------------------------
 
-        // -----------------------------------------------------
-        //  Read dates data
-        // -----------------------------------------------------
+    for (Event*& event : mEvents) {
+        if (event->mType == Event::eDefault )
+            for (auto&& d : event->mDates) {
+                *in >> d.mTi;
+                *in >> d.mSigmaTi;
+                if (d.mDeltaType != Date::eDeltaNone)
+                    *in >> d.mWiggle;
 
-        for (auto &&event : mEvents) {
-            if (event->mType == Event::eDefault )
-                 for (auto &&d : event->mDates) {
-                    in >> d.mTheta;
-                    in >> d.mSigma;
-                    if (d.mDeltaType != Date::eDeltaNone)
-                        in >> d.mWiggle;
+                *in >> d.mDeltaFixed;
+                *in >> d.mDeltaMin;
+                *in >> d.mDeltaMax;
+                *in >> d.mDeltaAverage;
+                *in >> d.mDeltaError;
 
-                    in >> d.mDeltaFixed;
-                    in >> d.mDeltaMin;
-                    in >> d.mDeltaMax;
-                    in >> d.mDeltaAverage;
-                    in >> d.mDeltaError;
+                /* obsolete since 3.2.0
                     qint32 tmpInt32;
-                    in >> tmpInt32;
+                    *in >> tmpInt32;
                     d.mSettings.mTmin = int (tmpInt32);
-                    in >> tmpInt32;
+                    *in >> tmpInt32;
                     d.mSettings.mTmax = int (tmpInt32);
-                    in >> d.mSettings.mStep;
+                    *in >> d.mSettings.mStep;
                     quint8 btmp;
-                    in >> btmp;
+                   * in >> btmp;
                     d.mSettings.mStepForced =(btmp==1);
+                    */
+                // in >> d.mSubDates;
+                double tmp;
+                *in >> tmp;
+                d.setTminRefCurve(tmp);
+                *in >> tmp;
+                d.setTmaxRefCurve(tmp);
 
-                   // in >> d.mSubDates;
-                    double tmp;
-                    in >> tmp;
-                    d.setTminRefCurve(tmp);
-                    in >> tmp;
-                    d.setTmaxRefCurve(tmp);
+                d.mCalibration = & (mProject->mCalibCurves[d.mUUID]);
 
-                    /* Check if the Calibration Curve exist*/
-                    const QString toFind (d.mName+d.mPlugin->getDateDesc(&d));
-         //           QMap<QString, CalibrationCurve>::const_iterator it = mProject->mCalibCurves.find (toFind);
-
-                    // if no curve Create a new instance in mProject->mCalibration
-       //             if ( it == mProject->mCalibCurves.end())
-       //                 mProject->mCalibCurves.insert(toFind, CalibrationCurve());
-
-                    //mProject->mCalibCurves.insert(toFind, CalibrationCurve());
-       //     qDebug()<<"Model:restoreFromFile insert a new mCalibration "<<toFind;
-
-                    d.mCalibration = & (mProject->mCalibCurves[toFind]);
-
-
-                    quint32 tmpUint32;
-                    in >> tmpUint32;
-
-                    for (quint32 i= 0; i<tmpUint32; i++) {
-                        double tmpKey;
-                        double tmpValue;
-                        in >> tmpKey;
-                        in >> tmpValue;
-                        d.mCalibHPD[tmpKey]= tmpValue;
-                    }
-#ifdef DEBUG
-                     if (d.mCalibration->mCurve.isEmpty())
-                         qDebug()<<"Model::restoreFromFile vide";
-#endif
+                quint32 tmpUint32;
+                *in >> tmpUint32;
+                double tmpKey;
+                double tmpValue;
+                for (quint32 i= 0; i<tmpUint32; i++) {
+                    *in >> tmpKey;
+                    *in >> tmpValue;
+                    d.mCalibHPD[tmpKey]= tmpValue;
                 }
-         }
-        in >> mLogModel;
-        in >> mLogMCMC;
-        in >> mLogResults;
+                //#ifdef DEBUG
 
-        generateCorrelations(mChains);
-       // generatePosteriorDensities(mChains, 1024, 1);
-       // generateNumericalResults(mChains);
+                const QString toFind ("WID::"+ d.mUUID);
 
-        file.close();
-       // file.remove(); // delete the temporary file with uncompressed data
+                if (d.mWiggleCalibration == nullptr || d.mWiggleCalibration->mVector.isEmpty()) {
+                    qDebug()<<"[Model::restoreFromFile] mWiggleCalibration vide";
+
+                } else {
+                    d.mWiggleCalibration = & (mProject->mCalibCurves[toFind]);
+                }
+                //#endif
+            }
+    }
+    *in >> mLogModel;
+    *in >> mLogInit;
+    *in >> mLogAdapt;
+    *in >> mLogResults;
+
+}
+
+void Model::restoreFromFile_v324(QDataStream *in)
+{
+    QList<QString> compatible_version;
+    compatible_version<<"3.2.4"<<"3.2.6";
+    int QDataStreamVersion;
+    *in >> QDataStreamVersion;
+    in->setVersion(QDataStreamVersion);
+
+    if (in->version()!= QDataStream::Qt_6_4)
+        return;
+
+    //QString appliVersion;
+    //res_file_version
+    *in >> res_file_version;
+    // prepare the future
+    //QStringList projectVersionList = appliVersion.split(".");
+#ifdef DEBUG
+    if (res_file_version != qApp->applicationVersion())
+        qDebug()<<" Different Model version ="<<res_file_version<<" actual ="<<qApp->applicationVersion();
+    if (compatible_version.contains(res_file_version))
+        qDebug()<<" Version compatible ";
+#endif
+    // -----------------------------------------------------
+    //  Read info
+    // -----------------------------------------------------
+
+    quint32 tmp32;
+    *in >> tmp32;
+
+    mChains.clear();
+    mChains.reserve(int (tmp32));
+    for (quint32 i=0 ; i<tmp32; ++i) {
+        ChainSpecs ch;
+        *in >> ch.burnElapsedTime;
+        *in >> ch.mAdaptElapsedTime;
+        *in >> ch.mAcquisitionElapsedTime;
+
+        *in >> ch.mBatchIndex;
+        *in >> ch.mBatchIterIndex;
+        *in >> ch.mBurnIterIndex;
+        *in >> ch.mMaxBatchs;
+        *in >> ch.mMixingLevel;
+        *in >> ch.mIterPerBatch;
+        *in >> ch.mIterPerBurn;
+        *in >> ch.mIterPerAquisition;
+        *in >> ch.mAquisitionIterIndex;
+        *in >> ch.mSeed;
+        *in >> ch.mThinningInterval;
+        *in >> ch.mRealyAccepted;
+        *in >> ch.mTotalIter;
+        mChains.append(ch);
     }
 
+    // -----------------------------------------------------
+    //  Read phases data
+    // -----------------------------------------------------
+
+    for (Phase* &p : mPhases) {
+        *in >> p->mAlpha;
+        *in >> p->mBeta;
+        *in >> p->mTau;
+        *in >> p->mDuration;
+    }
+    // -----------------------------------------------------
+    //  Read events data
+    // -----------------------------------------------------
+
+    for (Event* &e : mEvents) {
+        *in >> e->mTheta;
+        *in >> e->mS02Theta; // since 2023-06-01 v3.2.3
+    }
+    // -----------------------------------------------------
+    //  Read dates data
+    // -----------------------------------------------------
+
+    for (Event*& event : mEvents) {
+        if (event->mType == Event::eDefault )
+            for (auto&& d : event->mDates) {
+                *in >> d.mTi;
+                *in >> d.mSigmaTi;
+                if (d.mDeltaType != Date::eDeltaNone)
+                    *in >> d.mWiggle;
+
+                *in >> d.mDeltaFixed;
+                *in >> d.mDeltaMin;
+                *in >> d.mDeltaMax;
+                *in >> d.mDeltaAverage;
+                *in >> d.mDeltaError;
+
+                /* obsolete since 3.2.0
+                    qint32 tmpInt32;
+                    *in >> tmpInt32;
+                    d.mSettings.mTmin = int (tmpInt32);
+                    *in >> tmpInt32;
+                    d.mSettings.mTmax = int (tmpInt32);
+                    *in >> d.mSettings.mStep;
+                    quint8 btmp;
+                   * in >> btmp;
+                    d.mSettings.mStepForced =(btmp==1);
+                    */
+                // in >> d.mSubDates;
+                double tmp;
+                *in >> tmp;
+                d.setTminRefCurve(tmp);
+                *in >> tmp;
+                d.setTmaxRefCurve(tmp);
+
+                d.mCalibration = & (mProject->mCalibCurves[d.mUUID]);
+
+                quint32 tmpUint32;
+                *in >> tmpUint32;
+                double tmpKey;
+                double tmpValue;
+                for (quint32 i= 0; i<tmpUint32; i++) {
+                    *in >> tmpKey;
+                    *in >> tmpValue;
+                    d.mCalibHPD[tmpKey]= tmpValue;
+                }
+                //#ifdef DEBUG
+
+                const QString toFind ("WID::"+ d.mUUID);
+
+                if (d.mWiggleCalibration == nullptr || d.mWiggleCalibration->mVector.isEmpty()) {
+                    qDebug()<<"[Model::restoreFromFile] mWiggleCalibration vide";
+
+                } else {
+                    d.mWiggleCalibration = & (mProject->mCalibCurves[toFind]);
+                }
+                //#endif
+            }
+    }
+    *in >> mLogModel;
+    *in >> mLogInit;
+    *in >> mLogAdapt;
+    *in >> mLogResults;
+
+}
+
+bool Model::hasSelectedEvents()
+{
+   return std::any_of(mEvents.begin(), mEvents.end(), [](Event * e){return e->mIsSelected;});
+}
+
+bool Model::hasSelectedPhases()
+{
+    return std::any_of(mPhases.begin(), mPhases.end(), [](Phase * p){return p->mIsSelected;});
+}
+
+t_reduceTime Model::reduceTime(double t) const
+{
+    const double tmin = mSettings.mTmin;
+    const double tmax = mSettings.mTmax;
+    return (t - tmin) / (tmax - tmin);
+}
+
+std::vector<t_reduceTime> Model::reduceTime(const std::vector<double> &vec_t) const
+{
+    const double tmin = mSettings.mTmin;
+    const double tmax = mSettings.mTmax;
+
+    std::vector<t_reduceTime> res;
+    for (auto& t : vec_t)
+        res.push_back((t - tmin) / (tmax - tmin));
+
+    return res;
+}
+
+double Model::yearTime(t_reduceTime reduceTime)
+{
+    const double tmin = mSettings.mTmin;
+    const double tmax = mSettings.mTmax;
+    return reduceTime * (tmax - tmin) + tmin ;
+}
+
+QString Model::initializeTheta()
+{
+        return QString();
 }

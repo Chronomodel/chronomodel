@@ -68,7 +68,7 @@ public:
         int iconS = 20;
 
         painter->setRenderHint(QPainter::Antialiasing);
-        if(option.state & QStyle::State_Selected){
+        if (option.state & QStyle::State_Selected){
             painter->fillRect(option.rect, Painting::mainColorLight);
         }
 
@@ -77,7 +77,7 @@ public:
 
         PluginAbstract* plugin = PluginManager::getPluginFromId(pluginId);
         QIcon icon(":/chronomodel.png");
-        if(plugin)
+        if (plugin)
             icon = plugin->getIcon();
 
         QPixmap pixmap = icon.pixmap(iconS, iconS);

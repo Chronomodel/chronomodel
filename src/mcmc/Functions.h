@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -39,21 +39,22 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
-#include "StdUtilities.h"
+
 #include "DateUtils.h"
+#include "Matrix.h"
 
 #include <QMap>
 #include <QVector>
 #include <cmath>
 
-typedef double type_data;
+#if PARALLEL
+#include <execution>
+#define PAR std::execution::par,
+#else
+#define PAR
+#endif
 
-struct FunctionAnalysis{
-    type_data max = (type_data)0.;
-    type_data mode = (type_data)0.;
-    type_data mean = (type_data)0.;
-    type_data stddev = (type_data)0.;
-};
+typedef double type_data;
 
 struct Quartiles{
     type_data Q1 = (type_data)0.;
@@ -61,42 +62,181 @@ struct Quartiles{
     type_data Q3 = (type_data)0.;
 };
 
-struct DensityAnalysis
-{
+struct FunctionStat{
+    type_data max = (type_data)0.;
+    type_data mode = (type_data)0.;
+    type_data mean = (type_data)0.;
+    type_data std = (type_data)0.;
     Quartiles quartiles;
-    FunctionAnalysis analysis;
 };
 
-FunctionAnalysis analyseFunction(const QMap<type_data, type_data>& aFunction);
+struct TraceStat{
+    type_data min = (type_data)0.;
+    type_data max = (type_data)0.;
+    type_data mean = (type_data)0.;
+    type_data std = (type_data)0.;
+    Quartiles quartiles;
+};
 
-QString functionAnalysisToString(const FunctionAnalysis& analysis, const bool forCSV = false);
-QString densityAnalysisToString(const DensityAnalysis& analysis, const QString& nl = "<br>", const bool forCSV = false);
+
+
+struct DensityAnalysis
+{
+   // Quartiles quartiles;
+    FunctionStat funcAnalysis;
+    TraceStat traceAnalysis;
+   // type_data xmin;
+   // type_data xmax;
+};
+
+FunctionStat analyseFunction(const QMap<type_data, type_data> &fun);
+
+QString FunctionStatToString(const FunctionStat& analysis);
+QString densityAnalysisToString(const DensityAnalysis& analysis);
 
 // Standard Deviation of a vector of data
-type_data dataStd(const QVector<type_data> &data);
 
-double shrinkageUniform(const double so2);
+double variance_Knuth(const QList<double> &data);
+double variance_Knuth(const std::vector<double> &data);
+double variance_Knuth(const std::vector<int> &data);
 
-Quartiles quartilesForTrace(const QVector<type_data>& trace);
-
-QVector<double> calculRepartition (const QVector<double>& calib);
-QVector<double> calculRepartition (const QMap<double, double> &calib);
-Quartiles quartilesForRepartition(const QVector<double> &repartition, const double tmin, const double step);
-QPair<double, double> credibilityForTrace(const QVector<double>& trace, double thresh, double& exactThresholdResult, const QString description = "Credibility computation");
-QPair<double, double> credibilityForTrace(const QVector<int>& trace, double thresh, double& exactThresholdResult, const QString description = "Credibility computation");
-QPair<double, double> timeRangeFromTraces(const QVector<double>& trace1, const QVector<double>& trace2, const double thresh, const QString description ="Time Range Computation");
+type_data std_Koening(const QList<type_data> &data);
+inline double std_Knuth(const QList<double> &data) {return sqrt(variance_Knuth(data));};
+inline double std_Knuth(const std::vector<double> &data) {return sqrt(variance_Knuth(data));};
+inline double std_Knuth(const std::vector<int> &data) {return sqrt(variance_Knuth(data));};
 
 
-QPair<double, double> gapRangeFromTraces(const QVector<double>& trace1, const QVector<double>& trace2, const double thresh, const QString description ="Gap Range Computation");
 
-QPair<double, double> transitionRangeFromTraces(const QVector<double> &trace1, const QVector<double> &trace2, const double thresh, const QString description ="Gap Range Computation");
+void mean_variance_Knuth(const std::vector<double> &data, double &mean, double &variance);
+void mean_variance_Knuth(const QList<double> &data, double &mean, double &variance);
 
-QString intervalText(const QPair<double, QPair<double, double> >& interval, DateConversion conversionFunc = nullptr, const bool forCSV = false);
-QString getHPDText(const QMap<double, double>& hpd, double thresh, const QString& unit = QString(), DateConversion conversionFunc = nullptr, const bool forCSV =false);
+double std_unbiais_Knuth(const QList<double> &data);
+double std_unbiais_Knuth(const std::vector<double> &data);
+double std_unbiais_Knuth(const std::vector<int> &data);
+void mean_std_unbiais_Knuth(const std::vector<int> &data, double& mean, double& std);
 
-QList<QPair<double, QPair<double, double> > > intervalsForHpd(const QMap<double, double> &hpd, double thresh);
+double covariance(const std::vector<double>& dataX, const std::vector<double>& dataY);
 
-inline double rounddouble(const double f,const int prec)
+QList<double> autocorrelation_schoolbook(const QList<double> &trace, const int hmax=40);
+QList<double> autocorrelation_by_convol(const QList<double> &trace, const int hmax=40);
+
+const std::pair<double, double> linear_regression(const std::vector<double>& dataX, const std::vector<double>& dataY);
+
+double shrinkageUniform(const double s02);
+
+inline double dnorm (const double x, const double mu = 0., const double std = 1.) {return exp(-0.5*pow((x - mu)/ std, 2.))/ (sqrt(2.*M_PI)*std);}
+
+Quartiles quartilesForTrace(const QList<type_data> &trace);
+TraceStat traceStatistic(const QList<type_data> &trace);
+
+// QList<double> calculRepartition (const QList<double> &calib);
+QList<double> calculRepartition (const QMap<double, double> &calib);
+Quartiles quartilesForRepartition(const QList<double> &repartition, const double tmin, const double step);
+std::pair<double, double> credibilityForTrace(const QList<double> &trace, double thresh, double &exactThresholdResult, const QString description = "Credibility computation");
+std::pair<double, double> credibilityForTrace(const QList<int> &trace, double thresh, double &exactThresholdResult, const QString description = "Credibility computation");
+std::pair<double, double> timeRangeFromTraces(const QList<double> &trace1, const QList<double> &trace2, const double thresh, const QString description ="Time Range Computation");
+
+std::pair<double, double> gapRangeFromTraces(const QList<double> &trace1, const QList<double> &trace2, const double thresh, const QString description ="Gap Range Computation");
+
+std::pair<double, double> transitionRangeFromTraces(const QList<double> &trace1, const QList<double> &trace2, const double thresh, const QString description ="Gap Range Computation");
+
+const QString interval_to_text(const QPair<double, QPair<double, double> > &interval, DateConversion conversionFunc = nullptr, const bool forCSV = false);
+
+const QString get_HPD_text_from_mapping(const std::map<double, double> &mapping, const QString &unit = QString(),  DateConversion conversionFunc = nullptr, const bool forCSV = false);
+const QString get_HPD_text(const QList<QPair<double, QPair<double, double> >> &intervals, const QString &unit = QString(),  DateConversion conversionFunc = nullptr, const bool forCSV = false);
+
+QList<QPair<double, QPair<double, double> > > intervals_hpd_from_mapping(const std::map<double, double> &area_mapping, double &real_thresh);
+QList<QPair<double, QPair<double, double> > > intervals_hpd_from_mapping(const std::map<double, double> &area_mapping);
+//-------- Matrix
+std::vector<double> initVector(size_t n);
+
+std::vector<std::vector<int>> initIntMatrix(size_t rows, size_t cols);
+std::vector<std::vector<double>> initMatrix(size_t rows, size_t cols);
+void resizeMatrix(std::vector<double> &matrix,  size_t rows, size_t cols);
+
+std::vector<long double> initLongVector(size_t n);
+
+
+Matrix2D::value_type::value_type determinant(const Matrix2D& matrix, size_t shift = 0); // à contrôler
+Matrix2D::value_type::value_type determinant_gauss(const Matrix2D &matrix, size_t shift = 0);
+
+Matrix2D seedMatrix(const Matrix2D matrix, size_t shift = 0);
+Matrix2D remove_bands_Matrix(const Matrix2D &matrix, size_t shift = 0);
+
+Matrix2D transpose0(const Matrix2D &matrix);
+Matrix2D transpose(const Matrix2D& matrix, const int nbDiag);
+
+Matrix2D multiMatParDiag(const Matrix2D &matrix, const MatrixDiag &diag, size_t nbBandes);
+Matrix2D multiDiagParMat(const MatrixDiag &diag, const Matrix2D &matrix, const int nbBandes);
+
+std::vector<double> multiMatParVec(const Matrix2D &matrix, const std::vector<double> &vec, const int nbBandes);
+
+
+Matrix2D addMatEtMat0(const Matrix2D &matrix1, const Matrix2D &matrix2);
+Matrix2D addMatEtMat(const Matrix2D &matrix1, const Matrix2D &matrix2, const int nbBandes);
+Matrix2D addIdentityToMat(const Matrix2D &matrix);
+Matrix2D multiConstParMat(const Matrix2D &matrix, const double c, const int nbBandes);
+Matrix2D multiConstParMat0(const Matrix2D &matrix, const double c);
+
+Matrix2D multiMatParMat0(const Matrix2D &matrix1, const Matrix2D &matrix2);
+Matrix2D multiMatParMat(const Matrix2D &matrix1, const Matrix2D &matrix2, const int nbBandes1, const int nbBandes2);
+
+Matrix2D addDiagToMat(const MatrixDiag &diag, Matrix2D matrix);
+
+Matrix2D soustractMatToIdentity(const Matrix2D &matrix);
+
+Matrix2D multiplyMatrix_Naive(const Matrix2D& a, const Matrix2D& b);
+Matrix2D multiplyMatrix_Winograd(const Matrix2D &a, const Matrix2D &b);
+Matrix2D multiplyMatrixBanded_Winograd(const Matrix2D &a, const Matrix2D &b,  const int bandwidth = 0);
+
+Matrix2D inverseMatSym0(const Matrix2D& matrix, const int shift = 0);
+Matrix2D inverseMatSym(const Matrix2D & matrix1, const MatrixDiag &matrix2, const int nbBandes, const int shift);
+
+Matrix2D inverseMatSym_origin(const std::pair<Matrix2D, MatrixDiag> &decomp, const int nbBandes, const int shift);
+
+
+double sumAllMatrix(const std::vector<std::vector<double>> &matrix);
+t_matrix sumAllMatrix(const Matrix2D &m);
+
+
+double sumAllVector(const std::vector<double> &matrix);
+
+Matrix2D cofactor0(const Matrix2D &matrix);
+Matrix2D comatrice0(const Matrix2D &matrix);
+
+
+Matrix2D choleskyLL0(const Matrix2D& matrix);
+std::pair<Matrix2D, MatrixDiag > choleskyLDLT(const Matrix2D& matrix);
+std::pair<Matrix2D, MatrixDiag > choleskyLDLT(const Matrix2D& matrix, const int shift);
+std::pair<Matrix2D, MatrixDiag > choleskyLDLT(const Matrix2D& matrix, const int nbBandes, const int shift);
+std::pair<Matrix2D, MatrixDiag > choleskyLDLT_Dsup0(const Matrix2D& matrix, const int nbBandes, const int shift);
+std::pair<Matrix2D, MatrixDiag> decompositionCholesky(const Matrix2D &matrix, const int nbBandes, const int shift);
+
+std::pair<Matrix2D, Matrix2D > decompositionLU0(const Matrix2D &A);
+std::pair<Matrix2D, Matrix2D> Doolittle_LU(const Matrix2D A);
+std::pair<Matrix2D, MatrixDiag> LU_to_LD(const std::pair<Matrix2D, Matrix2D> LU);
+
+std::pair<Matrix2D, Matrix2D > decompositionQR(const Matrix2D& A);
+std::pair<Matrix2D, Matrix2D> householderQR(Matrix2D& A);
+
+std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, MatrixDiag> &decomp, const std::vector< double> &vecQtY);
+std::vector<long double> resolutionSystemeLineaireCholesky_long(const std::pair<Matrix2D, MatrixDiag> &decomp, const std::vector< double> &vecQtY);
+struct Strassen
+{ //https://www.sanfoundry.com/java-program-strassen-algorithm/
+
+    Matrix2D multiply (const Matrix2D &A, const Matrix2D &B);
+    Matrix2D sub(const Matrix2D &A, const Matrix2D &B);
+    Matrix2D add(const Matrix2D &A, const Matrix2D &B);
+/** Funtion to split parent matrix into child matrices **/
+
+void split(const Matrix2D &P, Matrix2D &C, int iB, int jB) ;
+/** Funtion to join child matrices intp parent matrix **/
+
+ void join(const Matrix2D &C, Matrix2D &P, int iB, int jB) ;
+
+};
+
+inline double rounddouble(const double f, const int prec)
 {
     double result;
     if (prec > 0){
@@ -109,13 +249,13 @@ inline double rounddouble(const double f,const int prec)
 }
 
 template <typename T>
-bool isOdd( T value )
+inline bool isOdd( T value )
 {
     return (value % 2!= 0 ? true : false);
 }
 
 template <typename T>
-bool isEven( T value )
+inline bool isEven( T value )
 {
     return (value % 2 == 0 ? true : false);
 }
@@ -129,19 +269,19 @@ bool isEven( T value )
  * @param p
  * @return
  */
-template <typename T>
-QPair<int, double> gammaQuartile(const QVector<T> &trace, const int quartileType, const double p)
+template <template<typename...> class C, typename T>
+QPair<int, T> gammaQuartile(const C<T> &trace, const int quartileType, const double p)
 {
     const int n (trace.size());
-    int j (0);
+    int j = 0;
     // We use jFloor which is the floor value of j but in the original double type
     // because when we cacul g in the 3 first cases we need the double format
-    double jFloor(0.);
+    T jFloor (0);
 
-    double m (0.);
-    double g (0.);
-    double gamma (0.);
-    double k (0.);
+    T m (0);
+    T g (0);
+    T gamma (0);
+    T k (0);
 
 
     switch (quartileType) {
@@ -152,9 +292,7 @@ QPair<int, double> gammaQuartile(const QVector<T> &trace, const int quartileType
         jFloor = floor((n * p) + m);
         j = (int)jFloor;
         g = n*p + m - jFloor;
-
         gamma = (g<1e-10 ? 0 : 1.) ;
- //qDebug()<<n<<p<<m<<jFloor<<j<<g<<gamma;
         break;
 
     case 2: // same probleme as type 1
@@ -228,12 +366,11 @@ QPair<int, double> gammaQuartile(const QVector<T> &trace, const int quartileType
  * @param p is the confidence must be between [0 , 1]
  * @return Q1(confidance) Q2(50%) Q3(1-confidance)
  */
-template <typename T>
-Quartiles quartilesType(const QVector<T>& trace, const int quartileType, const double p)
+template <template<typename...> class C, typename T>
+Quartiles quantilesType(const C<T>& trace, const int quartileType, const double p)
 {
-    Q_ASSERT(&trace);
     Quartiles Q;
-    QVector<T> traceSorted (trace);
+    C<T> traceSorted (trace);
 
     QPair<int, double> parQ1 = gammaQuartile(trace, quartileType, p); // first is j and second is gamma
     QPair<int, double> parQ2 = gammaQuartile(trace, quartileType, 0.5);
@@ -242,34 +379,35 @@ Quartiles quartilesType(const QVector<T>& trace, const int quartileType, const d
     std::sort(traceSorted.begin(), traceSorted.end());
 
     // Q1 determination
-    if (parQ1.first<=0)
-       Q.Q1 = (double)traceSorted.first();
+    if (parQ1.first <= 0)
+       Q.Q1 = (double)traceSorted.front();
 
     else if (parQ1.first < traceSorted.size())
             Q.Q1 = (1.- parQ1.second)*(double)traceSorted.at(parQ1.first-1) + parQ1.second*(double)traceSorted.at(parQ1.first);
     else
-        Q.Q1 = (double)traceSorted.last();
+        Q.Q1 = (double)traceSorted.back();
 
     // Q2 determination
-    if (parQ2.first<=0)
-       Q.Q2 = (double)traceSorted.first();
+    if (parQ2.first <= 0)
+       Q.Q2 = (double)traceSorted.front();
 
     else if (parQ2.first < traceSorted.size())
             Q.Q2 = (1.- parQ2.second)*(double)traceSorted.at(parQ2.first-1) + parQ2.second*(double)traceSorted.at(parQ2.first);
     else
-        Q.Q2 = (double)traceSorted.last();
+        Q.Q2 = (double)traceSorted.back();
 
     // Q3 determination
-    if (parQ3.first<=0)
-       Q.Q3 = (double)traceSorted.first();
+    if (parQ3.first <= 0)
+       Q.Q3 = (double)traceSorted.front();
 
     else if (parQ3.first < traceSorted.size())
             Q.Q3 = (1.- parQ3.second)*(double)traceSorted.at(parQ3.first-1) + parQ3.second*(double)traceSorted.at(parQ3.first);
     else
-        Q.Q3 = (double)traceSorted.last();
+        Q.Q3 = (double)traceSorted.back();
 
     return Q;
 }
 
+std::pair<double, double> solve_quadratic(const double y, const double a, const double b, const double c);
 
 #endif

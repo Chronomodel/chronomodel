@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -38,29 +38,24 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "DateDialog.h"
-#include "../PluginFormAbstract.h"
-#include "Collapsible.h"
-#include "RadioButton.h"
-#include "Label.h"
+
+#include "PluginFormAbstract.h"
 #include "HelpWidget.h"
-#include "LineEdit.h"
-#include "Painting.h"
-#include "ModelUtilities.h"
-#include "PluginManager.h"
-#include "../PluginAbstract.h"
+#include "PluginAbstract.h"
+
 #include <QtWidgets>
 
 
 DateDialog::DateDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags),
-mWiggleIsValid(false),
-mPluginDataAreValid(false),
-mForm(nullptr),
-mWidth(600),
-mMargin(5),
-mLineH(20),
-mButW(80),
-mButH(25),
-mWiggleEnabled(false)
+    mWiggleIsValid(false),
+    mPluginDataAreValid(false),
+    mForm(nullptr),
+    mWidth(600),
+    mMargin(5),
+    mLineH(20),
+    mButW(80),
+    mButH(25),
+    mWiggleEnabled(false)
 {
     setWindowTitle(tr("Create / Modify Data"));
     setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
@@ -71,7 +66,7 @@ mWiggleEnabled(false)
     mNameEdit = new QLineEdit(this);
     mNameEdit->setAlignment(Qt::AlignHCenter);
     mNameEdit->setText("New Data");
-   //mNameEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
+    //mNameEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
     mNameEdit->selectAll();
     mNameEdit->setFocus();
 
@@ -84,24 +79,29 @@ mWiggleEnabled(false)
 
     mAdvancedCheck = new QCheckBox(tr("Advanced"));
     mAdvancedWidget = new QGroupBox();
+    //mAdvancedWidget->setStyleSheet("QGroupBox {     font: bold;     font-size: 23px;     border: 1px solid silver;     border-radius: 6px;     margin-top: 15px; }");
+    mAdvancedWidget->setStyleSheet("QGroupBox {border: 0px}");
+
     mAdvancedWidget->setCheckable(false);
     mAdvancedWidget->setVisible(false);
-    mAdvancedWidget->setFlat(true);
+    mAdvancedWidget->setFlat(false);
     connect(mAdvancedCheck, &QCheckBox::toggled, this, &DateDialog::setAdvancedVisible);
 
-    mMethodLab = new QLabel(tr("Method"), mAdvancedWidget);
+    mMethodLab = new QLabel(tr("MCMC"), mAdvancedWidget);
     mMethodCombo = new QComboBox(mAdvancedWidget);
-    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHSymetric));
-    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eInversion));
-    mMethodCombo->addItem(ModelUtilities::getDataMethodText(Date::eMHSymGaussAdapt));
+    mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eMHPrior));
+    mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eInversion));
+    mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eMHAdaptGauss));
 
-    mWiggleLab = new Label(tr("Wiggle Matching"), mAdvancedWidget);
+    mWiggleLab = new QLabel(tr("Wiggle Matching"), mAdvancedWidget);
 
+    mDeltaNoneRadio = new QRadioButton(tr("None"), mAdvancedWidget);
     mDeltaFixedRadio = new QRadioButton(tr("Fixed"), mAdvancedWidget);
     mDeltaRangeRadio = new QRadioButton(tr("Range"), mAdvancedWidget);
     mDeltaGaussRadio = new QRadioButton(tr("Gaussian"), mAdvancedWidget);
-    mDeltaFixedRadio->setChecked(true);
+    mDeltaNoneRadio->setChecked(true);
 
+    connect(mDeltaNoneRadio, &QRadioButton::toggled, this, &DateDialog::updateVisibleControls);
     connect(mDeltaFixedRadio, &QRadioButton::toggled, this, &DateDialog::updateVisibleControls);
     connect(mDeltaRangeRadio, &QRadioButton::toggled, this,  &DateDialog::updateVisibleControls);
     connect(mDeltaGaussRadio, &QRadioButton::toggled, this,  &DateDialog::updateVisibleControls);
@@ -110,25 +110,25 @@ mWiggleEnabled(false)
     connect(mDeltaRangeRadio, &QRadioButton::toggled, this,  &DateDialog::checkWiggle);
     connect(mDeltaGaussRadio, &QRadioButton::toggled, this,  &DateDialog::checkWiggle);
 
-    mDeltaHelp = new HelpWidget(tr("Wiggle Sign : \"+\" if data ≤ event, \"-\" if data ≥ event"), mAdvancedWidget);
-    mDeltaHelp->setFixedHeight(50);
-    mDeltaHelp->setLink("https://chronomodel.com/storage/medias/3_chronomodel_user_manual.pdf#page=22");
+    mDeltaHelp = new HelpWidget(tr("Wiggle Sign : \n \"+\" if data ≤ event,\n \"-\" if data ≥ event"), mAdvancedWidget);
+    mDeltaHelp->setFixedHeight(70);
+    mDeltaHelp->setLink("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=22");
 
-    mDeltaFixedLab   = new QLabel(tr("Value"), mAdvancedWidget);
-    mDeltaMinLab     = new QLabel(tr("Min"), mAdvancedWidget);
-    mDeltaMaxLab     = new QLabel(tr("Max"), mAdvancedWidget);
+    mDeltaFixedLab = new QLabel(tr("Value"), mAdvancedWidget);
+    mDeltaMinLab = new QLabel(tr("Min"), mAdvancedWidget);
+    mDeltaMaxLab = new QLabel(tr("Max"), mAdvancedWidget);
     mDeltaAverageLab = new QLabel(tr("Mean"), mAdvancedWidget);
-    mDeltaErrorLab   = new QLabel(tr("Error (sd)"), mAdvancedWidget);
+    mDeltaErrorLab = new QLabel(tr("Error (sd)"), mAdvancedWidget);
 
-    mDeltaFixedEdit   = new QLineEdit(mAdvancedWidget);
+    mDeltaFixedEdit = new QLineEdit(mAdvancedWidget);
     mDeltaFixedEdit->setAlignment(Qt::AlignHCenter);
-    mDeltaMinEdit     = new QLineEdit(mAdvancedWidget);
+    mDeltaMinEdit = new QLineEdit(mAdvancedWidget);
     mDeltaMinEdit->setAlignment(Qt::AlignHCenter);
-    mDeltaMaxEdit     = new QLineEdit(mAdvancedWidget);
+    mDeltaMaxEdit = new QLineEdit(mAdvancedWidget);
     mDeltaMaxEdit->setAlignment(Qt::AlignHCenter);
     mDeltaAverageEdit = new QLineEdit(mAdvancedWidget);
     mDeltaAverageEdit->setAlignment(Qt::AlignHCenter);
-    mDeltaErrorEdit   = new QLineEdit(mAdvancedWidget);
+    mDeltaErrorEdit = new QLineEdit(mAdvancedWidget);
     mDeltaErrorEdit->setAlignment(Qt::AlignHCenter);
 
     mDeltaFixedEdit->setText(QString::number(0));
@@ -144,29 +144,31 @@ mWiggleEnabled(false)
     connect(mDeltaErrorEdit, &QLineEdit::textChanged, this, &DateDialog::checkWiggle);
 
     QGridLayout* advGrid = new QGridLayout();
-    advGrid->setContentsMargins(0, 0, 0, 0);
+
     advGrid->addWidget(mMethodLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
     advGrid->addWidget(mMethodCombo, 0, 1);
     advGrid->addWidget(mWiggleLab, 1, 0, Qt::AlignRight | Qt::AlignVCenter);
-    advGrid->addWidget(mDeltaFixedRadio, 1, 1);
-    advGrid->addWidget(mDeltaRangeRadio, 2, 1);
-    advGrid->addWidget(mDeltaGaussRadio, 3, 1);
-    advGrid->addWidget(mDeltaHelp, 4, 1);
+    advGrid->addWidget(mDeltaNoneRadio, 1, 1);
+    advGrid->addWidget(mDeltaFixedRadio, 2, 1);
+    advGrid->addWidget(mDeltaRangeRadio, 3, 1);
+    advGrid->addWidget(mDeltaGaussRadio, 4, 1);
+    advGrid->addWidget(mDeltaHelp, 5, 1);
 
-    advGrid->addWidget(mDeltaFixedLab, 5, 0, Qt::AlignRight | Qt::AlignVCenter);
-    advGrid->addWidget(mDeltaFixedEdit, 5, 1);
+    advGrid->addWidget(mDeltaFixedLab, 6, 0, Qt::AlignRight | Qt::AlignVCenter);
+    advGrid->addWidget(mDeltaFixedEdit, 6, 1);
 
-    advGrid->addWidget(mDeltaMinLab, 5, 0, Qt::AlignRight | Qt::AlignVCenter);
-    advGrid->addWidget(mDeltaMinEdit, 5, 1);
-    advGrid->addWidget(mDeltaMaxLab, 6, 0, Qt::AlignRight | Qt::AlignVCenter);
-    advGrid->addWidget(mDeltaMaxEdit, 6, 1);
+    advGrid->addWidget(mDeltaMinLab, 6, 0, Qt::AlignRight | Qt::AlignVCenter);
+    advGrid->addWidget(mDeltaMinEdit, 6, 1);
+    advGrid->addWidget(mDeltaMaxLab, 7, 0, Qt::AlignRight | Qt::AlignVCenter);
+    advGrid->addWidget(mDeltaMaxEdit, 7, 1);
 
-    advGrid->addWidget(mDeltaAverageLab, 5, 0, Qt::AlignRight | Qt::AlignVCenter);
-    advGrid->addWidget(mDeltaAverageEdit, 5, 1);
-    advGrid->addWidget(mDeltaErrorLab, 6, 0, Qt::AlignRight | Qt::AlignVCenter);
-    advGrid->addWidget(mDeltaErrorEdit, 6, 1);
+    advGrid->addWidget(mDeltaAverageLab, 6, 0, Qt::AlignRight | Qt::AlignVCenter);
+    advGrid->addWidget(mDeltaAverageEdit, 6, 1);
+    advGrid->addWidget(mDeltaErrorLab, 7, 0, Qt::AlignRight | Qt::AlignVCenter);
+    advGrid->addWidget(mDeltaErrorEdit, 7, 1);
 
     mAdvancedWidget->setLayout(advGrid);
+    mAdvancedWidget->layout()->setContentsMargins(20, 20, 20, 20);
 
     // ----------
 
@@ -175,6 +177,9 @@ mWiggleEnabled(false)
     connect(mButtonBox, &QDialogButtonBox::rejected, this, &DateDialog::reject);
 
     mLayout = new QVBoxLayout();
+    mLayout->setContentsMargins(5, 5, 5, 5);
+    mLayout->setSpacing(5);
+
     mLayout->addLayout(grid);
 
     QFrame* line1 = new QFrame();
@@ -192,7 +197,8 @@ mWiggleEnabled(false)
     mLayout->addWidget(mAdvancedCheck);
     mLayout->addWidget(mAdvancedWidget);
     mLayout->addWidget(mButtonBox);
-    mLayout->addStretch();
+    mLayout->addStretch(); 
+
     setLayout(mLayout);
 
     updateVisibleControls();
@@ -200,10 +206,10 @@ mWiggleEnabled(false)
 
 DateDialog::~DateDialog()
 {
-   if (mForm) {
-       disconnect(mForm, &PluginFormAbstract::OkEnabled, this, &DateDialog::setOkEnabled);
-       disconnect(mForm, &PluginFormAbstract::sizeChanged , this, &DateDialog::updateVisibleControls);
-   }
+    if (mForm) {
+        disconnect(mForm, &PluginFormAbstract::OkEnabled, this, &DateDialog::setOkEnabled);
+        disconnect(mForm, &PluginFormAbstract::sizeChanged , this, &DateDialog::updateVisibleControls);
+    }
 }
 
 void DateDialog::setForm(PluginFormAbstract* form)
@@ -217,9 +223,11 @@ void DateDialog::setForm(PluginFormAbstract* form)
         mForm = form;
         connect(mForm, &PluginFormAbstract::OkEnabled, this, &DateDialog::setPluginDataValid);
         connect(mForm, &PluginFormAbstract::sizeChanged , this, &DateDialog::updateVisibleControls);
-
-
+        mForm->layout()->setContentsMargins(10, 10, 10, 10);
+        mForm->setFlat(true);
+        mForm->setStyleSheet("QGroupBox {border: 0px}");
         mLayout->insertWidget(2, mForm);
+
         PluginAbstract* plugin = form->mPlugin;
 
         setWindowTitle(tr("Create %1 Data").arg(plugin->getName()));
@@ -236,16 +244,35 @@ void DateDialog::setForm(PluginFormAbstract* form)
 
         // Disable methods forbidden by plugin
         const QStandardItemModel* model = qobject_cast<const QStandardItemModel*>(mMethodCombo->model());
+
+        const QList<MHVariable::SamplerProposal> allowMetho = plugin->allowedDataMethods();
+        MHVariable::SamplerProposal spTest;
         for (int i=0; i<mMethodCombo->count(); ++i) {
             QStandardItem* item = model->item(i);
-            bool allowed = plugin->allowedDataMethods().contains(Date::DataMethod (i));
+
+            switch (i) {
+            case 0 :
+                spTest = MHVariable::eMHPrior;
+                break;
+            case 1 :
+                spTest = MHVariable::eInversion;
+                break;
+            case 2 :
+                spTest = MHVariable::eMHAdaptGauss;
+                break;
+            default :
+                spTest = MHVariable::eInversion;
+                break;
+            }
+
+            const bool allowed = allowMetho.contains(spTest);
 
             item->setFlags(!allowed ? item->flags() & ~(Qt::ItemIsSelectable|Qt::ItemIsEnabled)
                            : Qt::ItemIsSelectable|Qt::ItemIsEnabled);
             // visually disable by greying out - works only if combobox has been painted already and palette returns the wanted color
             item->setData(!allowed ? mMethodCombo->palette().color(QPalette::Disabled, QPalette::Text)
                           : QVariant(), // clear item data in order to use default color
-                          Qt::TextColorRole);
+                          Qt::ForegroundRole);
 
         }
     }
@@ -263,19 +290,22 @@ void DateDialog::checkWiggle()
         bool ok1 = true;
         mDeltaFixedEdit->text().toInt(&ok1);
         mWiggleIsValid = ok1;
+
     } else if (mDeltaRangeRadio->isChecked()) {
         bool ok1 = true;
         bool ok2 = true;
         const int dmin = mDeltaMinEdit->text().toInt(&ok1);
         const int dmax = mDeltaMaxEdit->text().toInt(&ok2);
-        mWiggleIsValid = ( ok1 && ok2 && ( (dmax>dmin) || ( (dmin == 0) && (dmax == 0) ) ) );
+        mWiggleIsValid = ( ok1 && ok2 &&  (dmax>dmin) );
 
     } else if(mDeltaGaussRadio->isChecked()) {
         bool ok1 = true;
         bool ok2 = true;
-        const double a = mDeltaAverageEdit->text().toDouble(&ok1);
+        //const double a =
+        mDeltaAverageEdit->text().toDouble(&ok1);
         const double e = mDeltaErrorEdit->text().toDouble(&ok2);
-        mWiggleIsValid = ( ok1 && ok2 && ( (e>0) || ( (a == 0.) && (e == 0.) ) ) );
+        mWiggleIsValid = ( ok1 && ok2 &&  (e>0) );
+
     } else
         mWiggleIsValid = true;
 
@@ -294,6 +324,7 @@ void DateDialog::setWiggleEnabled(bool enabled)
     mWiggleLab->setVisible(enabled);
     mDeltaHelp->setVisible(enabled);
 
+    mDeltaNoneRadio->setVisible(enabled);
     mDeltaFixedRadio->setVisible(enabled);
     mDeltaRangeRadio->setVisible(enabled);
     mDeltaGaussRadio->setVisible(enabled);
@@ -340,18 +371,40 @@ void DateDialog::setAdvancedVisible(bool visible)
         adjustSize();
 }
 
-void DateDialog::setDataMethod(Date::DataMethod method)
+void DateDialog::setDataMethod(MHVariable::SamplerProposal sp)
 {
-    mMethodCombo->setCurrentIndex(int(method));
+    int index;
+    switch (sp) {
+    case MHVariable::eMHPrior :
+        index = 0;
+        break;
+    case MHVariable::eInversion:
+        index = 1;
+        break;
+    case MHVariable::eMHAdaptGauss:
+        index = 2;
+        break;
+    // The following cases are not for data Method
+    case MHVariable::eFixe:
+    case MHVariable::eDoubleExp:
+    case MHVariable::eBoxMuller:
+    //case MHVariable::eMHAdaptGauss:
+    default:
+        index = -1;
+        break;
+    }
+
+    mMethodCombo->setCurrentIndex(index);
 }
 
 void DateDialog::setDate(const QJsonObject& date)
 {
     mNameEdit->setText(date.value(STATE_NAME).toString());
-    mMethodCombo->setCurrentIndex(date.value(STATE_DATE_METHOD).toInt());
+    setDataMethod( (MHVariable::SamplerProposal)date.value(STATE_DATE_SAMPLER).toInt());
 
     Date::DeltaType deltaType = Date::DeltaType (date.value(STATE_DATE_DELTA_TYPE).toInt());
 
+    mDeltaNoneRadio->setChecked(deltaType == Date::eDeltaNone);
     mDeltaFixedRadio->setChecked(deltaType == Date::eDeltaFixed);
     mDeltaRangeRadio->setChecked(deltaType == Date::eDeltaRange);
     mDeltaGaussRadio->setChecked(deltaType == Date::eDeltaGaussian);
@@ -364,13 +417,15 @@ void DateDialog::setDate(const QJsonObject& date)
     mDeltaAverageEdit->setText(QString::number(date.value(STATE_DATE_DELTA_AVERAGE).toDouble()));
     mDeltaErrorEdit->setText(QString::number(date.value(STATE_DATE_DELTA_ERROR).toDouble()));
 
-    if (deltaType == Date::eDeltaNone) {
-        mDeltaFixedRadio->setChecked(deltaType == Date::eDeltaFixed);
-        mDeltaFixedEdit->setText(QString::number(0));
-    }
+//    if (deltaType == Date::eDeltaNone) {
+//        mDeltaFixedRadio->setChecked(deltaType == Date::eDeltaFixed);
+//        mDeltaFixedEdit->setText(QString::number(0));
+//    }
     // if data are in the JSON they must be valid
     mPluginDataAreValid = true;
     mWiggleIsValid = true;
+    mAdvancedCheck->setEnabled(date.value(STATE_DATE_ORIGIN).toInt() != Date::eCombination);
+
     setOkEnabled();
     // open the display panel if there is wiggle parameter
     if ( (mDeltaFixedRadio->isChecked() && mDeltaFixedEdit->text().toDouble() != 0.) ||
@@ -395,14 +450,16 @@ double DateDialog::getDeltaMax() const {return mDeltaMaxEdit->text().toDouble();
 double DateDialog::getDeltaAverage() const {return mDeltaAverageEdit->text().toDouble();}
 double DateDialog::getDeltaError() const {return mDeltaErrorEdit->text().toDouble();}
 
-Date::DataMethod DateDialog::getMethod() const
+MHVariable::SamplerProposal DateDialog::getMethod() const
 {
-    Date::DataMethod method = Date::eMHSymetric;
+    MHVariable::SamplerProposal sampler = MHVariable::eMHPrior;
     if (mMethodCombo->currentIndex() == 1)
-        method = Date::eInversion;
+        sampler = MHVariable::eInversion;
+
     else if (mMethodCombo->currentIndex() == 2)
-        method = Date::eMHSymGaussAdapt;
-    return method;
+        sampler = MHVariable::eMHAdaptGauss;
+
+    return sampler;
 }
 
 Date::DeltaType DateDialog::getDeltaType() const
@@ -413,10 +470,10 @@ Date::DeltaType DateDialog::getDeltaType() const
     else if (mDeltaFixedRadio->isChecked() && mDeltaFixedEdit->text().toDouble() != 0. )
         return Date::eDeltaFixed;
 
-    else if (mDeltaRangeRadio->isChecked())
+    else if (mDeltaRangeRadio->isChecked() && (mDeltaMaxEdit->text().toDouble()-mDeltaMinEdit->text().toDouble()) > 0. )
         return Date::eDeltaRange;
 
-    else if (mDeltaGaussRadio->isChecked())
+    else if (mDeltaGaussRadio->isChecked() && mDeltaErrorEdit->text().toDouble() > 0. )
         return Date::eDeltaGaussian;
 
     else

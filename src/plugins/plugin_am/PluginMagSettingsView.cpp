@@ -1,11 +1,12 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
 	Helori LANOS
  	Philippe DUFRESNE
+    Komlan NOUKPOAPE
 
 This software is a computer program whose purpose is to
 create chronological models of archeological data using Bayesian statistics.
@@ -52,8 +53,8 @@ PluginMagSettingsView::PluginMagSettingsView(PluginMag* plugin, QWidget* parent,
 
     QVBoxLayout* layout = new QVBoxLayout();
     layout->setContentsMargins(0, 0, 0, 0);
-    layout->addWidget(mRefView);
-    setLayout(layout);
+   layout->addWidget(mRefView);
+   setLayout(layout);
 }
 
 PluginMagSettingsView::~PluginMagSettingsView()

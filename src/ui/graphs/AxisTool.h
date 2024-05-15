@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,7 +40,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef AXISTOOL_H
 #define AXISTOOL_H
 
-#include "StdUtilities.h"
 #include "DateUtils.h"
 
 #include <QVector>
@@ -56,11 +55,12 @@ struct Scale
     double mark; // Major interval
     int tip ; // Minor Interval count
 
-    Scale():min(0), max(1000), mark(100), tip(4){}
-    explicit Scale(double n, double x, double m, int t ) : min(n), max(x), mark(m), tip (t) {}
+    Scale():min(0), max(1000), mark(100), tip(4) {}
+    explicit Scale(const double a, const double b, const int nOptimal = 7) : min(a), max(b) {findOptimal(a, b, nOptimal);}
+    explicit Scale(double a, double b, double m, int t = 4 ) : min(a), max(b), mark(m), tip (t) {}
 
-    void findOptimal(const double &a, const double &b, const int &nOptimal);
-
+    void findOptimal(double a, double b, const int nOptimal = 7);
+    void findOptimalMark(const double a, const double b, const int nOptimal = 7);
 };
 
 /**
@@ -74,7 +74,7 @@ public:
     void updateValues(const int &totalPix, const int &minDeltaPix, const qreal &minVal, const qreal &maxVal);
     qreal getXForValue(const qreal &value);
     qreal getYForValue(const qreal &value);
-    QVector<qreal> paint(QPainter &p, const QRectF &r, qreal graduationSize = -1, DateConversion valueFormatFunc = nullptr);
+    QList<qreal> paint(QPainter &p, const QRectF &r, qreal graduationSize = -1, DateConversion valueFormatFunc = nullptr);
 
     double getMajorScale() const {return mMajorScale;}
     int getMinorScaleCount() const {return mMinorScaleCount;} // Tip

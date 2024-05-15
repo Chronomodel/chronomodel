@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QDialog>
 
-class MCMCLoopMain;
+class MCMCLoop;
 class QLabel;
 class QProgressBar;
 class QTextEdit;
@@ -53,7 +53,7 @@ class MCMCProgressDialog: public QDialog
 {
     Q_OBJECT
 public:
-    MCMCProgressDialog(MCMCLoopMain* loop, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Window);
+    MCMCProgressDialog(MCMCLoop* loop, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Window);
     ~MCMCProgressDialog();
 
     int startMCMC();
@@ -69,12 +69,13 @@ public slots:
     void setProgress2(int value);
 
     void setFinishedState();
+    void setMessage(const QString& message);
 
 protected:
     void keyPressEvent(QKeyEvent* e);
 
 public:
-    MCMCLoopMain* mLoop;
+    MCMCLoop* mLoop;
     QLabel* mLabel1;
     QLabel* mLabel2;
     QProgressBar* mProgressBar1;

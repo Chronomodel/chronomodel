@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2022
 
 Authors :
 	Philippe LANOS
@@ -40,39 +40,26 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef GRAPHVIEW_H
 #define GRAPHVIEW_H
 
-#define GRAPH_OPENGL 0
-
 #include "GraphViewAbstract.h"
 #include "GraphCurve.h"
 #include "GraphZone.h"
-#include "Ruler.h"
+#include "AxisTool.h"
 #include "DateUtils.h"
 
-#if GRAPH_OPENGL
-#include <QOpenGLWidget>
-#else
 #include <QWidget>
-#endif
-
 #include <QString>
 #include <QFont>
 #include <QColor>
 #include <QPixmap>
 #include <QFileInfo>
+#include <QPainterPath>
 
-#if GRAPH_OPENGL
-class GraphView: public QOpenGLWidget, public GraphViewAbstract
-#else
-class GraphView: public QWidget, public GraphViewAbstract
-#endif
+
+class GraphView: public GraphViewAbstract
 {
     Q_OBJECT
 public:
-/*    enum Rendering
-    {
-        eSD = 0,
-        eHD = 1
-    };*/
+
     enum AxisMode
     {
         eHidden = 0,
@@ -88,9 +75,11 @@ public:
         eUnderMin = 2,
         eOverMax = 3
     };
+
+
     GraphView(QWidget* parent = nullptr);
     explicit GraphView(const GraphView &graph, QWidget *parent= nullptr);
-    void setParent(QWidget *parent) {this->QWidget::setParent(parent);}
+
     void copyFrom(const GraphView &graph);
     virtual ~GraphView();
 
@@ -99,6 +88,7 @@ public:
     void setBackgroundColor(const QColor &color);
     QColor getBackgroundColor() const;
 
+    void setInfo(const QString& info) {mInfos.clear(); mInfos.append(info);};
     void addInfo(const QString& info);
     QString getInfo(char sep = '|');
     void clearInfos();
@@ -126,8 +116,8 @@ public:
     void setOverArrow(OverflowDataArrowMode mode) { mOverflowArrowMode = mode;}
 
     void autoAdjustYScale(bool active);
-    void adjustYToMaxValue(const qreal& marginProp = 0.);
-    void adjustYToMinMaxValue();
+    inline bool autoAdjustY() {return mAutoAdjustYScale;};
+    void adjustYScale();
 
    // void setRendering(Rendering render);
    // Rendering getRendering();
@@ -139,8 +129,9 @@ public:
 
     // Manage Curves
 
-    void addCurve(const GraphCurve& curve);
-    bool hasCurve() {return ((mCurves.size() != 0) || (mZones.size() != 0)) ;}
+    void add_curve(const GraphCurve& curve);
+    inline bool has_curves() {return ((mCurves.size() != 0) || (mZones.size() != 0)) ;}
+
     void removeCurve(const QString& name);
     void removeAllCurves();
     void reserveCurves(const int size);
@@ -149,10 +140,15 @@ public:
     const QList<GraphCurve>& getCurves() const;
     int numCurves() const;
 
+    inline bool has_points() const {return (refPoints.size() != 0) ;}
+    inline CurveRefPts* get_refPoint(int i) {return &refPoints[i];}
+    void set_points(const std::vector<CurveRefPts> refPts) {refPoints = refPts;};
+    void add_point(const CurveRefPts refPt) {refPoints.push_back(refPt);};
+    inline void insert_points(const std::vector<CurveRefPts> refPts) {refPoints.insert(refPoints.end(), refPts.begin(), refPts.end());};
+    void set_points_visible(const QString &name, const bool visible);
 
-
-    void addZone(const GraphZone& zone);
-    void removeAllZones();
+    void add_zone(const GraphZone& zone);
+    void remove_all_zones();
 
     // Set value formatting functions
     void setFormatFunctX(DateConversion f);
@@ -183,35 +179,39 @@ signals:
 public slots:
     void updateCurvesThickness(int value);
     void zoomX(const type_data min, const type_data max);
-    void exportCurrentDensityCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step =1.) const;
 
+    void exportCurrentDensities(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step = 1.) const;
     void exportCurrentVectorCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, bool writeInRows, int offset = 0) const;
 
-    void changeXScaleDivision (const Scale &sc);
-    void changeXScaleDivision (const double &major, const int & minor);
+    void exportCurrentCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step = 1., QString graph_title = "") const;
+    void exportReferenceCurves(const QString& defaultPath, const QLocale locale = QLocale::English, const QString& csvSep = ",", double step = 1., QString filename = "") const;
+
+    void changeXScaleDivision (const Scale& sc);
+    void changeXScaleDivision (const double& major, const int& minor);
 
 protected:
     void adaptMarginBottom();
 
-    void updateGraphSize(int w, int h);
+    void updateGraphSize(qreal w, qreal h);
+
+    QPainterPath makePath (const QMap<double, double> &map, const bool showBorder) const;
 
     void drawCurves(QPainter& painter);
+    void drawMap(GraphCurve &curve, QPainter& painter);
+    QPainterPath makeSubShape(QMap<double, double> mapInf, QMap<double, double> mapSup) const;
+    void drawShape(GraphCurve &curve, QPainter& painter);
+    void drawDensity(GraphCurve &curve, QPainter& painter);
 
-#if GRAPH_OPENGL
-    virtual void initializeGL();
-    virtual void resizeGL(int w, int h);
-#else
-    void resizeEvent(QResizeEvent* event);
-#endif
+    void resizeEvent(QResizeEvent*);
 
     void paintEvent(QPaintEvent*);
     void repaintGraph(const bool aAlsoPaintBackground);
-    void enterEvent(QEvent* e);
+    void enterEvent(QEnterEvent* e);
     void leaveEvent(QEvent* e);
     void mouseMoveEvent(QMouseEvent* e);
 
 protected:
-    QPixmap	mBufferBack;
+   // QPixmap	mBufferBack;// déforme trop l'image
 
     AxisTool mAxisToolX;
     AxisTool mAxisToolY;
@@ -242,7 +242,7 @@ protected:
 
     QString mNothingMessage;
 
-    QColor	mBackgroundColor;
+    QColor mBackgroundColor;
     int mThickness;
     int mOpacity;
     bool mCanControlOpacity;
@@ -252,6 +252,7 @@ protected:
     qreal  mTipY;
     QString  mTipXLab;
     QString  mTipYLab;
+    QString  mTipComment;
     qreal  mTipWidth;
     qreal  mTipHeight;
     bool  mTipVisible;
@@ -261,6 +262,7 @@ protected:
     QList<GraphCurve> mCurves;
     QList<GraphZone> mZones;
 
+
     QPainter mPrevPainter;
 
     qreal mBottomSpacer;
@@ -268,11 +270,67 @@ protected:
 public:
     QString mLegendX;
     QString mLegendY;
+    std::vector<CurveRefPts> refPoints;
 
 private:
      DateConversion mUnitFunctionX;
      DateConversion mUnitFunctionY;
 
+};
+
+
+
+class GraphTitle: public GraphViewAbstract
+{
+    Q_OBJECT
+protected:
+    qreal mTitleHeight;
+    qreal mSubTitleHeight;
+
+    QStaticText mTitle;
+    QStaticText mCommentTitle;
+    QStaticText mSubTitle;
+    QColor mBackgroundColor;
+    QColor mTitleBarColor;
+
+    bool mAutoAdjustTitleHeight;
+    bool mAutoAdjustSubTitleHeight;
+
+public:
+    GraphTitle(QWidget* parent = nullptr);
+    virtual ~GraphTitle();
+
+    explicit GraphTitle(QString title, QWidget* parent = nullptr);
+    explicit GraphTitle(QString title, QColor titleBarColor, QWidget* parent);
+
+    explicit GraphTitle(QString title, QString subTitle, QWidget* parent = nullptr);
+    explicit GraphTitle(QString title, QString subTitle, QColor backGround, QWidget* parent = nullptr);
+
+    explicit GraphTitle(QString title, QString commentTitle, QString subTitle, QWidget* parent = nullptr);
+
+    void paintEvent(QPaintEvent*);
+    void repaintGraph(const bool aAlsoPaintBackground);
+
+    void setTitle(const QString& title) {mTitle.setText(title);};
+    void setSubTitle(const QString& subTitle) {mSubTitle.setText(subTitle);};
+    void setBackGroundColor(const QColor& color) {mBackgroundColor = color;};
+    void setTitleBarColor(const QColor& color) {mTitleBarColor = color;};
+
+    void setTitleHeight(const qreal h) {mTitleHeight = h;; mAutoAdjustTitleHeight = false;};
+    qreal titleHeight() {return mTitleHeight;};
+
+    void setSubTitleHeight(const qreal h) {mSubTitleHeight = h; mAutoAdjustSubTitleHeight = false;};
+    qreal subTitleHeight() {return mSubTitleHeight;};
+
+    void setAutoAdjustTitleHeight(bool adjust) {mAutoAdjustTitleHeight = adjust;};
+    void setAutoAdjustSubTitleHeight(bool adjust) {mAutoAdjustSubTitleHeight = adjust;};
+    bool autoAdjustTitleHeight() {return mAutoAdjustTitleHeight;};
+    bool autoAdjustSubTitleHeight() {return mAutoAdjustSubTitleHeight;};
+
+    qreal height();
+
+    bool isTitle() const {return !mTitle.text().isEmpty();};
+    bool withTitle() const {return !mSubTitle.text().isEmpty();};
 };
 
 #endif

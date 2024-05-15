@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -41,22 +41,21 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AbstractItem.h"
 #include "ArrowItem.h"
 #include "ArrowTmpItem.h"
-#include "AppSettings.h"
 #include "StateKeys.h"
 
 #include <QtWidgets>
 
 AbstractScene::AbstractScene(QGraphicsView* view, QObject* parent):QGraphicsScene(parent),
-mDrawingArrow(false),
-mSelectKeyIsDown(false),
-mShowGrid(false),
-mProject(nullptr),
-mView(view),
-mUpdatingItems(false),
-mAltIsDown(false),
-mShowAllThumbs(true),
-mZoom(1.),
-mDeltaGrid ( AbstractItem::mItemWidth /4.) // 150 is the width of the Event and phase Item
+    mProject(nullptr),
+    mView(view),
+    mUpdatingItems(false),
+    mAltIsDown(false),
+    mShowAllThumbs(true),
+    mZoom(1.),
+    mDeltaGrid ( AbstractItem::mItemWidth /4.),
+    mDrawingArrow(false),
+    mSelectKeyIsDown(false),
+    mShowGrid(false) // 150 is the width of the Event and phase Item
 {
     mTempArrow = new ArrowTmpItem();
     addItem(mTempArrow);
@@ -64,12 +63,12 @@ mDeltaGrid ( AbstractItem::mItemWidth /4.) // 150 is the width of the Event and 
 }
 
 // Setter & Getter
-void AbstractScene::setProject(Project* project)
+void AbstractScene::setProject(std::shared_ptr<Project> project)
 {
     mProject = project;
 }
 
-Project* AbstractScene::getProject() const
+std::shared_ptr<Project> AbstractScene::getProject() const
 {
    return  mProject;
 }
@@ -94,28 +93,28 @@ void AbstractScene::updateConstraintsPos(AbstractItem* movedItem, const QPointF&
         mTempArrow->setFrom(curItem->pos().x(), curItem->pos().y());
 
     if (movedItem) {
-        int itemId = movedItem->mData[STATE_ID].toInt();
-        double itemX = movedItem->mData[STATE_ITEM_X].toDouble();
-        double itemY = movedItem->mData[STATE_ITEM_Y].toDouble();
+        const int itemId = movedItem->mData[STATE_ID].toInt();
+        //const double itemX = movedItem->mData[STATE_ITEM_X].toDouble();
+        //const double itemY = movedItem->mData[STATE_ITEM_Y].toDouble();
 
         //qDebug() << "---------";
         //qDebug() << "Moving event id : " << itemId;
 
-        for (int i(0); i<mConstraintItems.size(); ++i) {
-            QJsonObject cData = mConstraintItems[i]->data();
+        for (auto & ci : mConstraintItems) {
+            const QJsonObject &cData = ci->data();
 
-            //int cId = cData[STATE_ID].toInt();
             int bwdId = cData[STATE_CONSTRAINT_BWD_ID].toInt();
             int fwdId = cData[STATE_CONSTRAINT_FWD_ID].toInt();
 
-            if (bwdId == itemId) {
+            if (bwdId == itemId || fwdId == itemId) {
                 //qDebug() << "Backward const. id : " << cId << " (link: "<<bwdId<<" -> "<< fwdId <<", setFrom: " << itemX << ", " << itemY << ")";
-                mConstraintItems[i]->setFrom(itemX, itemY);
+                //ci->setFrom(itemX, itemY);
+                ci->updatePosition();
             }
-            else if (fwdId == itemId) {
+            /*else if (fwdId == itemId) {
                 //qDebug() << "Forward const. id : " << cId << " (link: "<<bwdId<<" -> "<< fwdId <<", setTo: " << itemX << ", " << itemY << ")";
-                mConstraintItems[i]->setTo(itemX, itemY);
-            }
+                ci->setTo(itemX, itemY);
+            }*/
 
         }
     }
@@ -172,7 +171,7 @@ void AbstractScene::itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEve
 void AbstractScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 {
     Q_UNUSED(e);
-    qDebug() << "AbstractScene::itemEntered";
+    qDebug() << "[AbstractScene::itemEntered]";
     AbstractItem* current = currentItem();
 
     if (mDrawingArrow && current && item && (item != current)) {
@@ -182,11 +181,11 @@ void AbstractScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
         if (constraintAllowed(current, item)) {
             mTempArrow->setState(ArrowTmpItem::eAllowed);
             mTempArrow->setLocked(true);
-            qDebug() << "AbstractScene::itemEntered constraintAllowed==true";
+            qDebug() << "[AbstractScene::itemEntered] constraintAllowed == true";
         } else {
             mTempArrow->setState(ArrowTmpItem::eForbidden);
             mTempArrow->setLocked(true);
-            qDebug() << "AbstractScene::itemEntered constraintAllowed==false";
+            qDebug() << "[AbstractScene::itemEntered] constraintAllowed == false";
         }
     }
 
@@ -244,7 +243,7 @@ void AbstractScene::itemMoved(AbstractItem* item, QPointF newPos, bool merging)
 void AbstractScene::adjustSceneRect()
 {
     // Ajust Scene rect to minimal
-    setSceneRect(specialItemsBoundingRect().adjusted(-30, -30, 30, 30));
+    setSceneRect(itemsBoundingRect().adjusted(-30, -30, 30, 30));
     update(sceneRect());
 }
 
@@ -259,35 +258,14 @@ void AbstractScene::itemReleased(AbstractItem* item, QGraphicsSceneMouseEvent* e
             AbstractItem* colliding = collidingItem(item);
             if (colliding)
                 mergeItems(item, colliding);
-        } else
+        } else {
+            qDebug()<<"[AbstractScene::itemReleased] sendUpdateProject(Item moved)";
             sendUpdateProject(tr("Item moved"), true, true);//  bool notify = true, bool storeUndoCommand = true
+        }
 
-        // Ajust Scene rect to minimal (and also fix the scene rect)
-        // After doing this, the scene no longer stetches when moving items!
-        // It is possible to reset it by calling setSceneRect(QRectF()),
-        // but the scene rect is reverted to the largest size it has had!
-
-        //setSceneRect(specialItemsBoundingRect().adjusted(-30, -30, 30, 30));
-
-        adjustSceneRect();
-
-        update();
     }
 }
 
-QRectF AbstractScene::specialItemsBoundingRect(QRectF r) const
-{
-    QRectF rect = r;
-    //for (int i(0); i<mItems.size(); ++i) {
-    for (auto item : mItems) {
-        const QRectF bRect = item->boundingRect();
-        QRectF r(item->scenePos().x() - bRect.width()/2,
-                 item->scenePos().y() - bRect.height()/2,
-                 bRect.size().width(), bRect.size().height());
-        rect = rect.united(r);
-    }
-    return rect;
-}
 
 // Mouse events
 void AbstractScene::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
@@ -333,7 +311,7 @@ void AbstractScene::keyPressEvent(QKeyEvent* keyEvent)
     else if (keyEvent->key() == Qt::Key_Shift)
         mSelectKeyIsDown = true;
   /*  else if (keyEvent->modifiers() == Qt::ControlModifier) {
-        qDebug() << "AbstractScene::keyPressEvent You Press: "<< "Qt::ControlModifier";
+        qDebug() << "[AbstractScene::keyPressEvent] You Press: "<< "Qt::ControlModifier";
     }*/
     else
         keyEvent->ignore();
@@ -346,9 +324,8 @@ void AbstractScene::keyReleaseEvent(QKeyEvent* keyEvent)
     if (keyEvent->isAutoRepeat() )
         keyEvent->ignore();
 
-
     if (keyEvent->key() == Qt::Key_Alt) {
-             qDebug() << "AbstractScene::keyReleaseEvent You Released: "<<"Qt::Key_Alt";
+            // qDebug() << "[AbstractScene::keyReleaseEvent] You Released: "<<"Qt::Key_Alt";
              mDrawingArrow = false;
              mAltIsDown = false;
              mSelectKeyIsDown = false;
@@ -358,10 +335,9 @@ void AbstractScene::keyReleaseEvent(QKeyEvent* keyEvent)
 
 }
 
-
 void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
 {
-    painter->fillRect(rect, QColor(230, 230, 230));
+    painter->fillRect(rect, Qt::white);
 
     painter->setBrush(Qt::white);
     painter->setPen(Qt::NoPen);
@@ -369,7 +345,7 @@ void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
 
     if (mShowGrid) {
         painter->setPen(QColor(220, 220, 220));
-        const  qreal x (sceneRect().x());
+        const qreal x (sceneRect().x());
         const qreal y (sceneRect().y());
         const qreal w (sceneRect().width());
         const qreal h (sceneRect().height());
@@ -381,7 +357,7 @@ void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
             xi += delta;
         }
 
-        qreal yi (floor(y/delta) * delta);
+        qreal yi (ceil(y/delta) * delta);
         while (yi< y + h) {
             painter->drawLine(QLineF(x , yi, x + w, yi));
             yi += delta;
@@ -389,9 +365,4 @@ void AbstractScene::drawBackground(QPainter* painter, const QRectF& rect)
 
     }
 
-    // Cross for origin :
-   /* painter->setPen(QColor(100, 100, 100));
-    painter->drawLine(-10, 0, 10, 0);
-    painter->drawLine(0, -10, 0, 10);
-    */
 }

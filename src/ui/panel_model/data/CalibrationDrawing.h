@@ -66,7 +66,7 @@ public:
     void setCalibComment(const QString& comment) { mCalibComment->setText(comment);}
     void setCalibGraph(GraphView *calibGraph);
 
-    void setFont(const QFont& font) { mFont = font; update();}
+    void setFont(const QFont& font) { mFont = font; }//update();}
     void hideMarker();
     void showMarker();
 

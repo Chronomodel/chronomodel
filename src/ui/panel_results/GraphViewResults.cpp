@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -38,11 +38,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "GraphViewResults.h"
-#include "Button.h"
 #include "Painting.h"
-#include "QtUtilities.h"
 #include "MainWindow.h"
 #include "MHVariable.h"
+#include "AppSettings.h"
+
 #include <QtWidgets>
 #include <QtSvg>
 #include <QMessageBox>
@@ -54,20 +54,18 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 int GraphViewResults::mHeightForVisibleAxis = int (4 * AppSettings::heigthUnit()); //look ResultsView::applyAppSettings()
 
 GraphViewResults::GraphViewResults(QWidget *parent):QWidget(parent),
-mCurrentTypeGraph(ePostDistrib),
-mCurrentVariable(eTheta),
-mShowAllChains(true),
-mShowCredibility(false),
-mShowCalib(false),
-mShowWiggle(false),
-mShowNumResults(false),
-mIsSelected(false),
-mShowSelectedRect(true),
-mMainColor(Painting::borderDark),
-mMargin(5),
-mLineH(20),
-mTopShift(0),
-mGraphFont(font())
+    mCurrentTypeGraph(ePostDistrib),
+    mCurrentVariableList(QList<variable_t>(eThetaEvent)),
+    mShowAllChains(true),
+    mShowVariableList(eThetaEvent),
+    mShowNumResults(false),
+    mIsSelected(false),
+    mShowSelectedRect(true),
+    mMainColor(Painting::borderDark),
+    mMargin(5),
+    mLineH(20),
+    mTopShift(0),
+    mGraphFont(font())
 {
     setGeometry(QRect(0, 0, parentWidget()->width(), 20 * AppSettings::heigthUnit()));
     setMouseTracking(true);
@@ -90,24 +88,24 @@ mGraphFont(font())
     mGraph->showYAxisSubTicks(true);
     mGraph->showYAxisValues(true);
 
-    mGraph->setXAxisMode(GraphView::eAllTicks);
+    //mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eMinMax);
 
     mGraph->setMargins(50, 10, 5, mGraphFont.pointSize() * 2.2); // make setMarginRight seMarginLeft ...
     mGraph->setRangeY(0, 1);
 
-    mTextArea = new QTextEdit(this);
-    mTextArea->setFrameStyle(QFrame::HLine);
-    QPalette palette = mTextArea->palette();
+    mStatArea = new QTextEdit(this);
+    mStatArea->setFrameStyle(QFrame::HLine);
+    QPalette palette = mStatArea->palette();
     palette.setColor(QPalette::Base, Qt::white);
     palette.setColor(QPalette::Text, Qt::black);
-    mTextArea->setPalette(palette);
+    mStatArea->setPalette(palette);
 
-    mTextArea->setFontFamily(mGraphFont.family());
-    mTextArea->setFontPointSize(mGraphFont.pointSizeF());
-    mTextArea->setText(tr("Nothing to display"));
-    mTextArea->setVisible(false);
-    mTextArea->setReadOnly(true);
+    mStatArea->setFontFamily(mGraphFont.family());
+    mStatArea->setFontPointSize(mGraphFont.pointSizeF());
+    mStatArea->setText(tr("Nothing to display"));
+    mStatArea->setVisible(false);
+    mStatArea->setReadOnly(true);
 
      /* OverLaySelect must be created after mGraph, because it must be refresh after/over the graph
       */
@@ -121,24 +119,22 @@ GraphViewResults::~GraphViewResults()
 
 }
 
-void GraphViewResults::generateCurves(TypeGraph typeGraph, Variable variable)
+void GraphViewResults::generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList)
 {
     mCurrentTypeGraph = typeGraph;
-    mCurrentVariable = variable;
+    mCurrentVariableList = variableList;
 }
 
-void GraphViewResults::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle)
+void GraphViewResults::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showVariableList)
 {
     mShowAllChains = showAllChains;
     mShowChainList = showChainList;
-    mShowCredibility = showCredibility;
-    mShowCalib = showCalib;
-    mShowWiggle = showWiggle;
-   // update();
+    mShowVariableList = showVariableList;
+
 }
 
 
-void GraphViewResults::setSettings(const ProjectSettings& settings)
+void GraphViewResults::setSettings(const StudyPeriodSettings& settings)
 {
     mSettings = settings;
 }
@@ -166,15 +162,25 @@ void GraphViewResults::setCurrentX(type_data min, type_data max)
 void GraphViewResults::zoom(type_data min, type_data max)
 {
     mGraph->zoomX(min, max);
+  //  const auto graphInfo = mGraph->getInfo();
+    // Force le rafraichissement de l'indication Min = ... / Max = ...
+  //  if (!graphInfo.isEmpty())
+   //     qApp->processEvents();
+
+    updateLayout();
+
 }
 
 void GraphViewResults::setMainColor(const QColor& color)
 {
     mMainColor = color;
-    update();
 }
 //Export Image & Data
 
+void GraphViewResults::setTitle(const QString& title)
+{
+    mTitle = title;
+}
 
 void GraphViewResults::saveAsImage()
 {
@@ -192,7 +198,7 @@ void GraphViewResults::saveAsImage()
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
  */
    // mGraph->setRendering(memoRendering);
-    QString filter = QObject::tr("Image (*.png);;Photo (*.jpg);;Scalable Vector Graphics (*.svg)");
+    QString filter = QObject::tr("Image (*.png);;Photo (*.jpg);; Windows Bitmap (*.bmp);;Scalable Vector Graphics (*.svg)");
     QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                     tr("Save graph image as..."),
                                                     MainWindow::getInstance()->getCurrentPath(),
@@ -207,8 +213,7 @@ void GraphViewResults::saveAsImage()
             if (mGraph)
                 mGraph->saveAsSVG(fileName, mTitle, "GraphViewResults",true);
 
-        }
-        else {
+        } else {
 
             //---
             //GraphView::Rendering memoRendering= mGraph->getRendering();
@@ -264,10 +269,11 @@ void GraphViewResults::imageToClipboard()
 void GraphViewResults::resultsToClipboard()
 {
     QClipboard* clipboard = QApplication::clipboard();
-    clipboard->setText(mResultsText);
+    clipboard->setText( mStatArea->toPlainText());
 }
+
 /**
- * @brief Export data from the visible curves, there is two kinds of data in a graphView: mData, QMap type and mDataVector, QVector type
+ * @brief Export data from the visible curves, there is two kinds of data in a graphView: mData, QMap type and mDataVector, QList type
  * @brief So there is two export functon exportCurrentVectorCurves and exportCurrentDensityCurves.
  * @brief In the Posterior Density tab, the Credibility bar is not save
  */
@@ -297,7 +303,7 @@ void GraphViewResults::saveGraphData() const
                     if (mShowChainList.at(i)) chainIdx = i;
 
                 if (chainIdx != -1) // We add 1 for the init
-                    offset = 1 + mChains.at(chainIdx).mNumBurnIter + mChains.at(chainIdx).mBatchIndex * mChains.at(chainIdx).mNumBatchIter;
+                    offset = 1 + mChains.at(chainIdx).mIterPerBurn + mChains.at(chainIdx).mBatchIndex * mChains.at(chainIdx).mIterPerBatch;
 
                 mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, offset);
         }
@@ -307,29 +313,53 @@ void GraphViewResults::saveGraphData() const
     else if (mCurrentTypeGraph == eCorrel)
         mGraph->exportCurrentVectorCurves (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, 0);
 
-    // All visible curves are saved in the same file, the credibility bar is not save
-    else if (mCurrentTypeGraph == ePostDistrib)
-        mGraph->exportCurrentDensityCurves (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
+    else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eTempo))
+        mGraph->exportCurrentCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep, mTitle);
+
+    else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eActivity))
+        mGraph->exportCurrentCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep, mTitle);
+
+    else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eG)) {
+        QMessageBox messageBox;
+        messageBox.setWindowTitle(tr("Save curve"));
+        messageBox.setText(tr("Do you want a reference curve to reused with ChronoModel or data of the graphic"));
+        QAbstractButton *referenceButton = messageBox.addButton(tr("Reference Curve"), QMessageBox::YesRole);
+        QAbstractButton *dataButton = messageBox.addButton(tr("Graphics data"), QMessageBox::NoRole);
+
+        messageBox.exec();
+        if (messageBox.clickedButton() == referenceButton)
+            mGraph->exportReferenceCurves (MainWindow::getInstance()->getCurrentPath(), QLocale::English, ",",  mSettings.mStep);
+
+        else if (messageBox.clickedButton() == dataButton) { // Export raw Data, the step is not 1 is map.column()
+            mGraph->exportCurrentCurves (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, 0, mTitle);
+        }
+        else return;
+
+    } else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eGP)) {
+        mGraph->exportCurrentCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep, mTitle);
+
+    }    // All visible curves are saved in the same file, the credibility bar is not save
+    else if (mCurrentTypeGraph == ePostDistrib && !mShowVariableList.contains(eG))
+        mGraph->exportCurrentDensities (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
 
 }
 
-void GraphViewResults::setNumericalResults (const QString& resultsHTML, const QString& resultsText)
+void GraphViewResults::setNumericalResults (const QString &resultsHTML)
 {
-    mResultsText = resultsText;
-    mTextArea->setHtml(resultsHTML);
+    mStatArea->setHtml(resultsHTML);
 }
 
 void GraphViewResults::showNumericalResults(const bool show)
 {
     mShowNumResults = show;
-    mTextArea->setVisible(show);
+    mStatArea->setVisible(show);
     updateLayout();
 }
 
 void GraphViewResults::setShowNumericalResults(const bool show)
 {
     mShowNumResults = show;
-    mTextArea->setVisible(show);
+    mStatArea->setVisible(show);
 }
 
 void GraphViewResults::setMarginLeft (qreal &m)
@@ -341,12 +371,12 @@ void GraphViewResults::setMarginRight(qreal &m)
     mGraph->setMarginRight(m);
 }
 
-void GraphViewResults::setGraphFont(const QFont& font)
+void GraphViewResults::setGraphsFont(const QFont& font)
 {
      // Recalcule mTopShift based on the new font, and position the graph according :
     mGraphFont = font;
-    mTextArea->setFontFamily(font.family());
-    mTextArea->setFontPointSize(font.pointSizeF());
+    mStatArea->setFontFamily(font.family());
+    mStatArea->setFontPointSize(font.pointSizeF());
     mGraph->setFont(font);
     updateLayout();
 }
@@ -371,6 +401,7 @@ void GraphViewResults::updateLayout()
 {
      // Define the rigth margin, according to the max on the scale
     QFont fontTitle (mGraphFont);
+    fontTitle.setBold(true);
     fontTitle.setPointSizeF(mGraphFont.pointSizeF() * 1.1);
     QFontMetricsF fmTitle (fontTitle);
     mTopShift = int (2 * fmTitle.height()) ;
@@ -380,19 +411,21 @@ void GraphViewResults::updateLayout()
 
     if (mShowNumResults) {
         mGraph->setGeometry(graphRect.adjusted(0, 0, int (-width()/3. -1), 0 ));
-        mTextArea->setGeometry(graphRect.adjusted(int (width()*2./3. + 2.), int (-mTopShift + 2 ), -2, -2));
+        mStatArea->setGeometry(graphRect.adjusted(int (width()*2./3. + 2.), int (-mTopShift + 2 ), -4, -2));
 
-    } else
+    } else {
         mGraph->setGeometry(graphRect);
+    }
 
     const bool axisVisible = (height() >= mHeightForVisibleAxis);
 
-    if ((mGraph->hasCurve())) {
+    if (mGraph->has_curves()) {
         mGraph->showXAxisValues(axisVisible);
         mGraph->setMarginBottom(axisVisible ? fm.ascent()* 2.0 : fm.ascent());
     }
 
     update();
+
 }
 
 void GraphViewResults::mousePressEvent(QMouseEvent *event)
@@ -408,16 +441,17 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     // write mTitle above the graph
     QFont fontTitle(mGraphFont);
     fontTitle.setPointSizeF(mGraphFont.pointSizeF()*1.1);
+    fontTitle.setBold(true);
     QFontMetrics fmTitle(fontTitle);
 
-    QPainter p;
-    p.begin(this);
+    QPainter p(this);
+
     p.fillRect(rect(), mGraph->getBackgroundColor());
     p.setFont(fontTitle);
 
     p.setPen(Qt::black);
 
-    p.drawText(QRectF( 2 * AppSettings::widthUnit(), 0, fmTitle.boundingRect(mTitle).width(), mTopShift), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
+    p.drawText(QRectF( 2 * AppSettings::widthUnit(), 0, fmTitle.horizontalAdvance(mTitle), mTopShift), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
 
     p.setFont(QFont(mGraphFont.family(), mGraphFont.pointSize(), -1 , true));
 
@@ -425,13 +459,13 @@ void GraphViewResults::paintEvent(QPaintEvent* )
      *  Write info at the right of the title line
      */
 
-   QString graphInfo = mGraph->getInfo();
+    QString graphInfo = mGraph->getInfo();
    if (!graphInfo.isEmpty()) {
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 8, 0))
         if (mShowNumResults)
-             p.drawText(QRectF(width()*2/3. - fmTitle.boundingRect(graphInfo).width() - 3 * AppSettings::widthUnit(),  mTopShift - fmTitle.capHeight()-fmTitle.descent(), fmTitle.boundingRect(graphInfo).width(), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
+             p.drawText(QRectF(width()*2/3. - fmTitle.horizontalAdvance(graphInfo) - 3 * AppSettings::widthUnit(),  mTopShift - fmTitle.capHeight()-fmTitle.descent(), fmTitle.horizontalAdvance(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
          else
-            p.drawText(QRectF(width() - fmTitle.boundingRect(graphInfo).width() - 3 * AppSettings::widthUnit(), mTopShift - fmTitle.capHeight()-fmTitle.descent() , fmTitle.boundingRect(graphInfo).width(), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
+            p.drawText(QRectF(width() - fmTitle.horizontalAdvance(graphInfo) - 3 * AppSettings::widthUnit(), mTopShift - fmTitle.capHeight()-fmTitle.descent() , fmTitle.horizontalAdvance(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
 #else
        if (mShowNumResults)
             p.drawText(QRectF(width()*2/3. - fmTitle.width(graphInfo) - 3 * AppSettings::widthUnit(),  mTopShift - fmTitle.ascent()-fmTitle.descent(), fmTitle.width(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
@@ -439,10 +473,13 @@ void GraphViewResults::paintEvent(QPaintEvent* )
            p.drawText(QRectF(width() - fmTitle.width(graphInfo)  - 3 * AppSettings::widthUnit(), mTopShift - fmTitle.ascent()-fmTitle.descent() , fmTitle.width(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
 #endif
    }
+   // force le rafraichissement
+  // if (!graphInfo.isEmpty())
+   //    qApp->processEvents();
 
     p.setPen(QColor(105, 105, 105));
     if (mShowNumResults)
-        p.drawRect(mTextArea->geometry().adjusted(-1, -1, 1, 1));
+        p.drawRect(mStatArea->geometry().adjusted(-1, -1, 1, 1));
 
     p.end();
 
@@ -460,71 +497,6 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     mItemColor = itemColor;
 }
 
-void GraphViewResults::setItemTitle(const QString& itemTitle)
-{
-    mItemTitle = itemTitle;
-}
-
-/** Generate Typical curves for Chronomodel
- * */
-GraphCurve GraphViewResults::generateDensityCurve(const QMap<double, double>& data,
-                                                  const QString& name,
-                                                  const QColor& lineColor,
-                                                  const Qt::PenStyle penStyle,
-                                                  const QBrush& brush) const{
-    GraphCurve curve;
-    curve.mName = name;
-    if (!data.isEmpty()) {
-        curve.mData = data;
-        curve.mPen = QPen(lineColor, 1, penStyle);
-        curve.mBrush = brush;
-        curve.mIsHisto = false;
-        curve.mIsRectFromZero = true; // for Unif-typo. calibs., invisible for others!
-   }
-     return curve;
-}
-
-GraphCurve GraphViewResults::generateHPDCurve(QMap<double, double> &data,
-                                              const QString& name,
-                                              const QColor& color) const{
-    GraphCurve curve;
-    curve.mName = name;
-    curve.mData = data;
-    curve.mPen = color;
-    curve.mBrush = QBrush(color);
-    curve.mIsHisto = false;
-    curve.mIsRectFromZero = true;
-
-    return curve;
-}
-
-GraphCurve GraphViewResults::generateSectionCurve(const QPair<double, double> &section,
-                                                      const QString& name,
-                                                      const QColor& color) const{
-    GraphCurve curve;
-    curve.mName = name;
-    curve.mSections.append(section);
-    curve.mPen.setColor(color);
-    curve.mPen.setWidth(3);
-    curve.mPen.setStyle(Qt::SolidLine);
-    curve.mIsTopLineSections = true;
-
-    return curve;
-}
-
-GraphCurve GraphViewResults::generateHorizontalLine(const double yValue,
-                                                    const QString& name,
-                                                    const QColor& color,
-                                                    const Qt::PenStyle penStyle) const
-{
-    GraphCurve curve;
-    curve.mName = name;
-    curve.mIsHorizontalLine = true;
-    curve.mHorizontalValue = yValue;
-    curve.mPen.setStyle(penStyle);
-    curve.mPen.setColor(color);
-    return curve;
-}
 
 void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
                                            MetropolisVariable* variable,
@@ -532,76 +504,76 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
 {
     QString prefix = name.isEmpty() ? name : name + " ";
 
-    for (int i=0; i<chains.size(); ++i) {
-
+    for (int i = 0; i < chains.size(); ++i) {
         GraphCurve curve;
-        curve.mUseVectorData = true;
+
+        curve.mType = GraphCurve::eQVectorData;
         curve.mName = prefix + "Trace " + QString::number(i);
         curve.mDataVector = variable->fullTraceForChain(chains, i);
         curve.mPen.setColor(Painting::chainColors.at(i));
-        curve.mIsHisto = false;
-        mGraph->addCurve(curve);
+        mGraph->add_curve(curve);
 
-        const double min ( vector_min_value(curve.mDataVector) );
-        const double max ( vector_max_value(curve.mDataVector) );
-        mGraph->setRangeY(floor(min), ceil(max));
+        const Quartiles &quartiles = variable->mChainsResults.at(i).traceAnalysis.quartiles;
 
-        const Quartiles& quartiles = variable->mChainsResults.at(i).quartiles;
+        QColor colBorder = QColor(Qt::darkBlue).darker(100);
+        colBorder.setAlpha(100);
+        QColor colMediane = QColor(Qt::darkBlue).darker(120);
+        colMediane.setAlpha(100);
 
-        GraphCurve curveQ1 = generateHorizontalLine(quartiles.Q1, prefix + "Q1 " + QString::number(i), Qt::green);
-        mGraph->addCurve(curveQ1);
+        const GraphCurve &curveQ3 = horizontalLine(quartiles.Q3, prefix + "Q3 " + QString::number(i), colBorder);
+        mGraph->add_curve(curveQ3);
 
-        GraphCurve curveQ2 = generateHorizontalLine(quartiles.Q2, prefix + "Q2 " + QString::number(i), Qt::red);
-        mGraph->addCurve(curveQ2);
+        const GraphCurve &curveQ2 = horizontalLine(quartiles.Q2, prefix + "Q2 " + QString::number(i), colMediane);
+        mGraph->add_curve(curveQ2);
 
-        GraphCurve curveQ3 = generateHorizontalLine(quartiles.Q3, prefix + "Q3 " + QString::number(i), Qt::green);
-        mGraph->addCurve(curveQ3);
+        const GraphCurve &curveQ1 = horizontalLine(quartiles.Q1, prefix + "Q1 " + QString::number(i), colBorder);
+        mGraph->add_curve(curveQ1);
     }
 }
 
 
 void GraphViewResults::generateAcceptCurves(const QList<ChainSpecs> &chains,
-                                            MHVariable* variable){
-    for (int i=0; i<chains.size(); ++i) {
+                                            MHVariable* variable)
+{
+    for (int i = 0; i < chains.size(); ++i) {
         GraphCurve curve;
         curve.mName = "Accept " + QString::number(i);
+        curve.mType = GraphCurve::eQVectorData;
         curve.mDataVector = variable->acceptationForChain(chains, i);
         curve.mPen.setColor(Painting::chainColors.at(i));
-        curve.mUseVectorData = true;
-        curve.mIsHisto = false;
-        mGraph->addCurve(curve);
+        mGraph->add_curve(curve);
     }
+    mGraph->add_curve(horizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine));
 }
 
 void GraphViewResults::generateCorrelCurves(const QList<ChainSpecs> &chains,
                                             MHVariable* variable){
-    for (int i=0; i<chains.size(); ++i) {
+    for (int i = 0; i < chains.size(); ++i) {
         GraphCurve curve;
         curve.mName = "Correl " + QString::number(i);
+        curve.mType = GraphCurve::eQVectorData;
         curve.mDataVector = variable->correlationForChain(i);
         // if there is no data, no curve to add.
         // It can append if there is not enought iteration, for example since a test
         if (curve.mDataVector.isEmpty())
             continue;
 
-        curve.mUseVectorData = true;
         curve.mPen.setColor(Painting::chainColors.at(i));
-        curve.mIsHisto = false;
-        mGraph->addCurve(curve);
+        mGraph->add_curve(curve);
 
         //to do, we only need the totalIter number?
         const double n = variable->runRawTraceForChain(mChains, i).size();
         const double limit = 1.96 / sqrt(n);
 
-        GraphCurve curveLimitLower = generateHorizontalLine(-limit,
-                                                            "Correl Limit Lower " + QString::number(i),
+        const GraphCurve &curveLimitLower = horizontalLine(-limit, "Correl Limit Lower " + QString::number(i),
                                                             Qt::red,
                                                             Qt::DotLine);
-        GraphCurve curveLimitUpper = generateHorizontalLine(limit,
-                                                            "Correl Limit Upper " + QString::number(i),
+
+        const GraphCurve &curveLimitUpper = horizontalLine(limit, "Correl Limit Upper " + QString::number(i),
                                                             Qt::red,
                                                             Qt::DotLine);
-        mGraph->addCurve(curveLimitLower);
-        mGraph->addCurve(curveLimitUpper);
+        mGraph->add_curve(curveLimitLower);
+        mGraph->add_curve(curveLimitUpper);
     }
 }
+
