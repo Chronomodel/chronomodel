@@ -1,0 +1,14 @@
+CeCILL-V2.1 Free Software License Agreement
+
+ Copyright (c) 2024 CNRS
+
+ This License Agreement is based on the CeCILL-V2.1 license, which is a copyleft
+ license similar to the GNU General Public License (GPL).
+
+ See the official CeCILL-V2.1 license for more information:
+ https://cecill.info/licences/Licence_CeCILL_V2.1-en.html
+ 
+This software use C subroutine library from the FFTW project
+ http://www.fftw.org/
+ distributed under the terms of the GNU General Public License
+ https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
