@@ -1,11 +1,12 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
 	Helori LANOS
  	Philippe DUFRESNE
+    Komlan NOUKPOAPE
 
 This software is a computer program whose purpose is to
 create chronological models of archeological data using Bayesian statistics.
@@ -47,76 +48,157 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("AM Measurements"), parent, flags)
 {
+    mIncRadio = new QRadioButton(tr("Inclination (I)"));
+    mDecRadio = new QRadioButton(tr("Declination (D)"));
+    mFieldRadio = new QRadioButton(tr("Field (F)"));
+    mIDRadio = new QRadioButton(tr("Directional (I, D)"));
+    mIFRadio = new QRadioButton(tr("Vector (I, F)"));
+    mIDFRadio = new QRadioButton(tr("Vector (I, D, F)"));
 
-    mIncRadio = new QRadioButton(tr("Inclination"));
-    mDecRadio = new QRadioButton(tr("Declination"));
-    mIntensityRadio = new QRadioButton(tr("Intensity"));
-
-    connect(mIncRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this,  &PluginMagForm:: updateOptions);
+    connect(mIncRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: updateOptions);
     connect(mDecRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: updateOptions);
-    connect(mIntensityRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: updateOptions);
+    connect(mFieldRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: updateOptions);
+    connect(mIDRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: updateOptions);
+    connect(mIFRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: updateOptions);
+    connect(mIDFRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: updateOptions);
+
+    connect(mIncRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: allIsValid);
+    connect(mDecRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: allIsValid);
+    connect(mFieldRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: allIsValid);
+    connect(mIDRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: allIsValid);
+    connect(mIFRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: allIsValid);
+    connect(mIDFRadio, static_cast<void (QRadioButton::*)(bool)> (&QRadioButton::clicked), this, &PluginMagForm:: allIsValid);
 
     mIncLab = new QLabel(tr("Inclination"), this);
     mDecLab = new QLabel(tr("Declination"), this);
-    mDecIncLab = new QLabel(tr("Inclination"), this);
-    mIntensityLab = new QLabel(tr("Intensity"), this);
     mAlpha95Lab = new QLabel(tr("Alpha 95"), this);
-    mRefLab = new QLabel(tr("Reference"), this);
+    mFieldLab =  new QLabel(tr("Field"), this);
+    mFieldErrorLab=  new QLabel(tr("Error F"), this);
+
+    mMCMCIterationLab = new QLabel(tr("Integration Step"), this);
+
+    //------------------------------------------------------------------------------------//
+
+    QDoubleValidator* validator_90to90 = new QDoubleValidator (-90., 90., 3);
+    validator_90to90->setLocale(QLocale());
+
+    QDoubleValidator* validator90to270 = new QDoubleValidator (-90., 270., 3);
+    validator90to270->setLocale(QLocale());
+
+    QDoubleValidator* validatorRplus = new QDoubleValidator (this);
+    validatorRplus->setBottom(0.0001);
+    validatorRplus->setLocale(QLocale());
+
+    QIntValidator* validatorZplus = new QIntValidator(this);
+    validatorZplus->setLocale(QLocale());
+    validatorZplus->setBottom(1);
 
     mIncEdit = new QLineEdit(this);
     mIncEdit->setAlignment(Qt::AlignHCenter);
+    mIncEdit->setToolTip(tr("Inclination is >=-90 and <=90"));
+    mIncEdit->setValidator(validator_90to90);
+    connect(mIncEdit, &QLineEdit::textChanged, this, &PluginMagForm::allIsValid);
+
     mDecEdit = new QLineEdit(this);
     mDecEdit->setAlignment(Qt::AlignHCenter);
-    mDecIncEdit = new QLineEdit(this);
-    mDecIncEdit->setAlignment(Qt::AlignHCenter);
-    mIntensityEdit = new QLineEdit(this);
-    mIntensityEdit->setAlignment(Qt::AlignHCenter);
+    mDecEdit->setToolTip(tr("Declination is >=-90 and <=270"));
+    mDecEdit->setValidator(validator90to270);
+    connect(mDecEdit, &QLineEdit::textChanged, this, &PluginMagForm::allIsValid);
+
     mAlpha95Edit = new QLineEdit(this);
     mAlpha95Edit->setAlignment(Qt::AlignHCenter);
-    connect(mAlpha95Edit, &QLineEdit::textChanged, this, &PluginMagForm::errorIsValid);
+    mAlpha95Edit->setToolTip(tr("Alpha95 is > 0"));
+    mAlpha95Edit->setValidator(validatorRplus);
+    connect(mAlpha95Edit, &QLineEdit::textChanged, this, &PluginMagForm::allIsValid);
 
-    mRefCombo = new QComboBox(this);
-    QStringList refCurves = plugin->getRefsNames();
-    for (int i = 0; i<refCurves.size(); ++i)
-        mRefCombo->addItem(refCurves[i]);
+    // --------------------------------------------------------------------------------------- //
+    mFieldEdit = new QLineEdit(this);
+    mFieldEdit ->setAlignment(Qt::AlignHCenter);
+    mFieldEdit ->setToolTip(tr("Field is >0"));
+    mFieldEdit->setValidator(validatorRplus);
+    connect(mFieldEdit, &QLineEdit::textChanged, this, &PluginMagForm::allIsValid);
 
-    mIncEdit->setText("60");
-    mDecEdit->setText("0");
-    mDecIncEdit->setText("60");
-    mIntensityEdit->setText("0");
+    mFieldErrorEdit = new QLineEdit(this);
+    mFieldErrorEdit ->setAlignment(Qt::AlignHCenter);
+    mFieldErrorEdit ->setToolTip(tr("error >0"));
+    mFieldErrorEdit->setValidator(validatorRplus);
+    connect(mFieldErrorEdit, &QLineEdit::textChanged, this, &PluginMagForm::allIsValid);
+
+    mMCMCIterationEdit = new QLineEdit(this);
+    mMCMCIterationEdit->setAlignment(Qt::AlignHCenter);
+    mMCMCIterationEdit->setToolTip(tr("iteration is > 0"));
+    mMCMCIterationEdit->setValidator(validatorZplus);
+
+    connect(mMCMCIterationEdit, &QLineEdit::textChanged, this, &PluginMagForm::allIsValid);
+
+    mRefILab = new QLabel(tr("Curve I"), this);
+    mRefICombo = new QComboBox(this);
+
+    mRefDLab = new QLabel(tr("Curve D"), this);
+    mRefDCombo = new QComboBox(this);
+
+    mRefFLab = new QLabel(tr("Curve F"), this);
+    mRefFCombo = new QComboBox(this);
+
+    const QStringList refCurves = plugin->getRefsNames();
+
+    for (auto &curve : refCurves) {
+        if (curve.contains("_i.ref"))
+            mRefICombo->addItem(curve);
+
+        if (curve.contains("_d.ref"))
+            mRefDCombo->addItem(curve);
+
+        if (curve.contains("_f.ref"))
+            mRefFCombo->addItem(curve);
+
+    }
+
+    mIncEdit->setText("65"); // Inclinaison pour la direction
+    mDecEdit->setText("0");    // Déclinaison pour la direction
     mAlpha95Edit->setText("1");
 
-    mIncRadio->setChecked(true);
-    mRefCombo->setCurrentIndex(mRefCombo->findText("i.ref",Qt::MatchEndsWith));
+    mFieldEdit ->setText("65"); // Inclinaison pour l'analyse vectorielle
+    mFieldErrorEdit ->setText("2");
+
+    mMCMCIterationEdit->setText("500");
+
+    mIDRadio->setChecked(true);
 
     QGridLayout* grid = new QGridLayout();
-    grid->setContentsMargins(0, 5, 0, 0);
+    grid->setContentsMargins(0, 3, 0, 0);
 
     grid->addWidget(mIncRadio, 0, 1);
     grid->addWidget(mDecRadio, 1, 1);
-    grid->addWidget(mIntensityRadio, 2, 1);
+    grid->addWidget(mFieldRadio, 2, 1);
 
-    // if Inclination is selected
-    grid->addWidget(mIncLab, 3, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mIncEdit, 3, 1);
+    grid->addWidget(mIDRadio, 0, 5);
+    grid->addWidget(mIFRadio, 1, 5);
+    grid->addWidget(mIDFRadio, 2, 5);
 
-    // if Declination is selected
-    grid->addWidget(mDecLab, 3, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mDecEdit, 3, 1);
+    grid->addWidget(mIncLab, 6, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mIncEdit, 6, 1);
+    grid->addWidget(mRefILab, 6, 4, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mRefICombo, 6, 5);
 
-    grid->addWidget(mDecIncLab, 4, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mDecIncEdit, 4, 1);
+    grid->addWidget(mDecLab, 7, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mDecEdit, 7, 1);
+    grid->addWidget(mRefDLab, 7, 4, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mRefDCombo, 7, 5);
 
-    // if Intensity is selected
-    grid->addWidget(mIntensityLab, 3, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mIntensityEdit, 3, 1);
+    grid->addWidget(mFieldLab, 8, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mFieldEdit, 8, 1);
+    grid->addWidget(mRefFLab, 8, 4, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mRefFCombo, 8, 5);
 
-    grid->addWidget(mAlpha95Lab, 5, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mAlpha95Edit, 5, 1);
+    grid->addWidget(mAlpha95Lab, 9, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mAlpha95Edit, 9, 1);
 
-    grid->addWidget(mRefLab, 6, 0, Qt::AlignRight | Qt::AlignVCenter);
-    grid->addWidget(mRefCombo, 6, 1);
+    grid->addWidget(mFieldErrorLab, 10, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mFieldErrorEdit, 10, 1);
 
+    grid->addWidget(mMCMCIterationLab, 12, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mMCMCIterationEdit, 12, 1);
     setLayout(grid);
 
     updateOptions();
@@ -127,106 +209,208 @@ PluginMagForm::~PluginMagForm()
 
 }
 
-void PluginMagForm::setData(const QJsonObject& data, bool isCombined)
+void PluginMagForm::setData(const QJsonObject &data, bool isCombined)
 {
-    (void) isCombined;
-    QLocale locale=QLocale();
-    const bool is_inc = data.value(DATE_AM_IS_INC_STR).toBool();
-    const bool is_dec = data.value(DATE_AM_IS_DEC_STR).toBool();
-    const bool is_int = data.value(DATE_AM_IS_INT_STR).toBool();
 
-    const double inc = data.value(DATE_AM_INC_STR).toDouble();
-    const double dec = data.value(DATE_AM_DEC_STR).toDouble();
-    const double intensity = data.value(DATE_AM_INTENSITY_STR).toDouble();
-    const double error = data.value(DATE_AM_ERROR_STR).toDouble();
-    const QString ref_curve = data.value(DATE_AM_REF_CURVE_STR).toString().toLower();
+    mIncEdit->setEnabled(!isCombined); // Inclinaison pour la direction
+    mDecEdit->setEnabled(!isCombined);    // Déclinaison pour la direction
+    mAlpha95Edit->setEnabled(!isCombined);
 
-    mIncRadio->setChecked(is_inc);
-    mDecRadio->setChecked(is_dec);
-    mIntensityRadio->setChecked(is_int);
+    mFieldEdit ->setEnabled(!isCombined);
+    mFieldErrorEdit ->setEnabled(!isCombined);
 
-    mIncEdit->setText(locale.toString(inc));
-    mDecEdit->setText(locale.toString(dec));
-    mDecIncEdit->setText(locale.toString(inc));
-    mIntensityEdit->setText(locale.toString(intensity));
-    mAlpha95Edit->setText(locale.toString(error));
+    mMCMCIterationEdit->setEnabled(!isCombined);
 
-    mRefCombo->setCurrentText(ref_curve);
+    mRefICombo->setEnabled(!isCombined);
+    mRefDCombo->setEnabled(!isCombined);
+    mRefFCombo->setEnabled(!isCombined);
 
-    updateOptions();
+    mIncRadio->setEnabled(!isCombined);
+    mDecRadio->setEnabled(!isCombined);
+    mFieldRadio->setEnabled(!isCombined);
+    mIDRadio->setEnabled(!isCombined);
+    mIFRadio->setEnabled(!isCombined);
+    mIDFRadio->setEnabled(!isCombined);
+
+
+    if (!isCombined) {
+        ProcessTypeAM pta = static_cast<ProcessTypeAM> (data.value(DATE_AM_PROCESS_TYPE_STR).toInt());
+
+        switch (pta) {
+        case eInc:
+            mIncRadio->setChecked(true);
+            break;
+        case eDec:
+            mDecRadio->setChecked(true);
+            break;
+        case eField:
+            mFieldRadio->setChecked(true);
+            break;
+        case eID:
+            mIDRadio->setChecked(true);
+            break;
+        case eIF:
+            mIFRadio->setChecked(true);
+            break;
+        case eIDF:
+            mIDFRadio->setChecked(true);
+            break;
+        default:
+            break;
+        }
+
+        const double incl = data.value(DATE_AM_INC_STR).toDouble();
+        const double decl = data.value(DATE_AM_DEC_STR).toDouble();
+        const double alpha95 = data.value(DATE_AM_ALPHA95_STR).toDouble();
+        const double field = data.value(DATE_AM_FIELD_STR).toDouble();
+        const double error_f = data.value(DATE_AM_ERROR_F_STR).toDouble();
+        const int iter = data.value(DATE_AM_ITERATION_STR).toInt();
+
+        QLocale locale  =QLocale();
+        mIncEdit->setText(locale.toString(incl)); // Inclinaison pour la direction
+        mDecEdit->setText(locale.toString(decl));    // Déclinaison pour la direction
+        mAlpha95Edit->setText(locale.toString(alpha95));
+
+        mFieldEdit ->setText(locale.toString(field));
+        mFieldErrorEdit ->setText(locale.toString(error_f));
+
+        mMCMCIterationEdit->setText(locale.toString(iter));
+
+        mRefICombo->setCurrentText(data.value(DATE_AM_REF_CURVEI_STR).toString().toLower());
+        mRefDCombo->setCurrentText(data.value(DATE_AM_REF_CURVED_STR).toString().toLower());
+        mRefFCombo->setCurrentText(data.value(DATE_AM_REF_CURVEF_STR).toString().toLower());
+
+        updateOptions();
+    }
+    emit PluginFormAbstract::OkEnabled(true );
 }
 
 QJsonObject PluginMagForm::getData()
 {
     QJsonObject data;
-    const QLocale locale=QLocale();
+    const QLocale locale;
 
-    const bool is_inc = mIncRadio->isChecked();
-    const bool is_dec = mDecRadio->isChecked();
-    const bool is_int = mIntensityRadio->isChecked();
+    ProcessTypeAM pta = ProcessTypeAM::eNone;
+    if (mIncRadio->isChecked())
+        pta = eInc;
+    else if (mDecRadio->isChecked())
+        pta = eDec;
+    else if (mFieldRadio->isChecked())
+        pta = eField;
+    else if (mIDRadio->isChecked())
+        pta = eID;
+    else if (mIFRadio->isChecked())
+        pta = eIF;
+    else if (mIDFRadio->isChecked())
+        pta = eIDF;
 
-    double inc = locale.toDouble(mIncEdit->text());
+    const double inc = locale.toDouble(mIncEdit->text());
     const double dec = locale.toDouble(mDecEdit->text());
-    if (is_dec)
-        inc = locale.toDouble(mDecIncEdit->text());
-    const double intensity = locale.toDouble(mIntensityEdit->text());
-    const double error = locale.toDouble(mAlpha95Edit->text());
+    const double alpha95 = locale.toDouble(mAlpha95Edit->text());
+    const double field = locale.toDouble(mFieldEdit->text());
+    const double error_f = locale.toDouble(mFieldErrorEdit->text());
 
-    QString ref_curve = mRefCombo->currentText();
+    const int iteration_mcmc = locale.toInt(mMCMCIterationEdit->text());
+    const QString refI_curve = mRefICombo->currentText();
+    const QString refD_curve = mRefDCombo->currentText();
+    const QString refF_curve = mRefFCombo->currentText();
 
-    data.insert(DATE_AM_IS_INC_STR, is_inc);
-    data.insert(DATE_AM_IS_DEC_STR, is_dec);
-    data.insert(DATE_AM_IS_INT_STR, is_int);
+    data.insert(DATE_AM_PROCESS_TYPE_STR, pta);
 
     data.insert(DATE_AM_INC_STR, inc);
     data.insert(DATE_AM_DEC_STR, dec);
-    data.insert(DATE_AM_INTENSITY_STR, intensity);
-    data.insert(DATE_AM_ERROR_STR, error);
-    data.insert(DATE_AM_REF_CURVE_STR, ref_curve);
+    data.insert(DATE_AM_ALPHA95_STR, alpha95);
+
+    data.insert(DATE_AM_FIELD_STR, field);
+    data.insert(DATE_AM_ERROR_F_STR, error_f);
+
+    data.insert(DATE_AM_ITERATION_STR, iteration_mcmc);
+    data.insert(DATE_AM_REF_CURVEI_STR, refI_curve);
+    data.insert(DATE_AM_REF_CURVED_STR, refD_curve);
+    data.insert(DATE_AM_REF_CURVEF_STR, refF_curve);
 
     return data;
 }
 
-void PluginMagForm::errorIsValid(QString str)
-{
-    bool ok;
-    QLocale locale;
-    double value = locale.toDouble(str,&ok);
-
-    emit PluginFormAbstract::OkEnabled(ok && (value>0) );
-}
-
 bool PluginMagForm::isValid()
 {
-    QString refCurve = mRefCombo->currentText();
-    if(refCurve.isEmpty())
-        mError = tr("Ref. curve is empty!");
-    return !refCurve.isEmpty();
+    return true;
 }
 
 void PluginMagForm::updateOptions()
 {
-    mIncEdit->setVisible(mIncRadio->isChecked());
-    mIncLab->setVisible(mIncRadio->isChecked());
+    const bool showInc = mIncRadio->isChecked() || mIDRadio->isChecked() || mDecRadio->isChecked() ||
+                         mIFRadio->isChecked() || mIDFRadio->isChecked();
 
-    //if(mIncRadio->isChecked())    mRefCombo->setCurrentIndex(mRefCombo->findText("i.ref",Qt::MatchEndsWith));
+    mIncLab->setVisible(showInc);
+    mIncEdit->setVisible(showInc);
 
-    mDecEdit->setVisible(mDecRadio->isChecked());
-    mDecLab->setVisible(mDecRadio->isChecked());
-    //if(mDecRadio->isChecked())    mRefCombo->setCurrentIndex(mRefCombo->findText("d.ref",Qt::MatchEndsWith));
+    const bool showRefInc = mIncRadio->isChecked() || mIDRadio->isChecked() ||
+                         mIFRadio->isChecked() || mIDFRadio->isChecked();
+    mRefILab->setVisible(showRefInc);
+    mRefICombo->setVisible(showRefInc);
 
-    mDecIncEdit->setVisible(mDecRadio->isChecked());
-    mDecIncLab->setVisible(mDecRadio->isChecked());
+    const bool showDec = mDecRadio->isChecked() || mIDRadio->isChecked() || mIDFRadio->isChecked();
+    mDecLab->setVisible(showDec);
+    mDecEdit->setVisible(showDec);
 
-    mIntensityEdit->setVisible(mIntensityRadio->isChecked());
-    mIntensityLab->setVisible(mIntensityRadio->isChecked());
-    //if(mIntensityRadio->isChecked())    mRefCombo->setCurrentIndex(mRefCombo->findText("f.ref",Qt::MatchEndsWith));
+    mRefDLab->setVisible(showDec);
+    mRefDCombo->setVisible(showDec);
 
-    if (mIntensityRadio->isChecked())
-        mAlpha95Lab->setText(tr("Error (sd)"));
-    else
-        mAlpha95Lab->setText(tr("Alpha 95"));
+    const bool showAlpha95 = !mFieldRadio->isChecked();
+    mAlpha95Lab->setVisible(showAlpha95);
+    mAlpha95Edit->setVisible(showAlpha95);
+
+    const bool showField = mFieldRadio->isChecked() || mIFRadio->isChecked() || mIDFRadio->isChecked();
+    mFieldLab->setVisible(showField);
+    mFieldEdit->setVisible(showField);
+
+    mRefFLab->setVisible(showField);
+    mRefFCombo->setVisible(showField);
+
+    mFieldErrorLab->setVisible(showField);
+    mFieldErrorEdit->setVisible(showField);
+
+    const bool showIter = mIDRadio->isChecked() || mIFRadio->isChecked() || mIDFRadio->isChecked();
+    mMCMCIterationLab->setVisible(showIter);
+    mMCMCIterationEdit->setVisible(showIter);
+
+    adjustSize();
+    emit sizeChanged();
 
 }
 
+void PluginMagForm::allIsValid()
+{
+    bool allOK;
+
+    if (mIncRadio->isChecked())
+        allOK =  mIncEdit->hasAcceptableInput() && mAlpha95Edit->hasAcceptableInput();
+
+    else if (mDecRadio->isChecked())
+        allOK =  mIncEdit->hasAcceptableInput() && mAlpha95Edit->hasAcceptableInput() && mDecEdit->hasAcceptableInput() ;
+
+    else if (mFieldRadio->isChecked())
+        allOK = mFieldEdit->hasAcceptableInput() && mFieldErrorEdit->hasAcceptableInput();
+
+    else if (mIDRadio->isChecked())
+        allOK = mIncEdit->hasAcceptableInput() && mAlpha95Edit->hasAcceptableInput()
+                && mDecEdit->hasAcceptableInput() && mMCMCIterationEdit->hasAcceptableInput();
+
+    else if (mIFRadio->isChecked())
+        allOK = mIncEdit->hasAcceptableInput() && mAlpha95Edit->hasAcceptableInput()
+                && mFieldEdit->hasAcceptableInput() && mFieldErrorEdit->hasAcceptableInput()
+                && mMCMCIterationEdit->hasAcceptableInput();
+
+    else if (mIDFRadio->isChecked())
+        allOK = mIncEdit->hasAcceptableInput() && mAlpha95Edit->hasAcceptableInput() && mDecEdit->hasAcceptableInput()
+                && mFieldEdit->hasAcceptableInput() && mFieldErrorEdit->hasAcceptableInput()
+                && mMCMCIterationEdit->hasAcceptableInput();
+
+    else
+        allOK = false;
+
+
+    emit PluginFormAbstract::OkEnabled(allOK );
+}
 #endif

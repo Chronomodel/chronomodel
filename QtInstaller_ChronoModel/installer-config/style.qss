@@ -1,0 +1,4 @@
+QFrame {
+    border: 5px;
+    background-color: transparent;
+}

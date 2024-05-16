@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -38,11 +38,16 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "DateItem.h"
+
+#include "CalibrationCurve.h"
 #include "Date.h"
-#include "Painting.h"
 #include "EventItem.h"
 #include "Project.h"
 #include "PluginAbstract.h"
+
+#include <QtCore>
+#include <QtGui>
+#include <QtWidgets>
 
 int DateItem::mTitleHeight (20);
 int DateItem:: mEltsHeight (40);
@@ -68,43 +73,87 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
     mDatesAnim->setTimeLine(mDatesAnimTimer);
 
     // Date::fromJson doesn't create mCalibration
-    Date d;
-    d.fromJson(date);
-    ProjectSettings s = ProjectSettings::fromJson(settings);
+    Date d (date);
+    const StudyPeriodSettings s = StudyPeriodSettings::fromJson(settings);
 
-    d.mSettings.mTmin = s.mTmin;
-    d.mSettings.mTmax = s.mTmax;
-    d.mSettings.mStep = s.mStep;
-
-    if (d.mPlugin!= nullptr) {
+     if (d.mPlugin!= nullptr) {
         if (!d.mIsValid)
             mCalibThumb = QPixmap();
 
         else {
-            if (d.mCalibration == nullptr)
-                d.calibrate(s, EventsScene->getProject());
 
-            if (d.mPlugin->getName() == "Unif")
-                mCalibThumb = d.generateUnifThumb();
+            // Date::calibrate() Controls the validity of the calibration and wiggle curves
+            d.calibrate(s, *EventsScene->getProject(), true);
 
-             /* Can happen when there is trouble with the ref curve, for example with un Undo after
+            if (d.mCalibration == nullptr) {
+                date[STATE_DATE_VALID] = false;
+                mCalibThumb = QPixmap();
+                QString mes = tr("Calibration curve not find for the Event %1").arg(d.mName);
+                //throw mes;
+                QMessageBox message(QMessageBox::Critical,
+                                    qApp->applicationName() + " " + qApp->applicationVersion(),
+                                    mes,
+                                    QMessageBox::Ok,
+                                    qApp->activeWindow());
+                message.exec();
+
+                if (d.mWiggleCalibration != nullptr) {
+                    d.mWiggleCalibration->mVector.clear();
+                    d.mWiggleCalibration->mMap.clear();
+                    d.mWiggleCalibration->mRepartition.clear();
+                    d.mWiggleCalibration = nullptr;
+                }
+            } else if (d.mCalibration->mVector.size() < 6) {
+                date[STATE_DATE_VALID] = false;
+                mCalibThumb = QPixmap();
+                //const double newStep = d.mCalibration->mStep/5.;
+               // QString mes = tr("Insufficient resolution for the Event %1 \n Decrease the step in the study period box to %2").arg(d.mName, QString::number(newStep));
+                QString mes = tr("Insufficient resolution for the Event %1 ").arg(d.mName);
+
+                //throw mes;
+                QMessageBox message(QMessageBox::Critical,
+                                    qApp->applicationName() + " " + qApp->applicationVersion(),
+                                    mes,
+                                    QMessageBox::Ok,
+                                    qApp->activeWindow());
+                message.exec();
+                d.mCalibration->mVector.clear();
+                d.mCalibration->mMap.clear();
+                d.mCalibration->mRepartition.clear();
+                d.mCalibration = nullptr;
+
+                if (d.mWiggleCalibration) {
+                    d.mWiggleCalibration->mVector.clear();
+                    d.mWiggleCalibration->mMap.clear();
+                    d.mWiggleCalibration->mRepartition.clear();
+                    d.mWiggleCalibration = nullptr;
+                }
+            }
+
+            if (d.mPlugin->getName() == "Unif" && d.mOrigin == Date::eSingleDate)
+                mCalibThumb = d.generateUnifThumb(s);
+
+             /* Can happen when there is trouble with the ref curve, for example with an Undo after
               * removing a refCurve
               */
 
-            else if (d.mCalibration && !d.mCalibration->mCurve.isEmpty())
-                mCalibThumb = d.generateCalibThumb();
+            else if (d.mCalibration && !d.mCalibration->mVector.isEmpty()) {
+               mCalibThumb = d.generateCalibThumb(s);
 
-            else
+            } else
                 mCalibThumb = QPixmap();
 
         }
     }
-
+//blockSignals(false);
 }
 
 DateItem::~DateItem()
 {
     mEventsScene= nullptr;
+  //  mDate.~QJsonObject(); // Don't delete the JSON, we need it when we delete an event.
+   // mColor.~QColor();
+   // mCalibThumb.~QPixmap();
 }
 
 const QJsonObject& DateItem::date() const
@@ -119,15 +168,17 @@ void DateItem::setOriginalPos(const QPointF pos)
 
 QRectF DateItem::boundingRect() const
 {
-   EventItem* eventItem = dynamic_cast<EventItem*>(parentItem());
-   if (eventItem) {
-               QRectF r( -AbstractItem::mItemWidth/2 + AbstractItem::mBorderWidth + AbstractItem::mEltsMargin,
-                         0,
-                        AbstractItem::mItemWidth - 2*(AbstractItem::mBorderWidth + AbstractItem::mEltsMargin),
-                        mTitleHeight +mEltsHeight);
-        return r;
-    } else
-        return QRectF(0, 0, AbstractItem::mItemWidth - 2*(AbstractItem::mBorderWidth + AbstractItem::mEltsMargin) , mTitleHeight +mEltsHeight);
+    qreal x = 0;
+    qreal y = 0;
+    qreal w = AbstractItem::mItemWidth - 2*(AbstractItem::mBorderWidth + AbstractItem::mEltsMargin);
+    qreal h = mTitleHeight + mEltsHeight;
+    
+    EventItem* eventItem = dynamic_cast<EventItem*>(parentItem());
+    if (eventItem) {
+       x = -AbstractItem::mItemWidth/2 + AbstractItem::mBorderWidth + AbstractItem::mEltsMargin;
+    }
+    
+    return QRectF(x, y, w, h);
 }
 
 void DateItem::setGreyedOut(bool greyedOut)
@@ -159,9 +210,9 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     const QRectF rName = QRectF(-r.width()/2., 0, r.width(), mTitleHeight);
 
     painter->fillRect(rName, Qt::white);
-    QFont font (qApp->font());
+    const QFont font (qApp->font().family(), 12.);
     //font.setPointSizeF(10.);
-    font.setPixelSize(12.);
+    //font.setPixelSize(12.);
 
     QString name = mDate.value(STATE_NAME).toString();
    // QFont ftAdapt = AbstractItem::adjustFont(font, name, rName);
@@ -173,7 +224,7 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     QFontMetrics metrics (font);
     name = metrics.elidedText(name, Qt::ElideRight, int (r.width() - 5));
 
-  painter->setFont(font);
+    painter->setFont(font);
     painter->drawText(rName, Qt::AlignCenter, name);
     // thumbnail
     const QRectF rct = QRectF(-r.width()/2., mTitleHeight, r.width(), mEltsHeight);
@@ -182,10 +233,10 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
         // using matrix transformation, because antiAliasing don't work with pixmap
         qreal sx = rct.width()/mCalibThumb.width();
         qreal sy =  rct.height()/mCalibThumb.height();
-        QMatrix mx = QMatrix();
-        mx.scale(sx, sy);
+//        QTransform mx;
+//        mx.scale(sx, sy);
 
-        const QPixmap ct2 = mCalibThumb.transformed(mx, Qt::SmoothTransformation);
+        const QPixmap ct2 = mCalibThumb.transformed(QTransform::fromScale(sx, sy), Qt::SmoothTransformation);
 
         painter->drawPixmap(int (rct.x()), int (rct.y()), ct2);
 
@@ -211,7 +262,7 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
 
 void DateItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
-    qDebug()<<"DateItem::mousePressEvent___________________ "<<e->modifiers();
+    qDebug()<<"[DateItem::mousePressEvent]--->"<<e->modifiers();
     /* REMARK
      * On macOS Qt::MetaModifier map to the keyboard key "Ctrl"
      * and      Qt::ControlModifier to the keyboard key " cmd" = Command key (⌘)

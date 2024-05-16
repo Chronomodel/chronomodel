@@ -42,15 +42,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "AbstractScene.h"
 #include "EventItem.h"
-#include "ProjectSettings.h"
-
-#include <QWheelEvent>
+#include "Date.h"
+#include "StudyPeriodSettings.h"
+#include "CurveSettings.h"
 
 class QGraphicsItemAnimation;
 class QTimeLine;
 
 class DateItem;
-class Date;
+
 class HelpWidget;
 
 
@@ -74,13 +74,11 @@ public slots:
 
     void createSceneFromState();
     void updateSceneFromState();
-    //void updateSelection(bool sendNotification = true, bool force = false);
+
     void updateStateSelectionFromItem();
     void updateHelp();
 
-   virtual  void deleteSelectedItems();
-    //void updateSelectedEventsFromPhases();
-    //void updateGreyedOutEvents(const QMap<int, bool>& eyedPhases);
+   virtual void deleteSelectedItems();
 
 public:
     void itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);
@@ -94,7 +92,7 @@ public:
     EventItem *dateReleased(DateItem *dateItem);
 
     QList<Date> decodeDataDrop_old(QGraphicsSceneDragDropEvent* e);
-    QList<QPair<QString, Date>> decodeDataDrop(QGraphicsSceneDragDropEvent* e); // = Qlist<QPair<Event'name, data>>
+    QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> decodeDataDrop(QGraphicsSceneDragDropEvent* e); // = Qlist<QPair<Event'name, data>>
 
     void adaptItemsForZoom(const double prop);
 
@@ -124,7 +122,7 @@ signals:
     void csvDataLineDropAccepted(QList<int> rows);
     void csvDataLineDropRejected(QList<int> rows);
     void eventClicked();
-    void eventDoubleClicked();
+    void eventDoubleClicked(AbstractItem* item);
     void noSelection();
     void eventsAreSelected();
     void eventsAreModified(const QString& reason, bool notify, bool storeUndoCommand);
@@ -132,7 +130,9 @@ signals:
 private:
     HelpWidget* mHelpView;
     QTimer* mHelpTimer;
-    ProjectSettings mSettings;
+    
+    StudyPeriodSettings mSettings;
+    CurveSettings mCurveSettings;
 
 //    QGraphicsItemAnimation* mDatesAnim;
 //    QTimeLine* mDatesAnimTimer;

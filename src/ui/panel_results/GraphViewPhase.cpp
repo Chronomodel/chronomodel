@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -38,6 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "GraphViewPhase.h"
+
 #include "GraphView.h"
 #include "Phase.h"
 #include "Painting.h"
@@ -45,18 +46,16 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "DateUtils.h"
 #include "ModelUtilities.h"
-#include "MainWindow.h"
-#include "Button.h"
+
 #include <QtWidgets>
 
 // Constructor / Destructor
 
 GraphViewPhase::GraphViewPhase(QWidget *parent):GraphViewResults(parent),
-mPhase(nullptr)
+    mPhase(nullptr)
 {
     setMainColor(Painting::borderDark);
     mGraph->setBackgroundColor(QColor(210, 210, 210));
-
 }
 
 GraphViewPhase::~GraphViewPhase()
@@ -64,19 +63,13 @@ GraphViewPhase::~GraphViewPhase()
     mPhase = nullptr;
 }
 
-
-
 void GraphViewPhase::setPhase(Phase* phase)
 {
     Q_ASSERT(phase);
 
     mPhase = phase;
-    setItemTitle(tr("Phase : %1").arg(mPhase->mName));
-
     setItemColor(mPhase->mColor);
-
 }
-
 
 void GraphViewPhase::paintEvent(QPaintEvent* e)
 {
@@ -88,16 +81,14 @@ void GraphViewPhase::resizeEvent(QResizeEvent* )
     updateLayout();
 }
 
-void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
+void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList)
 {
-    //qDebug()<<"GraphViewPhase::generateCurves()";
-    Q_ASSERT(mPhase);
-    GraphViewResults::generateCurves(typeGraph, variable);
+    GraphViewResults::generateCurves(typeGraph, variableList);
 
     mGraph->removeAllCurves();
     mGraph->reserveCurves(9);
 
-    mGraph->removeAllZones();
+    mGraph->remove_all_zones();
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
 
@@ -107,328 +98,487 @@ void GraphViewPhase::generateCurves(TypeGraph typeGraph, Variable variable)
 
     QColor color = mPhase->mColor;
 
-    QString resultsText = ModelUtilities::phaseResultsText(mPhase);
-    QString resultsHTML = ModelUtilities::phaseResultsHTML(mPhase);
-    setNumericalResults(resultsHTML, resultsText);
+    QString resultsHTML = tr("Nothing to Display");
+    if (mCurrentVariableList.contains(eBeginEnd)) {
+        resultsHTML = ModelUtilities::phaseResultsHTML(mPhase);
+
+    } else if (mCurrentVariableList.contains(eTempo)) {
+        resultsHTML = ModelUtilities::tempoResultsHTML(mPhase);
+
+    } else if (mCurrentVariableList.contains(eDuration)) {
+        resultsHTML = ModelUtilities::durationResultsHTML(mPhase);
+
+    } else if (mCurrentVariableList.contains(eActivity)) {
+        resultsHTML = ModelUtilities::activityResultsHTML(mPhase);
+    }
+    setNumericalResults(resultsHTML);
 
     mGraph->setOverArrow(GraphView::eNone);
+
     /* -------------first tab : posterior distrib-----------------------------------
      *  Possible curves :
-     *  - Post Distrib Alpha All Chains
-     *  - Post Distrib Beta All Chains
-     *  - HPD Alpha All Chains
-     *  - HPD Beta All Chains
-     *  - Duration
-     *  - HPD Duration
-     *  - Post Distrib Alpha i
-     *  - Post Distrib Beta i
+     *  - Begin-End
+     *  -- Post Distrib Begin All Chains
+     *  -- Post Distrib End All Chains
+     *  -- HPD Begin All Chains
+     *  -- HPD End All Chains
+     *  -- Post Distrib Begin Chain i
+     *  -- Post Distrib End Chain i
      *  - Time Range
+     *
      * ------------------------------------------------  */
-    if ((typeGraph == ePostDistrib) && (variable == eTheta)) {
-        mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
-        mGraph->mLegendY = "";
-        mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
-        mGraph->setFormatFunctY(nullptr);
-        mTitle = tr("Phase : %1").arg(mPhase->mName);
-        QMap<double,double> &alpha = mPhase->mAlpha.fullHisto();
-        QMap<double,double> &beta = mPhase->mBeta.fullHisto();
-        /*
-         * Detection of one Bound used as boundary != is xor
-         * If there is two Bound, the both are egal to 1, thus nothing to do
-         */
-        if ((alpha.size()==1) != (beta.size()==1)) {
-            if (alpha.size() == 1)
-                alpha[alpha.firstKey()] = map_max_value(beta) * 2.;
-            else
-                beta[beta.firstKey()] = map_max_value(alpha) * 2.;
+    if (typeGraph == ePostDistrib) {
+        if (mCurrentVariableList.contains(eBeginEnd)) {
+            mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
+            mGraph->mLegendY = "";
+            mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
+            mGraph->setFormatFunctY(nullptr);
+            mGraph->setYAxisMode(GraphView::eMinMaxHidden);
 
-        }
+            mTitle = tr("Phase : %1").arg(mPhase->mName);
+            QMap<double, double> &alpha = mPhase->mAlpha.mFormatedHisto;
+            QMap<double, double> &beta = mPhase->mBeta.mFormatedHisto;
 
-        GraphCurve curveAlpha = generateDensityCurve(alpha,
-                                                     "Post Distrib Alpha All Chains",
-                                                     color, Qt::DotLine);
-        QColor colorBeta = mPhase->mColor.darker(170);
+            QMap<double, double> &alphaHPD = mPhase->mAlpha.mFormatedHPD;
+            QMap<double, double> &betaHPD = mPhase->mBeta.mFormatedHPD;
+            /*
+             * Detection of one Bound used as boundary != is xor
+             * If there is two Bound, the both are egal to 1, thus nothing to do
+             */
+            const bool alphaIsBound = (alpha.size()==1);
+            const bool betaIsBound = (beta.size()==1);
 
+            if (alphaIsBound && !betaIsBound) {
+                const double normPdf = map_max(beta).value();
+                alpha[alpha.firstKey()] =  normPdf;
+                alphaHPD[alphaHPD.firstKey()] = normPdf;
 
-        GraphCurve curveBeta = generateDensityCurve(beta,
-                                                     "Post Distrib Beta All Chains",
-                                                     colorBeta, Qt::DashLine);
-        color.setAlpha(255); // set mBrush to fill
-        GraphCurve curveAlphaHPD = generateHPDCurve(mPhase->mAlpha.mHPD,
-                                                     "HPD Alpha All Chains",
-                                                     color);
+            } else if (betaIsBound && !alphaIsBound) {
+                const double normPdf = map_max(alpha).value();
+                beta[beta.firstKey()] = normPdf;
+                betaHPD[betaHPD.firstKey()] = normPdf;
 
-        GraphCurve curveBetaHPD = generateHPDCurve(mPhase->mBeta.mHPD,
-                                                   "HPD Beta All Chains",
-                                                   colorBeta);
+            } else if (alphaIsBound && betaIsBound) {
+                alpha[alpha.firstKey()] =  1.;
+                alphaHPD[alphaHPD.firstKey()] = 1.;
 
-        mGraph->addCurve(curveAlpha);
-        mGraph->addCurve(curveBeta);
-
-
-        mGraph->addCurve(curveAlphaHPD);
-        mGraph->addCurve(curveBetaHPD);
-
-        mGraph->setOverArrow(GraphView::eBothOverflow);
-
-        GraphCurve curveTimeRange = generateSectionCurve(mPhase->getFormatedTimeRange(),
-                                                                   "Time Range",
-                                                                   color);
-        mGraph->addCurve(curveTimeRange);
-
-        // ------------------------------------------------------------
-        //  Add zones outside study period
-        // ------------------------------------------------------------
-
-        GraphZone zoneMin;
-        zoneMin.mXStart = -INFINITY;
-        zoneMin.mXEnd = mSettings.getTminFormated();
-        zoneMin.mColor = QColor(217, 163, 69);
-        zoneMin.mColor.setAlpha(35);
-        zoneMin.mText = tr("Outside study period");
-        mGraph->addZone(zoneMin);
-
-        GraphZone zoneMax;
-        zoneMax.mXStart = mSettings.getTmaxFormated();
-        zoneMax.mXEnd = INFINITY;
-        zoneMax.mColor = QColor(217, 163, 69);
-        zoneMax.mColor.setAlpha(35);
-        zoneMax.mText = tr("Outside study period");
-        mGraph->addZone(zoneMax);
-
-        if (!mPhase->mAlpha.mChainsHistos.isEmpty())
-            for (int i=0; i<mChains.size(); ++i) {
-                GraphCurve curveAlpha = generateDensityCurve(mPhase->mAlpha.histoForChain(i),
-                                                             "Post Distrib Alpha " + QString::number(i),
-                                                             Painting::chainColors.at(i), Qt::DotLine);
-
-                GraphCurve curveBeta = generateDensityCurve(mPhase->mBeta.histoForChain(i),
-                                                            "Post Distrib Beta " + QString::number(i),
-                                                            Painting::chainColors.at(i).darker(170), Qt::DashLine);
-                mGraph->addCurve(curveAlpha);
-                mGraph->addCurve(curveBeta);
+                beta[beta.firstKey()] = 1.;
+                betaHPD[betaHPD.firstKey()] = 1.;
             }
-        mGraph->setYAxisMode(GraphView::eMinMax);
-    }
+
+            const GraphCurve &curveBegin = densityCurve(alpha, "Post Distrib Begin All Chains", color, Qt::DotLine);
+            const QColor colorEnd = mPhase->mColor.darker(170);
 
 
-    else if ((typeGraph == ePostDistrib) && (variable == eDuration)) {
-        mGraph->mLegendX = tr("Years");
-        mGraph->mLegendY = "";
-        mGraph->setFormatFunctX(nullptr);
-        mGraph->setFormatFunctY(nullptr);
+            const GraphCurve &curveEnd = densityCurve(beta, "Post Distrib End All Chains", colorEnd, Qt::DashLine);
+            color.setAlpha(255); // set mBrush to fill
+            const GraphCurve &curveBeginHPD = HPDCurve(alphaHPD, "HPD Begin All Chains", color);
 
-        mTitle = tr("Phase Duration : %1").arg(mPhase->mName);
-        GraphCurve curveDuration;
+            const GraphCurve &curveEndHPD = HPDCurve(betaHPD, "HPD End All Chains", colorEnd);
 
-        if (mPhase->mDuration.fullHisto().size()>1) {
-            curveDuration = generateDensityCurve(mPhase->mDuration.fullHisto(),
-                                                            "Post Distrib Duration All Chains",
-                                                            color);
+            mGraph->add_curve(curveBegin);
+            mGraph->add_curve(curveEnd);
 
-            mGraph->setRangeX(0., ceil(curveDuration.mData.lastKey()));
-            color.setAlpha(255);
-            GraphCurve curveDurationHPD = generateHPDCurve(mPhase->mDuration.mHPD,
-                                                           "HPD Duration All Chains",
-                                                           color);
-            mGraph->setCanControlOpacity(true);
-            mGraph->addCurve(curveDurationHPD);
+
+            mGraph->add_curve(curveBeginHPD);
+            mGraph->add_curve(curveEndHPD);
+
+            mGraph->setOverArrow(GraphView::eBothOverflow);
+
+            const GraphCurve &curveTimeRange = topLineSection(mPhase->getFormatedTimeRange(), "Time Range", color);
+            mGraph->add_curve(curveTimeRange);
+
+            /* ------------------------------------------------------------
+             *   Add zones Outside Study Period
+             * ------------------------------------------------------------*/
+
+            const GraphZone zoneMin (-INFINITY, mSettings.getTminFormated());
+            mGraph->add_zone(zoneMin);
+
+            const GraphZone zoneMax (mSettings.getTmaxFormated(), INFINITY);
+            mGraph->add_zone(zoneMax);
+
+            if (!mPhase->mAlpha.mChainsHistos.isEmpty())
+                for (auto i = 0; i<mChains.size(); ++i) {
+                    QMap<double, double> &alpha_i = mPhase->mAlpha.mChainsHistos[i];
+                    QMap<double, double> &beta_i = mPhase->mBeta.mChainsHistos[i];
+                    if (alphaIsBound && !betaIsBound) {
+                        alpha_i[alpha_i.firstKey()] =  map_max(beta_i).value();
+
+                    } else if (betaIsBound && !alphaIsBound) {
+                        beta_i[beta_i.firstKey()] = map_max(alpha_i).value();
+                    }
+
+                    const GraphCurve &curveBegin = densityCurve(alpha_i,
+                                                                "Post Distrib Begin Chain " + QString::number(i),
+                                                                Painting::chainColors.at(i), Qt::DotLine);
+
+                    const GraphCurve &curveEnd = densityCurve(beta_i,
+                                                              "Post Distrib End Chain " + QString::number(i),
+                                                              Painting::chainColors.at(i).darker(170), Qt::DashLine);
+                    mGraph->add_curve(curveBegin);
+                    mGraph->add_curve(curveEnd);
+                }
+
+
+        } else if (mCurrentVariableList.contains(eTempo)) {
+
+            if (!mPhase->mTempo.isEmpty()) {
+                mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
+                mGraph->mLegendY = "Events";
+                mGraph->setFormatFunctX(nullptr);
+                mGraph->setFormatFunctY(nullptr);
+                mGraph->setYAxisMode(GraphView::eAllTicks);
+
+                mGraph->setTipXLab("t");
+                mGraph->setTipYLab("n");
+                mGraph->setYAxisMode(GraphView::eAllTicks);
+                mGraph->autoAdjustYScale(true);
+
+                mTitle = tr("Phase Tempo : %1").arg(mPhase->mName);
+
+                GraphCurve curveTempo = densityCurve(mPhase->mTempo,
+                                                     "Post Distrib All Chains",
+                                                     color.darker(), Qt::SolidLine);
+                curveTempo.mIsRectFromZero = false;
+
+                auto brushColor = color;
+                brushColor.setAlpha(30);
+                const GraphCurve &curveTempoEnv = shapeCurve(mPhase->mTempoInf, mPhase->mTempoSup,
+                                                             "Post Distrib Env All Chains",
+                                                             color, Qt::CustomDashLine, brushColor);
+
+                mGraph->add_curve(curveTempoEnv);
+                mGraph->add_curve(curveTempo);
+
+                mGraph->setOverArrow(GraphView::eBothOverflow);
+
+                /* ------------------------------------------------------------
+             *   Add zones outside study period
+             * ------------------------------------------------------------*/
+
+                const GraphZone zoneMin (-INFINITY, mSettings.getTminFormated());
+                mGraph->add_zone(zoneMin);
+
+                const GraphZone zoneMax (mSettings.getTmaxFormated(), INFINITY);
+                mGraph->add_zone(zoneMax);
+
+            } else
+                mGraph->resetNothingMessage();
+
+
+        } else if (mCurrentVariableList.contains(eActivity)) {
+
+            if (!mPhase->mActivity.isEmpty()) {
+                mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
+                mGraph->mLegendY = "";
+                mGraph->setFormatFunctX(nullptr);
+                mGraph->setFormatFunctY(nullptr);
+                mGraph->setYAxisMode(GraphView::eHidden);
+
+                mTitle = tr("Phase Activity : %1").arg(mPhase->mName);
+                GraphCurve curveActivity = densityCurve( mPhase->mActivity,
+                                                        "Post Distrib All Chains",
+                                                        color, Qt::SolidLine);
+                curveActivity.mIsRectFromZero = true;
+                auto brushColor = color;
+                brushColor.setAlpha(30);
+
+                const GraphCurve &curveActivityEnv = shapeCurve(mPhase->mActivityInf, mPhase->mActivitySup,
+                                                                "Post Distrib Env All Chains",
+                                                                color, Qt::CustomDashLine, brushColor);
+                /* ------------------------------------------------------------
+             *   Display envelope Uniform
+             * ------------------------------------------------------------*/
+
+                const GraphCurve &curveActivityUnifTheo = densityCurve(mPhase->mActivityUnifTheo,
+                                                                       "Post Distrib Unif Mean",
+                                                                       Qt::darkGray, Qt::SolidLine);
+
+                if (mPhase->mValueStack.contains("Activity_Threshold") && mPhase->mValueStack.contains("Activity_Significance_Score") )
+                    mGraph->setInfo(QString("Significance Score ( %1 %) = %2").arg(stringForLocal(mPhase->mValueStack.at("Activity_Threshold").mValue), stringForLocal(mPhase->mValueStack.at("Activity_Significance_Score").mValue, true)) );
+
+                mGraph->setOverArrow(GraphView::eBothOverflow);
+
+                mGraph->add_curve(curveActivityEnv);
+                mGraph->add_curve(curveActivity);
+
+                mGraph->add_curve(curveActivityUnifTheo);
+
+                const type_data yMax = std:: max(map_max(mPhase->mActivitySup).value(), map_max(mPhase->mActivityUnifTheo).value());
+
+                mGraph->setRangeY(0., yMax);
+
+                /* ------------------------------------------------------------
+                 *   Add zones outside study period
+                 * ------------------------------------------------------------*/
+
+                const GraphZone zoneMin (-INFINITY, mSettings.getTminFormated());
+                mGraph->add_zone(zoneMin);
+
+                const GraphZone zoneMax (mSettings.getTmaxFormated(), INFINITY);
+                mGraph->add_zone(zoneMax);
+
+            } else
+                mGraph->resetNothingMessage();
+
+        } else if (mCurrentVariableList.contains(eDuration)) {
+            mGraph->mLegendX = tr("Years");
+            mGraph->mLegendY = "";
             mGraph->setFormatFunctX(nullptr);
             mGraph->setFormatFunctY(nullptr);
+            mGraph->setYAxisMode(GraphView::eMinMaxHidden);
+            mTitle = tr("Phase Duration : %1").arg(mPhase->mName);
 
-            mGraph->addCurve(curveDuration);
+            if (mPhase->mDuration.fullHisto().size() > 1) {
+                const GraphCurve &curveDuration = densityCurve(mPhase->mDuration.fullHisto(), "Post Distrib All Chains", color);
+
+                mGraph->setRangeX(0., ceil(curveDuration.mData.lastKey()));
+                color.setAlpha(255);
+                GraphCurve curveDurationHPD = HPDCurve(mPhase->mDuration.mFormatedHPD, "HPD All Chains", color);
+                mGraph->setCanControlOpacity(true);
+                mGraph->add_curve(curveDurationHPD);
+                mGraph->setFormatFunctX(nullptr);
+                mGraph->setFormatFunctY(nullptr);
+
+                mGraph->add_curve(curveDuration);
 
 
-            /* ------------------------------------
+                /* ------------------------------------
              *  Theta Credibility
              * ------------------------------------
              */
-            GraphCurve curveCred = generateSectionCurve(mPhase->mDuration.mCredibility,
-                                                            "Credibility All Chains",
-                                                            color);
-            mGraph->addCurve(curveCred);
+                GraphCurve curveCred = topLineSection(mPhase->mDuration.mFormatedCredibility,
+                                                      "Credibility All Chains",
+                                                      color);
+                mGraph->add_curve(curveCred);
 
-        } else
-            mGraph->resetNothingMessage();
-
-
-        if (!mPhase->mDuration.mChainsHistos.isEmpty())
-            for (int i=0; i<mChains.size(); ++i) {
-                GraphCurve curveDuration = generateDensityCurve(mPhase->mDuration.histoForChain(i),
-                                                             "Post Distrib Duration " + QString::number(i),
-                                                             Painting::chainColors.at(i), Qt::DotLine);
-
-                mGraph->addCurve(curveDuration);
-            }
-     } else if (typeGraph == ePostDistrib && variable == eSigma) {
-
-        mGraph->mLegendX = "";
-        mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
-        mGraph->setFormatFunctY(nullptr);
-
-        mTitle = tr("Phase's Events' Std Compil. : %1").arg(mPhase->mName);
+            } else
+                mGraph->resetNothingMessage();
 
 
-        for ( auto && ev : mPhase->mEvents) {
-        /* ------------------------------------------------
-         *  Events don't have std dev BUT we can visualize
-         *  an overlay of all dates std dev instead.
-         *  Possible curves, FOR ALL DATES :
-         *  - Sigma Date i All Chains
-         *  - Sigma Date i Chain j
-         * ------------------------------------------------
-         */
-            int i(0);
-            for (auto&& date : ev->mDates) {
-                GraphCurve curve = generateDensityCurve(date.mSigma.fullHisto(),
-                                                        "Sigma Date " + QString::number(i) + " All Chains",
-                                                        color);
+            if (!mPhase->mDuration.mChainsHistos.isEmpty())
+                for (int i = 0; i < mChains.size(); ++i) {
+                    const GraphCurve &curveDuration = densityCurve(mPhase->mDuration.histoForChain(i),
+                                                                   "Post Distrib Chain " + QString::number(i),
+                                                                   Painting::chainColors.at(i), Qt::DotLine);
 
-                mGraph->addCurve(curve);
-                if (!date.mSigma.mChainsHistos.isEmpty())
-                    for (int j=0; j<mChains.size(); ++j) {
-                        GraphCurve curveChain = generateDensityCurve(date.mSigma.histoForChain(j),
-                                                                     "Sigma Date " + QString::number(i) + " Chain " + QString::number(j),
-                                                                     Painting::chainColors.at(j));
-                        mGraph->addCurve(curveChain);
-                    }
-                ++i;
-            }
+                    mGraph->add_curve(curveDuration);
+                }
 
         }
-
-    }
-
+}
     /* -----------------second tab : history plot-------------------------------
-     *  - Trace Alpha i
-     *  - Q1 Alpha i
-     *  - Q2 Alpha i
-     *  - Q3 Alpha i
-     *  - Trace Beta i
-     *  - Q1 Beta i
-     *  - Q2 Beta i
-     *  - Q3 Beta i
+     *  - Trace Begin i
+     *  - Q1 Begin i
+     *  - Q2 Begin i
+     *  - Q3 Begin i
+     *  - Trace End i
+     *  - Q1 End i
+     *  - Q2 End i
+     *  - Q3 End i
      * ------------------------------------------------ */
-    else if (typeGraph == eTrace && variable == eTheta) {
-        mGraph->mLegendX = tr("Iterations");
-        mGraph->setFormatFunctX(nullptr);
-        mGraph->setFormatFunctY(nullptr);//DateUtils::convertToAppSettingsFormat);
-        mTitle = tr("Phase : %1").arg(mPhase->mName);
+    else if (typeGraph == eTrace) {
+        if (mCurrentVariableList.contains(eBeginEnd)) {
+            mGraph->mLegendX = tr("Iterations");
+            mGraph->setFormatFunctX(nullptr);
+            mGraph->setFormatFunctY(nullptr);
+            mGraph->setYAxisMode(GraphView::eMinMax);
+            mTitle = tr("Phase : %1").arg(mPhase->mName);
 
-        generateTraceCurves(mChains, &(mPhase->mAlpha), "Alpha");
-        generateTraceCurves(mChains, &(mPhase->mBeta), "Beta");
-        mGraph->autoAdjustYScale(true);
-    }
-    else if (typeGraph == eTrace && variable == eDuration) {
-        mGraph->mLegendX = tr("Iterations");
-        mGraph->setFormatFunctX(nullptr);
-        mGraph->setFormatFunctY(nullptr);
-        mTitle = tr("Phase Duration : %1").arg(mPhase->mName);
+            generateTraceCurves(mChains, &(mPhase->mAlpha), "Begin");
+            generateTraceCurves(mChains, &(mPhase->mBeta), "End");
+            mGraph->autoAdjustYScale(true);
 
-        generateTraceCurves(mChains, &(mPhase->mDuration), "Duration");
-        mGraph->autoAdjustYScale(true);
+        } else if (mCurrentVariableList.contains(eDuration)) {
+            mGraph->mLegendX = tr("Iterations");
+            mGraph->setFormatFunctX(nullptr);
+            mGraph->setFormatFunctY(nullptr);
+            mGraph->setYAxisMode(GraphView::eMinMax);
+            mTitle = tr("Phase Duration : %1").arg(mPhase->mName);
+
+            generateTraceCurves(mChains, &(mPhase->mDuration), "Duration");
+            mGraph->autoAdjustYScale(true);
+        }
     }
     /* ------------------------------------------------
-     *  third tab : Acception rate
-     *  fourth tab : Autocorrelation
+     *  third tab : Nothing
+     *  fourth tab : Nothing
      * ------------------------------------------------ */
     else {
        mTitle = tr("Phase : %1").arg(mPhase->mName);
        mGraph->resetNothingMessage();
     }
 
-
 }
 
-void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle)
+void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showVariableList)
 {
     Q_ASSERT(mPhase);
-    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
+    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showVariableList);
 
     /* --------------------first tab : posterior distrib----------------------------
      *
      *  Possible curves :
-     *  - Post Distrib Alpha All Chains
-     *  - Post Distrib Beta All Chains
-     *  - HPD Alpha All Chains
-     *  - HPD Beta All Chains
-     *  - Duration
-     *  - HPD Duration
-     *  - Post Distrib Alpha i
-     *  - Post Distrib Beta i
+     *  - Post Distrib Begin-End All Chains
+     *  - HPD Begin All Chains
+     *  - HPD End All Chains
+     *
+     *  - Post Distrib Begin Chain i
+     *  - Post Distrib End Chain i
+     *
+     *  -Duration
+     *  -- Post Distrib All Chains
+     *  -- HPD All Chains
+     *  -- Credibility All Chains
+     *  -- Post Distrib Chain i
+     *
+     *  - Tempo
+     *  - Tempo All Chains
+     *  - Tempo Error Env All Chain
+     *
+     *  - Activity
+     *  -- All Chains
+     *  -- Env All Chain
+     *
      * ------------------------------------------------
      */
-    if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eTheta) {
-        mGraph->setTipYLab("");
+    if (mCurrentTypeGraph == ePostDistrib) {
 
-        mGraph->setCurveVisible("Post Distrib Alpha All Chains", mShowAllChains);
-        mGraph->setCurveVisible("Post Distrib Beta All Chains", mShowAllChains);
-        mGraph->setCurveVisible("HPD Alpha All Chains", mShowAllChains);
-        mGraph->setCurveVisible("HPD Beta All Chains", mShowAllChains);
+        if (mCurrentVariableList.contains(eBeginEnd)) {
+            const bool showCredibility = mShowVariableList.contains(eCredibility);
 
-        mGraph->setCurveVisible("Time Range", mShowAllChains && mShowCredibility);
 
-        for (int i=0; i<mShowChainList.size(); ++i) {
-            mGraph->setCurveVisible("Post Distrib Alpha " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Post Distrib Beta " + QString::number(i), mShowChainList.at(i));
-        }
+            mGraph->setCurveVisible("Post Distrib Begin All Chains", mShowAllChains);
+            mGraph->setCurveVisible("Post Distrib End All Chains", mShowAllChains);
+            mGraph->setCurveVisible("HPD Begin All Chains", mShowAllChains);
+            mGraph->setCurveVisible("HPD End All Chains", mShowAllChains);
 
-        mGraph->setTipXLab("t");
-        mGraph->setTipYLab("");
-        mGraph->setYAxisMode(GraphView::eHidden);
-        mGraph->showInfos(false);
-        mGraph->clearInfos();
-        mGraph->autoAdjustYScale(true); // do repaintGraph()
+            mGraph->setCurveVisible("Time Range", mShowAllChains && showCredibility);
 
-    }
-
-    else if (mCurrentTypeGraph == ePostDistrib && mCurrentVariable == eSigma) {
-            for (auto && ev : mPhase->mEvents) {
-                const int n (ev->mDates.size());
-                for (auto i=0 ; i<n; ++i) {
-                    mGraph->setCurveVisible("Sigma Date " + QString::number(i) + " All Chains", mShowAllChains);
-
-                   for (int j=0; j<mShowChainList.size(); ++j)
-                        mGraph->setCurveVisible("Sigma Date " + QString::number(i) + " Chain " + QString::number(j), mShowChainList.at(j));
-
-                }
+            for (auto i=0; i<mShowChainList.size(); ++i) {
+                mGraph->setCurveVisible("Post Distrib Begin Chain " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Post Distrib End Chain " + QString::number(i), mShowChainList.at(i));
             }
-            mGraph->setTipXLab("Sigma");
-            mGraph->setYAxisMode(GraphView::eHidden);
+
+            mGraph->setTipXLab("t");
+            mGraph->setTipYLab("");
+
+            mGraph->showInfos(false);
+            mGraph->clearInfos();
             mGraph->autoAdjustYScale(true);
 
-    }
-    /* ---------------- second tab : history plot--------------------------------
-     *  - Alpha Trace i
-     *  - Alpha Q1 i
-     *  - Alpha Q2 i
-     *  - Alpha Q3 i
-     *  - Beta Trace i
-     *  - Beta Q1 i
-     *  - Beta Q2 i
-     *  - Beta Q3 i
-     * ------------------------------------------------ */
-    else if (mCurrentTypeGraph == eTrace && mCurrentVariable == eTheta) {
-
-        for (int i=0; i<mShowChainList.size(); ++i) {
-            mGraph->setCurveVisible("Alpha Trace " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Alpha Q1 " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Alpha Q2 " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Alpha Q3 " + QString::number(i), mShowChainList.at(i));
-
-            mGraph->setCurveVisible("Beta Trace " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Beta Q1 " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Beta Q2 " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Beta Q3 " + QString::number(i), mShowChainList.at(i));
         }
 
-        mGraph->setTipXLab(tr("Iteration"));
-        mGraph->setTipYLab("t");
-        mGraph->setYAxisMode(GraphView::eMinMaxHidden);
-        mGraph->showInfos(true);
-        mGraph->autoAdjustYScale(true);
+        else if (mCurrentVariableList.contains(eDuration)) {
+            const GraphCurve* duration = mGraph->getCurve("Post Distrib All Chains");
+
+            if ( duration && !duration->mData.isEmpty()) {
+                const bool showCredibility = mShowVariableList.contains(eCredibility);
+                mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
+                mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
+                mGraph->setCurveVisible("Credibility All Chains", showCredibility && mShowAllChains);
+
+                for (auto i=0; i<mShowChainList.size(); ++i)
+                    mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList.at(i));
+
+                mGraph->setTipXLab("t");
+                mGraph->setTipYLab("");
+                mGraph->autoAdjustYScale(true);
+            }
+
+        }
+        else if (mCurrentVariableList.contains(eTempo)) {
+            // With variable eTempo there is no choice of "chain", it must be "all chains"
+            const GraphCurve* tempo = mGraph->getCurve("Post Distrib All Chains");
+
+            if ( tempo && !tempo->mData.isEmpty()) {
+                const bool showError = mShowVariableList.contains(eError);
+                mGraph->setCurveVisible("Post Distrib All Chains", true);
+                mGraph->setCurveVisible("Post Distrib Env All Chains", showError);
+            }
+
+        }
+        else if (mCurrentVariableList.contains(eActivity)) {
+            // With variable eActivity there is no choice of "chain", it must be "all chains"
+            const GraphCurve* Activity = mGraph->getCurve("Post Distrib All Chains");
+
+            if ( Activity && !Activity->mData.isEmpty()) {
+
+                const bool showError = mShowVariableList.contains(eError);
+                mGraph->setCurveVisible("Post Distrib All Chains", true);
+                mGraph->setCurveVisible("Post Distrib Env All Chains", showError);
+
+                // Activity Uniform
+                const bool showActivityUnif = mShowVariableList.contains(eActivityUnif);
+                mGraph->setCurveVisible("Post Distrib Unif Mean", showActivityUnif);
+
+                mGraph->setTipXLab("t");
+                mGraph->setTipYLab("A");
+
+                type_data yMax = map_max(mPhase->mActivity).value();
+                if (showError) {
+                    yMax = std:: max(yMax, map_max(mPhase->mActivitySup).value());
+                }
+                if (showActivityUnif) {
+                    yMax = std:: max(yMax, map_max(mPhase->mActivityUnifTheo).value());
+                }
+                mGraph->setRangeY(0., yMax);
+            }
+
+        }
     }
+    /* ---------------- second tab : history plot--------------------------------
+     *  - Begin Trace i
+     *  - Begin Q1 i
+     *  - Begin Q2 i
+     *  - Begin Q3 i
+     *  - End Trace i
+     *  - End Q1 i
+     *  - End Q2 i
+     *  - End Q3 i
+     *
+     *  - Duration Trace i
+     *  - Duration Q1 i
+     *  - Duration Q2 i
+     *  - Duration Q3 i
+     * ------------------------------------------------ */
+    else if (mCurrentTypeGraph == eTrace) {
+        if (mCurrentVariableList.contains(eBeginEnd)) {
 
+            for (int i = 0; i<mShowChainList.size(); ++i) {
+                mGraph->setCurveVisible("Begin Trace " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Begin Q1 " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Begin Q2 " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Begin Q3 " + QString::number(i), mShowChainList.at(i));
 
+                mGraph->setCurveVisible("End Trace " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("End Q1 " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("End Q2 " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("End Q3 " + QString::number(i), mShowChainList.at(i));
+            }
+
+            mGraph->setTipXLab(tr("Iteration"));
+            mGraph->setTipYLab("t");
+            mGraph->setYAxisMode(GraphView::eMinMaxHidden);
+            mGraph->showInfos(false);
+            mGraph->autoAdjustYScale(true);
+
+        } else if (mCurrentVariableList.contains(eDuration)) {
+
+            for (int i = 0; i<mShowChainList.size(); ++i) {
+                mGraph->setCurveVisible("Duration Trace " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Duration Q1 " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Duration Q2 " + QString::number(i), mShowChainList.at(i));
+                mGraph->setCurveVisible("Duration Q3 " + QString::number(i), mShowChainList.at(i));
+            }
+
+            mGraph->setTipXLab(tr("Iteration"));
+            mGraph->setTipYLab("t");
+            mGraph->setYAxisMode(GraphView::eMinMaxHidden);
+            mGraph->showInfos(false);
+            mGraph->autoAdjustYScale(true);
+        }
+    }
     repaint();
 }

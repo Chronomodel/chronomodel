@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -40,14 +40,28 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef CALIBRATIONCURVE_H
 #define CALIBRATIONCURVE_H
 
-#include "PluginAbstract.h"
-
 #include <QString>
 #include <QMap>
-#include <MCMCSettings.h>
+
+#include "PluginAbstract.h"
 
 class CalibrationCurve
 {
+public:
+    QString mName;
+    QString mDescription;
+
+    QString mPluginId;
+    PluginAbstract* mPlugin;
+
+    QList<double> mRepartition;
+    QList<double> mVector;
+    QMap<double, double> mMap; // c'est la même chose que mVector, mais dans une QMap. Pour faciliter l'accés
+
+    double mTmin;
+    double mTmax;
+    double mStep;
+
 public:
     /** Default constructor */
     CalibrationCurve();
@@ -59,13 +73,13 @@ public:
     CalibrationCurve (CalibrationCurve&& other) noexcept : /* noexcept needed to enable optimizations in containers */
         mName (other.mName),
         mDescription (other.mDescription),
- //       mMethod (other.mMethod),
- //       mMCMCSetting (other.mMCMCSetting),
+
         mPluginId (other.mPluginId),
 
         mPlugin (other.mPlugin),
         mRepartition(other.mRepartition),
-        mCurve (other.mCurve),
+        mVector (other.mVector),
+        mMap (other.mMap),
         mTmin (other.mTmin),
         mTmax (other.mTmax),
         mStep (other.mStep)
@@ -73,10 +87,11 @@ public:
         other.mName = nullptr;
         other.mDescription = nullptr;
         other.mRepartition.clear();
-        other.mCurve.clear();
-        other.mPluginId = nullptr;
-        other.mPlugin =nullptr;
+        other.mVector.clear();
+        other.mMap.clear();
 
+        other.mPluginId = nullptr;
+        other.mPlugin = nullptr;
     }
 
     /** Destructor */
@@ -94,16 +109,19 @@ public:
     CalibrationCurve& operator= (CalibrationCurve&& other) noexcept
     {
         mName = other.mName;
-//        mMCMCSetting =other.mMCMCSetting;
         mPluginId = other.mPluginId;
         mPlugin = other.mPlugin;
 
         mDescription = other.mDescription;
-//        mMethod = other.mMethod;
+
         mRepartition.resize(other.mRepartition.size());
         std::copy(other.mRepartition.begin(), other.mRepartition.end(), mRepartition.begin());
-        mCurve .resize(other.mCurve.size());
-        std::copy(other.mCurve.begin(),other.mCurve.end(), mCurve.begin());
+
+        mVector.resize(other.mVector.size());
+        std::copy(other.mVector.begin(),other.mVector.end(), mVector.begin());
+        
+        mMap = std::move(other.mMap);
+
         mTmin = other.mTmin;
         mTmax = other.mTmax;
         mStep = other.mStep;
@@ -112,36 +130,74 @@ public:
         other.mDescription = nullptr;
 
         other.mRepartition.clear();
-        other.mCurve.clear();
+        other.mVector.clear();
+        other.mMap.clear();
 
         other.mPluginId = nullptr;
         other.mPlugin = nullptr;
+        
         return *this;
     }
 
-/*    enum Method{
-        eFromRef = 0,
-        eFromMCMC = 1,
-    };
-*/
-    QString mName;
-    QString mDescription;
+    double interpolate(double t) const {
+        // We need at least two points to interpolate
+        if (mVector.size() < 2 || t <= mTmin) {
+            //return mVector.first();
+            return 0.;
 
-//    Method mMethod;
+        } else if (t >= mTmax) {
+            //return mVector.last();
+            return 0.;
+        }
 
-    // Parameter refere to the Method
-//    MCMCSettings mMCMCSetting;
+        const double prop = (t - mTmin) / (mTmax - mTmin);
+        const double idx = prop * (mVector.size() - 1); // tricky : if (tmax - tmin) = 2000, then calib size is 2001 !
+        const int idxUnder = (int)floor(idx);
+        const int idxUpper = (int)ceil(idx);//idxUnder + 1;
 
-    QString mPluginId;
-    PluginAbstract* mPlugin;
+        if (idxUnder == idxUpper) {
+            return mVector[idxUnder];
 
-    QVector<double> mRepartition;
-    QVector<double> mCurve;
+        } else if (mVector[idxUnder] != 0. && mVector[idxUpper] != 0.) {
+            // Important for gate: no interpolation around gates
 
-    double mTmin;
-    double mTmax;
-    double mStep;
+            return std::lerp(mVector[idxUnder], mVector[idxUpper], (idx - idxUnder) / (idxUpper - idxUnder));
 
+
+        } else {
+            return 0.;
+        }
+    }
+    double repartition_interpolate(double t) const {
+        // We need at least two points to interpolate
+        if (mRepartition.size() < 2 || t <= mTmin) {
+            return mRepartition.first();
+
+        } else if (t >= mTmax) {
+            return mRepartition.last();
+        }
+
+        const double prop = (t - mTmin) / (mTmax - mTmin);
+        const double idx = prop * (mRepartition.size() - 1); // tricky : if (tmax - tmin) = 2000, then calib size is 2001 !
+        const int idxUnder = (int)floor(idx);
+        const int idxUpper = (int)ceil(idx);//idxUnder + 1;
+
+        if (idxUnder == idxUpper) {
+            return mRepartition[idxUnder];
+
+        } else if (mRepartition[idxUnder] != 0. && mRepartition[idxUpper] != 0.) {
+            // Important for gate: no interpolation around gates
+#ifdef DEBUG
+            if (idxUnder< 0 || idxUpper>=mRepartition.size())
+                qDebug()<<"[repartition_interpolate] idxUnder<= 0 || idxUpper>=mRepartition.size()";
+#endif
+            return std::lerp(mRepartition[idxUnder], mRepartition[idxUpper], (idx - idxUnder) / (idxUpper - idxUnder));
+
+
+        } else {
+            return 0.;
+        }
+    }
 };
 
 QDataStream &operator<<( QDataStream &stream, const CalibrationCurve &data );

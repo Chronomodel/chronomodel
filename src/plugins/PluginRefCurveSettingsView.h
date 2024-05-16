@@ -75,7 +75,7 @@ private:
     QListWidget* mRefCurvesList;
     QPushButton* mAddRefCurveBut;
     QPushButton* mDeleteRefCurveBut;
-    QPushButton* mOpenBut;
+  //  QPushButton* mOpenBut;
 
     QMap<QString, QString> mFilesOrg;
     QMap<QString, QString> mFilesNew;

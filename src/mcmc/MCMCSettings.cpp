@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -38,6 +38,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "MCMCSettings.h"
+
+#include "StateKeys.h"
 #include "Generator.h"
 #include <QVariant>
 #include <QJsonArray>
@@ -45,14 +47,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 MCMCSettings::MCMCSettings():
-mNumChains(MCMC_NUM_CHAINS_DEFAULT),
-mNumRunIter(MCMC_NUM_RUN_DEFAULT),
-mNumBurnIter(MCMC_NUM_BURN_DEFAULT),
-mMaxBatches(MCMC_MAX_ADAPT_BATCHES_DEFAULT),
-mNumBatchIter(MCMC_ITER_PER_BATCH_DEFAULT),
-mThinningInterval(MCMC_THINNING_INTERVAL_DEFAULT),
-mFinalBatchIndex(0),
-mMixingLevel(MCMC_MIXING_DEFAULT)
+    mNumChains(MCMC_NUM_CHAINS_DEFAULT),
+    mIterPerAquisition(MCMC_NUM_RUN_DEFAULT),
+    mIterPerBurn(MCMC_NUM_BURN_DEFAULT),
+    mMaxBatches(MCMC_MAX_ADAPT_BATCHES_DEFAULT),
+    mIterPerBatch(MCMC_ITER_PER_BATCH_DEFAULT),
+    mThinningInterval(MCMC_THINNING_INTERVAL_DEFAULT),
+    mFinalBatchIndex(0),
+    mMixingLevel(MCMC_MIXING_DEFAULT)
 {
 
 }
@@ -71,10 +73,10 @@ MCMCSettings& MCMCSettings::operator=(const MCMCSettings& s)
 void MCMCSettings::copyFrom(const MCMCSettings& s)
 {
     mNumChains = s.mNumChains;
-    mNumRunIter = s.mNumRunIter;
-    mNumBurnIter = s.mNumBurnIter;
+    mIterPerAquisition = s.mIterPerAquisition;
+    mIterPerBurn = s.mIterPerBurn;
     mMaxBatches = s.mMaxBatches;
-    mNumBatchIter = s.mNumBatchIter;
+    mIterPerBatch = s.mIterPerBatch;
     mSeeds = s.mSeeds;
     mThinningInterval = s.mThinningInterval;
     mFinalBatchIndex = s.mFinalBatchIndex;
@@ -90,10 +92,10 @@ MCMCSettings::~MCMCSettings()
 void MCMCSettings::restoreDefault()
 {
     mNumChains = MCMC_NUM_CHAINS_DEFAULT;
-    mNumRunIter =  MCMC_NUM_RUN_DEFAULT;
-    mNumBurnIter =  MCMC_NUM_BURN_DEFAULT;
+    mIterPerAquisition =  MCMC_NUM_RUN_DEFAULT;
+    mIterPerBurn =  MCMC_NUM_BURN_DEFAULT;
     mMaxBatches =  MCMC_MAX_ADAPT_BATCHES_DEFAULT;
-    mNumBatchIter = MCMC_ITER_PER_BATCH_DEFAULT;
+    mIterPerBatch = MCMC_ITER_PER_BATCH_DEFAULT;
     mThinningInterval =  MCMC_THINNING_INTERVAL_DEFAULT;
     mMixingLevel =  MCMC_MIXING_DEFAULT;
     mFinalBatchIndex= 0;
@@ -105,10 +107,10 @@ MCMCSettings MCMCSettings::fromJson(const QJsonObject& json)
 {
     MCMCSettings settings;
     settings.mNumChains = json.contains(STATE_MCMC_NUM_CHAINS) ? json.value(STATE_MCMC_NUM_CHAINS).toInt() : MCMC_NUM_CHAINS_DEFAULT;
-    settings.mNumRunIter = json.contains(STATE_MCMC_NUM_RUN_ITER) ? json.value(STATE_MCMC_NUM_RUN_ITER).toInt() : MCMC_NUM_RUN_DEFAULT;
-    settings.mNumBurnIter = json.contains(STATE_MCMC_NUM_BURN_ITER) ? json.value(STATE_MCMC_NUM_BURN_ITER).toInt() : MCMC_NUM_BURN_DEFAULT;
+    settings.mIterPerAquisition = json.contains(STATE_MCMC_NUM_RUN_ITER) ? json.value(STATE_MCMC_NUM_RUN_ITER).toInt() : MCMC_NUM_RUN_DEFAULT;
+    settings.mIterPerBurn = json.contains(STATE_MCMC_NUM_BURN_ITER) ? json.value(STATE_MCMC_NUM_BURN_ITER).toInt() : MCMC_NUM_BURN_DEFAULT;
     settings.mMaxBatches = json.contains(STATE_MCMC_MAX_ADAPT_BATCHES) ? json.value(STATE_MCMC_MAX_ADAPT_BATCHES).toInt() : MCMC_MAX_ADAPT_BATCHES_DEFAULT;
-    settings.mNumBatchIter = json.contains(STATE_MCMC_ITER_PER_BATCH) ? json.value(STATE_MCMC_ITER_PER_BATCH).toInt() : MCMC_ITER_PER_BATCH_DEFAULT;
+    settings.mIterPerBatch = json.contains(STATE_MCMC_ITER_PER_BATCH) ? json.value(STATE_MCMC_ITER_PER_BATCH).toInt() : MCMC_ITER_PER_BATCH_DEFAULT;
     settings.mThinningInterval = json.contains(STATE_MCMC_THINNING_INTERVAL) ? json.value(STATE_MCMC_THINNING_INTERVAL).toInt() : MCMC_THINNING_INTERVAL_DEFAULT;
     settings.mMixingLevel = json.contains(STATE_MCMC_MIXING) ? json.value(STATE_MCMC_MIXING).toDouble() : MCMC_MIXING_DEFAULT;
     QJsonArray seeds = json.value(STATE_MCMC_SEEDS).toArray();
@@ -122,10 +124,10 @@ QJsonObject MCMCSettings::toJson() const
 {
     QJsonObject mcmc;
     mcmc[STATE_MCMC_NUM_CHAINS] = QJsonValue::fromVariant(mNumChains);
-    mcmc[STATE_MCMC_NUM_RUN_ITER] = QJsonValue::fromVariant(mNumRunIter);
-    mcmc[STATE_MCMC_NUM_BURN_ITER] = QJsonValue::fromVariant(mNumBurnIter);
+    mcmc[STATE_MCMC_NUM_RUN_ITER] = QJsonValue::fromVariant(mIterPerAquisition);
+    mcmc[STATE_MCMC_NUM_BURN_ITER] = QJsonValue::fromVariant(mIterPerBurn);
     mcmc[STATE_MCMC_MAX_ADAPT_BATCHES] = QJsonValue::fromVariant(mMaxBatches);
-    mcmc[STATE_MCMC_ITER_PER_BATCH] = QJsonValue::fromVariant(mNumBatchIter);
+    mcmc[STATE_MCMC_ITER_PER_BATCH] = QJsonValue::fromVariant(mIterPerBatch);
     mcmc[STATE_MCMC_THINNING_INTERVAL] = QJsonValue::fromVariant(mThinningInterval);
 
     mcmc[STATE_MCMC_MIXING] = QJsonValue::fromVariant(mMixingLevel);
@@ -150,14 +152,15 @@ QList<ChainSpecs> MCMCSettings::getChains() const
         else
             chain.mSeed = Generator::createSeed();
 
-        chain.mNumBurnIter = mNumBurnIter;
+        chain.mIterPerBurn = mIterPerBurn;
         chain.mBurnIterIndex = 0;
         chain.mMaxBatchs = mMaxBatches;
-        chain.mNumBatchIter = mNumBatchIter;
+        chain.mIterPerBatch = mIterPerBatch;
         chain.mBatchIterIndex = 0;
         chain.mBatchIndex = 0;
-        chain.mNumRunIter = mNumRunIter;
-        chain.mRunIterIndex = 0;
+        chain.mIterPerAquisition = mIterPerAquisition;
+        chain.mAquisitionIterIndex = 0;
+        chain.mRealyAccepted = 0;
         chain.mTotalIter = 0;
         chain.mThinningInterval = mThinningInterval;
         chain.mMixingLevel = mMixingLevel;
@@ -169,10 +172,10 @@ QList<ChainSpecs> MCMCSettings::getChains() const
 QDataStream &operator<<( QDataStream &stream, const MCMCSettings &data )
 {
     stream << quint8 (data.mNumChains);
-    stream << (quint32) data.mNumRunIter;
-    stream << (quint32) data.mNumBurnIter;
+    stream << (quint32) data.mIterPerAquisition;
+    stream << (quint32) data.mIterPerBurn;
     stream << (quint32) data.mMaxBatches;
-    stream << (quint32) data.mNumBatchIter;
+    stream << (quint32) data.mIterPerBatch;
     stream << (quint32) data.mThinningInterval;
     stream << data.mSeeds;
     stream << (quint32) data.mFinalBatchIndex;
@@ -190,16 +193,16 @@ QDataStream &operator>>( QDataStream &stream, MCMCSettings &data )
 
     quint32 tmp32;
     stream >> tmp32;
-    data.mNumRunIter = int(tmp32);
+    data.mIterPerAquisition = int(tmp32);
 
     stream >> tmp32;
-    data.mNumBurnIter = int(tmp32);
+    data.mIterPerBurn = int(tmp32);
 
     stream >> tmp32;
     data.mMaxBatches = int(tmp32);
 
     stream >> tmp32;
-    data.mNumBatchIter = int(tmp32);
+    data.mIterPerBatch = int(tmp32);
 
     stream >> tmp32;
     data.mThinningInterval = int(tmp32);

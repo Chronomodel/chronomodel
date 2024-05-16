@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -38,21 +38,46 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "MainController.h"
+
 #include "PluginManager.h"
 #include "MainWindow.h"
 #include "Painting.h"
 
 MainController::MainController(const QString& filePath)
 {
+    QVersionNumber version (VERSION_NUMBER);
     Painting::init();
     PluginManager::loadPlugins();
-    //AppSettings::AppSettings();
-    AppSettings::readSettings();
+    QCoreApplication::setApplicationName("ChronoModel");
+    QCoreApplication::setApplicationVersion (version.toString());
+    QCoreApplication::setOrganizationDomain("https://www.chronomodel.com");
+    QCoreApplication::setOrganizationName("CNRS");
 
     mMainWindow = MainWindow::getInstance();
-    mMainWindow->readSettings(filePath);
-    mMainWindow->move(AppSettings::mLastPosition);
-    mMainWindow->resize(AppSettings::mLastSize);
+    try {
+        // AppSettings();
+        AppSettings::readSettings();
+
+        QString path;
+        if (filePath != "" ) {
+              path = filePath;
+
+        } else  if ((filePath == "" ) && AppSettings::mOpenLastProjectAtLaunch) {
+           const QString dir = AppSettings::mLastDir;
+           const QString filename = AppSettings::mLastFile;
+           if ((dir != "") && (filename !=""))
+               path = dir + "/" + filename;
+
+        }
+
+        mMainWindow->readSettings(path); // le problème est ici pour macOS
+
+        mMainWindow->move(AppSettings::mLastPosition);
+        mMainWindow->resize(AppSettings::mLastSize);
+
+    }  catch(...) {
+        qDebug() << "[MainController] Caught Exception!\n";
+    }
 
     mMainWindow->show();
 

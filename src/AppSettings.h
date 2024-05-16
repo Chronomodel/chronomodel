@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,35 +40,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef APPSETTINGS_H
 #define APPSETTINGS_H
 
-#include "Singleton.h"
 #include "DateUtils.h"
 
 #include <qsystemdetection.h>
 #include <QFont>
 #include <QLocale>
 
-//#define APP_SETTINGS_DEFAULT_LANGUAGE QLocale::English
-//#define APP_SETTINGS_DEFAULT_COUNTRY QLocale::UnitedKingdom
-/*
-#ifdef Q_OS_MAC
-   #define APP_SETTINGS_DEFAULT_FONT_FAMILY "Calibri" // "Helvetica" //"Zapfino"
-   #define APP_SETTINGS_DEFAULT_FONT_SIZE 12.
-#endif
-
-#ifdef Q_OS_WIN
-    #define APP_SETTINGS_DEFAULT_FONT_FAMILY "Calibri"// "Caladea" //"Calibri""Helvetica"
-    #define APP_SETTINGS_DEFAULT_FONT_SIZE  12
-#endif
-
-#ifdef Q_OS_LINUX
-    #define APP_SETTINGS_DEFAULT_FONT_FAMILY "Sans Serif"
-    #define APP_SETTINGS_DEFAULT_FONT_SIZE  10
-#endif
-*/
-
 #define APP_SETTINGS_DEFAULT_ICON_SIZE 3
 
-#define APP_SETTINGS_DEFAULT_AUTO_SAVE false
+#define APP_SETTINGS_DEFAULT_AUTO_SAVE true
 #define APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC 300
 #define APP_SETTINGS_DEFAULT_SHOW_HELP false
 #define APP_SETTINGS_DEFAULT_CELL_SEP ","
@@ -79,12 +59,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define APP_SETTINGS_DEFAULT_IMAGE_QUALITY 100
 #define APP_SETTINGS_DEFAULT_FORMATDATE DateUtils::eBCAD
 #define APP_SETTINGS_DEFAULT_PRECISION 0
-#define APP_SETTINGS_DEFAULT_SHEET 10
+#define APP_SETTINGS_DEFAULT_SHEET 50
 
 #define APP_SETTINGS_STR_LANGUAGE "language"
 #define APP_SETTINGS_STR_COUNTRY "country"
-// #define APP_SETTINGS_STR_FONT_FAMILY "font_family"
-//#define APP_SETTINGS_STR_FONT_SIZE "font_size"
 #define APP_SETTINGS_STR_ICON_SIZE "icon_size"
 
 #define APP_SETTINGS_STR_AUTO_SAVE "auto_save_enabled"
@@ -105,29 +83,23 @@ class AppSettings
 {
 public:
     AppSettings();
-   // AppSettings(const AppSettings& s);
-   // AppSettings& operator=(const AppSettings& s);
-   // void copyFrom(const AppSettings& s);
     virtual ~AppSettings();
 
     static void readSettings();
     static void writeSettings();
 
- //   static QFont font();
- //   static void setFont(const QFont &font);
     static int widthUnit();
     static int heigthUnit();
- //   static int fontDescent();
 
     static void setWidthUnit(int &width) {mWidthUnit = width;}
     static void setHeigthUnit(int &heigth) {mHeigthUnit = heigth;}
 
-public:
-   // static int mButtonWidth; // must be define with mWidthUnit and mHeigthUnit, according to the def screen
-
     static QLocale::Language mLanguage;
+#if QT_DEPRECATED_SINCE(6, 6)
+    static QLocale::Territory mCountry;
+#else
     static QLocale::Country mCountry;
-
+#endif
     static bool mAutoSave;
     static int mAutoSaveDelay;
     static bool mShowHelp;
@@ -141,8 +113,6 @@ public:
     static  DateUtils::FormatDate mFormatDate;
     static int mPrecision;
     static int mNbSheet;
- //   static QString mFontFamily;
-//    static  int  mFontPointSize;
 
     static QString mLastDir;
     static QString mLastFile;
@@ -151,12 +121,8 @@ public:
     static QPoint mLastPosition;
 
 private:
-//  static  QFont mFont;
-  static int mWidthUnit;
-  static int mHeigthUnit;
-//  static int mFontDescent;
-
-
+    static int mWidthUnit;
+    static int mHeigthUnit;
 };
 
 #endif

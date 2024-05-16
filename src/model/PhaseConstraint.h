@@ -68,8 +68,8 @@ public:
     void initGamma();
     void updateGamma();
 
-    QPair<double,double> getFormatedGapRange() const;
-    QPair<double,double> getFormatedTransitionRange() const;
+    std::pair<double, double> getFormatedGapRange() const;
+    std::pair<double, double> getFormatedTransitionRange() const;
 
 public:
     double mGamma;
@@ -82,8 +82,8 @@ public:
     double mGammaMin;
     double mGammaMax;
 
-    QPair<double,double> mGapRange;
-    QPair<double,double> mTransitionRange;
+    std::pair<double, double> mGapRange;
+    std::pair<double, double> mTransitionRange;
 
 };
 

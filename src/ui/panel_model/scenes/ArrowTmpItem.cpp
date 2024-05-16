@@ -201,12 +201,12 @@ void ArrowTmpItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
     painter->setFont(font);
     painter->setRenderHint(QPainter::Antialiasing);
 
-    QRectF rTex(centrum.x() - fm.boundingRect(getBubbleText()).width()/2., centrum.y() - fm.ascent()/2., fm.boundingRect(getBubbleText()).width(), fm.height());
+    QRectF rTex(centrum.x() - fm.horizontalAdvance(getBubbleText())/2., centrum.y() - fm.ascent()/2., fm.horizontalAdvance(getBubbleText()), fm.height());
 
     switch (mState) {
 
         case eForbidden:
-            qDebug() <<"ArrowTmpItem::paint mSate==eForbidden";
+            //qDebug() <<"ArrowTmpItem::paint mSate==eForbidden";
             painter->setBrush(Qt::white);
             painter->drawEllipse(r);
             painter->setPen(QPen(color, penWidth, Qt::SolidLine, Qt::RoundCap));
@@ -216,7 +216,7 @@ void ArrowTmpItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
         break;
 
         case eAllowed:
-            qDebug() <<"ArrowTmpItem::paint mSate==eAllowed";
+            //qDebug() <<"ArrowTmpItem::paint mSate==eAllowed";
             painter->setBrush(Qt::white);
             painter->drawEllipse(r);
 

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -38,7 +38,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "PluginRefCurveSettingsView.h"
-#include "ColorPicker.h"
 
 #include <QApplication>
 #include <QGridLayout>
@@ -46,11 +45,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QFileDialog>
 
 
+
 PluginRefCurveSettingsView::PluginRefCurveSettingsView(PluginAbstract* plugin, QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mPlugin(plugin)
 {
     mRefCurvesLab = new QLabel(tr("Available reference curves") + " :" , this);
     mRefCurvesLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    mRefCurvesLab->setToolTip(PluginAbstract::AppPluginLibrary());
+
     mRefCurvesList = new QListWidget(this);
     mRefCurvesList->setSelectionBehavior(QAbstractItemView::SelectRows);
     mRefCurvesList->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -58,12 +60,10 @@ mPlugin(plugin)
 
     mAddRefCurveBut = new QPushButton(tr("Add"), this);
     mDeleteRefCurveBut = new QPushButton(tr("Delete"), this);
-    mOpenBut = new QPushButton(tr("Open"), this);
-    mOpenBut->setVisible(false);
+
 
     connect(mAddRefCurveBut, &QPushButton::clicked, this, &PluginRefCurveSettingsView::addRefCurve);
     connect(mDeleteRefCurveBut, &QPushButton::clicked, this, &PluginRefCurveSettingsView::deleteRefCurve);
-  //  connect(mOpenBut, &QPushButton::clicked, this, &PluginRefCurveSettingsView::openSelectedFile);
     connect(mRefCurvesList, &QListWidget::itemSelectionChanged, this, &PluginRefCurveSettingsView::updateSelection);
 
     QGridLayout* layout = new QGridLayout();
@@ -71,7 +71,7 @@ mPlugin(plugin)
     layout->addWidget(mRefCurvesList, 1, 0, 1, 2);
     layout->addWidget(mAddRefCurveBut, 2, 0);
     layout->addWidget(mDeleteRefCurveBut, 2, 1);
-    //layout->addWidget(mOpenBut, 2, 2);
+
     setLayout(layout);
 
     // Store the list of existing files
@@ -93,13 +93,15 @@ PluginRefCurveSettingsView::~PluginRefCurveSettingsView(){
 
 void PluginRefCurveSettingsView::updateRefsList()
 {
+    mRefCurvesLab->setToolTip(mPlugin->getRefsPath());
+
     mRefCurvesList->clear();
     QMapIterator<QString, QString> iter(mFilesNew);
     while (iter.hasNext()) {
         iter.next();
         QListWidgetItem* item = new QListWidgetItem(iter.key());
-        const RefCurve& curve = mPlugin->mRefCurves[iter.key().toLower()];
-        if(curve.mDataMean.isEmpty())
+        const RefCurve &curve = mPlugin->mRefCurves[iter.key().toLower()];
+        if (curve.mDataMean.isEmpty())
             item->setForeground(Qt::red);
 
         mRefCurvesList->addItem(item);
@@ -109,6 +111,15 @@ void PluginRefCurveSettingsView::updateRefsList()
 void PluginRefCurveSettingsView::updateFilesInFolder()
 {
     QString calibPath = mPlugin->getRefsPath();
+    QDir cPath (calibPath);
+    // Creation of the plugin file directory, if it does not exist
+    if (!cPath.exists()) {
+        cPath.mkpath(calibPath);
+    }
+    if (!cPath.exists()) {
+        QMessageBox::warning(qApp->activeWindow(), tr("Error"), tr("Impossible to create the plugin path %1").arg(calibPath)) ;
+        return;
+    }
    // Delete removed curves
     QMapIterator<QString, QString> iter(mFilesOrg);
     iter = QMapIterator<QString, QString>(mFilesOrg);
@@ -131,15 +142,15 @@ void PluginRefCurveSettingsView::updateFilesInFolder()
         // The file name already existed, but we have a new path : replace it !
         if (mFilesOrg.contains(iter.key()) && iter.value() != mFilesOrg.value(iter.key())) {
             if (QMessageBox::question(qApp->activeWindow(), tr("Warning"), tr("Do you really want to replace existing %1").arg(iter.key())) == QMessageBox::Yes) {
-                QString filepath = calibPath + "/" + iter.key();
-
+                const QString filepath = calibPath + "/" + iter.key();
+                mFilesOrg[iter.key()] = filepath;
             }
         }
         // The file does not exist : copy it.
-        if (!mFilesOrg.contains(iter.key())) {
-            QString filepath = calibPath + "/" + iter.key();
+        else if (!mFilesOrg.contains(iter.key())) {
+            const QString filepath = calibPath + "/" + iter.key();
             if (QFile::copy(iter.value(), filepath))
-                mFilesOrg.insert(iter.key(),iter.value());
+                mFilesOrg.insert(iter.key(), iter.value());
 
         }
     }
@@ -153,13 +164,24 @@ void PluginRefCurveSettingsView::addRefCurve(){
                                                 "",
                                                 tr("Reference curve (*.%1)").arg(mPlugin->getRefExt() ));
 
-    if (!path.isEmpty()) {
-        QFileInfo fileInfo(path);
-        mFilesNew.insert(fileInfo.fileName(), fileInfo.absoluteFilePath());
-        updateFilesInFolder();
-        updateRefsList();
 
-        emit listRefCurveChanged();
+    QFileInfo fileInfo(path);
+    if (!path.isEmpty()) {
+        if (fileInfo.fileName().contains(';') || fileInfo.fileName().contains(',')) {
+            QMessageBox message(QMessageBox::Critical,
+                                qApp->applicationName() + " " + qApp->applicationVersion(),
+                                QObject::tr("File names must not contain any \",\" or \";\" "),
+                                QMessageBox::Ok,
+                                qApp->activeWindow());
+            message.exec();
+
+        } else {
+            mFilesNew.insert(fileInfo.fileName(), fileInfo.absoluteFilePath());
+            updateFilesInFolder();
+            updateRefsList();
+
+            emit listRefCurveChanged();
+        }
     }
 }
 
@@ -197,5 +219,4 @@ void PluginRefCurveSettingsView::updateSelection()
 {
     QList<QListWidgetItem*> selectedItems = mRefCurvesList->selectedItems();
     mDeleteRefCurveBut->setEnabled(selectedItems.size() > 0);
-    mOpenBut->setEnabled(selectedItems.size() > 0);
 }

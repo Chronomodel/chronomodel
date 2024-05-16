@@ -1,6 +1,5 @@
 /* ---------------------------------------------------------------------
-
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -50,26 +49,38 @@ CalibrationDrawing::CalibrationDrawing(QWidget *parent) : QWidget(parent),
     mCalibGraph (nullptr),
     mVerticalSpacer (5),
     mFont (parent->font())
-
 {
     setMouseTracking(true);
+
+    QPalette palette_BW;
+    palette_BW.setColor(QPalette::Base, Qt::white);
+    palette_BW.setColor(QPalette::Text, Qt::black);
+    palette_BW.setColor(QPalette::Window, Qt::white);
+    palette_BW.setColor(QPalette::WindowText, Qt::black);
+
     mTitle = new QLabel(this);
+    mTitle->setPalette(palette_BW);
 
     mRefTitle = new QLabel(this);
+    mRefTitle->setPalette(palette_BW);
     mRefComment = new QLabel(this);
+    mRefComment->setPalette(palette_BW);
 
     mCalibTitle = new QLabel(this);
+    mCalibTitle->setPalette(palette_BW);
     mCalibComment = new QLabel(this);
+    mCalibComment->setPalette(palette_BW);
 
     mMarkerX = new Marker(this);
     mMarkerY = new Marker(this);
-
 }
 
 CalibrationDrawing::~CalibrationDrawing()
 {
-    if (mCalibGraph)
+    if (mCalibGraph) {
         delete mCalibGraph;
+        mCalibGraph = nullptr;
+    }
 }
 
 void CalibrationDrawing::hideMarker()
@@ -95,8 +106,9 @@ void CalibrationDrawing::showMarker()
 
 void CalibrationDrawing::setRefGraph(GraphViewRefAbstract* refGraph)
 {
-      mRefGraphView = refGraph;
-      if (mRefGraphView) {
+    Q_ASSERT(refGraph);
+    if (refGraph) {
+        mRefGraphView = refGraph;
         mRefGraphView->setParent(this);
         mRefGraphView->setMouseTracking(true);
         if (mRefGraphView->mGraph) {
@@ -104,8 +116,8 @@ void CalibrationDrawing::setRefGraph(GraphViewRefAbstract* refGraph)
             mRefGraphView->mGraph->setTipXLab("t Ref");
             mRefGraphView->update();
         }
-      }
-  setMouseTracking(true);
+    }
+    setMouseTracking(true);
 }
 
 void CalibrationDrawing::setCalibGraph(GraphView* calibGraph)
@@ -114,12 +126,11 @@ void CalibrationDrawing::setCalibGraph(GraphView* calibGraph)
     mCalibGraph->setParent(this);
     mCalibGraph->setMouseTracking(true);
     mCalibGraph->setTipXLab("t Calib");
-
 }
 
 void CalibrationDrawing::paintEvent(QPaintEvent* e)
 {
-    Q_UNUSED(e);
+    (void) e;
     // drawing a background under curve
     QPainter p(this);
     p.fillRect(rect(), Qt::white);
@@ -136,14 +147,14 @@ void CalibrationDrawing::updateLayout()
     if (!mCalibGraph)
         return;
 
-    if (!mCalibGraph->hasCurve()) {
+    if (!mCalibGraph->has_curves()) {
         QLabel noCalib ("No Calibration", this);
-        noCalib.setGeometry(0, mVerticalSpacer, fm.boundingRect(noCalib.text()).width(), fm.height());
+        noCalib.setGeometry(0, mVerticalSpacer, fm.horizontalAdvance(noCalib.text()), fm.height());
         return;
     }
 
     const type_data max = mCalibGraph->maximumX();
-    const int marginRight = int (floor(fm.boundingRect(stringForGraph(max)).width()/2));
+    const int marginRight = int (floor(fm.horizontalAdvance(stringForGraph(max))/2));
 
 
     QFont topFont(mFont);
@@ -153,8 +164,8 @@ void CalibrationDrawing::updateLayout()
     QFontMetrics fmTop(topFont);
     mTitle->setFont(topFont);
 
-    const int titlePosition = ((width() - fmTop.boundingRect(mTitle->text()).width() - 6) /2) + 3;
-    mTitle->setGeometry(titlePosition, mVerticalSpacer, fmTop.boundingRect(mTitle->text()).width() + 3, fmTop.height());
+    const int titlePosition = ((width() - fmTop.horizontalAdvance(mTitle->text()) - 6) /2) + 3;
+    mTitle->setGeometry(titlePosition, mVerticalSpacer, fmTop.horizontalAdvance(mTitle->text()) + 3, fmTop.height());
 
     QFont titleFont(mFont);
     titleFont.setBold(true);
@@ -162,7 +173,7 @@ void CalibrationDrawing::updateLayout()
     QFontMetrics fmTitle(titleFont);
 
     mRefTitle->setFont(titleFont);
-    mRefTitle->setGeometry(20,  mTitle->y() + mTitle->height() + mVerticalSpacer, fmTitle.boundingRect(mRefTitle->text()).width(), fmTitle.height());
+    mRefTitle->setGeometry(20,  mTitle->y() + mTitle->height() + mVerticalSpacer, fmTitle.horizontalAdvance(mRefTitle->text()), fmTitle.height());
 
     mCalibTitle->setFont(titleFont);
 
@@ -173,7 +184,7 @@ void CalibrationDrawing::updateLayout()
     const int refH = totalGraph * 2/3; // it's a divide by integer, The direction of the operation is important
     const int calibH = totalGraph - refH ;
 
-    mRefComment->setGeometry(30,  mRefTitle->y() + mRefTitle->height() + mVerticalSpacer, fm.boundingRect(mRefComment->text()).width(), fm.height());
+    mRefComment->setGeometry(30,  mRefTitle->y() + mRefTitle->height() + mVerticalSpacer, fm.horizontalAdvance(mRefComment->text()), fm.height());
 
     if (mRefGraphView) {
         /* must be before setGeometry, because setGeometry is connected to resize.
@@ -189,19 +200,19 @@ void CalibrationDrawing::updateLayout()
             mRefGraphView->mGraph->setMarginBottom(fm .ascent() * 2.2);
         }
 
-        mCalibTitle->setGeometry(20,  mRefGraphView->y() + mRefGraphView->height() + mVerticalSpacer, fmTitle.boundingRect(mCalibTitle->text()).width(), fmTitle.height());
+        mCalibTitle->setGeometry(20,  mRefGraphView->y() + mRefGraphView->height() + mVerticalSpacer, fmTitle.horizontalAdvance(mCalibTitle->text()), fmTitle.height());
 
     } else
-        mCalibTitle->setGeometry(20,  mTitle->y() + mTitle->height() + mVerticalSpacer + refH, fmTitle.boundingRect(mCalibTitle->text()).width(), fmTitle.height());
+        mCalibTitle->setGeometry(20,  mTitle->y() + mTitle->height() + mVerticalSpacer + refH, fmTitle.horizontalAdvance(mCalibTitle->text()), fmTitle.height());
 
-    mCalibComment->setGeometry(30,  mCalibTitle->y() + mCalibTitle->height() + mVerticalSpacer, fm.boundingRect(mCalibComment->text()).width(), fm.height());
+    mCalibComment->setGeometry(30,  mCalibTitle->y() + mCalibTitle->height() + mVerticalSpacer, fm.horizontalAdvance(mCalibComment->text()), fm.height());
 
     mCalibGraph->setFont(mFont);
     mCalibGraph->setGeometry(0, mCalibComment->y() + mCalibComment->height() + mVerticalSpacer, width(), calibH);
     mCalibGraph->setMarginRight(marginRight);
     mCalibGraph->setMarginBottom(fm.ascent() * 2.2);
     mCalibGraph->setYAxisMode(GraphView::eMinMaxHidden);
-    mCalibGraph->autoAdjustYScale(true);
+   // mCalibGraph->autoAdjustYScale(true); //ici
 
     if (mMouseOverCurve) {
         showMarker();
@@ -225,10 +236,9 @@ void CalibrationDrawing::setMouseTracking(bool enable)
 
 void CalibrationDrawing::mouseMoveEvent(QMouseEvent* e)
 {
+    const int x = std::clamp(e->pos().x(), 0, width());
 
-    const int x ( qBound(0, e->pos().x(), width()) );
-
-    const int y ( qBound(0, e->pos().y(), height()) );
+    const int y = std::clamp(e->pos().y(), 0, height());
 
     // draw the red cross lines
     if (( mRefGraphView && mRefGraphView->geometry().contains(x, y))

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -38,41 +38,39 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "AboutDialog.h"
-#include "Painting.h"
 #include <QtWidgets>
 
 
 AboutDialog::AboutDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags)
 {
 
-    const QString text = "About " + qApp->applicationName() + " Version: " + qApp->applicationVersion();
+    const QString text = "About " + qGuiApp->applicationDisplayName()+ " Version: " + qApp->applicationVersion();
     setWindowTitle(text);
 
 #ifdef Q_OS_MAC
     QString path  =  qApp->applicationDirPath();
     QDir dir(path);
     dir.cdUp();
-    path = dir.absolutePath() + "/Resources";
+    path = dir.absolutePath() + "/Resources/";
 #else
     //http://doc.qt.io/qt-5/qstandardpaths.html#details
-    QStringList dataPath = QStandardPaths::standardLocations(QStandardPaths::DataLocation);
-    QString path  =  dataPath[0];
+    //QStringList dataPath = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
+    //QString path  =  dataPath[0];
+    QString path  = "";
 #endif
 
-
-
-    QFile htmlFile(path+ "/ABOUT.html");
+    QFile htmlFile(path+ "ABOUT.html");
     htmlFile.open(QIODevice::ReadOnly);
 
     mText = new QTextEdit();
     mText->setTextInteractionFlags(Qt::TextBrowserInteraction);
     mText->setHtml(htmlFile.readAll());
-    mText->setTextBackgroundColor(qApp->palette().background().color());
+    mText->setTextBackgroundColor(Qt::white);
 
     QVBoxLayout* layout = new QVBoxLayout();
     layout->addWidget(mText);
     setLayout(layout);
-    layout->setMargin(2);
+    //layout->setMargin(2);
 
     setMinimumSize(600, 600);
 }

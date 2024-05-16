@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -39,29 +39,24 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "CalibrationView.h"
 
-#include <QtWidgets>
-#include <QClipboard>
-
-#include "Ruler.h"
 #include "Date.h"
-#include "Event.h"
-#include "Marker.h"
-#include "../PluginAbstract.h"
-#include "../GraphViewRefAbstract.h"
+#include "PluginAbstract.h"
+#include "GraphViewRefAbstract.h"
 #include "MainWindow.h"
-#include "Project.h"
 #include "GraphView.h"
-#include "CheckBox.h"
 #include "LineEdit.h"
 #include "Button.h"
 #include "StdUtilities.h"
 #include "Painting.h"
 #include "Label.h"
-#include "ModelUtilities.h"
 #include "QtUtilities.h"
 #include "DoubleValidator.h"
+#include "AppSettings.h"
 
 #include "CalibrationDrawing.h"
+
+#include <QtWidgets>
+#include <QClipboard>
 
 CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
     mRefGraphView(nullptr),
@@ -70,14 +65,21 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mMajorScale (100),
     mMinorScale (4)
 {
+    setParent(parent);
+    QPalette palette( parent->palette());
 
-    mButtonWidth = int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
-    mButtonHeigth = int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    QPalette palette_BW;
+    palette_BW.setColor(QPalette::Base, Qt::white);
+    palette_BW.setColor(QPalette::Text, Qt::black);
+    palette_BW.setColor(QPalette::Window, Qt::white);
+    palette_BW.setColor(QPalette::WindowText, Qt::black);
+
+    mButtonWidth = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
 
     mDrawing = new CalibrationDrawing(this);
     mDrawing->setMouseTracking(true);
     setMouseTracking(true);
-
 
     mImageSaveBut = new Button(tr("Save"), this);
     mImageSaveBut->setIcon(QIcon(":picture_save.png"));
@@ -96,10 +98,6 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mResultsClipBut->setFlatVertical();
     mResultsClipBut->setToolTip(tr("Copy text results to clipboard"));
     mResultsClipBut->setIconOnly(true);
-
-    frameSeparator = new QFrame(this);
-    frameSeparator->setFrameStyle(QFrame::Panel);
-    frameSeparator->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
 
     mHPDLab = new Label(tr("HPD (%)"), this);
     mHPDLab->setAlignment(Qt::AlignHCenter);
@@ -137,6 +135,12 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mEndEdit->setAdjustText();
     mEndEdit->setText("1000");
 
+    mDisplayStudyBut = new QPushButton(tr("Study Period Display"), this);
+    mDisplayStudyBut->setPalette(palette_BW);
+    //mDisplayStudyBut->setStyleSheet("QPushButton { border : 2px; border-radius: 4px; color: black; background-color: white;};//border-radius: 3px; }");
+    mDisplayStudyBut->setToolTip(tr("Restore view with the study period span"));
+    mDisplayStudyBut->setMinimumWidth(fontMetrics().horizontalAdvance(mDisplayStudyBut->text()) + 10);
+
     mMajorScaleLab = new Label(tr("Maj. Int"), this);
     mMajorScaleLab->setAdjustText();
     mMajorScaleLab->setAlignment(Qt::AlignHCenter);
@@ -172,21 +176,20 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mCalibGraph->setMouseTracking(true);
 
     mResultsText = new QTextEdit(this);
-    mResultsText->setFrameStyle(QFrame::HLine);
-    QPalette palette = this->palette();
-    palette.setColor(QPalette::Base, Qt::white);
-    palette.setColor(QPalette::Text, Qt::black);
+    mResultsText->setFrameStyle(QFrame::NoFrame);
 
     mResultsText->setPalette(palette);
     mResultsText->setText(tr("No Result to display"));
     mResultsText->setReadOnly(true);
-
 
     // Connection
     // setText doesn't emit signal textEdited, when the text is changed programmatically
 
     connect(mStartEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &CalibrationView::updateScroll);
     connect(mEndEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &CalibrationView::updateScroll);
+
+    connect(mDisplayStudyBut, &QPushButton::clicked, this, &CalibrationView::applyStudyPeriod);
+
     connect(mMajorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &CalibrationView::updateScaleX);
     connect(mMinorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &CalibrationView::updateScaleX);
 
@@ -195,7 +198,6 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     connect(mResultsClipBut, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &CalibrationView::copyText);
     connect(mImageClipBut, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &CalibrationView::copyImage);
 
-    setVisible(false);
 }
 
 CalibrationView::~CalibrationView()
@@ -205,22 +207,36 @@ CalibrationView::~CalibrationView()
 
 void CalibrationView::applyAppSettings()
 {
-    mButtonWidth = int (1.3 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
-    mButtonHeigth = int (1.3 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonWidth = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
 
-    repaint();
+    if ( isVisible() && width()> 0 ) {
+        updateGraphs();
+        repaint();
+    }
+}
+
+void CalibrationView::applyStudyPeriod()
+{
+    mStartEdit->setText(QString::number(mSettings.getTminFormated()));
+    mEndEdit->setText(QString::number(mSettings.getTmaxFormated()));
+    updateScroll();
 }
 
 void CalibrationView::setDate(const QJsonObject& date)
 {
-    Q_ASSERT(&date);
     if (date.isEmpty())
         return;
 
-    Project* project = MainWindow::getInstance()->getProject();
-    const QJsonObject state = project->state();
-    const QJsonObject settings = state.value(STATE_SETTINGS).toObject();
-    mSettings = ProjectSettings::fromJson(settings);
+    Date d (date);
+    setDate(d);
+}
+
+void CalibrationView::setDate(const Date& d)
+{
+    const QJsonObject &state = MainWindow::getInstance()->getState();
+    const QJsonObject &settings = state.value(STATE_SETTINGS).toObject();
+    mSettings = StudyPeriodSettings::fromJson(settings);
 
     if (mRefGraphView) {
          if (mDate.mPlugin)
@@ -229,17 +245,15 @@ void CalibrationView::setDate(const QJsonObject& date)
     }
 
     try {
-        mDate.init();
-        mDate.fromJson(date);
-        mDate.autoSetTiSampler(false);
+        mDate = d;
 
         mDrawing->setTitle(mDate.mName + " (" + mDate.mPlugin->getName() + ")");
-
-        const double t1 ( mSettings.getTminFormated() );
-        const double t2 ( mSettings.getTmaxFormated() );
+        qDebug() << "[CalibrationView::setDate] mUUID "<<mDate.mName << mDate.mUUID;
+        const double t1 = mSettings.getTminFormated();
+        const double t2 = mSettings.getTmaxFormated();
         if (mDate.mIsValid) {
-            const double t3 ( mDate.getFormatedTminCalib() );
-            const double t4 ( mDate.getFormatedTmaxCalib() );
+            const double t3 = mDate.getFormatedTminCalib();
+            const double t4 = mDate.getFormatedTmaxCalib();
 
             mTminDisplay = qMin(t1, t3);
             mTmaxDisplay = qMax(t2, t4);
@@ -256,7 +270,10 @@ void CalibrationView::setDate(const QJsonObject& date)
             throw(tr("CalibrationView::setDate ") + mDate.mPlugin->getName() + mDate.mCalibration->mName + locale().toString(mDate.mCalibration->mTmin) + locale().toString(mDate.mCalibration->mTmax));
 
         updateScroll();
-        //updateGraphs();
+
+        mDrawing->setRefGraph( mRefGraphView);
+        mDrawing->updateLayout();
+        update();
     }
     catch(QString error) {
         QMessageBox message(QMessageBox::Critical,
@@ -266,17 +283,15 @@ void CalibrationView::setDate(const QJsonObject& date)
                             qApp->activeWindow());
         message.exec();
     }
-    mDrawing->setRefGraph( mRefGraphView);
-    mDrawing->updateLayout();
-    update();
+
 }
 
 void CalibrationView::updateGraphs()
 {
     mCalibGraph->removeAllCurves();
-    mCalibGraph->removeAllZones();
+    mCalibGraph->remove_all_zones();
 
-     if (!mDate.isNull() ) {
+    if (!mDate.isNull()) {
         mCalibGraph->setRangeX (mTminDisplay, mTmaxDisplay);
         mCalibGraph->setCurrentX (mTminDisplay, mTmaxDisplay);
         mCalibGraph->changeXScaleDivision (mMajorScale, mMinorScale);
@@ -291,7 +306,7 @@ void CalibrationView::updateGraphs()
             zone.mColor = QColor(217, 163, 69);
             zone.mColor.setAlpha(75);
             zone.mText = tr("Outside study period");
-            mCalibGraph->addZone(zone);
+            mCalibGraph->add_zone(zone);
         }
         if (mTmaxDisplay > mSettings.getTmaxFormated()) {
             GraphZone zone;
@@ -300,95 +315,117 @@ void CalibrationView::updateGraphs()
             zone.mColor = QColor(217, 163, 69);
             zone.mColor.setAlpha(75);
             zone.mText = tr("Outside study period");
-            mCalibGraph->addZone(zone);
+            mCalibGraph->add_zone(zone);
         }
 
-        // ------------------------------------------------------------
-        //  Calibration curve
-        // ------------------------------------------------------------
+        /* ------------------------------------------------------------
+          Calibration curve
+          ------------------------------------------------------------ */
         QColor penColor = Painting::mainColorDark;
         QColor brushColor = Painting::mainColorLight;
         brushColor.setAlpha(100);
 
         // Fill under distrib. of calibrated date only if Unif-typo :
-        const bool isUnif (mDate.mPlugin->getName() == "Unif");
+        //const bool isUnif (mDate.mPlugin->getName() == "Unif");
 
         // Fill HPD only if not Unif :
         mResultsText->clear();
-        QMap<double, double> calibMap;
-        if (mDate.mIsValid)
-            calibMap = mDate.getFormatedCalibMap();
 
-        if (!calibMap.isEmpty()) {
-
-            GraphCurve calibCurve;
-            calibCurve.mName = "Calibration";
-            calibCurve.mPen.setColor(penColor);
-            calibCurve.mIsHisto = false;
-            calibCurve.mData = calibMap;
-            calibCurve.mIsRectFromZero = isUnif;
-            calibCurve.mBrush = isUnif ? QBrush(brushColor) : QBrush(Qt::NoBrush);
+        if (mDate.mIsValid) {
+            const QMap<double, double> &calibToShow = mDate.getFormatedCalibToShow();
+            GraphCurve calibCurve = densityCurve(calibToShow, "Calibration", penColor);
+            calibCurve.mVisible = true;
             QFontMetrics fm (mCalibGraph->font());
-            mCalibGraph->addCurve(calibCurve);
+
+            mCalibGraph->add_curve(calibCurve);
             mCalibGraph->setMarginBottom(fm.ascent() * 2.2);
 
-         //   mCalibGraph->setTipXLab("t"); // don't work
+            GraphCurve calibWiggleCurve;
+
+            if (mDate.mDeltaType != Date::eDeltaNone) {
+                const QMap<double, double> &wiggleCalibMap =  mDate.getFormatedWiggleCalibToShow();
+                const QMap<double, double> &calibWiggle = normalize_map(wiggleCalibMap, map_max(calibCurve.mData).value());
+                calibWiggleCurve = densityCurve(calibWiggle, "Wiggle", Qt::red);
+                calibWiggleCurve.mVisible = true;
+                mCalibGraph->add_curve(calibWiggleCurve);
+            }
 
             QString input = mHPDEdit->text();
             mHPDEdit->validator()->fixup(input);
             mHPDEdit->setText(input);
 
             // hpd results
-            const double thresh = qBound(0., locale().toDouble(input), 100.);
-            // do QMap<type_data, type_data> mData; to calcul HPD on study Period
-            QMap<type_data, type_data> subData = calibCurve.mData;
-            subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+            QMap<type_data, type_data> periodCalib = getMapDataInRange(mDate.getFormatedCalibMap(), mSettings.getTminFormated(), mSettings.getTmaxFormated());
+            periodCalib = equal_areas(periodCalib, 1.);
+            QMap<double, double> hpd;
+            QList<QPair<double, QPair<double, double> > > formated_intervals;
+            const double thresh = std::clamp(locale().toDouble(input), 0., 100.);
+
+            if (thresh>(100. - 2*mDate.threshold_limit)) {
+                // In the case of uniform, or calibrations with a length of less than 10, there is no reduction in support for the calibrate (see Date::calibrate).
+                hpd = getMapDataInRange(mDate.getFormatedCalibMap(), mSettings.getTminFormated(), mSettings.getTmaxFormated());
+
+                if (periodCalib.size()<10)
+                    formated_intervals.append(qMakePair(1., qMakePair(periodCalib.firstKey(), periodCalib.lastKey() ) ));
+                else
+                    formated_intervals.append(qMakePair(1.- 2*mDate.threshold_limit, qMakePair(periodCalib.firstKey(), periodCalib.lastKey() ) ));
+
+            } else {
+                // do QMap<type_data, type_data> mData; to calcul HPD on study Period
+                hpd = QMap<double, double>(create_HPD_by_dichotomy(periodCalib, formated_intervals, thresh));
+
+            }
 
 
-            QMap<type_data, type_data> hpd = create_HPD(subData, thresh);
+            if (!hpd.isEmpty()) {
+                GraphCurve hpdCurve;
+                hpdCurve.mName = "Calibration HPD";
+                hpdCurve.mPen = brushColor;
+                hpdCurve.mBrush = brushColor;
+                hpdCurve.mIsRectFromZero = true;
+
+                // update max inside the display period
+                type_data yMax = 0;
+                QMap<type_data, type_data> displayCalib = getMapDataInRange(calibCurve.mData, mTminDisplay, mTmaxDisplay);
+                if (!displayCalib.isEmpty()) {
+
+                    yMax = map_max(displayCalib).value();
+
+                    if (mDate.mDeltaType != Date::eDeltaNone) {
+                        yMax = std::max( yMax, map_max(calibWiggleCurve.mData, mTminDisplay, mTmaxDisplay).value());
+                    }
+
+                    mCalibGraph->setRangeY(0., yMax);
+                }
+
+                const QMap<type_data, type_data> &displayHpd = getMapDataInRange(hpd, mTminDisplay, mTmaxDisplay);
+
+                hpdCurve.mData = normalize_map(displayHpd, yMax);
+                hpdCurve.mVisible = true;
+                mCalibGraph->add_curve(hpdCurve);
 
 
-            GraphCurve hpdCurve;
-            hpdCurve.mName = "Calibration HPD";
-            hpdCurve.mPen = penColor;
-            hpdCurve.mBrush = brushColor;
-            hpdCurve.mIsHisto = false;
-            hpdCurve.mIsRectFromZero = true;
-            hpdCurve.mData = hpd;
-            mCalibGraph->addCurve(hpdCurve);
-
-            // update max inside the display period
-            QMap<type_data, type_data> subDisplay = calibCurve.mData;
-            subDisplay = getMapDataInRange(subDisplay, mTminDisplay, mTmaxDisplay);
-
-            const type_data yMax = map_max_value(subDisplay);
-
-            mCalibGraph->setRangeY(0., yMax);
-
-            mCalibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
-            mCalibGraph->setFormatFunctX(nullptr);
-            mCalibGraph->setFormatFunctY(nullptr);
-
+                mCalibGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
+                mCalibGraph->setFormatFunctX(nullptr);
+                mCalibGraph->setFormatFunctY(nullptr);
+             }
             // ------------------------------------------------------------
             //  Display numerical results
             // ------------------------------------------------------------
             QString resultsStr;
 
-            DensityAnalysis results;
-            results.analysis = analyseFunction(subData);
+            if (!periodCalib.isEmpty()) {
+                DensityAnalysis results;
+                results.funcAnalysis = analyseFunction(periodCalib);
+                resultsStr += FunctionStatToString(results.funcAnalysis);
 
-            if (!subData.isEmpty()) {
-                QVector<double> subRepart = calculRepartition(subData);
+                const double real_thresh = std::accumulate(formated_intervals.begin(), formated_intervals.end(), 0., [](double sum, QPair<double, QPair<double, double> > p) {return sum + p.first;});
 
-                results.quartiles = quartilesForRepartition(subRepart, subData.firstKey(), mSettings.mStep);
-                resultsStr += densityAnalysisToString(results,"<br>", false);
-             }
-
-            const double realThresh = map_area(hpd) / map_area(subData);
-
-            resultsStr +=  "<br> HPD (" + stringForLocal(100. * realThresh) + "%) : " + getHPDText(hpd, realThresh * 100.,DateUtils::getAppSettingsFormatStr(), DateUtils::convertToAppSettingsFormat, false) ;
-
-            mResultsText->setText(resultsStr);
+                // formated_intervals is already in the right date format
+                resultsStr += "<br> HPD (" + stringForLocal(real_thresh * 100.) + "%) : " + get_HPD_text(formated_intervals, DateUtils::getAppSettingsFormatStr(), nullptr, false) ;
+                //resultsStr += "<br> Calibrated date step : " + stringForLocal(std::abs(hpd.lastKey() - hpd.firstKey())/hpd.size());
+                mResultsText->setHtml(resultsStr);
+            }
 
         } else {
             GraphZone zone;
@@ -397,25 +434,25 @@ void CalibrationView::updateGraphs()
             zone.mColor = QColor(217, 163, 69);
             zone.mColor.setAlpha(35);
             zone.mText = tr("Individual calibration not digitally computable ...");
-            mCalibGraph->addZone(zone);
+            mCalibGraph->add_zone(zone);
         }
+
         mDrawing->setCalibGraph(mCalibGraph);
         // ------------------------------------------------------------
         //  Reference curve from plugin
         // ------------------------------------------------------------
 
-
         // Get the ref graph for this plugin and this date
-        if (!mRefGraphView) {
-            mRefGraphView = mDate.mPlugin->getGraphViewRef();
-        }
+        if (!mRefGraphView)
+                mRefGraphView = mDate.mPlugin->getGraphViewRef();
+            
 
         if (mRefGraphView) {
             mRefGraphView->setParent(mDrawing);
             mRefGraphView->setVisible(true);
 
             mRefGraphView->setFormatFunctX(DateUtils::convertFromAppSettingsFormat); // must be before setDate, because setDate use it
-            ProjectSettings tmpSettings;
+            StudyPeriodSettings tmpSettings;
             const double maxDisplayInRaw = DateUtils::convertFromAppSettingsFormat(mTmaxDisplay);
             const double minDisplayInRaw = DateUtils::convertFromAppSettingsFormat(mTminDisplay);
             tmpSettings.mTmax = qMax(minDisplayInRaw, maxDisplayInRaw);
@@ -433,8 +470,23 @@ void CalibrationView::updateGraphs()
         //  Labels
         // ------------------------------------------------------------
         if (mRefGraphView) {
-            mDrawing->setRefTitle(tr("Calibration process"));
-            mDrawing->setRefComment(mDate.mPlugin->getDateDesc(&mDate));
+            if (mDate.mOrigin == Date::eSingleDate) {
+                mDrawing->setRefTitle(tr("Calibration process"));
+                mDrawing->setRefComment(mDate.mPlugin->getDateDesc(&mDate));
+
+            } else {
+                mDrawing->setRefTitle(tr("Overlay densities"));
+                QList<QString> subDatesName;
+                for (auto&& d : mDate.mSubDates) {
+                    if (d.toObject().value(STATE_DATE_DELTA_TYPE).toInt() == Date::eDeltaNone)
+                        subDatesName.append(d.toObject().value(STATE_NAME).toString());
+                    else
+                        subDatesName.append(d.toObject().value(STATE_NAME).toString() + " " + Date::getWiggleDesc(d.toObject()));
+                }
+
+                mDrawing->setRefComment(subDatesName.join(" ; "));
+            }
+
             mDrawing->setCalibTitle(tr("Distribution of calibrated date"));
             mDrawing->setCalibComment("HPD = " + mHPDEdit->text() + " %");
 
@@ -447,7 +499,6 @@ void CalibrationView::updateGraphs()
         mDrawing->updateLayout();
 
     }
-
     updateLayout();
 }
 
@@ -459,13 +510,12 @@ void CalibrationView::updateZoom()
 void CalibrationView::updateScaleX()
 {
     QString str = mMajorScaleEdit->text();
-    bool isNumber (true);
-    double aNumber = locale().toDouble(&str, &isNumber);
+    bool isNumber = true;
+    double aNumber = locale().toDouble(str, &isNumber);
 
-    QFont adaptedFont (font());
-
-    qreal textSize = fontMetrics().boundingRect(str).width()  + fontMetrics().boundingRect("0").width();
+    qreal textSize = fontMetrics().horizontalAdvance(str)  + fontMetrics().horizontalAdvance("0");
     if (textSize > mMajorScaleEdit->width()) {
+        QFont adaptedFont (font());
         const qreal fontRate = textSize / mMajorScaleEdit->width();
         const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
         adaptedFont.setPointSizeF(ptSiz);
@@ -484,10 +534,9 @@ void CalibrationView::updateScaleX()
 
     str = mMinorScaleEdit->text();
 
-    adaptedFont = font();
-
-    textSize = fontMetrics().boundingRect(str).width()  + fontMetrics().boundingRect("0").width();
+    textSize = fontMetrics().horizontalAdvance(str)  + fontMetrics().horizontalAdvance("0");
     if (textSize > mMinorScaleEdit->width()) {
+        QFont adaptedFont (font());
         const qreal fontRate = textSize / mMinorScaleEdit->width();
         const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
         adaptedFont.setPointSizeF(ptSiz);
@@ -496,7 +545,7 @@ void CalibrationView::updateScaleX()
     } else
         mMinorScaleEdit->setFont(font());
 
-    aNumber = locale().toDouble(&str, &isNumber);
+    aNumber = locale().toDouble(str, &isNumber);
 
     if (isNumber && aNumber >= 1) {
         mMinorScale =  int (aNumber);
@@ -517,22 +566,22 @@ void CalibrationView::updateScroll()
     else
         mTminDisplay = mSettings.getTminFormated();
 
-
     val = locale().toDouble(mEndEdit->text(), &ok);
     if (ok)
         mTmaxDisplay = val;
     else
         mTmaxDisplay = mSettings.getTmaxFormated();
 
-    qDebug()<<"CalibrationView::updateScroll()"<<mTminDisplay<<mTmaxDisplay;
+    qDebug()<<"[CalibrationView::updateScroll] "<< mTminDisplay << mTmaxDisplay;
         // usefull when we set mStartEdit and mEndEdit at the begin of the display,
         // after a call to setDate
         if (std::isinf(-mTminDisplay) || std::isinf(mTmaxDisplay) || mTminDisplay>mTmaxDisplay )
             return;
 
-    QFont adaptedFont (font());
-    qreal textSize = fontMetrics().boundingRect(mStartEdit->text()).width()  + fontMetrics().boundingRect("0").width();
+
+    qreal textSize = fontMetrics().horizontalAdvance(mStartEdit->text())  + fontMetrics().horizontalAdvance("0");
     if (textSize > mStartEdit->width() ) {
+        QFont adaptedFont (font());
         const qreal fontRate = textSize / mStartEdit->width() ;
         const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
         adaptedFont.setPointSizeF(ptSiz);
@@ -541,9 +590,9 @@ void CalibrationView::updateScroll()
     else
         mStartEdit->setFont(font());
 
-    adaptedFont = font();
-    textSize = fontMetrics().boundingRect(mEndEdit->text()).width() + fontMetrics().boundingRect("0").width();
+    textSize = fontMetrics().horizontalAdvance(mEndEdit->text()) + fontMetrics().horizontalAdvance("0");
     if (textSize > mEndEdit->width() ) {
+        QFont adaptedFont (font());
         const qreal fontRate = textSize / mEndEdit->width();
         const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
         adaptedFont.setPointSizeF(ptSiz);
@@ -568,26 +617,19 @@ void CalibrationView::exportImage()
     mDrawing->showMarker();
 
 }
+
 void CalibrationView::copyImage()
 {
     mDrawing->hideMarker();
     repaint();
     QApplication::clipboard()->setPixmap(mDrawing->grab());
     mDrawing->showMarker();
-
 }
+
 void CalibrationView::copyText()
 {
-     //QClipboard *p_Clipboard = QApplication::clipboard();
-    //str.remove(QRegExp("<[^>]*>"));
-    //p_Clipboard->setText(mResultsText->text().simplified());
-    /*QTextDocument doc;
-    doc.setHtml( mResultsLab->text() );
-    p_Clipboard->setText(doc.toPlainText());
-     */
     QString text = mDate.mName + " (" + mDate.mPlugin->getName() + ")" +"<br>" + mDate.getDesc() + "<br>" + mResultsText->toPlainText();
     QApplication::clipboard()->setText(text.replace("<br>", "\r"));
-
 }
 
 void CalibrationView::setVisible(bool visible)
@@ -595,7 +637,6 @@ void CalibrationView::setVisible(bool visible)
     mImageSaveBut->setVisible(visible);
     mImageClipBut->setVisible(visible);
     mResultsClipBut->setVisible(visible);
-    frameSeparator->setVisible(visible);
 
     mStartLab->setVisible(visible);
     mStartEdit->setVisible(visible);
@@ -610,9 +651,8 @@ void CalibrationView::setVisible(bool visible)
     QWidget::setVisible(visible);
 }
 
-void CalibrationView::resizeEvent(QResizeEvent* e)
+void CalibrationView::resizeEvent(QResizeEvent*)
 {
-    Q_UNUSED(e);
     if (!mDate.mPlugin || width()<0 || height()<0) {
         setVisible(false);
         return;
@@ -623,82 +663,92 @@ void CalibrationView::resizeEvent(QResizeEvent* e)
     update();
 
 }
-void CalibrationView::paintEvent(QPaintEvent* e)
-{
-    Q_UNUSED(e);
 
-    const int graphLeft (mButtonWidth);
-    const int graphWidth (width() - graphLeft);
+void CalibrationView::paintEvent(QPaintEvent* )
+{
+    const int graphWidth = width() - mButtonWidth;
 
     QPainter p(this);
-    //p.setRenderHint(QPainter::Antialiasing); // not necessary
-    // drawing a background under button
-    p.fillRect(QRect(0, 0, graphLeft, height()), Painting::borderDark);
+    // 1 - Drawing a background under button to hide buttonn of Even Scene
+    p.fillRect(0, 0, mButtonWidth, height(), Painting::borderDark);
 
-    // drawing a background under curve
-    p.fillRect(QRect(graphLeft, 0, graphWidth, height()), Qt::white);
+    //  2 - Behind toolBar
+    p.fillRect(mButtonWidth, mDrawing->y() + mDrawing->height(), graphWidth, mResultsText->y() - mDrawing->height() , Painting::borderDark);
 
+    // 3 - Drawing a background under curve
+    p.fillRect(mButtonWidth, 0, graphWidth, mDrawing->height(),  Qt::white);
+
+    // 4 - Behind mResultText, mResultsText is less wide than the remaining space to put a visible space to the left of the text
+    p.fillRect(mButtonWidth, mResultsText->y(), graphWidth, height() - mResultsText->y() , mResultsText->palette().base().color());
     updateLayout();
 
 }
 
 void CalibrationView::updateLayout()
 {
-    if (!mCalibGraph->hasCurve()) {
+    if (!mCalibGraph->has_curves()) {
         mDrawing->setGeometry(mButtonWidth, 0, 0, 0);
         return;
     }
 
     QFontMetrics fm (font());
 
-    // same variable in MultiCalibrationView::updateLayout()
+    // Same variable in MultiCalibrationView::updateLayout()
     const int textHeight (int (1.2 * (fm.descent() + fm.ascent()) ));
-    const int verticalSpacer (int (0.3 * AppSettings::heigthUnit()));
-    const int margin = int (0.1 * mButtonWidth);
-
+    const qreal toolBarHeigth = 2*textHeight + 12;
     //Position of Widget
-    int y (0);
+    int y = 0;
 
     mImageSaveBut->setGeometry(0, y, mButtonWidth, mButtonHeigth);
     y += mImageSaveBut->height();
     mImageClipBut->setGeometry(0, y, mButtonWidth, mButtonHeigth);
-    y += mImageClipBut->height();
-    mResultsClipBut->setGeometry(0, y, mButtonWidth, mButtonHeigth);
-    y += mResultsClipBut->height();
-
-    const int separatorHeight (height()- y - 10*textHeight - 10* verticalSpacer);
-    frameSeparator->setGeometry(0, y, mButtonWidth, separatorHeight);
-    y += frameSeparator->height() + verticalSpacer;
-
-    mStartLab->setGeometry(0, y, mButtonWidth, textHeight);
-    y += mStartLab->height();
-    mStartEdit->setGeometry(margin, y, mButtonWidth - 2*margin, textHeight);
-    y += mStartEdit->height() + verticalSpacer;
-    mEndLab->setGeometry(0, y, mButtonWidth, textHeight);
-    y += mEndLab->height();
-    mEndEdit->setGeometry(margin, y, mButtonWidth - 2*margin, textHeight);
-    y += mEndEdit->height() + verticalSpacer;
-
-    mMajorScaleLab->setGeometry(0, y, mButtonWidth, textHeight);
-    y += mMajorScaleLab->height();
-    mMajorScaleEdit->setGeometry(margin, y, mButtonWidth- 2*margin, textHeight);
-    y += mMajorScaleEdit->height() + verticalSpacer;
-
-    mMinorScaleLab->setGeometry(0, y, mButtonWidth, textHeight);
-    y += mMinorScaleLab->height();
-    mMinorScaleEdit->setGeometry(margin, y, mButtonWidth - 2*margin, textHeight);
-    y += mMinorScaleEdit->height() + 3*verticalSpacer;
-
-    mHPDLab->setGeometry(0, y, mButtonWidth, textHeight);
-    y += mHPDLab->height();
-    mHPDEdit->setGeometry(margin, y, mButtonWidth - 2*margin, textHeight);
 
     const int graphLeft = mImageSaveBut->x() + mImageSaveBut->width();
     const int graphWidth = width() - graphLeft;
 
     const int resTextH = 5 * fm.height();
-    mDrawing->setGeometry(graphLeft, 0, graphWidth, height() - resTextH);
-    mResultsText->setGeometry(graphLeft + 20, mDrawing->y() + mDrawing->height(), graphWidth - 40 , resTextH);
+
+    mDrawing->setGeometry(graphLeft, 0, graphWidth, height() - resTextH - toolBarHeigth);
+
+    // Bottom toolBar
+    const int yPosBottomBar0 = mDrawing->y() + mDrawing->height();
+    const int yPosBottomBar1 = yPosBottomBar0 + textHeight + 2;
+
+    const int buttonWidth =   mDisplayStudyBut->width();
+
+    const int labelWidth = std::min( fontMetrics().horizontalAdvance("-1000000") , (graphWidth - buttonWidth) /5);
+    const int editWidth = labelWidth;
+    const int marginBottomBar = (graphWidth- 5.*labelWidth - buttonWidth)/7.;
+
+
+    qreal xShift = marginBottomBar + graphLeft;
+    mStartLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
+    mStartEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
+
+    xShift += mStartLab->width() + marginBottomBar;
+    mEndLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
+    mEndEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
+
+    xShift += mEndLab->width() + marginBottomBar;
+    mDisplayStudyBut->setGeometry(xShift, yPosBottomBar1 - 5, mDisplayStudyBut->width(), textHeight + 10);
+
+
+    xShift += mDisplayStudyBut->width() + marginBottomBar;
+    mMajorScaleLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
+    mMajorScaleEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
+
+    xShift += mMajorScaleLab->width() + marginBottomBar;
+    mMinorScaleLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
+    mMinorScaleEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
+
+    xShift += mMinorScaleLab->width() + marginBottomBar;
+    mHPDLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
+    mHPDEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
+
+    // ResultBox
+    mResultsClipBut->setGeometry(0, mDrawing->y() + mDrawing->height() + toolBarHeigth, mButtonWidth, mButtonHeigth);
+
+    mResultsText->setGeometry(graphLeft + 20, mDrawing->y() + mDrawing->height() + toolBarHeigth, graphWidth - 40 , resTextH);
     mResultsText->setAutoFillBackground (true);
 
 }

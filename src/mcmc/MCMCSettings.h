@@ -1,6 +1,5 @@
 /* ---------------------------------------------------------------------
-
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -40,17 +39,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef MCMCSETTINGS_H
 #define MCMCSETTINGS_H
 
-#include "StateKeys.h"
-
 #include <QJsonObject>
 #include <QList>
-
 
 #define MCMC_NUM_CHAINS_DEFAULT 3
 #define MCMC_NUM_RUN_DEFAULT 100000
 #define MCMC_NUM_BURN_DEFAULT 1000
-#define MCMC_MAX_ADAPT_BATCHES_DEFAULT 20
-#define MCMC_ITER_PER_BATCH_DEFAULT 500
+#define MCMC_MAX_ADAPT_BATCHES_DEFAULT 200
+#define MCMC_ITER_PER_BATCH_DEFAULT 100
 #define MCMC_THINNING_INTERVAL_DEFAULT 10
 
 #define MCMC_MIXING_DEFAULT 0.99
@@ -58,18 +54,26 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 struct ChainSpecs
 {
-    int mSeed;
-    int mNumBurnIter;
-    int mBurnIterIndex;
-    int mMaxBatchs;
-    int mNumBatchIter;
-    int mBatchIterIndex;
-    int mBatchIndex;
-    int mNumRunIter;
-    int mRunIterIndex;
-    int mTotalIter; // burn + adapt + run
-    int mThinningInterval;
-    double mMixingLevel;
+    unsigned mSeed;
+    int mIterPerBurn = MCMC_NUM_BURN_DEFAULT;
+    int mBurnIterIndex = 0;
+    int mMaxBatchs = MCMC_MAX_ADAPT_BATCHES_DEFAULT;
+    int mIterPerBatch = MCMC_ITER_PER_BATCH_DEFAULT;
+    int mBatchIterIndex = 0;
+    int mBatchIndex = 0;
+    int mIterPerAquisition = 0; //mNumRunIter;
+    int mAquisitionIterIndex = 0; // mRunIterIndex;
+    int mTotalIter = 0; // burn + adapt + run
+    int mThinningInterval = MCMC_THINNING_INTERVAL_DEFAULT;
+
+    int mRealyAccepted = 0;
+    double mMixingLevel = MCMC_MIXING_DEFAULT;
+
+    qint64 mInitElapsedTime = 0;
+    qint64 burnElapsedTime = 0;
+    qint64 mAdaptElapsedTime = 0;
+    qint64 mAcquisitionElapsedTime = 0;
+
 };
 
 
@@ -89,12 +93,12 @@ public:
     QList<ChainSpecs> getChains() const;
 
     int mNumChains;
-    int mNumRunIter;
-    int mNumBurnIter;
+    int mIterPerAquisition;
+    int mIterPerBurn;
     int mMaxBatches;
-    int mNumBatchIter;
+    int mIterPerBatch;
     int mThinningInterval;
-    QList<int> mSeeds;
+    QList<unsigned> mSeeds;
 
     int mFinalBatchIndex;
     double mMixingLevel;
@@ -103,4 +107,4 @@ public:
 QDataStream &operator<<( QDataStream &stream, const MCMCSettings &data );
 QDataStream &operator>>( QDataStream &stream, MCMCSettings &data );
 
-#endif // endif MCMCSettings_H
+#endif

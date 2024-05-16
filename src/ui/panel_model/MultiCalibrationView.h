@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -46,13 +46,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QTextEdit>
 
 #include "Button.h"
-#include "Event.h"
 #include "Label.h"
 #include "LineEdit.h"
 #include "MultiCalibrationDrawing.h"
 #include "ColorPicker.h"
+#include "Project.h"
+#include "ScrollCompressor.h"
+#include "CurveUtilities.h"
 
-#include "ProjectSettings.h"
+#include "StudyPeriodSettings.h"
 
 class MultiCalibrationView: public QWidget
 {
@@ -62,11 +64,10 @@ public:
 
     ~MultiCalibrationView();
 
-    void setEventsList(const QList<Event*> &list) {mEventsList = list;}
-    void setProject(Project *project) {mProject = project;}
-  //  void setFont(const QFont& font);
+    void setProject(std::shared_ptr<Project> project);
+
     void updateGraphList();
-    void initScale (const double &majorScale, const int &minorScale) { mMajorScale= majorScale; mMinorScale = minorScale;}
+    void initScale (const double majorScale, const int minorScale) { mMajorScale = majorScale; mMinorScale = minorScale;}
     void initScale (const Scale &s) { mMajorScale = s.mark; mMinorScale = s.tip;}
 
 
@@ -74,6 +75,10 @@ protected:
     void paintEvent(QPaintEvent* e);
     void resizeEvent(QResizeEvent*);
     void updateLayout();
+    MultiCalibrationDrawing* scatterPlot(const double thres);
+    MultiCalibrationDrawing* fitPlot(const double thres);
+    MultiCalibrationDrawing* multiCalibrationPlot(const double thres);
+
 
 public slots:
     virtual void setVisible(bool visible);
@@ -82,30 +87,36 @@ public slots:
     void applyAppSettings();
 
 private slots:
-    void updateHPDGraphs(const QString & thres);
-    void updateGraphsSize(const QString & sizeStr);
+    void updateHPDGraphs(const QString &thres);
+
+    void updateGraphsSize(const QString &sizeStr);
+    void updateYZoom(const double prop = 100);
+
     void updateGraphsZoom();
     void updateScroll();
     void exportImage();
     void exportFullImage();
     void copyImage();
     void copyText();
+    void exportResults();
 
     void changeCurveColor();
     void showStat();
+    void showScatter();
+    void showFit();
 
 signals:
     void closed();
 
 public:
-    QList<Event*> mEventsList;
-    ProjectSettings mSettings;
-    Project *mProject;
+    StudyPeriodSettings mSettings;
+    std::shared_ptr<Project> mProject;
 
 private:
 
     MultiCalibrationDrawing* mDrawing;
-    QTextEdit* mTextArea;
+
+    QTextEdit* mStatArea;
     int mButtonWidth;
     int mButtonHeigth;
 
@@ -116,13 +127,16 @@ private:
     Button* mImageSaveBut;
     Button* mImageClipBut;
     Button* mStatClipBut;
+    Button* mExportResults;
     Button* mColorClipBut;
+    Button* mScatterClipBut;
+    Button* mFitClipBut;
     ColorPicker* mColorPicker;
 
-    QFrame* frameSeparator;
 
     Label* mGraphHeightLab;
     LineEdit* mGraphHeightEdit;
+    ScrollCompressor* mYZoom;
 
     Label* mHPDLab;
     LineEdit* mHPDEdit;
@@ -150,6 +164,7 @@ private:
 
     QString mResultText;
 
+    SilvermanParam mSilverParam;
 };
 
 #endif // MULTICALIBRATIONVIEW_H

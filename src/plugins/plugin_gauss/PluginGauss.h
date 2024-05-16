@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #if USE_PLUGIN_GAUSS
 
-#include "../PluginAbstract.h"
+#include "PluginAbstract.h"
 
 #define DATE_GAUSS_AGE_STR "age"
 #define DATE_GAUSS_ERROR_STR "error"
@@ -60,28 +60,33 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class DATATION_SHARED_EXPORT PluginGauss : public PluginAbstract
 {
     Q_OBJECT
-    //Q_PLUGIN_METADATA(IID "chronomodel.PluginAbstract.PluginGauss")
-    //Q_INTERFACES(PluginAbstract)
 public:
     PluginGauss();
     virtual ~PluginGauss();
 
     //virtual function
-    long double getLikelihood(const double& t, const QJsonObject& data);
+    long double getLikelihood(const double t, const QJsonObject& data);
     bool withLikelihoodArg() {return true; }
-    QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data);
-
+    QPair<long double, long double > getLikelihoodArg(const double t, const QJsonObject &data);
+    
+    QPair<double,double> getTminTmaxRefsCurve(const QJsonObject &data) const;
+    double getMinStepRefsCurve(const QJsonObject &data) const;
+    //QPair<double,double> getTminTmaxRefsCurveCombine(const QJsonArray& subData);
+   // long double getLikelihoodCombine  (const double& t, const QJsonArray& subData);
+    
     QString getName() const;
     QIcon getIcon() const;
     bool doesCalibration() const;
     bool wiggleAllowed() const;
-    Date::DataMethod getDataMethod() const;
-    QList<Date::DataMethod> allowedDataMethods() const;
+    //Date::DataMethod getDataMethod() const;
+    //QList<Date::DataMethod> allowedDataMethods() const;
+    MHVariable::SamplerProposal getDataMethod() const;
+    QList<MHVariable::SamplerProposal> allowedDataMethods() const;
     QString csvHelp() const;
     QStringList csvColumns() const;
-    int csvMinColumns() const;
-    QJsonObject fromCSV(const QStringList& list, const QLocale &csvLocale);
-    QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale) const;
+    qsizetype csvMinColumns() const;
+    QJsonObject fromCSV(const QStringList &list, const QLocale &csvLocale);
+    QStringList toCSV(const QJsonObject &data, const QLocale &csvLocale) const;
     QString getDateDesc(const Date* date) const;
     QString getDateRefCurveName(const Date* date) ;
 
@@ -90,19 +95,19 @@ public:
     virtual void deleteGraphViewRef(GraphViewRefAbstract* graph);
     PluginSettingsViewAbstract* getSettingsView();
 
-    QJsonObject checkValuesCompatibility(const QJsonObject& values);
-    bool isDateValid(const QJsonObject& data, const ProjectSettings& settings);
+    QJsonObject checkValuesCompatibility(const QJsonObject &values);
+    bool isDateValid(const QJsonObject &data, const StudyPeriodSettings &settings);
 
+    bool areDatesMergeable(const QJsonArray &dates);
+    QJsonObject mergeDates(const QJsonArray &dates);
     // ---------------------
 
     QString getRefExt() const;
     QString getRefsPath() const;
     RefCurve loadRefFile(QFileInfo refFile);
 
-    double getRefValueAt(const QJsonObject& data, const double& t);
-    double getRefErrorAt(const QJsonObject& data, const double& t, const QString mode);
-
-    QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
+    long double getRefValueAt(const QJsonObject &data, const double t);
+    double getRefErrorAt(const QJsonObject &data, const double t, const QString mode);
 
 
 };

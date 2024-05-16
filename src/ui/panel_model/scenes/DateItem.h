@@ -41,7 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define DATEITEM_H
 
 #include "EventsScene.h"
-#include "ProjectSettings.h"
+#include "StudyPeriodSettings.h"
 
 #include <QObject>
 #include <QGraphicsObject>
@@ -65,7 +65,7 @@ public:
     QRectF boundingRect() const;
 
     static int mTitleHeight;
-    static  int mEltsHeight;
+    static int mEltsHeight;
 protected:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
     void mousePressEvent(QGraphicsSceneMouseEvent* e);

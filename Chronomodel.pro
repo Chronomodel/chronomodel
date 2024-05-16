@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------
 
-#Copyright or © or Copr. CNRS	2014 - 2018
+#Copyright or © or Copr. CNRS	2014 - 2024
 
 #Authors :
 #	Philippe LANOS
@@ -37,10 +37,10 @@
 # knowledge of the CeCILL V2.1 license and that you accept its terms.
 # --------------------------------------------------------------------- */
 
-# DEFINES += VERSION_NUMBER=\\\"2.0.10\\\"
-VERSION = 2.0.18
- #VERSION_NUMBER # must match value in src/main.cpp and Chronomodel.rc (for windows)
-#PRO_PATH=$$PWD
+DEFINES += VERSION_NUMBER="3,2,7"
+VERSION = 3.2.7
+#VERSION_NUMBER # must match value in src/main.cpp and mainControler and Chronomodel.rc (for windows)
+
 PRO_PATH=$$_PRO_FILE_PWD_
 
 message("-------------------------------------------")
@@ -83,21 +83,19 @@ QT += core gui widgets svg
 
 # Resource file (for images)
 RESOURCES = $$PRO_PATH/Chronomodel.qrc
-#RESOURCES = Chronomodel.qrc
 
 # Compilation warning flags
-# QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas -Wno-unused-parameter # invalid option for MSVC2015
+QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas -Wno-unused-parameter # invalid option for MSVC2015
 # QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-parameter
 
 
 #########################################
-# C++ 11
+# C++ 2a
 # Config must use C++ 11 for random number generator
 # This works for Windows, Linux & Mac 10.7 and +
-# In the future we'll need to increase to C++17
-# which offered namespace std::experimental::parallel;
 #########################################
-CONFIG += c++11
+CONFIG += c++2a
+QMAKE_CXXFLAGS += -std=c++2a
 
 #########################################
 # MacOS specific settings
@@ -105,7 +103,7 @@ CONFIG += c++11
 macx{
     message("MacOSX specific settings")
 	# Icon file
-        ICON = $$PRO_PATH/icon/Chronomodel.icns
+        macx:ICON = $$PRO_PATH/icon/Chronomodel.icns
 
 	# This is the SDK used to compile : change it to whatever latest version of mac you are using.
 	# to determine which version of the macOS SDK is installed with xcode? type on a terminal
@@ -113,14 +111,21 @@ macx{
 
 
         QMAKESPEC = macx-clang
-        QMAKE_MAC_SDK = macosx10.14
+
+        QMAKE_MAC_SDK = macosx
         message("QMAKE_MAC_SDK = $$QMAKE_MAC_SDK")
 
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
-        QMAKE_MACOSX_DEPLOYMENT_TARGET=10.7
+        #QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14 # OS X 10.9 	Mavericks oct 2013  # essai sinon 10.14
+        QMAKE_MACOSX_DEPLOYMENT_TARGET = 12 # Since 2022-10-11 work with fftw 3.3.2
+
+        #QMAKE_MACOSX_DEPLOYMENT_TARGET = 13 # work with fftw 3.3.10
+
+        message("QMAKE_MACOSX_DEPLOYMENT_TARGET = $$QMAKE_MACOSX_DEPLOYMENT_TARGET")
+
 	# Define a set of resources to deploy inside the bundle :
 	RESOURCES_FILES.path = Contents/Resources
-	RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib
+        # RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib // used for older version <3.1.6
         RESOURCES_FILES.files += $$PRO_PATH/deploy/ABOUT.html
         RESOURCES_FILES.files += $$PRO_PATH/deploy/Chronomodel.png
         #RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns
@@ -133,9 +138,8 @@ macx{
 win32{
 	# Resource file (Windows only)
         message("WIN specific settings")
-        QMAKESPEC = win32-msvc  # for 32-bit and 64-bit
-        RC_FILE += Chronomodel.rc
-        RC_ICONS += $$PRO_PATH/icon/Chronomodel.ico
+        QMAKESPEC = win32-g++ #win32-msvc  # for 32-bit and 64-bit
+        RC_ICONS = $$PRO_PATH/icon/Chronomodel.ico
         QT_FATAL_WARNING = 1
 }
 
@@ -158,32 +162,42 @@ USE_PLUGIN_GAUSS = 1
 USE_PLUGIN_14C = 1
 USE_PLUGIN_TL = 1
 USE_PLUGIN_AM = 1
+USE_PLUGIN_F14C = 1
+USE_PLUGIN_DENSITY = 1
 
 DEFINES += "USE_PLUGIN_UNIFORM=$${USE_PLUGIN_UNIFORM}"
 DEFINES += "USE_PLUGIN_GAUSS=$${USE_PLUGIN_GAUSS}"
 DEFINES += "USE_PLUGIN_14C=$${USE_PLUGIN_14C}"
 DEFINES += "USE_PLUGIN_TL=$${USE_PLUGIN_TL}"
 DEFINES += "USE_PLUGIN_AM=$${USE_PLUGIN_AM}"
+DEFINES += "USE_PLUGIN_F14C=$${USE_PLUGIN_F14C}"
+DEFINES += "USE_PLUGIN_DENSITY=$${USE_PLUGIN_DENSITY}"
 
 #########################################
 # FFTW
 #########################################
-
+message("----- FFTW -----")
 macx{
 	# IMPORTANT NOTE :
 	# We use FFTW 3.2.2 on Mac to support Mac OS X versions from 10.7.
-	# (Using FFTW 3.3.4 is available for mac 10.9+)
 	# We provide FFTW.3.2.2.dmg if you want to install it on your system, but this is not necessary!
 	# The generated XCode project will locate FFTW files in the project directory and statically link against it.
 
 	# this is to include fftw.h in the code :
-	INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac
+	# INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac
+        INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.2.2/mac # for macos 12
+        LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.2.2/mac" -lfftw3
 
+        #INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac # with intel and arm, for macos 13
+        #LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac" -lfftw3
 
 	# Link the application with FFTW library
 	# If no dylib are present, static libs (.a) are used => that's why we moved .dylib files in a "dylib" folder.
-        #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3f
-        LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3
+
+
+        #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3
+
+
 
 	# If we were deploying FFTW as a dynamic library, we should :
 	# - Move all files from "lib/FFTW/mac/dylib" to "lib/FFTW/mac"
@@ -199,27 +213,30 @@ macx{
 }
 
 win32{
-        INCLUDEPATH += lib/FFTW
+        INCLUDEPATH += lib/fftw-3.2.2
         contains(QT_ARCH, i386) {
             message("32-bit")
-            LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win32" -lfftw3-3
+            LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.2.2/win32" -lfftw3-3
 
         } else { # to compile with a x64 machine
             message("64-bit")
-            LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/win64" -lfftw3-3
+            LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.2.2/win64" -lfftw3-3
         }
 }
 #linux :
 unix:!macx{
-	INCLUDEPATH += lib/FFTW
+        INCLUDEPATH += lib/fftw-3.2.2
         LIBS += -lfftw3
 }
 
 #########################################
+message("INCLUDEPATH : $$INCLUDEPATH")
+message("LIBS : $$LIBS")
+
 # TRANSLATIONS
 #########################################
 TRANSLATIONS = translations/Chronomodel_fr.ts \
-				translations/Chronomodel_en.ts
+               translations/Chronomodel_en.ts
 
 # For Microsoft Visual Studio only
 CODECFORSRC = UTF-8
@@ -237,7 +254,10 @@ INCLUDEPATH += src/plugins/plugin_am/
 INCLUDEPATH += src/plugins/plugin_gauss/
 INCLUDEPATH += src/plugins/plugin_tl/
 INCLUDEPATH += src/plugins/plugin_uniform/
+INCLUDEPATH += src/plugins/plugin_F14C/
+INCLUDEPATH += src/plugins/plugin_density/
 INCLUDEPATH += src/project/
+INCLUDEPATH += src/curve/
 INCLUDEPATH += src/ui/
 INCLUDEPATH += src/ui/dialogs/
 INCLUDEPATH += src/ui/graphs/
@@ -256,16 +276,25 @@ INCLUDEPATH += src/utilities/
 #########################################
 
 HEADERS += src/MainController.h \
+    src/ui/dialogs/RebuildCurveDialog.h \
+    src/ui/dialogs/SilvermanDialog.h \
     src/ui/panel_model/MultiCalibrationView.h \
-    src/ui/panel_model/MultiCalibrationDrawing.h
+    src/ui/panel_model/MultiCalibrationDrawing.h \
+    src/utilities/Matrix.h
 HEADERS += src/AppSettings.h
 HEADERS += src/StateKeys.h
 HEADERS += src/ChronoApp.h
 
+HEADERS += src/curve/CurveSettings.h
+HEADERS += src/curve/CurveSettingsView.h
+HEADERS += src/curve/MCMCLoopCurve.h
+HEADERS += src/curve/ModelCurve.h
+HEADERS += src/curve/CurveUtilities.h
+
 HEADERS += src/mcmc/Functions.h
 HEADERS += src/mcmc/Generator.h
 HEADERS += src/mcmc/MCMCLoop.h
-HEADERS += src/mcmc/MCMCLoopMain.h
+HEADERS += src/mcmc/MCMCLoopChrono.h
 HEADERS += src/mcmc/MCMCSettings.h
 HEADERS += src/mcmc/MetropolisVariable.h
 HEADERS += src/mcmc/MHVariable.h
@@ -274,7 +303,7 @@ HEADERS += src/model/Constraint.h
 HEADERS += src/model/Date.h
 HEADERS += src/model/Event.h
 HEADERS += src/model/EventConstraint.h
-HEADERS += src/model/EventKnown.h
+HEADERS += src/model/Bound.h
 HEADERS += src/model/Model.h
 HEADERS += src/model/ModelUtilities.h
 HEADERS += src/model/Phase.h
@@ -315,13 +344,28 @@ equals(USE_PLUGIN_AM, 1){
 equals(USE_PLUGIN_UNIFORM, 1){
 	HEADERS += src/plugins/plugin_uniform/PluginUniform.h
 	HEADERS += src/plugins/plugin_uniform/PluginUniformForm.h
+	HEADERS += src/plugins/plugin_uniform/PluginUniformRefView.h
+	HEADERS += src/plugins/plugin_uniform/PluginUniformSettingsView.h
+}
+equals(USE_PLUGIN_F14C, 1){
+    HEADERS += src/plugins/plugin_F14C/PluginF14C.h
+    HEADERS += src/plugins/plugin_F14C/PluginF14CForm.h
+    HEADERS += src/plugins/plugin_F14C/PluginF14CRefView.h
+    HEADERS += src/plugins/plugin_F14C/PluginF14CSettingsView.h
+}
+equals(USE_PLUGIN_DENSITY, 1){
+        HEADERS += src/plugins/plugin_density/PluginDensity.h
+        HEADERS += src/plugins/plugin_density/PluginDensityForm.h
+        HEADERS += src/plugins/plugin_density/PluginDensityRefView.h
+        HEADERS += src/plugins/plugin_density/PluginDensitySettingsView.h
 }
 
 HEADERS += src/project/PluginManager.h
 HEADERS += src/project/Project.h
-HEADERS += src/project/ProjectSettings.h
+HEADERS += src/project/StudyPeriodSettings.h
 HEADERS += src/project/SetProjectState.h
 HEADERS += src/project/StateEvent.h
+
 
 HEADERS += src/ui/dialogs/AboutDialog.h
 HEADERS += src/ui/dialogs/AppSettingsDialog.h
@@ -367,11 +411,13 @@ HEADERS += src/ui/panel_model/scenes/EventsScene.h
 HEADERS += src/ui/panel_model/scenes/PhaseItem.h
 HEADERS += src/ui/panel_model/scenes/PhasesScene.h
 
+HEADERS += src/ui/panel_results/GraphViewLambda.h
+HEADERS += src/ui/panel_results/GraphViewCurve.h
 HEADERS += src/ui/panel_results/GraphViewDate.h
 HEADERS += src/ui/panel_results/GraphViewEvent.h
 HEADERS += src/ui/panel_results/GraphViewPhase.h
 HEADERS += src/ui/panel_results/GraphViewResults.h
-HEADERS += src/ui/panel_results/GraphViewTempo.h
+HEADERS += src/ui/panel_results/GraphViewS02.h
 HEADERS += src/ui/panel_results/ResultsView.h
 
 HEADERS += src/ui/widgets/Button.h
@@ -386,6 +432,8 @@ HEADERS += src/ui/widgets/Marker.h
 HEADERS += src/ui/widgets/RadioButton.h
 HEADERS += src/ui/widgets/ScrollCompressor.h
 HEADERS += src/ui/widgets/Tabs.h
+HEADERS += src/ui/widgets/SwitchAction.h
+HEADERS += src/ui/widgets/CurveWidget.h
 
 HEADERS += src/ui/window/MainWindow.h
 HEADERS += src/ui/window/ProjectView.h
@@ -402,16 +450,25 @@ HEADERS += src/utilities/StdUtilities.h
 #########################################
 
 SOURCES += src/AppSettings.cpp \
+    src/ui/dialogs/RebuildCurveDialog.cpp \
+    src/ui/dialogs/SilvermanDialog.cpp \
     src/ui/panel_model/MultiCalibrationView.cpp \
-    src/ui/panel_model/MultiCalibrationDrawing.cpp
+    src/ui/panel_model/MultiCalibrationDrawing.cpp \
+    src/utilities/Matrix.cpp
 SOURCES += src/ChronoApp.cpp
 SOURCES += src/main.cpp
 SOURCES += src/MainController.cpp
 
+SOURCES += src/curve/CurveSettings.cpp
+SOURCES += src/curve/CurveSettingsView.cpp
+SOURCES += src/curve/MCMCLoopCurve.cpp
+SOURCES += src/curve/ModelCurve.cpp
+SOURCES += src/curve/CurveUtilities.cpp
+
 SOURCES += src/mcmc/Functions.cpp
 SOURCES += src/mcmc/Generator.cpp
 SOURCES += src/mcmc/MCMCLoop.cpp
-SOURCES += src/mcmc/MCMCLoopMain.cpp
+SOURCES += src/mcmc/MCMCLoopChrono.cpp
 SOURCES += src/mcmc/MCMCSettings.cpp
 SOURCES += src/mcmc/MetropolisVariable.cpp
 SOURCES += src/mcmc/MHVariable.cpp
@@ -420,7 +477,7 @@ SOURCES += src/model/Constraint.cpp
 SOURCES += src/model/Date.cpp
 SOURCES += src/model/Event.cpp
 SOURCES += src/model/EventConstraint.cpp
-SOURCES += src/model/EventKnown.cpp
+SOURCES += src/model/Bound.cpp
 SOURCES += src/model/Model.cpp
 SOURCES += src/model/ModelUtilities.cpp
 SOURCES += src/model/Phase.cpp
@@ -430,38 +487,51 @@ SOURCES += src/plugins/CalibrationCurve.cpp
 SOURCES += src/plugins/PluginRefCurveSettingsView.cpp
 SOURCES += src/plugins/RefCurve.cpp
 
-equals(USE_PLUGIN_TL, 1){
-	SOURCES += src/plugins/plugin_tl/PluginTL.cpp
-	SOURCES += src/plugins/plugin_tl/PluginTLForm.cpp
-	SOURCES += src/plugins/plugin_tl/PluginTLRefView.cpp
+equals(USE_PLUGIN_TL, 1) {
+    SOURCES += src/plugins/plugin_tl/PluginTL.cpp
+    SOURCES += src/plugins/plugin_tl/PluginTLForm.cpp
+    SOURCES += src/plugins/plugin_tl/PluginTLRefView.cpp
     SOURCES += src/plugins/plugin_tl/PluginTLSettingsView.cpp
 }
-equals(USE_PLUGIN_14C, 1){
-	SOURCES += src/plugins/plugin_14C/Plugin14C.cpp
-	SOURCES += src/plugins/plugin_14C/Plugin14CForm.cpp
-	SOURCES += src/plugins/plugin_14C/Plugin14CRefView.cpp
-        SOURCES += src/plugins/plugin_14C/Plugin14CSettingsView.cpp
+equals(USE_PLUGIN_14C, 1) {
+    SOURCES += src/plugins/plugin_14C/Plugin14C.cpp
+    SOURCES += src/plugins/plugin_14C/Plugin14CForm.cpp
+    SOURCES += src/plugins/plugin_14C/Plugin14CRefView.cpp
+    SOURCES += src/plugins/plugin_14C/Plugin14CSettingsView.cpp
 }
-equals(USE_PLUGIN_GAUSS, 1){
-	SOURCES += src/plugins/plugin_gauss/PluginGauss.cpp
-	SOURCES += src/plugins/plugin_gauss/PluginGaussForm.cpp
-	SOURCES += src/plugins/plugin_gauss/PluginGaussRefView.cpp
-        SOURCES += src/plugins/plugin_gauss/PluginGaussSettingsView.cpp
+equals(USE_PLUGIN_GAUSS, 1) {
+    SOURCES += src/plugins/plugin_gauss/PluginGauss.cpp
+    SOURCES += src/plugins/plugin_gauss/PluginGaussForm.cpp
+    SOURCES += src/plugins/plugin_gauss/PluginGaussRefView.cpp
+    SOURCES += src/plugins/plugin_gauss/PluginGaussSettingsView.cpp
 }
-equals(USE_PLUGIN_AM, 1){
-	SOURCES += src/plugins/plugin_am/PluginMag.cpp
-	SOURCES += src/plugins/plugin_am/PluginMagForm.cpp
-	SOURCES += src/plugins/plugin_am/PluginMagRefView.cpp
-        SOURCES += src/plugins/plugin_am/PluginMagSettingsView.cpp
+equals(USE_PLUGIN_AM, 1) {
+    SOURCES += src/plugins/plugin_am/PluginMag.cpp
+    SOURCES += src/plugins/plugin_am/PluginMagForm.cpp
+    SOURCES += src/plugins/plugin_am/PluginMagRefView.cpp
+    SOURCES += src/plugins/plugin_am/PluginMagSettingsView.cpp
 }
-equals(USE_PLUGIN_UNIFORM, 1){
-	SOURCES += src/plugins/plugin_uniform/PluginUniform.cpp
-	SOURCES += src/plugins/plugin_uniform/PluginUniformForm.cpp
+equals(USE_PLUGIN_UNIFORM, 1) {
+    SOURCES += src/plugins/plugin_uniform/PluginUniform.cpp
+    SOURCES += src/plugins/plugin_uniform/PluginUniformForm.cpp
+    SOURCES += src/plugins/plugin_uniform/PluginUniformRefView.cpp
+    SOURCES += src/plugins/plugin_uniform/PluginUniformSettingsView.cpp
 }
-
+equals(USE_PLUGIN_F14C, 1) {
+    SOURCES += src/plugins/plugin_F14C/PluginF14C.cpp
+    SOURCES += src/plugins/plugin_F14C/PluginF14CForm.cpp
+    SOURCES += src/plugins/plugin_F14C/PluginF14CRefView.cpp
+    SOURCES += src/plugins/plugin_F14C/PluginF14CSettingsView.cpp
+}
+equals(USE_PLUGIN_DENSITY, 1) {
+    SOURCES +=src/plugins/plugin_density/PluginDensity.cpp
+    SOURCES += src/plugins/plugin_density/PluginDensityForm.cpp
+    SOURCES += src/plugins/plugin_density/PluginDensityRefView.cpp
+    SOURCES += src/plugins/plugin_density/PluginDensitySettingsView.cpp
+}
 SOURCES += src/project/PluginManager.cpp
 SOURCES += src/project/Project.cpp
-SOURCES += src/project/ProjectSettings.cpp
+SOURCES += src/project/StudyPeriodSettings.cpp
 SOURCES += src/project/SetProjectState.cpp
 SOURCES += src/project/StateEvent.cpp
 
@@ -506,11 +576,13 @@ SOURCES += src/ui/panel_model/scenes/EventsScene.cpp
 SOURCES += src/ui/panel_model/scenes/PhaseItem.cpp
 SOURCES += src/ui/panel_model/scenes/PhasesScene.cpp
 
+SOURCES += src/ui/panel_results/GraphViewLambda.cpp
+SOURCES += src/ui/panel_results/GraphViewCurve.cpp
 SOURCES += src/ui/panel_results/GraphViewDate.cpp
 SOURCES += src/ui/panel_results/GraphViewEvent.cpp
 SOURCES += src/ui/panel_results/GraphViewPhase.cpp
 SOURCES += src/ui/panel_results/GraphViewResults.cpp
-SOURCES += src/ui/panel_results/GraphViewTempo.cpp
+SOURCES += src/ui/panel_results/GraphViewS02.cpp
 SOURCES += src/ui/panel_results/ResultsView.cpp
 
 SOURCES += src/ui/widgets/ColorPicker.cpp
@@ -525,6 +597,8 @@ SOURCES += src/ui/widgets/GroupBox.cpp
 SOURCES += src/ui/widgets/HelpWidget.cpp
 SOURCES += src/ui/widgets/Tabs.cpp
 SOURCES += src/ui/widgets/Marker.cpp
+SOURCES += src/ui/widgets/SwitchAction.cpp
+SOURCES += src/ui/widgets/CurveWidget.cpp
 
 SOURCES += src/ui/window/MainWindow.cpp
 SOURCES += src/ui/window/ProjectView.cpp
@@ -534,6 +608,6 @@ SOURCES += src/utilities/QtUtilities.cpp
 SOURCES += src/utilities/DoubleValidator.cpp
 SOURCES += src/utilities/DateUtils.cpp
 
-DISTFILES += \
-    Chronomodel.rc \
-    icon/Chronomodel.ico
+DISTFILES += icon/Chronomodel.ico
+#\ # Chronomodel.rc \
+

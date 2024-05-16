@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -41,30 +41,28 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define EVENTKNOWNITEM_H
 
 #include "EventItem.h"
-#include "Event.h"
 
 class EventKnownItem : public EventItem
 {
+    Q_OBJECT
 public:
-    EventKnownItem(EventsScene* eventsScene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent = 0);
+    EventKnownItem(EventsScene* eventsScene, const QJsonObject &event, const QJsonObject &settings, QGraphicsItem* parent = 0);
     virtual ~EventKnownItem();
 
-    virtual QRectF boundingRect() const;
-
-    void setEvent(const QJsonObject& event, const QJsonObject& settings);
-    void setDatesVisible(bool visible);
+    void setEvent(const QJsonObject &event, const QJsonObject &settings);
+    void setDatesVisible(const bool visible);
 
 protected:
-    virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
+    virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*);
     virtual void dropEvent(QGraphicsSceneDragDropEvent* e);
 
     virtual QRectF toggleRect() const;
 
 private:
     QImage mThumb;
-    int mThumbH;
-    bool mThumbVisible;
-    int mPhasesHeight;
+    qreal mThumbH;
+
+
 };
 
 #endif

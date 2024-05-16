@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -41,7 +41,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define APPSETTINGSDIALOG_H
 
 #include <QDialog>
-#include "AppSettings.h"
 
 
 class QCheckBox;
@@ -77,6 +76,7 @@ private slots:
     void changeSettings();
     void buttonClicked(QAbstractButton*);
     void needCalibration();
+    void restore();
    // void fontButtonClicked();
 
 signals:
@@ -134,7 +134,8 @@ private:
     QLabel* mPrecisionLab;
     QSpinBox* mPrecision;
 
-    QDialogButtonBox* mRestoreBox;
+    QDialogButtonBox* mApplyButton;
+    QPushButton *mRestoreBox;
 };
 
 #endif

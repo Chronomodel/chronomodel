@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -38,20 +38,18 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "DatesList.h"
-#include "Phase.h"
 #include "Date.h"
 #include "Event.h"
 #include "MainWindow.h"
 #include "Project.h"
-#include "../PluginAbstract.h"
+#include "PluginAbstract.h"
 #include "DatesListItemDelegate.h"
-#include "ModelUtilities.h"
-#include "Button.h"
+
 #include <QtWidgets>
 
 
 DatesList::DatesList(QWidget* parent):QListWidget(parent),
-mUpdatingSelection(false)
+    mUpdatingSelection(false)
 {
     setDragDropMode(QAbstractItemView::InternalMove);
     setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -63,7 +61,7 @@ mUpdatingSelection(false)
     connect(this, &DatesList::itemClicked, this, &DatesList::handleItemClicked);
     connect(this, &DatesList::itemDoubleClicked, this, &DatesList::handleItemDoubleClicked);
     connect(this, &DatesList::itemSelectionChanged, this, &DatesList::forceAtLeastOneSelected);
-    connect(this, &DatesList::itemSelectionChanged, this, &DatesList::handleItemIsChanged);
+    //connect(this, &DatesList::itemSelectionChanged, this, &DatesList::handleItemIsChanged);
 }
 
 DatesList::~DatesList()
@@ -71,20 +69,20 @@ DatesList::~DatesList()
 
 }
 
-void DatesList::setEvent(const QJsonObject& event)
+void DatesList::setEvent(const QJsonObject &event)
 {
     mEvent = event;
 
     clear();
 
     if (!mEvent.isEmpty()) {
-        QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
-        for (int i(0); i<dates.size(); ++i) {
-            QJsonObject date = dates[i].toObject();
+        const QJsonArray &dates = mEvent[STATE_EVENT_DATES].toArray();
+        for (auto&& d : dates) {
+            const QJsonObject &date = d.toObject();
 
             try {
-                Date d;
-                d.fromJson(date);
+                Date d (date);
+                
                 if (!d.isNull()) {
                     QListWidgetItem* item = new QListWidgetItem();
                     item->setFont(font());
@@ -99,11 +97,13 @@ void DatesList::setEvent(const QJsonObject& event)
                     item->setData(0x0102, d.mPlugin->getId());
                     item->setData(0x0103, d.getDesc());
                     item->setData(0x0104, d.mId);
-                    item->setData(0x0105, ModelUtilities::getDeltaText(d));
-                    item->setData(0x0106, ModelUtilities::getDataMethodText(d.mMethod));
+                    item->setData(0x0105, d.getWiggleDesc());
+                    item->setData(0x0106, MHVariable::getSamplerProposalText(d.mTi.mSamplerProposal));
                     item->setData(0x0107, d.mIsValid);
                     item->setData(0x0108, date.value(STATE_DATE_SUB_DATES).toArray().size() > 0);
-
+                    item->setData(0x0109, d.mOrigin);
+                    item->setData(0x0110, d.mUUID);
+                    
                     addItem(item);
                 }
             }
@@ -131,31 +131,11 @@ void DatesList::setEvent(const QJsonObject& event)
 void DatesList::handleItemClicked(QListWidgetItem* item)
 {
     int index = row(item);
-    QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
+    const QJsonArray &dates = mEvent[STATE_EVENT_DATES].toArray();
     if (index < dates.size()) {
-        QJsonObject date = dates[index].toObject();
         emit indexChange(index);
-        emit calibRequested(date);
+        emit calibRequested(dates[index].toObject());
     }
-}
-
-void DatesList::handleItemIsChanged()
-{
-    QJsonArray dates = mEvent[STATE_EVENT_DATES].toArray();
- //   bool oneSelection (false);
-    for (int i (0); i <dates.size(); ++i ) {
-        if (item(i)->isSelected() ) {
- //           oneSelection = true;
-            QJsonObject date = dates[i].toObject();
-            emit indexChange(i);
-            emit calibRequested(date);
-            break;
-        }
-    }
- /*   if (oneSelection == false) {
-        emit indexChange(-1);
-        emit calibRequested(QJsonObject ());
-    }*/
 }
 
 void DatesList::handleItemDoubleClicked(QListWidgetItem* item)
@@ -169,17 +149,19 @@ void DatesList::dropEvent(QDropEvent* e)
     QListWidget::dropEvent(e);
 
     QList<int> ids;
-    for (int i=0; i<count(); ++i) {
+    for (int i = 0; i<count(); ++i) {
         QListWidgetItem* it = item(i);
         int id = it->data(0x0104).toInt();
         ids << id;
     }
+    
     QJsonObject event = mEvent;
     QJsonArray dates = event[STATE_EVENT_DATES].toArray();
     QJsonArray datesOrdered;
-    for (int i=0; i<ids.size(); ++i) {
+    for (int i = 0; i<ids.size(); ++i) {
         const int id = ids[i];
-        for (int j=0; j<dates.size(); ++j){
+
+        for (int j = 0; j<dates.size(); ++j){
             QJsonObject date = dates[j].toObject();
             int dateId = date[STATE_ID].toInt();
             if (dateId == id) {
@@ -189,7 +171,7 @@ void DatesList::dropEvent(QDropEvent* e)
         }
     }
     event[STATE_EVENT_DATES] = datesOrdered;
-    MainWindow::getInstance()->getProject()->updateEvent(event, tr("Dates order changed"));
+    MainWindow::getInstance()->updateEvent(event, tr("Dates order changed"));
 }
 
 void DatesList::keyPressEvent(QKeyEvent* e)
@@ -210,7 +192,7 @@ void DatesList::forceAtLeastOneSelected()
 
     } else {
         mUpdatingSelection = true;
-        for (auto && it:mSelectedItems) {
+        for (auto&& it : mSelectedItems) {
             it->setSelected(true);
 
         }

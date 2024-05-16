@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,107 +40,31 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef METROPOLISVARIABLE_H
 #define METROPOLISVARIABLE_H
 
-#include "MCMCLoop.h"
 #include "Functions.h"
-#include "ProjectSettings.h"
 #include "DateUtils.h"
+#include "MCMCSettings.h"
 
 #include <QMap>
 #include <QVector>
 #include <QList>
 #include <QDataStream>
 #include <QObject>
+#include <QList>
 
-class MetropolisVariable: public QObject
+class TValueStack
 {
-    Q_OBJECT
-public:
-    MetropolisVariable(QObject *parent = nullptr);
-    explicit MetropolisVariable(const MetropolisVariable& origin);
-   // MetropolisVariable (MetropolisVariable&& origin) noexcept;
-    virtual ~MetropolisVariable();
-    MetropolisVariable& operator=(const MetropolisVariable & origin);
-   // MetropolisVariable& operator=(MetropolisVariable && origin);
+public :
+    std::string mName;
+    double mValue;
+    std::string mComment ;
 
-    void memo();
-    virtual void reset();
-    virtual void reserve( const int reserve);
+    TValueStack():mName("name"), mValue(0.), mComment("comment") {};
+    explicit TValueStack(std::string name, double value = 0., std::string comment ="") : mName(name), mValue(value), mComment(comment) {};
 
-    void setFormat(const DateUtils::FormatDate fm);
-    QString getName() {return mName;}
-    void setName(const QString name) {mName = name;}
-    // -----
-    //  These functions are time consuming!
-    // -----
-    void generateCorrelations(const QList<ChainSpecs> &chains);
+};
 
-    void generateHistos(const QList<ChainSpecs> &chains, const int fftLen = 1024, const double bandwidth = 1.06, const double tmin = 0., const double tmax = 0.);
-    void memoHistoParameter(const int fftLen = 1024, const double bandwidth = 1.06, const double tmin = 0., const double tmax = 0.);
-    bool HistoWithParameter(const int fftLen = 1024, const double bandwidth = 1.06, const double tmin = 0., const double tmax = 0.);
-
-    void generateHPD(const double threshold = 95);
-    void generateCredibility(const QList<ChainSpecs>& chains, double threshold = 95.);
-
-
-    // Virtual because MHVariable subclass adds some information
-    virtual void generateNumericalResults(const QList<ChainSpecs>& chains);
-
-
-    QMap<double, double> generateHisto(const QVector<double>& data, const int fftLen, const  double bandwidth, const double tmin = 0., const double tmax = 0.);
-
-    // -----
-    // These functions do not make any calculation
-    // -----
-    QMap<double, double>& fullHisto();
-    QMap<double, double>& histoForChain(const int index);
-
-    // Full trace for the chain (burn + adapt + run)
-    QVector<double> fullTraceForChain(const QList<ChainSpecs> &chains,const int index);
-
-    // Trace for run part as a vector
-    QVector<double> fullRunTrace(const QList<ChainSpecs>& chains);
-    QVector<double> fullRunRawTrace(const QList<ChainSpecs>& chains);
-
-    // Trace for run part of the chain as a vector
-    QVector<double> runRawTraceForChain(const QList<ChainSpecs>& chains, const int index);
-    QVector<double> runFormatedTraceForChain(const QList<ChainSpecs>& chains, const int index);
-
-    QVector<double> correlationForChain(const int index);
-
-    // -----
-
-    virtual QString resultsString(const QString& nl = "<br>",
-                                  const QString& noResultMessage = QObject::tr("No result to display"),
-                                  const QString& unit = QString(),
-                                  DateConversion formatFunc = nullptr,
-                                  const bool forCSV = false) const;
-
-    QStringList getResultsList(const QLocale locale, const int precision = 0, const bool withDateFormat = true);
-
-
-    /* obsolete change with the operator& << and >>
-     * QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data );
-     *
-     * QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data );
-    */
-     /*   void saveToStreamOfQByteArray(QDataStream *out);
-        void saveToStream(QDataStream &out);
-
-        void loadFromStreamOfQByteArray(QDataStream *in);
-        void loadFromStream(QDataStream &in);
-*/
-public slots:
-      void updateFormatedTrace();
-
-private:
-    void generateBufferForHisto(double* input, const QVector<double> &dataSrc, const int numPts, const double a, const double b);
-    QMap<double, double> bufferToMap(const double* buffer);
-
-
-
-signals:
-    void formatChanged();
-
+class MetropolisVariable
+{
 public:
     enum Support
     {
@@ -152,8 +76,8 @@ public:
         eBounded = 5 // on bounded support
     };
     double mX;
-    QVector<double>* mRawTrace;
-    QVector<double>* mFormatedTrace;
+    QList<double>* mRawTrace;
+    QList<double>* mFormatedTrace;
 
 
     // if we use std::vector we can not use QDataStream to save,
@@ -162,19 +86,22 @@ public:
     DateUtils::FormatDate mFormat;
 
     // Posterior density results.
-    // mHisto is calcuated using all run parts of all chains traces.
+    // mFormatedHisto is calculated using all run parts of all chains traces.
     // mChainsHistos constains posterior densities for each chain, computed using only the "run" part of the trace.
     // This needs to be re-calculated each time we change fftLength or bandwidth.
     // See generateHistos() for more.
-    QMap<double, double> mHisto;
+    QMap<double, double> mFormatedHisto;
     QList<QMap<double, double> > mChainsHistos;
 
     // List of correlations for each chain.
     // They are calculated once, when the MCMC is ready, from the run part of the trace.
-    QList<QVector<double> > mCorrelations;
+    QList<QList<double> > mCorrelations;
 
-    QMap<double, double> mHPD;
-    QPair<double, double> mCredibility;
+    QMap<double, double> mFormatedHPD;
+    QList<QPair<double, QPair<double, double> > > mRawHPDintervals;
+
+    std::pair<double, double> mRawCredibility;
+    std::pair<double, double> mFormatedCredibility;
 
     double mExactCredibilityThreshold;
 
@@ -191,6 +118,138 @@ public:
 
 private:
     QString mName;
+public:
+    MetropolisVariable();
+    explicit MetropolisVariable(const MetropolisVariable &origin);
+
+    virtual ~MetropolisVariable();
+    MetropolisVariable& operator=(const MetropolisVariable &origin);
+
+    void memo();
+    void memo(double *valueToSave);
+    virtual void reset();
+    virtual void reserve( const int reserve);
+
+    void setFormat(const DateUtils::FormatDate fm);
+
+    inline QString getName() {return mName;}
+    void setName(const QString name) {mName = name;}
+    // -----
+    //  These functions are time consuming!
+    // -----
+    void generateCorrelations(const QList<ChainSpecs> &chains);
+
+    void generateHistos(const QList<ChainSpecs> &chains, const int fftLen = 1024, const double bandwidth = 0.9, const double tmin = 0., const double tmax = 0.);
+    void memoHistoParameter(const int fftLen = 1024, const double bandwidth = 0.9, const double tmin = 0., const double tmax = 0.);
+    bool HistoWithParameter(const int fftLen = 1024, const double bandwidth = 0.9, const double tmin = 0., const double tmax = 0.);
+
+    void generateHPD(const double threshold = 95);
+    void generateCredibility(const QList<ChainSpecs>& chains, double threshold = 95.);
+
+
+    // Virtual because MHVariable subclass adds some information
+    virtual void generateNumericalResults(const QList<ChainSpecs>& chains);
+    void updateFormatedCredibility(const DateUtils::FormatDate fm);
+
+
+    QMap<double, double> generateHisto(const QList<double> &data, const int fftLen, const  double bandwidth, const double tmin = 0., const double tmax = 0.);
+
+    // -----
+    // These functions do not make any calculation
+    // -----
+    QMap<double, double>& fullHisto();
+    QMap<double, double>& histoForChain(const int index);
+
+    // Full trace for the chain (burn + adapt + run)
+    QList<double> fullTraceForChain(const QList<ChainSpecs> &chains,const int index);
+
+    // Trace for run part as a vector
+    template <template<typename...> class C, typename T>
+    C<T> full_run_trace(C<T>* trace, const QList<ChainSpecs> &chains)
+    {
+        if (trace->isEmpty())
+            return C<T>(0);
+
+        else if (trace->size() == 1) // Cas des variables fixes
+            return C<T>(*trace);
+
+        // Calcul reserve space
+        int reserveSize = 0;
+
+        for (const ChainSpecs& chain : chains)
+            reserveSize += chain.mRealyAccepted;
+
+        C<T> result(reserveSize);
+
+        int shift = 0;
+        int shiftTrace = 0;
+
+        for (const ChainSpecs& chain : chains) {
+            // we add 1 for the init
+            const int burnAdaptSize = 1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch);
+            const int runTraceSize = chain.mRealyAccepted;
+            const int firstRunPosition = shift + burnAdaptSize;
+            std::copy(trace->begin() + firstRunPosition , trace->begin() + firstRunPosition + runTraceSize , result.begin() + shiftTrace);
+
+            shiftTrace += runTraceSize;
+            shift = firstRunPosition +runTraceSize;
+        }
+        return result;
+    }
+
+    inline QList<double> fullRunFormatedTrace(const QList<ChainSpecs> &chains) {return full_run_trace(mFormatedTrace, chains);}
+    inline QList<double> fullRunRawTrace(const QList<ChainSpecs> &chains) {return full_run_trace(mRawTrace, chains);}
+
+    QList<double>::Iterator findIter_element(const long unsigned iter, const QList<ChainSpecs> &chains, const int chainIndex ) const;
+
+    // Trace for run part of the chain as a vector
+
+    template <typename T>
+    QList<T> run_trace_for_chain(QList<T>* trace, const QList<ChainSpecs> &chains, const int index) {
+
+        if (trace->empty()) {
+            return QList<T>(0);
+
+        } else if (trace->size() == 1) { // Cas des variables fixes
+            return QList<T>(*trace);
+
+        } else  {
+
+            int shift = 0;
+            for (auto i = 0; i<chains.size(); ++i)  {
+                const ChainSpecs &chain = chains.at(i);
+                // We add 1 for the init
+                const int burnAdaptSize = 1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch);
+                const int traceSize = chain.mRealyAccepted;
+
+                if (i == index) {
+                    return QList<T> (trace->begin() + shift + burnAdaptSize, trace->begin() + shift + burnAdaptSize + traceSize );
+                    break;
+                }
+                shift += traceSize + burnAdaptSize ;
+            }
+            return QList<T>(0);
+        }
+    }
+
+    inline QList<double> runRawTraceForChain(const QList<ChainSpecs> &chains, const int index) {return run_trace_for_chain(mRawTrace, chains, index); };
+    inline QList<double> runFormatedTraceForChain(const QList<ChainSpecs> &chains, const int index) {return run_trace_for_chain(mFormatedTrace, chains, index); };
+
+    QList<double> correlationForChain(const int index);
+
+    virtual QString resultsString(const QString &noResultMessage = QObject::tr("No result to display"),
+                                  const QString &unit = QString()) const;
+
+    QStringList getResultsList(const QLocale locale, const int precision = 0, const bool withDateFormat = true);
+
+    void updateFormatedTrace(const DateUtils::FormatDate fm);
+
+private:
+    void generateBufferForHisto(double* input, const QList<double> &dataSrc, const int numPts, const double a, const double b);
+    QMap<double, double> bufferToMap(const double* buffer);
+
+
+
 };
 
 QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data );

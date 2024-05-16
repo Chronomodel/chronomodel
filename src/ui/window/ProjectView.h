@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2020
 
 Authors :
 	Philippe LANOS
@@ -40,9 +40,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef PROJECTVIEW_H
 #define PROJECTVIEW_H
 
-#include "MCMCLoopMain.h"
-#include "AppSettings.h"
 #include "Project.h"
+#include "ModelView.h"
 #include "Tabs.h"
 
 #include <QWidget>
@@ -50,8 +49,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class QStackedWidget;
 class QTextEdit;
 class QTabWidget;
+class QVBoxLayout;
 
-class ModelView;
 class ResultsView;
 class Event;
 
@@ -59,50 +58,54 @@ class ProjectView: public QWidget
 {
     Q_OBJECT
 public:
-    ProjectView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
+    ProjectView(std::shared_ptr<Project> &project, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~ProjectView();
 
+    void setScreenDefinition();
     void resizeEvent(QResizeEvent* e);
 
-    bool mRefreshResults;
-
-    void doProjectConnections(Project* project);
+    void setProject(std::shared_ptr<Project> &project);
+    
     void resetInterface();
 
     void readSettings();
     void writeSettings();
-    void createProject();
-   // void setFont(const QFont &font);
+
     void newPeriod();
 
-    void updateMultiCalibration();
+    void updateMultiCalibrationAndEventProperties();
+    void eventsAreSelected();
+
+    void setShowAllThumbs(bool show) {mModelView->setShowAllThumbs(show);}
 
 public slots:
+    void initResults(std::shared_ptr<ModelCurve> model);
+    void updateResults();
     void updateProject();
     void showModel();
     void showResults();
     void showLogTab(const int &i);
-
-    void changeDesign(bool refresh);
+    
     void showLog();
     void showHelp(bool show);
 
-    void applySettings(Model* model);
-    void applyFilesSettings(Model* model);
-    void initResults(Model*);
-    void updateResults(Model*);
+    void applySettings(std::shared_ptr<ModelCurve> &model);
+    void applyFilesSettings(std::shared_ptr<ModelCurve> &model);
     void updateResultsLog(const QString& log);
-    void setAppSettings();
-
+    
+    void toggleCurve(bool toggle);
 
 private:
     QStackedWidget* mStack;
     ModelView* mModelView;
     ResultsView* mResultsView;
 
+    QWidget* mLogView;
+    QVBoxLayout* mLogLayout;
     Tabs* mLogTabs;
     QTextEdit* mLogModelEdit;
-    QTextEdit* mLogMCMCEdit;
+    QTextEdit* mLogInitEdit;
+    QTextEdit* mLogAdaptEdit;
     QTextEdit* mLogResultsEdit;
 };
 

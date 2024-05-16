@@ -48,8 +48,6 @@ PluginTLSettingsView::PluginTLSettingsView(PluginTL* plugin, QWidget* parent, Qt
 
 }
 
-PluginTLSettingsView::~PluginTLSettingsView(){
-
-}
+PluginTLSettingsView::~PluginTLSettingsView(){}
 
 #endif

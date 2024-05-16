@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -42,7 +42,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "Plugin14C.h"
 
-#include "AppSettings.h"
 #include <QJsonObject>
 #include <QtWidgets>
 
@@ -50,9 +49,6 @@ QString Plugin14CForm::mSelectedRefCurve = QString();
 
 Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("14C Measurements"), parent, flags)
 {
-    Plugin14C* plugin14C = static_cast<Plugin14C*> (mPlugin);
-
-
     mAverageLab = new QLabel(tr("Age (BP)"), this);
     mErrorLab = new QLabel(tr("Error (sd)"), this);
     mRLab = new QLabel(tr("Reservoir Effect (ΔR)"), this);
@@ -62,10 +58,15 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     mAverageEdit = new QLineEdit(this);
     mAverageEdit->setText("0");
     mAverageEdit->setAlignment(Qt::AlignHCenter);
+    QDoubleValidator* RValidator = new QDoubleValidator();
+    mAverageEdit->setValidator(RValidator);
 
     mErrorEdit = new QLineEdit(this);
-    mErrorEdit->setText("50");
+    mErrorEdit->setText("30");
     mErrorEdit->setAlignment(Qt::AlignHCenter);
+    QDoubleValidator* RplusValidator = new QDoubleValidator();
+    RplusValidator->setBottom(0.000001);
+    mErrorEdit->setValidator(RplusValidator);
     connect(mErrorEdit, &QLineEdit::textChanged, this, &Plugin14CForm::errorIsValid);
 
     mREdit = new QLineEdit(this);
@@ -75,13 +76,14 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     mRErrorEdit = new QLineEdit(this);
     mRErrorEdit->setText("0");
     mRErrorEdit->setAlignment(Qt::AlignHCenter);
+    mRErrorEdit->setValidator(RValidator);
 
     mRefCombo = new QComboBox(this);
-    QStringList refCurves = plugin14C->getRefsNames();
+    QStringList refCurves = mPlugin->getRefsNames();
     for (int i = 0; i<refCurves.size(); ++i)
         mRefCombo->addItem(refCurves.at(i));
 
-    QString defCurve = QString("intcal13.14c").toLower();
+    QString defCurve = QString("intcal20.14c").toLower();
     if (mSelectedRefCurve.isEmpty() && refCurves.contains(defCurve, Qt::CaseInsensitive))
        mSelectedRefCurve = defCurve;
 
@@ -89,7 +91,7 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
 
 
     QGridLayout* grid = new QGridLayout();
-    grid->setContentsMargins(0, 5, 0, 0);
+    grid->setContentsMargins(0, 3, 0, 0);
 
     grid->addWidget(mAverageLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mAverageEdit, 0, 1);
@@ -116,7 +118,7 @@ Plugin14CForm::~Plugin14CForm()
 
 void Plugin14CForm::setData(const QJsonObject& data, bool isCombined)
 {
-    const QLocale locale=QLocale();
+    const QLocale locale = QLocale();
     const double a = data.value(DATE_14C_AGE_STR).toDouble();
     const double e = data.value(DATE_14C_ERROR_STR).toDouble();
     const double r = data.value(DATE_14C_DELTA_R_STR).toDouble();
@@ -139,7 +141,7 @@ void Plugin14CForm::setData(const QJsonObject& data, bool isCombined)
 QJsonObject Plugin14CForm::getData()
 {
     QJsonObject data;
-    const QLocale locale=QLocale();
+    const QLocale locale = QLocale();
     const double a = locale.toDouble(mAverageEdit->text());
     const double e = locale.toDouble(mErrorEdit->text());
     const double r = locale.toDouble(mREdit->text());
@@ -159,16 +161,15 @@ QJsonObject Plugin14CForm::getData()
 
 void Plugin14CForm::errorIsValid(QString str)
 {
-    bool ok;
-    const QLocale locale;
-    double value = locale.toDouble(str,&ok);
-    emit PluginFormAbstract::OkEnabled(ok && (value>0) );
+    (void) str;
+    emit PluginFormAbstract::OkEnabled(mErrorEdit->hasAcceptableInput());
+
 }
 
 bool Plugin14CForm::isValid()
 {
     const QString refCurve = mRefCombo->currentText();
-    if(refCurve.isEmpty())
+    if (refCurve.isEmpty())
         mError = tr("Ref. curve is empty!");
     return !refCurve.isEmpty();
 }

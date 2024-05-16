@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -45,8 +45,83 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AppSettings.h"
 
 #include <QtWidgets>
+#include <QFontMetricsF>
 #include <QtSvg>
 #include <algorithm>
+
+/**
+ * @brief DHMS
+ * @param elapsedTime in msec
+ * @return
+ */
+QString DHMS( quint64 elapsedTime)
+{
+    if (elapsedTime == 0)
+        return "";
+
+    QString str;
+    quint64 day = 0;
+    quint64 hour = 0;
+    quint64 minute = 0;
+    quint64 second =0;
+
+    if (elapsedTime >= (24*3600*1000))
+        day = elapsedTime / (24*3600*1000);
+
+
+    if (day > 6)
+        return QString("%1 days ").arg(QString::number(day));
+
+    else if (day > 1)
+        str = QString("%1 days ").arg(QString::number(day));
+    else if (day == 1)
+        str = QString("1 day ");
+
+    elapsedTime -= day * 24*3600*1000;
+    hour = elapsedTime / (3600*1000);
+
+    if (hour > 1)
+        str += QString("%1 hours ").arg(QString::number(hour));
+    else if (hour == 1)
+        str += QString("1 hour ");
+
+    // If we have more than one day, we do not display below the hour
+    if (day >= 1)
+        return str;
+
+    elapsedTime -= hour*3600*1000;
+    minute = elapsedTime / (60*1000);
+
+    if (minute > 1)
+        str += QString("%1 minutes ").arg(QString::number(minute));
+    else if (minute == 1)
+        str += QString("1 minute ");
+
+    // If we have more than one hour, we do not display below the second
+    if (hour >= 1)
+        return str;
+
+    elapsedTime -= minute*60*1000;
+    second = elapsedTime / 1000;
+
+    if (second > 1)
+        str += QString("%1 seconds ").arg(QString::number(second));
+    else if (second == 1)
+        str += QString("1 second ");
+
+    // If we have more than one minute, we do not display below the second
+    if (minute >= 1)
+        return str;
+
+    if (second >= 1)
+        return str;
+
+    elapsedTime -= second*1000;
+
+    str += QString("%3 msec").arg(QString::number(elapsedTime));
+
+    return str;
+}
 
 bool colorIsDark(const QColor& color)
 {
@@ -62,7 +137,7 @@ bool intLessThan(const int& v1, const int& v2)
 void sortIntList(QList<int>& list)
 {
    // qSort(list.begin(), list.end(), intLessThan);// http://doc.qt.io/qt-5/qtalgorithms-obsolete.html#qSort
-    std::sort(list.begin(),list.end(),intLessThan);
+    std::sort(list.begin(), list.end(), intLessThan);
 }
 
 
@@ -94,10 +169,10 @@ int defaultDpiX()
     //if(!qt_is_gui_used)
       //  return 75;
 
-    if (const QScreen* screen = QGuiApplication::primaryScreen())
+    if (const QScreen* screen = QApplication::primaryScreen())
         return qRound(screen->logicalDotsPerInchX());
 
-    //PI has not been initialised, or it is being initialised. Give a default dpi
+    //PI has not been initialized, or it is being initialized. Give a default dpi
     return 100;
 }
 
@@ -116,10 +191,10 @@ qreal dpiScaled(qreal value)
 bool isComment(const QString& str)
 {
     QStringList commentsMarkers;
-    commentsMarkers << "//" << "#" << "/*";
+    commentsMarkers << "//" << "#" << "/*"<<"!"<<QString(char(148));
     QString strClean = str.trimmed();
 
-    for (auto &&str : commentsMarkers) {
+    for (auto&& str : commentsMarkers) {
         if (strClean.startsWith(str))
             return true;
     }
@@ -128,13 +203,45 @@ bool isComment(const QString& str)
 
 QColor getContrastedColor(const QColor& color)
 {
-    QColor frontColor = Qt::white;
-    qreal s = color.saturationF();
-    if (s < 0.4)  {
-        qreal l = color.lightnessF();
-        if (l >= 0.5)
-            frontColor = Qt::black;
+     //complementary color
+   /* int r = color.red();
+    int g = color.green();
+    int b = color.blue();
+// (255-r, 255-g, 255-b);
+ */
+     QColor frontColor;
+// https://en.wikipedia.org/wiki/HSL_and_HSV#/media/File:Hsl-hsv_models.svg
+     /*
+     // mode hsl, correspond à la roue et lightness corresopnd à la barre
+    const float hslHue = color.hslHueF()*360.;
+    const float hslSaturation = color.hslSaturationF();
+    const float lightness = color.lightnessF();
+//qDebug()<<hslHue<<hslSaturation<<lightness;
+    */
+
+//mode TSL
+    const float hsvHue = color.hsvHueF()*360.;
+    const float hsvSaturation = color.hsvSaturationF();
+    //float saturation = color.saturationF(); //==hsvSaturation
+    const float value = color.valueF(); // Correspond à la luminosité en TSL
+    //qDebug()<<hsvHue<<hsvSaturation<<saturation<< value;
+
+    if (value < 0.55) {
+        frontColor = Qt::white;
     }
+    else if (hsvSaturation < 0.25) {
+        frontColor = Qt::black;
+    }
+    else if (190<hsvHue && hsvHue<360) { // du bleu au rouge final
+        frontColor = Qt::white;
+    }
+    else if ( hsvHue<7) { // Le debut rouge
+        frontColor = Qt::white;
+
+    } else {
+        frontColor = Qt::black;
+    }
+
     return frontColor;
 }
 
@@ -148,18 +255,38 @@ QList<int> stringListToIntList(const QString& listStr, const QString& separator)
     QList<int> result;
     if (!listStr.isEmpty()) {
         QStringList list = listStr.split(separator);
-        for (auto str : list)
+        for (auto& str : list)
             result.append(str.toInt());
 
     }
     return result;
 }
 
-QStringList intListToStringList(const QList<int>& intList)
+QList<unsigned> stringListToUnsignedList(const QString &listStr, const QString &separator)
+{
+    QList<unsigned> result;
+    if (!listStr.isEmpty()) {
+        QStringList list = listStr.split(separator);
+        for (auto& str : list)
+            result.append(str.toInt());
+
+    }
+    return result;
+}
+
+QStringList intListToStringList(const QList<int> &intList)
 {
     QStringList list;
-    for (int i=0; i<intList.size(); ++i)
-        list.append(QString::number(intList[i]));
+    for (auto& i : intList)
+        list.append(QString::number(i));
+    return list;
+}
+
+QStringList unsignedListToStringList(const QList<unsigned>& unsignedList)
+{
+    QStringList list;
+    for (auto& un : unsignedList)
+        list.append(QString::number(un));
     return list;
 }
 
@@ -169,8 +296,21 @@ QString intListToString(const QList<int>& intList, const QString& separator)
     return list.join(separator);
 }
 
+QString unsignedListToString(const QList<unsigned> &intList, const QString &separator)
+{
+    QStringList list = unsignedListToStringList(intList);
+    return list.join(separator);
+}
 
-QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogTitle, const QString& defaultPath)
+QString long_double_to_str(const long double value)
+{
+    std::stringstream stream;
+    stream << std::fixed << std::setprecision(std::numeric_limits<long double>::max_digits10 + 1) << value;
+
+    return QString::fromStdString(stream.str());
+}
+
+QFileInfo saveWidgetAsImage(QObject* wid, const QRect &r, const QString &dialogTitle, const QString &defaultPath)
 {
     QFileInfo fileInfo;
 
@@ -185,20 +325,18 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
     }
 
     const QString filter = QObject::tr("Image (*.png);;Photo (*.jpg);; Windows Bitmap (*.bmp);;Scalable Vector Graphics (*.svg)");
-    const QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(),
-                                                    dialogTitle,
-                                                    defaultPath,
-                                                    filter);
+    const QString fileName = QFileDialog::getSaveFileName(qApp->activeWindow(), dialogTitle, defaultPath, filter);
+
     if (!fileName.isEmpty()) {
         fileInfo = QFileInfo(fileName);
         const QString fileExtension = fileInfo.suffix();
-        const int heightText (2 * qApp->fontMetrics().height());
-        const int bottomSpace (5);
+        const qreal heightText  = 2 * QFontMetricsF(qApp->font()).height();
+        const int bottomSpace = 5;
         const QString versionStr = qApp->applicationName() + " " + qApp->applicationVersion();
 
         if (fileExtension == "svg") {
             if (mGraph)
-                mGraph->saveAsSVG(fileName, versionStr, "GraphView",true);
+                mGraph->saveAsSVG(fileName, versionStr, "GraphView", true);
 
             else if (scene) {
                 const  QRect viewBox = QRect( r.x(), r.y(), r.width(), r.height() );
@@ -215,7 +353,7 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
                 scene->render(&p, r, r);
                 p.setFont(qApp->font());
                 p.setPen(Qt::black);
-                const int wStr= p.fontMetrics().boundingRect(versionStr).width();
+                const int wStr= p.fontMetrics().horizontalAdvance(versionStr);
                 const int hStr = p.fontMetrics().height();
 
                 p.drawText(0, int( r.height()/2 ), wStr, hStr,
@@ -330,18 +468,18 @@ QFileInfo saveWidgetAsImage(QObject* wid, const QRect& r, const QString& dialogT
     return fileInfo;
 }
 
-bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName)
+bool saveWidgetAsSVG(QWidget* widget, const QRect &r, const QString &fileName)
 {
     const QFontMetrics fm(widget->font());
 
     const int heightText= fm.descent() + fm.ascent() + 10;
 
-    const  QRect viewBox = QRect( 0, 0,r.width(), r.height() + heightText );
+    const QRect viewBox = QRect(0, 0, r.width(), r.height() + heightText);
     QSvgGenerator svgGenFile;
     svgGenFile.setFileName(fileName);
     svgGenFile.setViewBox(viewBox);
 
-    svgGenFile.setDescription(QObject::tr("SVG widget drawing "));
+    svgGenFile.setDescription(QObject::tr("SVG widget drawing"));
 
     QPainter p;
     p.begin(&svgGenFile);
@@ -360,8 +498,7 @@ bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName)
 
 QString prepareTooltipText(const QString& title, const QString& text)
 {
-    QString result = "<div style=\"margin:10px\"><p style=\"font-weight: bold; font-style: normal\">" + title + "</p><p>" + text + "</p></div>";
-    return result;
+    return "<div style=\"margin:10px\"><p style=\"font-weight: bold; font-style: normal\">" + title + "</p><p>" + text + "</p></div>";
 }
 
 QString line(const QString& str)
@@ -394,44 +531,52 @@ QString textBlue(const QString& str)
     return "<span style=\"color: blue;\">" + str + "</span>";
 }
 
-QString textPurple(const QString& str)
+QString textOrange(const QString& str)
 {
     return "<span style=\"color: #C95805;\">" + str + "</span>";
 }
 
-QString textColor(const QString &str,const QColor &color)
+QString textPurple(const QString& str)
+{
+    return "<span style=\"color: #7C1190;\">" + str + "</span>";
+}
+
+QString textColor(const QString &str, const QColor &color)
 {
     int red, green, blue;
     color.getRgb(&red, &green, &blue);
-    const QString text ="<span style=""color:rgb("+ QString::number(red)
+    return "<span style=""color:rgb("+ QString::number(red)
                                         + "," + QString::number(green)
                                         + "," + QString ::number(blue) + ");>" + str + "</span>";
 
-   return text;
 }
 QString textBackgroundColor(const QString &str, const QColor &color)
 {
     int red, green, blue;
     color.getRgb(&red, &green, &blue);
-    const QString text ="<center><p style=""background-color:rgb("+ QString::number(red)
+    return "<center><p style=""background-color:rgb("+ QString::number(red)
                                         + "," + QString::number(green)
                                         + "," + QString ::number(blue) + "); >" + str + "</p></center>";
-
-   return text;
 }
 
 
 QColor randomColor()
 {
+#ifdef Q_OS_MAC
+    return QColor(arc4random() % 255,
+                  arc4random() % 255,
+                  arc4random() % 255);
+#else
     return QColor(rand() % 255,
                   rand() % 255,
                   rand() % 255);
+#endif
 }
 
 bool constraintIsCircular(QJsonArray constraints, const int fromId, const int toId)
 {
-    for (int i=0; i<constraints.size(); ++i) {
-        QJsonObject constraint = constraints.at(i).toObject();
+    for (int i = 0; i<constraints.size(); ++i) {
+        const QJsonObject &constraint = constraints.at(i).toObject();
 
         // Detect circularity
         if (constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == toId && constraint.value(STATE_CONSTRAINT_FWD_ID).toInt() == fromId)
@@ -473,9 +618,11 @@ QString stringForGraph(const double valueToFormat)
 
 QString stringForLocal(const double valueToFormat, const bool forcePrecision)
 {
-    (void) forcePrecision;
     char fmt = 'f';
     QLocale locale = QLocale();
+
+    if (forcePrecision)
+        return locale.toString(valueToFormat, fmt, 19);
 
     const int precision = AppSettings::mPrecision;
 
@@ -488,22 +635,24 @@ QString stringForLocal(const double valueToFormat, const bool forcePrecision)
 
 QString stringForCSV(const double valueToFormat, const bool forcePrecision)
 {
-    (void) forcePrecision;
     char fmt = 'f';
+    QLocale locale = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
+    locale.setNumberOptions(QLocale::OmitGroupSeparator);
+    if (forcePrecision)
+        return locale.toString(valueToFormat, fmt, 9);
+
     if (std::abs(valueToFormat)>1E+06)
         fmt = 'G';
 
     const int precision = AppSettings::mPrecision;
 
-    QLocale locale = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
-    locale.setNumberOptions(QLocale::OmitGroupSeparator);
     return locale.toString(valueToFormat, fmt, precision);
 
 }
 
 
 // CSV File
-bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QString& csvSep, const bool withDateFormat)
+bool saveCsvTo(const QList<QStringList> &data, const QString &filePath, const QString &csvSep, const bool withDateFormat)
 {
     QFile file(filePath);
     if (file.open(QFile::WriteOnly | QFile::Truncate))  {
@@ -544,6 +693,46 @@ bool saveAsCsv(const QList<QStringList>& data, const QString& title)
         QTextStream output(&file);
         for (int i=0; i<data.size(); ++i)  {
             output << data.at(i).join(csvSep);
+            output << "\r";
+        }
+        file.close();
+        return true;
+    }
+    return false;
+}
+
+bool save_map_as_csv(const std::map<double, double> &map, const std::pair<QString, QString> &header, const QString title, const QString prefix)
+{
+    const QString csvSep = AppSettings::mCSVCellSeparator;
+    QLocale csvLocal = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
+    csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
+
+    const QString currentPath = MainWindow::getInstance()->getCurrentPath();
+    QString filename;
+
+    if (!prefix.isEmpty()) {
+
+        const QString fiName = MainWindow::getInstance()->getNameProject();
+        const QString defaultFilename = currentPath + "/"+ fiName.mid(0, fiName.size()-4) + "_" + prefix;
+
+        filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                              title,
+                                                              defaultFilename, "CSV (*.csv)");
+
+    } else {
+        filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                              title,
+                                                              currentPath,
+                                                              "CSV (*.csv)");
+    }
+
+
+    QFile file(filename);
+    if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+        QTextStream output(&file);
+        output << header.first + csvSep + header.second<< "\r";
+        for (auto m : map)  {
+            output << csvLocal.toString(m.first) + csvSep + csvLocal.toString(m.second);
             output << "\r";
         }
         file.close();

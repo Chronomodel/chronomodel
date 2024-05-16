@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2021
 
 Authors :
 	Philippe LANOS
@@ -40,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef MODELUTILITIES_H
 #define MODELUTILITIES_H
 
-#include "Model.h"
+#include "ModelCurve.h"
 #include "Date.h"
 #include "Event.h"
 #include "Phase.h"
@@ -52,40 +52,54 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class ModelUtilities
 {
 public:
-    static QString getEventMethodText(const Event::Method method);
-    static QString getDataMethodText(const Date::DataMethod method);
-    static QString getDeltaText(const Date& date);
 
-    static Event::Method getEventMethodFromText(const QString& text);
-    static Date::DataMethod getDataMethodFromText(const QString& text);
+    static QList<QList<Event*> > getNextBranches(const QList<Event*>& curBranch, Event* lastNode);
+    static QList<QList<Event*> > getBranchesFromEvent(Event* start);
+    static QList<QList<Event*> > getAllEventsBranches(const QList<Event*>& events);
 
-    static QVector<QVector<Event*> > getNextBranches(const QVector<Event*>& curBranch, Event* lastNode);
-    static QVector<QVector<Event*> > getBranchesFromEvent(Event* start);
-    static QVector<QVector<Event*> > getAllEventsBranches(const QList<Event*>& events);
+    static QList<QList<Phase*> > getNextBranches(const QList<Phase*>& curBranch, Phase* lastNode, const double gammaSum, const double maxLength);
+    static QList<QList<Phase*> > getBranchesFromPhase(Phase* start, const double maxLength);
+    static QList<QList<Phase*> > getAllPhasesBranches(const QList<Phase*>& events, const double maxLength);
 
-    static QVector<QVector<Phase*> > getNextBranches(const QVector<Phase*>& curBranch, Phase* lastNode, const double gammaSum, const double maxLength);
-    static QVector<QVector<Phase*> > getBranchesFromPhase(Phase* start, const double maxLength);
-    static QVector<QVector<Phase*> > getAllPhasesBranches(const QList<Phase*>& events, const double maxLength);
+    static QList<Event*> unsortEvents(const QList<Event*> &events);
+    static QString modelDescriptionHTML(const std::shared_ptr<ModelCurve> model);
+    static QString getMCMCSettingsLog(const std::shared_ptr<ModelCurve> model = nullptr);
+    static QString modelStateDescriptionHTML(const std::shared_ptr<ModelCurve> model = nullptr, QString stateDescript = "");
+    static QString modelStateDescriptionText(const std::shared_ptr<ModelCurve> model = nullptr, QString stateDescript = "");
 
-    static QVector<Event*> sortEventsByLevel(const QList<Event*>& events);
-    static QVector<Phase*> sortPhasesByLevel(const QList<Phase*>& phases);
+#pragma mark Results in HTML format
+    static QString dateResultsHTML(const Date* d, const std::shared_ptr<ModelCurve> &model = nullptr);
+    static QString dateResultsHTML(const Date* d, const double tmin_formated, const double tmax_formated);
+    static QString sigmaTiResultsHTML(const Date* d);
 
-    static QVector<Event*> unsortEvents(const QList<Event*>& events);
+    static QString eventResultsHTML(const Event* e, const bool withDates, const std::shared_ptr<ModelCurve> model = nullptr);
+    static QString eventResultsHTML(const Event* e, const bool withDates, const double tmin_formated, const double tmax_formated, bool with_curve = false);
+    static QString EventS02ResultsHTML(const Event* e);
+    static QString VgResultsHTML(const Event* e);
 
-    static QString dateResultsText(const Date* d, const Model* model = nullptr, const bool forCSV = false);
-    static QString eventResultsText(const Event* e, bool withDates, const Model* model = nullptr, const bool forCSV = false);
-    static QString phaseResultsText(const Phase* p, const bool forCSV = false);
-    static QString tempoResultsText(const Phase* p, const bool forCSV = false);
-    static QString constraintResultsText(const PhaseConstraint* p, const bool forCSV = false);
-
-    static QString dateResultsHTML(const Date* d, const Model* model = nullptr);
-    static QString eventResultsHTML(const Event* e,const bool withDates, const Model* model = nullptr);
     static QString phaseResultsHTML(const Phase* p);
+
     static QString tempoResultsHTML(const Phase* p);
+    static QString activityResultsHTML(const Phase* p);
+    static QString durationResultsHTML(const Phase* p);
     static QString constraintResultsHTML(const PhaseConstraint* p);
 
-    static short HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const Model* model);
+    static QString curveResultsHTML(const std::shared_ptr<ModelCurve> model = nullptr);
+    static QString lambdaResultsHTML(const std::shared_ptr<ModelCurve> model = nullptr);
+    static QString S02ResultsHTML(const std::shared_ptr<ModelCurve> model = nullptr);
+
+    static short HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const std::shared_ptr<ModelCurve> model);
+    static short HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const double tmin_formated, const double tmax_formated);
+
+
 };
+QString HTML_to_text(const QString &HTML);
+
+//void sampleInCumulatedRepartition (Event *event, const StudyPeriodSettings &settings, const double min, const double max); Obsolete
+
+double sample_in_repartition(const CalibrationCurve *calibrateCurve, const double min, const double max);
+
+void sampleInCumulatedRepartition_thetaFixe (Event *event, const StudyPeriodSettings &settings);
 
 // These 2 global functions are used to sort events and phases lists in result view
 

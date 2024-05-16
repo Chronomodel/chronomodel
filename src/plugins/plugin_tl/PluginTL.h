@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #if USE_PLUGIN_TL
 
-#include "../PluginAbstract.h"
+#include <PluginAbstract.h>
 
 #define DATE_TL_AGE_STR "age"
 #define DATE_TL_ERROR_STR "error"
@@ -59,27 +59,32 @@ public:
     virtual ~PluginTL();
 
     //virtual function
-    long double getLikelihood(const double& t, const QJsonObject& data);
+    
     bool withLikelihoodArg() {return true; }
-    QPair<long double, long double > getLikelihoodArg(const double& t, const QJsonObject& data);
+    
+    long double getLikelihood(const double t, const QJsonObject &data);
+    QPair<long double, long double > getLikelihoodArg(const double t, const QJsonObject &data);
+    QPair<double, double> getTminTmaxRefsCurve(const QJsonObject &data) const;
+    double getMinStepRefsCurve(const QJsonObject &data) const;
+    
+    bool areDatesMergeable(const QJsonArray &dates);
+    QJsonObject mergeDates(const QJsonArray &dates);
 
     QString getName() const;
     QIcon getIcon() const;
     bool doesCalibration() const;
     bool wiggleAllowed() const;
-    Date::DataMethod getDataMethod() const;
-    QList<Date::DataMethod> allowedDataMethods() const;
+    MHVariable::SamplerProposal getDataMethod() const;
+    QList<MHVariable::SamplerProposal> allowedDataMethods() const;
     QStringList csvColumns() const;
-    QJsonObject fromCSV(const QStringList& list, const QLocale &csvLocale);
-    QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale) const;
+    QJsonObject fromCSV(const QStringList &list, const QLocale &csvLocale);
+    QStringList toCSV(const QJsonObject &data, const QLocale &csvLocale) const;
     QString getDateDesc(const Date* date) const;
-    QJsonObject checkValuesCompatibility(const QJsonObject& values);
-
-    QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
+    QJsonObject checkValuesCompatibility(const QJsonObject &values);
 
     PluginFormAbstract* getForm();
     GraphViewRefAbstract* getGraphViewRef();
-    virtual void deleteGraphViewRef(GraphViewRefAbstract* graph);
+    void deleteGraphViewRef(GraphViewRefAbstract* graph);
     PluginSettingsViewAbstract* getSettingsView();
 };
 

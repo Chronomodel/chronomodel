@@ -4,9 +4,10 @@
 #include <QString>
 #include <QProgressDialog>
 #include <QtTest>
+#include <QtWidgets>
 
 #include "ChronoApp.h"
-#include <QtWidgets>
+
 #include "MainController.h"
 #include "StdUtilities.h"
 #include "Functions.h"
@@ -14,15 +15,23 @@
 #include "Model.h"
 #include "Phase.h"
 #include "Event.h"
+#include "Generator.h"
+#include "Functions.h"
 
 #include "fftw3.h"
+
+#include "MCMCLoopCurve.h"
+#include "ModelCurve.h"
+#include "Project.h"
 
 #include <iostream>
 #include <cmath>
 #include <errno.h>
 //#include <fenv.h>
-#include "Generator.h"
-#include "Functions.h"
+
+#include <time.h>       /* time_t, struct tm, difftime, time, mktime */
+#include <chrono>
+
 
 
 
@@ -35,9 +44,9 @@ QString formatFunction(const double valueToFormat, const bool forCSV = false);
  * @return
  */
 #define PRECISION 0.0000000001 //default 0.000000000001
-static inline bool myFuzzyCompare(double p1, double p2)
+static inline bool myFuzzyCompare(double p1, double p2, double precision = PRECISION)
 {
-    return (qAbs(p1 - p2) <= PRECISION * qMin(qAbs(p1), qAbs(p2)));
+    return (qAbs(p1 - p2) <= precision * qMin(qAbs(p1), qAbs(p2)));
 }
 
 class ChronomodelTest : public QObject
@@ -60,6 +69,12 @@ private Q_SLOTS:
     void tempo();
     void quantile();
     void quartileForTrace();
+
+    // test calcul chronoCurve
+    void calculMat();
+    void stat();
+    void curveFunction();
+
 };
 
 ChronomodelTest::ChronomodelTest()
@@ -161,17 +176,18 @@ void ChronomodelTest::trace()
 {
 
     ChainSpecs chain1;
-    chain1.mNumBurnIter = 3; //used
+    chain1.mIterPerBurn = 3; //used
     chain1.mBurnIterIndex=1;
 
     chain1.mBatchIterIndex = 2;
     chain1.mBatchIndex = 2; //used
-    chain1.mNumBatchIter = 3; //used
+    chain1.mIterPerBatch = 3; //used
 
-    chain1.mNumRunIter = 10; //used
-    chain1.mRunIterIndex = 5;
+    chain1.mIterPerAquisition = 10; //used
+    chain1.mAquisitionIterIndex = 5;
 
     chain1.mThinningInterval = 1; //used
+    chain1.mRealyAccepted = 10; //used
 
     MetropolisVariable fullTrace;
     fullTrace.mRawTrace = new QVector<double>();
@@ -180,17 +196,18 @@ void ChronomodelTest::trace()
         fullTrace.mRawTrace->append(i);
     //----------chain2
     ChainSpecs chain2;
-    chain2.mNumBurnIter = 3; //used
+    chain2.mIterPerBurn = 3; //used
     chain2.mBurnIterIndex=1;
 
     chain2.mBatchIterIndex = 2;
     chain2.mBatchIndex = 2; //used
-    chain2.mNumBatchIter = 3; //used
+    chain2.mIterPerBatch = 3; //used
 
-    chain2.mNumRunIter = 10; //used 2 iter more unused
-    chain2.mRunIterIndex = 5;
+    chain2.mIterPerAquisition = 10; //used 2 iter more unused
+    chain2.mAquisitionIterIndex = 5;
 
     chain2.mThinningInterval = 1; //used
+    chain2.mRealyAccepted = 10; //used
  // Adding chain2 in fullTrace
     for (auto i=1; i<21; ++i)
         fullTrace.mRawTrace->append(i);
@@ -272,17 +289,18 @@ void ChronomodelTest::fft()
     const double tmax (20);
 
     ChainSpecs chain1;
-    chain1.mNumBurnIter = 1; //used
+    chain1.mIterPerBurn = 1; //used
     chain1.mBurnIterIndex=1;
 
     chain1.mBatchIterIndex = 2;
     chain1.mBatchIndex = 0; //used
-    chain1.mNumBatchIter = 0; //used
+    chain1.mIterPerBatch = 0; //used
 
-    chain1.mNumRunIter = 18; //used
-    chain1.mRunIterIndex = 5;
+    chain1.mIterPerAquisition = 18; //used
+    chain1.mAquisitionIterIndex = 0;
 
     chain1.mThinningInterval = 1; //used
+    chain1.mRealyAccepted = 18; //used
 
 
     QVector<double> trace1;
@@ -301,7 +319,7 @@ void ChronomodelTest::fft()
 
     density1.generateHistos(chain1Spe, fftLen, bandwidth, tmin, tmax) ;
     //qDebug()<<"histo1"<<density1.mHisto;
-    QVERIFY(qFuzzyCompare(density1.mHisto.firstKey(), -5.35157149234));
+    QVERIFY(qFuzzyCompare(density1.mHisto.firstKey(), -5.54093161815921));//-5.35157149234));
 
     ChainSpecs chain2 (chain1);
     ChainSpecs chain3 (chain1);
@@ -326,24 +344,25 @@ void ChronomodelTest::fft()
     density2.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
     //qDebug()<<"histo2"<<density2.mHisto;
 
-    QVERIFY(qFuzzyCompare(density2.mHisto.firstKey(), -4.06316390051));
+    QVERIFY(qFuzzyCompare(density2.mHisto.firstKey(), -4.112396566542358)); //-4.06316390051));
 }
 
 void ChronomodelTest::hpd()
 {
     //--- test HPD --- Only one chain
     ChainSpecs chainHPD1;
-    chainHPD1.mNumBurnIter = 10; //used
-    chainHPD1.mBurnIterIndex=0;
+    chainHPD1.mIterPerBurn = 10; //used
+    chainHPD1.mBurnIterIndex = 0;
 
     chainHPD1.mBatchIterIndex = 0;
     chainHPD1.mBatchIndex = 10; //used
-    chainHPD1.mNumBatchIter = 100; //used
+    chainHPD1.mIterPerBatch = 100; //used
 
-    chainHPD1.mNumRunIter = 200; //used
-    chainHPD1.mRunIterIndex = 0;
+    chainHPD1.mIterPerAquisition = 200; //not used
+    chainHPD1.mAquisitionIterIndex = 0;
 
-    chainHPD1.mThinningInterval = 5; //used
+    chainHPD1.mThinningInterval = 0; //not used
+    chainHPD1.mRealyAccepted = 40; // 40 used mToltal = 1 + 10 + 10*100 + 40 =1051
 
 
     QList<ChainSpecs> chainHPDs;
@@ -380,15 +399,31 @@ void ChronomodelTest::hpd()
 
     densityHPD.mRawTrace = &traceHPD;
     densityHPD.mFormatedTrace = &traceHPD;
-    densityHPD.generateHistos(chainHPDs, 1024, 1.06, -1000., 2000.);
+    /*
+    const QVector<double> test_stat {32.495245 , 71.404288, 145.226621 , 56.585285,  84.360405 , 78.379382 , 99.621780};// , 75.229839 , 76.667125 , 79.484980, 106.903918, 125.845227, 151.512385 , 90.581431 , 57.410082 , 87.816521 , 16.592070, 104.729166, 153.559666, 150.331152 , 81.376184,  92.457870 , 89.661235, 107.619384 ,128.017155 , 72.341386 ,111.224275,  46.945097 , 24.393485 , 37.476728 ,157.863145 , 61.758697,  85.422980 ,125.197683 , 79.224371,  68.910965, 144.378219, 125.581241 , 18.637394, 115.689468, 128.111543 ,191.139432 ,146.703681 , 72.329983 ,135.000873,  88.285547, 118.860073 , 77.568237 , 95.219087 , 73.738182 , 75.024902 , 13.232312, 144.140485 , 83.363317};
+    TraceStat resStat = traceStatistic(test_stat);
+    double som =0;
+    for (auto ts : test_stat) {
+        som += (ts - resStat.mean)*(ts-resStat.mean);
+    }
+    som = sqrt(som/(test_stat.size()-1)); // non biaisé
+    double test_sd = std_Knuth(test_stat); // non biaisé
+    double test_sd2 = std_Koening(test_stat); // stat biaisé
+ //QVERIFY(test_sd == test_sd2*sqrt(test_stat.size()/(test_stat.size()-1)));
+
+    const QVector<double> subFullTrace (densityHPD.fullRunTrace(chainHPDs));
+    test_sd = std_Knuth(subFullTrace);
+    */
+    densityHPD.generateHistos(chainHPDs, 2048, 1.06, -1000., 2000.); //1024
     densityHPD.generateHPD(95.);
 
     QList<QPair<double, QPair<double, double> > > intervals = intervalsForHpd(densityHPD.mHPD, 95.);
   //  qDebug()<<"histo2 HPD"<<intervals[0].first<<intervals[0].second.first<<intervals[0].second.second;
 
-    QPair<double, double> answer = qMakePair<double, double> (181.253726753 , 217.061790521);
+    //QPair<double, double> answer = qMakePair<double, double> (181.17834135537777 , 217.061790521);
+     QPair<double, double> answer = qMakePair<double, double> (180.9866694951419 , 217.35305862040275);
 
-   QVERIFY(qFuzzyCompare(intervals[0].first, 94.9814736407));
+   QVERIFY(qFuzzyCompare(intervals[0].first, 95.0));
    QVERIFY(myFuzzyCompare(intervals[0].second.first, answer.first));
     /* obtain with ChronoModel v1.6
      * Posterior event date. :
@@ -438,15 +473,15 @@ void ChronomodelTest::tempo()
 
 
     ChainSpecs chain1;
-    chain1.mNumBurnIter = 0; //not used
+    chain1.mIterPerBurn = 0; //not used
     chain1.mBurnIterIndex = 0;
 
     chain1.mBatchIterIndex = 0;
     chain1.mBatchIndex = 0; //not used
-    chain1.mNumBatchIter = 0; //not used
+    chain1.mIterPerBatch = 0; //not used
 
-    chain1.mNumRunIter = 20; //used
-    chain1.mRunIterIndex = 5;
+    chain1.mIterPerAquisition = 20; //used
+    chain1.mAquisitionIterIndex = 5;
 
     chain1.mThinningInterval = 1; //used
 
@@ -629,28 +664,24 @@ void ChronomodelTest::quantile()
 {
     QVector<double> serie1;
     serie1 <<0.1<< 3.8<< 5.6 <<9.9 <<7.4 <<8.2 <<5.7 <<8.6 <<9.4<< 4.2 <<6.1<< 4.3<< 8.7 <<9.1 <<11.6 <<5.2 <<1.18<< 2.4<< 6.8<< 3.12;
-  for (double i(0.); i<=100.; i=i+25.) {
-        Quartiles q = quartilesTypeTest(serie1, 9, i/100. );
-qDebug()<< "serie1 "<<i << q.Q1;
+
+    Quartiles q;
+  for (int i =0.; i<=100.; i=i+25.) {
+        q = quartilesTypeTest(serie1, 9, (double)i/100. );
+       // QVERIFY(qFuzzyCompare(q.Q1 , 0.07518545614738946));
+        //qDebug()<< "serie1 "<<i << q.Q1;
     }
 
-/*     QVector<double> suite;
-    suite<<0<<1<<2<<3<<4<<5<<6<<7<<8<<9<<10;
 
-    for (double i(0.); i<=100.; i=i+10.) {
-        Quartiles q = quartilesTypeTest(suite, 1, i/100. );
-qDebug()<< "suite"<<i << q.Q1;
-    }
-*/
     QVector<double> serie2;
     serie2<< 0<<1<<2<<3<<4<<5<<6<<7<<8<<9<<10<<11<<12<<13<<14<<15<<16<<17<<18<<19<<20;
-      for (double i(0); i<=100.; i=i+25.)
+      for (int i=0; i<=100.; i=i+25.)
     {
-          Quartiles q = quartilesTypeTest(serie2, 9, i/100. );
-    qDebug()<< "serie2 "<<i << q.Q1;
+          Quartiles q = quartilesTypeTest(serie2, 9, (double)i/100. );
+          //qDebug()<< "serie2 "<<i << q.Q1;
      }
 
-qDebug()<<"---------------------------------------";
+      //qDebug()<<"---------------------------------------";
 /*     QVector<double> data12;
       data12 <<2<<3<<5<<7<<11<<13<<17<<19<<23<<29<<31<<37;
       int quantTy=2;
@@ -704,9 +735,470 @@ void ChronomodelTest::quartileForTrace()
     QVERIFY(cred.Q3 == 8.66);
 }
 
+//----------------- Test ChronoCurve
+
+
+// https://matrixcalc.org/fr/
+// https://www.dcode.fr/produit-matriciel#q1
+
+void ChronomodelTest::calculMat() {
+
+    Matrix2D mat3D (3);
+    mat3D [0] = {{ 1.,  2.,  3}}; //line num 0
+    mat3D [1] = {{ 4,  1, 5}};
+    mat3D [2] = {{6, 7, 1}};
+
+    qDebug() <<"1.1.a - test determinant() matrix = 84";
+    long double det = determinant(mat3D);
+    QVERIFY(det == 84);
+
+    qDebug() <<"1.1.b - test determinant_gauss() matrix = 84";
+    det = determinant_gauss(mat3D);
+    QVERIFY(det == 84);
+
+    Matrix2D matA (5);
+    matA [0] = {{ 1.,  4.,  5,  6,  7}}; //line num 0
+    matA [1] = {{ 8,  1, 10, 11, 12}};
+    matA [2] = {{13, 14, 1, 16, 17}};
+    matA [3] = {{18, 19, 20, 1, 22}};
+    matA [4] = {{23, 24, 25, 26, 1}};
+
+    qDebug() <<"1.2.a - test determinant() matrix = 1041744";
+    auto start = std::chrono::high_resolution_clock::now();
+
+    det = determinant(matA);
+    auto end = std::chrono::high_resolution_clock::now();
+    // Calculating total time taken by the program.
+    double time_taken =  std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+    qDebug() << "Time taken by program is : " << time_taken;
+
+    QVERIFY(det == 1041744.);
+
+    qDebug() <<"1.2.b - test determinant_gauss() matrix = 1041744";
+    start = std::chrono::high_resolution_clock::now();
+
+    det = determinant_gauss(matA);
+    end = std::chrono::high_resolution_clock::now();
+    time_taken =  std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+    qDebug() << "Time taken by program is : " << time_taken;
+    QVERIFY((double) det == (double) 1041744);
+
+
+    matA [0] = {{ 3.,  4.,  5,  6,  7}}; //line num 0
+    matA [1] = {{ 8,  9, 10, 11, 12}};
+    matA [2] = {{13, 14, 15, 16, 17}};
+    matA [3] = {{18, 19, 20, 21, 22}};
+    matA [4] = {{23, 24, 25, 26, 27}};
+
+    qDebug() <<"1.3.a - test determinant() matrix = 0";
+
+    det = determinant(matA);
+    QVERIFY(det == 0);
+
+    qDebug() <<"1.3.b - test determinant_gauss() matrix = 0";
+    det = determinant_gauss(matA);
+    QVERIFY(det == 0);
+
+    Matrix2D matB (5);
+    matB [0] = {{31, 32, 33, 34, 35}};
+    matB [1] = {{36, 37, 38, 39, 40}};
+    matB [2] = {{41, 42, 43, 44, 45}};
+    matB [3] = {{46, 47, 48, 49, 50}};
+    matB [4] = {{51, 52, 53, 54, 55}};
+
+    qDebug() <<"2 - test multiplication matrix";
+    Matrix2D result = multiMatParMat0(matA, matB);
+
+    QVERIFY(result[0][0] == 1075);  QVERIFY(result[0][1] == 1100); QVERIFY(result[0][2] == 1125); QVERIFY(result[0][3] == 1150); QVERIFY(result[0][4] == 1175);
+    QVERIFY(result[1][0] == 2100);  QVERIFY(result[1][1] == 2150); QVERIFY(result[1][2] == 2200); QVERIFY(result[1][3] == 2250); QVERIFY(result[1][4] == 2300);
+    QVERIFY(result[2][0] == 3125);  QVERIFY(result[2][1] == 3200); QVERIFY(result[2][2] == 3275); QVERIFY(result[2][3] == 3350); QVERIFY(result[2][4] == 3425);
+    QVERIFY(result[3][0] == 4150);  QVERIFY(result[3][1] == 4250); QVERIFY(result[3][2] == 4350); QVERIFY(result[3][3] == 4450); QVERIFY(result[3][4] == 4550);
+    QVERIFY(result[4][0] == 5175);  QVERIFY(result[4][1] == 5300); QVERIFY(result[4][2] == 5425); QVERIFY(result[4][3] == 5550); QVERIFY(result[4][4] == 5675);
+
+    Matrix2D matAs (2);
+    matAs [0] = {{ 1,  2}}; //col num 0
+    matAs [1] = {{ 3,  4}};
+
+    Matrix2D matBs (2);
+    matBs [0] = {{ 5,  6}}; //col num 0
+    matBs [1] = {{ 7,  8}};
+
+    qDebug() <<"3 - test Strassen 1969 multiplication matrix";
+    Strassen S;
+    Matrix2D resultStrassen = S.multiply(matAs, matBs);
+    QVERIFY(resultStrassen[0][0] == 19);  QVERIFY(resultStrassen[0][1] == 22);
+    QVERIFY(resultStrassen[1][0] == 43);  QVERIFY(resultStrassen[1][1] == 50);
+
+    resultStrassen = S.multiply( matA, matB);
+
+    QVERIFY(resultStrassen[0][0] == 1075);  QVERIFY(resultStrassen[0][1] == 1100); QVERIFY(resultStrassen[0][2] == 1125); QVERIFY(resultStrassen[0][3] == 1150); QVERIFY(resultStrassen[0][4] == 1175);
+    QVERIFY(resultStrassen[1][0] == 2100);  QVERIFY(resultStrassen[1][1] == 2150); QVERIFY(resultStrassen[1][2] == 2200); QVERIFY(resultStrassen[1][3] == 2250); QVERIFY(resultStrassen[1][4] == 2300);
+    QVERIFY(resultStrassen[2][0] == 3125);  QVERIFY(resultStrassen[2][1] == 3200); QVERIFY(resultStrassen[2][2] == 3275); QVERIFY(resultStrassen[2][3] == 3350); QVERIFY(resultStrassen[2][4] == 3425);
+    QVERIFY(resultStrassen[3][0] == 4150);  QVERIFY(resultStrassen[3][1] == 4250); QVERIFY(resultStrassen[3][2] == 4350); QVERIFY(resultStrassen[3][3] == 4450); QVERIFY(resultStrassen[3][4] == 4550);
+    QVERIFY(resultStrassen[4][0] == 5175);  QVERIFY(resultStrassen[4][1] == 5300); QVERIFY(resultStrassen[4][2] == 5425); QVERIFY(resultStrassen[4][3] == 5550); QVERIFY(resultStrassen[4][4] == 5675);
+
+    qDebug() <<"4 - test  addMatEtMat0 matrix";
+    result = addMatEtMat0(matA, matB);
+
+    QVERIFY(result[0][0] == 34); QVERIFY(result[0][1] == 36); QVERIFY(result[0][2] == 38); QVERIFY(result[0][3] == 40); QVERIFY(result[0][4] == 42);
+    QVERIFY(result[1][0] == 44); QVERIFY(result[1][1] == 46); QVERIFY(result[1][2] == 48); QVERIFY(result[1][3] == 50); QVERIFY(result[1][4] == 52);
+    QVERIFY(result[2][0] == 54); QVERIFY(result[2][1] == 56); QVERIFY(result[2][2] == 58); QVERIFY(result[2][3] == 60); QVERIFY(result[2][4] == 62);
+    QVERIFY(result[3][0] == 64); QVERIFY(result[3][1] == 66); QVERIFY(result[3][2] == 68); QVERIFY(result[3][3] == 70); QVERIFY(result[3][4] == 72);
+    QVERIFY(result[4][0] == 74); QVERIFY(result[4][1] == 76); QVERIFY(result[4][2] == 78); QVERIFY(result[4][3] == 80); QVERIFY(result[4][4] == 82);
+
+    qDebug() <<"4 - test Strassen 1969 addition matrix";
+    result = S.add(matA, matB);
+
+    QVERIFY(result[0][0] == 34); QVERIFY(result[0][1] == 36); QVERIFY(result[0][2] == 38); QVERIFY(result[0][3] == 40); QVERIFY(result[0][4] == 42);
+    QVERIFY(result[1][0] == 44); QVERIFY(result[1][1] == 46); QVERIFY(result[1][2] == 48); QVERIFY(result[1][3] == 50); QVERIFY(result[1][4] == 52);
+    QVERIFY(result[2][0] == 54); QVERIFY(result[2][1] == 56); QVERIFY(result[2][2] == 58); QVERIFY(result[2][3] == 60); QVERIFY(result[2][4] == 62);
+    QVERIFY(result[3][0] == 64); QVERIFY(result[3][1] == 66); QVERIFY(result[3][2] == 68); QVERIFY(result[3][3] == 70); QVERIFY(result[3][4] == 72);
+    QVERIFY(result[4][0] == 74); QVERIFY(result[4][1] == 76); QVERIFY(result[4][2] == 78); QVERIFY(result[4][3] == 80); QVERIFY(result[4][4] == 82);
+
+
+    qDebug() <<"5 - test transpose0 matrix";
+    result = transpose0(matA);
+
+    QVERIFY(result[0][0] == 3); QVERIFY(result[0][1] == 8);  QVERIFY(result[0][2] == 13); QVERIFY(result[0][3] == 18); QVERIFY(result[0][4] == 23);
+    QVERIFY(result[1][0] == 4); QVERIFY(result[1][1] == 9);  QVERIFY(result[1][2] == 14); QVERIFY(result[1][3] == 19); QVERIFY(result[1][4] == 24);
+    QVERIFY(result[2][0] == 5); QVERIFY(result[2][1] == 10); QVERIFY(result[2][2] == 15); QVERIFY(result[2][3] == 20); QVERIFY(result[2][4] == 25);
+    QVERIFY(result[3][0] == 6); QVERIFY(result[3][1] == 11); QVERIFY(result[3][2] == 16); QVERIFY(result[3][3] == 21); QVERIFY(result[3][4] == 26);
+    QVERIFY(result[4][0] == 7); QVERIFY(result[4][1] == 12); QVERIFY(result[4][2] == 17); QVERIFY(result[4][3] == 22); QVERIFY(result[4][4] == 27);
+
+    Matrix2D matC (5);
+    matC [0] = {{ 3.,  4.,  5,  6,  0}};
+    matC [1] = {{ 8,  9, 10, 0, 12}};
+    matC [2] = {{13, 14, 0, 16, 17}};
+    matC [3] = {{18, 0, 20, 21, 22}};
+    matC [4] = {{0, 24, 25, 26, 27}};
+
+    qDebug() <<"6 - test determinant matrix";
+    det = determinant(matC);
+
+    QVERIFY(det == 1271190);
+
+    qDebug() <<"7 - test cofactor0 matrix";
+    result = cofactor0(matC);
+
+    QVERIFY(result[0][0] == 95575);  QVERIFY(result[0][1] == 86170);  QVERIFY(result[0][2] == 71749);  QVERIFY(result[0][3] == 46840);  QVERIFY(result[0][4] == -188135);
+    QVERIFY(result[1][0] == 48550);  QVERIFY(result[1][1] == 44770);  QVERIFY(result[1][2] == 38974);  QVERIFY(result[1][3] == -86600); QVERIFY(result[1][4] == 7510);
+    QVERIFY(result[2][0] == 26605);  QVERIFY(result[2][1] == 25450);  QVERIFY(result[2][2] == -61067); QVERIFY(result[2][3] == 20620);  QVERIFY(result[2][4] == 14065);
+    QVERIFY(result[3][0] == 13900);  QVERIFY(result[3][1] == -52640); QVERIFY(result[3][2] == 14824);  QVERIFY(result[3][3] == 15790);  QVERIFY(result[3][4] == 17860);
+    QVERIFY(result[4][0] == -49655); QVERIFY(result[4][1] == 6970);   QVERIFY(result[4][2] == 9049);   QVERIFY(result[4][3] == 12640);  QVERIFY(result[4][4] == 20335);
+
+    qDebug() <<"8 - test inverseMatSym0 matrix";
+    result = inverseMatSym0(matC);
+
+    QVERIFY(qFuzzyCompare(result[0][0] , 0.07518545614738946)); QVERIFY(qFuzzyCompare(result[0][1] , 0.03819255972749943));  QVERIFY(qFuzzyCompare(result[0][2] , 0.02092920806488409));  QVERIFY(qFuzzyCompare(result[0][3] , 0.01093463604968573));  QVERIFY(qFuzzyCompare(result[0][4] , -0.03906182396022624));
+    QVERIFY(qFuzzyCompare(result[1][0] , 0.06778687686341145)); QVERIFY(qFuzzyCompare(result[1][1] , 0.03521896805355611));  QVERIFY(qFuzzyCompare(result[1][2] , 0.02002061060895696));  QVERIFY(qFuzzyCompare(result[1][3] , -0.04141001738528465)); QVERIFY(qFuzzyCompare(result[1][4] , 0.005483051314122987));
+    QVERIFY(qFuzzyCompare(result[2][0] , 0.05644238862797851)); QVERIFY(qFuzzyCompare(result[2][1] , 0.03065946082017637));  QVERIFY(qFuzzyCompare(result[2][2] , -0.04803923882346463)); QVERIFY(qFuzzyCompare(result[2][3] , 0.01166151401442743));  QVERIFY(qFuzzyCompare(result[2][4] , 0.007118526734791809));
+    QVERIFY(qFuzzyCompare(result[3][0] , 0.03684736349404889)); QVERIFY(qFuzzyCompare(result[3][1] , -0.0681251425829341));  QVERIFY(qFuzzyCompare(result[3][2] , 0.01622102124780717));  QVERIFY(qFuzzyCompare(result[3][3] , 0.01242143188665738));  QVERIFY(qFuzzyCompare(result[3][4] , 0.009943438825037957));
+    QVERIFY(qFuzzyCompare(result[4][0] ,-0.1479991189358003));  QVERIFY(qFuzzyCompare(result[4][1] , 0.005907850124686318)); QVERIFY(qFuzzyCompare(result[4][2] , 0.01106443568624674));  QVERIFY(qFuzzyCompare(result[4][3] , 0.01404982732715015));  QVERIFY(qFuzzyCompare(result[4][4] , 0.01599682187556542));
+
+
+    Matrix2D matK2 (4); //Positive and Symetric matrix
+    matK2 [0] = {{ 1., 1, 1, 1}};
+    matK2 [1] = {{ 1,  5, 5, 5}};
+    matK2 [2] = {{ 1,  5, 14, 14}};
+    matK2 [3] = {{ 1,  5, 14, 15}};
+
+    qDebug() <<"9 - test choleskyLL0 matrix N = 4";
+    result = choleskyLL0(matK2);
+
+    QVERIFY(result[0][0] == 1); QVERIFY(result[0][1] == 0); QVERIFY(result[0][2] == 0); QVERIFY(result[0][3] == 0);
+    QVERIFY(result[1][0] == 1); QVERIFY(result[1][1] == 2); QVERIFY(result[1][2] == 0); QVERIFY(result[1][3] == 0);
+    QVERIFY(result[2][0] == 1); QVERIFY(result[2][1] == 2); QVERIFY(result[2][2] == 3); QVERIFY(result[2][3] == 0);
+    QVERIFY(result[3][0] == 1); QVERIFY(result[3][1] == 2); QVERIFY(result[3][2] == 3); QVERIFY(result[3][3] == 1);
+
+    Matrix2D matK (5); //Positive and Symetric matrix
+    matK [0] = {{ 3, 1, 1, 1, 1}};
+    matK [1] = {{ 1, 6, 4, 4, 4}};
+    matK [2] = {{ 1, 4, 7, 5, 5}};
+    matK [3] = {{ 1, 4, 5, 9, 9}};
+    matK [4] = {{ 1, 4, 5, 9, 11.}};
+
+    qDebug() <<"10 - test choleskyLL0 matrix N = 5";
+    result = choleskyLL0(matK);
+
+    QVERIFY(qFuzzyCompare(result[0][0] , 1.732050807568877));  QVERIFY(qFuzzyCompare(result[0][1] , 0.));                QVERIFY(qFuzzyCompare(result[0][2] , 0.));                QVERIFY(qFuzzyCompare(result[0][3] , 0.));                QVERIFY(qFuzzyCompare(result[0][4] , 0.));
+    QVERIFY(qFuzzyCompare(result[1][0] , 0.5773502691896258)); QVERIFY(qFuzzyCompare(result[1][1] , 2.380476142847617)); QVERIFY(qFuzzyCompare(result[1][2] , 0.));                QVERIFY(qFuzzyCompare(result[1][3] , 0.));                QVERIFY(qFuzzyCompare(result[1][4] , 0.));
+    QVERIFY(qFuzzyCompare(result[2][0] , 0.5773502691896258)); QVERIFY(qFuzzyCompare(result[2][1] , 1.540308092430811)); QVERIFY(qFuzzyCompare(result[2][2] , 2.072225288683358)); QVERIFY(qFuzzyCompare(result[2][3] , 0.));                QVERIFY(qFuzzyCompare(result[2][4] , 0.));
+    QVERIFY(qFuzzyCompare(result[3][0] , 0.5773502691896258)); QVERIFY(qFuzzyCompare(result[3][1] , 1.540308092430811)); QVERIFY(qFuzzyCompare(result[3][2] , 1.107079263817136)); QVERIFY(qFuzzyCompare(result[3][3] , 2.251331417336179)); QVERIFY(qFuzzyCompare(result[3][4] , 0.));
+    QVERIFY(qFuzzyCompare(result[4][0] , 0.5773502691896258)); QVERIFY(qFuzzyCompare(result[4][1] , 1.540308092430811)); QVERIFY(qFuzzyCompare(result[4][2] , 1.107079263817136)); QVERIFY(qFuzzyCompare(result[4][3] , 2.251331417336179)); QVERIFY(qFuzzyCompare(result[4][4] , 1.414213562373095));
+
+
+    qDebug() <<"11 - test decompositionCholesky matrix N = 5 shift = 0";
+    std::pair<Matrix2D, std::vector<long double>> pairResult;
+   // pairResult = choleskyDiagonal(matK);
+    pairResult = decompositionCholesky(matK, 5 , 0);
+
+    result = pairResult.first;
+
+    std::vector<long double> diag = pairResult.second;
+
+    QVERIFY(qFuzzyCompare(result[0][0] , 1.));                 QVERIFY(qFuzzyCompare(result[0][1] , 0.));                 QVERIFY(qFuzzyCompare(result[0][2] , 0.));                 QVERIFY(qFuzzyCompare(result[0][3] , 0.)); QVERIFY(qFuzzyCompare(result[0][4] , 0.));
+    QVERIFY(qFuzzyCompare(result[1][0] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(result[1][1] , 1. ));                QVERIFY(qFuzzyCompare(result[1][2] , 0.));                 QVERIFY(qFuzzyCompare(result[1][3] , 0.)); QVERIFY(qFuzzyCompare(result[1][4] , 0.));
+    QVERIFY(qFuzzyCompare(result[2][0] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(result[2][1] , 0.6470588235294117)); QVERIFY(qFuzzyCompare(result[2][2] , 1. ));                QVERIFY(qFuzzyCompare(result[2][3] , 0.)); QVERIFY(qFuzzyCompare(result[2][4] , 0.));
+    QVERIFY(qFuzzyCompare(result[3][0] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(result[3][1] , 0.6470588235294117)); QVERIFY(qFuzzyCompare(result[3][2] , 0.5342465753424658)); QVERIFY(qFuzzyCompare(result[3][3] , 1.)); QVERIFY(qFuzzyCompare(result[3][4] , 0.));
+    QVERIFY(qFuzzyCompare(result[4][0] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(result[4][1] , 0.6470588235294117)); QVERIFY(qFuzzyCompare(result[4][2] , 0.5342465753424658)); QVERIFY(qFuzzyCompare(result[4][3] , 1.)); QVERIFY(qFuzzyCompare(result[4][4] , 1.));
+
+
+    QVERIFY(qFuzzyCompare(diag[0] , 3.));
+    QVERIFY(qFuzzyCompare(diag[1] , 5.666666666666667));
+    QVERIFY(qFuzzyCompare(diag[2] , 4.294117647058823));
+    QVERIFY(qFuzzyCompare(diag[3] , 5.068493150684931));
+    QVERIFY(qFuzzyCompare(diag[4] , 2.));
+
+    qDebug() <<"11.2 - test inverseMatSym matrix N = 5 shift = 0";
+    Matrix2D matK_1 (5);
+    matK_1 = inverseMatSym(result, diag, 5, 0); // ne fonctionne pas, devrait donner l'inverse de la matrice matK
+
+    Matrix2D matK_11 (5);
+    matK_11 = multiMatParMat(matK, matK_1, 5, 5);
+
+    qDebug() <<"12 - test choleskyLDL matrix N = 5";
+    std::pair<Matrix2D, std::vector<long double>> pairResult2;
+    pairResult2 = choleskyLDLT(matK);
+
+    result = pairResult2.first;
+
+    diag = pairResult2.second;
+
+    QVERIFY(qFuzzyCompare(result[0][0] , 1.));                 QVERIFY(qFuzzyCompare(result[0][1] , 0.));                 QVERIFY(qFuzzyCompare(result[0][2] , 0.));                 QVERIFY(qFuzzyCompare(result[0][3] , 0.)); QVERIFY(qFuzzyCompare(result[0][4] , 0.));
+    QVERIFY(qFuzzyCompare(result[1][0] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(result[1][1] , 1. ));                QVERIFY(qFuzzyCompare(result[1][2] , 0.));                 QVERIFY(qFuzzyCompare(result[1][3] , 0.)); QVERIFY(qFuzzyCompare(result[1][4] , 0.));
+    QVERIFY(qFuzzyCompare(result[2][0] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(result[2][1] , 0.6470588235294117)); QVERIFY(qFuzzyCompare(result[2][2] , 1. ));                QVERIFY(qFuzzyCompare(result[2][3] , 0.)); QVERIFY(qFuzzyCompare(result[2][4] , 0.));
+    QVERIFY(qFuzzyCompare(result[3][0] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(result[3][1] , 0.6470588235294117)); QVERIFY(qFuzzyCompare(result[3][2] , 0.5342465753424658)); QVERIFY(qFuzzyCompare(result[3][3] , 1.)); QVERIFY(qFuzzyCompare(result[3][4] , 0.));
+    QVERIFY(qFuzzyCompare(result[4][0] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(result[4][1] , 0.6470588235294117)); QVERIFY(qFuzzyCompare(result[4][2] , 0.5342465753424658)); QVERIFY(qFuzzyCompare(result[4][3] , 1.)); QVERIFY(qFuzzyCompare(result[4][4] , 1.));
+
+
+    QVERIFY(qFuzzyCompare(diag[0] , 3.));
+    QVERIFY(qFuzzyCompare(diag[1] , 5.666666666666667));
+    QVERIFY(qFuzzyCompare(diag[2] , 4.294117647058823));
+    QVERIFY(qFuzzyCompare(diag[3] , 5.068493150684931));
+    QVERIFY(qFuzzyCompare(diag[4] , 2.));
+
+
+    Matrix2D matK3 (7); //Positive and Symetric matrix with shift
+    matK3 [0] = {{ 0, 0, 0, 0, 0, 0,  0}};
+    matK3 [1] = {{ 0, 3, 1, 1, 1, 1,  0}};
+    matK3 [2] = {{ 0, 1, 6, 4, 4, 4,  0}};
+    matK3 [3] = {{ 0, 1, 4, 7, 5, 5,  0}};
+    matK3 [4] = {{ 0, 1, 4, 5, 9, 9,  0}};
+    matK3 [5] = {{ 0, 1, 4, 5, 9, 11., 0}};
+    matK3 [6] = {{ 0, 0, 0, 0, 0, 0,   0}};
+
+    qDebug() <<"13 - test decompositionCholesky matrix N = 5 with shift = 1";
+     pairResult = decompositionCholesky(matK3, 5 , 1);
+     result = pairResult.first;
+
+     diag = pairResult.second;
+
+     QVERIFY(qFuzzyCompare(result[0][0] , 0.)); QVERIFY(qFuzzyCompare(result[0][1] , 0.));                 QVERIFY(qFuzzyCompare(result[0][2] , 0.));                 QVERIFY(qFuzzyCompare(result[0][3] , 0.));                 QVERIFY(qFuzzyCompare(result[0][4] , 0.)); QVERIFY(qFuzzyCompare(result[0][5] , 0.));  QVERIFY(qFuzzyCompare(result[0][6] , 0.));
+     QVERIFY(qFuzzyCompare(result[1][0] , 0.)); QVERIFY(qFuzzyCompare(result[1][1] , 1.));                 QVERIFY(qFuzzyCompare(result[1][2] , 0.));                 QVERIFY(qFuzzyCompare(result[1][3] , 0.));                 QVERIFY(qFuzzyCompare(result[1][4] , 0.)); QVERIFY(qFuzzyCompare(result[1][5] , 0.));  QVERIFY(qFuzzyCompare(result[1][6] , 0.));
+     QVERIFY(qFuzzyCompare(result[2][0] , 0.)); QVERIFY(qFuzzyCompare(result[2][1] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(result[2][2] , 1. ));                QVERIFY(qFuzzyCompare(result[2][3] , 0.));                 QVERIFY(qFuzzyCompare(result[2][4] , 0.)); QVERIFY(qFuzzyCompare(result[2][5] , 0.));  QVERIFY(qFuzzyCompare(result[2][6] , 0.));
+     QVERIFY(qFuzzyCompare(result[3][0] , 0.)); QVERIFY(qFuzzyCompare(result[3][1] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(result[3][2] , 0.6470588235294117)); QVERIFY(qFuzzyCompare(result[3][3] , 1. ));                QVERIFY(qFuzzyCompare(result[3][4] , 0.)); QVERIFY(qFuzzyCompare(result[3][5] , 0.));  QVERIFY(qFuzzyCompare(result[3][6] , 0.));
+     QVERIFY(qFuzzyCompare(result[4][0] , 0.)); QVERIFY(qFuzzyCompare(result[4][1] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(result[4][2] , 0.6470588235294117)); QVERIFY(qFuzzyCompare(result[4][3] , 0.5342465753424658)); QVERIFY(qFuzzyCompare(result[4][4] , 1.)); QVERIFY(qFuzzyCompare(result[4][5] , 0.));  QVERIFY(qFuzzyCompare(result[4][6] , 0.));
+     QVERIFY(qFuzzyCompare(result[5][0] , 0.)); QVERIFY(qFuzzyCompare(result[5][1] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(result[5][2] , 0.6470588235294117)); QVERIFY(qFuzzyCompare(result[5][3] , 0.5342465753424658)); QVERIFY(qFuzzyCompare(result[5][4] , 1.)); QVERIFY(qFuzzyCompare(result[5][5] , 1.));  QVERIFY(qFuzzyCompare(result[5][6] , 0.));
+     QVERIFY(qFuzzyCompare(result[6][0] , 0.)); QVERIFY(qFuzzyCompare(result[6][1] , 0.));                 QVERIFY(qFuzzyCompare(result[6][2] , 0.));                 QVERIFY(qFuzzyCompare(result[6][3] , 0.));                 QVERIFY(qFuzzyCompare(result[6][4] , 0.)); QVERIFY(qFuzzyCompare(result[6][5] , 0.));  QVERIFY(qFuzzyCompare(result[6][6] , 0.));
+
+
+     QVERIFY(qFuzzyCompare(diag[0] , 0.));
+     QVERIFY(qFuzzyCompare(diag[1] , 3.));
+     QVERIFY(qFuzzyCompare(diag[2] , 5.666666666666667));
+     QVERIFY(qFuzzyCompare(diag[3] , 4.294117647058823));
+     QVERIFY(qFuzzyCompare(diag[4] , 5.068493150684931));
+     QVERIFY(qFuzzyCompare(diag[5] , 2.));
+     QVERIFY(qFuzzyCompare(diag[6] , 0.));
+
+     qDebug() <<"13.1 - inverseMatSym";
+     Matrix2D matK_3 (7);
+     matK_3 = inverseMatSym(result, diag, 5, 1);
+
+     Matrix2D matK3_1 (7);
+     matK3_1 = multiMatParMat(matK3, matK_3, 5, 5);
+
+    qDebug() <<"13.2 - decompositionLU0 matrix 3x3";
+    Matrix2D matLU0 (3);
+    matLU0 [0] = {{ 2,  -1, 0}}; //col num 0
+    matLU0 [1] = {{ -1,  2, -1}};
+    matLU0 [2] = {{ 0,  -1, 2}};
+    std::pair<Matrix2D, Matrix2D > pairMatrix;
+    pairMatrix =  decompositionLU0(matLU0);
+
+    // matrix L
+    Matrix2D matL = pairMatrix.first;
+    QVERIFY(matL[0][0] == 1);                  QVERIFY(matL[0][1] == 0);                               QVERIFY(matL[0][2] == 0);
+    QVERIFY(qFuzzyCompare(matL[1][0] , -0.5)); QVERIFY(matL[1][1] == 1);                               QVERIFY(matL[1][2] == 0);
+    QVERIFY(matL[2][0] == 0);                  QVERIFY(qFuzzyCompare(matL[2][1] , -0.66666666666667)); QVERIFY(matL[2][2] == 1);
+
+    // matrix U
+    Matrix2D matU = pairMatrix.second;
+    QVERIFY(matU[0][0] == 2); QVERIFY(matU[0][1] == -1);  QVERIFY(matU[0][2] == 0);
+    QVERIFY(matU[1][0] == 0); QVERIFY(matU[1][1] == 1.5); QVERIFY(matU[1][2] == -1);
+    QVERIFY(matU[2][0] == 0); QVERIFY(matU[2][1] == 0);   QVERIFY(qFuzzyCompare(matU[2][2] , 1.333333333333));
+
+
+    qDebug() <<"14 - decompositionLU0 matrix 5x5";
+    pairMatrix =  decompositionLU0(matK);
+    matL = pairMatrix.first;
+    //qDebug() << (double) matL[2][1];
+    QVERIFY(qFuzzyCompare(matL[0][0] , 1.));                 QVERIFY(qFuzzyCompare(matL[0][1] , 0.));                 QVERIFY(qFuzzyCompare(matL[0][2] , 0.));                 QVERIFY(qFuzzyCompare(matL[0][3] , 0.)); QVERIFY(qFuzzyCompare(matL[0][4] , 0.));
+    QVERIFY(qFuzzyCompare(matL[1][0] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(matL[1][1] , 1. ));                QVERIFY(qFuzzyCompare(matL[1][2] , 0.));                 QVERIFY(qFuzzyCompare(matL[1][3] , 0.)); QVERIFY(qFuzzyCompare(matL[1][4] , 0.));
+    QVERIFY(qFuzzyCompare(matL[2][0] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(matL[2][1] , 0.6470588235294117)); QVERIFY(qFuzzyCompare(matL[2][2] , 1. ));                QVERIFY(qFuzzyCompare(matL[2][3] , 0.)); QVERIFY(qFuzzyCompare(matL[2][4] , 0.));
+    QVERIFY(qFuzzyCompare(matL[3][0] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(matL[3][1] , 0.6470588235294117)); QVERIFY(qFuzzyCompare(matL[3][2] , 0.5342465753424658)); QVERIFY(qFuzzyCompare(matL[3][3] , 1.)); QVERIFY(qFuzzyCompare(matL[3][4] , 0.));
+    QVERIFY(qFuzzyCompare(matL[4][0] , 0.3333333333333333)); QVERIFY(qFuzzyCompare(matL[4][1] , 0.6470588235294117)); QVERIFY(qFuzzyCompare(matL[4][2] , 0.5342465753424658)); QVERIFY(qFuzzyCompare(matL[4][3] , 1.)); QVERIFY(qFuzzyCompare(matL[4][4] , 1.));
+
+    matU = pairMatrix.second;
+    QVERIFY(qFuzzyCompare(matU[0][0] , 3.)); QVERIFY(qFuzzyCompare(matU[0][1] , 1.));                 QVERIFY(qFuzzyCompare(matU[0][2] , 1.));                 QVERIFY(qFuzzyCompare(matU[0][3] , 1.));                QVERIFY(qFuzzyCompare(matU[0][4] , 1.));
+    QVERIFY(qFuzzyCompare(matU[1][0] , 0.)); QVERIFY(qFuzzyCompare(matU[1][1] , 5.666666666666667 )); QVERIFY(qFuzzyCompare(matU[1][2] , 3.666666666666667));  QVERIFY(qFuzzyCompare(matU[1][3] , 3.666666666666667)); QVERIFY(qFuzzyCompare(matU[1][4] , 3.666666666666667));
+    QVERIFY(qFuzzyCompare(matU[2][0] , 0.)); QVERIFY(qFuzzyCompare(matU[2][1] , 0.));                 QVERIFY(qFuzzyCompare(matU[2][2] , 4.294117647058824 )); QVERIFY(qFuzzyCompare(matU[2][3] , 2.294117647058824)); QVERIFY(qFuzzyCompare(matU[2][4] , 2.294117647058824));
+    QVERIFY(qFuzzyCompare(matU[3][0] , 0.)); QVERIFY(qFuzzyCompare(matU[3][1] , 0.));                 QVERIFY(qFuzzyCompare(matU[3][2] , 0.));                 QVERIFY(qFuzzyCompare(matU[3][3] , 5.068493150684931)); QVERIFY(qFuzzyCompare(matU[3][4] , 5.068493150684931));
+    QVERIFY(qFuzzyCompare(matU[4][0] , 0.)); QVERIFY(qFuzzyCompare(matU[4][1] , 0.));                 QVERIFY(qFuzzyCompare(matU[4][2] , 0.));                 QVERIFY(qFuzzyCompare(matU[4][3] , 0.));                QVERIFY(qFuzzyCompare(matU[4][4] , 2.));
+
+}
+
+void ChronomodelTest::stat() {
+    // https://calculis.net/droite-regression-lineaire
+    const std::vector<double>& data_x {2, 7, 13, 15, 20, 24, 25, 29, 30, 31};
+    const std::vector<double>& data_y {14, 24, 36, 40, 50, 58, 60, 68, 70, 72};
+    //
+    auto param = linear_regression(data_x, data_y);
+    qDebug() <<"15 - linear_regression";
+    QVERIFY(qFuzzyCompare(param.first , 2));
+    QVERIFY(qFuzzyCompare(param.second , 10));
+
+    const std::vector<double>& data_y2 {3.62, 3.78, 4.32, 4.14, 4.88, 5.01, 4.94, 5.39, 5.28, 5.42};
+
+    param = linear_regression(data_x, data_y2);
+
+    QVERIFY(qFuzzyCompare(param.first , 0.065105680317041));
+    QVERIFY(qFuzzyCompare(param.second , 3.401928665786));
+}
+void ChronomodelTest::curveFunction()
+{
+    qDebug() << "1 test orderEventsByThetaReduced";
+    Project proj ;
+    ModelCurve modl;
+    MCMCLoopCurve loopCurve (&modl, &proj);
+
+    QList <Event*> lEvents;
+    Event E1 ;
+    E1.mThetaReduced = 1.1;
+    E1.mName = "E1";
+
+    Event E2 ;
+    E2.mThetaReduced = 3.3;
+    E2.mName = "E2";
+
+    Event E3 ;
+    E3.mThetaReduced = 2.1;
+    E3.mName = "E3";
+
+    Event E4 ;
+    E4.mThetaReduced = 2.2;
+    E4.mName = "E4";
+
+    Event E5 ;
+    E5.mThetaReduced = 0.2;
+    E5.mName = "E5";
+
+    lEvents = {&E1, &E2, &E3, &E4, &E5};
+
+    loopCurve.orderEventsByThetaReduced(lEvents);
+
+     QVERIFY(lEvents[0]->mThetaReduced == 0.2);
+     QVERIFY(lEvents[1]->mThetaReduced == 1.1);
+     QVERIFY(lEvents[2]->mThetaReduced == 2.1);
+     QVERIFY(lEvents[3]->mThetaReduced == 2.2);
+     QVERIFY(lEvents[4]->mThetaReduced == 3.3);
+
+
+     double comparPrecision = std::numeric_limits<double>::epsilon() *5.;
+
+     qDebug() << "2 test orderEventsByThetaReduced";
+     // non modification
+     lEvents[0]->mThetaReduced = 0.1;
+     lEvents[1]->mThetaReduced = 0.2;
+     lEvents[2]->mThetaReduced = 0.2001;
+     lEvents[3]->mThetaReduced = 0.203;
+     lEvents[4]->mThetaReduced = 0.3;
+
+     loopCurve.spreadEventsThetaReduced0(lEvents);
+
+     QVERIFY(lEvents[0]->mThetaReduced == 0.1);
+     QVERIFY(lEvents[1]->mThetaReduced == 0.2);
+     QVERIFY(lEvents[2]->mThetaReduced == 0.2001);
+     QVERIFY(lEvents[3]->mThetaReduced == 0.203);
+     QVERIFY(lEvents[4]->mThetaReduced == 0.3);
+
+     // étallement d'un paquet centrale
+     lEvents[0]->mThetaReduced = 0.1;
+     lEvents[1]->mThetaReduced = 0.2;
+     lEvents[2]->mThetaReduced = 0.2;
+     lEvents[3]->mThetaReduced = 0.2;
+     lEvents[4]->mThetaReduced = 0.3;
+
+     loopCurve.spreadEventsThetaReduced0(lEvents);
+
+     QVERIFY(lEvents[0]->mThetaReduced == 0.1);
+     QVERIFY(myFuzzyCompare(lEvents[1]->mThetaReduced , 0.1999999998889777, comparPrecision));
+     QVERIFY(myFuzzyCompare(lEvents[2]->mThetaReduced , 0.20000000005551116, comparPrecision));
+     QVERIFY(myFuzzyCompare(lEvents[3]->mThetaReduced , 0.20000000022204462, comparPrecision));
+     QVERIFY(lEvents[4]->mThetaReduced == 0.3);
+
+      qDebug() << "3 test orderEventsByThetaReduced egal at left";
+      // un paquet en début de liste
+     lEvents[0]->mThetaReduced = 0.02;
+     lEvents[1]->mThetaReduced = 0.02;
+     lEvents[2]->mThetaReduced = 0.02;
+     lEvents[3]->mThetaReduced = 0.1;
+     lEvents[4]->mThetaReduced = 0.3;
+
+     loopCurve.spreadEventsThetaReduced0(lEvents);
+
+     QVERIFY(myFuzzyCompare(lEvents[0]->mThetaReduced , 0.02, comparPrecision));
+     QVERIFY(myFuzzyCompare(lEvents[1]->mThetaReduced , 0.020000000111022303, comparPrecision));
+     QVERIFY(myFuzzyCompare(lEvents[2]->mThetaReduced , 0.020000000222044605, comparPrecision));
+     QVERIFY(myFuzzyCompare(lEvents[3]->mThetaReduced , 0.1, comparPrecision));
+     QVERIFY(lEvents[4]->mThetaReduced == 0.3);
+
+
+     qDebug() << "4 test orderEventsByThetaReduced egal at right";
+
+     // un paquet en fin de liste
+    lEvents[0]->mThetaReduced = 0.02;
+    lEvents[1]->mThetaReduced = 0.2;
+    lEvents[2]->mThetaReduced = 0.301;
+    lEvents[3]->mThetaReduced = 0.301;
+    lEvents[4]->mThetaReduced = 0.301;
+
+    loopCurve.spreadEventsThetaReduced0(lEvents);
+
+    QVERIFY(qFuzzyCompare(lEvents[0]->mThetaReduced , 0.02));
+    QVERIFY(qFuzzyCompare(lEvents[1]->mThetaReduced , 0.2));
+    QVERIFY(myFuzzyCompare(lEvents[2]->mThetaReduced , 0.3009999997779554, comparPrecision));
+    QVERIFY(myFuzzyCompare(lEvents[3]->mThetaReduced , 0.3009999998889777, comparPrecision));
+    QVERIFY(myFuzzyCompare(lEvents[4]->mThetaReduced , 0.301 , comparPrecision));
+
+    // deux paquets en début et fin de liste
+    lEvents[0]->mThetaReduced = 0.02;
+    lEvents[1]->mThetaReduced = 0.02;
+    lEvents[2]->mThetaReduced = 0.3;
+    lEvents[3]->mThetaReduced = 0.301;
+    lEvents[4]->mThetaReduced = 0.301;
+
+    loopCurve.spreadEventsThetaReduced0(lEvents);
+
+    QVERIFY(myFuzzyCompare(lEvents[0]->mThetaReduced , 0.02, comparPrecision));
+    QVERIFY(myFuzzyCompare(lEvents[1]->mThetaReduced , 0.020000000222044605, comparPrecision));
+    QVERIFY(qFuzzyCompare(lEvents[2]->mThetaReduced , 0.3) );
+    QVERIFY(myFuzzyCompare(lEvents[3]->mThetaReduced , 0.3009999997779554, comparPrecision));
+    QVERIFY(myFuzzyCompare(lEvents[4]->mThetaReduced , 0.301, comparPrecision));
 
 
 
+
+}
 QTEST_APPLESS_MAIN(ChronomodelTest)
 
 #include "tst_chronomodeltest.moc"

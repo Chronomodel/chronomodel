@@ -56,10 +56,10 @@ class MCMCSettingsDialog: public QDialog
 {
     Q_OBJECT
 public:
-    MCMCSettingsDialog(QWidget* parent = nullptr);
+    MCMCSettingsDialog(QWidget* parent = nullptr, const bool show_help = true);
     virtual ~MCMCSettingsDialog();
 
-    void setSettings(const MCMCSettings& settings);
+    void setSettings(const MCMCSettings &settings);
     MCMCSettings getSettings();
 
 protected slots:
@@ -72,7 +72,7 @@ signals:
     void inputRejected();
 
 protected:
-    void paintEvent(QPaintEvent* e);
+    void paintEvent(QPaintEvent*);
     void resizeEvent(QResizeEvent* e);
     void updateLayout();
 
@@ -117,11 +117,11 @@ private:
     QLabel* mLevelLabel;
     LineEdit* mLevelEdit;
 
-    Button* mOkBut;
-    Button* mCancelBut;
+    QPushButton* mOkBut;
+    QPushButton* mCancelBut;
 
-    Button* mTestBut;
-    Button* mResetBut;
+    QPushButton* mTestBut;
+    QPushButton* mResetBut;
 
     QRectF mBurnRect;
     QRectF mAdaptRect;

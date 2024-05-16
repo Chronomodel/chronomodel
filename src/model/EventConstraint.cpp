@@ -39,6 +39,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "EventConstraint.h"
 #include "Event.h"
+#include "StateKeys.h"
 
 EventConstraint::EventConstraint():Constraint(),
 mEventFrom(0),
@@ -49,12 +50,12 @@ mEventTo(0)
 
 EventConstraint::EventConstraint(const EventConstraint& ec):Constraint()
 {
-    copyFrom(ec);
+    EventConstraint::copyFrom(ec);
 }
 
 EventConstraint& EventConstraint::operator=(const EventConstraint& ec)
 {
-    copyFrom(ec);
+    EventConstraint::copyFrom(ec);
     return *this;
 }
 

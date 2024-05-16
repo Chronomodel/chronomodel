@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -36,40 +36,23 @@ same conditions as regards security.
 The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
-
 #include "ProjectView.h"
+
+#include "MainWindow.h"
 #include "ModelView.h"
 #include "ResultsView.h"
-#include "Painting.h"
 #include "AppSettings.h"
 
-// Constructor / Destructor / Init
-ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
+ProjectView::ProjectView(std::shared_ptr<Project> &project, QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
 {
-    /* find screen definition */
-    int numScreen (QApplication::desktop()->screenNumber(this));
-    QScreen *screen = QApplication::screens().at(numScreen);
+    setMouseTracking(true);
+    setScreenDefinition();
 
-    //qreal mm_per_cm = 10;
-    const qreal cm_per_in = 2.54;
-    /*
-    qDebug()<<"ProjectView()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< width();
-    qDebug()<<"ProjectView()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< QApplication::desktop()->width();
-    qDebug()<<"ProjectView() screen width"<< width() / screen->physicalDotsPerInchX() * cm_per_in;
-    qDebug()<<"ProjectView() screen height"<< height() / screen->physicalDotsPerInchY() * cm_per_in;
-    */
-    int unitX = int(screen->physicalDotsPerInchX() / cm_per_in);
-    AppSettings::setWidthUnit( unitX);
-
-    int unitY = int(screen->physicalDotsPerInchY() / cm_per_in);
-    AppSettings::setHeigthUnit( unitY);
-
-
-    mModelView = new ModelView();
-    mResultsView = new ResultsView();
+    mModelView = new ModelView(project);
+    mResultsView = new ResultsView(project);
 
     QPalette palette;
-    palette.setColor(QPalette::Base, Qt::transparent);
+    palette.setColor(QPalette::Base, Qt::white);
     palette.setColor(QPalette::Text, Qt::black);
 
     mLogModelEdit = new QTextEdit();
@@ -78,11 +61,17 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     mLogModelEdit->setFrameStyle(QFrame::NoFrame);
     mLogModelEdit->setPalette(palette);
 
-    mLogMCMCEdit = new QTextEdit();
-    mLogMCMCEdit->setReadOnly(true);
-    mLogMCMCEdit->setAcceptRichText(true);
-    mLogMCMCEdit->setFrameStyle(QFrame::NoFrame);
-    mLogMCMCEdit->setPalette(palette);
+    mLogInitEdit = new QTextEdit();
+    mLogInitEdit->setReadOnly(true);
+    mLogInitEdit->setAcceptRichText(true);
+    mLogInitEdit->setFrameStyle(QFrame::NoFrame);
+    mLogInitEdit->setPalette(palette);
+
+    mLogAdaptEdit = new QTextEdit();
+    mLogAdaptEdit->setReadOnly(true);
+    mLogAdaptEdit->setAcceptRichText(true);
+    mLogAdaptEdit->setFrameStyle(QFrame::NoFrame);
+    mLogAdaptEdit->setPalette(palette);
 
     mLogResultsEdit = new QTextEdit();
     mLogResultsEdit->setReadOnly(true);
@@ -91,16 +80,26 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
     mLogResultsEdit->setPalette(palette);
 
     mLogTabs = new Tabs(this);
-    mLogTabs->addTab(mLogModelEdit,   tr("Model Description"));
-    mLogTabs->addTab(mLogMCMCEdit,    tr("MCMC Initialisation"));
-    mLogTabs->addTab(mLogResultsEdit, tr("Posterior Distrib. Stats"));
+    mLogTabs->setFixedHeight(mLogTabs->tabHeight());
+
+    mLogTabs->addTab(tr("Model Description"));
+    mLogTabs->addTab(tr("MCMC Initialization"));
+    mLogTabs->addTab(tr("MCMC Adaptation"));
+    mLogTabs->addTab(tr("Posterior Distrib. Stats"));
+
+    mLogLayout = new QVBoxLayout();
+    mLogLayout->addWidget(mLogTabs);
+    mLogLayout->addWidget(mLogResultsEdit);
+
+    mLogView = new QWidget();
+    mLogView->setLayout(mLogLayout);
 
     connect(mLogTabs, &Tabs::tabClicked, this, &ProjectView::showLogTab);
 
     mStack = new QStackedWidget();
     mStack->addWidget(mModelView);
     mStack->addWidget(mResultsView);
-    mStack->addWidget(mLogTabs);
+    mStack->addWidget(mLogView);
     mStack->setCurrentIndex(0);
 
     QHBoxLayout* layout = new QHBoxLayout();
@@ -110,12 +109,7 @@ ProjectView::ProjectView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
 
     connect(mResultsView, &ResultsView::resultsLogUpdated, this, &ProjectView::updateResultsLog);
 
-    //setAppSettingsFont();
-    mLogTabs->setTab(2, false);
-    mLogTabs->showWidget(2);
-
-
-
+    mLogTabs->setTab(3, false);
 
 }
 
@@ -124,43 +118,66 @@ ProjectView::~ProjectView()
 
 }
 
-void ProjectView::resizeEvent(QResizeEvent* e)
+void ProjectView::setScreenDefinition()
 {
-    (void) e;
     /* find screen definition */
-    int numScreen (QApplication::desktop()->screenNumber(this));
-    QScreen *screen = QApplication::screens().at(numScreen);
+    QScreen *screen;
 
+   /*  int numScreen = QApplication::desktop()->screenNumber(this));
+
+    if (numScreen>0) {
+        screen = QApplication::screens().at(numScreen);
+
+    } else {
+        screen =  QGuiApplication::primaryScreen();
+      //  numScreen = 0;
+    }
+    */
+    screen =  QApplication::primaryScreen();
     //qreal mm_per_cm = 10;
+
     qreal cm_per_in = 2.54;
-/* // look for screen definition
-        qDebug()<<"ProjectView::resizeEvent()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< width();
-        qDebug()<<"ProjectView::resizeEvent()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< QApplication::desktop()->width();
-        qDebug()<<"ProjectView::resizeEvent() screen setWidthUnit"<< screen->physicalDotsPerInchX() / cm_per_in;
-        qDebug()<<"ProjectView::resizeEvent() screen setHeigthUnit"<< screen->physicalDotsPerInchY() / cm_per_in;
-*/
-            int unitX = int(screen->physicalDotsPerInchX() / cm_per_in);
-            AppSettings::setWidthUnit( unitX);
+    // look for screen definition
+    //        qDebug()<<"ProjectView::resizeEvent()"<< screen->name() <<" number="<<numScreen <<"logical Dots="<<screen->logicalDotsPerInch()<<"devicePixelRatio="<<screen->devicePixelRatio()<<"availableVirtualGeometry()="<<screen->availableVirtualGeometry()<<" unitX ="<<screen->logicalDotsPerInch() / cm_per_in;
+    //        qDebug()<<"ProjectView::resizeEvent()"<< numScreen << QApplication::desktop()->screenGeometry(numScreen) << QApplication::desktop()->availableGeometry(numScreen)<< QApplication::desktop()->width();
+    //        qDebug()<<"ProjectView::resizeEvent() screen setWidthUnit"<< screen->physicalDotsPerInchX() / cm_per_in;
+    //        qDebug()<<"ProjectView::resizeEvent() screen setHeigthUnit"<< screen->physicalDotsPerInchY() / cm_per_in;
 
-            int unitY = int(screen->physicalDotsPerInchY() / cm_per_in);
-            AppSettings::setHeigthUnit( unitY);
+    int unitX = int(screen->logicalDotsPerInch() / cm_per_in);
+    AppSettings::setWidthUnit( unitX);
+
+    int unitY = int(screen->logicalDotsPerInch() / cm_per_in);
+    AppSettings::setHeigthUnit( unitY);
 
 
 
-   const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
+   /*const int logTabHusefull (height() - mLogTabs->tabHeight() - AppSettings::heigthUnit());
 
     mLogModelEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
     mLogMCMCEdit->resize( width() - AppSettings::widthUnit(), logTabHusefull );
     mLogResultsEdit->resize( width() - AppSettings::widthUnit() , logTabHusefull );
 
+    */
 
+    //int unitY = int(screen->physicalDotsPerInchY() / cm_per_in);
+
+
+    AppSettings::setHeigthUnit(unitY);
+}
+
+void ProjectView::resizeEvent(QResizeEvent* e)
+{
+    Q_UNUSED(e);
+
+    setScreenDefinition();
 
 }
 
-void ProjectView::doProjectConnections(Project* project)
+void ProjectView::setProject(std::shared_ptr<Project> &project)
 {
-    mModelView   -> setProject(project);
-    mResultsView -> doProjectConnections(project);
+    mModelView->setProject(project);
+    if (project->withResults())
+        mResultsView->setProject(project);
 }
 
 void ProjectView::resetInterface()
@@ -180,36 +197,18 @@ void ProjectView::showModel()
     mStack->setCurrentIndex(0);
 }
 
-/**
- * @brief ProjectView::changeDesign slot connected to Project::projectDesignChange() in MainWindows
- * @param refresh
- */
-void ProjectView::changeDesign(bool refresh)
-{
-    (void) refresh;
-    mRefreshResults = true;
-}
-
-void ProjectView::setAppSettings()
-{
-    mModelView->applyAppSettings();
-    mResultsView->applyAppSettings();
-
-}
-
 void ProjectView::showResults()
 {
     mResultsView->clearResults();
-    mResultsView->updateModel(); // update Design e.g. Name and color //updateResults() is call inside
-    mRefreshResults = false;
-
     mStack->setCurrentIndex(1);
-    // come from mViewResultsAction and  updateResults send repaint on mStack
+    
+    updateResults();
 }
 
 
 void ProjectView::showLog()
 {
+    mResultsView->mModel->mLogResults.clear();
     mResultsView->mModel->generateResultsLog();
     updateResultsLog(mResultsView->mModel->getResultsLog());
     mStack->setCurrentIndex(2);
@@ -223,93 +222,87 @@ void ProjectView::updateProject()
     mModelView->updateProject();
 }
 
-void ProjectView::createProject()
-{
-    mModelView->createProject();
-}
-
 void ProjectView::newPeriod()
 {
     mModelView->modifyPeriod();
 }
 
-void ProjectView:: applyFilesSettings(Model* model)
+void ProjectView::applyFilesSettings(std::shared_ptr<ModelCurve> &model)
 {
     // Rebuild all calibration curve
 
-    QJsonObject state = mModelView->getProject()->state();
-    ProjectSettings s = ProjectSettings::fromJson(state.value(STATE_SETTINGS).toObject());
-    bool calibrate = mModelView->findCalibrateMissing();
+    const QJsonObject &state = mModelView->getProject()->state();
+    const StudyPeriodSettings &s = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+    const bool calibrate = mModelView->findCalibrateMissing();
     if (calibrate)
         mModelView->calibrateAll(s);
 
     applySettings(model);
 }
 
-void ProjectView::applySettings(Model* model)
+void ProjectView::applySettings(std::shared_ptr<ModelCurve> &model)
 {
-    setAppSettings();
-    if (model) {
+    mModelView->applyAppSettings();
 
-        mResultsView->updateFormatSetting(model);
-
-        // force to regenerate the densities
-        mResultsView->initResults(model);
+    if (model && !model->mEvents.isEmpty()) {
+        const double memoThreshold = model->mThreshold;
+        model->mThreshold = -1;
+        model->clearThreshold();
+        model->updateDensities(model->mFFTLength, model->mBandwidth, memoThreshold);
+        emit model->newCalculus(); //redraw densities
 
         model->generateModelLog();
-        mLogModelEdit->setText(model->getModelLog());
-
-        mLogMCMCEdit->setText(model->getMCMCLog());
-
         model->generateResultsLog();
+
+        mLogModelEdit->setText(model->getModelLog());
+        mLogInitEdit->setText(model->getInitLog());
+        mLogAdaptEdit->setText(model->getAdaptLog());
         updateResultsLog(model->getResultsLog());
+
     }
 }
 
-void ProjectView::updateMultiCalibration()
+void ProjectView::updateMultiCalibrationAndEventProperties()
 {
-    mModelView->updateMultiCalibration();
+    mModelView->updateMultiCalibrationAndEventProperties();
 }
 
-void ProjectView::updateResults(Model* model)
+/**
+ * This function is called when  MCMC has finished
+ * We want to show the results :
+ *  - The Model may have changed since the last display : update it in results
+ *  - The Model densities have to be computed
+ *  - The Model Logs have to be generated
+ */
+void ProjectView::initResults(std::shared_ptr<ModelCurve> model)
 {
-    if (model) {
-        mResultsView->updateResults(model);
+    model->updateDesignFromJson();
+    model->initDensities();
 
-        model->generateModelLog();
-        mLogModelEdit->setText(model->getModelLog());
+    model->generateModelLog();
+    model->generateResultsLog();
 
-        mLogMCMCEdit->setText(model->getMCMCLog());
+    mResultsView->initModel(model);
+    // Update log view
+    mLogModelEdit->setText(model->getModelLog());
+    mLogInitEdit->setText(model->getInitLog());
+    mLogAdaptEdit->setText(model->getAdaptLog());
+    mLogResultsEdit->setText(model->getResultsLog());
 
-        model->generateResultsLog();
-        mLogResultsEdit->setText(model->getResultsLog());
+    // Show results :
+    mStack->setCurrentIndex(1);
 
-        mStack->setCurrentIndex(1);
-    }
 }
 
-void ProjectView::initResults(Model* model)
+void ProjectView::updateResults()
 {
-    qDebug()<<"ProjectView::initResults()";
-    if (model) {
-        mResultsView->clearResults();
+    std::shared_ptr<Project> project = MainWindow::getInstance()->getProject();
 
-        mResultsView->initResults(model);
-        mRefreshResults = true;
-        mResultsView->update();
+    if (project->mModel) {
+        project->mModel->updateDesignFromJson();
 
-        model->generateModelLog();
-        mLogModelEdit->setText(model->getModelLog());
-
-        mLogMCMCEdit->setText(model->getMCMCLog());
-
-        model->generateResultsLog();
-        mLogResultsEdit->setText(model->getResultsLog());
-
-       // showResults();
-       mStack->setCurrentIndex(1);
+        mResultsView->updateModel(project->mModel);
     }
-
 }
 
 void ProjectView::updateResultsLog(const QString& log)
@@ -320,11 +313,70 @@ void ProjectView::updateResultsLog(const QString& log)
     mLogResultsEdit->setStyleSheet(styleSh);
 #endif
     mLogResultsEdit->setHtml(log);
+
 }
 
 void ProjectView::showLogTab(const int &i)
 {
-    mLogTabs->showWidget(i);
+    mLogTabs->setTab(i, true);
+
+    QWidget* widFrom = nullptr;
+
+    if (mLogModelEdit->isVisible())
+        widFrom = mLogModelEdit;
+
+    else if (mLogInitEdit->isVisible())
+            widFrom = mLogInitEdit;
+
+    else if (mLogResultsEdit->isVisible())
+        widFrom = mLogResultsEdit;
+
+    else if (mLogAdaptEdit->isVisible())
+        widFrom = mLogAdaptEdit;
+
+    else
+        widFrom = nullptr;
+
+    if (mLogTabs->currentName() == tr("Model Description") ) {
+        mLogModelEdit->setVisible(true);
+        mLogInitEdit->setVisible(false);
+        mLogAdaptEdit->setVisible(false);
+        mLogResultsEdit->setVisible(false);
+
+        mLogLayout->replaceWidget(widFrom, mLogModelEdit);
+
+     } else if (mLogTabs->currentName() == tr("MCMC Initialization") ) {
+        mLogModelEdit->setVisible(false);
+        mLogInitEdit->setVisible(true);
+        mLogAdaptEdit->setVisible(false);
+        mLogResultsEdit->setVisible(false);
+
+        mLogLayout->replaceWidget(widFrom, mLogInitEdit);
+
+    } else if (mLogTabs->currentName() == tr("MCMC Adaptation") ) {
+       mLogModelEdit->setVisible(false);
+       mLogInitEdit->setVisible(false);
+       mLogAdaptEdit->setVisible(true);
+       mLogResultsEdit->setVisible(false);
+
+       mLogLayout->replaceWidget(widFrom, mLogAdaptEdit);
+
+     } else if (mLogTabs->currentName() == tr("Posterior Distrib. Stats") ) {
+        mLogModelEdit->setVisible(false);
+        mLogInitEdit->setVisible(false);
+        mLogAdaptEdit->setVisible(false);
+        mLogResultsEdit->setVisible(true);
+
+        mLogLayout->replaceWidget(widFrom, mLogResultsEdit);
+
+     } else {
+        mLogModelEdit->setVisible(false);
+        mLogInitEdit->setVisible(false);
+        mLogAdaptEdit->setVisible(false);
+        mLogResultsEdit->setVisible(false);
+    }
+
+
 }
 
 //  Read/Write settings
@@ -337,3 +389,13 @@ void ProjectView::readSettings()
 {
     mModelView->readSettings();
 }
+
+void ProjectView::toggleCurve(bool toggle)
+{
+    mModelView->showCurveSettings(toggle);
+}
+
+void ProjectView::eventsAreSelected()
+ {
+     mModelView->eventsAreSelected();
+ }

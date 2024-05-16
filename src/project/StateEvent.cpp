@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -39,10 +39,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "StateEvent.h"
 
-StateEvent::StateEvent(const QJsonObject& state, const QString& reason, bool notify):QEvent(QEvent::User),
-mState(state),
-mReason(reason),
-mNotify(notify)
+StateEvent::StateEvent(const QJsonObject& state, const QString& reason, bool notify):
+    QEvent(QEvent::User),
+    mState(state),
+    mReason(reason),
+    mNotify(notify)
 {
 
 }

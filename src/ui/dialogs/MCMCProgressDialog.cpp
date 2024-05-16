@@ -38,12 +38,20 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "MCMCProgressDialog.h"
-#include "MCMCLoopMain.h"
+
+#include "MCMCLoop.h"
 #include "AppSettings.h"
+
 #include <QtWidgets>
 
+// to prevent windows to stop for energy
+// https://learn.microsoft.com/fr-fr/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate?redirectedfrom=MSDN
 
-MCMCProgressDialog::MCMCProgressDialog(MCMCLoopMain* loop, QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags),
+#ifdef _WIN32
+#include "winbase.h"
+#endif
+
+MCMCProgressDialog::MCMCProgressDialog(MCMCLoop* loop, QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags),
 mLoop(loop)
 {
     setWindowTitle(tr("MCMC in progress..."));
@@ -70,16 +78,13 @@ mLoop(loop)
     layout->addWidget(buttonBox);
     setLayout(layout);
 
-   // setMinimumWidth(10 * AppSettings::widthUnit());
-
     // -----------
 
     connect(mCancelBut, &QPushButton::clicked, this, &MCMCProgressDialog::cancelMCMC);
-
-    connect(mLoop, &MCMCLoopMain::finished, this, &MCMCProgressDialog::setFinishedState);
-
-    connect(mLoop, &MCMCLoopMain::stepChanged, this, &MCMCProgressDialog::setTitle1);
-    connect(mLoop, &MCMCLoopMain::stepProgressed, this, &MCMCProgressDialog::setProgress1);
+    connect(mLoop, &MCMCLoop::setMessage, this, &MCMCProgressDialog::setMessage);
+    connect(mLoop, &MCMCLoop::finished, this, &MCMCProgressDialog::setFinishedState);
+    connect(mLoop, &MCMCLoop::stepChanged, this, &MCMCProgressDialog::setTitle1);
+    connect(mLoop, &MCMCLoop::stepProgressed, this, &MCMCProgressDialog::setProgress1);
 }
 
 MCMCProgressDialog::~MCMCProgressDialog()
@@ -89,7 +94,10 @@ MCMCProgressDialog::~MCMCProgressDialog()
 
 int MCMCProgressDialog::startMCMC()
 {
-    mLoop->start(QThread::HighPriority);// NormalPriority);
+#ifdef _WIN32
+    SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED); //https://learn.microsoft.com/fr-fr/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate?redirectedfrom=MSDN
+#endif
+    mLoop->start(QThread::QThread::NormalPriority);// TimeCriticalPriority);// NormalPriority);HighestPriority
     return exec();
 }
 
@@ -98,10 +106,16 @@ void MCMCProgressDialog::cancelMCMC()
     mLoop->requestInterruption();
 }
 
+void MCMCProgressDialog:: setMessage(const QString& message)
+{
+    mLabel1->setText(message);
+    setMinimumWidth(int (fontMetrics().horizontalAdvance(message) * 1.5));
+}
+
 void MCMCProgressDialog::setTitle1(const QString& message, int minProgress, int maxProgress)
 {
     mLabel1->setText(message);
-    setMinimumWidth(int (fontMetrics().boundingRect(message).width() * 1.5));
+    setMinimumWidth(int (fontMetrics().horizontalAdvance(message) * 1.5));
 
     mProgressBar1->setMinimum(minProgress);
     mProgressBar1->setMaximum(maxProgress);

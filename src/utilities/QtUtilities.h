@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,30 +40,63 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef QTUTILITIES_H
 #define QTUTILITIES_H
 
-#include "AppSettings.h"
-#include "AxisTool.h"
-
 #include <QStringList>
 #include <QColor>
 #include <QFileInfo>
 #include <QtCore/qdebug.h>
 
-bool colorIsDark(const QColor& color);
-void sortIntList(QList<int>& list);
+bool colorIsDark(const QColor &color);
+void sortIntList(QList<int> &list);
+
+QString DHMS(quint64 elapsedTime);
 
 QList<QStringList> readCSV(const QString& filePath, const QString& separator = ",");
 int defaultDpiX();
 qreal dpiScaled(qreal value);
 QColor getContrastedColor(const QColor& color);
 QList<int> stringListToIntList(const QString& listStr, const QString& separator = ",");
+QList<unsigned> stringListToUnsignedList(const QString& listStr, const QString& separator = ",");
+
+
 QStringList intListToStringList(const QList<int>& intList);
+QStringList unsignedListToStringList(const QList<unsigned>& unsignedList);
 QString intListToString(const QList<int>& intList, const QString& separator = ",");
+QString unsignedListToString(const QList<unsigned>& intList, const QString& separator);
+
+QString long_double_to_str(const long double value);
+
+#ifdef DEBUG
+template <typename U>
+void show_QList(const QList<U> &list, QString description)
+{
+    qDebug() << description;
+
+    for (auto v: list) {
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision(std::numeric_limits<U>::max_digits10 + 1) << v ;
+
+       qDebug()<< QString::fromStdString(stream.str()) ;
+    }
+
+
+}
+
+template <typename U, typename V>
+void show_QMap(const QMap<U, V> &map, QString description)
+{
+    qDebug() << description;
+    for (auto [key, value]: map.asKeyValueRange()) {
+        qDebug()<< key << value;
+    }
+
+}
+#endif
 
 QFileInfo saveWidgetAsImage(QObject* widget, const QRect& r, const QString& dialogTitle, const QString& defaultPath);
 bool saveWidgetAsSVG(QWidget* widget, const QRect& r, const QString& fileName);
 
 bool isComment(const QString& str);
-QString prepareTooltipText(const QString& title, const QString& text);
+QString prepareTooltipText(const QString &title, const QString& text);
 
 QString line(const QString& str);
 QString textBold(const QString& str);
@@ -71,23 +104,25 @@ QString textBlack(const QString& str);
 QString textRed(const QString& str);
 QString textGreen(const QString& str);
 QString textBlue(const QString& str);
+QString textOrange(const QString& str);
 QString textPurple(const QString& str);
 QString textColor(const QString &str, const QColor &color);
 QString textBackgroundColor(const QString &str, const QColor &color);
 
 QColor randomColor();
 
-bool constraintIsCircular( QJsonArray constraints, const int FromId, const int ToId);
+bool constraintIsCircular(QJsonArray constraints, const int FromId, const int ToId);
 
 
 QString removeZeroAtRight(QString str); // use StdUtilities::eraseZeroAtLeft()
 //QString stringWithAppSettings(const double valueToFormat, const bool forcePrecision = false);
 QString stringForGraph(const double valueToFormat);
-QString stringForLocal(const double valueToFormat, const bool forcePrecision = true);
-QString stringForCSV(const double valueToFormat, const bool forcePrecision = true);
+QString stringForLocal(const double valueToFormat, const bool forcePrecision = false);
+QString stringForCSV(const double valueToFormat, const bool forcePrecision = false);
 
-bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QString& csvSep, const bool withDateFormat = false);
-bool saveAsCsv(const QList<QStringList>& data, const QString& title = QObject::tr("Save as..."));
+bool saveCsvTo(const QList<QStringList> &data, const QString &filePath, const QString &csvSep, const bool withDateFormat = false);
+bool saveAsCsv(const QList<QStringList> &data, const QString &title = QObject::tr("Save as..."));
+bool save_map_as_csv(const std::map<double, double>& map, const std::pair<QString, QString> &header, const QString title = QObject::tr("Save as..."), const QString prefix = "");
 
 /**
  * @brief getMapDataInRange
@@ -96,21 +131,25 @@ bool saveAsCsv(const QList<QStringList>& data, const QString& title = QObject::t
  * @return return a QMap with only data inside the range [subMin; subMax]. We must evaluate missing data for the extremum if necessarry
  */
 template <typename T, typename V>
-QMap<T, V> getMapDataInRange(const QMap<T, V> &data, const T subMin, const  T subMax)
+QMap<T, V> getMapDataInRange(const QMap<T, V> data, const T subMin, const  T subMax)
 {
-#ifdef DEBUG
-  //  if (data.size() == 0)
-  //      qDebug()<<"QtUtilities::getMapDataInRange data.size() == 0";
-
-#endif
     if (data.size() == 0)
         return data;
 
-    T tBeforeSubMin;
-    V vBeforeSubMin;
+    if (data.size() == 1) {
+        if (data.firstKey()>=subMin && data.firstKey()<= subMax) {
+            return data;
+        }
+        else
+            return QMap<T, V> ();
+    }
+
+
+    T tBeforeSubMin (0);
+    V vBeforeSubMin (0);
     bool pointBeforeSubMin =false;
-    T tAfterSubMax;
-    V vAfterSubMax;
+    T tAfterSubMax (0);
+    V vAfterSubMax (0);
     bool pointAfterSubMax =false;
     const T min = data.firstKey();
     const T max = data.lastKey();
@@ -145,6 +184,15 @@ QMap<T, V> getMapDataInRange(const QMap<T, V> &data, const T subMin, const  T su
                 V subDataLast = subData.last();
                 subData[subMax] = interpolate( subMax, (T)subData.lastKey(), tAfterSubMax, subDataLast, vAfterSubMax );
             }
+
+        } else if (data.size() == 2 && data.firstKey() <= subMin && data.lastKey() >= subMax) {
+            subData.insert(subMin, data.first());
+            subData.insert(subMax, data.last());
+
+        } else if (data.firstKey()<=subMin && data.lastKey()>=subMax) {
+            subData[subMin] =  interpolateValueInQMap(subMin, data);
+            subData[subMax] =  interpolateValueInQMap(subMax, data);
+
         }
         return subData;
     }
@@ -154,18 +202,18 @@ QMap<T, V> getMapDataInRange(const QMap<T, V> &data, const T subMin, const  T su
 }
 
 template <typename T>
-QVector<T> getVectorDataInRange(const QVector<T>& data, const T subMin,const T subMax, const T min, const T max)
+QList<T> getVectorDataInRange(const QList<T> &data, const T subMin,const T subMax, const T min, const T max)
 {
     Q_ASSERT(!data.isEmpty());
 
     if (subMin != min || subMax != max)  {
-        QVector<T> subData;
+        QList<T> subData;
         subData.reserve(data.size());
-        int idxStart = (int) floor(data.size() * (subMin - min) / (max - min));
-        int idxEnd = (int) floor(data.size() * (subMax - min) / (max - min));
+        qsizetype idxStart = (qsizetype) floor(data.size() * (subMin - min) / (max - min));
+        qsizetype idxEnd = (qsizetype) floor(data.size() * (subMax - min) / (max - min));
 
-        idxStart = qMax(0, idxStart);
-        idxEnd = qMin(idxEnd, data.size()-1);
+        idxStart = std::max((qsizetype)0, idxStart);
+        idxEnd = std::min(idxEnd, data.size()-1);
         // we can use mid()
         for (int i=idxStart; i<=idxEnd; ++i)
                 subData.append(data[i]);

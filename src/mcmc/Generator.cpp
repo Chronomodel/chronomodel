@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -38,38 +38,40 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "Generator.h"
-#include "StdUtilities.h"
 
 #include <cmath>
 #include <errno.h>
 #include <fenv.h>
 #include <ctgmath>
-#include <cstdlib>
-#include <iostream>
-#include <random>
-#include <algorithm>
+
 #include <chrono>
-#include <iostream>
 #include <QDebug>
+#include <QObject>
 
+// Mersenne Twister 19937 generator
+std::mt19937 Generator::sEngine (0);
+std::uniform_real_distribution<double> Generator::sDoubleDistribution (0.0, 1.0);
 
-//int matherr(struct exception *e);
+std::default_random_engine CharGenerator (int(std::chrono::system_clock::now().time_since_epoch().count()));
 
-std::mt19937 Generator::sEngine(0);
-std::uniform_real_distribution<double> Generator::sDoubleDistribution(0.0, 1.0);
+int randomChar::operator()() {
+    return CharDistribution(CharGenerator);
+}
+
+c_UUID Generator::UUID;
 
 //http://xoroshiro.di.unimi.it/
 std::uint64_t Generator::xorshift64starSeed(35); /**< used with Generator::xorshift64star(void) */
 
-void Generator::initGenerator(const int seed)
+void Generator::initGenerator(const unsigned seed)
 {
    sEngine.seed(seed);
    sDoubleDistribution.reset();
-   qDebug()<<"initGenerator seed"<<seed;
+   //qDebug()<<"initGenerator seed"<<seed;
    xorshift64starSeed = seed;
 }
 
-int Generator::createSeed()
+unsigned Generator::createSeed()
 {
     // obtain a seed from the system clock:
     // unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
@@ -79,22 +81,30 @@ int Generator::createSeed()
     //std::random_device rd;
     //return rd();
 
-    return rand() % 1000;
+    //return rand() % 1000;
+    //return arc4random() % 1000; // invalide for Windows os
+
+    // Seed with a real random value, if available
+    std::random_device r;
+
+    // Choose a random mean between 1 and 6
+    std::mt19937 gen(r());
+    std::uniform_int_distribution<int> uniform_dist(1, 1000);
+    return uniform_dist(gen);
 }
 
 
-double Generator::randomUniform(const double& min, const double& max)
+double Generator::randomUniform(const double min, const double max)
 {
-    //const double r = min + sDoubleDistribution(sEngine) * (max - min);
-    //const double r = min + xorshift64star() * (max - min);
-
     return min + sDoubleDistribution(sEngine) * (max - min);
     // return min + xorshift64star() * (max - min);
 }
 
-int Generator::randomUniformInt(const int& min, const int& max)
+int Generator::randomUniformInt(const int min, const int max)
 {
-   return (int) round(randomUniform(min, max));
+    std::uniform_int_distribution<int> distribution(min, max);
+    return distribution(sEngine);
+   //return (int) round(randomUniform(min, max));
 }
 
 double Generator::gaussByDoubleExp(const double mean, const double sigma, const double min, const double max)
@@ -102,18 +112,18 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
     errno = 0;
     if ((min >= max) || (sigma == 0)) {
         if ((min >= max) && (sigma != 0))
-            throw QObject::tr("DOUBLE EXP ERROR : min = %1 , max = %2").arg(QString::number(min), QString::number(max));
+            throw QObject::tr("[Generator::gaussByDoubleExp]: min = %1 , max = %2").arg(QString::number(min), QString::number(max));
 
 #ifdef DEBUG
         else
-            qDebug() << "DOUBLE EXP WARNING : min == max";
+            qDebug() << "[Generator::gaussByDoubleExp] WARNING : min == max";
 #endif
 
         if ((sigma == 0) && (min <= max))
-            throw QObject::tr("DOUBLE EXP ERROR : sigma == 0, mean = %1").arg(QString::number(mean)) ;
+            throw QObject::tr("[Generator::gaussByDoubleExp] sigma == 0, mean = %1").arg(QString::number(mean)) ;
 #ifdef DEBUG
         else
-            qDebug() << "DOUBLE EXP WARNING : sigma == 0";
+            qDebug() << "[Generator::gaussByDoubleExp] WARNING : sigma == 0";
 #endif
 
         return min;
@@ -153,6 +163,7 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
     //qDebug() <<"DoubleExp : exp_x_min = "<<exp_x_min;
     //qDebug() << "exp(10 000=="<<exp((long double)(1000));
     //qDebug() << "DOUBLE EXP DoubleExp : errno apres = "<<strerror(errno);
+#ifdef DEBUG
     if (errno != 0) {
         qDebug() << "DOUBLE EXP : errno apres exp_minus_x_max = "<<strerror(errno);
         qDebug() <<"DoubleExp : mean = "<< mean<<" min="<<min<<" max="<<max<<" sigma"<<sigma;
@@ -160,6 +171,7 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
 
         errno=0;
     }
+#endif
     double ur = 1.0;
     long double rap = 0.0;
 
@@ -230,10 +242,19 @@ double Generator::boxMuller()
     //checkFloatingPointException("boxMuller");
 }
 
-double Generator::gaussByBoxMuller(const double& mean, const double& sigma)
+double Generator::gaussByBoxMuller(const double mean, const double sigma)
 {
     return mean + boxMuller() * sigma;
 }
+
+// obsolete
+/*
+  double Generator::shrinkage(const double variance, const double shrinkage)// à controler
+{
+   double x = std::sqrt(shrinkage) * boxMuller() + std::sqrt(1 - shrinkage) * boxMuller();
+   return x * std::sqrt(variance);
+}
+*/
 
 /** https://en.wikipedia.org/wiki/Xorshift
  *
@@ -251,3 +272,24 @@ double Generator::xorshift64star(void) {
 
        return to_double(Generator::xorshift64starSeed * UINT64_C(2685821657736338717));
 }
+
+double Generator::shrinkageUniforme(const double shrinkage)
+{
+    const double u = Generator::randomUniform();
+    const double x = shrinkage * ((1 - u) / u);
+    return x;
+}
+
+
+double Generator::gammaDistribution(const double alpha, const double beta)
+{
+    std::gamma_distribution<double>  gamma(alpha, beta);
+    return gamma(sEngine);
+}
+
+double Generator::exponentialeDistribution(const double meanexp)
+{
+    std::exponential_distribution<double>  exponential(meanexp);
+    return exponential(sEngine);
+}
+

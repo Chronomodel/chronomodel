@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -75,20 +75,21 @@ public:
     void setMarginRight (const qreal &right) {mMarginRight = right;}
     void setMarginLeft (const qreal &left) {mMarginLeft = left;}
 
-     void currentChanged(const double &min, const double &max);
-     void setScaleDivision (const double &major, const int &minorCount);
-     void setScaleDivision (const Scale &sc);
+    void currentChanged(const double &min, const double &max);
+    void setScaleDivision (const double &major, const int &minorCount);
+    void setScaleDivision (const Scale &sc);
 
-     double getZoom();
-     double getRealValue();
+    double getZoom();
+    double getRealValue();
 
-     void clearAreas();
-     void addArea(int start, int end, const QColor& color);
-     // Set value formatting functions
-     void setFormatFunctX(DateConversion f);
+    void clearAreas();
+    void addArea(int start, int end, const QColor &color);
+    // Set value formatting functions
+    void setFormatFunctX(DateConversion f);
     void updateLayout();
 protected:
 
+    bool event(QEvent *event);
     void resizeEvent(QResizeEvent* e);
     void paintEvent(QPaintEvent* e);
 
@@ -97,30 +98,31 @@ protected:
 public slots:
     void setZoom(double & prop);
     void updateScroll();
-    void scrollValueChanged(double value);
-
+    //void scrollValueChanged(double value);
+    void wheelScene(QEvent *e) {this->event(e); QWidget::event(e);}
 
 signals:
     void positionChanged(double min, double max);
-    void valueChanged(double value);
+    //void valueChanged(double value);
 
 private:
     QScrollBar* mScrollBar;
-    qreal mScrollBarHeight;
+    AxisTool mAxisTool;
+    QList<RulerArea> mAreas;
+    
     QFont mAxisFont;
     QRectF mAxisRect;
 
     qreal mStepMinWidth;
     qreal mStepWidth;
+    
     qreal mMarginLeft;
     qreal mMarginRight;
     qreal mMarginTop;
     qreal mMarginBottom;
-
-    AxisTool mAxisTool;
-
-
-    QVector<RulerArea> mAreas;
+    
+public:
+    static int sHeight;
 };
 
 #endif

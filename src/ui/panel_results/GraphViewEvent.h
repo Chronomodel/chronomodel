@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -53,13 +53,12 @@ public:
 
     void setEvent(Event *event);
 
-    void generateCurves(TypeGraph typeGraph, Variable variable);
-    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
+    void generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList);
+    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showVariableList);
 
 protected:
     void paintEvent(QPaintEvent* e);
     void resizeEvent(QResizeEvent* );
-//    void updateLayout();
 
 private:
     Event* mEvent;

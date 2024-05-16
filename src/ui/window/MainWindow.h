@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,20 +40,21 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "Singleton.h"
-#include "AppSettings.h"
-
 #include <QMainWindow>
+
+#include "Project.h"
+#include "Singleton.h"
 
 class QMenu;
 class QAction;
 class QActionGroup;
+class SwitchAction;
 class QStackedWidget;
 class QUndoStack;
 class QUndoView;
 class QDockWidget;
 class ProjectView;
-class Project;
+
 class Event;
 class Model;
 
@@ -63,13 +64,18 @@ class MainWindow : public QMainWindow, public Singleton<MainWindow>
     friend class Singleton<MainWindow>;
 
 public:
-    MainWindow(QWidget* aParent = nullptr);
+    MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 
-    Project* getProject();
-    QJsonObject getState() const;
+    const std::shared_ptr<Project>& getProject();
+    QJsonObject &getState() const;
 
+    inline void updateEvent(const QJsonObject &event, const QString &reason) {mProject->updateEvent(event, reason);};
     QUndoStack* getUndoStack();
+
+    bool undo_action;
+    bool redo_action;
+
     QString getCurrentPath() const;
     void setCurrentPath(const QString& path);
 
@@ -108,19 +114,28 @@ public slots:
     void about();
     void appSettings();
     void setAppSettings();
+    void updateAppSettings();
+
+    void toggleUndo() {undo_action = !undo_action;};
+    void toggleRedo() {redo_action = !redo_action;};
+
     void setAppFilesSettings();
     void openManual();
     void openWebsite();
     void showHelp(bool);
     void setLanguage(QAction* action);
-    void mcmcFinished(Model*);
+    void mcmcFinished();
     void noResult();
     void updateProject();
+    void toggleCurve(bool checked);
 
+    void rebuildExportCurve();
     void changeEventsColor();
     void changeEventsMethod();
     void changeDatesMethod();
-    void selectedEventInSelectedPhases();
+    void selectAllEvents();
+    void selectEventInSelectedPhases();
+    void selectEventWithString();
     void doGroupedAction();
 
 
@@ -129,7 +144,7 @@ private:
 
     QStackedWidget* mCentralStack;
     ProjectView* mProjectView;
-    Project* mProject;
+    std::shared_ptr<Project> mProject;
     QUndoStack* mUndoStack;
     QUndoView* mUndoView;
     QDockWidget* mUndoDock;
@@ -159,11 +174,13 @@ private:
 
     QAction* mProjectSaveAction;
     QAction* mProjectSaveAsAction;
-    QAction* mProjectExportAction;
+   // QAction* mProjectExportAction;
 
     QAction* mMCMCSettingsAction;
     QAction* mRunAction;
     QAction* mResetMCMCAction;
+    
+    SwitchAction* mCurveAction;
 
     QActionGroup* mViewGroup;
     QAction* mViewModelAction;
@@ -173,8 +190,12 @@ private:
     QAction* mUndoAction;
     QAction* mRedoAction;
     QAction* mUndoViewAction;
+    QAction* mSelectAllAction;
 
     QAction* mSelectEventsAction;
+    QAction* mSelectEventsNameAction;
+    QAction* mExportCurveAction;
+
     QAction* mEventsColorAction;
     QAction* mEventsMethodAction;
     QAction* mDatesMethodAction;

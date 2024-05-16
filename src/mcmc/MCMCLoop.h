@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -41,10 +41,19 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define MCMCLOOP_H
 
 #include "MCMCSettings.h"
+#include "Model.h"
 
 #include <QThread>
 
 #define ABORTED_BY_USER "Aborted by user"
+
+#if PARALLEL
+#include <execution>
+#define PAR std::execution::par,
+#else
+#define PAR
+#endif
+
 
 class Project;
 
@@ -54,45 +63,50 @@ class MCMCLoop : public QThread
 public:
     enum State
     {
-        eBurning = 0,
-        eAdapting = 1,
-        eRunning = 2
+        eInit = 0,
+        eBurning = 1,
+        eAdapting = 2,
+        eAquisition = 3
     };
-
-    MCMCLoop();
+    
+    //MCMCLoop(const std::shared_ptr<ModelCurve>& model);
+    explicit MCMCLoop (Project &project);
     virtual ~MCMCLoop();
 
-    void setMCMCSettings(const MCMCSettings& settings);
+    void setMCMCSettings(const MCMCSettings &settings);
     const QList<ChainSpecs>& chains() const;
-    const QString& getChainsLog() const;
-    const QString getInitLog() const;
-    const QString getMCMCSettingsLog() const ;
-
     void run();
 
 signals:
     void stepChanged(QString title, int min, int max);
     void stepProgressed(int value);
+    void setMessage(QString message);
 
 protected:
+
+    // Variable for update function
+    double tminPeriod;
+    double tmaxPeriod;
+    CurveSettings mCurveSettings;
+
     virtual QString calibrate() = 0;
-    virtual void initVariablesForChain() = 0;
-    virtual QString initMCMC() = 0;
-    virtual void update() = 0;
-    virtual void finalize() = 0;
-    virtual bool adapt() = 0;
+    //virtual void initVariablesForChain() = 0;
+    virtual QString initialize() = 0;
 
-protected:
-    QList<ChainSpecs> mChains;
+    QString initialize_time();
+    virtual bool update() = 0;
+    virtual void memo() = 0;
+    //virtual void memo_accept(const unsigned int i_chain) = 0;
+    virtual void finalize() = 0;
+    virtual bool adapt(const int batchIndex) = 0;
+
+    QList<ChainSpecs> mLoopChains;
     int mChainIndex;
     State mState;
 
-    QString mChainsLog;
-    QString mInitLog;
-
 public:
     QString mAbortedReason;
-    Project* mProject;
+    Project &mProject;
 };
 
 #endif

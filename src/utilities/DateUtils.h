@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -62,29 +62,28 @@ public:
         eMa = 7
     };
 
-
     static QString dateFormatToString(const FormatDate format);
-
 
     /**
      * @brief convert native values (classic BC/AD) to their prefered display date format (Cal B2k, ...)
      */
     static double convertToAppSettingsFormat(const double &valueToFormat);
     static QString convertToAppSettingsFormatStr(const double valueToFormat, const bool forCSV = false);
-    static QMap<double, double> convertMapToAppSettingsFormat(const QMap<double,double> &mapToFormat);
+    static QMap<double, double> convertMapToAppSettingsFormat(const QMap<double, double> &mapToFormat);
 
-
-    static double convertToFormat(const double &valueToFormat, const FormatDate &format);
-    static double convertFromFormat(const double &formattedValue, const FormatDate &format);
+    static double convertToFormat(const double valueToFormat, const FormatDate format);
+    static double convertFromFormat(const double formattedValue, const FormatDate format);
     /**
      * @brief convert formatted values (Cal B2k, Cal BP, ...) to native value (classic BC/AD)
      */
     static double convertFromAppSettingsFormat(const double &formattedValue);
-    static QString convertFromAppSettingsFormatStr(const double formattedValue);
-
+    inline QString convertFromAppSettingsFormatStr(const double formattedValue);
 
     static FormatDate getAppSettingsFormat();
     static QString getAppSettingsFormatStr();
+
+    static bool is_date(const FormatDate format);
+    static bool is_age(const FormatDate format);
 
 };
 

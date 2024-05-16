@@ -106,26 +106,22 @@ mType(type)
 
     // ----------
 
-    Project* project = MainWindow::getInstance()->getProject();
-
+    const QJsonObject &state = MainWindow::getInstance()->getState();
     if (mType == eDate) {
-        const QJsonObject state = project->state();
-        const ProjectSettings settings = ProjectSettings::fromJson(state[STATE_SETTINGS].toObject());
 
-        QJsonArray dates = state[STATE_DATES_TRASH].toArray();
+        const StudyPeriodSettings &settings = StudyPeriodSettings::fromJson(state[STATE_SETTINGS].toObject());
 
-        for (int i=0; i<dates.size(); ++i) {
+        const QJsonArray &dates = state[STATE_DATES_TRASH].toArray();
+
+        for (int i = 0; i<dates.size(); ++i) {
             try {
                 QJsonObject date = dates[i].toObject();
 
-//                // Validate the date before adding it to the correct event and pushing the state
-//                QJsonObject settingsJson = stateNext[STATE_SETTINGS].toObject();
-//                ProjectSettings settings = ProjectSettings::fromJson(settingsJson);
+                // Validate the date before adding it to the correct event and pushing the state
                 PluginAbstract* plugin = PluginManager::getPluginFromId(date[STATE_DATE_PLUGIN_ID].toString());
                 bool valid = plugin->isDateValid(date[STATE_DATE_DATA].toObject(), settings);
                 date[STATE_DATE_VALID] = valid;
-                Date d;
-                d.fromJson(date);
+                Date d (date);
 
                 if (!d.isNull()) {
                     QListWidgetItem* item = new QListWidgetItem(d.mName);
@@ -135,10 +131,12 @@ mType(type)
                     item->setData(0x0102, d.mPlugin->getId());
                     item->setData(0x0103, d.getDesc());
                     item->setData(0x0104, d.mId);
-                    item->setData(0x0105, ModelUtilities::getDeltaText(d));
-                    item->setData(0x0106, ModelUtilities::getDataMethodText(d.mMethod));
+                    item->setData(0x0105, d.getWiggleDesc());
+                    item->setData(0x0106, MHVariable::getSamplerProposalText(d.mTi.mSamplerProposal));
                     item->setData(0x0107, d.mIsValid);
                     item->setData(0x0108, date.value(STATE_DATE_SUB_DATES).toArray().size() > 0);
+                    item->setData(0x0109, d.mOrigin);
+                    item->setData(0x0110, d.mUUID);
 
                     mList->addItem(item);
                 }
@@ -153,14 +151,18 @@ mType(type)
             }
         }
     } else if (mType == eEvent) {
-        QJsonObject state = project->state();
-        QJsonArray events = state[STATE_EVENTS_TRASH].toArray();
+        const QJsonArray &events = state[STATE_EVENTS_TRASH].toArray();
 
         for (int i=0; i<events.size(); ++i) {
             QJsonObject event = events[i].toObject();
             QListWidgetItem* item = new QListWidgetItem(event[STATE_NAME].toString());
             item->setData(0x0101, event[STATE_NAME].toString());
-            item->setData(0x0103, event[STATE_EVENT_DATES].toArray().size());
+            if ((Event::Type) event.value(STATE_EVENT_TYPE).toInt() == Event::Type::eDefault) {
+                item->setData(0x0103, event[STATE_EVENT_DATES].toArray().size());
+            } else {
+                item->setData(0x0103, -1);
+            }
+
             item->setData(0x0104, event[STATE_COLOR_RED].toInt());
             item->setData(0x0105, event[STATE_COLOR_GREEN].toInt());
             item->setData(0x0106, event[STATE_COLOR_BLUE].toInt());
@@ -193,7 +195,7 @@ void TrashDialog::updateFromSelection()
 void TrashDialog::deleteItems(bool checked)
 {
     (void) checked;
-    Project* project = MainWindow::getInstance()->getProject();
+    const auto &project = MainWindow::getInstance()->getProject();
     QList<QListWidgetItem*> items = mList->selectedItems();
     QList<int> ids;
 

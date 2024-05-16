@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -38,20 +38,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "GraphViewDate.h"
+
 #include "GraphView.h"
 #include "Date.h"
-#include "Event.h"
 #include "Painting.h"
-#include "StdUtilities.h"
-#include "QtUtilities.h"
 #include "ModelUtilities.h"
+#include "StdUtilities.h"
+
 #include <QtWidgets>
-#include "../PluginAbstract.h"
-#include "../GraphViewRefAbstract.h"
 
-
-
-// Constructor / Destructor
 
 GraphViewDate::GraphViewDate(QWidget *parent):GraphViewResults(parent),
 mDate(nullptr),
@@ -70,12 +65,10 @@ void GraphViewDate::setDate(Date* date)
 {
     Q_ASSERT(date);
     mDate = date;
-    setItemTitle(tr("Data : %1").arg(mDate->mName));
-
     update();
 }
 
-void GraphViewDate::setColor(const QColor& color)
+void GraphViewDate::setColor(const QColor &color)
 {
     mColor = color;
     setItemColor(mColor);
@@ -87,17 +80,9 @@ void GraphViewDate::paintEvent(QPaintEvent* e)
     GraphViewResults::paintEvent(e);
 }
 
-// not used since v1.4
-//QColor GraphViewDate::getEventColor()
-//{
-//    return mDate->getEventColor();
-//}
-
-void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
+void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList)
 {
-    Q_ASSERT(mDate);
-    //qDebug()<<"GraphViewDate::generateCurves()";
-    GraphViewResults::generateCurves(typeGraph, variable);
+    GraphViewResults::generateCurves(typeGraph, variableList);
 
     /* ------------------------------------------------
      *  Reset the graph object settings
@@ -106,7 +91,7 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
     mGraph->removeAllCurves();
     mGraph->reserveCurves(6);
 
-    mGraph->removeAllZones();
+    mGraph->remove_all_zones();
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
     mGraph->setOverArrow(GraphView::eNone);
@@ -115,26 +100,23 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
     QPen defaultPen;
     defaultPen.setWidthF(1);
     defaultPen.setStyle(Qt::SolidLine);
-    QString resultsText = ModelUtilities::dateResultsText(mDate);
-    QString resultsHTML = ModelUtilities::dateResultsHTML(mDate);
-    setNumericalResults(resultsHTML, resultsText);
 
-    /* ------------------------------------------------
-     *  Are we working on calendar date or std dev ?
-     * ------------------------------------------------
-     */
-    MHVariable* variableDate = &(mDate->mTheta);
-    if (variable == eTheta)
-        variableDate = &(mDate->mTheta);
+    QString resultsHTML = tr("Nothing to Display");
 
-    else if(variable == eSigma)
-        variableDate = &(mDate->mSigma);
+    if (variableList.contains(eDataTi)) {
+        resultsHTML = ModelUtilities::dateResultsHTML(mDate);
 
-    /* ------------------------------------------------
+    } else if (variableList.contains(eSigma)) {
+        resultsHTML = ModelUtilities::sigmaTiResultsHTML(mDate);
+    }
+
+    setNumericalResults(resultsHTML);
+
+     /* ------------------------------------------------
      *  First tab : Posterior distrib.
      * ------------------------------------------------
      */
-    if (typeGraph == ePostDistrib && (variable == eTheta || variable == eSigma)) {
+    if (typeGraph == ePostDistrib) {
 
         /* ------------------------------------------------
          *  Possible Curves :
@@ -146,76 +128,111 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
          *  - Wiggle
          * ------------------------------------------------
          */
-        if (variable == eTheta) {
+        if (variableList.contains(eDataTi)) {
             mGraph->setOverArrow(GraphView::eBothOverflow);
             mTitle = tr("Data : %1").arg(mDate->mName);
-
 
             mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
             mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
             mGraph->setFormatFunctY(nullptr);
 
+            // Calibration
+            const QMap<double,double> &formatedCalib = mDate->getFormatedCalibToShow();
+            const double max_formatedCalib = map_max(formatedCalib).value();
 
-            //  Post Distrib All Chains
-            GraphCurve curvePostDistrib = generateDensityCurve(variableDate->fullHisto(),
-                                                         "Post Distrib All Chains",
-                                                         color,
-                                                         Qt::SolidLine,
-                                                         Qt::NoBrush);
-            mGraph->addCurve(curvePostDistrib);
-
-            // Post Distrib Chain i
-            if (!variableDate->mChainsHistos.isEmpty())
-                for (int i=0; i<mChains.size(); ++i) {
-                    GraphCurve curvePostDistribChain = generateDensityCurve(variableDate->histoForChain(i),
-                                                                            "Post Distrib Chain " + QString::number(i),
-                                                                            Painting::chainColors.at(i),
-                                                                            Qt::SolidLine,
-                                                                            Qt::NoBrush);
-                    mGraph->addCurve(curvePostDistribChain);
-                }
+            const GraphCurve &curveCalib = densityCurve(formatedCalib,
+                                                        "Calibration",
+                                                        QColor(150, 150, 150),
+                                                        Qt::SolidLine,
+                                                        Qt::NoBrush);
+            mGraph->add_curve(curveCalib);
 
             // HPD All Chains
-            GraphCurve curveHPD = generateHPDCurve(variableDate->mHPD,
-                                                   "HPD All Chains",
-                                                    color);
-            mGraph->addCurve(curveHPD);
+            //usefull for fixed value and display calibration
+            const QMap<double, double> &norm = mDate->mTi.mFormatedHPD.size() == 1 ? QMap<double, double> {{mDate->mTi.mFormatedHPD.firstKey(), max_formatedCalib}} : mDate->mTi.mFormatedHPD;
+            const GraphCurve &curveHPD = HPDCurve(norm,
+                                                  "HPD All Chains",
+                                                  color);
+            mGraph->add_curve(curveHPD);
 
-            // Calibration
-            const QMap<double,double> formatedCalib = mDate->getFormatedCalibMap();
+            //  Post Distrib All Chains
+            const QMap<double, double> &normPostDistrib = mDate->mTi.mFormatedHisto.size() == 1 ? QMap<double, double> {{mDate->mTi.mFormatedHisto.firstKey(), max_formatedCalib}} : mDate->mTi.mFormatedHisto;
+            const GraphCurve &curvePostDistrib = densityCurve(normPostDistrib,
+                                                              "Post Distrib All Chains",
+                                                              color,
+                                                              Qt::SolidLine,
+                                                              Qt::NoBrush);
 
-            GraphCurve curveCalib = generateDensityCurve(formatedCalib,
-                                                         "Calibration",
-                                                         QColor(150, 150, 150),
-                                                         Qt::SolidLine,
-                                                         Qt::NoBrush);
-            mGraph->addCurve(curveCalib);
+            mGraph->add_curve(curvePostDistrib);
 
-            // Wiggle
-            GraphCurve curveWiggle = generateDensityCurve(mDate->mWiggle.fullHisto(),
-                                                          "Wiggle",
+            // Post Distrib Chain i
+            if (!mDate->mTi.mChainsHistos.isEmpty())
+                for (int i=0; i<mChains.size(); ++i) {
+                    const QMap<double, double> &normPostDistribChain = mDate->mTi.mChainsHistos.at(i).size() == 1 ? QMap<double, double> {{mDate->mTi.mChainsHistos.at(i).firstKey(), max_formatedCalib}} : mDate->mTi.mChainsHistos.at(i);
+                    const GraphCurve &curvePostDistribChain = densityCurve(normPostDistribChain,
+                                                                           "Post Distrib Chain " + QString::number(i),
+                                                                           Painting::chainColors.at(i),
+                                                                           Qt::SolidLine,
+                                                                           Qt::NoBrush);
+                    mGraph->add_curve(curvePostDistribChain);
+                    if (!mDate->mWiggle.mChainsHistos.isEmpty()) {
+                        const QMap<double, double> &normPostWiggleChain = mDate->mWiggle.mChainsHistos.at(i).size() == 1 ? QMap<double, double> {{mDate->mWiggle.mChainsHistos.at(i).firstKey(), max_formatedCalib}} : mDate->mWiggle.mChainsHistos.at(i);
+
+                        const GraphCurve &curveWiggle = densityCurve(normPostWiggleChain,
+                                                                     "Wiggle Post Distrib Chain " + QString::number(i),
+                                                                     Painting::chainColors.at(i),
+                                                                     Qt::DashLine,
+                                                                     Qt::NoBrush);
+                        mGraph->add_curve(curveWiggle);
+                    }
+
+                }
+
+            // ---- Wiggle
+
+            //  Post Distrib All Chains
+            const QMap<double, double> &normPostWiggleChain = mDate->mWiggle.mFormatedHisto.size() == 1 ? QMap<double, double> {{mDate->mWiggle.mFormatedHisto.firstKey(), max_formatedCalib}} : mDate->mWiggle.mFormatedHisto;
+
+            const GraphCurve &curveWiggle = densityCurve( normPostWiggleChain,
+                                                          "Wiggle Post Distrib All Chains",
                                                           mColor,
                                                           Qt::DashLine,
                                                           Qt::NoBrush);
-            mGraph->addCurve(curveWiggle);
+            mGraph->add_curve(curveWiggle);
+
+            // Calibration
+            const QMap<double, double> &formatedWiggle = mDate->getFormatedWiggleCalibToShow();
+
+            const GraphCurve &curveWiggleCal = densityCurve(formatedWiggle,
+                                                        "Wiggle Calibration",
+                                                        QColor(150, 150, 150),
+                                                        Qt::DashLine,
+                                                        Qt::NoBrush);
+            mGraph->add_curve(curveWiggleCal);
+
 
             // Credibility (must be the last created curve because uses yMax!
-            GraphCurve curveCred = generateSectionCurve(variableDate->mCredibility,
+            GraphCurve curveCred = topLineSection(mDate->mTi.mFormatedCredibility,
                                                             "Credibility All Chains",
                                                             color);
-            mGraph->addCurve(curveCred);
+            mGraph->add_curve(curveCred);
 
             // ------------------------------------------------------------
             //  Add zones outside study period
             // ------------------------------------------------------------
+            const GraphZone zoneMin (-INFINITY, mSettings.getTminFormated());
+            mGraph->add_zone(zoneMin);
 
-            GraphZone zoneMin;
+            const GraphZone zoneMax (mSettings.getTmaxFormated(), INFINITY);
+            mGraph->add_zone(zoneMax);
+
+            /*GraphZone zoneMin;
             zoneMin.mXStart = -INFINITY;
             zoneMin.mXEnd = mSettings.getTminFormated();
             zoneMin.mColor = QColor(217, 163, 69);
             zoneMin.mColor.setAlpha(35);
             zoneMin.mText = tr("Outside study period");
-            mGraph->addZone(zoneMin);
+            mGraph->add_zone(zoneMin);
 
             GraphZone zoneMax;
             zoneMax.mXStart = mSettings.getTmaxFormated();
@@ -223,19 +240,19 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
             zoneMax.mColor = QColor(217, 163, 69);
             zoneMax.mColor.setAlpha(35);
             zoneMax.mText = tr("Outside study period");
-            mGraph->addZone(zoneMax);
+            mGraph->add_zone(zoneMax);*/
 
-
-            mGraph->setYAxisMode(GraphView::eHidden);
+            //mGraph->setYAxisMode(GraphView::eHidden);
         }
 
         /* ------------------------------------------------
          *  Possible Curves :
-         *  - Sigma All Chains
-         *  - Sigma Chain i
+         *  - Sigma
+         *  -- Post Distrib All Chains
+         *  -- Post Distrib Chain i
          * ------------------------------------------------
          */
-        else if (variable == eSigma) {
+        else if (variableList.contains(eSigma)) {
             mGraph->setOverArrow(GraphView::eNone);
             mTitle = tr("Individual Std : %1").arg(mDate->mName);
 
@@ -244,72 +261,82 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
             mGraph->setFormatFunctY(nullptr);
 
             //  Post Distrib All Chains
-            GraphCurve curvePostDistrib = generateDensityCurve(variableDate->fullHisto(),
-                                                               "Sigma all Chains",
+            const GraphCurve &curvePostDistrib = densityCurve(mDate->mSigmaTi.fullHisto(),
+                                                               "Post Distrib all Chains",
                                                                color,
                                                                Qt::SolidLine,
                                                                Qt::NoBrush);
-            mGraph->addCurve(curvePostDistrib);
+            mGraph->add_curve(curvePostDistrib);
 
             // Post Distrib Chain i
-            if (!variableDate->mChainsHistos.isEmpty())
+            if (!mDate->mSigmaTi.mChainsHistos.isEmpty())
                 for (int i=0; i<mChains.size(); ++i) {
-                    GraphCurve curvePostDistribChain = generateDensityCurve(variableDate->histoForChain(i),
-                                                                            "Sigma for Chain " + QString::number(i),
+                    const GraphCurve &curvePostDistribChain = densityCurve(mDate->mSigmaTi.histoForChain(i),
+                                                                            "Post Distrib Chain " + QString::number(i),
                                                                             Painting::chainColors.at(i),
                                                                             Qt::SolidLine,
                                                                             Qt::NoBrush);
-                    mGraph->addCurve(curvePostDistribChain);
+                    mGraph->add_curve(curvePostDistribChain);
                 }
             // HPD All Chains
-            GraphCurve curveHPD = generateHPDCurve(variableDate->mHPD,
-                                                   "Sigma HPD All Chains",
+            const GraphCurve &curveHPD = HPDCurve(mDate->mSigmaTi.mFormatedHPD,
+                                                   "HPD All Chains",
                                                     color);
-            mGraph->addCurve(curveHPD);
-
+            mGraph->add_curve(curveHPD);
+            // Credibility (must be the last created curve because uses yMax!
+            GraphCurve curveCred = topLineSection(mDate->mSigmaTi.mFormatedCredibility,
+                                                            "Credibility All Chains",
+                                                            color);
+            mGraph->add_curve(curveCred);
             mGraph->setYAxisMode(GraphView::eHidden);
         }
 
     }
     /* ------------------------------------------------
      *  Second tab : History plots.
-     *  Possible Curves (could be for theta or sigma):
+     *  Possible Curves (could be for ti or sigma):
      *  - Trace i
      *  - Q1 i
      *  - Q2 i
      *  - Q3 i
      * ------------------------------------------------
      */
-    else if (typeGraph == eTrace && (variable == eTheta || variable == eSigma)) {
+    else if (typeGraph == eTrace) {
         mGraph->mLegendX = tr("Iterations");
         mGraph->setFormatFunctX(nullptr);
-        mGraph->setFormatFunctY(nullptr);//DateUtils::convertToAppSettingsFormat);
-        if (variable == eTheta)
-            mTitle = tr("Data : %1").arg(mDate->mName);
-        else
-             mTitle = tr("Individual Std : %1").arg(mDate->mName);
+        mGraph->setFormatFunctY(nullptr);
 
-        generateTraceCurves(mChains, variableDate);
+        if (variableList.contains(eDataTi) && mDate->mTi.mSamplerProposal!= MHVariable::eFixe) {
+            mTitle = tr("Data : %1").arg(mDate->mName);
+            generateTraceCurves(mChains, &mDate->mTi);
+
+        } else if (variableList.contains(eSigma) && mDate->mSigmaTi.mSamplerProposal!= MHVariable::eFixe) {
+             mTitle = tr("Individual Std : %1").arg(mDate->mName);
+             generateTraceCurves(mChains, &mDate->mSigmaTi);
+        }
+
     }
     /* ------------------------------------------------
      *  Third tab : Acceptance rate.
-     *  Possible curves (could be for theta or sigma):
+     *  Possible curves (could be for ti or sigma):
      *  - Accept i
      *  - Accept Target
      * ------------------------------------------------
      */
-    else if (typeGraph == eAccept && (variable == eTheta || variable == eSigma)) {
+    else if (typeGraph == eAccept) {
         mGraph->mLegendX = tr("Iterations");
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(nullptr);
         mGraph->autoAdjustYScale(true);
-        if (variable == eTheta)
-            mTitle = tr("Data : %1").arg(mDate->mName);
-        else
-             mTitle = tr("Individual Std : %1").arg(mDate->mName);
 
-        mGraph->addCurve( generateHorizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine) );
-        generateAcceptCurves(mChains, variableDate);
+        if (variableList.contains(eDataTi) && mDate->mTi.mSamplerProposal!= MHVariable::eFixe) {
+            mTitle = tr("Data : %1").arg(mDate->mName);
+            generateAcceptCurves(mChains, &mDate->mTi);
+
+        } else if (variableList.contains(eSigma) && mDate->mSigmaTi.mSamplerProposal!= MHVariable::eFixe) {
+            mTitle = tr("Individual Std : %1").arg(mDate->mName);
+            generateAcceptCurves(mChains, &mDate->mSigmaTi);
+        }
     }
 
     /* ------------------------------------------------
@@ -320,16 +347,20 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
      *  - Correl Limit Upper i
      * ------------------------------------------------
      */
-    else if (typeGraph == eCorrel && (variable == eTheta || variable == eSigma)) {
+    else if (typeGraph == eCorrel) {
         mGraph->mLegendX = "";
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(nullptr);
-        if (variable == eTheta)
-            mTitle = tr("Data : %1").arg(mDate->mName);
-        else
-             mTitle = tr("Individual Std : %1").arg(mDate->mName);
 
-        generateCorrelCurves(mChains, variableDate);
+        if (variableList.contains(eDataTi) && mDate->mTi.mSamplerProposal!= MHVariable::eFixe) {
+            mTitle = tr("Data : %1").arg(mDate->mName);
+           generateCorrelCurves(mChains, &mDate->mTi);
+
+        } else if (variableList.contains(eSigma) && mDate->mSigmaTi.mSamplerProposal!= MHVariable::eFixe) {
+             mTitle = tr("Individual Std : %1").arg(mDate->mName);
+             generateCorrelCurves(mChains, &mDate->mSigmaTi);
+        }
+
         mGraph->setXScaleDivision(10, 10);
     }
     else {
@@ -340,9 +371,9 @@ void GraphViewDate::generateCurves(TypeGraph typeGraph, Variable variable)
 
 }
 
-void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle)
+void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t> &variableList)
 {
-    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showCredibility, showCalib, showWiggle);
+    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, variableList);
 
     /* --------------------First Tab : Posterior distrib.------------*/
 
@@ -358,15 +389,20 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
          *  - Wiggle
          * ------------------------------------------------
          */
-        if (mCurrentVariable == eTheta) {
+        if (variableList.contains(eDataTi)) {
 
+            const bool showCalib = variableList.contains(eDataCalibrate);
+            const bool showWiggle = variableList.contains(eDataWiggle);
             mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
+            mGraph->setCurveVisible("Wiggle Post Distrib All Chains", mShowAllChains && showWiggle);
             mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
-            mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowCredibility);
-            mGraph->setCurveVisible("Calibration", mShowCalib);
-            mGraph->setCurveVisible("Wiggle", mShowWiggle);
-            for (int i=0; i<mShowChainList.size(); ++i)
+            mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
+            mGraph->setCurveVisible("Calibration", showCalib);
+            mGraph->setCurveVisible("Wiggle Calibration", showWiggle && showCalib);
+            for (int i=0; i<mShowChainList.size(); ++i) {
                 mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
+                mGraph->setCurveVisible("Wiggle Post Distrib Chain " + QString::number(i), mShowChainList[i] && showWiggle);
+            }
 
             mGraph->setTipXLab("t");
             mGraph->setYAxisMode(GraphView::eHidden);
@@ -376,16 +412,20 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
         }
         /* ------------------------------------------------
          *  Possible Curves :
-         *  - Sigma All Chains
-         *  - Sigma Chain i
+         *  - Sigma
+         *  -- Post Distrib All Chains
+         *  -- Post Distrib Chain i
          * ------------------------------------------------
          */
-        else if (mCurrentVariable == eSigma) {
-            mGraph->setCurveVisible("Sigma all Chains", mShowAllChains);
-            for (int i=0; i<mShowChainList.size(); ++i)
-                mGraph->setCurveVisible("Sigma for Chain " + QString::number(i), mShowChainList[i]);
+        else if (variableList.contains(eSigma)) {
+            mGraph->setCurveVisible("Post Distrib all Chains", mShowAllChains);
+            for (int i=0; i<mShowChainList.size(); ++i) {
+                mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
+                mGraph->setCurveVisible("Wiggle Post Distrib Chain " + QString::number(i), mShowChainList[i]);
+            }
 
-            mGraph->setCurveVisible("Sigma HPD All Chains", mShowAllChains);
+            mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
+            mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
 
             mGraph->setTipXLab(tr("sigma"));
             mGraph->setYAxisMode(GraphView::eHidden);
@@ -401,6 +441,14 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
      * ------------------------------------------------
      */
     else if (mCurrentTypeGraph == eTrace) {
+
+        mGraph->setTipXLab(tr("Iteration"));
+        mGraph->setTipYLab("t");
+
+        mGraph->setYAxisMode(GraphView::eMinMaxHidden);
+        mGraph->showInfos(false);
+        mGraph->autoAdjustYScale(true);
+
         for (int i=0; i<mShowChainList.size(); ++i) {
             mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList.at(i));
             mGraph->setCurveVisible("Q1 " + QString::number(i), mShowChainList.at(i));
@@ -408,12 +456,6 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
             mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList.at(i));
         }
 
-        mGraph->setTipXLab(tr("Iteration"));
-        mGraph->setTipYLab("t");
-
-        mGraph->setYAxisMode(GraphView::eMinMaxHidden);
-        mGraph->showInfos(true);
-        mGraph->autoAdjustYScale(true); // do  repaintGraph()
     }
     /* -----------------------Third tab : Acceptance rate.-------------------------
      *  Possible curves (could be for theta or sigma):
@@ -432,11 +474,11 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
         mGraph->setYAxisMode(GraphView::eMinMax );
         mGraph->showInfos(false);
         mGraph->clearInfos();
-        mGraph->autoAdjustYScale(false); // do  repaintGraph()
+        mGraph->autoAdjustYScale(false);
         mGraph->setRangeY(0, 100); // do repaintGraph() !!
     }
 
-    /* -------------------- fourth tab : Autocorrelation----------------------------
+    /* -------------------- Fourth tab : Autocorrelation----------------------------
      *  Possible curves (could be for theta or sigma):
      *  - Correl i
      *  - Correl Limit Lower i

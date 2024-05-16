@@ -55,7 +55,7 @@ public:
     explicit PluginTLRefView(QWidget* parent = nullptr);
     virtual ~PluginTLRefView();
 
-    void setDate(const Date& date, const ProjectSettings& settings);
+    void setDate(const Date& date, const StudyPeriodSettings& settings);
 
 public slots:
     void zoomX(const double min, const double max);
@@ -63,8 +63,6 @@ public slots:
 protected:
     void resizeEvent(QResizeEvent* e);
 
-private:
-   // GraphView* mGraph;
 };
 
 #endif

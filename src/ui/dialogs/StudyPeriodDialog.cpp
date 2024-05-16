@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -38,28 +38,24 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "StudyPeriodDialog.h"
-#include "Collapsible.h"
-#include "HelpWidget.h"
 #include "LineEdit.h"
-#include "Painting.h"
-#include "ModelUtilities.h"
+
 #include <QtWidgets>
 
 
 StudyPeriodDialog::StudyPeriodDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags),
-mMargin(5),
-mLineH(20),
-mButW(80),
-mButH(25)
+    mMargin(5),
+    mLineH(20),
+    mButW(80),
+    mButH(25)
 {
    setWindowTitle(tr("Study Period Settings"));
-   //setSizePolicy(QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum));
 
     // -----------
-   mMinLab = new QLabel(tr("Start"), this);
+   mMinLab = new QLabel(tr("Start (BC/AD)"), this);
    mMinEdit = new LineEdit(this);
 
-   mMaxLab = new QLabel(tr("End"), this);
+   mMaxLab = new QLabel(tr("End (BC/AD)"), this);
    mMaxEdit = new LineEdit(this);
 
    QGridLayout* grid = new QGridLayout();
@@ -85,9 +81,9 @@ mButH(25)
     mStepLab     = new QLabel(tr("Resolution in years"), mAdvancedWidget);
 
     mStepSpin = new QDoubleSpinBox(mAdvancedWidget);
-    mStepSpin -> setRange(0.01, 10000);
-    mStepSpin -> setSingleStep(0.01);
-    mStepSpin -> setDecimals(2);
+    mStepSpin -> setRange(0.001, 10000);
+    mStepSpin -> setSingleStep(0.001);
+    mStepSpin -> setDecimals(4);
 
     QGridLayout* advGrid = new QGridLayout();
     advGrid->setContentsMargins(0, 0, 0, 0);
@@ -97,6 +93,7 @@ mButH(25)
     advGrid->addWidget(mStepSpin, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
 
     connect(mForcedCheck, &QCheckBox::toggled, mStepSpin, &QDoubleSpinBox::setEnabled);
+    //connect(mForcedCheck, &QCheckBox::toggled, this, &StudyPeriodDialog::showMessageStepForced);
 
     mAdvancedWidget->setLayout(advGrid);
 
@@ -127,19 +124,21 @@ mButH(25)
 
 StudyPeriodDialog::~StudyPeriodDialog()
 {
+    disconnect(mForcedCheck, &QCheckBox::toggled, this, &StudyPeriodDialog::showMessageStepForced);
 }
 
-void StudyPeriodDialog::setSettings(const ProjectSettings& s)
+void StudyPeriodDialog::setSettings(const StudyPeriodSettings &s)
 {
     mMinEdit->setText(locale().toString(s.mTmin));
     mMaxEdit->setText(locale().toString(s.mTmax));
-    const double suggested = s.getStep(s.mTmin, s.mTmax);
-    mForcedCheck -> setText(tr("(suggested/default value = %1 )").arg(QString::number(suggested) ) );
+    //const double suggested = s.getStep(s.mTmin, s.mTmax);
+    // mForcedCheck -> setText(tr("(suggested/default value = %1 )").arg(QString::number(suggested) ) );
     mForcedCheck -> setChecked(s.mStepForced);
     mStepSpin    -> setEnabled(s.mStepForced);
     mStepSpin    -> setValue(s.mStep);
 
     mAdvancedCheck->setChecked(s.mStepForced);
+    connect(mForcedCheck, &QCheckBox::toggled, this, &StudyPeriodDialog::showMessageStepForced);
 }
 
 void StudyPeriodDialog::setStep(double step, bool forced, double suggested)
@@ -150,9 +149,9 @@ void StudyPeriodDialog::setStep(double step, bool forced, double suggested)
     mStepSpin    -> setValue(step);
 }
 
-ProjectSettings StudyPeriodDialog::getSettings() const
+StudyPeriodSettings StudyPeriodDialog::getSettings() const
 {
-    ProjectSettings s = ProjectSettings();
+    StudyPeriodSettings s = StudyPeriodSettings();
     s.mTmin = locale().toDouble(mMinEdit->text());
     s.mTmax = locale().toDouble(mMaxEdit->text());
     if (mForcedCheck->isChecked())
@@ -201,4 +200,61 @@ void StudyPeriodDialog::setAdvancedVisible(bool visible)
         updateVisibleControls();
     else
         adjustSize();
+}
+void StudyPeriodDialog::showMessageStepForced(bool forced)
+{
+    if (forced) {
+        /*QMessageBox message(QMessageBox::Information,
+                        tr("Study Period Step Forced"),
+                        tr("Forcing the step affects all calibrations.\rCalculation time and results are also affected."),
+                            QMessageBox::Ok,
+                        this);*/
+        QMessageBox message;
+        message.setText("Study Period Step Forced");
+        //message.setInformativeText("Do you want to save your changes?");
+        message.setStandardButtons(QMessageBox::Ok );
+        message.setDefaultButton(QMessageBox::Ok);
+
+        //const QString text_show = tr("Details ...");
+        //const QString text_hide = tr("Hide Details");
+
+        QString detail = "All the calibrations will be recalculated with this same step.\r";
+        detail += "In cases where reference curves are defined over large time ranges and when you choose a very fine step size, all the calculations will be much longer.";
+        detail +=" \rConversely, if your step size is too large in relation to the definition of the reference curve,";
+        detail += " the calculation of the calibration curves will be coarse and may miss time solutions...";
+        //detail += "\rBy default, the algorithm defines a different step for each calibration curve, looking for the optimum step.";
+
+        //QPushButton* bt_details = message.addButton( text_show, QMessageBox::ActionRole );
+        message.setInformativeText(detail);
+        message.exec();
+
+        //message.setDetailedText(detail);
+        //auto result = message.exec();
+        //auto res_but = message.clickedButton();
+        /*
+        while (message.exec() != QMessageBox::Ok) {
+            if (message.clickedButton() == bt_details) {
+                if (message.informativeText().isEmpty()) {
+                    message.setInformativeText(detail);
+
+                    //message.setAccessibleDescription("titi");
+                    //message.removeButton(bt_details);
+
+                   // bt_details = message.addButton( text_hide, QMessageBox::ActionRole );
+
+                } else {
+                    message.setInformativeText("");
+                    //bt_details->setText(text_show);
+                    //bt_details->click();
+                    //message.removeButton(bt_details);
+
+                    //bt_details = message.addButton(text_show, QMessageBox::ActionRole );
+                }
+            }
+
+            message.update();
+           // result = message.exec();
+        } ;
+        */
+    }
 }

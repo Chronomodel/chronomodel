@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -40,34 +40,53 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef ABSTRACTSCENE_H
 #define ABSTRACTSCENE_H
 
+#include "Project.h"
+
 #include <QGraphicsScene>
 
 class AbstractItem;
 class ArrowItem;
 class ArrowTmpItem;
-class Project;
 
 
 class AbstractScene: public QGraphicsScene
 {
     Q_OBJECT
+protected:
+    std::shared_ptr<Project> mProject;
+    QGraphicsView* mView;
+    QList<AbstractItem*> mItems;
+    QList<ArrowItem*> mConstraintItems;
+
+    bool mUpdatingItems;
+    bool mAltIsDown;
+
+    bool mShowAllThumbs;
+
+    double mZoom;
+
+    AbstractItem* mCurrentItem;
+    qreal mDeltaGrid;
+
 public:
+    bool mDrawingArrow;
+    ArrowTmpItem* mTempArrow;
+    bool mSelectKeyIsDown; // used to add item in selection
+    bool mShowGrid;
+
     AbstractScene(QGraphicsView* view, QObject* parent = nullptr);
     virtual ~AbstractScene();
 
-    QRectF specialItemsBoundingRect(QRectF r = QRectF()) const;
     void adjustSceneRect();
-    bool mDrawingArrow;
-    ArrowTmpItem* mTempArrow;
 
-    void setProject(Project *project);
-    Project* getProject() const;
+    void setProject(std::shared_ptr<Project> project);
+    std::shared_ptr<Project> getProject() const;
+    QJsonObject &getState() const {return mProject->mState;};
 
     QList<AbstractItem*> getItemsList() const  {return mItems;}
     bool showAllThumbs() const { return mShowAllThumbs;}
 
-    bool mSelectKeyIsDown; // used to add item in selection
-    bool mShowGrid;
+
     qreal deltaGrid() const {return mDeltaGrid;}
 
 public slots:
@@ -106,21 +125,7 @@ protected:
 
     void drawBackground(QPainter* painter, const QRectF& rect);
 
-protected:
-    Project* mProject;
-    QGraphicsView* mView;
-    QList<AbstractItem*> mItems;
-    QList<ArrowItem*> mConstraintItems;
 
-    bool mUpdatingItems;
-    bool mAltIsDown;
-
-    bool mShowAllThumbs;
-
-    double mZoom;
-
-    AbstractItem* mCurrentItem;
-    qreal mDeltaGrid;
 
 signals:
     void projectUpdated();

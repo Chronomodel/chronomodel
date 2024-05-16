@@ -44,9 +44,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QJsonObject>
 #include <QString>
 
-class Project;
-
-
 class StateEvent: public QEvent
 {
 public:

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -44,11 +44,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QJsonObject>
 
 #include "Date.h"
-#include "ProjectSettings.h"
+#include "StudyPeriodSettings.h"
 #include "GraphView.h"
 
 class GraphViewRefAbstract;
-class Date;
+
 class Marker;
 class LineEdit;
 class Button;
@@ -57,7 +57,6 @@ class QLabel;
 class Label;
 class QSlider;
 class QScrollBar;
-class QFrame;
 class QGraphicsScene;
 class QGraphicsView;
 class CalibrationDrawing;
@@ -71,13 +70,15 @@ public:
     ~CalibrationView();
 
     void setDate(const QJsonObject& date);
+    void setDate(const Date& date);
+    void resetDate() {mDate = Date();};
    // void setFont(const QFont& font);
-    void initScale (const double &majorScale, const int &minorScale) { mMajorScale= majorScale; mMinorScale = minorScale;}
+    void initScale (const double majorScale, const int minorScale) { mMajorScale= majorScale; mMinorScale = minorScale;}
     void initScale (const Scale &s) { mMajorScale = s.mark; mMinorScale = s.tip;}
 
 protected:
-    void paintEvent(QPaintEvent* e);
-    void resizeEvent(QResizeEvent* e);
+    void paintEvent(QPaintEvent*);
+    void resizeEvent(QResizeEvent*);
     void updateLayout();
 
 public slots:
@@ -90,6 +91,7 @@ private slots:
 
     void updateZoom();
     void updateScroll();
+    void applyStudyPeriod();
     void exportImage();
     void copyImage();
     void copyText();
@@ -100,7 +102,7 @@ signals:
 
 public:
     Date mDate;
-    ProjectSettings mSettings;
+    StudyPeriodSettings mSettings;
 
 private:
 
@@ -119,8 +121,6 @@ private:
     Button* mImageClipBut;
     Button* mResultsClipBut;
 
-    QFrame* frameSeparator;
-
     Label* mHPDLab;
     LineEdit* mHPDEdit;
 
@@ -129,6 +129,9 @@ private:
 
     Label* mEndLab;
     LineEdit* mEndEdit;
+
+    // Adjust the zoom on the study period
+    QPushButton* mDisplayStudyBut;
 
     Label* mMajorScaleLab;
     LineEdit* mMajorScaleEdit;

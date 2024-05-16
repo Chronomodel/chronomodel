@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,9 +40,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef GRAPHVIEWRESULTS_H
 #define GRAPHVIEWRESULTS_H
 
-#include "ProjectSettings.h"
+#include "ModelUtilities.h"
+#include "StudyPeriodSettings.h"
 #include "MCMCSettings.h"
-#include "MCMCLoop.h"
+
 #include "GraphView.h"
 
 #include <QWidget>
@@ -54,10 +55,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QEvent>
 
 class Button;
-//class QPropertyAnimation;
 
 class MHVariable;
 class MetropolisVariable;
+class Model;
 
 class Overlay : public QWidget {
 public:
@@ -83,23 +84,60 @@ protected:
     }
 };
 
+class OverLine : public QWidget {
+public:
+    OverLine(QWidget * parent = nullptr) : QWidget{parent} {
+       setAttribute(Qt::WA_TransparentForMouseEvents);
+     //   setWindowFlags(Qt::Widget | Qt::FramelessWindowHint | Qt::ToolTip | Qt::WindowStaysOnTopHint);
+       setAttribute(Qt::WA_NoSystemBackground, true);
+       setAttribute(Qt::WA_TranslucentBackground, true);
+    }
+
+protected:
+
+    void paintEvent(QPaintEvent *) override {
+        const QColor color (49, 112, 176, 40);
+        QFont font (QFont().family(), 30, QFont::Medium, false);
+
+        QPainter p (this);
+        p.setFont(font);
+        p.fillRect(rect(), color);
+        p.setPen(color.darker());
+        p.drawText(rect(), Qt::AlignCenter | Qt::TextWordWrap, QObject::tr("Selected"));
+        p.end();
+    }
+};
 
 class GraphViewResults: public QWidget
 {
     Q_OBJECT
 public:
-    enum TypeGraph{
-        ePostDistrib = 0,
-        eTrace = 1,
-        eAccept = 2,
-        eCorrel = 3
+    enum graph_t{
+        ePostDistrib,
+        eTrace,
+        eAccept,
+        eCorrel,
+        eFunction
     };
-    enum Variable{
-        eTheta = 0,
-        eSigma = 1,
-        eDuration = 2,
-        eTempo = 3,
-        eActivity = 4
+    enum variable_t{
+        eBeginEnd,
+        eThetaEvent, eS02,
+        eDataTi, eDataCalibrate, eDataWiggle,
+        eCredibility,
+        eSigma ,
+        eVg,
+
+        eTempo,
+        eActivity,
+        eActivityUnif,
+        eError,
+        eDuration,
+
+        eG, eGError, eMap, eGEventsPts, eGDatesPts,
+        eGP,
+        eGS,
+        eLambda,
+        eS02Vg
     };
     static int mHeightForVisibleAxis ;
     // member
@@ -108,40 +146,32 @@ protected:
     Overlay* mOverLaySelect;
 
     GraphView* mGraph;
-    TypeGraph mCurrentTypeGraph;
-    Variable mCurrentVariable;
+    graph_t mCurrentTypeGraph;
+    QList<variable_t> mCurrentVariableList;
 
     QString mTitle;
 
-    QString mResultsText;
-
     QColor mItemColor;
-    QString mItemTitle;
 
     bool mShowAllChains;
     QList<bool> mShowChainList;
-    bool mShowCredibility;
+    QList<variable_t> mShowVariableList;
 
-    bool mShowCalib;
-    bool mShowWiggle;
     bool mShowNumResults;
     bool mIsSelected;
     bool mShowSelectedRect;
 
-    ProjectSettings mSettings;
+    StudyPeriodSettings mSettings;
     MCMCSettings mMCMCSettings;
     QList<ChainSpecs> mChains;
 
     QColor mMainColor;
 
-    QTextEdit* mTextArea;
+    QTextEdit* mStatArea;
 
     qreal mMargin;
     qreal mLineH;
-   // qreal mGraphLeft;
     int mTopShift;
-
-
 
     QFont mGraphFont;
     //-----
@@ -153,77 +183,65 @@ public:
 
     virtual void mousePressEvent(QMouseEvent *event);
 
-    void setSettings(const ProjectSettings& settings);
-    void setMCMCSettings(const MCMCSettings& mcmc, const QList<ChainSpecs>& chains);
+    void setSettings(const StudyPeriodSettings &settings);
+    void setMCMCSettings(const MCMCSettings &mcmc, const QList<ChainSpecs> &chains);
 
-    void setMainColor(const QColor& color);
+    void setMainColor(const QColor &color);
    // void toggle(const QRect& geometry); //useless
+    void setTitle(const QString &title);
+    inline void setTipYLab (const QString &label) {mGraph->setTipYLab(label);};
+    inline QString title() const {return mTitle;};
 
     void setMarginLeft (qreal &m);
     void setMarginRight (qreal &m);
 
    // void setRendering(GraphView::Rendering render);
-    virtual void setGraphFont(const QFont& font);
+    virtual void setGraphsFont(const QFont &font);
     void setGraphsThickness(int value);
     void setGraphsOpacity(int value);
 
-    void setItemColor(const QColor& itemColor);
-    void setItemTitle(const QString& itemTitle);
+    void setItemColor(const QColor &itemColor);
 
-    bool isSelected() const  { return mIsSelected;}
-    void setSelected( const bool&  selected) {
-            mIsSelected = selected;
+    inline bool isSelected() const  {return mIsSelected;}
+
+    inline void setSelected( const bool selected) {
+        mIsSelected = selected;
     }
 
-    void showSelectedRect(const bool & show) {
+    inline void showSelectedRect(const bool show) {
         mShowSelectedRect = show;
     }
 
     void setShowNumericalResults(const bool show);
 
-
-    GraphView* getGraph() const { return mGraph;}
+    inline GraphView* getGraph() const {return mGraph; }
+    inline QList<variable_t> getCurrentVariables() const {return mCurrentVariableList;}
+    inline graph_t getCurrentType() const { return mCurrentTypeGraph; }
+    
    // GraphView::Rendering getRendering() const  { return mGraph->getRendering(); }
-    QString getResultsText() const {return mResultsText;}
-    QString getTextAreaToHtml() const { return mTextArea->toHtml();}
-    QString getTextAreaToPlainText() const { return mTextArea->toPlainText();}
+    QString getResultsText() const {return HTML_to_text(mStatArea->toHtml());}
+    QString getTextAreaToHtml() const { return mStatArea->toHtml();}
+    QString getTextAreaToPlainText() const { return mStatArea->toPlainText();}
 
-    GraphCurve generateDensityCurve(const QMap<double, double> &data,
-                                    const QString& name,
-                                    const QColor& lineColor,
-                                    const Qt::PenStyle penStyle = Qt::SolidLine,
-                                    const QBrush& brush = Qt::NoBrush) const;
 
-    GraphCurve generateHPDCurve(QMap<double, double>& data,
-                                const QString& name,
-                                const QColor& color) const;
+    void generateTraceCurves(const QList<ChainSpecs> &chains, MetropolisVariable* variable, const QString& name = QString());
 
-    GraphCurve generateSectionCurve(const QPair<double, double>& section,
-                                        const QString& name,
-                                        const QColor& color) const;
+    void generateAcceptCurves(const QList<ChainSpecs> &chains, MHVariable* variable);
 
-    GraphCurve generateHorizontalLine(const double yValue,
-                                      const QString& name,
-                                      const QColor& color,
-                                      const Qt::PenStyle penStyle = Qt::SolidLine) const;
-
-    void generateTraceCurves(const QList<ChainSpecs>& chains,
-                             MetropolisVariable* variable,
-                             const QString& name = QString());
-
-    void generateAcceptCurves(const QList<ChainSpecs>& chains,
-                              MHVariable* variable);
-
-    void generateCorrelCurves(const QList<ChainSpecs>& chains,
-                              MHVariable* variable);
+    void generateCorrelCurves(const QList<ChainSpecs> &chains, MHVariable* variable);
 
     // This method is used to recreate all curves in mGraph.
-    // It is vitual because we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
-    virtual void generateCurves(TypeGraph typeGraph, Variable variable);
+    // It is vitual because we want a different behavior in sub-classes (GraphViewDate, GraphViewEvent and GraphViewPhase)
+    virtual void generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList);
 
     // This method is used to update visible existing curves in mGraph.
     // It is vitual because we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
-    virtual void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
+    //virtual void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
+    virtual void updateCurvesToShow(bool showAllChains, const QList<bool> &showChainList, const QList<variable_t> &showVariableList);
+
+
+    inline void changeYScaleDivision(const Scale &sc) const {mGraph->setYScaleDivision(sc);};
+    inline void changeYScaleDivision(const double major, const int minor) const {mGraph->setYScaleDivision(major, minor);};
 
 public slots:
     void setRange(type_data min, type_data max);
@@ -231,14 +249,14 @@ public slots:
 
     void zoom(type_data min, type_data max);
     void showNumericalResults(const bool show);
-    void setNumericalResults(const QString& resultsHTML, const QString& resultsText);
+    void setNumericalResults(const QString &resultsHTML);
 
     void saveAsImage();
     void imageToClipboard();
     void resultsToClipboard();
     void saveGraphData() const; // must be accessible by ResultsView
-    void changeXScaleDivision(const Scale &sc) {mGraph->changeXScaleDivision(sc); update();}
-    void changeXScaleDivision(const double &major, const int &minor) {mGraph->changeXScaleDivision(major, minor); update();}
+    void changeXScaleDivision(const Scale &sc) {mGraph->changeXScaleDivision(sc);};
+    void changeXScaleDivision(const double &major, const int &minor) {mGraph->changeXScaleDivision(major, minor);};
 
 protected:
 

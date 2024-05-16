@@ -43,6 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define STATE_APP_VERSION "app_version"
 #define STATE_SETTINGS "settings"
 #define STATE_MCMC "mcmc"
+#define STATE_CURVE "curve"
 #define STATE_EVENTS "events"
 #define STATE_PHASES "phases"
 #define STATE_EVENTS_CONSTRAINTS "events_constraints"
@@ -69,10 +70,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define STATE_IS_SELECTED "is_selected"
 #define STATE_IS_CURRENT "is_current"
 
+#define STATE_DATE_UUID "UUID"
 #define STATE_DATE_DATA "data"
 #define STATE_DATE_PLUGIN_ID "plugin_id"
-#define STATE_DATE_METHOD "method"
+#define STATE_DATE_METHOD "method" // Obsolete change with "sampler"
+#define STATE_DATE_SAMPLER "sampler"
+
 #define STATE_DATE_VALID "valid"
+#define STATE_DATE_ORIGIN "origin"
 #define STATE_DATE_DELTA_TYPE "delta_type"
 #define STATE_DATE_DELTA_FIXED "delta_fixed"
 #define STATE_DATE_DELTA_MIN "delta_min"
@@ -82,14 +87,23 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define STATE_DATE_SUB_DATES "subdates"
 
 #define STATE_EVENT_TYPE "type"
-#define STATE_EVENT_METHOD "method"
+#define STATE_EVENT_METHOD "method" // Obsolete change with "sampler"
+#define STATE_EVENT_SAMPLER "sampler"
+
 #define STATE_EVENT_DATES "dates"
 #define STATE_EVENT_PHASE_IDS "phase_ids"
 
-//#define STATE_EVENT_KNOWN_TYPE "known_type"
 #define STATE_EVENT_KNOWN_FIXED "known_fixed"
-//#define STATE_EVENT_KNOWN_START "known_unif_start"
-//#define STATE_EVENT_KNOWN_END "known_unif_end"
+
+#define STATE_EVENT_POINT_TYPE "point_type"  // default or node
+#define STATE_EVENT_X_INC_DEPTH "X_Inc_Depth"   // old value "YInc"
+#define STATE_EVENT_SX_ALPHA95_SDEPTH "sX_Alpha95_sDepth" // old value"SInc"
+
+#define STATE_EVENT_Y_DEC "Y_Dec" //old value "YDec"
+#define STATE_EVENT_SY "sY" // old value "SDec"
+
+#define STATE_EVENT_Z_F "Z_Field" // old value"YInt"
+#define STATE_EVENT_SZ_SF "sZ_sF" // old value "SInt"
 
 #define STATE_PHASE_TAU_TYPE "tau_type"
 #define STATE_PHASE_TAU_FIXED "tau_fixed"
@@ -115,5 +129,19 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define STATE_MCMC_SEEDS "seeds"
 
 #define STATE_MCMC_MIXING "mixing_level"
+
+#define STATE_CURVE_PROCESS_TYPE "process_type"
+//#define STATE_CURVE_VARIABLE_TYPE "variable_type"
+
+#define STATE_CURVE_THRESHOLD "speed_threshold"
+
+#define STATE_CURVE_USE_ERR_MESURE "use_err_mesure"
+
+#define STATE_CURVE_TIME_TYPE "time_type"
+#define STATE_CURVE_VARIANCE_TYPE "variance_type"
+#define STATE_CURVE_USE_VARIANCE_INDIVIDUAL "variance_individual"
+#define STATE_CURVE_VARIANCE_FIXED "variance_fixed"
+#define STATE_CURVE_COEFF_LISSAGE_TYPE "coeff_lissage_type"
+#define STATE_CURVE_ALPHA_LISSAGE "alpha"
 
 #endif

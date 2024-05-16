@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,13 +40,16 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginTL.h"
 #if USE_PLUGIN_TL
 
-#include "StdUtilities.h"
 #include "PluginTLForm.h"
 #include "PluginTLRefView.h"
-#include <cstdlib>
-#include <iostream>
+#include "Generator.h"
+
 #include <QJsonObject>
 #include <QtWidgets>
+
+#include <cstdlib>
+#include <iostream>
+
 
 
 PluginTL::PluginTL()
@@ -60,7 +63,7 @@ PluginTL::~PluginTL()
         delete mRefGraph;
 }
 
-long double PluginTL::getLikelihood(const double& t, const QJsonObject& data)
+long double PluginTL::getLikelihood(const double t, const QJsonObject &data)
 {
     const double age = data.value(DATE_TL_AGE_STR).toDouble();
     const long double error = (long double)data.value(DATE_TL_ERROR_STR).toDouble();
@@ -71,7 +74,7 @@ long double PluginTL::getLikelihood(const double& t, const QJsonObject& data)
     return v;
 }
 
-QPair<long double, long double> PluginTL::getLikelihoodArg(const double& t, const QJsonObject& data)
+QPair<long double, long double> PluginTL::getLikelihoodArg(const double t, const QJsonObject &data)
 {
     QPair<long double, long double> result;
     const double age = data.value(DATE_TL_AGE_STR).toDouble();
@@ -103,17 +106,17 @@ bool PluginTL::wiggleAllowed() const
     return false;
 }
 
-Date::DataMethod PluginTL::getDataMethod() const
+MHVariable::SamplerProposal PluginTL::getDataMethod() const
 {
-    return Date::eMHSymGaussAdapt;
+    return MHVariable::eMHPrior;
 }
 
-QList<Date::DataMethod> PluginTL::allowedDataMethods() const
+QList<MHVariable::SamplerProposal> PluginTL::allowedDataMethods() const
 {
-    QList<Date::DataMethod> methods;
-    methods.append(Date::eMHSymetric);
-    methods.append(Date::eInversion);
-    methods.append(Date::eMHSymGaussAdapt);
+    QList<MHVariable::SamplerProposal> methods;
+    methods.append(MHVariable::eMHPrior);
+    methods.append(MHVariable::eInversion);
+    methods.append(MHVariable::eMHAdaptGauss);
     return methods;
 }
 
@@ -131,7 +134,7 @@ PluginFormAbstract* PluginTL::getForm()
 }
 
 // Convert old project versions
-QJsonObject PluginTL::checkValuesCompatibility(const QJsonObject& values)
+QJsonObject PluginTL::checkValuesCompatibility(const QJsonObject &values)
 {
     QJsonObject result = values;
 
@@ -142,7 +145,7 @@ QJsonObject PluginTL::checkValuesCompatibility(const QJsonObject& values)
 
     return result;
 }
-QJsonObject PluginTL::fromCSV(const QStringList& list, const QLocale& csvLocale)
+QJsonObject PluginTL::fromCSV(const QStringList &list, const QLocale &csvLocale)
 {
     QJsonObject json;
     if (list.size() >= csvMinColumns()) {
@@ -156,7 +159,7 @@ QJsonObject PluginTL::fromCSV(const QStringList& list, const QLocale& csvLocale)
     return json;
 }
 
-QStringList PluginTL::toCSV(const QJsonObject& data, const QLocale& csvLocale) const
+QStringList PluginTL::toCSV(const QJsonObject &data, const QLocale &csvLocale) const
 {
     QStringList list;
     list << csvLocale.toString(data.value(DATE_TL_AGE_STR).toDouble());
@@ -167,17 +170,30 @@ QStringList PluginTL::toCSV(const QJsonObject& data, const QLocale& csvLocale) c
 
 QString PluginTL::getDateDesc(const Date* date) const
 {
-    const QLocale locale = QLocale();
+    Q_ASSERT(date);
     QString result;
-    if (date) {
+    
+    const QLocale locale = QLocale();
+    
+    if (date->mOrigin == Date::eSingleDate) {
         QJsonObject data = date->mData;
-        result += QObject::tr("Age : %1  ± %2").arg(locale.toString(data.value(DATE_TL_AGE_STR).toDouble()), locale.toString(data.value(DATE_TL_ERROR_STR).toDouble()));
-        result += "; " + QObject::tr("Ref. year : %1").arg(locale.toString(data.value(DATE_TL_REF_YEAR_STR).toDouble()));
+        result += QObject::tr("Age = %1  ± %2").arg(locale.toString(data.value(DATE_TL_AGE_STR).toDouble()), locale.toString(data.value(DATE_TL_ERROR_STR).toDouble()));
+        result += ": " + QObject::tr("Ref. year = %1").arg(locale.toString(data.value(DATE_TL_REF_YEAR_STR).toDouble()));
+
+    } else {
+         result = "Combine (";
+        QStringList datesDesc;
+        for (auto&& d: date->mSubDates) {
+            Date subDate (d.toObject() );
+            datesDesc.append(getDateDesc(&subDate));
+        }
+        result +=  datesDesc.join(" | ") + " )" ;
     }
+    
     return result;
 }
 
-QPair<double,double> PluginTL::getTminTmaxRefsCurve(const QJsonObject& data) const
+QPair<double,double> PluginTL::getTminTmaxRefsCurve(const QJsonObject &data) const
 {
     const double age = data.value(DATE_TL_AGE_STR).toDouble();
     const double error = data.value(DATE_TL_ERROR_STR).toDouble();
@@ -185,13 +201,24 @@ QPair<double,double> PluginTL::getTminTmaxRefsCurve(const QJsonObject& data) con
 
     const double k = 5.;
 
-    const double tmin = ref_year - age - k * error;
-    const double tmax = ref_year - age + k * error;
+    double tmin = ref_year - age - k * error;
+    double tmax = ref_year - age + k * error;
 
-    return qMakePair<double,double>(tmin, tmax);
+    return QPair<double, double>(tmin, tmax);
 }
 
+double PluginTL::getMinStepRefsCurve(const QJsonObject &data) const
+{
+    const double age = data.value(DATE_TL_AGE_STR).toDouble();
+    const double error = data.value(DATE_TL_ERROR_STR).toDouble();
+    const double ref_year = data.value(DATE_TL_REF_YEAR_STR).toDouble();
 
+    const double tmin = ref_year - age - 2. * error;
+    const double tmax = ref_year - age + 2. * error;
+    return std::abs(tmax-tmin)/ 10.;
+
+
+}
 
 
 // ------------------------------------------------------------------
@@ -213,5 +240,51 @@ PluginSettingsViewAbstract* PluginTL::getSettingsView()
 {
     return nullptr;
 }
+
+
+// Combine / Split
+bool PluginTL::areDatesMergeable(const QJsonArray& )
+{
+    return true;
+}
+/**
+ * @brief Combine several TL
+ **/
+QJsonObject PluginTL::mergeDates(const QJsonArray &dates)
+{
+    QJsonObject result;
+    if (dates.size() > 1) {
+       
+        QJsonObject mergedData;
+
+        mergedData[DATE_TL_AGE_STR] = 100;
+        mergedData[DATE_TL_ERROR_STR] = 100;
+        mergedData[DATE_TL_REF_YEAR_STR] = 0;
+        
+        
+        QStringList names;
+
+        for (auto&& d: dates)
+            names.append(d.toObject().value(STATE_NAME).toString());
+
+        // inherits the first data propeties as plug-in and method...
+        result = dates.at(0).toObject();
+        result[STATE_NAME] =  names.join(" | ");
+        result[STATE_DATE_UUID] = QString::fromStdString( Generator::UUID());
+        result[STATE_DATE_DATA] = mergedData;
+        result[STATE_DATE_ORIGIN] = Date::eCombination;
+        result[STATE_DATE_SUB_DATES] = dates;
+        result[STATE_DATE_VALID] = true;
+
+        result[STATE_DATE_DELTA_TYPE] = Date::eDeltaNone;
+        
+
+    } else
+        result["error"] = tr("Combine needs at least 2 data !");
+
+    return result;
+
+}
+
 
 #endif

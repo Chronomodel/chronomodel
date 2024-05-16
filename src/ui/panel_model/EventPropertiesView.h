@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -40,11 +40,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef EVENTPROPERTIESVIEW_H
 #define EVENTPROPERTIESVIEW_H
 
+
+#include <QCheckBox>
 #include <QWidget>
 #include <QJsonObject>
 
-class Event;
-class Date;
+#include "Button.h"
+
 class Label;
 class LineEdit;
 
@@ -56,9 +58,11 @@ class QRadioButton;
 
 class ColorPicker;
 class DatesList;
-class Button;
+
 class RadioButton;
 class GraphView;
+
+class CurveWidget;
 
 
 class EventPropertiesView: public QWidget
@@ -71,14 +75,15 @@ public:
     void updateEvent();
     const QJsonObject& getEvent() const;
 
-    void setCalibChecked(bool checked);
-    bool isCalibChecked() const;
+    inline void setCalibChecked(bool checked) { mCalibBut->setChecked(checked);}
+    inline bool isCalibChecked() const {return mCalibBut->isChecked();};
     bool hasEvent() const;
     bool hasBound() const;
     bool hasEventWithDates() const;
+    void initEvent(QJsonObject* event = nullptr);
 
 public slots:
-    void setEvent(const QJsonObject& event);
+    void setEvent(QJsonObject *event);
     void applyAppSettings();
 
 protected:
@@ -86,13 +91,25 @@ protected:
     void resizeEvent(QResizeEvent* e);
     void keyPressEvent(QKeyEvent* e);
     void updateLayout();
+    QString XerrorLabel() const;
 
 private slots:
 
     void updateEventName();
     void updateEventColor(const QColor& color);
-    void updateEventMethod(int index);
+    void updateEventSampler(int index);
     void updateIndex(int index);
+
+    // Curve
+    void updateCurveNode(bool isNode);
+    void updateEventXInc();
+    void updateEventYDec();
+    void updateEventZF();
+
+
+    void updateEventSXInc();
+    void updateEventSYDec();
+    void updateEventSZF();
 
     void createDate();
     void deleteSelectedDates();
@@ -117,7 +134,7 @@ signals:
 
 private:
     int minimumHeight;
-    QJsonObject mEvent;
+    QJsonObject *mEvent;
     int mCurrentDateIdx;
 
     QWidget* mTopView;
@@ -131,10 +148,12 @@ private:
     QLineEdit* mNameEdit;
     ColorPicker* mColorPicker;
     QComboBox* mMethodCombo;
+    QLabel* mMethodInfo;
 
     DatesList* mDatesList;
-    QList<Button*> mPluginButs1;
-    QList<Button*> mPluginButs2;
+    QList<Button*> mPluginButs;
+    //QList<std::unique_ptr<Button>> mPluginButs;
+
     Button* mDeleteBut;
     Button* mRecycleBut;
 
@@ -155,9 +174,30 @@ private:
 
     int mComboBoxHeight;
 
+    CurveWidget* mCurveWidget;
 
+    QCheckBox* mCurveNodeCB;
 
+    QLabel* mX_IncLab;
+    QLineEdit* mX_IncEdit;
 
+    QLabel* mS_X_IncLab;
+    QLineEdit* mS_X_IncEdit;
+
+    QLabel* mY_DecLab;
+    QLineEdit* mY_DecEdit;
+
+    QLabel* mS_Y_Lab;
+    QLineEdit* mS_Y_Edit;
+
+    QLabel* mZ_IntLab;
+    QLineEdit* mZ_IntEdit;
+
+    QLabel* mS_Z_IntLab;
+    QLineEdit* mS_Z_IntEdit;
+
+    bool mCurveEnabled;
+   // CurveSettings::ProcessType mCurveProcessType;
 };
 
 #endif

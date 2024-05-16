@@ -45,13 +45,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 CheckBox::CheckBox(QWidget* parent):QCheckBox(parent)
 {
     setCursor(Qt::PointingHandCursor);
-    setFont(parentWidget()->font());
 }
 
 CheckBox::CheckBox(const QString& text, QWidget* parent):QCheckBox(text, parent)
 {
     setCursor(Qt::PointingHandCursor);
-    setFont(parentWidget()->font());
 }
 
 CheckBox::~CheckBox()

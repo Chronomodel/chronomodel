@@ -52,12 +52,18 @@ QColor Painting::borderDark = QColor(50, 50, 50);
 
 void Painting::init()
 {
-    chainColors.append(Qt::blue);
-    chainColors.append(Qt::green);
-    chainColors.append(Qt::red);
-    chainColors.append(Qt::yellow);
+    chainColors.append(QColor(179, 70, 50)); // brown
+    chainColors.append(QColor(74, 92, 164)); // blue
+    chainColors.append(QColor(101, 154, 89)); // green
+    chainColors.append(QColor(238, 50, 70)); // red
+    chainColors.append(QColor(183, 158, 120)); // light brown
+    chainColors.append(QColor(241, 36, 52)); // red
+    chainColors.append(QColor(125, 144, 192)); // blue-grey
+    chainColors.append(QColor(174, 32, 53)); // brown-bordeaux
+    chainColors.append(QColor(26, 93, 75)); // dark-green
+    chainColors.append(QColor(40, 33, 133)); // dark-blue
 
-    for (int i=0; i<200; ++i)
+    for (int i = 0; i<200; ++i)
         chainColors.append(randomColor());
 }
 
@@ -157,10 +163,12 @@ void drawButton2(QPainter& painter, const QRectF& rect, bool hover, bool isEnabl
             painter.setPen(QColor(27, 51, 59));
             painter.setBrush(Qt::NoBrush);
             painter.drawRoundedRect(r, 4, 4);
+
         } else if(!isEnabled) {
             painter.setPen(QColor(140, 140, 140));
             painter.setBrush(QColor(160, 160, 160));
             painter.drawRoundedRect(r, 4, 4);
+
         } else {
             grad.setColorAt(0, QColor(90, 90, 90));
             grad.setColorAt(1, QColor(70, 70, 70));

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -54,11 +54,16 @@ public:
     void setMergeable(bool mergeable, bool shouldRepaint = true);
     virtual void setGreyedOut(const bool greyedOut);
 
-    virtual void updateItemPosition(const QPointF& pos) = 0;
+    virtual void updateItemPosition(const QPointF& pos);
     void setSelectedInData(const bool selected);
     void setCurrentInData(const bool current);
+    QJsonObject& getData() {return mData;};
 
-    static QFont adjustFont(const QFont &ft, const  QString & str, const QRectF &r);
+    static QFont adjustFont(const QFont &ft, const QString &str, const QRectF &r);
+
+    virtual QSizeF sizeF() {return mSize;};
+    virtual QRectF rectF() const;
+    virtual QRectF boundingRect() const;
 
 protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent* e);
@@ -68,25 +73,23 @@ protected:
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* e);
     virtual void hoverEnterEvent(QGraphicsSceneHoverEvent* e);
     virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent* e);
-    virtual QVariant itemChange(GraphicsItemChange change, const QVariant& value);
-
+    virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 
 public:
     static int mBorderWidth;
     static int mEltsMargin;
     static int mItemWidth;
-    QJsonObject mData;
+    static int mTitleHeight;
+    QSizeF mSize;
 
+    QJsonObject mData;
     AbstractScene* mScene;
 
-    int mTitleHeight;
     int mEltsHeight;
 
     bool mMoving; // used in AbstractScene::itemReleased() to merge item like eventItem and phaseItem
     bool mMergeable;
     bool mGreyedOut;
-
-
 
 };
 

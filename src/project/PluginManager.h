@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2023
 
 Authors :
 	Philippe LANOS
@@ -44,15 +44,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 class PluginAbstract;
 
-
 class PluginManager
 {
 public:
     static void loadPlugins();
     static void clearPlugins();
-    static PluginAbstract* getPluginFromId(const QString& pluginId);
-    static PluginAbstract* getPluginFromName(const QString& pluginName);
-    static const QList<PluginAbstract*>& getPlugins();
+    static PluginAbstract* getPluginFromId(const QString &pluginId);
+    static PluginAbstract* getPluginFromName(const QString &pluginName);
+    static const QList<PluginAbstract*> &getPlugins();
     static QStringList getPluginsNames();
 
 private:

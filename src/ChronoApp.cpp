@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -41,10 +41,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MainWindow.h"
 
 #include <QtWidgets>
+#include <iostream>
 
 ChronoApp::ChronoApp(int& argc, char** argv):QApplication(argc, argv)
 {
-
+#ifdef DEBUG
+    std::cout<<"start ChronoApp"<<"\n";
+#endif
 }
 
 ChronoApp::~ChronoApp()
@@ -57,7 +60,6 @@ ChronoApp::~ChronoApp()
 bool ChronoApp::event(QEvent* e)
 {
 
-
     /*QFileOpenEvent* foe = dynamic_cast<QFileOpenEvent*>(e);
     if(foe)
     {
@@ -66,15 +68,15 @@ bool ChronoApp::event(QEvent* e)
     }*/
     if (e->type() == QEvent::FileOpen) {
         QString path = static_cast<QFileOpenEvent*>(e)->file();
-
+#ifdef DEBUG
+        std::cout<<"in ChronoApp::event path = "<< path.toStdString();
+#endif
         MainWindow* w = MainWindow::getInstance();
 
         w->readSettings(path);
 
         w = nullptr;
-        /*QMessageBox box;
-        box.setText(static_cast<QFileOpenEvent*>(e)->file());
-        box.exec();*/
+
     }
-    return QApplication::event(e);
+    return QGuiApplication::event(e);
 }

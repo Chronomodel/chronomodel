@@ -1,11 +1,12 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
 	Helori LANOS
  	Philippe DUFRESNE
+    Komlan NOUKPOAPE
 
 This software is a computer program whose purpose is to
 create chronological models of archeological data using Bayesian statistics.
@@ -42,7 +43,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #if USE_PLUGIN_AM
 
-#include "../PluginFormAbstract.h"
+#include <QValidator>
+
+#include "PluginFormAbstract.h"
 
 class PluginMag;
 class QLineEdit;
@@ -63,32 +66,45 @@ public:
 
     bool isValid();
 
-signals:
-    void OkEnabled(bool enabled = true) ;
-
 protected slots:
     void updateOptions();
-    void errorIsValid(QString str);
+
+    void allIsValid();
 
 private:
     QRadioButton* mIncRadio;
     QRadioButton* mDecRadio;
-    QRadioButton* mIntensityRadio;
+    QRadioButton* mFieldRadio;
+    QRadioButton* mIDRadio;
+    QRadioButton* mIFRadio;
+    QRadioButton* mIDFRadio;
 
     QLabel* mIncLab;
     QLabel* mDecLab;
-    QLabel* mDecIncLab;
-    QLabel* mIntensityLab;
     QLabel* mAlpha95Lab;
-    QLabel* mRefLab;
+    QLabel* mFieldLab;
+    QLabel* mFieldErrorLab;
+    QLabel* mMCMCIterationLab;
+
+    QLabel* mRefILab;
+    QLabel* mRefDLab;
+    QLabel* mRefFLab;
 
     QLineEdit* mIncEdit;
     QLineEdit* mDecEdit;
-    QLineEdit* mDecIncEdit;
-    QLineEdit* mIntensityEdit;
     QLineEdit* mAlpha95Edit;
+    QLineEdit* mFieldEdit;
+    QLineEdit* mFieldErrorEdit;
+    QLineEdit* mMCMCIterationEdit;
 
-    QComboBox* mRefCombo;
+    QComboBox* mRefICombo;
+    QComboBox* mRefDCombo;
+    QComboBox* mRefFCombo;
+
+   // QDoubleValidator *m9090Validator, *m90270Validator, *mRplusValidator;
+    //QIntValidator* mZplusValidator;
+
+
 };
 
 #endif
