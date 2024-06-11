@@ -103,7 +103,7 @@ ProjectView::ProjectView(std::shared_ptr<Project> &project, QWidget* parent, Qt:
     mStack->setCurrentIndex(0);
 
     QHBoxLayout* layout = new QHBoxLayout();
-    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setContentsMargins(0, 20, 0, 0);
     layout->addWidget(mStack);
     setLayout(layout);
 

@@ -44,6 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "Project.h"
 #include "Singleton.h"
+#include "qpushbutton.h"
 
 class QMenu;
 class QAction;
@@ -205,6 +206,7 @@ private:
     QAction* mManualAction;
     QAction* mWebsiteAction;
 
+    QPushButton* testButton;
 private:
     Q_DISABLE_COPY(MainWindow)
 };

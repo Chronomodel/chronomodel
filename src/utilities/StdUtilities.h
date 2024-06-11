@@ -173,22 +173,22 @@ T vector_interpolate_idx_for_value(const T value, const Container<T> &vector, in
         T valueSup = vector.at(idxSup);
 
         // test si on a atteind la valeur
-        if (std::abs(valueInf - value) <= std::numeric_limits<T>::epsilon()) {
+        if (std::abs(valueInf - value) <= 10E-300) {
             valueSup = value;
             idxSup = idxInf;
 
-        } else  if (std::abs(valueSup - value) <= std::numeric_limits<T>::epsilon()) {
+        } else  if (std::abs(valueSup - value) <= 10E-300) {
             valueInf = value;
             idxInf = valueSup;
         }
 
         T idx;
-        if (std::abs(valueSup - valueInf) <= std::numeric_limits<T>::epsilon()) { // on recherche la taille du plateau, on élargie pour determiner le centre
-            while (idxInf>0 && std::abs(valueInf - vector.at(idxInf-1)) <= std::numeric_limits<T>::epsilon()) {
+        if (std::abs(valueSup - valueInf) <= 10E-300) { // on recherche la taille du plateau, on élargie pour determiner le centre
+            while (idxInf>0 && std::abs(valueInf - vector.at(idxInf-1)) <= 10E-300) {
                 idxInf -= 1;
                 valueInf = vector.at(idxInf);
             };
-            while (idxSup<vector.size()-1 && std::abs(valueSup- vector.at(idxSup+1)) <= std::numeric_limits<T>::epsilon()) {
+            while (idxSup<vector.size()-1 && std::abs(valueSup- vector.at(idxSup+1)) <= 10E-300) {
                 idxSup += 1;
                 valueSup = vector.at(idxSup);
             };
@@ -197,11 +197,11 @@ T vector_interpolate_idx_for_value(const T value, const Container<T> &vector, in
 
         } else {
             // On ressert l'intervale, une des bornes est sur le plateau
-            while (idxInf>0 && std::abs(valueInf - vector.at(idxInf+1)) <= std::numeric_limits<T>::epsilon()) {
+            while (idxInf>0 && std::abs(valueInf - vector.at(idxInf+1)) <= 10E-300) {
                 idxInf += 1;
                 valueInf = vector.at(idxInf);
             };
-            while (idxSup<vector.size()-1 && std::abs(valueSup - vector.at(idxSup-1)) <= std::numeric_limits<T>::epsilon()) {
+            while (idxSup<vector.size()-1 && std::abs(valueSup - vector.at(idxSup-1)) <= 10E-300) {
                 idxSup -= 1;
                 valueSup = vector.at(idxSup);
             };

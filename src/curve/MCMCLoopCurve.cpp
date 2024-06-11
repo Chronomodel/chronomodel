@@ -72,7 +72,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #ifdef _WIN32
 #include <QtWidgets>
-#include "winbase.h"
+//#include <winbase.h>
+#include <windows.h> //for Qt 6.7
 #endif
 
 MCMCLoopCurve::MCMCLoopCurve(Project &project):

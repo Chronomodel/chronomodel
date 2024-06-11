@@ -453,7 +453,7 @@ QJsonObject PluginDensity::mergeDates(const QJsonArray &dates)
             max = std::min(tminTmax.second + dWiggleMax, max);
         }
 
-        if ((max - min) <= 1.) {
+        if ((max - min) <= 0.) {
             result["error"] = tr("Combine is not possible, not enough coincident densities; numeric issue");
             return result;
         }

@@ -769,7 +769,7 @@ QJsonObject PluginGauss::mergeDates(const QJsonArray& dates)
             max = std::min(tminTmax.second + dWiggleMax, max);
         }
 
-        if ((max - min) <= 100.) {
+        if ((max - min) <= 00.) {
             result["error"] = tr("Combine is not possible, not enough coincident densities; numeric issue");
             return result;
         }

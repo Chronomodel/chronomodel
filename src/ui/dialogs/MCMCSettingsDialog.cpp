@@ -61,6 +61,7 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent, const bool show_help):QD
     mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
 {
     setWindowTitle(tr("MCMC Settings"));
+    setMouseTracking(true);
     mBurnBoxWidth = int(1.5 * mEditW);
     mAdaptBoxWidth = int(3.5 * mEditW);
     mAcquireBoxWidth = int(1.5 * mEditW);
@@ -167,9 +168,12 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent, const bool show_help):QD
 #else
     mTestBut->setVisible(false);
 #endif
-
+setAttribute(Qt::WA_AlwaysShowToolTips);
     mResetBut = new QPushButton(tr("Restore Defaults"), this);
- //   mResetBut->setFixedSize(fontMetrics().horizontalAdvance(mResetBut->text()) + 2 * mMarginW, mButH);
+    mResetBut->setToolTip(tr("Restore default parameter values"));
+    mResetBut->setToolTipDuration(1000);
+    mResetBut->QWidget::setAttribute(Qt::WA_AlwaysShowToolTips);
+
 
     connect(mOkBut, &QPushButton::clicked, this, &MCMCSettingsDialog::inputControl);
     connect(this, &MCMCSettingsDialog::inputValided, this, &MCMCSettingsDialog::accept);
@@ -270,6 +274,8 @@ void MCMCSettingsDialog::paintEvent(QPaintEvent*)
     p.drawText(mAquireRect.adjusted(0, mLineH + 2 * mMarginH, 0, -mAquireRect.height() + 2 * mLineH + 2 * mMarginH), Qt::AlignCenter, tr("Iterations") );
     p.drawText(int (mAquireRect.x() + (mAcquireBoxWidth - fontMetrics().horizontalAdvance(tr("Thinning")))/2), int (mAquireRect.y() + 3 * mLineH + 4 * mMarginH), fontMetrics().horizontalAdvance(tr("Thinning")), mButH, Qt::AlignCenter, tr("Thinning") );
 
+
+    qDebug()<<mResetBut->QWidget::toolTip()<<mResetBut->toolTipDuration()<<QToolTip::isVisible();
 
 }
 
