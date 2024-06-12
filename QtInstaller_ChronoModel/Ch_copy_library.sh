@@ -25,7 +25,6 @@ QT_LIB_PATH=/Users/dufresne/Qt/6.7.0/macos/lib
 QT_PLUGINS_PATH=/Users/dufresne/Qt/6.7.0/macos/plugins
 VERSION=3.2.7
 
-
 # le texte suivant est remplacé par macdeployqt
 # -------------------------------------------------------
 #  Copier les librairies Qt dans bundle
@@ -87,14 +86,14 @@ echo "$ 3 Insertion de la version dans Info.plist "
 # https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html
 
 PLIST=${BUNDLE}/Contents/Info.plist
-/usr/libexec/Plistbuddy -c "Set :CFBundleIdentifier fr.CNRS.chronomodel" "$PLIST"
+#/usr/libexec/Plistbuddy -c "Set :CFBundleIdentifier fr.CNRS.chronomodel" "$PLIST"
 /usr/libexec/Plistbuddy -c "Set :CFBundleSignature chml" "$PLIST"
-/usr/libexec/Plistbuddy -c "Set :CFBundleExecutable chronomodel" "$PLIST"
+#/usr/libexec/Plistbuddy -c "Set :CFBundleExecutable chronomodel" "$PLIST"
 
 /usr/libexec/Plistbuddy -c "Add :CFBundleVersion string ${VERSION}" "$PLIST"
 /usr/libexec/Plistbuddy -c "Add :CFBundleShortVersionString string ${VERSION}" "$PLIST"
 
-/usr/libexec/Plistbuddy -c "Add :CFBundleIconFile string Chronomodel.icns" "$PLIST"
+#/usr/libexec/Plistbuddy -c "Add :CFBundleIconFile string Chronomodel.icns" "$PLIST"
 
 /usr/libexec/Plistbuddy -c "Add CFBundleDocumentTypes array" "$PLIST"
 /usr/libexec/Plistbuddy -c "Add :CFBundleDocumentTypes:0:CFBundleTypeRole string Editor" "$PLIST"
