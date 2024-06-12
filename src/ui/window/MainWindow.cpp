@@ -67,7 +67,7 @@ MainWindow::MainWindow(QWidget* parent):
     setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() );
 #endif
     setMouseTracking(true);
-    QPalette tooltipPalette;
+  /*  QPalette tooltipPalette;
     tooltipPalette.setColor(QPalette::ToolTipBase, Qt::white);
     tooltipPalette.setColor(QPalette::ToolTipText, Qt::black);
     QToolTip::setPalette(tooltipPalette);
@@ -75,13 +75,17 @@ MainWindow::MainWindow(QWidget* parent):
     tooltipFont.setItalic(true);
 
     QToolTip::setFont(tooltipFont);
-
+*/
+ /*   testButton = new QPushButton("test",this);
+    testButton->setToolTip("test test");
+    testButton->setGeometry(QRect(150,70, 30,20));
+*/
     mLastPath = QDir::homePath();
 
     mProject = nullptr;
 
     /* Creation of ResultsView and ModelView */
-    mProjectView = new ProjectView(mProject);
+    mProjectView = new ProjectView(mProject, this);
     setCentralWidget(mProjectView);
 
     mUndoStack = new QUndoStack();
@@ -178,7 +182,7 @@ void MainWindow::setCurrentPath(const QString& path)
 void MainWindow::createActions()
 {
     //QWhatsThis::createAction();
-    setMouseTracking(true);
+   // setMouseTracking(true);
 
     mAppSettingsAction = new QAction(QIcon(":settings_p.png"), tr("Settings"), this);
     connect(mAppSettingsAction, &QAction::triggered, this, &MainWindow::appSettings);

@@ -51,8 +51,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 
 #ifdef _WIN32
-#include "winbase.h"
-#include "windows.h"
+//#include "winbase.h"
+#include <windows.h> //for Qt 6.7
 #endif
 
 

@@ -674,9 +674,10 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, Project &project
             if (repartitionTemp.last() > 0.) {
                 if (truncate && repartitionTemp.size() > 10) {
                     const long double threshold = threshold_limit;
-
-                    const int minIdx = floor(vector_interpolate_idx_for_value(double(threshold * rep), repartitionTemp));
-                    const int maxIdx = ceil(vector_interpolate_idx_for_value(double ((1. - threshold) * rep), repartitionTemp));
+                    const double th_min= (threshold * rep);
+                    const double th_max = ((1. - threshold) * rep);
+                    const int minIdx = floor(vector_interpolate_idx_for_value(th_min, repartitionTemp));
+                    const int maxIdx = ceil(vector_interpolate_idx_for_value(th_max, repartitionTemp));
 
 
                     tminCal = mTminRefCurve + minIdx * long_step;

@@ -48,7 +48,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 // https://learn.microsoft.com/fr-fr/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate?redirectedfrom=MSDN
 
 #ifdef _WIN32
-#include "winbase.h"
+//#include "winbase.h"
+#include <windows.h> //for Qt 6.7
 #endif
 
 MCMCProgressDialog::MCMCProgressDialog(MCMCLoop* loop, QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags),
