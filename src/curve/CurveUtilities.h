@@ -78,12 +78,16 @@ typedef struct SplineResults
 
 typedef struct MCMCSplineComposante
 {
-    //std::vector<double> vecThetaEvents; // le noeud ti
     std::vector<double> vecThetaReduced; // le noeud ti reduce
     std::vector<double> vecG;
     std::vector<double> vecGamma;
     std::vector<double> vecVarG;
-    
+    void clear() {
+        vecThetaReduced.clear();
+        vecG.clear();
+        vecGamma.clear();
+        vecVarG.clear();
+    }
 } MCMCSplineComposante;
 
 QDataStream &operator<<( QDataStream& stream, const MCMCSplineComposante& spline );
@@ -94,6 +98,11 @@ typedef struct MCMCSpline
     MCMCSplineComposante splineX;
     MCMCSplineComposante splineY;
     MCMCSplineComposante splineZ;
+    void clear() {
+        splineX.clear();
+        splineY.clear();
+        splineZ.clear();
+    }
     
 } MCMCSpline;
 
@@ -114,6 +123,16 @@ typedef struct PosteriorMeanGComposante
     // spline density
     CurveMap mapG;
     CurveMap mapGP;
+    void clear() {
+        vecG.clear();
+        vecGP.clear();
+        vecGS.clear();
+        vecVarG.clear();
+        vecVarianceG.clear();
+        vecVarErrG.clear();
+        mapG.clear();
+        mapGP.clear();
+    }
     
 } PosteriorMeanGComposante;
 
@@ -125,7 +144,11 @@ typedef struct PosteriorMeanG
     PosteriorMeanGComposante gx;
     PosteriorMeanGComposante gy;
     PosteriorMeanGComposante gz;
-    
+    void clear() {
+        gx.clear();
+        gy.clear();
+        gz.clear();
+    }
 } PosteriorMeanG;
 
 QDataStream &operator<<( QDataStream &stream, const PosteriorMeanG& pMeanG );

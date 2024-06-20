@@ -82,12 +82,19 @@ ModelCurve::ModelCurve(const QJsonObject &json, QObject *parent):
 
 ModelCurve::~ModelCurve()
 {
+    Model::clear();
+    mLambdaSpline.reset();
+    mS02Vg.reset();
+    mSpline.clear();
+    mSplinesTrace.clear();
+    mPosteriorMeanG.clear();
+    mPosteriorMeanGByChain.clear();
+
 }
 
 QJsonObject ModelCurve::toJson() const
 {
     QJsonObject json = Model::toJson();
-    
     json[STATE_CURVE] = mCurveSettings.toJson();
     
     return json;
@@ -159,8 +166,6 @@ void ModelCurve::settings_from_Json(const QJsonObject &json)
                      mCurveSettings.mProcessType == CurveSettings::eProcess_Declination ||
                      mCurveSettings.mProcessType == CurveSettings::eProcess_Field;
 
-
-
 }
 
 // Date files read / write
@@ -170,7 +175,6 @@ void ModelCurve::settings_from_Json(const QJsonObject &json)
 void ModelCurve::saveToFile(QDataStream *out)
 {
     Model::saveToFile(out);
-
 
     /* -----------------------------------------------------
     *   Write curve data
@@ -701,18 +705,27 @@ void ModelCurve::clearCredibilityAndHPD()
     }
 }
 
+
+
 void ModelCurve::clearTraces()
 {
     Model::clearTraces();
-  /*  for (Event*& event : mEvents)
-        event->mVg.reset();
-*/
+
     if (mProject->isCurve()) {
         mLambdaSpline.reset();
+    }
 
-    }mS02Vg.reset();
+    mS02Vg.reset();
+    mSplinesTrace.clear();
 }
 
+void ModelCurve::clear()
+{
+    Model::clear();
+    clearTraces();
+    clearCredibilityAndHPD();
+    clearPosteriorDensities();
+}
 
 void ModelCurve::setThresholdToAllModel(const double threshold)
 {

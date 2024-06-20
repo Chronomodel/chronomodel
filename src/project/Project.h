@@ -191,6 +191,8 @@ public:
     void createEventKnown(qreal x, qreal y);
     void createPhase(qreal x, qreal y);
     
+    void clear_calibCurves();
+
     bool isCurve() const;
 
 public slots:

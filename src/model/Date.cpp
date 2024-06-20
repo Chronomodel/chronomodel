@@ -603,7 +603,7 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, Project &project
 
     // Update of the new calibration curve
 
-    mCalibration = std::move( &project.mCalibCurves[mUUID]);
+    mCalibration = &project.mCalibCurves[mUUID];
     mCalibration -> mDescription = getDesc();
     if(priod_settings.mStepForced)
         refMinStep = priod_settings.mStep;

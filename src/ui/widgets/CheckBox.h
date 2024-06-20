@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -52,7 +52,10 @@ public:
     ~CheckBox();
 
 protected:
+    bool mMouseOver;
     void paintEvent(QPaintEvent* e);
+    void enterEvent(QEnterEvent *e);
+    void leaveEvent(QEvent * e);
 };
 
 #endif

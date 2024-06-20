@@ -91,6 +91,7 @@ public:
     void clearPosteriorDensities();
     void clearCredibilityAndHPD();
     void clearTraces();
+    void clear();
 
     virtual void updateFormatSettings();
     

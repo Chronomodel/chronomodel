@@ -46,6 +46,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QWidget>
 #include <QLineEdit>
+#include <QShortcut>
 
 class QStackedWidget;
 class QSplitter;
@@ -99,6 +100,8 @@ private:
     Button* mButNewEvent;
     Button* mButNewEventKnown;
     Button* mButDeleteEvent;
+    QShortcut* mDelShortcut;
+
     Button* mButRecycleEvent;
     Button* mButExportEvents;
     Button* mButEventsGlobalView;
@@ -137,7 +140,7 @@ private:
     MultiCalibrationView* mMultiCalibrationView;
 
 
-    QPropertyAnimation* mAnimationCalib;
+    //QPropertyAnimation* mAnimationCalib;
 
     // ------
     double mTmin;
@@ -180,6 +183,7 @@ public:
     void calibrateAll(StudyPeriodSettings newS);
     bool findCalibrateMissing();
 
+    void clearInterface();
     void resetInterface();
     void showHelp(bool show);
 

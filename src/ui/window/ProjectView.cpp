@@ -180,11 +180,18 @@ void ProjectView::setProject(std::shared_ptr<Project> &project)
         mResultsView->setProject(project);
 }
 
+void ProjectView::clearInterface()
+{
+    mModelView   -> clearInterface();
+    mResultsView -> clearResults();
+}
+
 void ProjectView::resetInterface()
 {
     showModel();
     mModelView   -> resetInterface();
-    mResultsView -> clearResults();
+    if (mResultsView)
+        mResultsView -> clearResults();
 }
 
 void ProjectView::showHelp(bool show)
@@ -301,7 +308,7 @@ void ProjectView::updateResults()
     if (project->mModel) {
         project->mModel->updateDesignFromJson();
 
-        mResultsView->updateModel(project->mModel);
+        mResultsView->updateModel();
     }
 }
 

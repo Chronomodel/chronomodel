@@ -373,7 +373,7 @@ void GraphViewResults::setMarginRight(qreal &m)
 
 void GraphViewResults::setGraphsFont(const QFont& font)
 {
-     // Recalcule mTopShift based on the new font, and position the graph according :
+    // Recalcule mTopShift based on the new font, and position the graph according :
     mGraphFont = font;
     mStatArea->setFontFamily(font.family());
     mStatArea->setFontPointSize(font.pointSizeF());
