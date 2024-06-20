@@ -39,6 +39,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "CheckBox.h"
 #include "Painting.h"
+#include "AppSettings.h"
 
 #include <QtWidgets>
 
@@ -57,11 +58,29 @@ CheckBox::~CheckBox()
 
 }
 
+void CheckBox::enterEvent(QEnterEvent *e)
+{
+    mMouseOver = true;
+    update();
+    QCheckBox::QWidget::enterEvent(e);
+}
+
+void CheckBox::leaveEvent(QEvent * e)
+{
+    mMouseOver = false;
+    update();
+    QCheckBox::QWidget::leaveEvent(e);
+}
+
 void CheckBox::paintEvent(QPaintEvent* e)
 {
-    Q_UNUSED(e);
+    (void) e;
 
     QPainter p(this);
     p.setFont(parentWidget()->font());
     drawCheckbox(p, rect(), text(), checkState());
+    if (mMouseOver && AppSettings::mShowHelp) {
+        QToolTip::showText(mapToGlobal(rect().center()), toolTip());
+    }
+  //  QCheckBox::paintEvent(e);
 }

@@ -62,7 +62,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 EventsScene::EventsScene(QGraphicsView* view, QObject* parent):AbstractScene(view, parent)
 {
     mHelpView = new HelpWidget(view);
-    mHelpView->setLink("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=9");
+    mHelpView->setLink("https://chronomodel.com/storage/medias/83_chronomodel_v32_user_manual_2024_05_13_min.pdf.pdf#page=9");
     mHelpTimer = new QTimer(this);
 
     connect(this, &QGraphicsScene::selectionChanged, this, &EventsScene::updateStateSelectionFromItem);
@@ -166,25 +166,25 @@ void EventsScene::updateHelp()
 
     if (mItems.size() == 0) {
         text = tr("Define a study period on the right panel, apply it, and start creating your model by clicking on \"New Event...\".");
-        mHelpView->setLink("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=18"); // chapter
+        mHelpView->setLink("https://chronomodel.com/storage/medias/83_chronomodel_v32_user_manual_2024_05_13_min.pdf#page=18"); // chapter
     }
     else if (selected.count() == 0) {
         text = tr("Select an event or a bound by clicking on it.");
         if (mConstraintItems.size() != 0)
             text += tr("\nYou can also edit constraints by double clicking on the arrow");
-        mHelpView->setLink("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=38"); // Chapter
+        mHelpView->setLink("https://chronomodel.com/storage/medias/83_chronomodel_v32_user_manual_2024_05_13_min.pdf#page=38"); // Chapter
     } else if (selected.count() == 1) {
         const bool isBound = (dynamic_cast<EventKnownItem*>(selected[0]) != nullptr);
 
         if (mAltIsDown) {
             text = tr("Mouve your mouse and click on another element to create a constraint.");
-                mHelpView->setLink("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=38");
+                mHelpView->setLink("https://chronomodel.com/storage/medias/83_chronomodel_v32_user_manual_2024_05_13_min.pdf#page=38");
         } else if (mSelectKeyIsDown && !isBound) {
             text = tr("Drag the Data onto another Event to shift it.");
-                mHelpView->setLink("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=30");
+                mHelpView->setLink("https://chronomodel.com/storage/medias/83_chronomodel_v32_user_manual_2024_05_13_min.pdf#page=30");
         } else {
             text = tr("You have selected an element. You can now:\r- Edit its properties from the right panel.\r- Create a constraint by holding the \"Alt\" key down and clicking on another element.");
-                mHelpView->setLink("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=19");
+                mHelpView->setLink("https://chronomodel.com/storage/medias/83_chronomodel_v32_user_manual_2024_05_13_min.pdf#page=19");
             if (!isBound)
                 text += tr("\r- Move its Data in another element by holding the \"Shift\" key down and dragging the selected element onto another one.\r- Delete it with the button on the left.");
         }
@@ -522,14 +522,15 @@ void EventsScene::updateSceneFromState()
         if (!events_ids_inNewState.contains(event.value(STATE_ID).toInt())) {
 
             if (type == Event::eDefault) {
-                 EventItem* eventItem = (EventItem*)mItems[indexItemToRemove.at(i)];
-                QList<QGraphicsItem*> dateItems = eventItem->childItems();
+                EventItem* eventItem = (EventItem*)mItems[indexItemToRemove.at(i)];
+                eventItem->remove_dateItems();
+                /*QList<QGraphicsItem*> dateItems = eventItem->childItems();
 
                 const auto dateItemsSize = dateItems.size() -1;
                 for (auto j = dateItemsSize; j >= 0; --j) {
                     removeItem(dateItems.at(j));
                     delete dateItems[j];
-                }
+                }*/
                 delete eventItem;
             } else if (type == Event::eBound) {
                 EventKnownItem* boundItem = (EventKnownItem*)mItems[indexItemToRemove.at(i)];
@@ -754,25 +755,14 @@ void EventsScene::clean()
     // ------------------------------------------------------
     //  Delete all items
     // ------------------------------------------------------
-    const auto itemsSize = mItems.size() - 1;
-    for (auto i = itemsSize; i >= 0; --i) {
-        EventItem* eventItem = static_cast<EventItem*>(mItems[i]);
 
-            QList<QGraphicsItem*> dateItems = eventItem->childItems();
-            const auto dateItemsSize = dateItems.size() -1;
-            for (auto j = dateItemsSize; j >= 0; --j) {
-                delete dateItems.first(); // delete the object
-                dateItems.removeFirst(); // remove the pointer
-            }
+    for (AbstractItem* item : mItems) {
+        EventItem* eventItem = static_cast<EventItem*>(item);
 
-        mItems.removeAt(i);
+        eventItem->~EventItem();
 
-        // This does not break the code but is commented to match PhasesScene implementation
-        //removeItem(eventItem);
-        eventItem->setVisible(false); // The item disappears and after it's deleted later
-       // eventItem->deleteLater();
+        item = nullptr;
     }
-
     mItems.clear();
     // ------------------------------------------------------
     //  Delete all constraints
@@ -784,7 +774,7 @@ void EventsScene::clean()
         delete constraintItem;
         constraintItem = nullptr;
     }
-
+    mConstraintItems.clear();
     mProject = nullptr;
     // ------------------------------------------------------
     //  Reset scene rect
@@ -1167,11 +1157,13 @@ void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
        emit selectionChanged();
     }
 
-    if (keyEvent->key() == Qt::Key_Delete) {
+    /*if (keyEvent->key() == Qt::Key_Delete) {
         deleteSelectedItems();
 
     // spotting the  Alt key
-    } else if (keyEvent->modifiers() == Qt::AltModifier && selectedItems().count()==1) {
+    } else*/
+
+    if (keyEvent->modifiers() == Qt::AltModifier && selectedItems().count()==1) {
 
         qDebug() << "[EventsScene::keyPressEvent] You Press: "<< "Qt::Key_Alt";
         mAltIsDown = true;
@@ -1215,17 +1207,6 @@ void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
     }
 
 #endif
-   /* else if (keyEvent->modifiers() && Qt::ControlModifier)  {
-                mDrawingArrow = false;
-                mTempArrow->setVisible(false);
-                qDebug() << "EventsScene::keyPressEvent You Press: "<< "Qt::ControlModifier";
-
-            }*/
-
-   // else
-     //   keyEvent->ignore();
-
-
 
 }
 

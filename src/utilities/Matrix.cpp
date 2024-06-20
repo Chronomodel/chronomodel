@@ -1,7 +1,7 @@
 #include "Matrix.h"
+
 #include <iostream>
 #include <vector>
-#include <cmath>
 
 CurveMap::CurveMap()
 {

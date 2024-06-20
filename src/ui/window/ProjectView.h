@@ -66,6 +66,7 @@ public:
 
     void setProject(std::shared_ptr<Project> &project);
     
+    void clearInterface();
     void resetInterface();
 
     void readSettings();

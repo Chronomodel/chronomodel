@@ -49,8 +49,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 GraphViewDate::GraphViewDate(QWidget *parent):GraphViewResults(parent),
-mDate(nullptr),
-mColor(Qt::blue)
+    mDate(nullptr)
+    //,
+    //mColor(Qt::blue)
 {
     setMainColor(QColor(155, 155, 155));
     mGraph->setBackgroundColor(Qt::white);
@@ -68,16 +69,10 @@ void GraphViewDate::setDate(Date* date)
     update();
 }
 
-void GraphViewDate::setColor(const QColor &color)
+void GraphViewDate::updateColor(const QColor &color)
 {
-    mColor = color;
-    setItemColor(mColor);
+    setItemColor(color);
     update();
-}
-
-void GraphViewDate::paintEvent(QPaintEvent* e)
-{
-    GraphViewResults::paintEvent(e);
 }
 
 void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList)
@@ -195,7 +190,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
 
             const GraphCurve &curveWiggle = densityCurve( normPostWiggleChain,
                                                           "Wiggle Post Distrib All Chains",
-                                                          mColor,
+                                                          mItemColor,
                                                           Qt::DashLine,
                                                           Qt::NoBrush);
             mGraph->add_curve(curveWiggle);

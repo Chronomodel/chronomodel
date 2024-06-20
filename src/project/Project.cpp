@@ -139,6 +139,7 @@ Project::~Project()
     MainWindow::getInstance()->getUndoStack()->clear();
     mState = QJsonObject();
     mLastSavedState = QJsonObject();
+    mCalibCurves.clear();
     //delete mModel;
     //mModel = nullptr;
    // if (mModel)
@@ -2567,6 +2568,14 @@ void Project::createPhase(qreal x, qreal y)
             delete dialog;
         }
     }
+}
+
+void Project::clear_calibCurves()
+{
+    mCalibCurves.clear();
+    mLastSavedState = QJsonObject();
+    mState = QJsonObject();
+    mName.clear();
 }
 
 void Project::updatePhase(const QJsonObject& phaseIn)

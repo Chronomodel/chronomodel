@@ -2056,7 +2056,6 @@ void Model::clearTraces()
  * */
 void Model::saveToFile(QDataStream *out)
 {
-
     out->setVersion(QDataStream::Qt_6_4);
 
     *out << quint32 (out->version());// we could add software version here << quint16(out.version());

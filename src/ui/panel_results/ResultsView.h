@@ -85,7 +85,7 @@ public:
 
     void setProject(const std::shared_ptr<Project> project);
     void initModel(const std::shared_ptr<ModelCurve> model);
-    void updateModel(std::shared_ptr<ModelCurve> model);
+    void updateModel();
 
 protected:
     // ------------------------------------------------

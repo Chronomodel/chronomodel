@@ -497,6 +497,7 @@ void MainWindow::newProject()
         yesCreate= true;
 
     if (yesCreate) {
+        mProject->clear_calibCurves();
         mProject.reset(new Project());
         //Project* newProject = new Project();
          // just update mAutoSaveTimer to avoid open the save() dialog box
@@ -571,11 +572,11 @@ void MainWindow::openProject()
             //resetInterface(): clear mEventsScene and mPhasesScene, set mProject = nullptr
             resetInterface();
 
-            //delete mProject;
-           // mProject.reset();// = nullptr;
         }
         statusBar()->showMessage(tr("Loading project : %1").arg(path));
         // assign new project
+        if (mProject != nullptr)
+            mProject->clear_calibCurves();
         mProject.reset(new Project());
         connectProject();
 
@@ -678,15 +679,15 @@ void MainWindow::closeProject()
         mProject->clearModel();
         disconnectProject();
 
-        resetInterface();
+        //resetInterface();
+        clearInterface();
 
         activateInterface(false);
         mViewResultsAction->setEnabled(false);
 
+        mProject->clear_calibCurves();
+        mProject.reset();
         updateWindowTitle();
-        //delete mProject;
-        mProject.reset();// = nullptr;
-
    } else // if there is no project, we suppose it means to close the programm
        QApplication::exit(0);
 }
@@ -830,7 +831,7 @@ void MainWindow::updateAppSettings()
 
 void MainWindow::openManual()
 {
-    QDesktopServices::openUrl(QUrl("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf", QUrl::TolerantMode));
+    QDesktopServices::openUrl(QUrl("https://chronomodel.com/storage/medias/83_chronomodel_v32_user_manual_2024_05_13_min.pdf", QUrl::TolerantMode));
 
 }
 
@@ -1283,9 +1284,36 @@ void MainWindow::readSettings(const QString& defaultFilePath)
    }
 }
 
+void MainWindow::clearInterface()
+{
+    mProjectView->clearInterface();
+
+    mProjectSaveAction->setEnabled(false);
+    mProjectSaveAsAction->setEnabled(false);
+
+    mCurveAction->setEnabled(false);
+    mViewModelAction->setEnabled(false);
+    mMCMCSettingsAction->setEnabled(false);
+    mResetMCMCAction->setEnabled(false);
+
+    mSelectEventsAction->setEnabled(false);
+    mEventsColorAction->setEnabled(false);
+    mEventsMethodAction->setEnabled(false);
+    mDatesMethodAction->setEnabled(false);
+    for (auto&& act : mDatesActions)
+        act->setEnabled(false);
+
+    mExportCurveAction->setEnabled(false);
+    mRunAction->setEnabled(false);
+
+    mViewResultsAction->setEnabled(false);
+    mViewLogAction->setEnabled(false);
+
+}
+
 void MainWindow::resetInterface()
 {
-    mProjectView->resetInterface();
+    mProjectView->resetInterface(); 
 }
 
 void MainWindow::activateInterface(bool activate)
@@ -1294,7 +1322,6 @@ void MainWindow::activateInterface(bool activate)
 
     mProjectSaveAction->setEnabled(activate);
     mProjectSaveAsAction->setEnabled(activate);
-    //mProjectExportAction->setEnabled(activate);
 
     mCurveAction->setEnabled(activate);
     mViewModelAction->setEnabled(activate);
@@ -1323,26 +1350,6 @@ void MainWindow::activateInterface(bool activate)
         mViewLogAction->setEnabled(false);
     }
 
-    //  int largeurEcran = QApplication::desktop()->width();
-    //  int hauteurEcran = QApplication::desktop()->height();
-/*
-    int numScreen (QApplication::desktop()->screenNumber(this));
-    QScreen *screen;
-    if (numScreen>0) {
-        screen = QApplication::screens().at(numScreen);
-    } else {
-        screen =  QGuiApplication::primaryScreen();
-        numScreen = 0;
-    }
-
-    //qreal mm_per_cm = 10;
-    qreal cm_per_in = 2.54;
-
-    qDebug()<<"MainWindow::activateInterface numScreen = "<< numScreen <<  QGuiApplication::screens().at(numScreen);
-    qDebug()<<"MainWindow::activateInterface this >>screenGeometry"<< numScreen << QApplication::desktop()->screenGeometry(this) << QApplication::desktop()->availableGeometry(this)<< QApplication::desktop()->width();
-    qDebug()<<"MainWindow::activateInterface screen width"<< width() / screen->physicalDotsPerInchX() * cm_per_in;
-    qDebug()<<"MainWindow::activateInterface screen height"<< height() / screen->physicalDotsPerInchY() * cm_per_in;
-*/
 }
 
 void MainWindow::setRunEnabled(bool enabled)

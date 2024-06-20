@@ -80,6 +80,11 @@ EventItem::EventItem(EventsScene* scene, const QJsonObject &event, const QJsonOb
 EventItem::~EventItem()
 {
     mData = QJsonObject();
+    remove_dateItems();
+}
+
+void EventItem::remove_dateItems()
+{
     QList<QGraphicsItem*> dateItems = childItems();
     const auto dateItemsSize = dateItems.size() - 1;
     for (auto j = dateItemsSize; j >= 0; --j) {
@@ -88,10 +93,10 @@ EventItem::~EventItem()
 
         delete dateItems.first();
         dateItems.removeFirst();
+
     }
-
+    dateItems.clear();
 }
-
 /**
  * @brief EventItem::mousePressEvent Overwrite of AbstractItem::mousePressEvent
  * @param e
@@ -149,15 +154,7 @@ void EventItem::setEvent(const QJsonObject &event, const QJsonObject &StudyPerio
         // ----------------------------------------------
         //  Delete Date Items
         // ----------------------------------------------
-        QList<QGraphicsItem*> dateItems = childItems();
-        const auto NItems = childItems().size()-1;
-        for (auto i = NItems; i >= 0; --i) {
-            mScene->removeItem(dateItems[i]);
-            dateItems[i]->setParentItem(nullptr);
-            //delete [] dateItems[i];
-            dateItems.removeAt(i);
-        }
-        dateItems.clear();
+        remove_dateItems();
 
         mData[STATE_EVENT_DATES] = QJsonArray();
         // ----------------------------------------------

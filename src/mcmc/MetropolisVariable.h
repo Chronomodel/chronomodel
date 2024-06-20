@@ -170,7 +170,7 @@ public:
         if (trace->isEmpty())
             return C<T>(0);
 
-        else if (trace->size() == 1) // Cas des variables fixes
+        else if (trace->size() == chains.size()) // Cas des variables fixes
             return C<T>(*trace);
 
         // Calcul reserve space

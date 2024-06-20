@@ -190,9 +190,6 @@ void Button::setColorState(ColorState state)
 
 bool Button::event(QEvent* event)
 {
-   /* if (event->type() == 110) {
-        QToolTip::showText(mapToGlobal(rect().center()), toolTip());
-    }*/
     return QPushButton::event(event);
 }
 

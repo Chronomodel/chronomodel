@@ -80,6 +80,7 @@ public:
     QString getCurrentPath() const;
     void setCurrentPath(const QString& path);
 
+    void clearInterface();
     void resetInterface();
     void activateInterface(bool activate);
     void setRunEnabled(bool enabled);

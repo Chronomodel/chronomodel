@@ -1118,15 +1118,18 @@ void ResultsView::setProject(const std::shared_ptr<Project> project)
 
 void ResultsView::clearResults()
 {
-   // deleteChainsControls();
     deleteAllGraphsInList(mByEventsGraphs);
     deleteAllGraphsInList(mByPhasesGraphs);
     deleteAllGraphsInList(mByCurveGraphs);
+    mZooms.clear();
+    mZoomsX.clear();
+    mZoomsY.clear();
+    mZoomsZ.clear();
+
 }
 
-void ResultsView::updateModel(std::shared_ptr<ModelCurve> model)
+void ResultsView::updateModel()
 {
-    (void) model;
     createGraphs();
     updateLayout();
 
@@ -1264,6 +1267,7 @@ void ResultsView::initModel(const std::shared_ptr<ModelCurve> model)
     mFFTLenCombo->setCurrentText(stringForLocal(mModel->getFFTLength()));
     mBandwidthSpin->setValue(mModel->getBandwidth());
 
+    updateGraphsMinMax();
     applyStudyPeriod();
     updateOptionsWidget();
     createGraphs();
@@ -1879,9 +1883,9 @@ void ResultsView::createByEventsGraphs()
             ++graphIndex;
                 
             if (mEventsDatesUnfoldCheck->isChecked()) {
+                blockSignals(true);
                 for (auto&& date : event->mDates) {
                     if (graphIndexIsInCurrentPage(graphIndex)) {
-
                         GraphViewDate* graph = new GraphViewDate(eventsWidget);
                         graph->setSettings(mModel->mSettings);
                         graph->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
@@ -1889,7 +1893,7 @@ void ResultsView::createByEventsGraphs()
                         graph->setGraphsFont(mFontBut->font());
                         graph->setGraphsThickness(mThicknessCombo->currentIndex());
                         graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
-                        graph->setColor(event->mColor);
+                        graph->setItemColor(event->mColor);
                         graph->setGraphsOpacity(mOpacityCombo->currentIndex()*10);
                         graph->setMarginLeft(mMarginLeft);
                         graph->setMarginRight(mMarginRight);
@@ -1899,6 +1903,7 @@ void ResultsView::createByEventsGraphs()
                     }
                     ++graphIndex;
                 }
+                blockSignals(false);
             }
         }
     }
@@ -1961,8 +1966,8 @@ void ResultsView::createByPhasesGraphs()
                     ++graphIndex;
                         
                     if (mPhasesDatesUnfoldCheck->isChecked()) {
-                        for (auto& date : event->mDates) {
-
+                        blockSignals(true);
+                        for (auto& date : event->mDates) {                            
                             if (graphIndexIsInCurrentPage(graphIndex))  {
                                 GraphViewDate* graph = new GraphViewDate(phasesWidget);
                                 graph->setSettings(mModel->mSettings);
@@ -1971,7 +1976,7 @@ void ResultsView::createByPhasesGraphs()
                                 graph->setGraphsFont(mFontBut->font());
                                 graph->setGraphsThickness(mThicknessCombo->currentIndex());
                                 graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
-                                graph->setColor(event->mColor);
+                                graph->setItemColor(event->mColor);
                                 graph->setGraphsOpacity(mOpacityCombo->currentIndex()*10);
                                 graph->setMarginLeft(mMarginLeft);
                                 graph->setMarginRight(mMarginRight);
@@ -1981,6 +1986,7 @@ void ResultsView::createByPhasesGraphs()
                             }
                             ++graphIndex;
                         }
+                        blockSignals(false);
                     }
                 }
             }
@@ -2005,7 +2011,7 @@ void ResultsView::createByCurveGraph()
     deleteAllGraphsInList(mByCurveGraphs);
     
     QWidget* widget = mCurveScrollArea->widget();
-
+    blockSignals(true);
     if (mLambdaRadio->isChecked())  {
         GraphViewLambda* graphAlpha = new GraphViewLambda(widget);
         graphAlpha->setSettings(mModel->mSettings);
@@ -2421,6 +2427,7 @@ void ResultsView::createByCurveGraph()
             connect(graphZ, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
         }
     }
+    blockSignals(false);
 }
 
 void ResultsView::deleteAllGraphsInList(QList<GraphViewResults*>& list)

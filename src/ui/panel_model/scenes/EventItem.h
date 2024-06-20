@@ -63,7 +63,7 @@ protected:
 public:
     EventItem(EventsScene* scene, const QJsonObject &event, const QJsonObject &StudyPeriodSettings, QGraphicsItem* parent = nullptr);
     virtual ~EventItem();
-
+    void remove_dateItems();
     virtual void setGreyedOut(const bool greyedOut);
 
     void setWithSelectedPhase(const bool selected) {mWithSelectedPhase = selected;}
@@ -96,6 +96,7 @@ protected:
 
     void resizeEventItem();
     void repositionDateItems();
+
     
 };
 

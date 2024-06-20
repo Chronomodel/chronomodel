@@ -206,6 +206,7 @@ void AppSettings::writeSettings()
     settings.setValue("pos", AppSettings::mLastPosition);
 
     settings.beginGroup("AppSettings");
+    settings.setValue(APP_SETTINGS_STR_ICON_SIZE, AppSettings::mIconSize);
     settings.setValue(APP_SETTINGS_STR_AUTO_SAVE, AppSettings::mAutoSave);
     settings.setValue(APP_SETTINGS_STR_AUTO_SAVE_DELAY_SEC, AppSettings::mAutoSaveDelay);
 

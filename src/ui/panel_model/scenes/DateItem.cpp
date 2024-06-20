@@ -138,13 +138,14 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
               */
 
             else if (d.mCalibration && !d.mCalibration->mVector.isEmpty()) {
-               mCalibThumb = d.generateCalibThumb(s);
+                mCalibThumb = d.generateCalibThumb(s);
 
             } else
                 mCalibThumb = QPixmap();
 
         }
     }
+
 //blockSignals(false);
 }
 

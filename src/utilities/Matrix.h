@@ -85,7 +85,7 @@ public:
     double maxX() const {return rangeX.second;}
     double minY() const {return rangeY.first;}
     double maxY() const {return rangeY.second;}
-
+    void clear() {data.resize(0);}
     virtual ~CurveMap();
 
 };
