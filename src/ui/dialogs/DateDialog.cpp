@@ -112,7 +112,7 @@ DateDialog::DateDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, f
 
     mDeltaHelp = new HelpWidget(tr("Wiggle Sign : \n \"+\" if data ≤ event,\n \"-\" if data ≥ event"), mAdvancedWidget);
     mDeltaHelp->setFixedHeight(70);
-    mDeltaHelp->setLink("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=22");
+    mDeltaHelp->setLink("https://chronomodel.com/storage/medias/83_chronomodel_v32_user_manual_2024_05_13_min.pdf#page=22");
 
     mDeltaFixedLab = new QLabel(tr("Value"), mAdvancedWidget);
     mDeltaMinLab = new QLabel(tr("Min"), mAdvancedWidget);

@@ -126,7 +126,7 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent, const bool show_help):QD
     // On the bottom part
     if (show_help) {
         mHelp = new HelpWidget(tr("About seeds : Each MCMC chain is different from the others because it uses a different seed. By default, seeds are picked randomly. However, you can force the chains to use specific seeds by entering them below. By doing so, you can replicate exactly the same results using the same seeds."), this);
-        mHelp->setLink("https://chronomodel.com/storage/medias/59_manuel_release_2_0_version_1_04_03_2019.pdf#page=52"); // chapter 4.2 MCMC settings
+        mHelp->setLink("https://chronomodel.com/storage/medias/83_chronomodel_v32_user_manual_2024_05_13_min.pdf#page=52"); // chapter 4.2 MCMC settings
         mHelp->setVisible(show_help);
     } else {
         mHelp = new HelpWidget(this);
