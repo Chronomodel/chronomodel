@@ -121,8 +121,8 @@ Event::Event(std::shared_ptr<Model> model):
 }
 
 Event::Event (const QJsonObject &json, std::shared_ptr<Model> model):
-    mIsNode( false),
-    mMixingCalibrations (nullptr)
+    mIsNode(false),
+    mMixingCalibrations(nullptr)
 {
     mModel = model;
     mType = Type (json.value(STATE_EVENT_TYPE).toInt());
@@ -177,6 +177,7 @@ Event::Event (const QJsonObject &json, std::shared_ptr<Model> model):
             mDates.append(dat);
         else
             throw QObject::tr("ERROR : data could not be created with plugin %1").arg(date.toObject().value(STATE_DATE_PLUGIN_ID).toString());
+        
     }
 
 }

@@ -740,3 +740,68 @@ bool save_map_as_csv(const std::map<double, double> &map, const std::pair<QStrin
     }
     return false;
 }
+
+void save_qlist(QDataStream& stream, const QList<double>* data)
+{
+    if (data) {
+        stream << (quint32) data->size();
+         for (auto v : *data)
+            stream << v;
+    } else {
+        stream << (quint32)(0);
+    }
+
+}
+
+void save_qlist(QDataStream& stream, const QList<double> data)
+{
+    quint32 size = data.size();
+    stream << size;
+    if (size < 0) {
+        for (auto v : data)
+            stream << v;
+    }
+
+}
+
+QList<double>* load_qlist_ptr(QDataStream& stream)
+{
+    quint32 size;
+    
+    stream >> size;
+    QList<double>* data;
+    
+    
+    if (size>0) {
+        data = new QList<double>();
+        double v;
+        for (quint32 i = 0; i < size; ++i) {
+            stream >> v;
+            data->push_back(v);
+        }
+    } else {
+        data = nullptr;
+    }
+    
+    return data;
+    
+}
+
+QList<double> load_qlist(QDataStream& stream)
+{
+    quint32 size;
+    
+    stream >> size;
+    QList<double> data;
+    
+    if (size>0) {
+        double v;
+        for (quint32 i = 0; i < size; ++i) {
+            stream >> v;
+            data.push_back(v);
+        }
+    }
+    
+    return data;
+    
+}

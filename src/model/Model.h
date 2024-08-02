@@ -80,7 +80,7 @@ public:
 
     double mThreshold; // used for TimeRange + Credibility + transition Range + GapRange
     double mBandwidth;
-    size_t mFFTLength;
+    int mFFTLength;
     double mHActivity;
     // Stockage des courbes binomiales en fonction de n
     std::unordered_map<int, std::vector<double>> mBinomiale_Gx;
@@ -139,7 +139,7 @@ public:
     virtual void restoreFromFile(QDataStream* in) {return restoreFromFile_v323(in);};
 
     void restoreFromFile_v323(QDataStream* in);
-    void restoreFromFile_v324(QDataStream *in);
+    void restoreFromFile_v324(QDataStream* in);
 
     // Only trace needed for this :
     virtual void generateCorrelations(const QList<ChainSpecs>& chains);
@@ -181,7 +181,7 @@ public:
 public slots:
     void setThreshold(const double threshold);
     void setBandwidth(const double bandwidth);
-    void setFFTLength(size_t FFTLength);
+    void setFFTLength(int FFTLength);
     void setHActivity(const double h, const double rangePercent);
 
 signals:

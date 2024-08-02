@@ -769,7 +769,7 @@ std::vector<double> calculMatInfluence_origin(const SplineMatrices& matrices, co
 
 std::vector<double> calcul_spline_variance(const SplineMatrices& matrices, const QList<Event*> &events, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambdaSpline)
 {
-    unsigned int n = events.size();
+    unsigned int n = (unsigned int)events.size();
     std::vector<double> matA = calculMatInfluence_origin(matrices, 1, decomp, lambdaSpline);
     std::vector<double> varG;
 
@@ -1035,7 +1035,7 @@ double valeurG(const double t, const MCMCSplineComposante& spline, unsigned long
 //obsolete
 double valeurErrG(const double t, const MCMCSplineComposante& spline, unsigned& i0, Model &model)
 {
-    const unsigned n = spline.vecThetaReduced.size();
+    const unsigned n = (unsigned) spline.vecThetaReduced.size();
     const double t_red = model.reduceTime(t);
 
     const double t1 = spline.vecThetaReduced[0];
@@ -1068,7 +1068,7 @@ double valeurErrG(const double t, const MCMCSplineComposante& spline, unsigned& 
 // dans RenCurve U-CMT-Routine_Spline Valeur_Gp
 double valeurGPrime(const double t, const MCMCSplineComposante& spline, unsigned& i0, Model &model)
 {
-    const unsigned n = spline.vecThetaReduced.size();
+    const unsigned n = (unsigned)spline.vecThetaReduced.size();
     const double tReduce =  model.reduceTime(t);
     const double t1 = spline.vecThetaReduced.at(0);
     const double tn = spline.vecThetaReduced.at(n-1);
@@ -1110,14 +1110,14 @@ double valeurGPrime(const double t, const MCMCSplineComposante& spline, unsigned
     return gPrime;
 }
 
-double valeurGSeconde(const double t, const MCMCSplineComposante& spline, Model &model)
+double valeurGSeconde(const double t, const MCMCSplineComposante& spline, Model& model)
 {
-    const int n = spline.vecThetaReduced.size();
+    const size_t n = spline.vecThetaReduced.size();
     const auto tReduce = model.reduceTime(t);
     // The second derivative is always zero outside the interval [t1,tn].
     double gSeconde = 0.;
 
-    for (int i = 0; i < n-1; ++i) {
+    for (size_t i = 0; i < n-1; ++i) {
         const t_reduceTime ti1 = spline.vecThetaReduced.at(i);
         const t_reduceTime ti2 = spline.vecThetaReduced.at(i+1);
         if ((tReduce >= ti1) && (tReduce < ti2)) {
@@ -1258,14 +1258,14 @@ SplineMatrices prepare_calcul_spline(const std::vector<t_reduceTime> &vecH, cons
     return matrices;
 }
 
-std::vector<double> calcul_spline_variance(const SplineMatrices& matrices, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambda)
+std::vector<double> calcul_spline_variance(const SplineMatrices& matrices, const std::pair<Matrix2D, MatrixDiag>& decomp, const double lambda)
 {
-    const std::vector<double> &matA = calculMatInfluence_origin(matrices, 1, decomp, lambda);
+    const std::vector<double>& matA = calculMatInfluence_origin(matrices, 1, decomp, lambda);
     std::vector<double> varG;
-    const auto &diagW1 = matrices.diagWInv;
-    unsigned int n = diagW1.size();
+    const auto& diagW1 = matrices.diagWInv;
+    size_t n = diagW1.size();
 
-    for (unsigned int i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         varG.push_back(matA[i]  * diagW1[i]);
     }
 
@@ -1705,95 +1705,7 @@ std::pair<double, double> initLambdaSplineByCV(const bool depth, const std::vect
 
         const SplineMatrices &test_matrices = prepare_calcul_spline(vecH, vec_Vg_Si2);
 
-/*
-        //----
 
-
-        Vg = var_residual(vec_X, test_matrices, vecH, lambda_loop);
-
-        if (doY) {
-            Vg += var_residual(vec_Y, test_matrices, vecH, lambda_loop);
-            Vg /= 2.;
-
-        } else if (doYZ) {
-            Vg += var_residual(vec_Y, test_matrices, vecH, lambda_loop) + var_residual(vec_Z, test_matrices, vecH, lambda_loop);
-            Vg /= 3.;
-        }
-
-
-        vec_Vg_Si2.clear();
-
-        for (auto X_err : vec_X_err) {
-            vec_Vg_Si2.push_back(Vg + pow(X_err, 2.));
-        }
-
-        const SplineMatrices &test_matrices2 = prepare_calcul_spline(vecH, vec_Vg_Si2);
-
-
-        //-- 2eme
-        Vg = var_residual(vec_X, test_matrices2, vecH, lambda_loop);
-
-        if (doY) {
-            Vg += var_residual(vec_Y, test_matrices2, vecH, lambda_loop);
-            Vg /= 2.;
-
-        } else if (doYZ) {
-            Vg += var_residual(vec_Y, test_matrices2, vecH, lambda_loop) + var_residual(vec_Z, test_matrices2, vecH, lambda_loop);
-            Vg /= 3.;
-        }
-
-
-        vec_Vg_Si2.clear();
-
-        for (auto X_err : vec_X_err) {
-            vec_Vg_Si2.push_back(Vg + pow(X_err, 2.));
-        }
-
-        const SplineMatrices &test_matrices3 = prepare_calcul_spline(vecH, vec_Vg_Si2);
-
-        //-- 3eme
-        Vg = var_residual(vec_X, test_matrices3, vecH, lambda_loop);
-
-        if (doY) {
-            Vg += var_residual(vec_Y, test_matrices3, vecH, lambda_loop);
-            Vg /= 2.;
-
-        } else if (doYZ) {
-            Vg += var_residual(vec_Y, test_matrices2, vecH, lambda_loop) + var_residual(vec_Z, test_matrices2, vecH, lambda_loop);
-            Vg /= 3.;
-        }
-
-
-        vec_Vg_Si2.clear();
-
-        for (auto X_err : vec_X_err) {
-            vec_Vg_Si2.push_back(Vg + pow(X_err, 2.));
-        }
-
-        const SplineMatrices &test_matrices4 = prepare_calcul_spline(vecH, vec_Vg_Si2);
-
-        //-- 2eme
-        Vg = var_residual(vec_X, test_matrices4, vecH, lambda_loop);
-
-        if (doY) {
-            Vg += var_residual(vec_Y, test_matrices4, vecH, lambda_loop);
-            Vg /= 2.;
-
-        } else if (doYZ) {
-            Vg += var_residual(vec_Y, test_matrices4, vecH, lambda_loop) + var_residual(vec_Z, test_matrices4, vecH, lambda_loop);
-            Vg /= 3.;
-        }
-
-
-        vec_Vg_Si2.clear();
-
-        for (auto X_err : vec_X_err) {
-            vec_Vg_Si2.push_back(Vg + pow(X_err, 2.));
-        }
-
-        const SplineMatrices &test_matrices5 = prepare_calcul_spline(vecH, vec_Vg_Si2);
-
-*/
 
         //-----
         const double cv = cross_validation(vec_X, test_matrices, vecH, lambda_loop);
@@ -2016,7 +1928,7 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const 
 
             if ( (gcv  < mini_gcv + 1E-16) && gcv!=0) {
                 mini_gcv = gcv;
-                mini_gcv_idx = GCV.size();
+                //mini_gcv_idx = GCV.size();
             }
             GCV.push_back(gcv);
             lambda_GCV.push_back(lambda_loop);
@@ -2054,14 +1966,14 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const 
 
     // Recherche du dernier minimum, on parcours les tablea à l'envers de lambda grand vers lambda petit
 
-    int last_min_gcv_idx = GCV.size()-1;
+    int last_min_gcv_idx = (int)GCV.size()-1;
     qDebug()<<" ici"<<(GCV.at(last_min_gcv_idx - 1) - GCV.at(last_min_gcv_idx) <= 1E-10) << GCV.at(last_min_gcv_idx - 1) - GCV.at(last_min_gcv_idx);
     while (last_min_gcv_idx> 0 &&   GCV.at(last_min_gcv_idx - 1) - GCV.at(last_min_gcv_idx) <= 1E-10) {
         last_min_gcv_idx -= 1;
     }
     //double last_min_gcv_lambda = lambda_GCV.at(last_min_gcv_idx);
 
-    int last_min_cv_idx = CV.size()-1;
+    int last_min_cv_idx = (int)CV.size()-1;
     while (last_min_cv_idx> 0 && CV.at(last_min_cv_idx - 1) - CV.at(last_min_cv_idx) <= 1E-10 ) {
         last_min_cv_idx -= 1;
     }

@@ -63,7 +63,7 @@ void Tabs::addTab(const QString& name)
     mTabIds.append(mTabIds.size());
 }
 
-void Tabs::addTab(const QString& name, int identifier)
+void Tabs::addTab(const QString& name, qsizetype identifier)
 {
     mTabNames.append(name);
     if (mTabNames.size() == 1)
@@ -90,7 +90,7 @@ void Tabs::addTab(QWidget* wid, const QString& name)
     mTabIds.append(mTabIds.size());
 }
 
-QWidget* Tabs::getWidget(const int &i)
+QWidget* Tabs::getWidget(const qsizetype &i)
 {
     if (i<mTabWidgets.size())
         return mTabWidgets[i];
@@ -147,14 +147,14 @@ QSize Tabs::sizeHint() const
 }
 
 
-int Tabs::currentIndex() const
+qsizetype Tabs::currentIndex() const
 {
     return mCurrentIndex;
 }
 
 int Tabs::currentId() const
 {
-    return mTabIds.at(mCurrentIndex);
+    return (int)mTabIds.at(mCurrentIndex);
 }
 
 QString Tabs::currentName() const
@@ -162,11 +162,11 @@ QString Tabs::currentName() const
     return mTabNames.at(mCurrentIndex);
 }
 
-void Tabs::showWidget(const int &i)
+void Tabs::showWidget(const qsizetype &i)
 {
     Q_ASSERT(i<mTabWidgets.size());
 
-    int j = 0;
+    qsizetype j = 0;
     for (auto && w:mTabWidgets) {
         if (j!= i)
             w->setVisible(false);
@@ -178,11 +178,11 @@ void Tabs::showWidget(const int &i)
 }
 
 
-void Tabs::setTab(const int &i, bool notify)
+void Tabs::setTab(const qsizetype &index, bool notify)
 {
-    Q_ASSERT (i < mTabNames.size());
-    if (i != mCurrentIndex) {
-        mCurrentIndex = i;
+    Q_ASSERT (index < mTabNames.size());
+    if (index != mCurrentIndex) {
+        mCurrentIndex = index;
         // we start to hide all widget and after we show the current widget, because if there is the same widget used in the several
         for (auto&& wid : mTabWidgets)
             if (wid) {
@@ -202,15 +202,15 @@ void Tabs::setTab(const int &i, bool notify)
         }
 
         if (notify)
-            emit tabClicked(i);
+            emit tabClicked(index);
 
         updateLayout();
     }
 }
 
-void Tabs::setTabId(const int identifier, bool notify)
+void Tabs::setTabId(const qsizetype id, bool notify)
 {
-    int idx = mTabIds.indexOf(identifier);
+    qsizetype idx = mTabIds.indexOf(id);
     setTab(idx, notify);
 }
 
@@ -227,7 +227,7 @@ void Tabs::paintEvent(QPaintEvent* e)
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
 
-    for (int i = 0; i<mTabNames.size(); ++i) {
+    for (qsizetype i = 0; i<mTabNames.size(); ++i) {
         QColor backColor = (i == mCurrentIndex) ? Painting::mainColorDark : Qt::black;
         QColor frontColor = (i == mCurrentIndex) ? Qt::white : QColor(200, 200, 200);
         if (mTabVisible.at(i)) {
@@ -277,7 +277,7 @@ void Tabs::resizeEvent(QResizeEvent* e)
 
 void Tabs::mousePressEvent(QMouseEvent* e)
 {
-    for (int i=0; i<mTabNames.size(); ++i)
+    for (qsizetype i=0; i<mTabNames.size(); ++i)
         if (i != mCurrentIndex && mTabRects.at(i).contains(e->pos()))
             setTab(i, true);
 }

@@ -207,9 +207,9 @@ bool EventItem::isCurveNode() const
  */
 bool EventItem::withSelectedDate() const
 {
-    const QList<QGraphicsItem*> datesItemsList = childItems();
+    const QList<QGraphicsItem*>& datesItemsList = childItems();
     for (const QGraphicsItem* date : datesItemsList) {
-        if (date->isSelected())
+        if (date && date->isSelected())
             return true;
     }
     return false;

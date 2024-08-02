@@ -209,50 +209,6 @@ QList<float> normalize_vector(const QList<float>& vector)
     return histo;
 }
 
-/**
- @brief This function transforms a QList turning its minimum value to "from" and its maximum value is "to" and adjusting other values accordingly
- **/
-/*
-QList<double> stretch_vector(const QList<double> &vector, const double from, const double to)
-{
-    QList<double> histo;
-    QList<double>::const_iterator it = vector.constBegin();
-    if (it != vector.constEnd()) {
-        const std::pair<QList<double>::const_iterator, QList<double>::const_iterator> min_max = std::minmax_element(begin(vector), end(vector));
-        const double min = *min_max.first;
-        const double max = *min_max.second;
-
-        if (min < max) {
-            for (const auto& val : vector)
-                histo.push_back(from + (to - from) * (val - min) / (max - min));
-
-        } else // Just 1 value... set it to "from" (setting it to "to" could also be done though...)
-            histo.push_back(to);
-
-    }
-    return histo;
-}
-
-QList<float> stretch_vector(const QList<float>& vector, const float from, const float to)
-{
-    QList<float> histo;
-    QList<float>::const_iterator it = vector.constBegin();
-    if (it != vector.constEnd()) {
-        const float min = *(min_element(vector.constBegin(), vector.constEnd()));
-        const float max = *(max_element(vector.constBegin(), vector.constEnd()));
-
-        if (min < max) {
-            for (QList<float>::const_iterator it = vector.constBegin(); it != vector.constEnd(); ++it)
-                histo.push_back(from + (to - from) * (*it - min) / (max - min));
-
-        } else {
-            // Just 1 value... set it to "from" (setting it to "to" could also be done though...)
-            histo.push_back(to);
-        }
-    }
-    return histo;
-}
-*/
 
 QMap<double, double> equal_areas(const QMap<double, double>& mapToModify, const QMap<double, double>& mapWithTargetArea)
 {
@@ -290,16 +246,19 @@ QMap<double, double> equal_areas(const QMap<double, double> &mapToModify, const 
     if (mapToModify.isEmpty())
         return QMap<double, double>();
 
-    QMap<double, double> result(mapToModify); 
-    const auto srcArea = map_area(mapToModify);
+    QMap<double, double> result;
+    const double srcArea = map_area(mapToModify);
 
     const double prop = targetArea / srcArea;
-    QMap<double, double>::iterator iter = result.begin();
-    while (iter!=result.end() ) {
-        iter.value() *= prop;
-        ++iter;
+   
+    auto keyVal_range = mapToModify.asKeyValueRange(); //https://doc.qt.io/qt-6/containers.html#implicit-sharing-iterator-problem
+    for (auto [key, value] : keyVal_range) {
+        //value *= prop;
+        const double tmp = value*prop;
+        
+        result.insert(key, tmp);
     }
-
+    
     return result;
 }
 
@@ -417,11 +376,10 @@ QMap<double, double> vector_to_map(const QList<double> &data, const double min, 
 
     else {
         map.insert(min, data.at(0));
-        //const int nbPts = 1 + int (round((max - min) / step)); // step is not usefull, it's must be data.size/(max-min+1)
+        
+        const auto nbPts = data.size() - 1;//int ((max - min) / step);
 
-        const int nbPts = data.size() - 1;//int ((max - min) / step);
-
-        for (int i = 1; i< nbPts; ++i) {
+        for (qsizetype i = 1; i< nbPts; ++i) {
             map.insert(min + i * step, data.at(i));
         }
         map.insert(max, data.last());

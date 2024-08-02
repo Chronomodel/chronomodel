@@ -147,7 +147,7 @@ ResultsView::ResultsView(std::shared_ptr<Project> project, QWidget* parent, Qt::
     curveWidget->setMouseTracking(true);
     mCurveScrollArea->setWidget(curveWidget);
 
-    connect(mGraphTypeTabs, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::applyGraphTypeTab);
+    connect(mGraphTypeTabs, static_cast<void (Tabs::*)(const qsizetype&)>(&Tabs::tabClicked), this, &ResultsView::applyGraphTypeTab);
     connect(mRuler, &Ruler::positionChanged, this, &ResultsView::applyRuler);
 
    // connect(this, &ResultsView::wheelMove, mRuler, &Ruler::wheelScene);// Allows horizontal scrolling on the results window, without having to use the ruler
@@ -385,7 +385,7 @@ ResultsView::ResultsView(std::shared_ptr<Project> project, QWidget* parent, Qt::
     mGraphListTab->addTab(tr("Phases"));
     mGraphListTab->addTab(tr("Curves"));
 
-    connect(mGraphListTab, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::applyGraphListTab);
+    connect(mGraphListTab, static_cast<void (Tabs::*)(const qsizetype&)>(&Tabs::tabClicked), this, &ResultsView::applyGraphListTab);
 
     // -----------------------------------------------------------------
     //  Tabs : Display / Distrib. Options
@@ -397,7 +397,7 @@ ResultsView::ResultsView(std::shared_ptr<Project> project, QWidget* parent, Qt::
     mDisplayDistribTab->addTab(tr("Distrib. Options"));
 
     // Necessary to reposition all elements inside the selected tab :
-    connect(mDisplayDistribTab, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::updateOptionsWidget);
+    connect(mDisplayDistribTab, static_cast<void (Tabs::*)(const qsizetype&)>(&Tabs::tabClicked), this, &ResultsView::updateOptionsWidget);
 
     // -----------------------------------------------------------------
     //  Display / Span Options
@@ -1042,7 +1042,7 @@ ResultsView::ResultsView(std::shared_ptr<Project> project, QWidget* parent, Qt::
 
     mPageSaveTab->setTab(0, false);
 
-    connect(mPageSaveTab, static_cast<void (Tabs::*)(const int&)>(&Tabs::tabClicked), this, &ResultsView::updateOptionsWidget);
+    connect(mPageSaveTab, static_cast<void (Tabs::*)(const qsizetype&)>(&Tabs::tabClicked), this, &ResultsView::updateOptionsWidget);
 
     // ---------------------------------------------------------------------------
     //  Right Layout (Options)
@@ -1369,7 +1369,7 @@ void ResultsView::updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewRes
     // Rq: Le widget doit être plus petit que le scrollArea pour ne pas bouger horizontalement!,
     //par contre le graph à l'interieur du widget peut avoir la même taille
     if (widget) {                
-        widget->resize(scrollArea->width()-2, graphs.size() * mGraphHeight * coefDisplay);
+        widget->resize(scrollArea->width()-2, (int)graphs.size() * mGraphHeight * coefDisplay);
 
         int i = 0;
         for (auto&& g : graphs) {
@@ -1424,7 +1424,7 @@ void ResultsView::applyGraphTypeTab()
  */
 void ResultsView::applyGraphListTab()
 {
-    int currentIndex = mGraphListTab->currentIndex();
+    int currentIndex = (int)mGraphListTab->currentIndex();
     
     // Display the scroll area corresponding to the selected tab :
     mEventsScrollArea->setVisible(currentIndex == 0);
@@ -2205,7 +2205,7 @@ void ResultsView::createByCurveGraph()
                                 // memo Data Points
                                 eventsPts.append(evPts);
 
-                                hpdPerEvent.push_back(intervals.size() + 1);
+                                hpdPerEvent.push_back((int)intervals.size() + 1);
 
                             } else if (intervals.size() == 1) {
                                 hpdPerEvent.push_back(1);
@@ -2322,7 +2322,7 @@ void ResultsView::createByCurveGraph()
                 int iEventPts = -1;
                 for (const auto& event : modelCurve()->mEvents) {
                     if (event->mIsSelected || showAllEvents) {
-                        for (int j = 0 ; j< hpdPerEvent[i]; j++) {
+                        for (auto j = 0 ; j< hpdPerEvent[i]; j++) {
                             iEventPts++;
                             if ( model->mCurveSettings.mProcessType == CurveSettings::eProcess_3D ||
                                  model->mCurveSettings.mProcessType == CurveSettings::eProcess_2D ) {
@@ -2341,7 +2341,7 @@ void ResultsView::createByCurveGraph()
                         }
 
                         try {
-                            for (int j = 0 ; j< dataPerEvent[i]; j++) {
+                            for (auto j = 0 ; j< dataPerEvent[i]; j++) {
 
                                 if ( model->mCurveSettings.mProcessType == CurveSettings::eProcess_3D ||
                                     model->mCurveSettings.mProcessType == CurveSettings::eProcess_2D ) {
@@ -4306,7 +4306,7 @@ void ResultsView::imageToClipboard()
         const int versionHeight = 20;
         short pr = short(AppSettings::mPixelRatio);
 
-        QImage image(firstGraph->width() * pr, (graphs.size() * firstGraph->height() + versionHeight) * pr , QImage::Format_ARGB32_Premultiplied);
+        QImage image(firstGraph->width() * pr, ((int)graphs.size() * firstGraph->height() + versionHeight) * pr , QImage::Format_ARGB32_Premultiplied);
 
         image.setDevicePixelRatio(pr);
         image.fill(Qt::transparent);
@@ -4374,7 +4374,7 @@ void ResultsView::saveAsImage()
 
             const short pr = short (AppSettings::mPixelRatio);
 
-            QImage image (graphs.first()->width() * pr, (graphs.size() * graphs.first()->height() + heightText) * pr , QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
+            QImage image (graphs.first()->width() * pr, ((int)graphs.size() * graphs.first()->height() + heightText) * pr , QImage::Format_ARGB32_Premultiplied); //Format_ARGB32_Premultiplied //Format_ARGB32
 
             if (image.isNull() )
                 qDebug()<< " image width = 0";
@@ -4421,7 +4421,7 @@ void ResultsView::saveAsImage()
         else {
             //Rendering memoRendering= mRendering;
             const int wGraph = graphs.first()->width();
-            const int hGraph = graphs.size() * graphs.first()->height();
+            const int hGraph = (int)graphs.size() * graphs.first()->height();
             QRect rTotal ( 0, 0, wGraph, hGraph + heightText );
             // Set SVG Generator
 

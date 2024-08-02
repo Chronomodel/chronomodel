@@ -526,7 +526,7 @@ void Phase::update_Tau(const double tminPeriod, const double tmaxPeriod)
             // Modif PhD 2022
             // model definition
 
-            const int n = mEvents.length();
+            const int n = (int) mEvents.length();
             double s = mBeta.mX - mAlpha.mX;
             const double precision = .0001;
             const double R = tmaxPeriod - tminPeriod;
@@ -634,7 +634,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     }
 
     // Curves for error binomial
-    const int n = mEvents.size();
+    const int n = (int)mEvents.size();
     mRawActivityUnifTheo.clear();
 
     const std::vector<double>& Gx = mModel->mBinomiale_Gx.at(n);

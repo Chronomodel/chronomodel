@@ -534,7 +534,7 @@ const QList<GraphCurve>& GraphView::getCurves() const
 
 int GraphView::numCurves() const
 {
-    return mCurves.size();
+    return (int)mCurves.size();
 }
 
 void GraphView::add_zone(const GraphZone &zone)
@@ -2109,7 +2109,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
         rows.append(QStringList("# X Axis"));
         QMap<type_data, QList<type_data> > rowsData;
 
-        int rowsCount = rows.count();
+        qsizetype rowsCount = rows.count();
         QStringList emptyColumn;
 
         qDebug()<<"[GraphView::exportCurrentVectorCurves] "<<" nbCurve to export"<<mCurves.size();
@@ -2126,7 +2126,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
             }
 
             if (!abscissesWritten) {
-                for (int i = offset+rowsCount; i<data.size()+1; ++i) {
+                for (qsizetype i = offset+rowsCount; i<data.size()+1; ++i) {
                     // we add 1 to the line number, because the index of vector start to 0-> false now 0 is the init
                     rows.append(QStringList(locale.toString(i-rowsCount+1))+emptyColumn);
 

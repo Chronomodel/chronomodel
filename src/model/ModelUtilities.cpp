@@ -255,8 +255,8 @@ QList<QList<Phase*> > ModelUtilities::getAllPhasesBranches(const QList<Phase*>& 
 QList<Event*> ModelUtilities::unsortEvents(const QList<Event*> &events)
 {
     QList<Event*> results (events);
-    for (int i = results.size()-1; i > 0; --i){
-        std::swap(results[i], results[Generator::randomUniformInt(0, i)]);
+    for (auto i = results.size()-1; i > 0; --i){
+        std::swap(results[i], results[Generator::randomUniformInt(0, (int)i)]);
     }
     return results;
 }
@@ -1152,7 +1152,7 @@ double sample_in_repartition (const CalibrationCurve* calibrateCurve, const doub
 
 
         double prop = (min - calibrateCurve->mTmin) / (calibrateCurve->mTmax - calibrateCurve->mTmin);
-        const int rep_idx_max = calibrateCurve->mRepartition.size() - 1;
+        const int rep_idx_max = (int)calibrateCurve->mRepartition.size() - 1;
 
         const int idxUnder = std::clamp((int)floor(prop * rep_idx_max), 0, rep_idx_max);
 

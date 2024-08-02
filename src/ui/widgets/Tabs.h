@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -51,25 +51,25 @@ public:
 
     // setter
     void addTab(const QString& name);
-    void addTab(const QString& name, int identifier);
+    void addTab(const QString& name, qsizetype identifier);
     void addTab(QWidget* wid, const QString& name);
-    void setTab(const int &index, bool notify);
-    void setTabId(const int identifier, bool notify);
+    void setTab(const qsizetype &index, bool notify);
+    void setTabId(const qsizetype id, bool notify);
     void setFont(const QFont &font);
-    void setTabHeight(const int &h) {mTabHeight = h;}
+    void setTabHeight(const int& h) {mTabHeight = h;}
 
-    void setTabVisible(const int &i , const bool visible) {
+    void setTabVisible(const qsizetype& i , const bool visible) {
         mTabVisible[i] = visible;
         updateLayout();
     }
     
-    int currentIndex() const;
+    qsizetype currentIndex() const;
     int currentId() const;
 
     QString currentName() const;
 
     // getter
-    QWidget* getWidget(const int &i);
+    QWidget* getWidget(const qsizetype& i);
     QWidget* getCurrentWidget();
     QRect widgetRect();
 
@@ -82,10 +82,10 @@ public:
     int tabHeight() const { return mTabHeight;}
 
 signals:
-    void tabClicked(const int &index);
+    void tabClicked(const qsizetype& index);
 
 public slots:
-    void showWidget(const int &i);
+    void showWidget(const qsizetype& i);
 
 protected:
     void paintEvent(QPaintEvent* e);
@@ -98,9 +98,9 @@ private:
     QStringList mTabNames;
     QList<QRectF> mTabRects;
     QList<QWidget*> mTabWidgets;
-    QList<int> mTabIds;
+    QList<qsizetype> mTabIds;
     QList<bool> mTabVisible;
-    int mCurrentIndex;
+    qsizetype mCurrentIndex;
 };
 
 #endif

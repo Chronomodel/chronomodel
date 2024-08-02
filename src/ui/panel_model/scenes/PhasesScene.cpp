@@ -70,18 +70,18 @@ void PhasesScene::deleteSelectedItems()
 
 bool PhasesScene::constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo)
 {
-    const QJsonArray &constraints = mProject->mState.value(STATE_PHASES_CONSTRAINTS).toArray();
+    const QJsonArray& constraints = mProject->mState.value(STATE_PHASES_CONSTRAINTS).toArray();
 
-    const QJsonObject &phaseFrom = ((PhaseItem*)itemFrom)->getData();
-    const QJsonObject &phaseTo   = ((PhaseItem*)itemTo)->getData();
+    const QJsonObject& phaseFrom = ((PhaseItem*)itemFrom)->getData();
+    const QJsonObject& phaseTo   = ((PhaseItem*)itemTo)->getData();
 
     const int phaseFromId = phaseFrom.value(STATE_ID).toInt();
     const int phaseToId   = phaseTo.value(STATE_ID).toInt();
 
     bool ConstraintAllowed = true;
 
-    for (const auto &c : constraints) {
-       const QJsonObject constraint = c.toObject();
+    for (const auto c : constraints) {
+       const QJsonObject& constraint = c.toObject();
         // Prevent the double
         if ((constraint.value(STATE_CONSTRAINT_BWD_ID).toInt() == phaseFromId) && (constraint.value(STATE_CONSTRAINT_FWD_ID).toInt() == phaseToId)) {
 
@@ -216,7 +216,7 @@ void PhasesScene::createSceneFromState()
     // ------------------------------------------------------
     //  Create  constraint items
     // ------------------------------------------------------
-    for (const auto& c : constraints) {
+    for (const auto c : constraints) {
         const QJsonObject constraint = c.toObject();
 
         // CREATE ITEM
@@ -251,7 +251,7 @@ void PhasesScene::updateSceneFromState()
         //  Delete items not in current state
         // ------------------------------------------------------
         blockSignals(true);
-        for (int i = mItems.size()-1; i >= 0; --i) {
+        for (qsizetype i = mItems.size()-1; i >= 0; --i) {
             PhaseItem* item = (PhaseItem*)mItems[i];
             mItems.removeAt(i);
             // This is a QObject : call deleteLater instead of delete
@@ -261,7 +261,7 @@ void PhasesScene::updateSceneFromState()
         // ------------------------------------------------------
         //  Delete constraints not in current state
         // ------------------------------------------------------
-        for (int i = mConstraintItems.size()-1; i >= 0; --i) {
+        for (qsizetype i = mConstraintItems.size()-1; i >= 0; --i) {
             ArrowItem* constraintItem = mConstraintItems[i];
             removeItem(constraintItem);
             mConstraintItems.removeOne(constraintItem);
@@ -277,11 +277,11 @@ void PhasesScene::updateSceneFromState()
     const QJsonArray &constraints = state.value(STATE_PHASES_CONSTRAINTS).toArray();
 
     QList<int> phases_ids;
-    for (const auto &p : phases)
+    for (const auto p : phases)
         phases_ids << p.toObject().value(STATE_ID).toInt();
 
     QList<int> constraints_ids;
-    for (const auto &c : constraints)
+    for (const auto c : constraints)
         constraints_ids << c.toObject().value(STATE_ID).toInt();
 
     mUpdatingItems = true;
@@ -291,7 +291,7 @@ void PhasesScene::updateSceneFromState()
     // ------------------------------------------------------
     bool hasDeleted = false;
     blockSignals(true);
-    for (int i = mItems.size()-1; i >=0 ; --i) {
+    for (qsizetype i = mItems.size()-1; i >=0 ; --i) {
         PhaseItem* item = (PhaseItem*)mItems[i];
         QJsonObject& phase = item->getData();
 
@@ -314,7 +314,7 @@ void PhasesScene::updateSceneFromState()
     //  Create / Update phase items
     // ------------------------------------------------------
     bool hasCreated = false;
-    for (const auto &p : phases) {
+    for (const auto p : phases) {
         const QJsonObject phase = p.toObject();
 
         bool itemExists = false;
@@ -384,7 +384,7 @@ void PhasesScene::updateSceneFromState()
     //  Delete constraints not in current state
     // ------------------------------------------------------
     blockSignals(true);
-    for (int i = mConstraintItems.size()-1; i>=0; --i) {
+    for (qsizetype i = mConstraintItems.size()-1; i>=0; --i) {
         ArrowItem* constraintItem = mConstraintItems[i];
         QJsonObject &constraint = constraintItem->data();
 
@@ -402,8 +402,8 @@ void PhasesScene::updateSceneFromState()
     // ------------------------------------------------------
     //  Create / Update constraint items
     // ------------------------------------------------------
-    for (const auto &c : constraints) {
-        const QJsonObject &constraint = c.toObject();
+    for (const auto c : constraints) {
+        const QJsonObject& constraint = c.toObject();
 
         bool itemExists = false;
         for (const auto &ci : mConstraintItems) {
@@ -457,7 +457,7 @@ void PhasesScene::clean()
     // ------------------------------------------------------
     //  Delete all items
     // ------------------------------------------------------
-    for (int i = mItems.size()-1; i>=0; --i) {
+    for (qsizetype i = mItems.size()-1; i>=0; --i) {
         PhaseItem* item = (PhaseItem*)mItems[i];
         mItems.removeAt(i);
 
@@ -472,7 +472,7 @@ void PhasesScene::clean()
     // ------------------------------------------------------
     //  Delete all constraints
     // ------------------------------------------------------
-    for (int i = mConstraintItems.size()-1; i>=0; --i) {
+    for (qsizetype i = mConstraintItems.size()-1; i>=0; --i) {
         ArrowItem* constraintItem = mConstraintItems[i];
 #ifdef DEBUG
         qDebug() << "Phase Constraint deleted : " << constraintItem->data()[STATE_ID].toInt();

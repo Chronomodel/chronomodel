@@ -742,7 +742,7 @@ QMap<double, double> gaussian_filter(QMap<double, double> &map, const double sig
 
     //qDebug() <<"filtre Gaussian";
     //  data
-    const int inputSize = curve_input.size();
+    const int inputSize = (int) curve_input.size();
 
     const double sigma_filter = sigma * step;
 
@@ -846,7 +846,7 @@ QMap<double, double> low_pass_filter(QMap<double, double> &map, const double Tc)
     */
     qDebug() <<"[low_pass_filter] Tc ="<<Tc;
 
-    const int inputSize = map.size();
+    const int inputSize = (int)map.size();
     const int paddingSize = 1*inputSize;
 
     const int N = inputSize + 2*paddingSize;
@@ -1016,7 +1016,8 @@ double *hamming(int L, int N_fft)
 // https://en.wikipedia.org/wiki/Window_function#Hann_and_Hamming_windows
 QMap<double, double> window_filter(QMap<double, double> &map, const double L)
 {
-
+    if (map.isEmpty())
+        return map;
     std::vector<double> curve_input;
     QMap<double, double> results;
 
@@ -1036,7 +1037,7 @@ QMap<double, double> window_filter(QMap<double, double> &map, const double L)
     */
     qDebug() <<"filtre hanning";
     //  data
-    const int inputSize = curve_input.size();
+    const int inputSize = (int)curve_input.size();
 
     const int paddingSize = 2*inputSize;
 

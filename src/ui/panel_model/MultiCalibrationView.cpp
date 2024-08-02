@@ -136,7 +136,7 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mGraphHeightEdit = new LineEdit(this);
     mGraphHeightEdit->setText(locale().toString(100));
 
-    QIntValidator* heightValidator = new QIntValidator();
+    QIntValidator* heightValidator = new QIntValidator(this);
     heightValidator->setRange(50, 500);
     mGraphHeightEdit->setValidator(heightValidator);
     mGraphHeightEdit->setAdjustText(true);
@@ -203,7 +203,7 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mHPDEdit->setAdjustText();
     mHPDEdit->setText("95");
 
-    DoubleValidator* percentValidator = new DoubleValidator();
+    DoubleValidator* percentValidator = new DoubleValidator(this);
     percentValidator->setBottom(0.);
     percentValidator->setTop(100.);
     percentValidator->setDecimals(3);
@@ -240,6 +240,7 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
 
 MultiCalibrationView::~MultiCalibrationView()
 {
+    
 }
 
 void MultiCalibrationView::setProject(std::shared_ptr<Project> project)
@@ -2553,7 +2554,7 @@ void MultiCalibrationView::exportResults()
             } else {
                 const QJsonArray dates = ev.value(STATE_EVENT_DATES).toArray();
 
-                for (const auto &date : dates) {
+                for (const auto date : dates) {
                     const QJsonObject &jdate = date.toObject();
 
                     Date d (jdate);
@@ -2578,8 +2579,8 @@ void MultiCalibrationView::exportResults()
 
                         if (!periodCalib.isEmpty()) {
 
-                            statLine<< csvLocal.toString(results.funcAnalysis.mode) << csvLocal.toString(results.funcAnalysis.mean) << csvLocal.toString(results.funcAnalysis.std);
-                            statLine<< csvLocal.toString(results.funcAnalysis.quartiles.Q1) << csvLocal.toString(results.funcAnalysis.quartiles.Q2) << csvLocal.toString(results.funcAnalysis.quartiles.Q3);
+                            statLine << csvLocal.toString(results.funcAnalysis.mode) << csvLocal.toString(results.funcAnalysis.mean) << csvLocal.toString(results.funcAnalysis.std);
+                            statLine << csvLocal.toString(results.funcAnalysis.quartiles.Q1) << csvLocal.toString(results.funcAnalysis.quartiles.Q2) << csvLocal.toString(results.funcAnalysis.quartiles.Q3);
 
                             // hpd results
                             QList<QPair<double, QPair<double, double> > > formated_intervals;
@@ -2590,12 +2591,12 @@ void MultiCalibrationView::exportResults()
                             maxHpd = std::max(maxHpd, nh);
                             const double real_thresh = std::accumulate(formated_intervals.begin(), formated_intervals.end(), 0., [](double sum, QPair<double, QPair<double, double> > p) {return sum + p.first;});
 
-                            statLine<< csvLocal.toString(100. *real_thresh, 'f', 1) << hpdStr;
+                            statLine << csvLocal.toString(100. *real_thresh, 'f', 1) << hpdStr;
 
                         }
 
                     } else
-                        statLine<< "Stat Not Computable";
+                        statLine << "Stat Not Computable";
 
                     stats.append(statLine);
                 }

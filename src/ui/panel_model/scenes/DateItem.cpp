@@ -145,16 +145,22 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
 
         }
     }
+    d.reset();
 
 //blockSignals(false);
 }
 
 DateItem::~DateItem()
 {
-    mEventsScene= nullptr;
+    mEventsScene = nullptr;
   //  mDate.~QJsonObject(); // Don't delete the JSON, we need it when we delete an event.
-   // mColor.~QColor();
-   // mCalibThumb.~QPixmap();
+  
+    delete mDatesAnim;
+    mDatesAnim = nullptr;
+    delete mDatesAnimTimer;
+    mDatesAnimTimer = nullptr;
+
+    
 }
 
 const QJsonObject& DateItem::date() const

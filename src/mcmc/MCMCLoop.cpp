@@ -136,7 +136,7 @@ QString MCMCLoop::initialize_time()
 #endif
     }
     // -------------------------- Init gamma ------------------------------
-    emit stepChanged(tr("Initializing Phase Gaps..."), 0, phasesConstraints.size());
+    emit stepChanged(tr("Initializing Phase Gaps..."), 0, (int)phasesConstraints.size());
     int i = 0;
     try {
         for (auto&& phC : phasesConstraints) {
@@ -153,7 +153,7 @@ QString MCMCLoop::initialize_time()
     }
 
     // -------------------------- Init tau -----------------------------------------
-    emit stepChanged(tr("Initializing Phase Durations..."), 0, phases.size());
+    emit stepChanged(tr("Initializing Phase Durations..."), 0, (int)phases.size());
     i = 0;
     try {
         for (auto&& ph : phases) {
@@ -199,7 +199,7 @@ QString MCMCLoop::initialize_time()
 
     QList<Event*> unsortedEvents = ModelUtilities::unsortEvents(allEvents);
 
-    emit stepChanged(tr("Initializing Events..."), 0, unsortedEvents.size());
+    emit stepChanged(tr("Initializing Events..."), 0, (int)unsortedEvents.size());
     qDebug()<<"[MCMCLoop::initialize_time] mLoopChains seed = "<< mLoopChains[0].mSeed;
     try {
 
@@ -490,7 +490,7 @@ QString MCMCLoop::initialize_time()
 
 
     // --------------------------- Init alpha and beta phases ----------------------
-    emit stepChanged(tr("Initializing Phases..."), 0, phases.size());
+    emit stepChanged(tr("Initializing Phases..."), 0, (int)phases.size());
     try {
         i = 0;
         for (auto&& phase : phases ) {
@@ -589,7 +589,7 @@ void MCMCLoop::run()
      std::vector<Event*> initListEvents (mProject.mModel->mEvents.size());
      std::copy(mProject.mModel->mEvents.begin(), mProject.mModel->mEvents.end(), initListEvents.begin() );
 
-    unsigned estimatedTotalIter = mLoopChains.size() *(mLoopChains.at(0).mIterPerBurn + mLoopChains.at(0).mIterPerBatch*mLoopChains.at(0).mMaxBatchs + mLoopChains.at(0).mIterPerAquisition);
+    unsigned estimatedTotalIter = (unsigned)((int)mLoopChains.size() *(mLoopChains.at(0).mIterPerBurn + mLoopChains.at(0).mIterPerBatch*mLoopChains.at(0).mMaxBatchs + mLoopChains.at(0).mIterPerAquisition));
     unsigned iterDone = 0;
     for (mChainIndex = 0; mChainIndex < mLoopChains.size(); ++mChainIndex) {
 

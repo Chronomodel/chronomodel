@@ -73,7 +73,7 @@ void GraphViewS02::resizeEvent(QResizeEvent* )
     updateLayout();
 }
 
-void GraphViewS02::generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList)
+void GraphViewS02::generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList)
 {
     GraphViewResults::generateCurves(typeGraph, variableList);
     
@@ -125,7 +125,7 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QList<variable_
         // ------------------------------------
         if (!mModel->mS02Vg.mChainsHistos.isEmpty()) {
             for (qsizetype i=0; i<mChains.size(); ++i)  {
-                const GraphCurve &curvePostDistribChain = densityCurve(mModel->mS02Vg.histoForChain(i),
+                const GraphCurve& curvePostDistribChain = densityCurve(mModel->mS02Vg.histoForChain(i),
                                                                        "Post Distrib Chain " + QString::number(i),
                                                                        Painting::chainColors.at(i),
                                                                        Qt::SolidLine,

@@ -193,6 +193,8 @@ macx{
 
         INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac # with intel and arm, for macos 13
         LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac" -lfftw3
+        
+        
 
 	# Link the application with FFTW library
 	# If no dylib are present, static libs (.a) are used => that's why we moved .dylib files in a "dylib" folder.

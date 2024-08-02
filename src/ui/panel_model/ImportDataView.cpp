@@ -248,7 +248,7 @@ void ImportDataView::browse()
                                 titleText.append(val);
                         }
                         data << titleText;
-                        cols = (values.size() > cols) ? values.size() : cols;
+                        cols = (values.size() > cols) ? (int)values.size() : cols;
                         ++rows;
 
                     } else if (values.at(0).contains("structure", Qt::CaseInsensitive)) {
@@ -261,7 +261,7 @@ void ImportDataView::browse()
                         }
 
                         data << titleText;
-                        cols = (values.size() > cols) ? values.size() : cols;
+                        cols = (values.size() > cols) ? (int)values.size() : cols;
                         ++rows;
 
                     } else if (values.size() > 2) {
@@ -276,7 +276,7 @@ void ImportDataView::browse()
                             data << values;
 
                             // Adapt max columns count if necessary
-                            cols = (values.size() > cols) ? values.size() : cols;
+                            cols = ((int)values.size() > cols) ? (int)values.size() : cols;
                             ++rows;
 
                         }

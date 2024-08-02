@@ -927,7 +927,7 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, Project &project
              * https://dsp.stackexchange.com/questions/22145/perform-convolution-in-frequency-domain-using-fftw
              */
 
-            const int inputSize = calibrationTemp.size();
+            const int inputSize = (int)calibrationTemp.size();
 
             const double L = (mDeltaMax-mDeltaMin+1) / mWiggleCalibration->mStep;
 
@@ -1041,7 +1041,7 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, Project &project
              */
             qDebug() <<"[Date::calibrateWiggle] wiggle eDeltaGaussian";
             //  data
-            const int inputSize (calibrationTemp.size());
+            const int inputSize = (int)calibrationTemp.size();
 
             const double sigma = mDeltaError / mWiggleCalibration->mStep;
             const int gaussSize (std::max(inputSize, int(3*sigma)) );

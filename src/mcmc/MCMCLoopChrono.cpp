@@ -95,7 +95,7 @@ QString MCMCLoopChrono::calibrate()
         if (isInterruptionRequested())
             return ABORTED_BY_USER;
 
-        emit stepChanged(tr("Calibrating..."), 0, dates.size());
+        emit stepChanged(tr("Calibrating..."), 0, (int)dates.size());
 
         int i = 0;
         for (auto&& date : dates) {

@@ -123,7 +123,7 @@ void ArrowItem::updatePosition()
 
     if (mType == eEvent) {
         const QJsonArray &events = state.value(STATE_EVENTS).toArray();
-        for (const auto& ev : events) {
+        for (const auto ev : events) {
             const QJsonObject &event = ev.toObject();
             if (event.value(STATE_ID).toInt() == fromId)
                 from = event;
@@ -132,7 +132,7 @@ void ArrowItem::updatePosition()
         }
     } else {
         const QJsonArray &phases = state.value(STATE_PHASES).toArray();
-        for (const auto &ph : phases ) {
+        for (const auto ph : phases ) {
             const QJsonObject &phase = ph.toObject();
             if (phase.value(STATE_ID).toInt() == fromId)
                 from = phase;

@@ -42,7 +42,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 #include <QtSvg>
 
-DoubleValidator::DoubleValidator(QObject * parent):QDoubleValidator(parent)
+DoubleValidator::DoubleValidator(QObject * parent):
+    QDoubleValidator(parent)
 {
 
 }

@@ -372,8 +372,8 @@ QJsonArray PhaseItem::getEvents() const
     const QJsonObject &state = MainWindow::getInstance()->getState();
     const QJsonArray &allEvents = state.value(STATE_EVENTS).toArray();
     QJsonArray events;
-    for (const auto &ev : allEvents) {
-        const QJsonObject &event = ev.toObject();
+    for (const auto ev : allEvents) {
+        const QJsonObject& event = ev.toObject();
         const QString phasesIdsStr = event.value(STATE_EVENT_PHASE_IDS).toString();
         QStringList phasesIds = phasesIdsStr.split(",");
         if (phasesIds.contains(phaseId))

@@ -147,7 +147,7 @@ template <template<typename...> class Container, class T >
 T vector_interpolate_idx_for_value(const T value, const Container<T> &vector, int idxInf = 0, int idxSup = 0)
 {
     if (idxSup == 0)
-        idxSup = vector.size() - 1;
+        idxSup = (int)vector.size() - 1;
 
     if (value < vector.front())
         return T (0);

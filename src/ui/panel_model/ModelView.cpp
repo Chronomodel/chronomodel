@@ -333,7 +333,8 @@ ModelView::ModelView(std::shared_ptr<Project> &project, QWidget* parent, Qt::Win
 
 ModelView::~ModelView()
 {
-
+    mCalibrationView = nullptr;
+    mMultiCalibrationView = nullptr;
 }
 
 void ModelView::setProject(std::shared_ptr<Project> &project)

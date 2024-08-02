@@ -60,53 +60,31 @@ MHVariable::MHVariable():
     mGlobalAcceptationPerCent(.0),
     mHistoryAcceptRateMH(nullptr)
 {
-  mAllAccepts.clear();
-  mHistoryAcceptRateMH = new QList<double>();
-
 }
 
 /** Copy constructor */
 
-MHVariable::MHVariable( const MHVariable& origin):
-    MHVariable()
-
+MHVariable::MHVariable(const MHVariable& origin):
+    MetropolisVariable(origin)
 {
-    mX = origin.mX;
-    mRawTrace->resize(origin.mRawTrace->size());
-    std::copy(origin.mRawTrace->begin(), origin.mRawTrace->end(), mRawTrace->begin());
-
-    mFormatedTrace->resize(origin.mFormatedTrace->size());
-    std::copy(origin.mFormatedTrace->begin(), origin.mFormatedTrace->end(), mFormatedTrace->begin());
-
-    mSupport = origin.mSupport;
-    mFormat = origin.mFormat;
-
-    mFormatedHisto = origin.mFormatedHisto;
-    mChainsHistos = origin.mChainsHistos;
-
-    mCorrelations = origin.mCorrelations;
-
-    mFormatedHPD = origin.mFormatedHPD;
-    mFormatedCredibility = origin.mFormatedCredibility;
-
-    mExactCredibilityThreshold = origin.mExactCredibilityThreshold;
-
-    mResults = origin.mResults;
-    mChainsResults = origin.mChainsResults;
-
-    mfftLenUsed = origin.mBandwidthUsed;
-    mBandwidthUsed = origin.mBandwidthUsed;
-    mThresholdUsed = origin.mThresholdUsed;
-
-    mtminUsed = origin.mtminUsed;
-    mtmaxUsed = origin.mtmaxUsed;
-
     mAllAccepts.clear();
-    mHistoryAcceptRateMH = new QList<double>(origin.mHistoryAcceptRateMH->size());
+ 
+    if (origin.mHistoryAcceptRateMH) {
+        mHistoryAcceptRateMH = new QList<double>(origin.mHistoryAcceptRateMH->size());
+        std::copy(origin.mHistoryAcceptRateMH->begin(), origin.mHistoryAcceptRateMH->end(), mRawTrace->begin());
+    }
+}
+
+MHVariable::MHVariable(const MetropolisVariable& origin):
+    MetropolisVariable(origin),
+    mHistoryAcceptRateMH(nullptr)
+{
+    mAllAccepts.clear();
 }
 
 MHVariable::~MHVariable()
 {
+    
     delete mHistoryAcceptRateMH;
     mHistoryAcceptRateMH = nullptr;
 }
@@ -172,85 +150,49 @@ void MHVariable::reset()
     mAllAccepts.clear();// mAllAccepts.clear(); //don't clean, avalable for cumulate chain
 
     mLastAccepts.squeeze();
-    //mAllAccepts->squeeze();
+
 }
 
-void MHVariable::reserve(const int reserve)
+void MHVariable::reserve(const qsizetype reserve)
 {
     MetropolisVariable::reserve(reserve);
     //mAllAccepts->reserve(reserve);
+    if (!mHistoryAcceptRateMH)
+        mHistoryAcceptRateMH = new QList<double>();
     mHistoryAcceptRateMH->reserve(reserve);
 }
 
-MHVariable& MHVariable::copy(MHVariable const& origin)
+
+
+MHVariable& MHVariable::operator=(const MHVariable& origin)
 {
-    mX = origin.mX;
-    //mRawTrace = origin.mRawTrace;
-    mRawTrace->resize(origin.mRawTrace->size());
-    std::copy(origin.mRawTrace->begin(), origin.mRawTrace->end(), mRawTrace->begin());
-
-    mFormatedTrace->resize(origin.mFormatedTrace->size());
-    std::copy(origin.mFormatedTrace->begin(), origin.mFormatedTrace->end(), mFormatedTrace->begin());
-
-    mSupport = origin.mSupport;
-    mFormat = origin.mFormat;
-
-    mFormatedHisto = origin.mFormatedHisto;
-    mChainsHistos = origin.mChainsHistos;
-
-    mCorrelations = origin.mCorrelations;
-
-    mFormatedHPD = origin.mFormatedHPD;
-    mFormatedCredibility = origin.mFormatedCredibility;
-
-    mExactCredibilityThreshold = origin.mExactCredibilityThreshold;
-
-    mResults = origin.mResults;
-    mChainsResults = origin.mChainsResults;
-
-    mfftLenUsed = origin.mBandwidthUsed;
-    mBandwidthUsed = origin.mBandwidthUsed;
-    mThresholdUsed = origin.mThresholdUsed;
-
-    mtminUsed = origin.mtminUsed;
-    mtmaxUsed = origin.mtmaxUsed;
-
+    MetropolisVariable::operator=(origin);
+    
     mSigmaMH = origin.mSigmaMH;
     mLastAccepts = origin.mLastAccepts;
     mLastAcceptsLength = origin.mLastAcceptsLength;
 
-    mAllAccepts = origin.mAllAccepts; //->resize(origin.mAllAccepts->size());
-    //std::copy(origin.mAllAccepts->begin(), origin.mAllAccepts->end(), mAllAccepts->begin());
-
-    //mAllAccepts = origin.mAllAccepts;
+    mAllAccepts = origin.mAllAccepts;
 
     mGlobalAcceptationPerCent = origin.mGlobalAcceptationPerCent;
-
-    //mHistoryAcceptRateMH = origin.mHistoryAcceptRateMH;
-
-    mHistoryAcceptRateMH->resize(origin.mHistoryAcceptRateMH->size());
-    std::copy(origin.mHistoryAcceptRateMH->begin(), origin.mHistoryAcceptRateMH->end(), mHistoryAcceptRateMH->begin());
-
+            
+    if (origin.mHistoryAcceptRateMH) {
+        if (mHistoryAcceptRateMH == nullptr) {
+            mHistoryAcceptRateMH = new QList<double>(*origin.mHistoryAcceptRateMH);
+        } else {
+            mHistoryAcceptRateMH->resize(origin.mHistoryAcceptRateMH->size());
+            std::copy(origin.mHistoryAcceptRateMH->begin(), origin.mHistoryAcceptRateMH->end(), mHistoryAcceptRateMH->begin());
+        }
+    }
+      
     mSamplerProposal = origin.mSamplerProposal;
-
-    return *this;
-}
-
-MHVariable& MHVariable::operator=( MHVariable const& origin)
-{
-    copy(origin);
     return *this;
 }
 
 double MHVariable::getCurrentAcceptRate() const
 {
-   // Q_ASSERT(!mLastAccepts.isEmpty());
-    if (mLastAccepts.isEmpty())
+   if (mLastAccepts.isEmpty())
         return 0.;
-
-    /*const double sum = std::accumulate(mLastAccepts.begin(), mLastAccepts.end(), 0.,[](double s, double a){return s+(a ? 1. : 0.);}) / mLastAccepts.size(); //#include <numeric>
-    return std::move(sum) ;
-*/
 
     return std::count_if(mLastAccepts.begin(), mLastAccepts.end(), [](bool i) { return i; })/ (double) mLastAccepts.size();
 
@@ -385,14 +327,17 @@ MHVariable::SamplerProposal MHVariable::getSamplerProposalFromText(const QString
     }
 }
 
-
-QDataStream &operator<<( QDataStream &stream, const MHVariable &data )
+/**
+ write stream
+ */
+QDataStream &operator<<( QDataStream& stream, const MHVariable& data )
 {
     stream << dynamic_cast<const MetropolisVariable&>(data);
 
     /* owned by MHVariable*/
     stream << data.mAllAccepts;
-    stream << *(data.mHistoryAcceptRateMH);
+    save_qlist(stream, data.mHistoryAcceptRateMH);
+    
     stream << data.mLastAccepts;
 
     stream << data.mSigmaMH;
@@ -401,20 +346,25 @@ QDataStream &operator<<( QDataStream &stream, const MHVariable &data )
     return stream;
 }
 
-QDataStream &operator>>( QDataStream &stream, MHVariable &data )
+/**
+ read stream
+ */
+QDataStream &operator>>(QDataStream& stream, MHVariable& data )
 {
     /* herited from MetropolisVariable*/
-    stream >> dynamic_cast<MetropolisVariable&>(data);
-
+    MetropolisVariable metro_data;
+    stream >> metro_data;
+    
+    const MHVariable tmp_data (metro_data);
+    data = tmp_data;
+    
     data.mAllAccepts.clear();
     stream >> data.mAllAccepts;
 
-    if (data.mHistoryAcceptRateMH)
-        data.mHistoryAcceptRateMH->clear();
-    else
-        data.mHistoryAcceptRateMH = new QList<double>();
-    stream >> *(data.mHistoryAcceptRateMH);
-
+    delete data.mHistoryAcceptRateMH;
+    data.mHistoryAcceptRateMH = load_qlist_ptr(stream);
+    
+    
     if (!data.mLastAccepts.isEmpty())
         data.mLastAccepts.clear();
 

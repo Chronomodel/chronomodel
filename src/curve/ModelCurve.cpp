@@ -176,6 +176,8 @@ void ModelCurve::saveToFile(QDataStream *out)
 {
     Model::saveToFile(out);
 
+    if (!is_curve)
+        return;
     /* -----------------------------------------------------
     *   Write curve data
     * ----------------------------------------------------- */
@@ -208,6 +210,8 @@ void ModelCurve::restoreFromFile_v323(QDataStream* in)
 
     Model::restoreFromFile_v323(in);
 
+    if (!is_curve)
+        return;
     /* -----------------------------------------------------
     *  Read events VG
     *----------------------------------------------------- */

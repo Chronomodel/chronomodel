@@ -58,7 +58,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 #include <QClipboard>
 
-CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
+CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):
+    QWidget(parent, flags),
     mRefGraphView(nullptr),
     mTminDisplay(-HUGE_VAL),
     mTmaxDisplay(HUGE_VAL),
@@ -109,7 +110,7 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget
     mHPDEdit->setAdjustText();
     mHPDEdit->setText("95");
 
-    DoubleValidator* percentValidator = new DoubleValidator();
+    DoubleValidator* percentValidator = new DoubleValidator(this);
     percentValidator->setBottom(0.);
     percentValidator->setTop(100.);
     percentValidator->setDecimals(3);

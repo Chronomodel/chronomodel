@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -43,6 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QStringList>
 #include <QColor>
 #include <QFileInfo>
+#include <QList>
 #include <QtCore/qdebug.h>
 
 bool colorIsDark(const QColor &color);
@@ -215,7 +216,7 @@ QList<T> getVectorDataInRange(const QList<T> &data, const T subMin,const T subMa
         idxStart = std::max((qsizetype)0, idxStart);
         idxEnd = std::min(idxEnd, data.size()-1);
         // we can use mid()
-        for (int i=idxStart; i<=idxEnd; ++i)
+        for (qsizetype i=idxStart; i<=idxEnd; ++i)
                 subData.append(data[i]);
 
         subData.squeeze();
@@ -225,5 +226,11 @@ QList<T> getVectorDataInRange(const QList<T> &data, const T subMin,const T subMa
         return data;
 
 }
+
+QList<double>* load_qlist_ptr(QDataStream& stream);
+QList<double> load_qlist(QDataStream& stream);
+
+void save_qlist(QDataStream& stream, const QList<double>* data);
+void save_qlist(QDataStream& stream, const QList<double> data);
 
 #endif

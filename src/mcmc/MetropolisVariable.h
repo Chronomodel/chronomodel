@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -120,15 +120,15 @@ private:
     QString mName;
 public:
     MetropolisVariable();
-    explicit MetropolisVariable(const MetropolisVariable &origin);
+    explicit MetropolisVariable(const MetropolisVariable& origin);
 
     virtual ~MetropolisVariable();
-    MetropolisVariable& operator=(const MetropolisVariable &origin);
+    virtual MetropolisVariable& operator=(const MetropolisVariable& origin);
 
-    void memo();
-    void memo(double *valueToSave);
+    virtual void memo();
+    virtual void memo(double* valueToSave);
     virtual void reset();
-    virtual void reserve( const int reserve);
+    virtual void reserve(const qsizetype reserve);
 
     void setFormat(const DateUtils::FormatDate fm);
 
@@ -152,20 +152,20 @@ public:
     void updateFormatedCredibility(const DateUtils::FormatDate fm);
 
 
-    QMap<double, double> generateHisto(const QList<double> &data, const int fftLen, const  double bandwidth, const double tmin = 0., const double tmax = 0.);
+    QMap<double, double> generateHisto(const QList<double>& data, const int fftLen, const  double bandwidth, const double tmin = 0., const double tmax = 0.);
 
     // -----
     // These functions do not make any calculation
     // -----
     QMap<double, double>& fullHisto();
-    QMap<double, double>& histoForChain(const int index);
+    QMap<double, double>& histoForChain(const qsizetype index);
 
     // Full trace for the chain (burn + adapt + run)
-    QList<double> fullTraceForChain(const QList<ChainSpecs> &chains,const int index);
+    QList<double> fullTraceForChain(const QList<ChainSpecs> &chains,const qsizetype index);
 
     // Trace for run part as a vector
     template <template<typename...> class C, typename T>
-    C<T> full_run_trace(C<T>* trace, const QList<ChainSpecs> &chains)
+    C<T> full_run_trace(C<T>* trace, const QList<ChainSpecs>& chains)
     {
         if (trace->isEmpty())
             return C<T>(0);
@@ -197,17 +197,17 @@ public:
         return result;
     }
 
-    inline QList<double> fullRunFormatedTrace(const QList<ChainSpecs> &chains) {return full_run_trace(mFormatedTrace, chains);}
-    inline QList<double> fullRunRawTrace(const QList<ChainSpecs> &chains) {return full_run_trace(mRawTrace, chains);}
+    inline QList<double> fullRunFormatedTrace(const QList<ChainSpecs>& chains) {return full_run_trace(mFormatedTrace, chains);}
+    inline QList<double> fullRunRawTrace(const QList<ChainSpecs>& chains) {return full_run_trace(mRawTrace, chains);}
 
-    QList<double>::Iterator findIter_element(const long unsigned iter, const QList<ChainSpecs> &chains, const int chainIndex ) const;
+    QList<double>::Iterator findIter_element(const long unsigned iter, const QList<ChainSpecs>& chains, const qsizetype chainIndex ) const;
 
     // Trace for run part of the chain as a vector
 
     template <typename T>
-    QList<T> run_trace_for_chain(QList<T>* trace, const QList<ChainSpecs> &chains, const int index) {
+    QList<T> run_trace_for_chain(QList<T>* trace, const QList<ChainSpecs>& chains, const qsizetype index) {
 
-        if (trace->empty()) {
+        if (!trace || trace->empty()) {
             return QList<T>(0);
 
         } else if (trace->size() == 1) { // Cas des variables fixes
@@ -216,7 +216,7 @@ public:
         } else  {
 
             int shift = 0;
-            for (auto i = 0; i<chains.size(); ++i)  {
+            for (qsizetype i = 0; i<chains.size(); ++i)  {
                 const ChainSpecs &chain = chains.at(i);
                 // We add 1 for the init
                 const int burnAdaptSize = 1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch);
@@ -232,27 +232,27 @@ public:
         }
     }
 
-    inline QList<double> runRawTraceForChain(const QList<ChainSpecs> &chains, const int index) {return run_trace_for_chain(mRawTrace, chains, index); };
-    inline QList<double> runFormatedTraceForChain(const QList<ChainSpecs> &chains, const int index) {return run_trace_for_chain(mFormatedTrace, chains, index); };
+    inline QList<double> runRawTraceForChain(const QList<ChainSpecs>& chains, const qsizetype index) {return run_trace_for_chain(mRawTrace, chains, index); };
+    inline QList<double> runFormatedTraceForChain(const QList<ChainSpecs>& chains, const qsizetype index) {return run_trace_for_chain(mFormatedTrace, chains, index); };
 
-    QList<double> correlationForChain(const int index);
+    QList<double> correlationForChain(const qsizetype index);
 
-    virtual QString resultsString(const QString &noResultMessage = QObject::tr("No result to display"),
-                                  const QString &unit = QString()) const;
+    virtual QString resultsString(const QString& noResultMessage = QObject::tr("No result to display"),
+                                  const QString& unit = QString()) const;
 
     QStringList getResultsList(const QLocale locale, const int precision = 0, const bool withDateFormat = true);
 
     void updateFormatedTrace(const DateUtils::FormatDate fm);
 
 private:
-    void generateBufferForHisto(double* input, const QList<double> &dataSrc, const int numPts, const double a, const double b);
+    void generateBufferForHisto(double* input, const QList<double>& dataSrc, const int numPts, const double a, const double b);
     QMap<double, double> bufferToMap(const double* buffer);
 
 
 
 };
 
-QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data );
+QDataStream &operator<<( QDataStream& stream, const MetropolisVariable& data );
 
-QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data );
+QDataStream &operator>>( QDataStream& stream, MetropolisVariable& data );
 #endif

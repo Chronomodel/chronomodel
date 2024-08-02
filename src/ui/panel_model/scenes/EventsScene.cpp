@@ -253,10 +253,9 @@ void EventsScene::setShowAllThumbs(const bool show)
     for (auto item : mItems) {
         bool selectedPhase = false;
         QJsonArray phases = dynamic_cast<EventItem*>(item)->getPhases();
-        for (const QJsonValue& phase : phases) {
+        for (const QJsonValue phase : phases) {
             if ((selectedPhase == false) && (phase.toObject().value(STATE_IS_SELECTED).toBool() == true)) {
                 selectedPhase = true;
-                //  qDebug()<<"EventsScene::setShowAllThumbs Phase Selected: "<<phase.toObject().value(STATE_NAME).toString();
             }
         }
         dynamic_cast<EventItem*>(item)->setWithSelectedPhase(selectedPhase);
@@ -304,7 +303,7 @@ void EventsScene::createSceneFromState()
 
      //http://doc.qt.io/qt-5/qprogressdialog.html#minimumDuration-prop
 
-    QProgressDialog* progress = new QProgressDialog("Create event items","Wait" , 1, eventsInState.size());//,qApp->activeWindow(), Qt::Window);
+    QProgressDialog* progress = new QProgressDialog("Create event items","Wait" , 1, (int)eventsInState.size());//,qApp->activeWindow(), Qt::Window);
     progress->setWindowModality(Qt::WindowModal);
     progress->setCancelButton(nullptr);
 
@@ -333,7 +332,7 @@ void EventsScene::createSceneFromState()
     // ------------------------------------------------------
     //  Create event items
     // ------------------------------------------------------
-    int i = 0;
+    qsizetype i = 0;
 
     progress->setLabelText(tr("Create event items"));
 
@@ -341,7 +340,7 @@ void EventsScene::createSceneFromState()
         const QJsonObject& event = citer->toObject();
         ++i;
 
-        progress->setValue(i);
+        progress->setValue((int)i);
 
        // CREATE ITEM
         Event::Type type = Event::Type (event.value(STATE_EVENT_TYPE).toInt());
@@ -363,12 +362,12 @@ void EventsScene::createSceneFromState()
     // ------------------------------------------------------
 
     progress->setLabelText(tr("Create constraint items"));
-    progress->setMaximum(constraints.size());
+    progress->setMaximum((int)constraints.size());
     i = 0;
-    for (auto &c : constraints) {
+    for (const auto c : constraints) {
         i++;
-        const QJsonObject &constraint = c.toObject();
-        progress->setValue(i);
+        const QJsonObject& constraint = c.toObject();
+        progress->setValue((int)i);
         ArrowItem* constraintItem = new ArrowItem(this, ArrowItem::eEvent, constraint);
         mConstraintItems.append(constraintItem);
         addItem(constraintItem);
@@ -463,7 +462,7 @@ void EventsScene::updateSceneFromState()
     if (mItems.size() != eventsInNewState.size()) {
         //http://doc.qt.io/qt-5/qprogressdialog.html#minimumDuration-prop
         displayProgress = true;
-        progress = new QProgressDialog("Create / Update event items","Wait" , 1, eventsInNewState.size());//,qApp->activeWindow(), Qt::Window);
+        progress = new QProgressDialog("Create / Update event items","Wait" , 1, (int)eventsInNewState.size());//,qApp->activeWindow(), Qt::Window);
         progress->setWindowModality(Qt::WindowModal);
         progress->setCancelButton(nullptr);
 
@@ -684,9 +683,8 @@ blockSignals(false);
     if (displayProgress)
         progress->setLabelText(tr("Create / Update constraint items"));
 
-    //for (int i = 0; i < constraints.size(); ++i) {
-    for (const auto &c : constraints) {
-        const QJsonObject &constraint = c.toObject();
+    for (const auto c : constraints) {
+        const QJsonObject& constraint = c.toObject();
         if (displayProgress)
             progress->setValue(i);
 
@@ -1346,7 +1344,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
     progress->setMinimum(1);
 
     //progress->setMinimumWidth(int (progress->fontMetrics().horizontalAdvance(progress->labelText()) * 1.5));
-    progress->setMaximum(listEvent_Data.size()-1);
+    progress->setMaximum((int)listEvent_Data.size()-1);
 
     for (int i = 0; i < listEvent_Data.size(); ++i) {
         // We must regenerate the variables "state" and "events" after event or data inclusion

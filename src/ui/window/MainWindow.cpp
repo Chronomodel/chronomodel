@@ -557,7 +557,7 @@ void MainWindow::newProject()
 void MainWindow::openProject()
 {
     const QString currentPath = getCurrentPath();
-    QString path = QFileDialog::getOpenFileName(this,
+    const QString path = QFileDialog::getOpenFileName(this,
                                                       tr("Open File"),
                                                       currentPath,
                                                       tr("Chronomodel Project (*.chr)"));
@@ -587,7 +587,7 @@ void MainWindow::openProject()
 
 
         // look MainWindows::readSetting()
-        if (mProject->load(path)) {
+        if (mProject->load(path) == true) {
             activateInterface(true);
             updateWindowTitle();
             // Create mEventsScene and mPhasesScenes
@@ -665,8 +665,9 @@ void MainWindow::disconnectProject()
 void MainWindow::closeProject()
 {
    if (mProject) {
-        if ( mProject->askToSave(tr("Save current project as...")) == true)
-             mProject->saveProjectToFile();
+       mProject->askToSave(tr("Save current project as...")); // Saver if anserd is Yes
+        /*if ( mProject->askToSave(tr("Save current project as...")) == true)
+             mProject->saveProjectToFile(); */
 
         mUndoStack->clear();
 

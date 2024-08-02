@@ -326,7 +326,7 @@ void Project::checkStateModification(const QJsonObject &stateNew, const QJsonObj
 
          // Check Event and date modification
         const QJsonArray eventsNew = stateNew.value(STATE_EVENTS).toArray();
-        const QJsonArray &eventsOld = stateOld.value(STATE_EVENTS).toArray();
+        const QJsonArray& eventsOld = stateOld.value(STATE_EVENTS).toArray();
 
         if ( eventsNew.size() != eventsOld.size()) {
             mDesignIsChanged = true;
@@ -335,9 +335,9 @@ void Project::checkStateModification(const QJsonObject &stateNew, const QJsonObj
 
         } else {
             auto ev_old = eventsOld.begin();
-            for (const auto &ev_new :eventsNew) {
-               const auto &ev_new_obj = ev_new.toObject();
-               const auto &ev_old_obj = ev_old->toObject();
+            for (const auto ev_new :eventsNew) {
+               const auto& ev_new_obj = ev_new.toObject();
+               const auto& ev_old_obj = ev_old->toObject();
                 // Check DESIGN
                // Check name of Event
                if (ev_new_obj.value(STATE_NAME) != ev_old_obj.value(STATE_NAME))
@@ -367,16 +367,16 @@ void Project::checkStateModification(const QJsonObject &stateNew, const QJsonObj
                }
 
                // Check dates inside Event
-               const QJsonArray &datesNew = ev_new_obj.value(STATE_EVENT_DATES).toArray();
-               const QJsonArray &datesOld = ev_old_obj.value(STATE_EVENT_DATES).toArray();
+               const QJsonArray& datesNew = ev_new_obj.value(STATE_EVENT_DATES).toArray();
+               const QJsonArray& datesOld = ev_old_obj.value(STATE_EVENT_DATES).toArray();
                if ( datesNew.size() != datesOld.size()) {
                    mStructureIsChanged = true;
                    return;
                } else {
                    auto date_old = datesOld.begin();
-                   for (const auto &date_new : datesNew) {
-                       const auto &date_new_obj = date_new.toObject();
-                       const auto &date_old_obj = date_old->toObject();
+                   for (const auto date_new : datesNew) {
+                       const auto& date_new_obj = date_new.toObject();
+                       const auto& date_old_obj = date_old->toObject();
                         // Check name of Date
                         if (date_new_obj.value(STATE_NAME) != date_old_obj.value(STATE_NAME))
                             mDesignIsChanged = true;
@@ -1292,8 +1292,8 @@ bool Project::recenterProject()
     double minXPhase(HUGE_VAL), maxXPhase(- HUGE_VAL), minYPhase(HUGE_VAL), maxYPhase(- HUGE_VAL);
 
     const QJsonArray phases = mState.value(STATE_PHASES).toArray();
-    for (auto& phaseJSON : phases) {
-        const QJsonObject &phase = phaseJSON.toObject();
+    for (const auto phaseJSON : phases) {
+        const QJsonObject& phase = phaseJSON.toObject();
         minXPhase =std::min(minXPhase, phase[STATE_ITEM_X].toDouble());
         maxXPhase =std::max(maxXPhase, phase[STATE_ITEM_X].toDouble());
 
@@ -1302,8 +1302,8 @@ bool Project::recenterProject()
     }
 
     const QJsonArray events = mState.value(STATE_EVENTS).toArray();
-    for (auto& eventJSON : events) {
-        const QJsonObject &event = eventJSON.toObject();
+    for (const auto eventJSON : events) {
+        const QJsonObject& event = eventJSON.toObject();
         minXEvent =std::min(minXEvent, event[STATE_ITEM_X].toDouble());
         maxXEvent =std::max(maxXEvent, event[STATE_ITEM_X].toDouble());
 
@@ -1608,7 +1608,7 @@ void Project::deleteSelectedTrashedEvents(const QList<int>& ids)
 
     QJsonArray events_trash = mState.value(STATE_EVENTS_TRASH).toArray();
 
-    for (int i = events_trash.size()-1; i >= 0; --i) {
+    for (auto i = events_trash.size()-1; i >= 0; --i) {
         QJsonObject event = events_trash[i].toObject();
         int id = event.value(STATE_ID).toInt();
 
@@ -1710,10 +1710,10 @@ void Project::mergeEvents(int eventFromId, int eventToId)
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
     QJsonObject eventFrom;
     QJsonObject eventTo;
-    int fromIndex = -1;
-    int toIndex = -1;
+    qsizetype fromIndex = -1;
+    qsizetype toIndex = -1;
 
-    for (int i = events.size()-1; i >= 0; --i) {
+    for (qsizetype i = events.size()-1; i >= 0; --i) {
         QJsonObject evt = events.at(i).toObject();
         int id = evt.value(STATE_ID).toInt();
         if (id == eventFromId) {
@@ -1726,7 +1726,7 @@ void Project::mergeEvents(int eventFromId, int eventToId)
     }
     QJsonArray datesFrom = eventFrom.value(STATE_EVENT_DATES).toArray();
     QJsonArray datesTo = eventTo.value(STATE_EVENT_DATES).toArray();
-    for (int i=0; i<datesFrom.size(); ++i) {
+    for (qsizetype i=0; i<datesFrom.size(); ++i) {
         QJsonObject dateFrom = datesFrom.at(i).toObject();
         dateFrom[STATE_ID] = getUnusedDateId(datesTo);
         datesTo.append(dateFrom);
@@ -1739,7 +1739,7 @@ void Project::mergeEvents(int eventFromId, int eventToId)
 
     // Delete constraints around the disappearing event
     QJsonArray constraints = stateNext.value(STATE_EVENTS_CONSTRAINTS).toArray();
-    for (int i = constraints.size()-1; i >= 0; --i) {
+    for (qsizetype i = constraints.size()-1; i >= 0; --i) {
         QJsonObject c = constraints.at(i).toObject();
         int fromId = c.value(STATE_CONSTRAINT_BWD_ID).toInt();
         int toId = c.value(STATE_CONSTRAINT_FWD_ID).toInt();
@@ -1891,7 +1891,7 @@ int Project::getUnusedDateId(const QJsonArray& dates) const
         idIsFree = true;
         //for (int i = 0; i < dates.size(); ++i) {
         //    QJsonObject date = dates.at(i).toObject();
-        for (auto &date : dates) {
+        for (const auto date : dates) {
             if (date.toObject().value(STATE_ID).toInt() == id) {
                 idIsFree = false;
                 break;
@@ -2266,7 +2266,7 @@ void Project::deleteDates(int eventId, const QList<int>& dateIndexes)
             QJsonArray dates_trash = mState.value(STATE_DATES_TRASH).toArray();
             QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
 
-            for (int j = dates.size()-1; j >= 0; --j) {
+            for (auto j = dates.size()-1; j >= 0; --j) {
                 if (dateIndexes.contains(j)) {
                     QJsonObject date = dates.takeAt(j).toObject();
                     dates_trash.append(date);
@@ -2295,7 +2295,7 @@ void Project::deleteSelectedTrashedDates(const QList<int> &ids)
 
     QJsonArray dates_trash = mState.value(STATE_DATES_TRASH).toArray();
 
-    for (int i = dates_trash.size()-1; i >= 0; --i) {
+    for (auto i = dates_trash.size()-1; i >= 0; --i) {
         QJsonObject date = dates_trash.at(i).toObject();
         int id = date.value(STATE_ID).toInt();
 
@@ -2322,7 +2322,7 @@ void Project::recycleDates(int eventId)
             QJsonObject event = events.at(i).toObject();
             if (event.value(STATE_ID).toInt() == eventId){
                 QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
-                for (int i = indexes.size()-1; i >= 0; --i) {
+                for (auto i = indexes.size()-1; i >= 0; --i) {
                     QJsonObject date = dates_trash.takeAt(indexes.at(i)).toObject();
                     // Validate the date before adding it to the correct event and pushing the state
                     QJsonObject settingsJson = stateNext[STATE_SETTINGS].toObject();
@@ -2645,7 +2645,7 @@ void Project::deleteSelectedPhases()
         const QJsonObject phase = phases.at(i).toObject();
         if (phase.value(STATE_IS_SELECTED).toBool()) {
             const int phase_id = phase.value(STATE_ID).toInt();
-            for (int j=phases_constraints.size()-1; j>=0; --j) {
+            for (qsizetype j=phases_constraints.size()-1; j>=0; --j) {
                 QJsonObject constraint = phases_constraints.at(j).toObject();
                 const int bwd_id = constraint.value(STATE_CONSTRAINT_BWD_ID).toInt();
                 const int fwd_id = constraint.value(STATE_CONSTRAINT_FWD_ID).toInt();
@@ -2654,7 +2654,7 @@ void Project::deleteSelectedPhases()
                     phases_constraints.removeAt(j);
 
             }
-            for (int j=0; j<events.size(); ++j) {
+            for (qsizetype j=0; j<events.size(); ++j) {
                 QJsonObject event = events.at(j).toObject();
                 QString idsStr = event.value(STATE_EVENT_PHASE_IDS).toString();
                 QStringList ids = idsStr.split(",");
@@ -2683,7 +2683,7 @@ int Project::getUnusedPhaseId(const QJsonArray& phases)
     while (!idIsFree) {
         ++id;
         idIsFree = true;
-        for (int i = 0; i<phases.size(); ++i) {
+        for (qsizetype i = 0; i<phases.size(); ++i) {
             const QJsonObject phase = phases.at(i).toObject();
             if (phase.value(STATE_ID).toInt() == id) {
                 idIsFree = false;
@@ -2702,7 +2702,7 @@ void Project::mergePhases(int phaseFromId, int phaseToId)
     QJsonArray phases_constraints = mState.value(STATE_PHASES_CONSTRAINTS).toArray();
 
     // Delete constraints around the disappearing phase
-    for (int j=phases_constraints.size()-1; j>=0; --j) {
+    for (qsizetype j=phases_constraints.size()-1; j>=0; --j) {
         const QJsonObject &constraint = phases_constraints.at(j).toObject();
         const int bwd_id = constraint.value(STATE_CONSTRAINT_BWD_ID).toInt();
         const int fwd_id = constraint.value(STATE_CONSTRAINT_FWD_ID).toInt();
@@ -2712,7 +2712,7 @@ void Project::mergePhases(int phaseFromId, int phaseToId)
     }
 
     // Change phase id in events
-    for (int j=0; j<events.size(); ++j) {
+    for (qsizetype j=0; j<events.size(); ++j) {
         const QJsonObject &event = events.at(j).toObject();
         QString idsStr = event.value(STATE_EVENT_PHASE_IDS).toString();
         QStringList ids = idsStr.split(",");
@@ -2727,7 +2727,7 @@ void Project::mergePhases(int phaseFromId, int phaseToId)
     }
 
     // remove disappearing phase
-    for (int i=phases.size()-1; i>=0; --i) {
+    for (qsizetype i=phases.size()-1; i>=0; --i) {
         const QJsonObject &p = phases.at(i).toObject();
         const int id = p.value(STATE_ID).toInt();
         if (id == phaseFromId) {
@@ -2771,8 +2771,8 @@ void Project::mergePhases(int phaseFromId, int phaseToId)
 
 QJsonObject Project::getPhasesWithId(const int id)
 {
-    const QJsonArray &phases = mState.value(STATE_PHASES).toArray();
-    for (const QJsonValue& pha : phases) {
+    const QJsonArray& phases = mState.value(STATE_PHASES).toArray();
+    for (const QJsonValue pha : phases) {
         if (pha.toObject().value(STATE_ID) == id)
             return pha.toObject();
     }
@@ -2788,8 +2788,8 @@ bool Project::isEventConstraintAllowed(const QJsonObject& eventFrom, const QJson
     const int eventToId = eventTo.value(STATE_ID).toInt();
     bool ConstraintAllowed = true;
 
-    for (const auto &cts : constraints) {
-        const QJsonObject constraint = cts.toObject();
+    for (const auto cts : constraints) {
+        const QJsonObject& constraint = cts.toObject();
         if (constraint.value(STATE_CONSTRAINT_BWD_ID) == eventFromId && constraint.value(STATE_CONSTRAINT_FWD_ID) == eventToId) {
             ConstraintAllowed = false;
             qDebug() << "[Project::isEventConstraintAllowed] not Allowed " ;
@@ -2892,10 +2892,7 @@ int Project::getUnusedEventConstraintId(const QJsonArray& constraints)
     while (!idIsFree) {
         ++id;
         idIsFree = true;
-        //for (int i = 0; i<constraints.size(); ++i) {
-          //  QJsonObject constraint = constraints.at(i).toObject();
-        //if (constraint.value(STATE_ID).toInt() == id) {
-        for (const auto &constraint : constraints) {
+        for (const auto constraint : constraints) {
             if (constraint.toObject().value(STATE_ID).toInt() == id) {
                 idIsFree = false;
                 break;
@@ -3025,7 +3022,7 @@ int Project::getUnusedPhaseConstraintId(const QJsonArray &constraints)
         idIsFree = true;
         //for (int i = 0; i<constraints.size(); ++i) {
         //    QJsonObject constraint = constraints.at(i).toObject();
-        for (auto &constraint : constraints) {
+        for (const auto constraint : constraints) {
             if (constraint.toObject().value(STATE_ID).toInt() == id) {
                 idIsFree = false;
                 break;

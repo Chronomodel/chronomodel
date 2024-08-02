@@ -58,13 +58,14 @@ public:
     };
 
     MHVariable();
-    explicit MHVariable(const MHVariable &origin);
+    explicit MHVariable(const MHVariable& origin);
+    explicit MHVariable(const MetropolisVariable& origin);
     virtual ~MHVariable();
 
-    virtual void reset();
-    virtual void reserve( const int reserve);
-    MHVariable& copy(MHVariable const& origin);
-    MHVariable& operator=(MHVariable const& origin);
+    void reset() override;
+    void reserve(const qsizetype reserve) override;
+    //MHVariable& copy(MHVariable const& origin);
+    MHVariable& operator=(const MHVariable& origin);
 
     double getCurrentAcceptRate() const;
     void saveCurrentAcceptRate();
@@ -76,9 +77,9 @@ public:
     QList<double> acceptationForChain(const QList<ChainSpecs>& chains, int index);
     void generateGlobalRunAcceptation(const QList<ChainSpecs>& chains);
 
-    void generateNumericalResults(const QList<ChainSpecs>& chains);
+    void generateNumericalResults(const QList<ChainSpecs>& chains) override;
     QString resultsString(const QString &noResultMessage = QObject::tr("No result to display"),
-                          const QString &unit = QString()) const;
+                          const QString &unit = QString()) const override;
 
     static QString getSamplerProposalText(const MHVariable::SamplerProposal sp);
     static MHVariable::SamplerProposal getSamplerProposalFromText(const QString &text);

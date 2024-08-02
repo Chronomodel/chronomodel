@@ -62,7 +62,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 extern QString res_file_version;
 
-Model::Model(QObject *parent):
+Model::Model(QObject* parent):
     QObject(parent),
     mProject(nullptr),
     mNumberOfPhases(0),
@@ -76,7 +76,7 @@ Model::Model(QObject *parent):
     
 }
 
-Model::Model(const QJsonObject &json, QObject* parent):
+Model::Model(const QJsonObject& json, QObject* parent):
     QObject(parent),
     mProject(nullptr),
     mNumberOfPhases(0),
@@ -101,8 +101,8 @@ Model::Model(const QJsonObject &json, QObject* parent):
 
     if (json.contains(STATE_PHASES)) {
         const QJsonArray phases = json.value(STATE_PHASES).toArray();
-        mNumberOfPhases = phases.size();
-        for (auto &json : phases)
+        mNumberOfPhases = (int) phases.size();
+        for (const auto json : phases)
              mPhases.append(new Phase(json.toObject(), this));
 
     }
@@ -112,9 +112,9 @@ Model::Model(const QJsonObject &json, QObject* parent):
 
     if (json.contains(STATE_EVENTS)) {
         QJsonArray events = json.value(STATE_EVENTS).toArray();
-        mNumberOfEvents = events.size();
+        mNumberOfEvents = (int) events.size();
 
-        for (int i = 0; i < events.size(); ++i) {
+        for (qsizetype i = 0; i < events.size(); ++i) {
             const QJsonObject JSONevent = events.at(i).toObject();
 
             if (JSONevent.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
@@ -147,7 +147,7 @@ Model::Model(const QJsonObject &json, QObject* parent):
 
     if (json.contains(STATE_EVENTS_CONSTRAINTS)) {
         const QJsonArray constraints = json.value(STATE_EVENTS_CONSTRAINTS).toArray();
-        for (int i=0; i<constraints.size(); ++i) {
+        for (qsizetype i=0; i<constraints.size(); ++i) {
             const QJsonObject constraint = constraints.at(i).toObject();
             EventConstraint* c = new EventConstraint(EventConstraint::fromJson(constraint));
             mEventConstraints.append(c);
@@ -156,7 +156,7 @@ Model::Model(const QJsonObject &json, QObject* parent):
 
     if (json.contains(STATE_PHASES_CONSTRAINTS)) {
         const QJsonArray constraints = json.value(STATE_PHASES_CONSTRAINTS).toArray();
-        for (int i=0; i<constraints.size(); ++i) {
+        for (qsizetype i=0; i<constraints.size(); ++i) {
             const QJsonObject constraint = constraints.at(i).toObject();
             PhaseConstraint* c = new PhaseConstraint(PhaseConstraint::fromJson(constraint));
             mPhaseConstraints.append(c);
@@ -168,12 +168,12 @@ Model::Model(const QJsonObject &json, QObject* parent):
     //  Must be done here !
     //  nb : Les data sont déjà linkées aux events à leur création
     // ------------------------------------------------------------
-    for (int i=0; i<mEvents.size(); ++i) {
+    for (qsizetype i=0; i<mEvents.size(); ++i) {
         int eventId = mEvents.at(i)->mId;
         QList<int> phasesIds = mEvents.at(i)->mPhasesIds;
 
         // Link des events / phases
-        for (int j=0; j<mPhases.size(); ++j) {
+        for (qsizetype j=0; j<mPhases.size(); ++j) {
             const int phaseId = mPhases.at(j)->mId;
             if (phasesIds.contains(phaseId)) {
                 mEvents[i]->mPhases.append(mPhases[j]);
@@ -182,10 +182,11 @@ Model::Model(const QJsonObject &json, QObject* parent):
         }
 
         // Link des events / contraintes d'event
-        for (int j=0; j<mEventConstraints.size(); ++j) {
+        for (qsizetype j=0; j<mEventConstraints.size(); ++j) {
             if (mEventConstraints[j]->mFromId == eventId) {
                 mEventConstraints[j]->mEventFrom = mEvents[i];
                 mEvents[i]->mConstraintsFwd.append(mEventConstraints[j]);
+                
             } else if (mEventConstraints[j]->mToId == eventId) {
                 mEventConstraints[j]->mEventTo = mEvents[i];
                 mEvents[i]->mConstraintsBwd.append(mEventConstraints[j]);
@@ -193,12 +194,13 @@ Model::Model(const QJsonObject &json, QObject* parent):
         }
     }
     // Link des phases / contraintes de phase
-    for (int i=0; i<mPhases.size(); ++i) {
+    for (qsizetype i=0; i<mPhases.size(); ++i) {
         const int phaseId = mPhases.at(i)->mId;
-        for (int j=0; j<mPhaseConstraints.size(); ++j) {
+        for (qsizetype j=0; j<mPhaseConstraints.size(); ++j) {
             if (mPhaseConstraints.at(j)->mFromId == phaseId) {
                 mPhaseConstraints[j]->mPhaseFrom = mPhases[i];
                 mPhases[i]->mConstraintsNextPhases.append(mPhaseConstraints[j]);
+                
             } else if (mPhaseConstraints.at(j)->mToId == phaseId) {
                 mPhaseConstraints[j]->mPhaseTo = mPhases[i];
                 mPhases[i]->mConstraintsPrevPhases.append(mPhaseConstraints[j]);
@@ -221,44 +223,12 @@ void Model::clear()
     // - The Event MH variables are reset (freeing trace memory)
     // - The Dates MH variables are reset (freeing trace memory)
     // - The Dates are cleared
-    //for (Event* &ev: mEvents) {
-  /*  for (auto ev = mEvents.rbegin(); ev != mEvents.rend(); ev++) {
-        // Event can be an Event or an EventCurve.
-        // => do not delete it using ~Event(), because the appropriate destructor could be ~EventCurve().
-        //delete ev;
-        delete *ev;
-    }
-    
-    for (EventConstraint* &ec : mEventConstraints) {
-        delete ec;
-        ec = nullptr;
-    }
- */
+  
     mEvents.clear();
     mEventConstraints.clear();
 
     mPhases.clear();
     mPhaseConstraints.clear();
-
-    /*if (!mPhases.isEmpty()) {
-        for (Phase* &ph: mPhases) {
-           // if (ph) {
-                delete ph;
-                ph = nullptr;
-           // }
-        }
-        mPhases.clear();
-    }
-
-    if (!mPhaseConstraints.isEmpty()) {
-        for (PhaseConstraint* &pc : mPhaseConstraints) {
-           // if (pc) {
-                delete pc; //->~PhaseConstraint();
-                pc = nullptr;
-           // }
-        }
-        mPhaseConstraints.clear();
-    }*/
 
     mChains.clear();
     mLogModel.clear();
@@ -291,7 +261,7 @@ void Model::updateFormatSettings()
         phase->mAlpha.setFormat(DateUtils::getAppSettingsFormat());
         phase->mBeta.setFormat(DateUtils::getAppSettingsFormat());
         phase->mDuration.setFormat(DateUtils::eNumeric);
-        phase->mTau.setFormat(DateUtils::eNumeric);
+        //phase->mTau.setFormat(DateUtils::eNumeric);
 
         // update Tempo and activity curves
         phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
@@ -324,8 +294,8 @@ void Model::fromJson(const QJsonObject& json)
 
     if (json.contains(STATE_PHASES)) {
         const QJsonArray phases = json.value(STATE_PHASES).toArray();
-        mNumberOfPhases = phases.size();
-        for (auto &json : phases)
+        mNumberOfPhases = (int) phases.size();
+        for (const auto json : phases)
              mPhases.append(new Phase(json.toObject(), this));
 
     }
@@ -335,7 +305,7 @@ void Model::fromJson(const QJsonObject& json)
 
     if (json.contains(STATE_EVENTS)) {
         QJsonArray events = json.value(STATE_EVENTS).toArray();
-        mNumberOfEvents = events.size();
+        mNumberOfEvents = (int) events.size();
 
         for (int i = 0; i < events.size(); ++i) {
             const QJsonObject JSONevent = events.at(i).toObject();
@@ -672,12 +642,12 @@ QList<QStringList> Model::getStats(const QLocale locale, const int precision, co
 
     for (const auto& phase : mPhases) {
         QStringList l = phase->mAlpha.getResultsList(locale, precision);
-        maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
+        maxHpd = std::max(maxHpd, ((int)l.size() - 9) / 3);
         l.prepend(phase->mName + " Begin");
         rows << l;
 
         l = phase->mBeta.getResultsList(locale, precision);
-        maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
+        maxHpd = std::max(maxHpd, ((int)l.size() - 9) / 3);
         l.prepend(phase->mName + " End");
         rows << l;
 
@@ -694,7 +664,7 @@ QList<QStringList> Model::getStats(const QLocale locale, const int precision, co
     for (Event*& event : mEvents) {
         if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
              QStringList l = event->mTheta.getResultsList(locale, precision);
-             maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
+             maxHpd = std::max(maxHpd, ((int)l.size() - 9) / 3);
              l.prepend(event->mName);
              rows << l;
 
@@ -710,11 +680,11 @@ QList<QStringList> Model::getStats(const QLocale locale, const int precision, co
     rows << QStringList();
     for (Event*& event : mEvents) {
         if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
-            for (int j = 0; j < event->mDates.size(); ++j) {
+            for (qsizetype j = 0; j < event->mDates.size(); ++j) {
                 Date& date = event->mDates[j];
 
                 QStringList l = date.mTi.getResultsList(locale, precision);
-                maxHpd = qMax(maxHpd, (l.size() - 9) / 3);
+                maxHpd = std::max(maxHpd, ((int)l.size() - 9) / 3);
                 l.prepend(date.mName);
                 rows << l;
             }
@@ -749,7 +719,7 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
     rows << headers;
 
     int shift = 0;
-    for (int i = 0; i < mChains.size(); ++i) {
+    for (qsizetype i = 0; i < mChains.size(); ++i) {
         int burnAdaptSize = 1 + mChains.at(i).mIterPerBurn + (mChains.at(i).mBatchIndex * mChains.at(i).mIterPerBatch);
         int runSize = mChains.at(i).mRealyAccepted;
 
@@ -1177,7 +1147,7 @@ void Model::setBandwidth(const double bandwidth)
     }
 }
 
-void Model::setFFTLength(size_t FFTLength)
+void Model::setFFTLength(int FFTLength)
 {
     if (mFFTLength != FFTLength) {
         updateDensities(FFTLength, mBandwidth, mThreshold);
@@ -1275,7 +1245,7 @@ void Model::initVariablesForChain()
 {
     // Today we have the same acceptBufferLen for every chain
     const int acceptBufferLen =  mChains[0].mIterPerBatch;
-    int initReserve = 0;
+    qsizetype initReserve = 0;
 
     for (auto&& c: mChains)
        initReserve += ( 1 + (c.mMaxBatchs*c.mIterPerBatch) + c.mIterPerBurn + (c.mIterPerAquisition/c.mThinningInterval) );
@@ -1322,10 +1292,10 @@ void Model::initVariablesForChain()
        //phase->mTau.reset();
        phase->mDuration.reset();
 
-       phase->mAlpha.mRawTrace->reserve(initReserve);
-       phase->mBeta.mRawTrace->reserve(initReserve);
+        phase->mAlpha.reserve(initReserve);//mRawTrace->reserve(initReserve);
+       phase->mBeta.reserve(initReserve);//.mRawTrace->reserve(initReserve);
        //phase->mTau.mRawTrace->reserve(initReserve);
-       phase->mDuration.mRawTrace->reserve(initReserve);
+       phase->mDuration.reserve(initReserve);//.mRawTrace->reserve(initReserve);
     }
 }
 
@@ -1624,7 +1594,7 @@ void Model::generateHPD(const double thresh)
     t.start();
 #endif
 
-    for (const auto& event : mEvents) {
+    for (auto&& event : mEvents) {
         event->mTheta.generateHPD(thresh);
 
         if (event->type() != Event::eBound) {
@@ -1632,8 +1602,7 @@ void Model::generateHPD(const double thresh)
             if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
                 event->mS02Theta.generateHPD(thresh);
 
-            for (int j = 0; j<event->mDates.size(); ++j) {
-                Date& date = event->mDates[j];
+            for (auto&& date : event->mDates) {
                 date.mTi.generateHPD(thresh);
                 date.mSigmaTi.generateHPD(thresh);
             }
@@ -1668,7 +1637,7 @@ void Model::generateTempo(size_t gridLength)
 #endif
 
     for (const auto& phase : mPhases) {
-        const int n = phase->mEvents.size();
+        const int n = (int)(phase->mEvents.size());
 
         // Description des données
         std::vector<double> concaAllTrace;
@@ -1705,7 +1674,7 @@ void Model::generateTempo(size_t gridLength)
 
         // Loop
          std::vector<int> niTempo (gridLength);
-         const int iMax = gridLength-1;
+         const int iMax = (int)(gridLength-1);
    try {
         for (const auto& t : concaAllTrace) {
 
