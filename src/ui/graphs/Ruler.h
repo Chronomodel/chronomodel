@@ -89,17 +89,17 @@ public:
     void updateLayout();
 protected:
 
-    bool event(QEvent *event);
-    void resizeEvent(QResizeEvent* e);
+    bool event(QEvent* event);
+    void resizeEvent(QResizeEvent*);
     void paintEvent(QPaintEvent* e);
 
     DateConversion mFormatFuncX;
 
 public slots:
-    void setZoom(double & prop);
+    void setZoom(double& prop);
     void updateScroll();
     //void scrollValueChanged(double value);
-    void wheelScene(QEvent *e) {this->event(e); QWidget::event(e);}
+    void wheelScene(QEvent* e) {this->event(e); QWidget::event(e);}
 
 signals:
     void positionChanged(double min, double max);

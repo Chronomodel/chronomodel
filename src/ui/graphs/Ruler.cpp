@@ -221,13 +221,9 @@ double Ruler::getZoom()
 
 void Ruler::setZoom(double &prop)
 {
-    // Ici, 10 correspond à la différence minimale de valeur (quand le zoom est le plus fort)
     double minProp = 1. / (mMax - mMin);   //10. / (mMax - mMin);
 
-  //  mZoomProp = (100. - prop) / 100.;
-    mZoomProp = prop /100.;
-    if (mZoomProp < minProp)
-        mZoomProp = minProp;
+    mZoomProp = std::max(minProp, prop /100.);
 
     if (mZoomProp != 1.) {
         // Remember old scroll position
@@ -237,8 +233,8 @@ void Ruler::setZoom(double &prop)
             posProp = double (mScrollBar->value()) / rangeBefore;
 
         // Update Scroll Range
-        int fullScrollSteps = 1000;
-        int scrollSteps = int((1. - mZoomProp) * double (fullScrollSteps));
+        const int fullScrollSteps = 1000;
+        int scrollSteps = int((1. - mZoomProp) * fullScrollSteps);
         mScrollBar->setRange(0, scrollSteps);
         mScrollBar->setPageStep(fullScrollSteps);
 
@@ -251,8 +247,8 @@ void Ruler::setZoom(double &prop)
        /* mScrollBar->setTracking(false);
         mScrollBar->setSliderPosition(pos);
         mScrollBar->setTracking(true);*/
-    }
-    else
+
+    } else
         mScrollBar->setRange(0, 0);
 
     update();
@@ -262,15 +258,14 @@ void Ruler::setZoom(double &prop)
 void Ruler::updateScroll()
 {
     if ( (mCurrentMax - mCurrentMin) != (mMax - mMin)) {
-        double delta = mCurrentMax - mCurrentMin;
-        double deltaStart = (mMax - mMin)-delta;
+        const double delta = mCurrentMax - mCurrentMin;
+        const double deltaStart = (mMax - mMin) - delta;
 
         mCurrentMin = mMin + deltaStart * (double (mScrollBar->value()) / double (mScrollBar->maximum()));
-        mCurrentMin = floor( std::clamp(mCurrentMin, mMin, mMax) );
+        mCurrentMin = std::clamp(mCurrentMin, mMin, mMax);
         mCurrentMax = mCurrentMin + delta;
 
-    }
-    else {
+    } else {
         mCurrentMin = mMin;
         mCurrentMax = mMax;
     }
@@ -287,8 +282,6 @@ void Ruler::updateScroll()
  bool Ruler::event(QEvent *event)
 {
     if (event->type() == QEvent::Wheel) {
-        //QScrollBar::event(event);//::slider
-        //updateScroll();
         mScrollBar->event(event);
     }
     return QWidget::event(event);
@@ -318,9 +311,8 @@ void Ruler::updateLayout()
     update();
 }
 
-void Ruler::resizeEvent(QResizeEvent* e)
+void Ruler::resizeEvent(QResizeEvent* )
 {
-    Q_UNUSED(e);
     updateLayout();
 }
 
@@ -336,10 +328,8 @@ void Ruler::paintEvent(QPaintEvent* e)
     // ----------------------------------------------
     //  Areas (to display green, orange, and red areas)
     // ----------------------------------------------
-    for(auto && area : mAreas)
-    {
-        if (area.mStart < mCurrentMax && area.mStop > mCurrentMin)
-        {
+    for(auto && area : mAreas) {
+        if (area.mStart < mCurrentMax && area.mStop > mCurrentMin) {
             double x1 = w * (area.mStart - mCurrentMin) / (mCurrentMax - mCurrentMin);
             x1 = (x1 < 0.) ? 0. : x1;
             double x2 = w;
