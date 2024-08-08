@@ -77,12 +77,11 @@ public:
     bool itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent*);
 
     void itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent*);
-    //void updateEyedPhases();
 
     void adaptItemsForZoom(const double prop);
 
     void setShowAllEvents(const bool show);
-   // bool showAllEvents() const { return mShowAllEvents;}
+
 
 protected:
     AbstractItem* collidingItem(const QGraphicsItem* item);
@@ -94,8 +93,6 @@ protected:
     void createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo);
     void mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo);
 
-private:
-   // bool mShowAllEvents;
 
 };
 

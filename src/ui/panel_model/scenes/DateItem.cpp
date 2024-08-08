@@ -44,6 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "EventItem.h"
 #include "Project.h"
 #include "PluginAbstract.h"
+#include "QtUtilities.h"
 
 #include <QtCore>
 #include <QtGui>
@@ -83,7 +84,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
         else {
 
             // Date::calibrate() Controls the validity of the calibration and wiggle curves
-            d.calibrate(s, *EventsScene->getProject(), true);
+            d.calibrate(s, *getProject_ptr(), true);
 
             if (d.mCalibration == nullptr) {
                 date[STATE_DATE_VALID] = false;

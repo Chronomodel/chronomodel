@@ -130,7 +130,7 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     //  Repaint based on mEvent
     // ----------------------------------------------
     //update(); Done by prepareGeometryChange() at the function start
-    QJsonObject state = mScene->getProject()->mState;
+    QJsonObject state = getProject_ptr()->mState;
     CurveSettings curveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
 
     const int nbLines = getNumberCurveLines(curveSettings);
@@ -209,7 +209,7 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* , 
         painter->drawImage(thumbRect, mThumb, mThumb.rect());
 
     // Phases
-    QJsonObject state = mScene->getProject()->mState;
+    QJsonObject state = getProject_ptr()->mState;
     CurveSettings curveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
 
     QRectF curveRect(rect.x() + side, rect.y() + top + 3*mEltsMargin + mTitleHeight + mThumbH, rect.width() - 2*side,  mCurveTextHeight);

@@ -194,7 +194,7 @@ void EventItem::setEvent(const QJsonObject &event, const QJsonObject &StudyPerio
 
 bool EventItem::isCurveNode() const
 {
-    const QJsonObject &state = mScene->getProject()->mState;
+    const QJsonObject &state = getProject_ptr()->mState;
     const CurveSettings curveSettings (state.value(STATE_CURVE).toObject());
     const bool withNode = (curveSettings.mLambdaSplineType != CurveSettings::eInterpolation)
                           && (curveSettings.mVarianceType == CurveSettings::eModeBayesian);
@@ -227,7 +227,7 @@ void EventItem::setGreyedOut(const bool greyedOut)
 
 void EventItem::updateGreyedOut()
 {
-    const QJsonArray &phases = mScene->getState().value(STATE_PHASES).toArray();
+    const QJsonArray &phases = getState_ptr()->value(STATE_PHASES).toArray();
     mGreyedOut = true;
 
     QStringList selectedPhasesIds;
@@ -286,7 +286,7 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
     e->acceptProposedAction();
     QJsonObject event = mData;
     EventsScene* scene = dynamic_cast<EventsScene*>(mScene);
-    std::shared_ptr<Project> project = scene->getProject();
+    std::shared_ptr<Project> project = getProject_ptr();
     QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
     
     QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> droppedData = scene->decodeDataDrop(e);
@@ -324,7 +324,7 @@ void EventItem::resizeEventItem()
     qreal eventHeight = y + (childItems().count() * h);
     //qDebug() << "resizeEventItem dates count : " << dates.count();
 
-    const QJsonObject &state = mScene->getProject()->mState;
+    const QJsonObject &state = getProject_ptr()->mState;
     const CurveSettings &curveSettings (state.value(STATE_CURVE).toObject());
 
     const int nbLines = getNumberCurveLines(curveSettings);
@@ -389,7 +389,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     font.setBold(false);
     font.setItalic(false);
     
-    QJsonObject state = mScene->getProject()->mState;
+    QJsonObject state = getProject_ptr()->mState;
     CurveSettings curveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
 
     const qreal vMarge = AbstractItem::mEltsMargin;
@@ -453,7 +453,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
 QJsonArray EventItem::getPhases() const
 {
-    const QJsonArray allPhases = mScene->getState().value(STATE_PHASES).toArray();
+    const QJsonArray allPhases = getState_ptr()->value(STATE_PHASES).toArray();
 
     const QString eventPhaseIdsStr = mData.value(STATE_EVENT_PHASE_IDS).toString();
     const QStringList eventPhaseIds = eventPhaseIdsStr.split(",");

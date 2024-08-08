@@ -99,13 +99,13 @@ EventItem* EventsScene::findEventItemWithJsonId(const int id)
 void EventsScene::deleteSelectedItems()
 {
    qDebug()<<"[EventsScene::deleteSelectedItems]";
-   mProject->deleteSelectedEvents();
+   getProject_ptr()->deleteSelectedEvents();
    emit noSelection();
 }
 
 bool EventsScene::constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo)
 {
-    const QJsonArray constraints = mProject->mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
+    const QJsonArray constraints = getState_ptr()->value(STATE_EVENTS_CONSTRAINTS).toArray();
     const QJsonObject eventFrom = dynamic_cast<EventItem*>(itemFrom)->getData();
     const QJsonObject eventTo = dynamic_cast<EventItem*>(itemTo)->getData();
 
@@ -141,7 +141,7 @@ void EventsScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)
     const QJsonObject eventTo = dynamic_cast<EventItem*>(itemTo)->getData();
     qDebug()<<"[EventsScene::createConstraint]"<<eventFrom.value(STATE_NAME)<<eventTo.value(STATE_NAME);
 
-    mProject->createEventConstraint(eventFrom.value(STATE_ID).toInt(),
+    getProject_ptr()->createEventConstraint(eventFrom.value(STATE_ID).toInt(),
                                     eventTo.value(STATE_ID).toInt());
 
 }
@@ -151,7 +151,7 @@ void EventsScene::mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo)
     const QJsonObject& eventFrom = dynamic_cast<EventItem*>(itemFrom)->getData();
     const QJsonObject& eventTo = dynamic_cast<EventItem*>(itemTo)->getData();
 
-    mProject->mergeEvents(eventFrom.value(STATE_ID).toInt(),
+    getProject_ptr()->mergeEvents(eventFrom.value(STATE_ID).toInt(),
                                               eventTo.value(STATE_ID).toInt());
 }
 
@@ -214,7 +214,7 @@ void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool sto
 {
     qDebug()<<"[EventsScene::sendUpdateProject] start";
 
-    QJsonObject statePrev = mProject->state();
+    QJsonObject statePrev = *getState_ptr();
     QJsonObject stateNext = statePrev;
 
     //mData in the mItems are copies of the Model(State) while doing setEvent(), so we have to rebuild the
@@ -228,9 +228,9 @@ void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool sto
     stateNext[STATE_EVENTS] = events;
 
     if (storeUndoCommand)
-        mProject->pushProjectState(stateNext, reason, notify);
+        getProject_ptr()->pushProjectState(stateNext, reason, notify);
     else
-        mProject->sendUpdateState(stateNext, reason, notify);
+        getProject_ptr()->sendUpdateState(stateNext, reason, notify);
 
 }
 void EventsScene::noHide()
@@ -294,12 +294,12 @@ void EventsScene::createSceneFromState()
     startTime.start();
 #endif
 
-    const QJsonObject state = mProject->state();
-    const QJsonArray eventsInState = state.value(STATE_EVENTS).toArray();
-    const QJsonArray constraints = state.value(STATE_EVENTS_CONSTRAINTS).toArray();
-    const QJsonObject settings = state.value(STATE_SETTINGS).toObject();
+    const QJsonObject* state = getState_ptr();
+    const QJsonArray eventsInState = state->value(STATE_EVENTS).toArray();
+    const QJsonArray constraints = state->value(STATE_EVENTS_CONSTRAINTS).toArray();
+    const QJsonObject settings = state->value(STATE_SETTINGS).toObject();
 
-    const QJsonObject CurveSettings = state.value(STATE_CURVE).toObject();
+    const QJsonObject CurveSettings = state->value(STATE_CURVE).toObject();
 
      //http://doc.qt.io/qt-5/qprogressdialog.html#minimumDuration-prop
 
@@ -397,12 +397,12 @@ void EventsScene::updateSceneFromState()
     startTime.start();
     //Chronometer ch ("EventsScene::updateSceneFromState");
 #endif
-    const QJsonObject &state = mProject->state();
+    const QJsonObject* state = getState_ptr();
 
-    if (mProject->mState.value(STATE_EVENTS).toArray().isEmpty() && mProject->mState.value(STATE_PHASES).toArray().isEmpty() && mItems.isEmpty())
+    if (state->value(STATE_EVENTS).toArray().isEmpty() && state->value(STATE_PHASES).toArray().isEmpty() && mItems.isEmpty())
         return;
 
-    if (mProject->mState.value(STATE_EVENTS).toArray().isEmpty() && !mItems.isEmpty()) {
+    if (state->value(STATE_EVENTS).toArray().isEmpty() && !mItems.isEmpty()) {
         // ------------------------------------------------------
         //  Delete EventItems
         // ------------------------------------------------------
@@ -443,13 +443,13 @@ void EventsScene::updateSceneFromState()
         return;
     }
 
-    const QJsonArray &eventsInNewState = state.value(STATE_EVENTS).toArray();
-    const QJsonArray &constraints = state.value(STATE_EVENTS_CONSTRAINTS).toArray();
+    const QJsonArray &eventsInNewState = state->value(STATE_EVENTS).toArray();
+    const QJsonArray &constraints = state->value(STATE_EVENTS_CONSTRAINTS).toArray();
 
     // case of newProject
 
-    const QJsonObject &settings = state.value(STATE_SETTINGS).toObject();
-    const QJsonObject &curveSettings = state.value(STATE_CURVE).toObject();
+    const QJsonObject &settings = state->value(STATE_SETTINGS).toObject();
+    const QJsonObject &curveSettings = state->value(STATE_CURVE).toObject();
 
     QProgressDialog* progress = nullptr;
     bool displayProgress = false;
@@ -556,7 +556,7 @@ void EventsScene::updateSceneFromState()
 
     //---- Find selected phases, to update Event greyedOut
     QStringList selectedPhasesIds;
-    const QJsonArray &phases = getState().value(STATE_PHASES).toArray();
+    const QJsonArray &phases = getState_ptr()->value(STATE_PHASES).toArray();
     for (const auto &&p : phases) {
         QJsonObject phase = p.toObject();
         const bool isSelected = phase.value(STATE_IS_SELECTED).toBool();
@@ -573,7 +573,7 @@ void EventsScene::updateSceneFromState()
             progress->setValue(i);
 
         bool itemUnkown = true;
-blockSignals(true);
+        blockSignals(true);
         for (auto&& absItem : mItems) {
             EventItem* oldItem = dynamic_cast<EventItem*> (absItem);
             const QJsonObject oldItem_data = oldItem->getData();
@@ -609,7 +609,8 @@ blockSignals(true);
 
             oldItem = nullptr;
         }
-blockSignals(false);
+        blockSignals(false);
+
         if (itemUnkown) {
             // CREATE ITEM
                 Event::Type type = Event::Type (event.value(STATE_EVENT_TYPE).toInt());
@@ -773,7 +774,7 @@ void EventsScene::clean()
         constraintItem = nullptr;
     }
     mConstraintItems.clear();
-    mProject = nullptr;
+
     // ------------------------------------------------------
     //  Reset scene rect
     // ------------------------------------------------------
@@ -829,7 +830,7 @@ void EventsScene::updateStateSelectionFromItem()
          }
 
         if (modified ) {
-            mProject->mState[STATE_EVENTS] = updatedEvents;
+            getProject_ptr()->mState[STATE_EVENTS] = updatedEvents;
 
             if (movedItem) {
                 qDebug()<<"[EventsScene::updateStateSelectionFromItem] sendUpdateProject(Item moved)";
@@ -970,7 +971,7 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
             // Move the date to another event :
             //qDebug()<<"EventsScene::dateReleased MERGE";
 
-            QJsonObject* state = mProject->state_ptr();
+            QJsonObject* state = getState_ptr();
             QJsonArray events = state->value(STATE_EVENTS).toArray();
             bool isRemove (false);
             bool isAdd (false);
@@ -1010,7 +1011,7 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
                 // add dateToAdd to next event : and update mDate[STATE_ID] of the dateItem itself
                 else if (event.value(STATE_ID).toInt() == nextEvent.value(STATE_ID).toInt()) {
                     QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
-                    dateToAdd[STATE_ID] = mProject->getUnusedDateId(dates);
+                    dateToAdd[STATE_ID] = getProject_ptr()->getUnusedDateId(dates);
                     dateItem->mDate[STATE_ID] = dateToAdd[STATE_ID];
                     dates.append(dateToAdd);
                     event[STATE_EVENT_DATES] = dates;
@@ -1029,7 +1030,7 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
             (*state)[STATE_EVENTS] = events;
 
             hoveredEventItem->setMergeable(false);
-            mProject->pushProjectState(*state, DATE_MOVE_TO_EVENT_REASON, true); // used to disable ResultsView
+            getProject_ptr()->pushProjectState(*state, DATE_MOVE_TO_EVENT_REASON, true); // used to disable ResultsView
             return hoveredEventItem;
 
         } else
@@ -1134,7 +1135,7 @@ void EventsScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e
 
     QMessageBox message(QMessageBox::Question, tr("Delete constraint"), tr("Do you really want to delete this constraint?"), QMessageBox::Yes | QMessageBox::No, qApp->activeWindow());
     if (message.exec() == QMessageBox::Yes)
-        mProject->deleteEventConstraint(item->data().value(STATE_ID).toInt());
+        getProject_ptr()->deleteEventConstraint(item->data().value(STATE_ID).toInt());
 }
 
 /**
@@ -1291,7 +1292,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
     QList<QPair<QString, Date>> listEvent_Data = droppedData.first;
     QList<QMap<QString, double>> listCurveData = droppedData.second;
 
-    std::shared_ptr<Project> project = MainWindow::getInstance()->getProject();
+    auto project = getProject_ptr();
 
     // Create one event per data
     int deltaX = 0;
@@ -1450,19 +1451,19 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
             bool addConstraint = false;
             EventConstraint c;
             if (currentEvent.value(STATE_ID).toInt() != previousEvent.value(STATE_ID).toInt()) {
-                if ( constraint == eConstraintStrati && mProject->isEventConstraintAllowed(currentEvent, previousEvent)) {
+                if ( constraint == eConstraintStrati && project->isEventConstraintAllowed(currentEvent, previousEvent)) {
                        c.mFromId = currentEvent.value(STATE_ID).toInt();
                        c.mToId = previousEvent.value(STATE_ID).toInt();
                        addConstraint = true;
 
-                } else if (mProject->isEventConstraintAllowed(previousEvent, currentEvent)) {
+                } else if (project->isEventConstraintAllowed(previousEvent, currentEvent)) {
                         c.mFromId = previousEvent.value(STATE_ID).toInt();
                         c.mToId = currentEvent.value(STATE_ID).toInt();
                         addConstraint = true;
                 }
 
                 if (addConstraint) {
-                    c.mId = mProject->getUnusedEventConstraintId(eventsConstraints);
+                    c.mId = project->getUnusedEventConstraintId(eventsConstraints);
 
                     QJsonObject constraint = c.toJson();
                     eventsConstraints.append(constraint);

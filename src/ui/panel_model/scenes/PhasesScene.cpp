@@ -64,13 +64,13 @@ PhasesScene::~PhasesScene()
  */
 void PhasesScene::deleteSelectedItems()
 {
-    mProject->deleteSelectedPhases();
+    getProject_ptr()->deleteSelectedPhases();
     emit noSelection();
 }
 
 bool PhasesScene::constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo)
 {
-    const QJsonArray& constraints = mProject->mState.value(STATE_PHASES_CONSTRAINTS).toArray();
+    const QJsonArray& constraints = getProject_ptr()->mState.value(STATE_PHASES_CONSTRAINTS).toArray();
 
     const QJsonObject& phaseFrom = ((PhaseItem*)itemFrom)->getData();
     const QJsonObject& phaseTo   = ((PhaseItem*)itemTo)->getData();
@@ -114,7 +114,7 @@ void PhasesScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)
     const QJsonObject phaseFrom = dynamic_cast<PhaseItem*>(itemFrom)->getData();
     const QJsonObject phaseTo = dynamic_cast<PhaseItem*>(itemTo)->getData();
 
-    mProject->createPhaseConstraint(phaseFrom.value(STATE_ID).toInt(),
+    getProject_ptr()->createPhaseConstraint(phaseFrom.value(STATE_ID).toInt(),
                                                         phaseTo.value(STATE_ID).toInt());
 }
 
@@ -123,7 +123,7 @@ void PhasesScene::mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo)
     QJsonObject phaseFrom = ((PhaseItem*)itemFrom)->getData();
     QJsonObject phaseTo = ((PhaseItem*)itemTo)->getData();
 
-    mProject->mergePhases(phaseFrom.value(STATE_ID).toInt(),
+    getProject_ptr()->mergePhases(phaseFrom.value(STATE_ID).toInt(),
                                               phaseTo.value(STATE_ID).toInt());
 }
 
@@ -157,7 +157,7 @@ void PhasesScene::sendUpdateProject(const QString& reason, bool notify, bool sto
 {
     qDebug()<<"[PhasesScene::sendUpdateProject] "<<reason<<notify<<storeUndoCommand;
     //QJsonObject statePrev = mProject->state();
-    QJsonObject stateNext = mProject->state();
+    QJsonObject stateNext = getProject_ptr()->state();
 
     QJsonArray phases = QJsonArray();
     for (const auto &item : mItems)
@@ -166,9 +166,9 @@ void PhasesScene::sendUpdateProject(const QString& reason, bool notify, bool sto
     stateNext[STATE_PHASES] = phases;
 
     if (storeUndoCommand)
-        mProject->pushProjectState(stateNext, reason, notify);
+        getProject_ptr()->pushProjectState(stateNext, reason, notify);
     else
-        mProject->sendUpdateState(stateNext, reason, notify);
+        getProject_ptr()->sendUpdateState(stateNext, reason, notify);
 
 }
 
@@ -176,7 +176,7 @@ void PhasesScene::createSceneFromState()
  {
      qDebug()<<"[PhasesScene::createSceneFromState]";
 
-     const QJsonObject state = mProject->state();
+     const QJsonObject state = getProject_ptr()->state();
      const QJsonArray phases = state.value(STATE_PHASES).toArray();
      const QJsonArray constraints = state.value(STATE_PHASES_CONSTRAINTS).toArray();
 
@@ -243,10 +243,10 @@ void PhasesScene::updateSceneFromState()
     startTime.start();
 #endif
 
-    if (mProject->mState.value(STATE_EVENTS).toArray().isEmpty() && mProject->mState.value(STATE_PHASES).toArray().isEmpty() && mItems.isEmpty())
+    if (getProject_ptr()->mState.value(STATE_EVENTS).toArray().isEmpty() && getProject_ptr()->mState.value(STATE_PHASES).toArray().isEmpty() && mItems.isEmpty())
         return;
 
-    if (mProject->mState.value(STATE_PHASES).toArray().isEmpty() && mItems.isEmpty()) {
+    if (getProject_ptr()->mState.value(STATE_PHASES).toArray().isEmpty() && mItems.isEmpty()) {
         // ------------------------------------------------------
         //  Delete items not in current state
         // ------------------------------------------------------
@@ -272,7 +272,7 @@ void PhasesScene::updateSceneFromState()
         mConstraintItems.squeeze();
         return;
     }
-    const QJsonObject &state = mProject->state();
+    const QJsonObject &state = getProject_ptr()->state();
     const QJsonArray &phases = state.value(STATE_PHASES).toArray();
     const QJsonArray &constraints = state.value(STATE_PHASES_CONSTRAINTS).toArray();
 
@@ -483,7 +483,6 @@ void PhasesScene::clean()
         constraintItem = nullptr;
     }
 
-    mProject = nullptr;
     clear();
     setSceneRect(QRectF());
     update(sceneRect());
@@ -647,17 +646,17 @@ void PhasesScene::itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent
 {
     AbstractScene::itemDoubleClicked(item, e);
     if (!mDrawingArrow)
-        mProject->updatePhase(static_cast<PhaseItem*>(item)->getData());
+        getProject_ptr()->updatePhase(static_cast<PhaseItem*>(item)->getData());
 }
 
 void PhasesScene::constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent*)
 {
-    mProject->updatePhaseConstraint(item->data().value(STATE_ID).toInt());
+    getProject_ptr()->updatePhaseConstraint(item->data().value(STATE_ID).toInt());
 }
 
 void PhasesScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent*)
 {
-    mProject->updatePhaseConstraint(item->data().value(STATE_ID).toInt());
+    getProject_ptr()->updatePhaseConstraint(item->data().value(STATE_ID).toInt());
 }
 
 

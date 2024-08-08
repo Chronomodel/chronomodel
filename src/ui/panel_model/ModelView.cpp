@@ -346,8 +346,8 @@ void ModelView::setProject()
         disconnectScenes();
     }
 
-    mPhasesScene->setProject(project);
-    mEventsScene->setProject(project);
+   // mPhasesScene->setProject();
+   // mEventsScene->setProject();
 
     mCurveSettingsView->setProject();
 

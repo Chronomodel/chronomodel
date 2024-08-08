@@ -46,7 +46,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 
 AbstractScene::AbstractScene(QGraphicsView* view, QObject* parent):QGraphicsScene(parent),
-    mProject(nullptr),
     mView(view),
     mUpdatingItems(false),
     mAltIsDown(false),
@@ -62,16 +61,6 @@ AbstractScene::AbstractScene(QGraphicsView* view, QObject* parent):QGraphicsScen
     mTempArrow->setVisible(false);
 }
 
-// Setter & Getter
-void AbstractScene::setProject(std::shared_ptr<Project> project)
-{
-    mProject = project;
-}
-
-std::shared_ptr<Project> AbstractScene::getProject() const
-{
-   return  mProject;
-}
 
 AbstractScene::~AbstractScene()
 {

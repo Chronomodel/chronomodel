@@ -131,13 +131,13 @@ void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
         if (insertRect().contains(e->pos())) {
             //qDebug() << "[PhaseItem::mousePressEvent]-> insertRect clicked";
             e->accept();
-            mScene->getProject()->updatePhaseEvents(mData.value(STATE_ID).toInt(), Project::InsertEventsToPhase);
+            getProject_ptr()->updatePhaseEvents(mData.value(STATE_ID).toInt(), Project::InsertEventsToPhase);
             return;
 
         } else if (matLeastOneEventSelected && extractRect().contains(e->pos())) {
             //qDebug() << "PhaseItem::mousePressEvent-> extractRect clicked";
             e->accept();
-            mScene->getProject()->updatePhaseEvents(mData.value(STATE_ID).toInt(), Project::ExtractEventsFromPhase);
+            getProject_ptr()->updatePhaseEvents(mData.value(STATE_ID).toInt(), Project::ExtractEventsFromPhase);
             return;
         }
 
