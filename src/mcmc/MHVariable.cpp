@@ -56,23 +56,33 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 /** Default constructor */
 MHVariable::MHVariable():
+    mSigmaMH(0),
     mLastAcceptsLength(0),
-    mGlobalAcceptationPerCent(.0),
-    mHistoryAcceptRateMH(nullptr)
+    mGlobalAcceptationPerCent(0),
+    mHistoryAcceptRateMH(nullptr),
+    mSamplerProposal(eDoubleExp)
 {
 }
 
 /** Copy constructor */
 
 MHVariable::MHVariable(const MHVariable& origin):
-    MetropolisVariable(origin)
+    MetropolisVariable(origin),
+    mSigmaMH(origin.mSigmaMH),
+    mLastAcceptsLength(origin.mLastAcceptsLength),
+    mGlobalAcceptationPerCent(origin.mGlobalAcceptationPerCent),
+    mSamplerProposal(origin.mSamplerProposal)
 {
     mAllAccepts.clear();
- 
-    if (origin.mHistoryAcceptRateMH) {
-        mHistoryAcceptRateMH = new QList<double>(origin.mHistoryAcceptRateMH->size());
-        std::copy(origin.mHistoryAcceptRateMH->begin(), origin.mHistoryAcceptRateMH->end(), mRawTrace->begin());
+
+    if (origin.mHistoryAcceptRateMH && !origin.mHistoryAcceptRateMH->isEmpty()) {
+        if (mHistoryAcceptRateMH)
+            mHistoryAcceptRateMH->resize(origin.mHistoryAcceptRateMH->size());
+        else
+            mHistoryAcceptRateMH = new QList<double>(origin.mHistoryAcceptRateMH->size());
+        std::copy(origin.mHistoryAcceptRateMH->begin(), origin.mHistoryAcceptRateMH->end(), mHistoryAcceptRateMH->begin());
     }
+
 }
 
 MHVariable::MHVariable(const MetropolisVariable& origin):
@@ -84,8 +94,8 @@ MHVariable::MHVariable(const MetropolisVariable& origin):
 
 MHVariable::~MHVariable()
 {
-    
-    delete mHistoryAcceptRateMH;
+    if (mHistoryAcceptRateMH) // && !mHistoryAcceptRateMH->isEmpty())
+        delete mHistoryAcceptRateMH;
     mHistoryAcceptRateMH = nullptr;
 }
 
@@ -145,6 +155,11 @@ bool MHVariable::adapt (const double coef_min, const double coef_max, const doub
 void MHVariable::reset()
 {
     MetropolisVariable::reset();
+
+    if (mHistoryAcceptRateMH != nullptr) {
+        mHistoryAcceptRateMH->clear();
+        //mHistoryAcceptRateMH->squeeze();
+    }
 
     mLastAccepts.clear();
     mAllAccepts.clear();// mAllAccepts.clear(); //don't clean, avalable for cumulate chain

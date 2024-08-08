@@ -40,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "SetProjectState.h"
 #include "Project.h"
 
-SetProjectState::SetProjectState(Project* project, const QJsonObject &prevState, const QJsonObject &nextState, const QString &reason, bool notify):
+SetProjectState::SetProjectState(Project* project, const QJsonObject& prevState, const QJsonObject& nextState, const QString& reason, bool notify):
     mProject(project),
     mPrevState(prevState),
     mNextState(nextState),
@@ -53,7 +53,7 @@ SetProjectState::SetProjectState(Project* project, const QJsonObject &prevState,
     setText(mReason);
 }
 
-SetProjectState:: ~SetProjectState()
+SetProjectState::~SetProjectState()
 {
     mProject = nullptr;
 }
@@ -63,7 +63,7 @@ void SetProjectState::undo()
     qDebug()<<"[SetProjectState::undo] notify=" << mNotify << " reason=" << mReason;
     mProject->mState = mPrevState;
     emit mProject->currentEventChanged(nullptr);
-   // emit mProject->noResult();
+
     emit mProject->projectStateChanged();
 }
 

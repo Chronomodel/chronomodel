@@ -64,7 +64,6 @@ extern QString res_file_version;
 
 Model::Model(QObject* parent):
     QObject(parent),
-    mProject(nullptr),
     mNumberOfPhases(0),
     mNumberOfEvents(0),
     mNumberOfDates(0),
@@ -78,7 +77,6 @@ Model::Model(QObject* parent):
 
 Model::Model(const QJsonObject& json, QObject* parent):
     QObject(parent),
-    mProject(nullptr),
     mNumberOfPhases(0),
     mNumberOfEvents(0),
     mNumberOfDates(0),
@@ -212,7 +210,6 @@ Model::Model(const QJsonObject& json, QObject* parent):
 
 Model::~Model()
 {
-    mProject = nullptr;
 }
 
 void Model::clear()
@@ -307,8 +304,8 @@ void Model::fromJson(const QJsonObject& json)
         QJsonArray events = json.value(STATE_EVENTS).toArray();
         mNumberOfEvents = (int) events.size();
 
-        for (int i = 0; i < events.size(); ++i) {
-            const QJsonObject JSONevent = events.at(i).toObject();
+        for (auto ev : events) {
+            const QJsonObject JSONevent = ev.toObject();
 
             if (JSONevent.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
                 try {
@@ -340,8 +337,8 @@ void Model::fromJson(const QJsonObject& json)
 
     if (json.contains(STATE_EVENTS_CONSTRAINTS)) {
         const QJsonArray constraints = json.value(STATE_EVENTS_CONSTRAINTS).toArray();
-        for (int i=0; i<constraints.size(); ++i) {
-            const QJsonObject constraint = constraints.at(i).toObject();
+        for (auto& co : constraints) {
+            const QJsonObject constraint = co.toObject();
             EventConstraint* c = new EventConstraint(EventConstraint::fromJson(constraint));
             mEventConstraints.append(c);
         }
@@ -349,8 +346,8 @@ void Model::fromJson(const QJsonObject& json)
 
     if (json.contains(STATE_PHASES_CONSTRAINTS)) {
         const QJsonArray constraints = json.value(STATE_PHASES_CONSTRAINTS).toArray();
-        for (int i=0; i<constraints.size(); ++i) {
-            const QJsonObject constraint = constraints.at(i).toObject();
+        for (auto& co : constraints) {
+            const QJsonObject constraint = co.toObject();
             PhaseConstraint* c = new PhaseConstraint(PhaseConstraint::fromJson(constraint));
             mPhaseConstraints.append(c);
         }
@@ -400,134 +397,6 @@ void Model::fromJson(const QJsonObject& json)
 
     }
 
-}
-
-void Model::setProject( Project* project)
-{
-    mProject = project;
-    mCurveName.clear();
-    mCurveLongName.clear();
-
-    if (!mProject || !mProject->isCurve()) {
-        return;
-    }
-
-    //ModelCurve* curveModel = dynamic_cast<ModelCurve*>(mProject->mModel.get());
-    const auto &curveModel = mProject->mModel;
-
-    const QString xLabel = curveModel->mCurveSettings.XLabel();
-    const QString yLabel = curveModel->mCurveSettings.YLabel();
-    const QString zLabel = curveModel->mCurveSettings.ZLabel();
-
-    const QString x_short_name = curveModel->mCurveSettings.X_short_name();
-    const QString y_short_name = curveModel->mCurveSettings.Y_short_name();
-    const QString z_short_name = curveModel->mCurveSettings.Z_short_name();
-
-    switch (curveModel->mCurveSettings.mProcessType) {
-
-    case CurveSettings::eProcess_2D:
-    case CurveSettings::eProcess_Spherical:
-    case CurveSettings::eProcess_Unknwon_Dec:
-        mCurveName.append({x_short_name, y_short_name});
-        mCurveLongName.append({xLabel, yLabel});
-        break;
-
-    case CurveSettings::eProcess_3D:
-    case CurveSettings::eProcess_Vector:
-        mCurveName.append({x_short_name, y_short_name, z_short_name});
-        mCurveLongName.append({xLabel, yLabel, zLabel});
-        break;
-
-    case CurveSettings::eProcess_None:
-    case CurveSettings::eProcess_Univariate:
-    case CurveSettings::eProcess_Inclination:
-    case CurveSettings::eProcess_Declination:
-    case CurveSettings::eProcess_Field:
-    case CurveSettings::eProcess_Depth:
-    default:
-        mCurveName.append(x_short_name);
-        mCurveLongName.append(xLabel);
-        break;
-    }
-
-}
-
-
-/**
- * @brief ResultsView::updateModel Update Design
- */
-void Model::updateDesignFromJson()
-{
-    if (!mProject)
-        return;
-    setProject(mProject); // update mCurveName
-    const QJsonObject *state = mProject->state_ptr();
-    const QJsonArray events = state->value(STATE_EVENTS).toArray();
-    const QJsonArray phases = state->value(STATE_PHASES).toArray();
-
-    QJsonArray::const_iterator iterJSONEvent = events.constBegin();
-    while (iterJSONEvent != events.constEnd()) {
-        const QJsonObject eventJSON = (*iterJSONEvent).toObject();
-        const int eventId = eventJSON.value(STATE_ID).toInt();
-        const QJsonArray dates = eventJSON.value(STATE_EVENT_DATES).toArray();
-
-        QList<Event *>::iterator iterEvent = mEvents.begin();
-        while (iterEvent != mEvents.end()) {
-            if ((*iterEvent)->mId == eventId) {
-                (*iterEvent)->mName  = eventJSON.value(STATE_NAME).toString();
-                (*iterEvent)->mItemX = eventJSON.value(STATE_ITEM_X).toDouble();
-                (*iterEvent)->mItemY = eventJSON.value(STATE_ITEM_Y).toDouble();
-                (*iterEvent)->mIsSelected = eventJSON.value(STATE_IS_SELECTED).toBool();
-                (*iterEvent)->mColor = QColor(eventJSON.value(STATE_COLOR_RED).toInt(),
-                                              eventJSON.value(STATE_COLOR_GREEN).toInt(),
-                                              eventJSON.value(STATE_COLOR_BLUE).toInt());
-                
-                for (int k = 0; k<(*iterEvent)->mDates.size(); ++k) {
-                    Date& d = (*iterEvent)->mDates[k];
-                    for (auto &&dateVal : dates) {
-                        const QJsonObject date = dateVal.toObject();
-                        const int dateId = date.value(STATE_ID).toInt();
-
-                        if (dateId == d.mId) {
-                            d.mName = date.value(STATE_NAME).toString();
-                            d.mColor = (*iterEvent)->mColor;
-                            break;
-                        }
-                    }
-                }
-                break;
-            }
-            ++iterEvent;
-        }
-        ++iterJSONEvent;
-    }
-
-    QJsonArray::const_iterator iterJSONPhase = phases.constBegin();
-    while (iterJSONPhase != phases.constEnd()) {
-        const QJsonObject phaseJSON = (*iterJSONPhase).toObject();
-        const int phaseId = phaseJSON.value(STATE_ID).toInt();
-
-        for (const auto& p : mPhases) {
-            if (p->mId == phaseId) {
-                p->mName = phaseJSON.value(STATE_NAME).toString();
-                p->mItemX = phaseJSON.value(STATE_ITEM_X).toDouble();
-                p->mItemY = phaseJSON.value(STATE_ITEM_Y).toDouble();
-                p->mColor = QColor(phaseJSON.value(STATE_COLOR_RED).toInt(),
-                                   phaseJSON.value(STATE_COLOR_GREEN).toInt(),
-                                   phaseJSON.value(STATE_COLOR_BLUE).toInt());
-                p->mIsSelected = phaseJSON.value(STATE_IS_SELECTED).toBool();
-                break;
-            }
-        }
-        ++iterJSONPhase;
-    }
-
-    std::sort(mEvents.begin(), mEvents.end(), sortEvents);
-    std::sort(mPhases.begin(), mPhases.end(), sortPhases);
-
-    for (const auto& p : mPhases ) {
-        std::sort(p->mEvents.begin(), p->mEvents.end(), sortEvents);
-    }
 }
 
 QJsonObject Model::toJson() const
@@ -867,7 +736,7 @@ QList<QStringList> Model::getEventsTraces(QLocale locale,const bool withDateForm
  */
 bool Model::isValid()
 {
-    bool curveModel = mProject->isCurve();
+    bool curveModel = getProject_ptr()->isCurve();
     // 1 - At least one event is required in a model
     // 3 events is needed for a curve
     if (mEvents.isEmpty()) {
@@ -1327,8 +1196,8 @@ void Model::updateDensities(int fftLen, double bandwidth, double threshold)
 {
     clearPosteriorDensities();
 
-    if (mProject->mLoop)
-        emit mProject->mLoop->setMessage(QObject::tr("Computing posterior distributions and numerical results"));
+    if (getProject_ptr()->mLoop)
+        emit getProject_ptr()->mLoop->setMessage(QObject::tr("Computing posterior distributions and numerical results"));
     generateCredibility(threshold);
 
     updateFormatSettings(); // update formatedCredibility and formatedTrace
@@ -2221,7 +2090,7 @@ void Model::restoreFromFile_v323(QDataStream *in)
                 *in >> tmp;
                 d.setTmaxRefCurve(tmp);
 
-                d.mCalibration = & (mProject->mCalibCurves[d.mUUID]);
+                d.mCalibration = & (getProject_ptr()->mCalibCurves[d.mUUID]);
 
                 quint32 tmpUint32;
                 *in >> tmpUint32;
@@ -2240,7 +2109,7 @@ void Model::restoreFromFile_v323(QDataStream *in)
                     qDebug()<<"[Model::restoreFromFile] mWiggleCalibration vide";
 
                 } else {
-                    d.mWiggleCalibration = & (mProject->mCalibCurves[toFind]);
+                    d.mWiggleCalibration = & (getProject_ptr()->mCalibCurves[toFind]);
                 }
                 //#endif
             }
@@ -2359,7 +2228,7 @@ void Model::restoreFromFile_v324(QDataStream *in)
                 *in >> tmp;
                 d.setTmaxRefCurve(tmp);
 
-                d.mCalibration = & (mProject->mCalibCurves[d.mUUID]);
+                d.mCalibration = & (getProject_ptr()->mCalibCurves[d.mUUID]);
 
                 quint32 tmpUint32;
                 *in >> tmpUint32;
@@ -2378,7 +2247,7 @@ void Model::restoreFromFile_v324(QDataStream *in)
                     qDebug()<<"[Model::restoreFromFile] mWiggleCalibration vide";
 
                 } else {
-                    d.mWiggleCalibration = & (mProject->mCalibCurves[toFind]);
+                    d.mWiggleCalibration = & (getProject_ptr()->mCalibCurves[toFind]);
                 }
                 //#endif
             }

@@ -39,22 +39,24 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ResultsView.h"
 
+#include "Bound.h"
 #include "GraphView.h"
 #include "GraphViewDate.h"
 #include "GraphViewEvent.h"
-#include "GraphViewPhase.h"
 #include "GraphViewLambda.h"
 #include "GraphViewCurve.h"
+#include "GraphViewPhase.h"
 #include "GraphViewS02.h"
 
+#include "ProjectView.h"
 #include "QtCore/qobjectdefs.h"
+#include "StdUtilities.h"
 #include "Tabs.h"
 #include "Ruler.h"
 #include "Marker.h"
 
 #include "Date.h"
 #include "Event.h"
-#include "Bound.h"
 #include "Phase.h"
 
 #include "Label.h"
@@ -68,7 +70,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Project.h"
 
 #include "QtUtilities.h"
-#include "StdUtilities.h"
 #include "ModelUtilities.h"
 #include "AppSettings.h"
 #include "ModelCurve.h"
@@ -78,9 +79,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QFontDialog>
 
 
-ResultsView::ResultsView(std::shared_ptr<Project> project, QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-    mModel(project ? project->mModel : nullptr),
-
+ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
     mMargin(5),
     mOptionsW(250),
     mMarginLeft(40),
@@ -1093,18 +1092,19 @@ ResultsView::ResultsView(std::shared_ptr<Project> project, QWidget* parent, Qt::
 
     mMarker->raise();
 
-    updateOptionsWidget();
+    createOptionsWidget();
+
 }
 
 ResultsView::~ResultsView()
 {
-    mModel = nullptr;
 }
 
 
 #pragma mark Project & Model
 
-void ResultsView::setProject(const std::shared_ptr<Project> project)
+
+void ResultsView::setProject()
 {
     /* Starting MCMC calculation does a mModel.clear() at first, and recreate it.
      * Then, it fills its elements (events, ...) with calculated data (trace, ...)
@@ -1112,8 +1112,8 @@ void ResultsView::setProject(const std::shared_ptr<Project> project)
      * => The previous nor the new results can be displayed so we must start by clearing the results view! */
 
     clearResults();
-    initModel(project->mModel);
-    connect(project.get(), &Project::mcmcStarted, this, &ResultsView::clearResults);
+    initModel();
+    connect(getProject_ptr().get(), &Project::mcmcStarted, this, &ResultsView::clearResults);
 }
 
 void ResultsView::clearResults()
@@ -1135,27 +1135,14 @@ void ResultsView::updateModel()
 
 }
 
-void ResultsView::initModel(const std::shared_ptr<ModelCurve> model)
+void ResultsView::initModel()
 {
-    mModel = model;
-    disconnect(mModel.get(), nullptr, nullptr, nullptr);
+    auto model = getModel_ptr();
+    disconnect(model.get(), nullptr, nullptr, nullptr);
 
-    connect(mModel.get(), &Model::newCalculus, this, &ResultsView::generateCurves);
+    connect(model.get(), &Model::newCalculus, this, &ResultsView::generateCurves);
 
-    /*Scale timeScale;
-    timeScale.findOptimalMark(mModel->mSettings.getTminFormated(), mModel->mSettings.getTmaxFormated(), 7);
-    mMajorScale = timeScale.mark;
-    mMinorCountScale = 4;
-
-    mRuler->setRange(mModel->mSettings.getTminFormated(), mModel->mSettings.getTmaxFormated());
-    mRuler->setCurrent(mModel->mSettings.getTminFormated(), mModel->mSettings.getTmaxFormated());
-    mRuler->setScaleDivision(mMajorScale, mMinorCountScale);
-
-    QLocale locale = QLocale();
-    mMajorScaleEdit->setText(locale.toString(mMajorScale));
-    mMinorScaleEdit->setText(locale.toString(mMinorCountScale));*/ // done by applystudyPeriod
-
-    mHasPhases = (mModel->mPhases.size() > 0);
+    mHasPhases = (model->mPhases.size() > 0);
 
     // ----------------------------------------------------
     //  Create Chains option controls (radio and checkboxes under "MCMC Chains")
@@ -1166,18 +1153,17 @@ void ResultsView::initModel(const std::shared_ptr<ModelCurve> model)
     mCurrentTypeGraph = GraphViewResults::ePostDistrib;
     mCurrentVariableList.clear();
     if (isCurve()) {
-        const auto modelCurve = mModel;//static_cast<const ModelCurve*> (model);
         mMainVariable = GraphViewResults::eG;
         mCurveGRadio->setChecked(true);
         mGraphListTab->setTab(2, false);
 
-        const auto &gx = modelCurve->mPosteriorMeanG.gx;
+        const auto &gx = model->mPosteriorMeanG.gx;
         const auto minmax_Y = gx.mapG.rangeY;
 
         double minY = +INFINITY;
         double maxY = -INFINITY;
-        minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mXIncDepth, x);});
-        maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mXIncDepth, x);});
+        minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mXIncDepth, x);});
+        maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mXIncDepth, x);});
         int i = 0;
         for (const auto &g : gx.vecG) {
             const auto e = 1.96*sqrt(gx.vecVarG.at(i));
@@ -1193,18 +1179,18 @@ void ResultsView::initModel(const std::shared_ptr<ModelCurve> model)
         mResultCurrentMaxX = XScale.max;
         setXRange();
 
-        mXOptionTitle->setText(mModel->getCurvesLongName().at(0) + " " + tr("Scale"));
-        mXOptionLab->setText(mModel->getCurvesName().at(0));
-        mXOptionBut->setText(tr("Optimal") + " " + mModel->getCurvesName().at(0) + " " + tr("Display"));
+        mXOptionTitle->setText(model->getCurvesLongName().at(0) + " " + tr("Scale"));
+        mXOptionLab->setText(model->getCurvesName().at(0));
+        mXOptionBut->setText(tr("Optimal") + " " + model->getCurvesName().at(0) + " " + tr("Display"));
 
-        if (mModel->displayY() && !modelCurve->mPosteriorMeanG.gy.vecG.empty() ) {
-            const auto &gy = modelCurve->mPosteriorMeanG.gy;
+        if (model->displayY() && !model->mPosteriorMeanG.gy.vecG.empty() ) {
+            const auto &gy = model->mPosteriorMeanG.gy;
             const auto minmax_Y = gy.mapG.rangeY;
 
             minY = +INFINITY;
             maxY = -INFINITY;
-            minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mYDec, x);});
-            maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mYDec, x);});
+            minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mYDec, x);});
+            maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mYDec, x);});
             int i = 0;
             for (const auto &g : gy.vecG) {
                 const auto e = 1.96*sqrt(gy.vecVarG.at(i));
@@ -1218,18 +1204,18 @@ void ResultsView::initModel(const std::shared_ptr<ModelCurve> model)
             mResultCurrentMinY = XScale.min;
             mResultCurrentMaxY = XScale.max;
             setYRange();
-            mYOptionTitle->setText(mModel->getCurvesLongName().at(1) + " " + tr("Scale"));
-            mYOptionLab->setText(mModel->getCurvesName().at(1));
-            mYOptionBut->setText(tr("Optimal") + " " + mModel->getCurvesName().at(1) + " " + tr("Display"));
+            mYOptionTitle->setText(model->getCurvesLongName().at(1) + " " + tr("Scale"));
+            mYOptionLab->setText(model->getCurvesName().at(1));
+            mYOptionBut->setText(tr("Optimal") + " " + model->getCurvesName().at(1) + " " + tr("Display"));
 
-            if (mModel->displayZ() && !modelCurve->mPosteriorMeanG.gz.vecG.empty() ) {
-                const auto &gz = modelCurve->mPosteriorMeanG.gz;
+            if (model->displayZ() && !model->mPosteriorMeanG.gz.vecG.empty() ) {
+                const auto &gz = model->mPosteriorMeanG.gz;
                 const auto minmax_Y = gz.mapG.rangeY;
 
                 minY = +INFINITY;
                 maxY = -INFINITY;
-                minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mZField, x);});
-                maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mZField, x);});
+                minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mZField, x);});
+                maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mZField, x);});
                 int i = 0;
                 for (const auto &g : gz.vecG) {
                     const auto e = 1.96*sqrt(gz.vecVarG.at(i));
@@ -1244,9 +1230,9 @@ void ResultsView::initModel(const std::shared_ptr<ModelCurve> model)
                 mResultCurrentMinZ = XScale.min;
                 mResultCurrentMaxZ = XScale.max;
                 setZRange();
-                mZOptionTitle->setText(mModel->getCurvesLongName().at(2) + " " + tr("Scale"));
-                mZOptionLab->setText(mModel->getCurvesName().at(2));
-                mZOptionBut->setText(tr("Optimal") + " " + mModel->getCurvesName().at(2) + " " + tr("Display"));
+                mZOptionTitle->setText(model->getCurvesLongName().at(2) + " " + tr("Scale"));
+                mZOptionLab->setText(model->getCurvesName().at(2));
+                mZOptionBut->setText(tr("Optimal") + " " + model->getCurvesName().at(2) + " " + tr("Display"));
             }
         }
 
@@ -1261,11 +1247,11 @@ void ResultsView::initModel(const std::shared_ptr<ModelCurve> model)
     updateMainVariable();
     mCurrentVariableList.append(mMainVariable);
     mRangeThresholdEdit->setText(stringForLocal(95.));
-    mThresholdEdit->setText(stringForLocal(mModel->getThreshold()));
-    mHActivityEdit->setText(stringForLocal(mModel->mHActivity));
+    mThresholdEdit->setText(stringForLocal(model->getThreshold()));
+    mHActivityEdit->setText(stringForLocal(model->mHActivity));
 
-    mFFTLenCombo->setCurrentText(stringForLocal(mModel->getFFTLength()));
-    mBandwidthSpin->setValue(mModel->getBandwidth());
+    mFFTLenCombo->setCurrentText(stringForLocal(model->getFFTLength()));
+    mBandwidthSpin->setValue(model->getBandwidth());
 
     updateGraphsMinMax();
     applyStudyPeriod();
@@ -1590,6 +1576,7 @@ void ResultsView::applyCurrentVariable()
 
 void ResultsView::toggleDisplayDistrib()
 {
+    auto model = getModel_ptr();
     const bool isPostDistrib = isPostDistribGraph();
     // -------------------------------------------------------------------------------------
     //  MCMC Display options are not visible for mCurrentVariable = Tempo
@@ -1605,9 +1592,9 @@ void ResultsView::toggleDisplayDistrib()
         mDisplayDistribTab->setTabVisible(1, true);
     }
 
-    const bool displayX = mModel->displayX();
-    const bool displayY = mModel->displayY();
-    const bool displayZ = mModel->displayZ();
+    const bool displayX = model->displayX();
+    const bool displayY = model->displayY();
+    const bool displayZ = model->displayZ();
     // Search for the visible widget
     QWidget* widFrom = nullptr;
     int widHeigth = 0;
@@ -1721,10 +1708,11 @@ void ResultsView::toggleDisplayDistrib()
 
 void ResultsView::createChainsControls()
 {
-    if (mModel->mChains.size() != mChainChecks.size()) {
+    auto model =getModel_ptr();
+    if (model->mChains.size() != mChainChecks.size()) {
         deleteChainsControls();
 
-        for (int i=0; i<mModel->mChains.size(); ++i) {
+        for (int i=0; i<model->mChains.size(); ++i) {
             CheckBox* check = new CheckBox(tr("Chain %1").arg(QString::number(i+1)), mChainsGroup);
             check->setFixedHeight(16);
             check->setVisible(true);
@@ -1767,7 +1755,7 @@ void ResultsView::deleteChainsControls()
 
 void ResultsView::createGraphs()
 {
-    if (!mModel) {
+    if (getModel_ptr() == nullptr) {
         return;
     }
 
@@ -1787,7 +1775,8 @@ void ResultsView::createGraphs()
 
 void ResultsView::updateTotalGraphs()
 {
-    if (!mModel) {
+    auto model = getModel_ptr();
+    if (model == nullptr) {
         mMaximunNumberOfVisibleGraph = 0;
         return;
     }
@@ -1795,8 +1784,8 @@ void ResultsView::updateTotalGraphs()
     int totalGraphs = 0;
     
     if (mGraphListTab->currentName() == tr("Events")) {
-        bool showAllEvents = ! mModel->hasSelectedEvents();
-        for (const auto& event : mModel->mEvents) {
+        bool showAllEvents = ! model->hasSelectedEvents();
+        for (const auto& event : model->mEvents) {
             if (event->mIsSelected || showAllEvents) {
                 ++totalGraphs;
                 
@@ -1806,9 +1795,9 @@ void ResultsView::updateTotalGraphs()
             }
         }
     } else if (mGraphListTab->currentName() == tr("Phases")) {
-        bool showAllPhases = ! mModel->hasSelectedPhases();
+        bool showAllPhases = ! model->hasSelectedPhases();
 
-        for (const auto& phase : mModel->mPhases) {
+        for (const auto& phase : model->mPhases) {
             if (phase->mIsSelected || showAllPhases) {
                 ++totalGraphs;
                 
@@ -1828,10 +1817,10 @@ void ResultsView::updateTotalGraphs()
             ++totalGraphs;
 
         } else {
-            if (!mModel->mEvents.isEmpty() && isCurve()) {
+            if (!model->mEvents.isEmpty() && isCurve()) {
                 ++totalGraphs;
-                if (mModel->displayY()) ++totalGraphs;
-                if (mModel->displayZ()) ++totalGraphs;
+                if (model->displayY()) ++totalGraphs;
+                if (model->displayZ()) ++totalGraphs;
             }
         }
     }
@@ -1844,7 +1833,11 @@ void ResultsView::updateTotalGraphs()
  */
 void ResultsView::createByEventsGraphs()
 {
-    Q_ASSERT(mModel);
+    auto model = getModel_ptr();
+    if (model == nullptr) {
+        mMaximunNumberOfVisibleGraph = 0;
+        return;
+    }
 
     // ----------------------------------------------------------------------
     //  Disconnect and delete existing graphs
@@ -1854,7 +1847,7 @@ void ResultsView::createByEventsGraphs()
     // ----------------------------------------------------------------------
     // Show all events unless at least one is selected
     // ----------------------------------------------------------------------
-    bool showAllEvents = ! mModel->hasSelectedEvents();
+    bool showAllEvents = ! model->hasSelectedEvents();
 
     // ----------------------------------------------------------------------
     //  Iterate through all events and create corresponding graphs
@@ -1862,12 +1855,12 @@ void ResultsView::createByEventsGraphs()
     QWidget* eventsWidget = mEventsScrollArea->widget();
     int graphIndex = 0;
 
-    for (const auto& event : mModel->mEvents) {
+    for (const auto& event : model->mEvents) {
         if (event->mIsSelected || showAllEvents) {
             if (graphIndexIsInCurrentPage(graphIndex)) {
                 GraphViewEvent* graph = new GraphViewEvent(eventsWidget);
-                graph->setSettings(mModel->mSettings);
-                graph->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+                graph->setSettings(model->mSettings);
+                graph->setMCMCSettings(model->mMCMCSettings, model->mChains);
                 graph->setEvent(event);
                 graph->setGraphsFont(mFontBut->font());
                 graph->setGraphsThickness(mThicknessCombo->currentIndex());
@@ -1887,8 +1880,8 @@ void ResultsView::createByEventsGraphs()
                 for (auto&& date : event->mDates) {
                     if (graphIndexIsInCurrentPage(graphIndex)) {
                         GraphViewDate* graph = new GraphViewDate(eventsWidget);
-                        graph->setSettings(mModel->mSettings);
-                        graph->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+                        graph->setSettings(model->mSettings);
+                        graph->setMCMCSettings(model->mMCMCSettings, model->mChains);
                         graph->setDate(&date);
                         graph->setGraphsFont(mFontBut->font());
                         graph->setGraphsThickness(mThicknessCombo->currentIndex());
@@ -1911,7 +1904,11 @@ void ResultsView::createByEventsGraphs()
 
 void ResultsView::createByPhasesGraphs()
 {
-    Q_ASSERT(mModel);
+    auto model = getModel_ptr();
+    if (model == nullptr) {
+        mMaximunNumberOfVisibleGraph = 0;
+        return;
+    }
 
     // ----------------------------------------------------------------------
     //  Disconnect and delete existing graphs
@@ -1921,7 +1918,7 @@ void ResultsView::createByPhasesGraphs()
     // ----------------------------------------------------------------------
     // Show all, unless at least one is selected
     // ----------------------------------------------------------------------
-    const bool showAllPhases = ! mModel->hasSelectedPhases();
+    const bool showAllPhases = ! model->hasSelectedPhases();
 
     // ----------------------------------------------------------------------
     //  Iterate through all, and create corresponding graphs
@@ -1929,12 +1926,12 @@ void ResultsView::createByPhasesGraphs()
     QWidget* phasesWidget = mPhasesScrollArea->widget();
     int graphIndex = 0;
 
-    for (const auto& phase : mModel->mPhases) {
+    for (const auto& phase : model->mPhases) {
         if (phase->mIsSelected || showAllPhases) {
             if (graphIndexIsInCurrentPage(graphIndex)) {
                 GraphViewPhase* graph = new GraphViewPhase(phasesWidget);
-                graph->setSettings(mModel->mSettings);
-                graph->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+                graph->setSettings(model->mSettings);
+                graph->setMCMCSettings(model->mMCMCSettings, model->mChains);
                 graph->setPhase(phase);
                 graph->setGraphsFont(mFontBut->font());
                 graph->setGraphsThickness(mThicknessCombo->currentIndex());
@@ -1951,8 +1948,8 @@ void ResultsView::createByPhasesGraphs()
                 for (const auto& event : phase->mEvents) {
                      if (graphIndexIsInCurrentPage(graphIndex)) {
                         GraphViewEvent* graph = new GraphViewEvent(phasesWidget);
-                        graph->setSettings(mModel->mSettings);
-                        graph->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+                        graph->setSettings(model->mSettings);
+                        graph->setMCMCSettings(model->mMCMCSettings, model->mChains);
                         graph->setEvent(event);
                         graph->setGraphsFont(mFontBut->font());
                         graph->setGraphsThickness(mThicknessCombo->currentIndex());
@@ -1970,8 +1967,8 @@ void ResultsView::createByPhasesGraphs()
                         for (auto& date : event->mDates) {                            
                             if (graphIndexIsInCurrentPage(graphIndex))  {
                                 GraphViewDate* graph = new GraphViewDate(phasesWidget);
-                                graph->setSettings(mModel->mSettings);
-                                graph->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+                                graph->setSettings(model->mSettings);
+                                graph->setMCMCSettings(model->mMCMCSettings, model->mChains);
                                 graph->setDate(&date);
                                 graph->setGraphsFont(mFontBut->font());
                                 graph->setGraphsThickness(mThicknessCombo->currentIndex());
@@ -1999,11 +1996,14 @@ void ResultsView::createByCurveGraph()
    if (!isCurve())
         return;
 
-    auto model = modelCurve();
+   auto model = getModel_ptr();
+   if (model == nullptr) {
+       return;
+   }
     // ----------------------------------------------------------------------
     // Show all events unless at least one is selected
     // ----------------------------------------------------------------------
-    bool showAllEvents = ! mModel->hasSelectedEvents();
+    bool showAllEvents = ! model->hasSelectedEvents();
 
     // ----------------------------------------------------------------------
     //  Disconnect and delete existing graphs
@@ -2014,15 +2014,14 @@ void ResultsView::createByCurveGraph()
     blockSignals(true);
     if (mLambdaRadio->isChecked())  {
         GraphViewLambda* graphAlpha = new GraphViewLambda(widget);
-        graphAlpha->setSettings(mModel->mSettings);
-        graphAlpha->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+        graphAlpha->setSettings(model->mSettings);
+        graphAlpha->setMCMCSettings(model->mMCMCSettings, model->mChains);
         graphAlpha->setGraphsFont(mFontBut->font());
         graphAlpha->setGraphsThickness(mThicknessCombo->currentIndex());
         graphAlpha->changeXScaleDivision(mMajorScale, mMinorCountScale);
         graphAlpha->setMarginLeft(mMarginLeft);
         graphAlpha->setMarginRight(mMarginRight);
         graphAlpha->setTitle(tr("Smoothing"));
-        graphAlpha->setModel(model);
 
         mByCurveGraphs.append(graphAlpha);
 
@@ -2030,15 +2029,14 @@ void ResultsView::createByCurveGraph()
 
     } else  if (mS02VgRadio->isChecked())  {
         GraphViewS02* graphS02 = new GraphViewS02(widget);
-        graphS02->setSettings(mModel->mSettings);
-        graphS02->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+        graphS02->setSettings(model->mSettings);
+        graphS02->setMCMCSettings(model->mMCMCSettings, model->mChains);
         graphS02->setGraphsFont(mFontBut->font());
         graphS02->setGraphsThickness(mThicknessCombo->currentIndex());
         graphS02->changeXScaleDivision(mMajorScale, mMinorCountScale);
         graphS02->setMarginLeft(mMarginLeft);
         graphS02->setMarginRight(mMarginRight);
         graphS02->setTitle(tr("Curve Shrinkage"));
-        graphS02->setModel(model);
 
         mByCurveGraphs.append(graphS02);
 
@@ -2049,7 +2047,7 @@ void ResultsView::createByCurveGraph()
         const bool displayZ = model->displayZ();
 
         // insert refpoints for X
-        //  const double thresh = 68.4; //80;
+        //  const double thresh = 68.4;
 
         double pt_Ymin, pt_Ymax;
         QList<CurveRefPts> eventsPts;
@@ -2061,7 +2059,7 @@ void ResultsView::createByCurveGraph()
 
             //Same calcul within MultiCalibrationView::scatterPlot(const double thres)
             // Creation des points de ref
-            for (const auto& event : modelCurve()->mEvents) {
+            for (const auto& event : model->mEvents) {
                 if (event->mIsSelected || showAllEvents) {
                     CurveRefPts evPts;
                     CurveRefPts dPts;
@@ -2243,19 +2241,18 @@ void ResultsView::createByCurveGraph()
          }
 
         GraphViewCurve* graphX = new GraphViewCurve(widget);
-        graphX->setSettings(mModel->mSettings);
-        graphX->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+        graphX->setSettings(model->mSettings);
+        graphX->setMCMCSettings(model->mMCMCSettings, model->mChains);
         graphX->setGraphsFont(mFontBut->font());
         graphX->setGraphsThickness(mThicknessCombo->currentIndex());
         graphX->changeXScaleDivision(mMajorScale, mMinorCountScale);
         graphX->setMarginLeft(mMarginLeft);
         graphX->setMarginRight(mMarginRight);
 
-
         QString resultsHTML = ModelUtilities::curveResultsHTML(model);
         graphX->setNumericalResults(resultsHTML);
 
-        const QStringList curveLongName = mModel->getCurvesLongName();
+        const QStringList curveLongName = model->getCurvesLongName();
         const QString varRateText = tr("Var. Rate");
         const QString accelarationText = tr("Acceleration");
 
@@ -2272,10 +2269,8 @@ void ResultsView::createByCurveGraph()
             graphX->setTitle(curveTitleX);
         }
 
-        graphX->setComposanteG(mModel->mPosteriorMeanG.gx);
-        graphX->setComposanteGChains(mModel->getChainsMeanGComposanteX());
-        graphX->setModel(mModel);
-
+        graphX->setComposanteG(model->mPosteriorMeanG.gx);
+        graphX->setComposanteGChains(model->getChainsMeanGComposanteX());
 
         if (mMainVariable == GraphViewResults::eG) {
             graphX->setEventsPoints(eventsPts);
@@ -2290,8 +2285,8 @@ void ResultsView::createByCurveGraph()
         if (displayY) {
 
             GraphViewCurve* graphY = new GraphViewCurve(widget);
-            graphY->setSettings(mModel->mSettings);
-            graphY->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+            graphY->setSettings(model->mSettings);
+            graphY->setMCMCSettings(model->mMCMCSettings, model->mChains);
             graphY->setGraphsFont(mFontBut->font());
             graphY->setGraphsThickness(mThicknessCombo->currentIndex());
             graphY->changeXScaleDivision(mMajorScale, mMinorCountScale);
@@ -2310,17 +2305,15 @@ void ResultsView::createByCurveGraph()
                 graphY->setTitle(curveTitleY);
             }
 
-            graphY->setComposanteG(modelCurve()->mPosteriorMeanG.gy);
-            graphY->setComposanteGChains(modelCurve()->getChainsMeanGComposanteY());
-
-            graphY->setModel(mModel);
+            graphY->setComposanteG(model->mPosteriorMeanG.gy);
+            graphY->setComposanteGChains(model->getChainsMeanGComposanteY());
 
             if (mMainVariable == GraphViewResults::eG) {
                 // change the values of the Y and the error, with the values of the declination and the error, we keep tmean
                 int i = 0;
                 int iDataPts = 0;
                 int iEventPts = -1;
-                for (const auto& event : modelCurve()->mEvents) {
+                for (const auto& event : model->mEvents) {
                     if (event->mIsSelected || showAllEvents) {
                         for (auto j = 0 ; j< hpdPerEvent[i]; j++) {
                             iEventPts++;
@@ -2375,8 +2368,8 @@ void ResultsView::createByCurveGraph()
         
         if (displayZ) {
             GraphViewCurve* graphZ = new GraphViewCurve(widget);
-            graphZ->setSettings(mModel->mSettings);
-            graphZ->setMCMCSettings(mModel->mMCMCSettings, mModel->mChains);
+            graphZ->setSettings(model->mSettings);
+            graphZ->setMCMCSettings(model->mMCMCSettings, model->mChains);
             graphZ->setGraphsFont(mFontBut->font());
             graphZ->setGraphsThickness(mThicknessCombo->currentIndex());
             graphZ->changeXScaleDivision(mMajorScale, mMinorCountScale);
@@ -2395,15 +2388,14 @@ void ResultsView::createByCurveGraph()
                 graphZ->setTitle(curveTitleZ);
             }
 
-            graphZ->setComposanteG(modelCurve()->mPosteriorMeanG.gz);
-            graphZ->setComposanteGChains(modelCurve()->getChainsMeanGComposanteZ());
+            graphZ->setComposanteG(model->mPosteriorMeanG.gz);
+            graphZ->setComposanteGChains(model->getChainsMeanGComposanteZ());
 
-            graphZ->setModel(mModel);
             if (mMainVariable == GraphViewResults::eG) {
                 int i = 0;
                 int iDataPts = 0;
                 int iEventPts = -1;
-                for (const auto& event : modelCurve()->mEvents) {
+                for (const auto& event : model->mEvents) {
                     if (event->mIsSelected || showAllEvents) {
                         for (int j = 0 ; j< hpdPerEvent[i]; j++) {
                             iEventPts++;
@@ -2510,7 +2502,7 @@ bool ResultsView::graphIndexIsInCurrentPage(int graphIndex)
 void ResultsView::generateCurves()
 {
     QList<GraphViewResults*> listGraphs = currentGraphs(false);
-    const auto str_tip = mModel->getCurvesName();
+    const auto str_tip = getModel_ptr()->getCurvesName();
     int i = 0;
     for (GraphViewResults*& graphView : listGraphs) {
         graphView->generateCurves(GraphViewResults::graph_t(mCurrentTypeGraph), mCurrentVariableList);
@@ -2527,6 +2519,7 @@ void ResultsView::generateCurves()
 
 void ResultsView::updateGraphsMinMax()
 {
+    auto model = getModel_ptr();
     QList<GraphViewResults*> listGraphs = currentGraphs(false);
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
         if (mMainVariable == GraphViewResults::eDuration ||
@@ -2546,14 +2539,14 @@ void ResultsView::updateGraphsMinMax()
             mResultMaxT = getGraphsMax(listGraphs, "Lambda", 10.);
 
         } else {
-            mResultMinT = mModel->mSettings.getTminFormated();
-            mResultMaxT = mModel->mSettings.getTmaxFormated();
+            mResultMinT = model->mSettings.getTminFormated();
+            mResultMaxT = model->mSettings.getTmaxFormated();
         }
 
     } else if ((mCurrentTypeGraph == GraphViewResults::eTrace) || (mCurrentTypeGraph == GraphViewResults::eAccept)) {
             for (qsizetype i = 0; i<mChainRadios.size(); ++i) {
                 if (mChainRadios.at(i)->isChecked()) {
-                    const ChainSpecs& chain = mModel->mChains.at(i);
+                    const ChainSpecs& chain = model->mChains.at(i);
                     mResultMinT = 0;
                     const int adaptSize = chain.mBatchIndex * chain.mIterPerBatch;
                     const int runSize = chain.mRealyAccepted;
@@ -2607,6 +2600,7 @@ double ResultsView::getGraphsMin(const QList<GraphViewResults*> &graphs, const Q
  */
 void ResultsView::updateCurvesToShow()
 {
+    auto model = getModel_ptr();
     // --------------------------------------------------------
     //  Gather selected chain options
     // --------------------------------------------------------
@@ -2664,7 +2658,7 @@ void ResultsView::updateCurvesToShow()
             GraphViewCurve* graphCurve = static_cast<GraphViewCurve*>(graph);
             graphCurve->setShowNumericalResults(showStat);
 
-            QString graphName = mModel->getCurvesLongName().at(0);
+            QString graphName = model->getCurvesLongName().at(0);
             const QString varRateText = tr("Var. Rate");
             const QString accelarationText = tr("Acceleration");
 
@@ -2679,8 +2673,8 @@ void ResultsView::updateCurvesToShow()
                 graphCurve->updateCurvesToShowForG(showAllChains, showChainList, showVariableList, scaleX);
             }
 
-            if (mModel->displayY() ) {
-                graphName = mModel->getCurvesLongName().at(1);
+            if (model->displayY() ) {
+                graphName = model->getCurvesLongName().at(1);
                 if (mCurveGPRadio->isChecked())
                     graphName = graphName + " " + varRateText;
                 else if (mCurveGSRadio->isChecked())
@@ -2692,8 +2686,8 @@ void ResultsView::updateCurvesToShow()
                     graphCurve->updateCurvesToShowForG(showAllChains, showChainList, showVariableList, scaleY);
                 }
 
-                if (mModel->displayZ()) {
-                    graphName = mModel->getCurvesLongName().at(2);
+                if (model->displayZ()) {
+                    graphName = model->getCurvesLongName().at(2);
                     if (mCurveGPRadio->isChecked())
                         graphName = graphName + " " + varRateText;
                     else if (mCurveGSRadio->isChecked())
@@ -2834,11 +2828,12 @@ void ResultsView::updateCurvesToShow()
  */
 void ResultsView::updateScales()
 {
-    if (!mModel) {
+    auto model = getModel_ptr();
+    if ( model == nullptr) {
         return;
     }
 
-    const StudyPeriodSettings s = mModel->mSettings;
+    const StudyPeriodSettings s = model->mSettings;
 
     // ------------------------------------------------------------------
     //  Define mResultCurrentMinT and mResultCurrentMaxT
@@ -2874,7 +2869,7 @@ void ResultsView::updateScales()
         if ((mCurrentTypeGraph == GraphViewResults::eTrace) || (mCurrentTypeGraph == GraphViewResults::eAccept)) {
             for (int i = 0; i<mChainRadios.size(); ++i) {
                 if (mChainRadios.at(i)->isChecked()) {
-                    const ChainSpecs& chain = mModel->mChains.at(i);
+                    const ChainSpecs& chain = model->mChains.at(i);
                     mResultCurrentMinT = 0;
                     const int adaptSize = chain.mBatchIndex * chain.mIterPerBatch;
                     const int runSize = chain.mRealyAccepted;
@@ -2987,7 +2982,7 @@ void ResultsView::updateScales()
             ++idSelect;
         }
 
-        const ChainSpecs& chain = mModel->mChains.at(idSelect);
+        const ChainSpecs& chain = model->mChains.at(idSelect);
         const int adaptSize = chain.mBatchIndex * chain.mIterPerBatch;
         const int runSize = chain.mRealyAccepted;
         mResultMaxT = 1 +  chain.mIterPerBurn + adaptSize + runSize;
@@ -3059,7 +3054,7 @@ void ResultsView::updateScales()
     // -------------------------------------------------------
     // X option
     // -------------------------------------------------------
-    if (mModel->displayX()) {
+    if (model->displayX()) {
         if (mZoomsX.find(key) != mZoomsX.end()) {
             const double XMin = mZoomsX.value(key).first;
             const double XMax = mZoomsX.value(key).second;
@@ -3076,7 +3071,7 @@ void ResultsView::updateScales()
     // -------------------------------------------------------
     // Y option
     // -------------------------------------------------------
-    if (mModel->displayY()) {
+    if (model->displayY()) {
         if (mZoomsY.find(key) != mZoomsY.end()) {
             const double YMin = mZoomsY.value(key).first;
             const double YMax = mZoomsY.value(key).second;
@@ -3092,7 +3087,7 @@ void ResultsView::updateScales()
         // -------------------------------------------------------
         // Z option
         // -------------------------------------------------------
-        if (mModel->displayZ()) {
+        if (model->displayZ()) {
             if (mZoomsZ.find(key) != mZoomsZ.end()) {
                 const double ZMin = mZoomsZ.value(key).first;
                 const double ZMax = mZoomsZ.value(key).second;
@@ -3110,9 +3105,186 @@ void ResultsView::updateScales()
 
 }
 
+void ResultsView::createOptionsWidget()
+{
+
+    unsigned optionWidgetHeigth = 0;
+    // -------------------------------------------------------------------------------------
+    //  Update graph list tab
+    // -------------------------------------------------------------------------------------
+
+    mGraphListTab->setTabVisible(1, mHasPhases); // Phases
+    //mGraphListTab->setTabVisible(2, isCurve()); // Curve
+
+
+    delete mOptionsLayout;
+    mOptionsLayout = new QVBoxLayout();
+    mOptionsLayout->setContentsMargins(mMargin, mMargin, 0, 0);
+    mOptionsLayout->addWidget(mGraphListTab);
+    // If the current tab is not currently visible :
+    // - Show the "Phases" tab (1) which is a good default choice if the model has phases.
+    // - Show the "Events" tab (0) which is a good default choice if the model doesn't have phases.
+
+    //if (mHasPhases && mGraphListTab->currentIndex() >= 2 && !isCurve()) {
+        mGraphListTab->setTab(1, false);
+
+   // }
+/*    else if (!mHasPhases && !isCurve() && mGraphListTab->currentIndex() >= 1) {
+        mGraphListTab->setTab(0, false);
+    }
+    */
+
+    optionWidgetHeigth += mGraphListTab->height();
+    // -------------------------------------------------------------------------------------
+    //  Update controls depending on current graph list
+    // -------------------------------------------------------------------------------------
+
+        mOptionsLayout->addWidget(mEventsGroup);
+
+        mGraphTypeTabs->setTabVisible(1, true); // History Plot
+        mGraphTypeTabs->setTabVisible(2, true); // Acceptance Rate
+        mGraphTypeTabs->setTabVisible(3, true); // Autocorrelation
+
+        mEventsGroup->show();
+        mPhasesGroup->setVisible(false);
+        mCurvesGroup->setVisible(false);
+        const qreal h = mEventThetaRadio->height() * 1.5;
+
+        mEventVGRadio->setVisible(false);
+        //--- change layout
+
+
+        QVBoxLayout* eventGroupLayout = new QVBoxLayout();
+        eventGroupLayout->setContentsMargins(10, 10, 10, 10);
+        //eventGroupLayout->setSpacing(15);
+        eventGroupLayout->addWidget(mEventThetaRadio);
+        eventGroupLayout->addWidget(mDataSigmaRadio);
+#ifdef S02_BAYESIAN
+        eventGroupLayout->addWidget(mS02Radio);
+        qreal totalH =  4*h;
+#else
+        qreal totalH =  3*h;
+#endif
+
+        mEventVGRadio->hide();
+
+
+        eventGroupLayout->addWidget(mEventsDatesUnfoldCheck);
+
+
+        mDataCalibCheck->hide();
+        mWiggleCheck->hide();
+
+        eventGroupLayout->addWidget(mStatCheck);
+        totalH += h;
+
+        delete mEventsGroup->layout() ;
+        mEventsGroup->setLayout(eventGroupLayout);
+
+        //-- end new layout
+
+        mEventsGroup->setFixedHeight(totalH);
+
+        optionWidgetHeigth += mEventsGroup->height();
+
+
+
+    // ------------------------------------
+    //  Display / Distrib. Option
+    // ------------------------------------
+    optionWidgetHeigth += mDisplayDistribTab->height();
+
+    mOptionsLayout->addWidget(mDisplayDistribTab);
+
+    qreal widHeigth = 0;
+    const  qreal internSpan = 10;
+    if (true) {//mDisplayDistribTab->currentName() == tr("Display") ) {
+        mDisplayWidget->show();
+        mDistribWidget->hide();
+        mOptionsLayout->addWidget(mDisplayWidget);
+
+        // ------------------------------------
+        //  Display Options
+        // ------------------------------------
+
+        const qreal h = mDisplayStudyBut->height();
+
+        widHeigth = 11*h + 13*internSpan;
+        /* 11*h = spanOptionTitle + studyPeriodButton + span + slider + majorInterval + minorCount
+        *        + GraphicOptionsTitle + ZoomSlider + Font + Thickness + Opacity
+        */
+
+
+        mDisplayStudyBut->setText(xScaleRepresentsTime() ? tr("Study Period Display") : tr("Fit Display"));
+        mDisplayStudyBut->setVisible(true);
+        widHeigth += mDisplayStudyBut->height() + internSpan;
+
+
+            mXOptionTitle->setVisible(false);
+            mXOptionGroup->setVisible(false);
+
+            mYOptionTitle->setVisible(false);
+            mYOptionGroup->setVisible(false);
+
+            mZOptionTitle->setVisible(false);
+            mZOptionGroup->setVisible(false);
+            mDisplayWidget-> setFixedHeight(widHeigth);
+
+
+        optionWidgetHeigth += widHeigth;
+
+    }
+    optionWidgetHeigth += 35;//40; // ???
+
+    // -------------------------------------------------------------------------------------
+    //  Page / Save
+    // -------------------------------------------------------------------------------------
+    mOptionsLayout->addWidget(mPageSaveTab);
+    optionWidgetHeigth += mPageSaveTab->height();
+
+    if (true) {//mPageSaveTab->currentName() == tr("Page") ) {
+
+        // -------------------------------------------------------------------------------------
+        //  - Update the total number of graphs for all pages
+        //  - Check if the current page is still lower than the number of pages
+        //  - Update the pagination display
+        //  => All this must be done BEFORE calling createGraphs, which uses theses params to build the graphs
+        // -------------------------------------------------------------------------------------
+        //updateTotalGraphs();
+        mMaximunNumberOfVisibleGraph = 0;
+
+        const int numPages = ceil((double)mMaximunNumberOfVisibleGraph / (double)mGraphsPerPage);
+        if (mCurrentPage >= numPages) {
+            mCurrentPage = 0;
+        }
+
+        mPageEdit->setText(locale().toString(mCurrentPage + 1) + "/" + locale().toString(numPages));
+
+        mPageWidget->setVisible(true);
+        mSaveSelectWidget->hide();
+        mSaveAllWidget->hide();
+
+        mOptionsLayout->addWidget(mPageWidget);
+        optionWidgetHeigth += mPageWidget->height();
+
+    }
+
+    mOptionsLayout->addStretch();
+    mOptionsWidget->setLayout(mOptionsLayout);
+    mOptionsWidget->setGeometry(0, 0, mOptionsW - mMargin, optionWidgetHeigth);
+}
+
 
 void ResultsView::updateOptionsWidget()
 {
+    auto project = getProject_ptr();
+    if (project ==  nullptr)
+        return;
+
+    auto model = getModel_ptr();
+    if (model ==  nullptr)
+        return;
+
     const bool isPostDistrib = isPostDistribGraph();
     unsigned optionWidgetHeigth = 0;
     // -------------------------------------------------------------------------------------
@@ -3387,9 +3559,9 @@ void ResultsView::updateOptionsWidget()
         mDisplayStudyBut->setVisible(true);
         widHeigth += mDisplayStudyBut->height() + internSpan;
 
-        const bool displayX = mModel ? mModel->displayX() : false;
-        const bool displayY = mModel ? mModel->displayY() : false;
-        const bool displayZ = mModel ? mModel->displayZ() : false;
+        const bool displayX = model ? model->displayX() : false;
+        const bool displayY = model ? model->displayY() : false;
+        const bool displayZ = model ? model->displayZ() : false;
 
         if (isCurve() && ( mMainVariable == GraphViewResults::eG ||
                            mMainVariable == GraphViewResults::eGP ||
@@ -3778,9 +3950,10 @@ void ResultsView::applyRuler(const double min, const double max)
 
 void ResultsView::applyStudyPeriod()
 {
+    auto model = getModel_ptr();
     if (xScaleRepresentsTime()) {
-      mResultCurrentMinT = mModel->mSettings.getTminFormated();
-      mResultCurrentMaxT = mModel->mSettings.getTmaxFormated();
+      mResultCurrentMinT = model->mSettings.getTminFormated();
+      mResultCurrentMaxT = model->mSettings.getTmaxFormated();
 
     } else if ( mMainVariable == GraphViewResults::eSigma ||
                 mMainVariable == GraphViewResults::eDuration ||
@@ -3806,7 +3979,7 @@ void ResultsView::applyStudyPeriod()
                       break;
                ++idSelect;
         }
-        const ChainSpecs& chain = mModel->mChains.at(idSelect);
+        const ChainSpecs& chain = model->mChains.at(idSelect);
         const int adaptSize = chain.mBatchIndex * chain.mIterPerBatch;
         const int runSize = chain.mRealyAccepted;
         // The min is always 0
@@ -3816,10 +3989,6 @@ void ResultsView::applyStudyPeriod()
     }
         
     if (xScaleRepresentsTime()) {
-        //auto span = (mModel->mSettings.getTmaxFormated() - mModel->mSettings.getTminFormated())/2. * mTimeSpin->minimum();
-        //mResultMinT = mModel->mSettings.getTminFormated() - span ;
-        //mResultMaxT = mModel->mSettings.getTmaxFormated() + span ;
-
         mResultZoomT = (mResultMaxT - mResultMinT)/(mResultCurrentMaxT - mResultCurrentMinT);
 
     } else
@@ -3940,19 +4109,19 @@ void ResultsView::applyZRange()
 
 void ResultsView::findOptimalX()
 {
-    const auto modelCurve = mModel;//static_cast<const ModelCurve*> (mModel);
+    const auto model = getModel_ptr();
     const std::vector<double>* vec = nullptr;
 
     Scale XScale;
     if (mCurveGRadio->isChecked()) {
-        const auto minmax_Y = modelCurve->mPosteriorMeanG.gx.mapG.rangeY;
-        vec = &modelCurve->mPosteriorMeanG.gx.vecG;
-        const std::vector<double>* vecVar = &modelCurve->mPosteriorMeanG.gx.vecVarG;
+        const auto minmax_Y = model->mPosteriorMeanG.gx.mapG.rangeY;
+        vec = &model->mPosteriorMeanG.gx.vecG;
+        const std::vector<double>* vecVar = &model->mPosteriorMeanG.gx.vecVarG;
 
         double minY = +INFINITY;
         double maxY = -INFINITY;
-        minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mXIncDepth, x);});
-        maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mXIncDepth, x);});
+        minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mXIncDepth, x);});
+        maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mXIncDepth, x);});
         int i = 0;
         for (auto g : *vec) {
             const auto e = 1.96*sqrt(vecVar->at(i));
@@ -3965,13 +4134,13 @@ void ResultsView::findOptimalX()
 
     } else {
         if (mCurveGPRadio->isChecked()) {
-            const auto minmax_Y = modelCurve->mPosteriorMeanG.gx.mapGP.rangeY;
-            vec = &modelCurve->mPosteriorMeanG.gx.vecGP;
+            const auto minmax_Y = model->mPosteriorMeanG.gx.mapGP.rangeY;
+            vec = &model->mPosteriorMeanG.gx.vecGP;
             const auto minMax = std::minmax_element(vec->begin(), vec->end());
             XScale.findOptimal(std::min(minmax_Y.first, *minMax.first), std::max(minmax_Y.second, *minMax.second), 7);
 
         } else {
-            vec = &modelCurve->mPosteriorMeanG.gx.vecGS;
+            vec = &model->mPosteriorMeanG.gx.vecGS;
             const auto minMax = std::minmax_element(vec->begin(), vec->end());
             XScale.findOptimal(*minMax.first, *minMax.second, 7);
         }
@@ -3990,18 +4159,18 @@ void ResultsView::findOptimalX()
 
 void ResultsView::findOptimalY()
 {
-    const auto modelCurve = mModel;//static_cast<const ModelCurve*> (mModel);
+    const auto model = getModel_ptr();
     const std::vector<double>* vec = nullptr;
 
     Scale XScale;
     if (mCurveGRadio->isChecked()) {
-        vec = &modelCurve->mPosteriorMeanG.gy.vecG;
-        const std::vector<double>* vecVar = &modelCurve->mPosteriorMeanG.gy.vecVarG;
+        vec = &model->mPosteriorMeanG.gy.vecG;
+        const std::vector<double>* vecVar = &model->mPosteriorMeanG.gy.vecVarG;
 
         double minY = +INFINITY;
         double maxY = -INFINITY;
-        minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mYDec, x);});
-        maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mYDec, x);});
+        minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mYDec, x);});
+        maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mYDec, x);});
         int i = 0;
         for (auto g : *vec) {
             const auto e = 1.96*sqrt(vecVar->at(i));
@@ -4014,13 +4183,13 @@ void ResultsView::findOptimalY()
 
     } else {
         if (mCurveGPRadio->isChecked()) {
-            const auto minmax_Y = modelCurve->mPosteriorMeanG.gy.mapGP.rangeY;
-            vec = &modelCurve->mPosteriorMeanG.gy.vecGP;
+            const auto minmax_Y = model->mPosteriorMeanG.gy.mapGP.rangeY;
+            vec = &model->mPosteriorMeanG.gy.vecGP;
             const auto minMax = std::minmax_element(vec->begin(), vec->end());
             XScale.findOptimal(std::min(minmax_Y.first, *minMax.first), std::max(minmax_Y.second, *minMax.second), 7);
 
         } else {
-            vec = &modelCurve->mPosteriorMeanG.gy.vecGS;
+            vec = &model->mPosteriorMeanG.gy.vecGS;
             const auto minMax = std::minmax_element(vec->begin(), vec->end());
             XScale.findOptimal(*minMax.first, *minMax.second, 7);
         }
@@ -4036,18 +4205,18 @@ void ResultsView::findOptimalY()
 
 void ResultsView::findOptimalZ()
 {
-    const auto modelCurve = mModel;//static_cast<const ModelCurve*> (mModel);
+    const auto model = getModel_ptr();
 
     const std::vector<double>* vec = nullptr;
     Scale XScale;
     if (mCurveGRadio->isChecked()) {
-        vec = &modelCurve->mPosteriorMeanG.gz.vecG;
-        const std::vector<double>* vecVar = &modelCurve->mPosteriorMeanG.gz.vecVarG;
+        vec = &model->mPosteriorMeanG.gz.vecG;
+        const std::vector<double>* vecVar = &model->mPosteriorMeanG.gz.vecVarG;
 
         double minY = +INFINITY;
         double maxY = -INFINITY;
-        minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mZField, x);});
-        maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mZField, x);});
+        minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mZField, x);});
+        maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mZField, x);});
         int i = 0;
         for (auto g : *vec) {
             const auto e = 1.96*sqrt(vecVar->at(i));
@@ -4060,13 +4229,13 @@ void ResultsView::findOptimalZ()
 
     } else {
         if (mCurveGPRadio->isChecked()) {
-            const auto minmax_Y = modelCurve->mPosteriorMeanG.gz.mapGP.rangeY;
-            vec = &modelCurve->mPosteriorMeanG.gz.vecGP;
+            const auto minmax_Y = model->mPosteriorMeanG.gz.mapGP.rangeY;
+            vec = &model->mPosteriorMeanG.gz.vecGP;
             const auto minMax = std::minmax_element(vec->begin(), vec->end());
             XScale.findOptimal(std::min(minmax_Y.first, *minMax.first), std::max(minmax_Y.second, *minMax.second), 7);
 
         } else {
-            vec = &modelCurve->mPosteriorMeanG.gz.vecGS;
+            vec = &model->mPosteriorMeanG.gz.vecGS;
             const auto minMax = std::minmax_element(vec->begin(), vec->end());
             XScale.findOptimal(*minMax.first, *minMax.second, 7);
         }
@@ -4212,25 +4381,25 @@ void ResultsView::applyOpacity(int value)
 void ResultsView::applyFFTLength()
 {
     const int len = mFFTLenCombo->currentText().toInt();
-    mModel->setFFTLength(len);
+    getModel_ptr()->setFFTLength(len);
 }
 
 void ResultsView::applyHActivity()
 {
     const double h = locale().toDouble(mHActivityEdit->text());
     const double rangePercent = locale().toDouble(mRangeThresholdEdit->text());
-    mModel->setHActivity(h, rangePercent);
+    getModel_ptr()->setHActivity(h, rangePercent);
 }
 void ResultsView::applyBandwidth()
 {
     const double bandwidth = mBandwidthSpin->value();
-    mModel->setBandwidth(bandwidth);
+    getModel_ptr()->setBandwidth(bandwidth);
 }
 
 void ResultsView::applyThreshold()
 {
     const double hpd = locale().toDouble(mThresholdEdit->text());
-    mModel->setThreshold(hpd);
+    getModel_ptr()->setThreshold(hpd);
 }
 
 void ResultsView::applyNextPage()
@@ -4465,7 +4634,8 @@ void ResultsView::saveAsImage()
  */
 void ResultsView::exportResults()
 {
-    if (mModel) {
+    auto model = getModel_ptr();
+    if (model) {
 
         const QString csvSep = AppSettings::mCSVCellSeparator;
         const int precision = AppSettings::mPrecision;
@@ -4503,7 +4673,7 @@ void ResultsView::exportResults()
                 output<<"<h2>"<< version << "</h2>" << Qt::endl;
                 output<<"<h2>"<< projectName+ "</h2>" << Qt::endl;
                 output<<"<hr>";
-                output<<mModel->getModelLog();
+                output<<model->getModelLog();
 
                 output<<"</body>"<< Qt::endl;
                 output<<"</html>"<< Qt::endl;
@@ -4521,7 +4691,7 @@ void ResultsView::exportResults()
                 output<<"<h2>"<< version << "</h2>" << Qt::endl;
                 output<<"<h2>"<< projectName+ "</h2>" << Qt::endl;
                 output<<"<hr>";
-                output<<mModel->getInitLog();
+                output<<model->getInitLog();
 
                 output<<"</body>"<< Qt::endl;
                 output<<"</html>"<< Qt::endl;
@@ -4539,7 +4709,7 @@ void ResultsView::exportResults()
                 output<<"<h2>"<< version << "</h2>" << Qt::endl;
                 output<<"<h2>"<< projectName+ "</h2>" << Qt::endl;
                 output<<"<hr>";
-                output<<mModel->getAdaptLog();
+                output<<model->getAdaptLog();
 
                 output<<"</body>"<< Qt::endl;
                 output<<"</html>"<< Qt::endl;
@@ -4557,54 +4727,54 @@ void ResultsView::exportResults()
                 output<<"<h2>"<< version << "</h2>" << Qt::endl;
                 output<<"<h2>"<< projectName+ "</h2>" << Qt::endl;
                 output<<"<hr>";
-                output<<mModel->getResultsLog();
+                output<<model->getResultsLog();
 
                 output<<"</body>"<< Qt::endl;
                 output<<"</html>"<< Qt::endl;
             }
             file.close();
 
-            const QList<QStringList> stats = mModel->getStats(csvLocal, precision, true);
+            const QList<QStringList> stats = model->getStats(csvLocal, precision, true);
             saveCsvTo(stats, dirPath + "/Synthetic_Stats_Table.csv", csvSep, true);
 
-            if (mModel->mPhases.size() > 0) {
-                const QList<QStringList> phasesTraces = mModel->getPhasesTraces(csvLocal, false);
+            if (model->mPhases.size() > 0) {
+                const QList<QStringList> phasesTraces = model->getPhasesTraces(csvLocal, false);
                 saveCsvTo(phasesTraces, dirPath + "/Chain_all_Phases.csv", csvSep, false);
 
-                for (int i=0; i<mModel->mPhases.size(); ++i) {
-                    const QList<QStringList> phaseTrace = mModel->getPhaseTrace(i,csvLocal, false);
-                    const QString name = mModel->mPhases.at(i)->mName.toLower().simplified().replace(" ", "_");
+                for (int i=0; i<model->mPhases.size(); ++i) {
+                    const QList<QStringList> phaseTrace = model->getPhaseTrace(i, csvLocal, false);
+                    const QString name = model->mPhases.at(i)->mName.toLower().simplified().replace(" ", "_");
                     saveCsvTo(phaseTrace, dirPath + "/Chain_Phase_" + name + ".csv", csvSep, false);
                 }
             }
-            QList<QStringList> eventsTraces = mModel->getEventsTraces(csvLocal, false);
+            QList<QStringList> eventsTraces = model->getEventsTraces(csvLocal, false);
             saveCsvTo(eventsTraces, dirPath + "/Chain_all_Events.csv", csvSep, false);
 
             // --------------   Saving Curve Map
-            if (mModel->mProject->isCurve()) {
+            if (getProject_ptr()->isCurve()) {
                 // first Map G
-                const auto list_names = mModel->getCurvesName();
+                const auto list_names = model->getCurvesName();
 
                 file.setFileName(dirPath + "/Curve_" +list_names.at(0) + "_Map.csv");
 
                 if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-                    modelCurve()->saveMapToFile(&file, csvSep, modelCurve()->mPosteriorMeanG.gx.mapG);
+                    model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gx.mapG);
 
                 }
 
-                if (mModel->displayY()) {
+                if (model->displayY()) {
                     file.setFileName(dirPath + "/Curve"+list_names.at(1) + "_Map.csv");
 
                     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-                        modelCurve()->saveMapToFile(&file, csvSep, modelCurve()->mPosteriorMeanG.gy.mapG);
+                        model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gy.mapG);
                         file.close();
                     }
 
-                    if (mModel->displayZ()) {
+                    if (model->displayZ()) {
                         file.setFileName(dirPath + "/Curve"+list_names.at(2) + "_Map.csv");
 
                         if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-                            modelCurve()->saveMapToFile(&file, csvSep, modelCurve()->mPosteriorMeanG.gz.mapG);
+                            model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gz.mapG);
                             file.close();
                         }
                     }
@@ -4614,7 +4784,7 @@ void ResultsView::exportResults()
                 // --------------   Saving Curve Ref
                 int i = 0;
                 for (auto&& graph : mByCurveGraphs) {
-                    graph->getGraph()->exportReferenceCurves ("", QLocale::English, ",",  mModel->mSettings.mStep, dirPath + "/Curve_"+list_names.at(i) + "_ref.csv" );
+                    graph->getGraph()->exportReferenceCurves ("", QLocale::English, ",",  model->mSettings.mStep, dirPath + "/Curve_"+list_names.at(i) + "_ref.csv" );
                     i++;
                 }
 
@@ -4623,23 +4793,23 @@ void ResultsView::exportResults()
                 file.setFileName(dirPath + "/Curve_" +list_names.at(0) + "_MapGP.csv");
 
                 if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-                    modelCurve()->saveMapToFile(&file, csvSep, modelCurve()->mPosteriorMeanG.gx.mapGP);
+                    model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gx.mapGP);
 
                 }
 
-                if (mModel->displayY()) {
+                if (model->displayY()) {
                     file.setFileName(dirPath + "/Curve"+list_names.at(1) + "_MapGP.csv");
 
                     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-                        modelCurve()->saveMapToFile(&file, csvSep, modelCurve()->mPosteriorMeanG.gy.mapGP);
+                        model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gy.mapGP);
                         file.close();
                     }
 
-                    if (mModel->displayZ()) {
+                    if (model->displayZ()) {
                         file.setFileName(dirPath + "/Curve"+list_names.at(2) + "_MapGP.csv");
 
                         if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-                            modelCurve()->saveMapToFile(&file, csvSep, modelCurve()->mPosteriorMeanG.gz.mapGP);
+                            model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gz.mapGP);
                             file.close();
                         }
                     }
@@ -4649,7 +4819,7 @@ void ResultsView::exportResults()
                 // --------------   Saving Curve Ref
                 i = 0;
                 for (auto&& graph : mByCurveGraphs) {
-                    graph->getGraph()->exportReferenceCurves ("", QLocale::English, ",",  mModel->mSettings.mStep, dirPath + "/Curve_"+list_names.at(i) + "_ref.csv" );
+                    graph->getGraph()->exportReferenceCurves ("", QLocale::English, ",",  model->mSettings.mStep, dirPath + "/Curve_"+list_names.at(i) + "_ref.csv" );
                     i++;
                 }
 
@@ -4781,21 +4951,15 @@ void ResultsView::exportFullImage()
 
 #pragma mark Curve
 
-bool ResultsView::isCurve() const
+bool ResultsView::isCurve()
 {
-    if (mModel != nullptr)
-        return mModel->is_curve;
+    auto model = getModel_ptr();
+    if (model != nullptr)
+        return model->is_curve;
     else
         return false;
 }
 
-/* dynamic_cast can only be used with pointers and references.
- *  On failure to cast, a null pointer is returned.
- */
-std::shared_ptr<ModelCurve> ResultsView::modelCurve() const
-{
-    return mModel;//dynamic_cast<ModelCurve*>(mModel);
-}
 
 GraphViewResults::variable_t ResultsView::getMainVariable() const
 {

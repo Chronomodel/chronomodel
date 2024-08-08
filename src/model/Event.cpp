@@ -181,6 +181,163 @@ Event::Event (const QJsonObject &json, std::shared_ptr<Model> model):
     }
 
 }
+/** Copy constructor */
+Event::Event(const Event &origin)
+{
+    mType = origin.mType;
+    mId = origin.mId;
+
+    mModel = origin.mModel;
+    mName = origin.mName;
+
+    mColor = origin.mColor;
+
+    mItemX = origin.mItemX;
+    mItemY = origin.mItemY;
+
+    mIsCurrent = origin.mIsCurrent;
+    mIsSelected = origin.mIsSelected;
+
+    mDates = origin.mDates;
+
+    mPhasesIds = origin.mPhasesIds;
+    mConstraintsFwdIds = origin.mConstraintsFwdIds;
+    mConstraintsBwdIds = origin.mConstraintsBwdIds;
+
+    mPhases = origin.mPhases;
+    mConstraintsFwd = origin.mConstraintsFwd;
+    mConstraintsBwd = origin.mConstraintsBwd;
+
+
+    mTheta = origin.mTheta;
+    /* mTheta.mX = origin.mTheta.mX;
+    mTheta.mSupport = origin.mTheta.mSupport;
+    mTheta.mFormat = origin.mTheta.mFormat;
+    mTheta.mSamplerProposal = origin.mTheta.mSamplerProposal;
+    mTheta.mSigmaMH = origin.mTheta.mSigmaMH;*/
+
+    mS02Theta.mX = origin.mS02Theta.mX;
+    /* mS02Theta.mSupport = origin.mS02Theta.mSupport;
+    mS02Theta.mFormat = origin.mS02Theta.mFormat;
+    mS02Theta.mSamplerProposal = origin.mS02Theta.mSamplerProposal;
+    mS02Theta.mSigmaMH = origin.mS02Theta.mSigmaMH;*/
+
+
+    mAShrinkage = origin.mAShrinkage;
+    mBetaS02 = origin.mBetaS02;
+    mInitialized = origin.mInitialized;
+
+    mIsNode = origin.mIsNode;
+    mThetaNode = origin.mThetaNode;
+
+    mLevel = origin.mLevel;
+    // Valeurs entrées par l'utilisateur
+    mPointType = origin.mPointType;
+    mXIncDepth = origin.mXIncDepth;
+    mYDec = origin.mYDec;
+    mZField = origin.mZField;
+
+    mS_XA95Depth = origin.mS_XA95Depth;
+    mS_Y = origin.mS_Y;
+    mS_ZField = origin.mS_ZField;
+
+    // Valeurs préparées (projetées)
+    mYx = origin.mYx;
+    mYy = origin.mYy;
+    mYz = origin.mYz;
+
+    // Valeurs utilisée pour les calculs
+    mThetaReduced = origin.mThetaReduced;
+    mSy = origin.mSy;
+    mW = origin.mW;
+
+    mVg = origin.mVg;
+    /*mVg.mSupport = origin.mVg.mSupport;
+    mVg.mFormat = origin.mVg.mFormat;
+    mVg.mSamplerProposal = origin.mVg.mSamplerProposal;*/
+
+    mMixingCalibrations = origin.mMixingCalibrations;
+
+}
+
+/** Copy assignment operator */
+Event& Event::operator=(const Event& origin)
+{
+    mType = origin.mType;
+    mId = origin.mId;
+
+    mModel = origin.mModel;
+    mName = origin.mName;
+
+    mColor = origin.mColor;
+
+    mItemX = origin.mItemX;
+    mItemY = origin.mItemY;
+
+    mIsCurrent = origin.mIsCurrent;
+    mIsSelected = origin.mIsSelected;
+
+    mDates = origin.mDates;
+
+    mPhasesIds = origin.mPhasesIds;
+    mConstraintsFwdIds = origin.mConstraintsFwdIds;
+    mConstraintsBwdIds = origin.mConstraintsBwdIds;
+
+    mPhases = origin.mPhases;
+    mConstraintsFwd = origin.mConstraintsFwd;
+    mConstraintsBwd = origin.mConstraintsBwd;
+
+
+    mTheta = origin.mTheta;
+   /* mTheta.mX = origin.mTheta.mX;
+    mTheta.mSupport = origin.mTheta.mSupport;
+    mTheta.mFormat = origin.mTheta.mFormat;
+    mTheta.mSamplerProposal = origin.mTheta.mSamplerProposal;
+    mTheta.mSigmaMH = origin.mTheta.mSigmaMH;*/
+
+    mS02Theta.mX = origin.mS02Theta.mX;
+   /* mS02Theta.mSupport = origin.mS02Theta.mSupport;
+    mS02Theta.mFormat = origin.mS02Theta.mFormat;
+    mS02Theta.mSamplerProposal = origin.mS02Theta.mSamplerProposal;
+    mS02Theta.mSigmaMH = origin.mS02Theta.mSigmaMH;*/
+
+
+    mAShrinkage = origin.mAShrinkage;
+    mBetaS02 = origin.mBetaS02;
+    mInitialized = origin.mInitialized;
+
+    mIsNode = origin.mIsNode;
+    mThetaNode = origin.mThetaNode;
+
+    mLevel = origin.mLevel;
+    // Valeurs entrées par l'utilisateur
+    mPointType = origin.mPointType;
+    mXIncDepth = origin.mXIncDepth;
+    mYDec = origin.mYDec;
+    mZField = origin.mZField;
+
+    mS_XA95Depth = origin.mS_XA95Depth;
+    mS_Y = origin.mS_Y;
+    mS_ZField = origin.mS_ZField;
+
+    // Valeurs préparées (projetées)
+    mYx = origin.mYx;
+    mYy = origin.mYy;
+    mYz = origin.mYz;
+
+    // Valeurs utilisée pour les calculs
+    mThetaReduced = origin.mThetaReduced;
+    mSy = origin.mSy;
+    mW = origin.mW;
+
+    mVg = origin.mVg;
+    /*mVg.mSupport = origin.mVg.mSupport;
+    mVg.mFormat = origin.mVg.mFormat;
+    mVg.mSamplerProposal = origin.mVg.mSamplerProposal;*/
+
+    mMixingCalibrations = origin.mMixingCalibrations;
+    return *this;
+}
 
 /**
  * @todo Check the copy of the color if mJson is not set
@@ -189,34 +346,10 @@ void Event::copyFrom(const Event& event)
 {
     mType = event.mType;
     mId = event.mId;
+    mModel = event.mModel;
+
     mName = event.mName;
-
     mColor = event.mColor;
-
-    mIsNode = event.mIsNode;
-
-    mLevel = event.mLevel;
-
-    mDates = event.mDates;
-    mPhases = event.mPhases;
-    mConstraintsFwd = event.mConstraintsFwd;
-    mConstraintsBwd = event.mConstraintsBwd;
-
-    mTheta = event.mTheta;
-    mTheta.mX = event.mTheta.mX;
-    mTheta.mSupport = event.mTheta.mSupport;
-    mTheta.mFormat = event.mTheta.mFormat;
-    mTheta.mSamplerProposal = event.mTheta.mSamplerProposal;
-    mTheta.mSigmaMH = event.mTheta.mSigmaMH;
-
-    mS02Theta.mX = event.mS02Theta.mX;
-    mS02Theta.mSupport = event.mS02Theta.mSupport;
-    mS02Theta.mFormat = event.mS02Theta.mFormat;
-    mS02Theta.mSamplerProposal = event.mS02Theta.mSamplerProposal;
-    mS02Theta.mSigmaMH = event.mS02Theta.mSigmaMH;
-
-    mAShrinkage = event.mAShrinkage;
-    mBetaS02 = event.mBetaS02;
 
     mItemX = event.mItemX;
     mItemY = event.mItemY;
@@ -234,7 +367,33 @@ void Event::copyFrom(const Event& event)
     mConstraintsFwd = event.mConstraintsFwd;
     mConstraintsBwd = event.mConstraintsBwd;
 
-    // Valeurs entrées par l'utilisateur
+    mTheta = event.mTheta;
+    /*mTheta.mX = event.mTheta.mX;
+    mTheta.mSupport = event.mTheta.mSupport;
+    mTheta.mFormat = event.mTheta.mFormat;
+    mTheta.mSamplerProposal = event.mTheta.mSamplerProposal;
+    mTheta.mSigmaMH = event.mTheta.mSigmaMH;*/
+
+    mS02Theta.mX = event.mS02Theta.mX;
+    /* mS02Theta.mSupport = event.mS02Theta.mSupport;
+    mS02Theta.mFormat = event.mS02Theta.mFormat;
+    mS02Theta.mSamplerProposal = event.mS02Theta.mSamplerProposal;
+    mS02Theta.mSigmaMH = event.mS02Theta.mSigmaMH;*/
+
+    mAShrinkage = event.mAShrinkage;
+    mBetaS02 = event.mBetaS02;
+    mInitialized = event.mInitialized;
+
+    mIsNode = event.mIsNode;
+    mThetaNode = event.mThetaNode;
+
+    mLevel = event.mLevel;
+    // --------------------------------------------------------
+    //  Curve
+    // --------------------------------------------------------
+
+    // Values entered by the user
+    mPointType = event.mPointType;
     mXIncDepth = event.mXIncDepth;
     mYDec = event.mYDec;
     mZField = event.mZField;
@@ -243,20 +402,27 @@ void Event::copyFrom(const Event& event)
     mS_Y = event.mS_Y;
     mS_ZField = event.mS_ZField;
 
-    // Valeurs préparées (projetées)
+    // Prepared (projected) values
     mYx = event.mYx;
     mYy = event.mYy;
     mYz = event.mYz;
 
-    // Valeurs utilisée pour les calculs
+    // Splines values
+    mGx = event.mGx;
+    mGy = event.mGy;
+    mGz = event.mGz;
+
+    // Values used for the calculations
     mThetaReduced = event.mThetaReduced;
     mSy = event.mSy;
     mW = event.mW;
 
     mVg = event.mVg;
-    mVg.mSupport = event.mVg.mSupport;
+   /* mVg.mSupport = event.mVg.mSupport;
     mVg.mFormat = event.mVg.mFormat;
-    mVg.mSamplerProposal = event.mVg.mSamplerProposal;
+    mVg.mSamplerProposal = event.mVg.mSamplerProposal;*/
+
+    mMixingCalibrations = event.mMixingCalibrations;
 
 }
 
@@ -282,6 +448,10 @@ Event::~Event()
         mConstraintsBwd.clear();
 
     mVg.reset();
+
+    mS02Theta.reset();
+
+    mMixingCalibrations = nullptr;
 }
 
 
@@ -289,7 +459,7 @@ Event::~Event()
 
 Event Event::fromJson(const QJsonObject& json)
 {
-    Event event = Event();
+    Event event;// = Event();
     event.mType = Type (json.value(STATE_EVENT_TYPE).toInt());
     event.mId = json.value(STATE_ID).toInt();
     event.mName = json.value(STATE_NAME).toString();
@@ -302,9 +472,11 @@ Event Event::fromJson(const QJsonObject& json)
     event.mIsSelected = json.value(STATE_IS_SELECTED).toBool();
     event.mIsCurrent = json.value(STATE_IS_CURRENT).toBool();
 
+    event.mTheta = MHVariable();
     event.mTheta.mSamplerProposal = MHVariable::SamplerProposal (json.value(STATE_EVENT_SAMPLER).toInt());
     event.mTheta.setName("Theta of Event : "+ event.mName);
 
+    event.mS02Theta = MHVariable();
     event.mS02Theta.setName("S02 of Event : "+ event.mName);
     event.mS02Theta.mSupport = MHVariable::eRpStar;
 #ifdef S02_BAYESIAN
@@ -313,6 +485,11 @@ Event Event::fromJson(const QJsonObject& json)
     event.mS02Theta.mSamplerProposal = MHVariable::eFixe;
 #endif
 
+    event.mVg = MHVariable();
+    event.mVg.setName("VG of Event : " + event.mName);
+    event.mVg.mSupport = MetropolisVariable::eRpStar;
+    event.mVg.mFormat = DateUtils::eNumeric;
+    event.mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
     event.mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
 

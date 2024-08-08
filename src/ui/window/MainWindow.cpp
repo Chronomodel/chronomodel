@@ -85,7 +85,7 @@ MainWindow::MainWindow(QWidget* parent):
     mProject = nullptr;
 
     /* Creation of ResultsView and ModelView */
-    mProjectView = new ProjectView(mProject, this);
+    mProjectView = new ProjectView(this);
     setCentralWidget(mProjectView);
 
     mUndoStack = new QUndoStack();
@@ -497,7 +497,8 @@ void MainWindow::newProject()
         yesCreate= true;
 
     if (yesCreate) {
-        mProject->clear_calibCurves();
+        if (mProject)
+            mProject->clear_calibCurves();
         mProject.reset(new Project());
         //Project* newProject = new Project();
          // just update mAutoSaveTimer to avoid open the save() dialog box
@@ -532,7 +533,7 @@ void MainWindow::newProject()
             mProject->setAppSettingsAutoSave();
 
             // Send the project to the views
-            mProjectView->setProject(mProject);
+            mProjectView->setProject();
 
             // Ask for the a Study Period (open dialog)
             mProjectView->newPeriod();
@@ -589,15 +590,17 @@ void MainWindow::openProject()
         // look MainWindows::readSetting()
         if (mProject->load(path) == true) {
             activateInterface(true);
-            updateWindowTitle();
-            // Create mEventsScene and mPhasesScenes
-            if ( mProject->mModel!=nullptr && !mProject->mModel->mChains.isEmpty())
-                    mcmcFinished(); //do initDensities()
 
-            mProjectView->setProject(mProject);
+            mProjectView->setProject();
+            // Create mEventsScene and mPhasesScenes
+            if ( mProject->mModel!=nullptr && !mProject->mModel->mChains.isEmpty()) {
+                    mcmcFinished(); //do initDensities()
+            }
+
 
             mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true);
-
+            AppSettings::mIsSaved = true;
+            updateWindowTitle();
          }
 
         mUndoStack->clear();
@@ -674,6 +677,7 @@ void MainWindow::closeProject()
         mProject->initState(CLOSE_PROJECT_REASON);
         mProject->mLastSavedState = mProject->mState;//emptyState();
         AppSettings::mLastDir = QString();
+        AppSettings::mLastFile = QString();
 
         // Go back to model tab :
         mViewModelAction->trigger();
@@ -696,30 +700,40 @@ void MainWindow::closeProject()
 void MainWindow::saveProject()
 {
     mProject->save();
-    updateWindowTitle();
 }
 
 void MainWindow::saveProjectAs()
 {
     mProject->saveAs(tr("Save current project as..."));
-    updateWindowTitle();
 }
 
 void MainWindow::updateWindowTitle()
 {
+    const QString saved_sign = AppSettings::mIsSaved ?  " ✓ " : QString(" ● ");
 #ifdef DEBUG
-    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + " DEBUG Mode "+ (AppSettings::mLastFile.isEmpty() ?  "" : QString(" - ") + AppSettings::mLastFile));
+    const QString file_name = " DEBUG Mode " + (AppSettings::mLastFile.isEmpty() ?  "" : QString(" - ") + AppSettings::mLastFile  + saved_sign);
 #else
-    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + (AppSettings::mLastFile.isEmpty() ?  "" : QString(" - ") + AppSettings::mLastFile));
+     const QString file_name = (AppSettings::mLastFile.isEmpty() ?  "" : QString(" - ") + AppSettings::mLastFile + saved_sign);
 #endif
+
+    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + file_name);
+
 }
 
+/**
+ * @brief MainWindow::updateProject come from undo and redo action
+ */
 void MainWindow::updateProject()
 {
     qDebug()<<"[MainWindow::updateProject]";
+    mProject->checkStateModification(mProject->mState, mProject->mLastSavedState);
+    if (mProject->structureIsChanged())
+        noResult();
 
     mRunAction->setEnabled(true);
     mProjectView->updateProject();
+    AppSettings::mIsSaved = false;
+    updateWindowTitle();
 
 }
 
@@ -1198,11 +1212,12 @@ void MainWindow::closeEvent(QCloseEvent* e)
 
 void MainWindow::keyPressEvent(QKeyEvent* keyEvent)
 {
-    if (keyEvent->matches(QKeySequence::Undo))
+    if (keyEvent->matches(QKeySequence::Undo)) {
         mUndoStack->undo();
 
-    else if (keyEvent->matches(QKeySequence::Redo))
+    } else if (keyEvent->matches(QKeySequence::Redo)) {
         mUndoStack->redo();
+    }
 
     QMainWindow::keyPressEvent(keyEvent);
 }
@@ -1252,14 +1267,14 @@ void MainWindow::readSettings(const QString& defaultFilePath)
             }
             if (mProject->load(defaultFilePath)) {
                 activateInterface(true);
-                updateWindowTitle();
+                // updateWindowTitle(); done by pushProjectState
                 connectProject();
                 if (mProject->withResults())
                     mcmcFinished(); //do initDensities()
 
                 mProject->setAppSettingsAutoSave();
 
-                mProjectView->setProject(mProject);
+                mProjectView->setProject();
 
                 mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, false); // notify false, sinon do updatProject and redo update()
                 // to do, it'is done in project load
@@ -1384,7 +1399,9 @@ void MainWindow::mcmcFinished()
     mExportCurveAction->setEnabled(mProject->isCurve());
 
     // Tell the views to update
-    mProjectView->initResults(mProject->mModel);
+    mProjectView->initResults();
+    AppSettings::mIsSaved = false;
+    updateWindowTitle();
 
 
 }

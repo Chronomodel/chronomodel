@@ -50,7 +50,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "LineEdit.h"
 #include "MultiCalibrationDrawing.h"
 #include "ColorPicker.h"
-#include "Project.h"
 #include "ScrollCompressor.h"
 #include "CurveUtilities.h"
 
@@ -64,7 +63,7 @@ public:
 
     ~MultiCalibrationView();
 
-    void setProject(std::shared_ptr<Project> project);
+    void setProject();
 
     void updateGraphList();
     void initScale (const double majorScale, const int minorScale) { mMajorScale = majorScale; mMinorScale = minorScale;}
@@ -110,7 +109,6 @@ signals:
 
 public:
     StudyPeriodSettings mSettings;
-    std::shared_ptr<Project> mProject;
 
 private:
 

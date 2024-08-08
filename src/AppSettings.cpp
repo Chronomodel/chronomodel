@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -79,6 +79,8 @@ QString AppSettings::mLastFile;
 
 QSize AppSettings::mLastSize;
 QPoint AppSettings::mLastPosition;
+
+bool AppSettings::mIsSaved;
 
 AppSettings::AppSettings()
 {

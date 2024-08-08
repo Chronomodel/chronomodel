@@ -44,6 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Painting.h"
 #include "DateUtils.h"
 #include "ModelUtilities.h"
+#include "QtUtilities.h"
 
 #include <QtWidgets>
 
@@ -71,12 +72,6 @@ void GraphViewCurve::setComposanteGChains(const QList<PosteriorMeanGComposante>&
     mComposanteGChains = composanteChains;
 }
 
-void GraphViewCurve::setModel(const std::shared_ptr<ModelCurve> model)
-{
-    mModel = model;
-}
-
-
 void GraphViewCurve::paintEvent(QPaintEvent* e)
 {
     GraphViewResults::paintEvent(e);
@@ -102,7 +97,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
     mGraph->setFormatFunctX(nullptr);
     mGraph->setBackgroundColor(QColor(230, 230, 230));
     
-    const QString &resultsHTML = ModelUtilities::curveResultsHTML(mModel);
+    const QString &resultsHTML = ModelUtilities::curveResultsHTML(getModel_ptr());
     setNumericalResults(resultsHTML);
 
     // We use the parameter saved with the map

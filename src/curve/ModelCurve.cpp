@@ -106,6 +106,130 @@ void ModelCurve::fromJson(const QJsonObject &json)
     settings_from_Json(json);
 }
 
+void ModelCurve::setProject()
+{
+
+    mCurveName.clear();
+    mCurveLongName.clear();
+
+    if (!getProject_ptr() || !getProject_ptr()->isCurve()) {
+        return;
+    }
+
+    const QString xLabel = mCurveSettings.XLabel();
+    const QString yLabel = mCurveSettings.YLabel();
+    const QString zLabel = mCurveSettings.ZLabel();
+
+    const QString x_short_name = mCurveSettings.X_short_name();
+    const QString y_short_name = mCurveSettings.Y_short_name();
+    const QString z_short_name = mCurveSettings.Z_short_name();
+
+    switch (mCurveSettings.mProcessType) {
+
+    case CurveSettings::eProcess_2D:
+    case CurveSettings::eProcess_Spherical:
+    case CurveSettings::eProcess_Unknwon_Dec:
+        mCurveName.append({x_short_name, y_short_name});
+        mCurveLongName.append({xLabel, yLabel});
+        break;
+
+    case CurveSettings::eProcess_3D:
+    case CurveSettings::eProcess_Vector:
+        mCurveName.append({x_short_name, y_short_name, z_short_name});
+        mCurveLongName.append({xLabel, yLabel, zLabel});
+        break;
+
+    case CurveSettings::eProcess_None:
+    case CurveSettings::eProcess_Univariate:
+    case CurveSettings::eProcess_Inclination:
+    case CurveSettings::eProcess_Declination:
+    case CurveSettings::eProcess_Field:
+    case CurveSettings::eProcess_Depth:
+    default:
+        mCurveName.append(x_short_name);
+        mCurveLongName.append(xLabel);
+        break;
+    }
+
+}
+
+/**
+ * @brief ResultsView::updateModel Update Design
+ */
+void ModelCurve::updateDesignFromJson()
+{
+    if (!getProject_ptr())
+        return;
+    setProject();// update mCurveName
+    const QJsonObject *state = getProject_ptr()->state_ptr();
+    const QJsonArray events = state->value(STATE_EVENTS).toArray();
+    const QJsonArray phases = state->value(STATE_PHASES).toArray();
+
+    QJsonArray::const_iterator iterJSONEvent = events.constBegin();
+    while (iterJSONEvent != events.constEnd()) {
+        const QJsonObject eventJSON = (*iterJSONEvent).toObject();
+        const int eventId = eventJSON.value(STATE_ID).toInt();
+        const QJsonArray dates = eventJSON.value(STATE_EVENT_DATES).toArray();
+
+        QList<Event *>::iterator iterEvent = mEvents.begin();
+        while (iterEvent != mEvents.end()) {
+            if ((*iterEvent)->mId == eventId) {
+                (*iterEvent)->mName  = eventJSON.value(STATE_NAME).toString();
+                (*iterEvent)->mItemX = eventJSON.value(STATE_ITEM_X).toDouble();
+                (*iterEvent)->mItemY = eventJSON.value(STATE_ITEM_Y).toDouble();
+                (*iterEvent)->mIsSelected = eventJSON.value(STATE_IS_SELECTED).toBool();
+                (*iterEvent)->mColor = QColor(eventJSON.value(STATE_COLOR_RED).toInt(),
+                                              eventJSON.value(STATE_COLOR_GREEN).toInt(),
+                                              eventJSON.value(STATE_COLOR_BLUE).toInt());
+
+                for (int k = 0; k<(*iterEvent)->mDates.size(); ++k) {
+                    Date& d = (*iterEvent)->mDates[k];
+                    for (auto &&dateVal : dates) {
+                        const QJsonObject date = dateVal.toObject();
+                        const int dateId = date.value(STATE_ID).toInt();
+
+                        if (dateId == d.mId) {
+                            d.mName = date.value(STATE_NAME).toString();
+                            d.mColor = (*iterEvent)->mColor;
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            ++iterEvent;
+        }
+        ++iterJSONEvent;
+    }
+
+    QJsonArray::const_iterator iterJSONPhase = phases.constBegin();
+    while (iterJSONPhase != phases.constEnd()) {
+        const QJsonObject phaseJSON = (*iterJSONPhase).toObject();
+        const int phaseId = phaseJSON.value(STATE_ID).toInt();
+
+        for (const auto& p : mPhases) {
+            if (p->mId == phaseId) {
+                p->mName = phaseJSON.value(STATE_NAME).toString();
+                p->mItemX = phaseJSON.value(STATE_ITEM_X).toDouble();
+                p->mItemY = phaseJSON.value(STATE_ITEM_Y).toDouble();
+                p->mColor = QColor(phaseJSON.value(STATE_COLOR_RED).toInt(),
+                                   phaseJSON.value(STATE_COLOR_GREEN).toInt(),
+                                   phaseJSON.value(STATE_COLOR_BLUE).toInt());
+                p->mIsSelected = phaseJSON.value(STATE_IS_SELECTED).toBool();
+                break;
+            }
+        }
+        ++iterJSONPhase;
+    }
+
+    std::sort(mEvents.begin(), mEvents.end(), sortEvents);
+    std::sort(mPhases.begin(), mPhases.end(), sortPhases);
+
+    for (const auto& p : mPhases ) {
+        std::sort(p->mEvents.begin(), p->mEvents.end(), sortEvents);
+    }
+}
+
 void ModelCurve::settings_from_Json(const QJsonObject &json)
 {
     if (json.contains(STATE_CURVE)) {
@@ -210,8 +334,9 @@ void ModelCurve::restoreFromFile_v323(QDataStream* in)
 
     Model::restoreFromFile_v323(in);
 
-    if (!is_curve)
+    if (!is_curve) {
         return;
+    }
     /* -----------------------------------------------------
     *  Read events VG
     *----------------------------------------------------- */
@@ -620,7 +745,7 @@ void ModelCurve::clearThreshold()
 {
     Model::clearThreshold();
 
-    if (mProject->isCurve()) {
+    if (getProject_ptr()->isCurve()) {
         for (Event*& event : mEvents)
             event->mVg.mThresholdUsed = -1.;
 
@@ -638,7 +763,7 @@ void ModelCurve::generateCredibility(const double thresh)
 #endif
     Model::generateCredibility(thresh);
 
-    if (mProject->isCurve()) {
+    if (getProject_ptr()->isCurve()) {
         for (Event*& event : mEvents) {
             event->mVg.generateCredibility(mChains, thresh);
         }
@@ -655,7 +780,7 @@ void ModelCurve::generateHPD(const double thresh)
 {
     Model::generateHPD(thresh);
 
-    if (mProject->isCurve()) {
+    if (getProject_ptr()->isCurve()) {
         for (Event*& event : mEvents) {
             if (event->type() != Event::eBound) {
                 if (event->mVg.mSamplerProposal != MHVariable::eFixe)
@@ -674,7 +799,7 @@ void ModelCurve::generateHPD(const double thresh)
 void ModelCurve::clearPosteriorDensities()
 {
     Model::clearPosteriorDensities();
-    if (mProject->isCurve()) {
+    if (getProject_ptr()->isCurve()) {
         for (Event*& event : mEvents) {
             if (event->type() != Event::eBound) {
                 event->mVg.mFormatedHisto.clear();
@@ -693,7 +818,7 @@ void ModelCurve::clearPosteriorDensities()
 void ModelCurve::clearCredibilityAndHPD()
 {
     Model::clearCredibilityAndHPD();
-    if (mProject->isCurve()) {
+    if (getProject_ptr()->isCurve()) {
         for (Event*& event : mEvents) {
             if (event->type() != Event::eBound) {
                 event->mVg.mFormatedHPD.clear();
@@ -715,7 +840,7 @@ void ModelCurve::clearTraces()
 {
     Model::clearTraces();
 
-    if (mProject->isCurve()) {
+    if (getProject_ptr()->isCurve()) {
         mLambdaSpline.reset();
     }
 
@@ -734,7 +859,7 @@ void ModelCurve::clear()
 void ModelCurve::setThresholdToAllModel(const double threshold)
 {
     Model::setThresholdToAllModel(threshold);
-    if (mProject->isCurve()) {
+    if (getProject_ptr()->isCurve()) {
         for (Event*& event : mEvents)
             event->mVg.mThresholdUsed = mThreshold;
 
@@ -748,7 +873,7 @@ void ModelCurve::memo_accept(const unsigned i_chain)
 {
     Model::memo_accept(i_chain);
 
-    if (mProject->isCurve()) {
+    if (getProject_ptr()->isCurve()) {
     /* --------------------------------------------------------------
      *  D -  Memo S02 Vg
      * -------------------------------------------------------------- */
@@ -784,7 +909,7 @@ void ModelCurve::initVariablesForChain()
 {
     Model::initVariablesForChain();
 
-    if (mProject->isCurve()) {
+    if (getProject_ptr()->isCurve()) {
     // today we have the same acceptBufferLen for every chain
     const int acceptBufferLen =  mChains.at(0).mIterPerBatch;
     int initReserve = 0;

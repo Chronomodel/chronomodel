@@ -157,6 +157,7 @@ Button::Button(const Button &button, QWidget* parent):
 Button::~Button()
 {
 }
+
 void Button::keyPressEvent(QKeyEvent* event)
 {
     QPushButton::keyPressEvent(event);

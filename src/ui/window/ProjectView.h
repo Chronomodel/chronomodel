@@ -57,14 +57,28 @@ class Event;
 class ProjectView: public QWidget
 {
     Q_OBJECT
+private:
+    QStackedWidget* mStack;
+    ModelView* mModelView;
+    ResultsView* mResultsView;
+
+    QWidget* mLogView;
+    QVBoxLayout* mLogLayout;
+    Tabs* mLogTabs;
+    QTextEdit* mLogModelEdit;
+    QTextEdit* mLogInitEdit;
+    QTextEdit* mLogAdaptEdit;
+    QTextEdit* mLogResultsEdit;
+
 public:
-    ProjectView(std::shared_ptr<Project> &project, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
+
+    ProjectView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~ProjectView();
 
     void setScreenDefinition();
     void resizeEvent(QResizeEvent* e);
 
-    void setProject(std::shared_ptr<Project> &project);
+    void setProject();
     
     void clearInterface();
     void resetInterface();
@@ -80,7 +94,7 @@ public:
     void setShowAllThumbs(bool show) {mModelView->setShowAllThumbs(show);}
 
 public slots:
-    void initResults(std::shared_ptr<ModelCurve> model);
+    void initResults();
     void updateResults();
     void updateProject();
     void showModel();
@@ -96,18 +110,7 @@ public slots:
     
     void toggleCurve(bool toggle);
 
-private:
-    QStackedWidget* mStack;
-    ModelView* mModelView;
-    ResultsView* mResultsView;
 
-    QWidget* mLogView;
-    QVBoxLayout* mLogLayout;
-    Tabs* mLogTabs;
-    QTextEdit* mLogModelEdit;
-    QTextEdit* mLogInitEdit;
-    QTextEdit* mLogAdaptEdit;
-    QTextEdit* mLogResultsEdit;
 };
 
 #endif

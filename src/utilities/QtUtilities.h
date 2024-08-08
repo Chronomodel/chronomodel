@@ -40,6 +40,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef QTUTILITIES_H
 #define QTUTILITIES_H
 
+#include "ModelCurve.h"
+
 #include <QStringList>
 #include <QColor>
 #include <QFileInfo>
@@ -232,5 +234,9 @@ QList<double> load_qlist(QDataStream& stream);
 
 void save_qlist(QDataStream& stream, const QList<double>* data);
 void save_qlist(QDataStream& stream, const QList<double> data);
+
+std::shared_ptr<Project> getProject_ptr();
+std::shared_ptr<ModelCurve> getModel_ptr();
+QJsonObject* getState_ptr();
 
 #endif

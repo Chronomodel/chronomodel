@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -119,6 +119,8 @@ public:
 
     static QSize mLastSize;
     static QPoint mLastPosition;
+
+    static bool mIsSaved;
 
 private:
     static int mWidthUnit;

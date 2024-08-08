@@ -419,14 +419,14 @@ CurveSettings CurveSettingsView::getSettings() const
     return settings;
 }
 
-void CurveSettingsView::setProject(std::shared_ptr<Project> project)
+void CurveSettingsView::setProject()
 {
-    if (mProject != nullptr)
+    auto project =getProject_ptr();
+    if (project != nullptr)
         setConnections(false);
 
-    mProject = project;
 
-    const CurveSettings curveSettings (mProject->mState.value(STATE_CURVE).toObject());
+    const CurveSettings curveSettings (project->mState.value(STATE_CURVE).toObject());
 
     setSettings(curveSettings);
 
@@ -441,10 +441,10 @@ void CurveSettingsView::reset()
 
 void CurveSettingsView::save()
 {
-    //const CurveSettings &curveSettings = getSettings();
-    QJsonObject stateNext = mProject->mState;
+    auto project =getProject_ptr();
+    QJsonObject stateNext = project->mState;
     stateNext[STATE_CURVE] = getSettings().toJson();
-    mProject->pushProjectState(stateNext, CURVE_SETTINGS_UPDATED_REASON, true);
+    project->pushProjectState(stateNext, CURVE_SETTINGS_UPDATED_REASON, true);
     emit newProcess(mProcessTypeInput->currentText());
 }
 

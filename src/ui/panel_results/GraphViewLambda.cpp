@@ -42,11 +42,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ModelCurve.h"
 #include "Painting.h"
 #include "ModelUtilities.h"
+#include "QtUtilities.h"
 
 #include <QtWidgets>
 
-GraphViewLambda::GraphViewLambda(QWidget *parent):GraphViewResults(parent),
-    mModel(nullptr)
+GraphViewLambda::GraphViewLambda(QWidget *parent):GraphViewResults(parent)
 {
     setMainColor(Painting::borderDark);
     mGraph->setBackgroundColor(QColor(210, 210, 210));
@@ -55,12 +55,6 @@ GraphViewLambda::GraphViewLambda(QWidget *parent):GraphViewResults(parent),
 GraphViewLambda::~GraphViewLambda()
 {
 }
-
-void GraphViewLambda::setModel(const std::shared_ptr<ModelCurve> model)
-{
-    mModel = model;
-}
-
 
 void GraphViewLambda::paintEvent(QPaintEvent* e)
 {
@@ -74,6 +68,7 @@ void GraphViewLambda::resizeEvent(QResizeEvent* )
 
 void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList)
 {
+    auto model = getModel_ptr();
     GraphViewResults::generateCurves(typeGraph, variableList);
     
     mGraph->removeAllCurves();
@@ -89,7 +84,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
 
     QColor color = Qt::blue;
 
-    const QString resultsHTML = ModelUtilities::lambdaResultsHTML(mModel);
+    const QString resultsHTML = ModelUtilities::lambdaResultsHTML(model);
     setNumericalResults(resultsHTML);
 
     // ------------------------------------------------
@@ -108,7 +103,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
         //  Post distrib All Chains
         // ------------------------------------
 
-        const GraphCurve &curvePostDistrib = densityCurve(mModel->mLambdaSpline.fullHisto(),
+        const GraphCurve &curvePostDistrib = densityCurve(model->mLambdaSpline.fullHisto(),
                                                           "Post Distrib All Chains",
                                                           color);
 
@@ -117,7 +112,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
         // ------------------------------------
         //  HPD All Chains
         // ------------------------------------
-        const GraphCurve &curveHPD = HPDCurve(mModel->mLambdaSpline.mFormatedHPD, "HPD All Chains", color);
+        const GraphCurve &curveHPD = HPDCurve(model->mLambdaSpline.mFormatedHPD, "HPD All Chains", color);
         mGraph->add_curve(curveHPD);
 
         // ------------------------------------
@@ -125,7 +120,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
         // ------------------------------------
 
         for (int i=0; i<mChains.size(); ++i)  {
-            const GraphCurve &curvePostDistribChain = densityCurve(mModel->mLambdaSpline.histoForChain(i),
+            const GraphCurve &curvePostDistribChain = densityCurve(model->mLambdaSpline.histoForChain(i),
                                                                    "Post Distrib Chain " + QString::number(i),
                                                                    Painting::chainColors.at(i),
                                                                    Qt::SolidLine,
@@ -137,7 +132,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
         // ------------------------------------
         //  Theta Credibility
         // ------------------------------------
-        const GraphCurve &curveCred = topLineSection(mModel->mLambdaSpline.mFormatedCredibility,
+        const GraphCurve &curveCred = topLineSection(model->mLambdaSpline.mFormatedCredibility,
                                                      "Credibility All Chains",
                                                      color);
         mGraph->add_curve(curveCred);
@@ -152,8 +147,8 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
         mGraph->setTipYLab("Smoothing");
         mGraph->setFormatFunctX(nullptr);
         mTitle = tr("Smoothing Trace");
-        if (mModel->mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
-            generateTraceCurves(mChains, &(mModel->mLambdaSpline));
+        if (model->mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
+            generateTraceCurves(mChains, &(model->mLambdaSpline));
         else
             mGraph->resetNothingMessage();
     }
@@ -165,8 +160,8 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
         mGraph->setTipYLab("Rate");
         mGraph->setFormatFunctX(nullptr);
         mTitle = tr("Smoothing Acceptation");
-        if (mModel->mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
-            generateAcceptCurves(mChains, &(mModel->mLambdaSpline));
+        if (model->mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
+            generateAcceptCurves(mChains, &(model->mLambdaSpline));
         else
             mGraph->resetNothingMessage();
     }
@@ -178,8 +173,8 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
         mGraph->mLegendX = "";
         mGraph->setFormatFunctX(nullptr);
         mTitle = tr("Smoothing Autocorrelation");
-        if (mModel->mLambdaSpline.mSamplerProposal != MHVariable::eFixe) {
-            generateCorrelCurves(mChains, &(mModel->mLambdaSpline));
+        if (model->mLambdaSpline.mSamplerProposal != MHVariable::eFixe) {
+            generateCorrelCurves(mChains, &(model->mLambdaSpline));
             mGraph->setXScaleDivision(10, 10);
         }
         else
@@ -193,7 +188,6 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
 
 void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t> &variableList)
 {
-    Q_ASSERT(mModel);
 
     GraphViewResults::updateCurvesToShow(showAllChains, showChainList, variableList);
 

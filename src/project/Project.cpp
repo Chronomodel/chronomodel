@@ -98,10 +98,6 @@ Project::Project():
     } else
         mAutoSaveTimer->stop();
 
-    //
-   // mModel = nullptr;//std::make_unique<Model>(new Model());
-    //mModel->setProject(this);
-
     mReasonChangeStructure << PROJECT_LOADED_REASON << PROJECT_SETTINGS_UPDATED_REASON << INSERT_PROJECT_REASON;
     mReasonChangeStructure << NEW_EVEN_BY_CSV_DRAG_REASON;
 
@@ -118,7 +114,7 @@ Project::Project():
     mReasonChangeStructure << "Phase updated" << "Phase constraint created" << "Phase constraint updated" << "Phase's events updated";
     mReasonChangeStructure << "Phase selected";
 
-    mReasonChangeStructure << "Curve Settings updated";
+    mReasonChangeStructure << "Curve Settings updated" << "MCMC Settings updated";
     mReasonChangeStructure.squeeze();
 
     mReasonChangeDesign << "Date name updates" << "Date color updated";
@@ -226,13 +222,18 @@ bool Project::pushProjectState(const QJsonObject &state, const QString &reason, 
 
         if (mStructureIsChanged && (reason != PROJECT_LOADED_REASON) ) {
             mState = state;
+            AppSettings::mIsSaved = false;
+            MainWindow::getInstance()->updateWindowTitle();
             emit noResult(); // connected to MainWindows::noResults
             return true;
         }
 
     }
+    if (mStructureIsChanged || mDesignIsChanged || mItemsIsMoved )
+        AppSettings::mIsSaved = false;
 
     updateState(state, reason, notify);
+    MainWindow::getInstance()->updateWindowTitle();
     return true;
 
 }
@@ -318,9 +319,10 @@ void Project::checkStateModification(const QJsonObject &stateNew, const QJsonObj
         if ( phasesConstNew.size() != phasesConstOld.size()) {
             mStructureIsChanged = true;
             return;
+
         } else if (phasesConstNew != phasesConstOld) {
-                mStructureIsChanged = true;
-                return;
+            mStructureIsChanged = true;
+            return;
         }
 
 
@@ -412,9 +414,17 @@ void Project::checkStateModification(const QJsonObject &stateNew, const QJsonObj
         if ( eventsConstNew.size() != eventsConstOld.size()) {
             mStructureIsChanged = true;
             return;
+
         } else if (eventsConstNew != eventsConstOld) {
-                mStructureIsChanged = true;
-                return;
+            mStructureIsChanged = true;
+            return;
+
+        }
+        const QJsonObject &curveNew = stateNew.value(STATE_CURVE).toObject();
+        const QJsonObject &curveOld = stateOld.value(STATE_CURVE).toObject();
+        if (curveNew != curveOld) {
+           mStructureIsChanged = true;
+           return;
         }
     }
 
@@ -454,7 +464,7 @@ void Project::unselectedAllInState(QJsonObject &state)
 
 bool Project::structureIsChanged()
 {
- return mStructureIsChanged;
+    return mStructureIsChanged;
 }
 
 bool Project::designIsChanged()
@@ -764,7 +774,7 @@ bool Project::load(const QString &path, bool force)
                     qDebug() << "[Project::load] Loading model file.res : " << dataPath << " size=" << dataFile.size();
 
                     try {
-                         mModel = std::shared_ptr<ModelCurve>(new ModelCurve (mState));
+                         mModel = std::shared_ptr<ModelCurve>(new ModelCurve(mState, this));
                             qDebug() << "[Project::load] Create a ModelCurve";
 
                     }
@@ -783,7 +793,7 @@ bool Project::load(const QString &path, bool force)
 
 
                     try {
-                        mModel->setProject(this);
+                        mModel->setProject();
 
                         QFile file(dataPath);
                         if (file.exists() && file.open(QIODevice::ReadOnly)){
@@ -1233,8 +1243,13 @@ bool Project::saveProjectToFile()
 
             file_chr.resize(file_chr.pos());
             file_chr.close();
-        } else
+
+            AppSettings::mIsSaved = true;
+
+        } else {
+            AppSettings::mIsSaved = false;
             return false;
+        }
 
     }
 #ifdef DEBUG
@@ -1257,6 +1272,8 @@ bool Project::saveProjectToFile()
             out << it.value();
         }
         file_cal.close();
+
+        AppSettings::mIsSaved = true;
      }
 
     QFileInfo checkFile(file_res.fileName());
@@ -1267,7 +1284,7 @@ bool Project::saveProjectToFile()
 
         qDebug() << "[Project::saveProjectToFile] Saving project results in "<< AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res";
 
-        mModel->setProject(this);
+        mModel->setProject();
 
         // -----------------------------------------------------
         //  Create file
@@ -1280,9 +1297,12 @@ bool Project::saveProjectToFile()
             QDataStream out(&file_res);
             mModel->saveToFile(&out);
             file_res.close();
+
+            AppSettings::mIsSaved = true;
         }
 
     }
+    MainWindow::getInstance()->updateWindowTitle();
     return true;
 }
 
@@ -3083,8 +3103,7 @@ void Project::runChronomodel()
     emit mcmcStarted();
 
     clearModel();
-    mModel = std::shared_ptr<ModelCurve>(new ModelCurve(mState));
-    mModel->setProject(this);
+    mModel = std::shared_ptr<ModelCurve>(new ModelCurve(mState, this));
 
     bool modelOk = false;
     try {
@@ -3201,10 +3220,8 @@ void Project::runCurve()
     //  using the project state
     // ------------------------------------------------------------------------------------------
     clearModel();
-    mModel = std::shared_ptr<ModelCurve>(new ModelCurve(mState));
+    mModel = std::shared_ptr<ModelCurve>(new ModelCurve(mState, this));
 
-    mModel->setProject(this);
-    
     // ------------------------------------------------------------------------------------------
     //  Check if the model is valid
     // ------------------------------------------------------------------------------------------

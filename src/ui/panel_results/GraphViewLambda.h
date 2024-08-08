@@ -51,8 +51,6 @@ public:
     explicit GraphViewLambda(QWidget *parent = nullptr);
     virtual ~GraphViewLambda();
 
-    void setModel(const std::shared_ptr<ModelCurve> model) ;
-
     virtual void generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList);
     void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showVariableList);
 
@@ -60,8 +58,6 @@ protected:
     void paintEvent(QPaintEvent* e);
     void resizeEvent(QResizeEvent* );
 
-private:
-   std::shared_ptr<ModelCurve> mModel;
 
 };
 

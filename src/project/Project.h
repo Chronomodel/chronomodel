@@ -228,18 +228,17 @@ signals:
     void projectItemsIsMoved(bool itemsIsMoved);
 
 public:
-    QJsonObject mState;
+
     QJsonObject mLastSavedState;
 
     QString mName;
 
-    //Model* mModel;
-    //std::shared_ptr<Model> mModelChrono;
     std::shared_ptr<ModelCurve> mModel;
     MCMCLoop* mLoop; //public QThread
 
     QMap<QString, CalibrationCurve> mCalibCurves;
     QTimer* mAutoSaveTimer;
+    QJsonObject mState;
 
 private :
     // used to define scene modification
@@ -249,7 +248,8 @@ private :
     QSet<QString> mReasonChangeStructure;
     QSet<QString> mReasonChangeDesign;
     QSet<QString> mReasonChangePosition;
-    
+
+
     bool mNoResults;
 };
 

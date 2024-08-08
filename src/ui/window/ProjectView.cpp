@@ -40,16 +40,17 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "MainWindow.h"
 #include "ModelView.h"
+#include "QtUtilities.h"
 #include "ResultsView.h"
 #include "AppSettings.h"
 
-ProjectView::ProjectView(std::shared_ptr<Project> &project, QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
+ProjectView::ProjectView( QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
 {
     setMouseTracking(true);
     setScreenDefinition();
 
-    mModelView = new ModelView(project);
-    mResultsView = new ResultsView(project);
+    mModelView = new ModelView(this);
+    mResultsView = new ResultsView(this);
 
     QPalette palette;
     palette.setColor(QPalette::Base, Qt::white);
@@ -167,17 +168,16 @@ void ProjectView::setScreenDefinition()
 
 void ProjectView::resizeEvent(QResizeEvent* e)
 {
-    Q_UNUSED(e);
-
+    (void)e;
     setScreenDefinition();
 
 }
 
-void ProjectView::setProject(std::shared_ptr<Project> &project)
+void ProjectView::setProject()
 {
-    mModelView->setProject(project);
-    if (project->withResults())
-        mResultsView->setProject(project);
+    mModelView->setProject();
+    if (getProject_ptr()->withResults())
+        mResultsView->setProject();
 }
 
 void ProjectView::clearInterface()
@@ -215,9 +215,9 @@ void ProjectView::showResults()
 
 void ProjectView::showLog()
 {
-    mResultsView->mModel->mLogResults.clear();
-    mResultsView->mModel->generateResultsLog();
-    updateResultsLog(mResultsView->mModel->getResultsLog());
+    getModel_ptr()->mLogResults.clear();
+    getModel_ptr()->generateResultsLog();
+    updateResultsLog(getModel_ptr()->getResultsLog());
     mStack->setCurrentIndex(2);
 }
 
@@ -238,7 +238,7 @@ void ProjectView::applyFilesSettings(std::shared_ptr<ModelCurve> &model)
 {
     // Rebuild all calibration curve
 
-    const QJsonObject &state = mModelView->getProject()->state();
+    const QJsonObject &state = getProject_ptr()->state();
     const StudyPeriodSettings &s = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
     const bool calibrate = mModelView->findCalibrateMissing();
     if (calibrate)
@@ -281,15 +281,16 @@ void ProjectView::updateMultiCalibrationAndEventProperties()
  *  - The Model densities have to be computed
  *  - The Model Logs have to be generated
  */
-void ProjectView::initResults(std::shared_ptr<ModelCurve> model)
+void ProjectView::initResults()
 {
+    auto model = getModel_ptr();
     model->updateDesignFromJson();
     model->initDensities();
 
     model->generateModelLog();
     model->generateResultsLog();
 
-    mResultsView->initModel(model);
+    mResultsView->initModel();
     // Update log view
     mLogModelEdit->setText(model->getModelLog());
     mLogInitEdit->setText(model->getInitLog());
@@ -303,10 +304,10 @@ void ProjectView::initResults(std::shared_ptr<ModelCurve> model)
 
 void ProjectView::updateResults()
 {
-    std::shared_ptr<Project> project = MainWindow::getInstance()->getProject();
+    auto model = getModel_ptr();
 
-    if (project->mModel) {
-        project->mModel->updateDesignFromJson();
+    if (model) {
+        model->updateDesignFromJson();
 
         mResultsView->updateModel();
     }

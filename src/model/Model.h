@@ -49,15 +49,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QJsonObject>
 
-class Project;
-
 
 class Model: public QObject
 {
     Q_OBJECT
 public:
     StudyPeriodSettings mSettings;
-    Project *mProject;
 
     MCMCSettings mMCMCSettings;
 
@@ -115,17 +112,12 @@ public:
     inline bool displayZ () const {return mCurveName.size()>2;}
 
     virtual void updateFormatSettings();
-    void updateDesignFromJson();
 
     virtual QJsonObject toJson() const;
     virtual void fromJson( const QJsonObject& json);
-    
-    void setProject(Project *project);
 
     bool isValid();
     void clear();
-
-   // QString initialize_time();
 
     void initNodeEvents(); // use in MCMCLoopChrono::initialize()
     QString initializeTheta();

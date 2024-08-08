@@ -167,7 +167,7 @@ public:
     template <template<typename...> class C, typename T>
     C<T> full_run_trace(C<T>* trace, const QList<ChainSpecs>& chains)
     {
-        if (trace->isEmpty())
+        if (trace == nullptr || trace->isEmpty())
             return C<T>(0);
 
         else if (trace->size() == chains.size()) // Cas des variables fixes

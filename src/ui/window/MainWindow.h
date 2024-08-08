@@ -147,6 +147,7 @@ private:
     QStackedWidget* mCentralStack;
     ProjectView* mProjectView;
     std::shared_ptr<Project> mProject;
+
     QUndoStack* mUndoStack;
     QUndoView* mUndoView;
     QDockWidget* mUndoDock;

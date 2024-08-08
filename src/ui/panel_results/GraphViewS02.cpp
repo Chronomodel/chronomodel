@@ -39,15 +39,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "GraphViewS02.h"
 #include "GraphView.h"
-#include "ModelCurve.h"
 #include "Painting.h"
-#include "DateUtils.h"
 #include "ModelUtilities.h"
+#include "QtUtilities.h"
 
 #include <QtWidgets>
 
-GraphViewS02::GraphViewS02(QWidget *parent):GraphViewResults(parent),
-    mModel(nullptr)
+GraphViewS02::GraphViewS02(QWidget *parent):GraphViewResults(parent)
 {
     setMainColor(Painting::borderDark);
     mGraph->setBackgroundColor(QColor(210, 210, 210));
@@ -55,13 +53,9 @@ GraphViewS02::GraphViewS02(QWidget *parent):GraphViewResults(parent),
 
 GraphViewS02::~GraphViewS02()
 {
-    //mModel = nullptr;
 }
 
-void GraphViewS02::setModel(std::shared_ptr<ModelCurve> model)
-{
-    mModel = model;
-}
+
 
 void GraphViewS02::paintEvent(QPaintEvent* e)
 {
@@ -75,6 +69,7 @@ void GraphViewS02::resizeEvent(QResizeEvent* )
 
 void GraphViewS02::generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList)
 {
+    auto model = getModel_ptr();
     GraphViewResults::generateCurves(typeGraph, variableList);
     
     mGraph->removeAllCurves();
@@ -90,8 +85,7 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QList<variable_
 
     QColor color = Qt::blue;
 
-    //QString resultsText = ModelUtilities::S02ResultsText(mModel);
-    QString resultsHTML = ModelUtilities::S02ResultsHTML(mModel);
+    QString resultsHTML = ModelUtilities::S02ResultsHTML(model);
     setNumericalResults(resultsHTML);
     // ------------------------------------------------
     //  First tab : Posterior distrib
@@ -109,7 +103,7 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QList<variable_
         //  Post distrib All Chains
         // ------------------------------------
 
-        const GraphCurve &curvePostDistrib = densityCurve(mModel->mS02Vg.fullHisto(),
+        const GraphCurve &curvePostDistrib = densityCurve(model->mS02Vg.fullHisto(),
                                                           "Post Distrib All Chains",
                                                           color);
         mGraph->add_curve(curvePostDistrib);
@@ -117,15 +111,15 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QList<variable_
         // ------------------------------------
         //  HPD All Chains
         // ------------------------------------
-        const GraphCurve &curveHPD = HPDCurve(mModel->mS02Vg.mFormatedHPD, "HPD All Chains", color);
+        const GraphCurve &curveHPD = HPDCurve(model->mS02Vg.mFormatedHPD, "HPD All Chains", color);
         mGraph->add_curve(curveHPD);
 
         // ------------------------------------
         //  Post Distrib Chain i
         // ------------------------------------
-        if (!mModel->mS02Vg.mChainsHistos.isEmpty()) {
+        if (!model->mS02Vg.mChainsHistos.isEmpty()) {
             for (qsizetype i=0; i<mChains.size(); ++i)  {
-                const GraphCurve& curvePostDistribChain = densityCurve(mModel->mS02Vg.histoForChain(i),
+                const GraphCurve& curvePostDistribChain = densityCurve(model->mS02Vg.histoForChain(i),
                                                                        "Post Distrib Chain " + QString::number(i),
                                                                        Painting::chainColors.at(i),
                                                                        Qt::SolidLine,
@@ -137,7 +131,7 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QList<variable_
         // ------------------------------------
         //  Theta Credibility
         // ------------------------------------
-        const GraphCurve &curveCred = topLineSection(mModel->mS02Vg.mFormatedCredibility,
+        const GraphCurve &curveCred = topLineSection(model->mS02Vg.mFormatedCredibility,
                                                      "Credibility All Chains",
                                                      color);
         mGraph->add_curve(curveCred);
@@ -152,8 +146,8 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QList<variable_
         mGraph->setTipYLab("S02");
         mGraph->setFormatFunctX(nullptr);
         mTitle = tr("Curve Shrinkage Trace");
-        if (mModel->mS02Vg.mSamplerProposal != MHVariable::eFixe)
-            generateTraceCurves(mChains, &(mModel->mS02Vg));
+        if (model->mS02Vg.mSamplerProposal != MHVariable::eFixe)
+            generateTraceCurves(mChains, &(model->mS02Vg));
         else
             mGraph->resetNothingMessage();
     }
@@ -165,8 +159,8 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QList<variable_
         mGraph->setTipYLab("Rate");
         mGraph->setFormatFunctX(nullptr);
         mTitle = tr("Curve Shrinkage Acceptation");
-        if (mModel->mS02Vg.mSamplerProposal != MHVariable::eFixe)
-            generateAcceptCurves(mChains, &(mModel->mS02Vg));
+        if (model->mS02Vg.mSamplerProposal != MHVariable::eFixe)
+            generateAcceptCurves(mChains, &(model->mS02Vg));
          else
             mGraph->resetNothingMessage();
 
@@ -180,8 +174,8 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QList<variable_
         mGraph->mLegendX = "";
         mGraph->setFormatFunctX(nullptr);
         mTitle = tr("Curve Shrinkage Autocorrelation");
-        if (mModel->mS02Vg.mSamplerProposal != MHVariable::eFixe) {
-            generateCorrelCurves(mChains, &(mModel->mS02Vg));
+        if (model->mS02Vg.mSamplerProposal != MHVariable::eFixe) {
+            generateCorrelCurves(mChains, &(model->mS02Vg));
             mGraph->setXScaleDivision(10, 10);
         }
         else

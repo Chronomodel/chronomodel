@@ -143,11 +143,13 @@ public:
     Event (std::shared_ptr<Model> model = nullptr);
 
     explicit Event (const QJsonObject& json, std::shared_ptr<Model> model);
+    Event(const Event &origin);
     virtual ~Event();
 
+    virtual Event& operator=(const Event& origin);
     virtual void copyFrom(const Event& event);
 
-    static Event fromJson(const QJsonObject& json);
+    static Event fromJson(const QJsonObject& json); // With no model
     virtual QJsonObject toJson() const;
 
     inline Type type() const { return mType;}

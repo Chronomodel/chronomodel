@@ -60,7 +60,7 @@ public:
     void setSettings(const CurveSettings& settings);
     CurveSettings getSettings() const;
     
-    void setProject(std::shared_ptr<Project> project);
+    void setProject();
     void setConnections(const bool doConnections);
 
 signals:
@@ -72,8 +72,7 @@ protected slots:
     void save();
 
 private:
-    std::shared_ptr<Project> mProject;
-    
+
     bool mEnabled;
     
     QLabel* mTitleLabel;

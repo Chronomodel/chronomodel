@@ -70,7 +70,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <assert.h>
 
-ModelView::ModelView(std::shared_ptr<Project> &project, QWidget* parent, Qt::WindowFlags flags):
+ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):
     QWidget (parent, flags),
    // mEventsScene (nullptr),
     mCurSearchIdx (0),
@@ -78,7 +78,6 @@ ModelView::ModelView(std::shared_ptr<Project> &project, QWidget* parent, Qt::Win
     mCurrentRightWidget (nullptr),
     mTmin (0.),
     mTmax (2000.),
-    mProject (project),
     mSplitProp (0.6),
     mHandlerW (0.25 *AppSettings::widthUnit()),
     mIsSplitting (false),
@@ -337,25 +336,24 @@ ModelView::~ModelView()
     mMultiCalibrationView = nullptr;
 }
 
-void ModelView::setProject(std::shared_ptr<Project> &project)
-{
-    assert(project != nullptr);
 
-    const bool projectExist = (mProject!=nullptr ? true : false);
+void ModelView::setProject()
+{
+    auto project = getProject_ptr();
+    const bool projectExist = (project!=nullptr ? true : false);
 
     if (projectExist) {
         disconnectScenes();
     }
-    mProject = project;
 
-    mPhasesScene->setProject(mProject);
-    mEventsScene->setProject(mProject);
+    mPhasesScene->setProject(project);
+    mEventsScene->setProject(project);
 
-    mCurveSettingsView->setProject(mProject);
+    mCurveSettingsView->setProject();
 
     if (!mMultiCalibrationView)
         mMultiCalibrationView = new MultiCalibrationView(mRightWrapper);
-    mMultiCalibrationView->setProject(mProject);
+    mMultiCalibrationView->setProject();
     updateCurveButton();
     //connectScenes();
 
@@ -363,7 +361,7 @@ void ModelView::setProject(std::shared_ptr<Project> &project)
     mPhasesScene->setShowAllEvents(true);
 
     hideProperties();
-    const StudyPeriodSettings settings = StudyPeriodSettings::fromJson(mProject->mState[STATE_SETTINGS].toObject());
+    const StudyPeriodSettings settings = StudyPeriodSettings::fromJson(project->mState[STATE_SETTINGS].toObject());
 
     mTmin = settings.mTmin;
     mTmax = settings.mTmax;
@@ -371,7 +369,7 @@ void ModelView::setProject(std::shared_ptr<Project> &project)
     setSettingsValid(settings.mTmin < settings.mTmax);
 
     //Unselect all Item in all scene
-    mProject->unselectedAllInState(mProject->mState);
+    project->unselectedAllInState(project->mState);
 
     mEventsScene->createSceneFromState();
     mPhasesScene->createSceneFromState();
@@ -391,10 +389,11 @@ void ModelView::setProject(std::shared_ptr<Project> &project)
 void ModelView::updateProject()
 {
     qDebug()<<"[ModelView::updateProject]";
-    if (!mProject)
+    auto project = getProject_ptr();
+    if (project == nullptr)
         return;
 
-    const QJsonObject &state = mProject->state();
+    const QJsonObject &state = project->state();
     const StudyPeriodSettings &settings = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
     mTmin = settings.mTmin;
@@ -422,6 +421,7 @@ void ModelView::updateProject()
 
 void ModelView::connectScenes()
 {
+    auto project = getProject_ptr();
     connect(mButNewEvent, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ModelView::createEventInPlace);
     connect(mButNewEventKnown, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ModelView::createEventKnownInPlace);
 
@@ -452,13 +452,13 @@ void ModelView::connectScenes()
 
     // Project::currentEventChanged come from Project::deleteSelectedEvents() and EventsScene::updateSceneFromState()
 
-    if (mProject) {
-        connect(mProject.get(), &Project::projectStateChanged, this, &ModelView::updateMultiCalibrationAndEventProperties);
-        connect(mButRecycleEvent, static_cast<void (Button::*)(bool)> (&Button::clicked), mProject.get(), &Project::recycleEvents);
+    if (project) {
+        connect(project.get(), &Project::projectStateChanged, this, &ModelView::updateMultiCalibrationAndEventProperties);
+        connect(mButRecycleEvent, static_cast<void (Button::*)(bool)> (&Button::clicked), project.get(), &Project::recycleEvents);
         if (mEventPropertiesView) {
-            connect(mProject.get(), &Project::currentEventChanged, mEventPropertiesView, &EventPropertiesView::setEvent);
-            connect(mEventPropertiesView, &EventPropertiesView::combineDatesRequested, mProject.get(), &Project::combineDates);
-            connect(mEventPropertiesView, &EventPropertiesView::splitDateRequested, mProject.get(), &Project::splitDate);
+            connect(project.get(), &Project::currentEventChanged, mEventPropertiesView, &EventPropertiesView::setEvent);
+            connect(mEventPropertiesView, &EventPropertiesView::combineDatesRequested, project.get(), &Project::combineDates);
+            connect(mEventPropertiesView, &EventPropertiesView::splitDateRequested, project.get(), &Project::splitDate);
             connect(mEventPropertiesView, &EventPropertiesView::updateCalibRequested, this, &ModelView::updateCalibration);
             connect(mEventPropertiesView, &EventPropertiesView::showCalibRequested, this, &ModelView::showCalibration);
         }
@@ -471,6 +471,7 @@ void ModelView::connectScenes()
 
 void ModelView::disconnectScenes()
 {
+    auto project = getProject_ptr();
     disconnect(mButNewEvent, &Button::clicked, this, &ModelView::createEventInPlace);
     disconnect(mButNewEventKnown, &Button::clicked, this, &ModelView::createEventKnownInPlace);
     disconnect(mButDeleteEvent,  static_cast<void (Button::*)(bool)> (&Button::clicked), mEventsScene, &EventsScene::deleteSelectedItems);
@@ -501,23 +502,19 @@ void ModelView::disconnectScenes()
 
     disconnect(mButCurve, &Button::toggled, MainWindow::getInstance(), &MainWindow::toggleCurve);
 
-    if (mProject) {
-        disconnect(mProject.get(), &Project::projectStateChanged, this, &ModelView::updateMultiCalibrationAndEventProperties);
-        disconnect(mButRecycleEvent, &Button::clicked, mProject.get(), &Project::recycleEvents);
+    if (project) {
+        disconnect(project.get(), &Project::projectStateChanged, this, &ModelView::updateMultiCalibrationAndEventProperties);
+        disconnect(mButRecycleEvent, &Button::clicked, project.get(), &Project::recycleEvents);
         if (mEventPropertiesView) {
             disconnect(mEventPropertiesView, &EventPropertiesView::updateCalibRequested, this, &ModelView::updateCalibration);
             disconnect(mEventPropertiesView, &EventPropertiesView::showCalibRequested, this, &ModelView::showCalibration);
-            disconnect(mProject.get(), &Project::currentEventChanged, mEventPropertiesView, &EventPropertiesView::setEvent);
-            disconnect(mEventPropertiesView, &EventPropertiesView::combineDatesRequested, mProject.get(), &Project::combineDates);
-            disconnect(mEventPropertiesView, &EventPropertiesView::splitDateRequested, mProject.get(), &Project::splitDate);
+            disconnect(project.get(), &Project::currentEventChanged, mEventPropertiesView, &EventPropertiesView::setEvent);
+            disconnect(mEventPropertiesView, &EventPropertiesView::combineDatesRequested, project.get(), &Project::combineDates);
+            disconnect(mEventPropertiesView, &EventPropertiesView::splitDateRequested, project.get(), &Project::splitDate);
         }
     }
 }
 
-std::shared_ptr<Project> &ModelView::getProject()
-{
-   return  mProject;
-}
 
 void ModelView::clearInterface()
 {
@@ -537,7 +534,6 @@ void ModelView::clearInterface()
     //  noEventSelected();
     disconnectScenes();
 
-    mProject.reset();
     mEventsScene->clean();
     mPhasesScene->clean();
     mCalibrationView->setVisible(false);
@@ -556,35 +552,20 @@ void ModelView::clearInterface()
 
 void ModelView::resetInterface()
 {
-    mButProperties->setEnabled(false);
-    mButProperties->setChecked(false);
-
-    mButMultiCalib->setEnabled(false);
-    mButMultiCalib->setChecked(false);
-
-    mButDeleteEvent->setEnabled(false);
-    mButDeleteEvent->setChecked(false);
-
-    mButNewEvent->setEnabled(true);
-    mButNewEventKnown->setEnabled(true);
-    mButImport->setEnabled(true);
-
-  //  noEventSelected();
     disconnectScenes();
 
-    mProject.reset(new Project());
     mEventsScene->clean();
     mPhasesScene->clean();
     mCalibrationView->setDate(QJsonObject());
 
 
     mMultiCalibrationView->setVisible(false);
-    mMultiCalibrationView->setProject(mProject);
+    mMultiCalibrationView->setProject();
 
     mEventPropertiesView->initEvent();
 
-   // hideProperties();
-    updateLayout();
+    noEventSelected();
+
 }
 
 void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
@@ -604,7 +585,7 @@ void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
 bool ModelView::findCalibrateMissing()
 {
     bool calibMissing = false;
-    const QJsonObject &state = mProject->state();
+    const QJsonObject &state = getProject_ptr()->state();
 
     const QJsonArray &Qevents = state.value(STATE_EVENTS).toArray();
 
@@ -635,7 +616,7 @@ bool ModelView::findCalibrateMissing()
         for (auto&& ev : events) {
             for (auto&& date : ev.mDates) {
                 // look if the refCurve is still in the Plugin Ref. Curves list
-                // because the mProject->mCalibCurves is still existing but maybe not the curve in the list of the plugin
+                // because the project->mCalibCurves is still existing but maybe not the curve in the list of the plugin
                 if (date.mCalibration) {
                     const QStringList refsNames = date.getPlugin()->getRefsNames();
                     const QString dateRefName = date.getPlugin()->getDateRefCurveName(&date);
@@ -648,11 +629,11 @@ bool ModelView::findCalibrateMissing()
                     calibMissing = true;
                     continue;
                 }
-                // look inside mProject->mCalibCurves, if there is a missing calibration
+                // look inside project->mCalibCurves, if there is a missing calibration
                 // to try to rebuild it after
                 const QString toFind (date.mUUID);
-                QMap<QString, CalibrationCurve>::iterator it = mProject->mCalibCurves.find(toFind);
-                if ( it == mProject->mCalibCurves.end()) {
+                QMap<QString, CalibrationCurve>::iterator it = getProject_ptr()->mCalibCurves.find(toFind);
+                if ( it == getProject_ptr()->mCalibCurves.end()) {
                     calibMissing = true;
                     continue;
                 }
@@ -671,7 +652,8 @@ bool ModelView::findCalibrateMissing()
 
 void ModelView::calibrateAll(StudyPeriodSettings newS)
 {
-    const QJsonObject &state = mProject->state();
+    auto project = getProject_ptr();
+    const QJsonObject &state = project->state();
 
     QJsonArray Qevents = state.value(STATE_EVENTS).toArray();
 
@@ -679,7 +661,7 @@ void ModelView::calibrateAll(StudyPeriodSettings newS)
     * There is no date to calibrate
     */
     if (!Qevents.isEmpty()) {
-        for (auto && cal : mProject->mCalibCurves) {
+        for (auto && cal : project->mCalibCurves) {
             cal.mMap.clear();
             cal.mRepartition.clear();
             cal.mRepartition.squeeze();
@@ -687,11 +669,13 @@ void ModelView::calibrateAll(StudyPeriodSettings newS)
             cal.mVector.squeeze();
             cal.mPlugin = nullptr;
         }
-        mProject->mCalibCurves.clear();
+        project->mCalibCurves.clear();
 
         QList<Event> events;
-        for (auto&& Qev: Qevents)
-            events.append(Event::fromJson(Qev.toObject()));
+        for (auto&& Qev: Qevents) {
+            auto tmpE = Event::fromJson(Qev.toObject());
+            events.append(tmpE);
+        }
 
         QProgressDialog *progress = new QProgressDialog("Calibration in progress...","Wait" , 1, 10);
         progress->setWindowModality(Qt::WindowModal);
@@ -714,13 +698,13 @@ void ModelView::calibrateAll(StudyPeriodSettings newS)
                 for (auto&& date : listDates) {
                     Date d (date.toObject());
                     d.autoSetTiSampler(true);
-                    d.calibrate(newS, *mProject, true);
+                    d.calibrate(newS, *project, true);
 
                     ++position;
                     progress->setValue(position);
                 }
           }
-         mProject -> setSettings(newS); //do pushProjectState
+         project -> setSettings(newS); //do pushProjectState
     }
 
 
@@ -728,7 +712,8 @@ void ModelView::calibrateAll(StudyPeriodSettings newS)
 
 void ModelView::modifyPeriod()
 {
-    QJsonObject state = mProject->state();
+    auto project = getProject_ptr();
+    QJsonObject state = project->state();
     StudyPeriodSettings s = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
     StudyPeriodDialog dialog(qApp->activeWindow());
@@ -745,7 +730,7 @@ void ModelView::modifyPeriod()
           mMultiCalibrationView->initScale(xScale);
           mCalibrationView->initScale(xScale);
 
-          mProject -> setSettings(newS); //do pushProjectState //done in ModelView::calibrateAll(newS);??
+          project -> setSettings(newS); //do pushProjectState //done in ModelView::calibrateAll(newS);??
           MainWindow::getInstance() -> setResultsEnabled(false);
           MainWindow::getInstance() -> setLogEnabled(false);
         }
@@ -756,7 +741,7 @@ void ModelView::modifyPeriod()
 
 void ModelView::updateCurveButton()
 {
-    QJsonObject state = mProject->state();
+    const QJsonObject &state = getProject_ptr()->state();
 
     const CurveSettings cs (state.value(STATE_CURVE).toObject());
     mButCurve->setText(tr("ChronoCurve : ") + cs.processText());
@@ -797,7 +782,7 @@ void ModelView::searchEvent()
         mLastSearch = search;
         mSearchIds.clear();
 
-        const QJsonObject &state = mProject->state();
+        const QJsonObject &state = getProject_ptr()->state();
         const QJsonArray &events = state.value(STATE_EVENTS).toArray();
 
         for (auto&& evJSON : events) {
@@ -841,12 +826,12 @@ void ModelView::searchEvent()
 // Event::setEvent recognizes pos().isnull() as a new EventItem and randomizes the position
 void ModelView::createEventInPlace()
 {
-    mProject->createEvent(0, 0);
+    getProject_ptr()->createEvent(0, 0);
 }
 
 void ModelView::createEventKnownInPlace()
 {
-    mProject->createEventKnown(0, 0);
+    getProject_ptr()->createEventKnown(0, 0);
 }
 
 void ModelView::createPhaseInPlace()
@@ -854,7 +839,7 @@ void ModelView::createPhaseInPlace()
     const QRectF viewRect = mPhasesView->rect();
     const QPointF visiblePos = mPhasesView->mapToScene( int (viewRect.x()), int (viewRect.y()));
 
-    mProject->createPhase(visiblePos.x() + viewRect.width()/2., visiblePos.y() + viewRect.height()/2.);
+    getProject_ptr()->createPhase(visiblePos.x() + viewRect.width()/2., visiblePos.y() + viewRect.height()/2.);
 }
 
 /**
@@ -1017,7 +1002,7 @@ void ModelView::showMultiCalib()
 
         }
 
-        auto events = mProject->mState.value(STATE_EVENTS).toArray();
+        auto events = getProject_ptr()->mState.value(STATE_EVENTS).toArray();
         bool with_selected_event =false;
         for (const auto&& ev : events) {
             const QJsonObject jsonEv = ev.toObject();
@@ -1064,7 +1049,7 @@ void ModelView::showImport()
 {
    updateLayout();
    if (mButImport->isChecked()) {
-       if (mProject->studyPeriodIsValid()) {
+       if (getProject_ptr()->studyPeriodIsValid()) {
             mButProperties  -> setChecked(false);
             mButCurve  -> setChecked(false);
 
@@ -1170,7 +1155,7 @@ void ModelView::noEventSelected()
 
 void ModelView::showPhases()
 {
-    if (mProject->studyPeriodIsValid()) {
+    if (getProject_ptr()->studyPeriodIsValid()) {
         showCalibration(false);
 
         mButImport->setChecked(false);
@@ -1460,7 +1445,7 @@ void ModelView::updateCalibration(const QJsonObject &date)
     if (!date.isEmpty() ) {
         Date d (date);
         if (d.mCalibration == nullptr)
-            d.calibrate(StudyPeriodSettings::fromJson(mProject->state().value(STATE_SETTINGS).toObject()), *mProject, true);
+            d.calibrate(StudyPeriodSettings::fromJson(getProject_ptr()->state().value(STATE_SETTINGS).toObject()), *getProject_ptr(), true);
 
         // A date has been double-clicked => update CalibrationView only if the date is not null
         if (mEventPropertiesView->isVisible() && mEventPropertiesView->isCalibChecked())
@@ -1632,23 +1617,7 @@ void ModelView::showCurveSettings(bool show)
 
         mCurveSettingsView->setVisible(show);
 
-        if (mProject) {
-
-            // Save the "enabled" state of Curve in project settings
-         /*   QJsonObject state = mProject->mState;
-            CurveSettings settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
-            // settings.mEnabled = toggle;
-           // const bool isCurve = (settings.mProcessType != CurveSettings::eProcessTypeNone);
-            state[STATE_CURVE] = settings.toJson();
-
-
-            // Update the Curve settings view with the project's values
-            mCurveSettingsView->setSettings(settings);
-            mProject->pushProjectState(state, CURVE_SETTINGS_UPDATED_REASON, true);
-*/
-            // Tell the event properties view if it should display Curve parameters
-            //mEventPropertiesView->setCurveSettings(isCurve, settings.mProcessType);
-
+        if (getProject_ptr()) {
             mEventsScene->updateSceneFromState();
         }
 

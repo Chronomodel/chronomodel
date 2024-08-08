@@ -73,6 +73,7 @@ MetropolisVariable::MetropolisVariable(const MetropolisVariable &origin):
     MetropolisVariable()
 {
     mX = origin.mX;
+    mName = origin.mName;
     if (origin.mRawTrace && !origin.mRawTrace->isEmpty()) {
         if (mRawTrace)
             mRawTrace->resize(origin.mRawTrace->size());
@@ -97,6 +98,7 @@ MetropolisVariable::MetropolisVariable(const MetropolisVariable &origin):
 
     mFormatedHPD = origin.mFormatedHPD;
     mRawCredibility = origin.mRawCredibility;
+    mRawHPDintervals = origin.mRawHPDintervals;
     mFormatedCredibility = origin.mFormatedCredibility;
 
     mExactCredibilityThreshold = origin.mExactCredibilityThreshold;
@@ -129,7 +131,7 @@ MetropolisVariable::~MetropolisVariable()
 MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable& origin)
 {
     mX = origin.mX;
-
+    mName = origin.mName;
     if (origin.mRawTrace) {
         if (mRawTrace == nullptr) {
             mRawTrace = new QList<double>(*origin.mRawTrace);
@@ -158,6 +160,7 @@ MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable& orig
 
     mFormatedHPD = origin.mFormatedHPD;
     mRawCredibility = origin.mRawCredibility;
+    mRawHPDintervals = origin.mRawHPDintervals;
     mFormatedCredibility = origin.mFormatedCredibility;
 
     mExactCredibilityThreshold = origin.mExactCredibilityThreshold;
@@ -192,6 +195,8 @@ void MetropolisVariable::reset()
     if (mRawTrace != nullptr) {
         mRawTrace->clear();
         mRawTrace->squeeze();
+    }
+    if (mFormatedTrace != nullptr) {
         mFormatedTrace->clear();
         mFormatedTrace->squeeze();
 
@@ -221,10 +226,11 @@ void MetropolisVariable::reserve(const qsizetype reserve)
 
 void MetropolisVariable::setFormat(const DateUtils::FormatDate fm)
 {
-    if (fm != mFormat || mFormatedTrace->size() != mRawTrace->size()) {
-        updateFormatedTrace(fm);
+    if (mRawTrace) {
+        if (fm != mFormat || mFormatedTrace->size() != mRawTrace->size()) {
+            updateFormatedTrace(fm);
+        }
     }
-
     updateFormatedCredibility(fm);
 
     if (mFormat != DateUtils::eNumeric)
@@ -237,8 +243,6 @@ void MetropolisVariable::setFormat(const DateUtils::FormatDate fm)
  */
 void MetropolisVariable::updateFormatedTrace(const DateUtils::FormatDate fm)
 {
-    //if (!mRawTrace || mRawTrace->size() == 0)
-      // return;
     if (!mRawTrace)
        return;
     if (!mFormatedTrace) {
@@ -462,9 +466,11 @@ QMap<double, double> MetropolisVariable::generateHisto(const QList<double> &data
 }
 
 
-void MetropolisVariable::generateHistos(const QList<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+void MetropolisVariable::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
-    Q_ASSERT_X(!mFormatedTrace->isEmpty(), "[MetropolisVariable::generateHistos]", "mFormatedTrace.isEmpty()");
+    //Q_ASSERT_X(!mFormatedTrace->isEmpty(), "[MetropolisVariable::generateHistos]", "mFormatedTrace.isEmpty()");
+    if (mFormatedTrace == nullptr || mFormatedTrace->isEmpty())
+        return;
     const QList<double> &subFullTrace = fullRunFormatedTrace(chains);
     mFormatedHisto = generateHisto(subFullTrace, fftLen, bandwidth, tmin, tmax);
 
@@ -547,7 +553,7 @@ void MetropolisVariable::generateHPD(const double threshold)
 
 void MetropolisVariable::generateCredibility(const QList<ChainSpecs> &chains, double threshold)
 {
-    if (mRawTrace->isEmpty())  {
+    if (mRawTrace==nullptr || mRawTrace->isEmpty())  {
         mRawCredibility = std::pair<double, double>(1, -1);
 
     } else if (mThresholdUsed != threshold) {

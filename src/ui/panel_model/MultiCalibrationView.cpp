@@ -243,10 +243,10 @@ MultiCalibrationView::~MultiCalibrationView()
     
 }
 
-void MultiCalibrationView::setProject(std::shared_ptr<Project> project)
+void MultiCalibrationView::setProject()
 {
-    mProject = project;
-    const QJsonObject &settings = mProject->state().value(STATE_SETTINGS).toObject();
+    auto state = MainWindow::getInstance()->getState();
+    const QJsonObject &settings = state.value(STATE_SETTINGS).toObject();
     mSettings = StudyPeriodSettings::fromJson(settings);
 
 }
@@ -303,6 +303,7 @@ void MultiCalibrationView::applyAppSettings()
 
 void MultiCalibrationView::updateLayout()
 {
+    auto project = getProject_ptr();
     const int graphWidth = std::max(0, width() - mButtonWidth);
 
     const int x0 = graphWidth;
@@ -315,7 +316,7 @@ void MultiCalibrationView::updateLayout()
     //Position of Widget
     int y  = 0;
 
-    const bool curveModel = mProject ? mProject->isCurve(): false;
+    const bool curveModel = project ? project->isCurve(): false;
     mImageSaveBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
     y += mImageSaveBut->height();
     mImageClipBut->setGeometry(x0, y, mButtonWidth, mButtonHeigth);
@@ -445,8 +446,8 @@ void MultiCalibrationView::updateGraphList()
 
     } else {
 
-        const QJsonObject &state = mProject->state();
-        mSettings = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+        const QJsonObject* state = getState_ptr();
+        mSettings = StudyPeriodSettings::fromJson(state->value(STATE_SETTINGS).toObject());
 
         mTminDisplay = mSettings.getTminFormated() ;
         mTmaxDisplay = mSettings.getTmaxFormated();
@@ -492,8 +493,8 @@ void MultiCalibrationView::updateGraphList()
 
 MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double thres)
 {
-    const QJsonObject &state = mProject->state();
-    mSettings = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+    const QJsonObject* state = getState_ptr();
+    mSettings = StudyPeriodSettings::fromJson(state->value(STATE_SETTINGS).toObject());
 
     mTminDisplay = mSettings.getTminFormated() ;
     mTmaxDisplay = mSettings.getTmaxFormated();
@@ -505,12 +506,12 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
     QList<GraphViewAbstract*> graphList;
     QList<QColor> colorList;
     QList<bool> listAxisVisible;
-    const QJsonArray &events = state.value(STATE_EVENTS).toArray();
+    const QJsonArray &events = state->value(STATE_EVENTS).toArray();
 
     QList<QJsonObject> selectedEvents;
 
-    const bool curveModel = mProject->isCurve();
-    CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
+    const bool curveModel = getProject_ptr()->isCurve();
+    CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state->value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
 
     for (auto&& ev : events) {
        QJsonObject jsonEv = ev.toObject();
@@ -675,9 +676,9 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
 
 MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 {
-    const QJsonObject &state = mProject->state();
+    QJsonObject* state = getState_ptr();
 
-    mSettings = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+    mSettings = StudyPeriodSettings::fromJson(state->value(STATE_SETTINGS).toObject());
 
     mTminDisplay = mSettings.getTminFormated() ;
     mTmaxDisplay = mSettings.getTmaxFormated();
@@ -694,11 +695,11 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
     QList<QColor> colorList;
     QList<bool> listAxisVisible;
-    const QJsonArray &events = state.value(STATE_EVENTS).toArray();
+    const QJsonArray &events = state->value(STATE_EVENTS).toArray();
 
     QList<QJsonObject> selectedEvents;
 
-    const CurveSettings cs (state.value(STATE_CURVE).toObject());
+    const CurveSettings cs (state->value(STATE_CURVE).toObject());
     CurveSettings::ProcessType processType = cs.mProcessType;
 
     for (const auto&& ev : events) {
@@ -1222,9 +1223,9 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
 MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 {
-    const QJsonObject &state = mProject->state();
+    const QJsonObject* state = getState_ptr();
 
-    mSettings = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+    mSettings = StudyPeriodSettings::fromJson(state->value(STATE_SETTINGS).toObject());
 
     mTminDisplay = mSettings.getTminFormated() ;
     mTmaxDisplay = mSettings.getTmaxFormated();
@@ -1241,11 +1242,11 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 
     QList<QColor> colorList;
     QList<bool> listAxisVisible;
-    const QJsonArray &events = state.value(STATE_EVENTS).toArray();
+    const QJsonArray &events = state->value(STATE_EVENTS).toArray();
 
     QList<QJsonObject> selectedEvents;
 
-    const CurveSettings cs (state.value(STATE_CURVE).toObject());
+    const CurveSettings cs (state->value(STATE_CURVE).toObject());
     CurveSettings::ProcessType processType = cs.mProcessType;
 
     for (const auto&& ev : events) {
@@ -2148,6 +2149,8 @@ void MultiCalibrationView::updateGraphsZoom()
 
     const QList<GraphView*> &graphList = mDrawing->getGraphViewList();
     qreal maxYLength = 0;
+
+    const bool is_curve = getProject_ptr()->isCurve();
     for (GraphView* gr : graphList) {
 
         if (gr->has_curves() || gr->has_points()) {
@@ -2196,7 +2199,7 @@ void MultiCalibrationView::updateGraphsZoom()
                     Scale yScale;
                     yScale.findOptimal(yMin, yMax, 7);
 
-                    if (mProject->isCurve()) {
+                    if (is_curve) {
                         maxYLength = std::max({fm.horizontalAdvance(stringForGraph(yScale.max)),
                                                fm.horizontalAdvance(stringForGraph(yScale.min)),
                                                fm.horizontalAdvance(stringForGraph(yScale.min - yScale.mark)),
@@ -2237,7 +2240,7 @@ void MultiCalibrationView::updateGraphsZoom()
         }
     }
 
-    if ((mScatterClipBut->isChecked() || mFitClipBut->isChecked()) && mProject->isCurve())
+    if ((mScatterClipBut->isChecked() || mFitClipBut->isChecked()) && is_curve)
         mMarginLeft = 1.5 * maxYLength + 10;
     else
         mMarginLeft = 1.3 * fm.horizontalAdvance(stringForGraph(mTminDisplay))/2. + 10;
@@ -2442,11 +2445,11 @@ void MultiCalibrationView::exportResults()
                                                           currentPath, "CSV (*.csv)");
     if (!filePath.isEmpty()) {
 
-        const QJsonObject &state = mProject->state();
-        const bool isCurve = mProject->isCurve();
-        const CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
+        const QJsonObject* state = getState_ptr();
+        const bool isCurve = getProject_ptr()->isCurve();
+        const CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state->value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
 
-        const QJsonArray &events = state.value(STATE_EVENTS).toArray();
+        const QJsonArray &events = state->value(STATE_EVENTS).toArray();
         QList<QJsonObject> selectedEvents;
 
         for (auto &&ev : events) {
@@ -2629,12 +2632,12 @@ void MultiCalibrationView::showStat()
         mStatArea->setFont(font());
 
         // update Results from selected Event in JSON
-        const QJsonObject &state = mProject->state();
-        const QJsonArray events = state.value(STATE_EVENTS).toArray();
+        const QJsonObject* state = getState_ptr();
+        const QJsonArray events = state->value(STATE_EVENTS).toArray();
         QList<QJsonObject> selectedEvents;
 
-        const bool curveModel = mProject->isCurve();
-        const CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state.value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
+        const bool curveModel = getProject_ptr()->isCurve();
+        const CurveSettings::ProcessType processType = static_cast<CurveSettings::ProcessType>(state->value(STATE_CURVE).toObject().value(STATE_CURVE_PROCESS_TYPE).toInt());
 
         for (auto&& ev : events) {
             QJsonObject jsonEv = ev.toObject();

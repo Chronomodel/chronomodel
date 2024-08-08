@@ -80,11 +80,15 @@ class ResultsView: public QWidget
 {
     Q_OBJECT
 public:
-    ResultsView(std::shared_ptr<Project> project, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
+    //ResultsView(std::shared_ptr<Project> project, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
+    ResultsView( QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~ResultsView();
 
-    void setProject(const std::shared_ptr<Project> project);
+   /* void setProject(const std::shared_ptr<Project> project);
     void initModel(const std::shared_ptr<ModelCurve> model);
+    */
+    void setProject();
+    void initModel();
     void updateModel();
 
 protected:
@@ -161,8 +165,9 @@ protected:
     // ------------------------------------------------
     //  Curve
     // ------------------------------------------------
-    std::shared_ptr<ModelCurve> modelCurve() const;
-    inline bool isCurve() const;
+
+    inline bool isCurve();
+    void createOptionsWidget();
 
 public slots:
 
@@ -267,7 +272,7 @@ public:
     // - mModel->mSettings (StudyPeriodSettings)
     // - mModel->mMCMCSettings (MCMCSettings)
     // - mModel->mChains (QList<ChainSpecs>)
-    std::shared_ptr<ModelCurve> mModel;
+
 
 private:
 

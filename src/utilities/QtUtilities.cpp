@@ -805,3 +805,20 @@ QList<double> load_qlist(QDataStream& stream)
     return data;
     
 }
+
+std::shared_ptr<Project> getProject_ptr()
+{
+    return MainWindow::getInstance()->getProject();
+}
+
+std::shared_ptr<ModelCurve> getModel_ptr()
+{
+    auto project = getProject_ptr();
+    return project ? project->mModel : nullptr;
+}
+
+QJsonObject* getState_ptr()
+{
+    auto project = getProject_ptr();
+    return project ? &project->mState : nullptr;
+}

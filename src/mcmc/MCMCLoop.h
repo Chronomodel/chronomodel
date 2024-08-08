@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -40,8 +40,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef MCMCLOOP_H
 #define MCMCLOOP_H
 
+#include "CurveSettings.h"
 #include "MCMCSettings.h"
-#include "Model.h"
 
 #include <QThread>
 
@@ -69,7 +69,7 @@ public:
         eAquisition = 3
     };
     
-    //MCMCLoop(const std::shared_ptr<ModelCurve>& model);
+
     explicit MCMCLoop (Project &project);
     virtual ~MCMCLoop();
 

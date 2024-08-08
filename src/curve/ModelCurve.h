@@ -48,6 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QFile>
 
 class ModelCurve: public std::enable_shared_from_this<ModelCurve>, public Model
+//class ModelCurve: public Model
 {
 public:
     CurveSettings mCurveSettings;
@@ -69,6 +70,9 @@ public:
     ModelCurve(QObject *parent = nullptr);
     explicit ModelCurve(const QJsonObject &json, QObject *parent = nullptr);
     virtual ~ModelCurve();
+
+    void setProject();
+    void updateDesignFromJson();
 
     virtual void saveToFile(QDataStream *out);
     virtual void restoreFromFile(QDataStream *in) {return restoreFromFile_v324(in);};
