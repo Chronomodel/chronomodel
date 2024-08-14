@@ -66,7 +66,11 @@ PhaseItem::PhaseItem(AbstractScene* scene, const QJsonObject& phase, QGraphicsIt
 
 PhaseItem::~PhaseItem()
 {
-
+    delete inPix;
+    inPix = nullptr;
+    
+    delete exPix;
+    exPix = nullptr;
 }
 
 
@@ -155,7 +159,7 @@ void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
         } else
             itemScene->mTempArrow->setFrom(pos().x(), pos().y());
     }
-
+    itemScene = nullptr;
     QGraphicsObject::mousePressEvent(e);
 
 }

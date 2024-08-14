@@ -44,9 +44,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QObject>
 
-//Bound::Bound(const Model *model):
-Bound::Bound(std::shared_ptr<Model> model):
-    Event (model),
+
+Bound::Bound():
     mFixed (0.)
 {
     mType = eBound;
@@ -56,9 +55,8 @@ Bound::Bound(std::shared_ptr<Model> model):
     mS02Theta.mSamplerProposal = MHVariable::eFixe;
 }
 
-//Bound::Bound(const QJsonObject &json, const Model* model):
-Bound::Bound(const QJsonObject &json, std::shared_ptr<Model> model):
-    Event (model)
+Bound::Bound(const QJsonObject &json):
+    Event(json)
 {
     mType = Type (json[STATE_EVENT_TYPE].toInt());
     mId = json[STATE_ID].toInt();
@@ -66,7 +64,7 @@ Bound::Bound(const QJsonObject &json, std::shared_ptr<Model> model):
     mColor = QColor(json[STATE_COLOR_RED].toInt(),
                            json[STATE_COLOR_GREEN].toInt(),
                            json[STATE_COLOR_BLUE].toInt());
-    //event.Event::mMethod = Event::eFixe;
+   
     mTheta.mSamplerProposal= MHVariable::eFixe;
     mItemX = json[STATE_ITEM_X].toDouble();
     mItemY = json[STATE_ITEM_Y].toDouble();
@@ -98,13 +96,17 @@ Bound::Bound(const QJsonObject &json, std::shared_ptr<Model> model):
     mS02Theta.mSamplerProposal = MHVariable::eFixe;
 }
 
+Bound::~Bound()
+{
+
+}
 
 // JSON
 Bound Bound::fromJson(const QJsonObject &json)
 {
-    Bound bound;
+    Bound bound(json);
 
-    bound.mType = Type (json[STATE_EVENT_TYPE].toInt());
+   /* bound.mType = Type (json[STATE_EVENT_TYPE].toInt());
     bound.mId = json[STATE_ID].toInt();
     bound.mName =  json[STATE_NAME].toString();
     bound.mColor = QColor(json[STATE_COLOR_RED].toInt(),
@@ -138,7 +140,7 @@ Bound Bound::fromJson(const QJsonObject &json)
     bound.mVg.mFormat = DateUtils::eNumeric;
     bound.mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
-    bound.mS02Theta.mSamplerProposal = MHVariable::eFixe;
+    bound.mS02Theta.mSamplerProposal = MHVariable::eFixe;*/
     return bound;
 }
 
@@ -187,7 +189,7 @@ double Bound::formatedFixedValue() const
 }
 
 
-void Bound::updateValues(const double tmin, const double tmax, const double step)
+void Bound::updateValues(const double& tmin, const double& tmax, const double& step)
 {
     mValues.clear();
 

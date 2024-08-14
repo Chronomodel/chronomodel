@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -250,14 +250,21 @@ QMap<double, double> equal_areas(const QMap<double, double> &mapToModify, const 
     const double srcArea = map_area(mapToModify);
 
     const double prop = targetArea / srcArea;
+
+    for (auto it = mapToModify.begin(); it != mapToModify.end(); ++it)
+    {
+        result.insert(it.key(), it.value()*prop);
+    }
+
+
    
-    auto keyVal_range = mapToModify.asKeyValueRange(); //https://doc.qt.io/qt-6/containers.html#implicit-sharing-iterator-problem
+   /* auto keyVal_range = mapToModify.asKeyValueRange(); //https://doc.qt.io/qt-6/containers.html#implicit-sharing-iterator-problem
     for (auto [key, value] : keyVal_range) {
         //value *= prop;
         const double tmp = value*prop;
         
         result.insert(key, tmp);
-    }
+    }*/
     
     return result;
 }
@@ -361,7 +368,7 @@ QList<float> equal_areas(const QList<float>& data, const float step, const float
 }
 
 
-QMap<double, double> vector_to_map(const QList<double> &data, const double min, const double max, const double step)
+QMap<double, double> vector_to_map(const QList<double>& data, const double min, const double max, const double step)
 {
    // Q_ASSERT(max>=min && !data.isEmpty());
     Q_ASSERT(max>=min);

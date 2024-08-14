@@ -70,7 +70,6 @@ PluginF14CForm::PluginF14CForm(PluginF14C* plugin, QWidget* parent, Qt::WindowFl
     mRplusValidator->setTop(10.0);
     mErrorEdit->setValidator(mRplusValidator);
 
-
     connect(mAverageEdit, &QLineEdit::textChanged, this, &PluginF14CForm::valueIsValid);
     connect(mErrorEdit, &QLineEdit::textChanged, this, &PluginF14CForm::errorIsValid);
 

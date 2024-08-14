@@ -46,15 +46,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 
 AbstractScene::AbstractScene(QGraphicsView* view, QObject* parent):QGraphicsScene(parent),
+    mDrawingArrow(false),
+    mSelectKeyIsDown(false),
+    mShowGrid(false),
     mView(view),
     mUpdatingItems(false),
     mAltIsDown(false),
     mShowAllThumbs(true),
     mZoom(1.),
-    mDeltaGrid ( AbstractItem::mItemWidth /4.),
-    mDrawingArrow(false),
-    mSelectKeyIsDown(false),
-    mShowGrid(false) // 150 is the width of the Event and phase Item
+    mDeltaGrid ( AbstractItem::mItemWidth /4.) // 150 is the width of the Event and phase Item
 {
     mTempArrow = new ArrowTmpItem();
     addItem(mTempArrow);
@@ -64,7 +64,16 @@ AbstractScene::AbstractScene(QGraphicsView* view, QObject* parent):QGraphicsScen
 
 AbstractScene::~AbstractScene()
 {
-
+    for (auto* i : mItems) {
+        delete i;
+        i = nullptr;
+    }
+    for (auto* ci : mConstraintItems) {
+        delete ci;
+        ci = nullptr;
+    }
+    delete mTempArrow;
+    mTempArrow = nullptr;
 }
 
 void AbstractScene::showGrid(bool show)

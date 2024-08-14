@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -178,6 +178,11 @@ public slots:
 
 signals:
     void newCalculus();
+
+
+#pragma mark curve variables
+
+
 
 
 };

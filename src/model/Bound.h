@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -46,20 +46,18 @@ class Bound: public Event
 {
 public:
 
-    Bound(std::shared_ptr<Model> model = nullptr);
-    explicit Bound(const QJsonObject& json, std::shared_ptr<Model> model = nullptr);
+    Bound();
+    virtual ~Bound();
+    explicit Bound(const QJsonObject& json);
 
     static Bound fromJson(const QJsonObject& json);
     virtual QJsonObject toJson() const;
-
-    //EventKnown& operator=(const EventKnown& event);
-    //void copyFrom(const EventKnown& event);
 
     void setFixedValue(const double& value);
     double fixedValue() const;
     double formatedFixedValue() const;
 
-    void updateValues(const double tmin, const double tmax, const double step);
+    void updateValues(const double &tmin, const double &tmax, const double &step);
 
     virtual void updateTheta(const double, const double);
 

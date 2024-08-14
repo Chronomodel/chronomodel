@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -89,7 +89,7 @@ public:
     void constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e);
 
     void dateMoved(const DateItem* dateItem);
-    EventItem *dateReleased(DateItem *dateItem);
+    EventItem *dateReleased(DateItem* dateItem);
 
     QList<Date> decodeDataDrop_old(QGraphicsSceneDragDropEvent* e);
     QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> decodeDataDrop(QGraphicsSceneDragDropEvent* e); // = Qlist<QPair<Event'name, data>>
@@ -100,7 +100,7 @@ public:
 
     void noHide();
     void setShowAllThumbs(const bool show);
-    //bool showAllThumbs() const { return mShowAllThumbs;}
+
 
 protected:
     virtual void keyPressEvent(QKeyEvent* keyEvent);
@@ -116,7 +116,7 @@ protected:
     bool constraintAllowed(AbstractItem *itemFrom, AbstractItem *itemTo);
     void createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo);
     void mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo);
-    EventItem *findEventItemWithJsonId(const int id);
+    EventItem* findEventItemWithJsonId(const int id);
 
 signals:
     void csvDataLineDropAccepted(QList<int> rows);
@@ -133,10 +133,6 @@ private:
     
     StudyPeriodSettings mSettings;
     CurveSettings mCurveSettings;
-
-//    QGraphicsItemAnimation* mDatesAnim;
-//    QTimeLine* mDatesAnimTimer;
-    //bool mShowAllThumbs;
 
 };
 

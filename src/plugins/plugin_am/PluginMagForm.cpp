@@ -79,10 +79,10 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
 
     //------------------------------------------------------------------------------------//
 
-    QDoubleValidator* validator_90to90 = new QDoubleValidator (-90., 90., 3);
+    QDoubleValidator* validator_90to90 = new QDoubleValidator (-90., 90., 3, this);
     validator_90to90->setLocale(QLocale());
 
-    QDoubleValidator* validator90to270 = new QDoubleValidator (-90., 270., 3);
+    QDoubleValidator* validator90to270 = new QDoubleValidator (-90., 270., 3, this);
     validator90to270->setLocale(QLocale());
 
     QDoubleValidator* validatorRplus = new QDoubleValidator (this);

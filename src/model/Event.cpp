@@ -40,7 +40,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Event.h"
 
 #include "CalibrationCurve.h"
-#include "Model.h"
 #include "Date.h"
 #include "Phase.h"
 
@@ -49,6 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Generator.h"
 #include "Bound.h"
 #include "QtUtilities.h"
+#include "StdUtilities.h"
 
 #include <QString>
 #include <QJsonArray>
@@ -57,7 +57,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QJsonObject>
 
 
-Event::Event(std::shared_ptr<Model> model):
+Event::Event():
     mType (eDefault),
     mId (0),
     mName ("no Event Name"),
@@ -68,9 +68,9 @@ Event::Event(std::shared_ptr<Model> model):
     mIsNode( false),
     mLevel (0),
     mPointType (ePoint),
-    mMixingCalibrations (nullptr)
+    mMixingCalibrations (std::make_shared<CalibrationCurve>())
 {
-    mModel = model;
+   
     mTheta.mSupport = MetropolisVariable::eBounded;
     mTheta.mFormat = DateUtils::eUnknown;
     mTheta.mSamplerProposal = MHVariable::eDoubleExp;
@@ -120,11 +120,10 @@ Event::Event(std::shared_ptr<Model> model):
 
 }
 
-Event::Event (const QJsonObject &json, std::shared_ptr<Model> model):
+Event::Event (const QJsonObject& json):
     mIsNode(false),
-    mMixingCalibrations(nullptr)
+    mMixingCalibrations(std::make_shared<CalibrationCurve>())
 {
-    mModel = model;
     mType = Type (json.value(STATE_EVENT_TYPE).toInt());
     mId = json.value(STATE_ID).toInt();
     mName = json.value(STATE_NAME).toString();
@@ -187,7 +186,7 @@ Event::Event(const Event &origin)
     mType = origin.mType;
     mId = origin.mId;
 
-    mModel = origin.mModel;
+    //mModel = origin.mModel;
     mName = origin.mName;
 
     mColor = origin.mColor;
@@ -261,12 +260,13 @@ Event::Event(const Event &origin)
 }
 
 /** Copy assignment operator */
+/*
 Event& Event::operator=(const Event& origin)
 {
     mType = origin.mType;
     mId = origin.mId;
 
-    mModel = origin.mModel;
+    //mModel = origin.mModel;
     mName = origin.mName;
 
     mColor = origin.mColor;
@@ -289,17 +289,10 @@ Event& Event::operator=(const Event& origin)
 
 
     mTheta = origin.mTheta;
-   /* mTheta.mX = origin.mTheta.mX;
-    mTheta.mSupport = origin.mTheta.mSupport;
-    mTheta.mFormat = origin.mTheta.mFormat;
-    mTheta.mSamplerProposal = origin.mTheta.mSamplerProposal;
-    mTheta.mSigmaMH = origin.mTheta.mSigmaMH;*/
+
 
     mS02Theta.mX = origin.mS02Theta.mX;
-   /* mS02Theta.mSupport = origin.mS02Theta.mSupport;
-    mS02Theta.mFormat = origin.mS02Theta.mFormat;
-    mS02Theta.mSamplerProposal = origin.mS02Theta.mSamplerProposal;
-    mS02Theta.mSigmaMH = origin.mS02Theta.mSigmaMH;*/
+
 
 
     mAShrinkage = origin.mAShrinkage;
@@ -331,13 +324,12 @@ Event& Event::operator=(const Event& origin)
     mW = origin.mW;
 
     mVg = origin.mVg;
-    /*mVg.mSupport = origin.mVg.mSupport;
-    mVg.mFormat = origin.mVg.mFormat;
-    mVg.mSamplerProposal = origin.mVg.mSamplerProposal;*/
+
 
     mMixingCalibrations = origin.mMixingCalibrations;
     return *this;
 }
+*/
 
 /**
  * @todo Check the copy of the color if mJson is not set
@@ -346,7 +338,6 @@ void Event::copyFrom(const Event& event)
 {
     mType = event.mType;
     mId = event.mId;
-    mModel = event.mModel;
 
     mName = event.mName;
     mColor = event.mColor;
@@ -428,12 +419,12 @@ void Event::copyFrom(const Event& event)
 
 Event::~Event()
 {
-    mTheta.reset();
+   /* mTheta.clear();
     
     for (auto&& date : mDates) {
-        date.mTi.reset();
-        date.mSigmaTi.reset();
-        date.mWiggle.reset();
+        date.mTi.clear();
+        date.mSigmaTi.clear();
+        date.mWiggle.clear();
     }
 
     mDates.clear();
@@ -447,11 +438,12 @@ Event::~Event()
     if (!mConstraintsBwd.isEmpty())
         mConstraintsBwd.clear();
 
-    mVg.reset();
+    mVg.clear();
 
-    mS02Theta.reset();
-
-    mMixingCalibrations = nullptr;
+    mS02Theta.clear();
+    */
+    //delete mMixingCalibrations;
+    //mMixingCalibrations = nullptr;
 }
 
 
@@ -708,10 +700,10 @@ QList<double> Event::curveParametersFromJsonEvent(QJsonObject &event, CurveSetti
 
 
 // MCMC
-void Event::reset()
+void Event::clear()
 {
-    mTheta.reset();
-    mVg.reset();
+    mTheta.clear();
+    mVg.clear();
     mInitialized = false;
     mIsNode = false;
     mThetaNode = HUGE_VAL;//__builtin_inf();//INFINITY;

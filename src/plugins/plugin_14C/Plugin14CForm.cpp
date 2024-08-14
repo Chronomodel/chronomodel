@@ -58,13 +58,13 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     mAverageEdit = new QLineEdit(this);
     mAverageEdit->setText("0");
     mAverageEdit->setAlignment(Qt::AlignHCenter);
-    QDoubleValidator* RValidator = new QDoubleValidator();
+    QDoubleValidator* RValidator = new QDoubleValidator(this);
     mAverageEdit->setValidator(RValidator);
 
     mErrorEdit = new QLineEdit(this);
     mErrorEdit->setText("30");
     mErrorEdit->setAlignment(Qt::AlignHCenter);
-    QDoubleValidator* RplusValidator = new QDoubleValidator();
+    QDoubleValidator* RplusValidator = new QDoubleValidator(this);
     RplusValidator->setBottom(0.000001);
     mErrorEdit->setValidator(RplusValidator);
     connect(mErrorEdit, &QLineEdit::textChanged, this, &Plugin14CForm::errorIsValid);

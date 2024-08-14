@@ -72,9 +72,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):
     QWidget (parent, flags),
-   // mEventsScene (nullptr),
     mCurSearchIdx (0),
-   // mPhasesScene (nullptr),
     mCurrentRightWidget (nullptr),
     mTmin (0.),
     mTmax (2000.),
@@ -332,8 +330,17 @@ ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):
 
 ModelView::~ModelView()
 {
+    delete mCalibrationView;
     mCalibrationView = nullptr;
+
+    delete mMultiCalibrationView;
     mMultiCalibrationView = nullptr;
+
+    delete mAnimationHide;
+    mAnimationHide = nullptr;
+
+    delete mAnimationShow;
+    mAnimationShow = nullptr;
 }
 
 
@@ -345,9 +352,6 @@ void ModelView::setProject()
     if (projectExist) {
         disconnectScenes();
     }
-
-   // mPhasesScene->setProject();
-   // mEventsScene->setProject();
 
     mCurveSettingsView->setProject();
 
@@ -667,7 +671,7 @@ void ModelView::calibrateAll(StudyPeriodSettings newS)
             cal.mRepartition.squeeze();
             cal.mVector.clear();
             cal.mVector.squeeze();
-            cal.mPlugin = nullptr;
+           // cal.mPlugin = nullptr;
         }
         project->mCalibCurves.clear();
 
@@ -698,7 +702,7 @@ void ModelView::calibrateAll(StudyPeriodSettings newS)
                 for (auto&& date : listDates) {
                     Date d (date.toObject());
                     d.autoSetTiSampler(true);
-                    d.calibrate(newS, *project, true);
+                    d.calibrate(newS, project, true);
 
                     ++position;
                     progress->setValue(position);
@@ -1445,7 +1449,7 @@ void ModelView::updateCalibration(const QJsonObject &date)
     if (!date.isEmpty() ) {
         Date d (date);
         if (d.mCalibration == nullptr)
-            d.calibrate(StudyPeriodSettings::fromJson(getProject_ptr()->state().value(STATE_SETTINGS).toObject()), *getProject_ptr(), true);
+            d.calibrate(StudyPeriodSettings::fromJson(getProject_ptr()->state().value(STATE_SETTINGS).toObject()), getProject_ptr(), true);
 
         // A date has been double-clicked => update CalibrationView only if the date is not null
         if (mEventPropertiesView->isVisible() && mEventPropertiesView->isCalibChecked())

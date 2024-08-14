@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -54,7 +54,7 @@ class GraphViewAbstract:public QWidget
     Q_OBJECT
 
 public:
-    GraphViewAbstract();
+    GraphViewAbstract(QWidget* parent = nullptr);
     virtual ~GraphViewAbstract();
 
 #pragma mark Getters
@@ -75,7 +75,6 @@ public:
     qreal marginBottom() const;
 
  #pragma mark Setters
-    void setParent(QWidget *parent) {this->QWidget::setParent(parent);}
 
     void setPrevParameter();
 

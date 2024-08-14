@@ -94,6 +94,7 @@ MHVariable::MHVariable(const MetropolisVariable& origin):
 
 MHVariable::~MHVariable()
 {
+    qDebug()<<"delete MHVariable" << mName;
     if (mHistoryAcceptRateMH) // && !mHistoryAcceptRateMH->isEmpty())
         delete mHistoryAcceptRateMH;
     mHistoryAcceptRateMH = nullptr;
@@ -152,17 +153,19 @@ bool MHVariable::adapt (const double coef_min, const double coef_max, const doub
     return noAdapted;
 }
 
-void MHVariable::reset()
+void MHVariable::clear()
 {
-    MetropolisVariable::reset();
+    MetropolisVariable::clear();
 
     if (mHistoryAcceptRateMH != nullptr) {
         mHistoryAcceptRateMH->clear();
+        delete mHistoryAcceptRateMH;
+        mHistoryAcceptRateMH = nullptr;
         //mHistoryAcceptRateMH->squeeze();
     }
 
     mLastAccepts.clear();
-    mAllAccepts.clear();// mAllAccepts.clear(); //don't clean, avalable for cumulate chain
+    mAllAccepts.clear();
 
     mLastAccepts.squeeze();
 
@@ -351,7 +354,7 @@ QDataStream &operator<<( QDataStream& stream, const MHVariable& data )
 
     /* owned by MHVariable*/
     stream << data.mAllAccepts;
-    save_qlist(stream, data.mHistoryAcceptRateMH);
+    save_container(stream, *data.mHistoryAcceptRateMH);
     
     stream << data.mLastAccepts;
 
@@ -377,7 +380,7 @@ QDataStream &operator>>(QDataStream& stream, MHVariable& data )
     stream >> data.mAllAccepts;
 
     delete data.mHistoryAcceptRateMH;
-    data.mHistoryAcceptRateMH = load_qlist_ptr(stream);
+    data.mHistoryAcceptRateMH = load_QList_ptr(stream);
     
     
     if (!data.mLastAccepts.isEmpty())

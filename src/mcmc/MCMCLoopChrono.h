@@ -43,18 +43,16 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MCMCLoop.h"
 
 class Project;
-class Model;
+class ModelCurve;
 
 class MCMCLoopChrono: public MCMCLoop
 {
     Q_OBJECT
 public:
-    MCMCLoopChrono(Project &project);
+    MCMCLoopChrono(std::shared_ptr<ModelCurve> model);
     ~MCMCLoopChrono();
 
 protected:
-    std::shared_ptr<Model> mModelChrono;
-
     virtual QString calibrate();
 
     virtual QString initialize();

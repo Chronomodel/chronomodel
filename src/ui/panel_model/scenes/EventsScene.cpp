@@ -344,15 +344,20 @@ void EventsScene::createSceneFromState()
 
        // CREATE ITEM
         Event::Type type = Event::Type (event.value(STATE_EVENT_TYPE).toInt());
-        EventItem* newItem;
-        if (type == Event::eDefault)
-            newItem = new EventItem(this, event, settings);
-        else //if(type == Event::eBound)
-            newItem = new EventKnownItem(this, event, settings);
 
-        mItems.append(newItem);
+        if (type == Event::eDefault) {
+            EventItem* newItem = new EventItem(this, event, settings);
+            mItems.append(newItem);
+            addItem(newItem);
+
+        } else {//if(type == Event::eBound)
+            EventItem* newItem = new EventKnownItem(this, event, settings);
+            mItems.append(newItem);
+            addItem(newItem);
+        }
+
         qDebug()<<"[EventsScene::createSceneFromState] Create mItems:"<<event.value(STATE_NAME).toString();
-        addItem(newItem);
+
 
         }
 
@@ -443,13 +448,13 @@ void EventsScene::updateSceneFromState()
         return;
     }
 
-    const QJsonArray &eventsInNewState = state->value(STATE_EVENTS).toArray();
-    const QJsonArray &constraints = state->value(STATE_EVENTS_CONSTRAINTS).toArray();
+    const QJsonArray& eventsInNewState = state->value(STATE_EVENTS).toArray();
+    const QJsonArray& constraints = state->value(STATE_EVENTS_CONSTRAINTS).toArray();
 
     // case of newProject
 
-    const QJsonObject &settings = state->value(STATE_SETTINGS).toObject();
-    const QJsonObject &curveSettings = state->value(STATE_CURVE).toObject();
+    const QJsonObject& settings = state->value(STATE_SETTINGS).toObject();
+    const QJsonObject& curveSettings = state->value(STATE_CURVE).toObject();
 
     QProgressDialog* progress = nullptr;
     bool displayProgress = false;
@@ -761,6 +766,7 @@ void EventsScene::clean()
         eventItem->~EventItem();
 
         item = nullptr;
+        eventItem = nullptr;
     }
     mItems.clear();
     // ------------------------------------------------------

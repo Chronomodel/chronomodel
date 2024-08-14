@@ -54,26 +54,25 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 class Project;
 
-MCMCLoopChrono::MCMCLoopChrono(Project &project):
-    MCMCLoop(project),
-    mModelChrono(std::dynamic_pointer_cast<Model>(project.mModel))
+MCMCLoopChrono::MCMCLoopChrono(std::shared_ptr<ModelCurve> model):
+    MCMCLoop(model)
 {
-    if (mModelChrono)
-        setMCMCSettings(mModelChrono->mMCMCSettings);
+    if (mModel)
+        setMCMCSettings(mModel->mMCMCSettings);
 
     mCurveSettings.mTimeType = CurveSettings::eModeBayesian;
 }
 
 MCMCLoopChrono::~MCMCLoopChrono()
 {
-    //mModel = nullptr;
+
 }
 
 QString MCMCLoopChrono::calibrate()
 {
-    if (mModelChrono) {
-        QList<Event*> &events = mModelChrono->mEvents;
-        events.reserve(mModelChrono->mEvents.size());
+    if (mModel) {
+        QList<Event*> &events = mModel->mEvents;
+        events.reserve(mModel->mEvents.size());
         //----------------- Calibrate measurements --------------------------------------
 
         QList<Date*> dates;
@@ -101,7 +100,7 @@ QString MCMCLoopChrono::calibrate()
         for (auto&& date : dates) {
               if (date->mCalibration) {
                 if (date->mCalibration->mVector.isEmpty())
-                    date->calibrate(mProject);
+                    date->calibrate(getProject_ptr());
 
                 if (date->mCalibration->mVector.size() < 5) {
                     const double new_step = date->mCalibration->mStep/5.;
@@ -155,7 +154,7 @@ bool MCMCLoopChrono::update_v3()
     //
     //  B - Update theta Events
     // --------------------------------------------------------------
-    for (auto&& event : mModelChrono->mEvents) {
+    for (auto&& event : mModel->mEvents) {
 
         event->updateTheta(tminPeriod, tmaxPeriod); // update ti dates and theta
 
@@ -176,13 +175,13 @@ bool MCMCLoopChrono::update_v3()
     /* --------------------------------------------------------------
      *  C.2 - Update Tau Phases
      * -------------------------------------------------------------- */
-    std::for_each(PAR mModelChrono->mPhases.begin(), mModelChrono->mPhases.end(), [this] (Phase* p) {p->update_Tau (tminPeriod, tmaxPeriod);});
+    std::for_each(PAR mModel->mPhases.begin(), mModel->mPhases.end(), [this] (Phase* p) {p->update_Tau (tminPeriod, tmaxPeriod);});
 
 
     /* --------------------------------------------------------------
      *  C.3 - Update Phases constraints
      * -------------------------------------------------------------- */
-    std::for_each(PAR mModelChrono->mPhaseConstraints.begin(), mModelChrono->mPhaseConstraints.end(), [] (PhaseConstraint* pc) {pc->updateGamma();});
+    std::for_each(PAR mModel->mPhaseConstraints.begin(), mModel->mPhaseConstraints.end(), [] (PhaseConstraint* pc) {pc->updateGamma();});
 
 
    return true;
@@ -204,7 +203,7 @@ bool MCMCLoopChrono::update_v4()
     // --------------------------------------------------------------
     //  B - Update theta Events
     // --------------------------------------------------------------
-    for (auto&& event : mModelChrono->mEvents) {
+    for (auto&& event : mModel->mEvents) {
         // --------------------------------------------------------------
         //  A - Update ti Dates
         // --------------------------------------------------------------
@@ -232,13 +231,13 @@ bool MCMCLoopChrono::update_v4()
     /* --------------------------------------------------------------
      *  C.2 - Update Tau Phases
      * -------------------------------------------------------------- */
-    std::for_each(PAR mModelChrono->mPhases.begin(), mModelChrono->mPhases.end(), [this] (Phase* p) {p->update_Tau (tminPeriod, tmaxPeriod);});
+    std::for_each(PAR mModel->mPhases.begin(), mModel->mPhases.end(), [this] (Phase* p) {p->update_Tau (tminPeriod, tmaxPeriod);});
 
 
     /* --------------------------------------------------------------
      *  C.3 - Update Phases constraints
      * -------------------------------------------------------------- */
-    std::for_each(PAR mModelChrono->mPhaseConstraints.begin(), mModelChrono->mPhaseConstraints.end(), [] (PhaseConstraint* pc) {pc->updateGamma();});
+    std::for_each(PAR mModel->mPhaseConstraints.begin(), mModel->mPhaseConstraints.end(), [] (PhaseConstraint* pc) {pc->updateGamma();});
 
 
     return true;
@@ -262,7 +261,7 @@ bool MCMCLoopChrono::adapt(const int batchIndex) //original code
 
     const double delta = (batchIndex < 10000) ? 0.01 : (1. / sqrt(batchIndex));
 
-    for (const auto& event : mModelChrono->mEvents) {
+    for (const auto& event : mModel->mEvents) {
        for (auto& date : event->mDates) {
 
             //--------------------- Adapt Sigma MH de t_i -----------------------------------------
@@ -290,7 +289,7 @@ bool MCMCLoopChrono::adapt(const int batchIndex) //original code
 
 void MCMCLoopChrono::memo()
 {
-    for (const auto& event : mModelChrono->mEvents) {
+    for (const auto& event : mModel->mEvents) {
         //--------------------- Memo Events -----------------------------------------
         if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
             event->mTheta.memo();
@@ -316,7 +315,7 @@ void MCMCLoopChrono::memo()
     }
 
     //--------------------- Memo Phases -----------------------------------------
-    for (const auto& ph : mModelChrono->mPhases)
+    for (const auto& ph : mModel->mPhases)
             ph->memoAll();
 
 }
@@ -333,7 +332,7 @@ void MCMCLoopChrono::finalize()
     // This is not a copy of all data!
     // Chains only contain description of what happened in the chain (numIter, numBatch adapt, ...)
     // Real data are inside mModel members (mEvents, mPhases, ...)
-    mModelChrono->mChains = mLoopChains;
+    mModel->mChains = mLoopChains;
 
     // This is called here because it is calculated only once and will never change afterwards
     // This is very slow : it is for this reason that the results display may be long to appear at the end of MCMC calculation.
@@ -341,9 +340,9 @@ void MCMCLoopChrono::finalize()
      */
 
     emit setMessage(tr("Computing posterior distributions and numerical results"));
-    mModelChrono->generateCorrelations(mModelChrono->mChains);
+    mModel->generateCorrelations(mModel->mChains);
 
-    mModelChrono->initDensities();
+    mModel->initDensities();
 
     // This should not be done here because it uses resultsView parameters
     // ResultView will trigger it again when loading the model

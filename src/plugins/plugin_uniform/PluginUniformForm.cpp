@@ -53,13 +53,10 @@ PluginUniformForm::PluginUniformForm(PluginUniform* plugin, QWidget* parent, Qt:
     mMinEdit = new QLineEdit(this);
     mMinEdit->setAlignment(Qt::AlignHCenter);
     mMinEdit->setText("0");
-    //QIntValidator* positiveValidator = new QIntValidator(this);
-    //mMinEdit->setValidator(positiveValidator);
 
     mMaxEdit = new QLineEdit(this);
     mMaxEdit->setAlignment(Qt::AlignHCenter);
     mMaxEdit->setText("100");
-    //mMaxEdit->setValidator(positiveValidator);
 
     connect(mMinEdit, &QLineEdit::textChanged, this, &PluginUniformForm::valuesAreValid);
     connect(mMaxEdit, &QLineEdit::textChanged, this, &PluginUniformForm::valuesAreValid);

@@ -45,11 +45,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MCMCSettings.h"
 
 #include <QMap>
-#include <QVector>
 #include <QList>
 #include <QDataStream>
 #include <QObject>
 #include <QList>
+
 
 class TValueStack
 {
@@ -76,8 +76,9 @@ public:
         eBounded = 5 // on bounded support
     };
     double mX;
-    QList<double>* mRawTrace;
-    QList<double>* mFormatedTrace;
+    std::shared_ptr<std::vector<double>> mRawTrace;
+    //QList<double>* mFormatedTrace;
+    std::shared_ptr<std::vector<double>> mFormatedTrace;
 
 
     // if we use std::vector we can not use QDataStream to save,
@@ -115,8 +116,6 @@ public:
     double mtminUsed;
     double mtmaxUsed;
 
-
-private:
     QString mName;
 public:
     MetropolisVariable();
@@ -127,7 +126,7 @@ public:
 
     virtual void memo();
     virtual void memo(double* valueToSave);
-    virtual void reset();
+    virtual void clear();
     virtual void reserve(const qsizetype reserve);
 
     void setFormat(const DateUtils::FormatDate fm);
@@ -167,7 +166,7 @@ public:
     template <template<typename...> class C, typename T>
     C<T> full_run_trace(C<T>* trace, const QList<ChainSpecs>& chains)
     {
-        if (trace == nullptr || trace->isEmpty())
+        if (trace == nullptr || trace->size() == 0)
             return C<T>(0);
 
         else if (trace->size() == chains.size()) // Cas des variables fixes
@@ -197,43 +196,145 @@ public:
         return result;
     }
 
+    template <typename T>
+    QList<T> full_run_trace(std::vector<T>* trace, const QList<ChainSpecs>& chains)
+    {
+        if (trace == nullptr || trace->size() == 0)
+            return QList<T>(0);
+
+        else if (trace->size() == chains.size()) // Cas des variables fixes
+            return QList<T>(trace->begin(), trace->end());
+
+        // Calcul reserve space
+        int reserveSize = 0;
+
+        for (const ChainSpecs& chain : chains)
+            reserveSize += chain.mRealyAccepted;
+
+        QList<T> result(reserveSize);
+
+        int shift = 0;
+        int shiftTrace = 0;
+
+        for (const ChainSpecs& chain : chains) {
+            // we add 1 for the init
+            const int burnAdaptSize = 1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch);
+            const int runTraceSize = chain.mRealyAccepted;
+            const int firstRunPosition = shift + burnAdaptSize;
+            std::copy(trace->begin() + firstRunPosition , trace->begin() + firstRunPosition + runTraceSize , result.begin() + shiftTrace);
+
+            shiftTrace += runTraceSize;
+            shift = firstRunPosition +runTraceSize;
+        }
+        return result;
+    }
+
+
+    template <typename T>
+    QList<T> full_run_trace(std::shared_ptr<std::vector<T>> trace, const QList<ChainSpecs>& chains)
+    {
+        if (trace == nullptr || trace->size() == 0)
+            return QList<T>(0);
+
+        else if (trace->size() == chains.size()) // Cas des variables fixes
+            return QList<T>(trace->begin(), trace->end());
+
+        // Calcul reserve space
+        int reserveSize = 0;
+
+        for (const ChainSpecs& chain : chains)
+            reserveSize += chain.mRealyAccepted;
+
+        QList<T> result(reserveSize);
+
+        int shift = 0;
+        int shiftTrace = 0;
+
+        for (const ChainSpecs& chain : chains) {
+            // we add 1 for the init
+            const int burnAdaptSize = 1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch);
+            const int runTraceSize = chain.mRealyAccepted;
+            const int firstRunPosition = shift + burnAdaptSize;
+            std::copy(trace->begin() + firstRunPosition , trace->begin() + firstRunPosition + runTraceSize , result.begin() + shiftTrace);
+
+            shiftTrace += runTraceSize;
+            shift = firstRunPosition +runTraceSize;
+        }
+        return result;
+    }
+
     inline QList<double> fullRunFormatedTrace(const QList<ChainSpecs>& chains) {return full_run_trace(mFormatedTrace, chains);}
     inline QList<double> fullRunRawTrace(const QList<ChainSpecs>& chains) {return full_run_trace(mRawTrace, chains);}
 
-    QList<double>::Iterator findIter_element(const long unsigned iter, const QList<ChainSpecs>& chains, const qsizetype chainIndex ) const;
+    std::vector<double>::iterator findIter_element(const long unsigned iter, const QList<ChainSpecs>& chains, const qsizetype chainIndex ) const;
 
     // Trace for run part of the chain as a vector
 
-    template <typename T>
-    QList<T> run_trace_for_chain(QList<T>* trace, const QList<ChainSpecs>& chains, const qsizetype index) {
+    template <template<typename...> class C, typename T>
+    C<T> run_trace_for_chain(C<T>* trace, const QList<ChainSpecs>& chains, const qsizetype index) {
 
-        if (!trace || trace->empty()) {
-            return QList<T>(0);
+        if (!trace || trace->size() == 0) {
+            return C<T>(0);
 
         } else if (trace->size() == 1) { // Cas des variables fixes
-            return QList<T>(*trace);
+            return C<T>(*trace);
 
         } else  {
 
             int shift = 0;
             for (qsizetype i = 0; i<chains.size(); ++i)  {
-                const ChainSpecs &chain = chains.at(i);
+                const ChainSpecs& chain = chains.at(i);
                 // We add 1 for the init
                 const int burnAdaptSize = 1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch);
                 const int traceSize = chain.mRealyAccepted;
 
                 if (i == index) {
-                    return QList<T> (trace->begin() + shift + burnAdaptSize, trace->begin() + shift + burnAdaptSize + traceSize );
+                    return C<T> (trace->begin() + shift + burnAdaptSize, trace->begin() + shift + burnAdaptSize + traceSize );
                     break;
                 }
                 shift += traceSize + burnAdaptSize ;
             }
-            return QList<T>(0);
+            return C<T>(0);
         }
     }
+    template <template<typename...> class C, typename T>
+    C<T> run_trace_for_chain(std::shared_ptr<C<T>> trace, const QList<ChainSpecs>& chains, const qsizetype index) {
 
-    inline QList<double> runRawTraceForChain(const QList<ChainSpecs>& chains, const qsizetype index) {return run_trace_for_chain(mRawTrace, chains, index); };
-    inline QList<double> runFormatedTraceForChain(const QList<ChainSpecs>& chains, const qsizetype index) {return run_trace_for_chain(mFormatedTrace, chains, index); };
+        if (!trace || trace->size() == 0) {
+            return C<T>(0);
+
+        } else if (trace->size() == 1) { // Cas des variables fixes
+            return C<T>(*trace);
+
+        } else  {
+
+            int shift = 0;
+            for (qsizetype i = 0; i<chains.size(); ++i)  {
+                const ChainSpecs& chain = chains.at(i);
+                // We add 1 for the init
+                const int burnAdaptSize = 1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch);
+                const int traceSize = chain.mRealyAccepted;
+
+                if (i == index) {
+                    return C<T> (trace->begin() + shift + burnAdaptSize, trace->begin() + shift + burnAdaptSize + traceSize );
+                    break;
+                }
+                shift += traceSize + burnAdaptSize ;
+            }
+            return C<T>(0);
+        }
+    }
+    //inline QList<double> runRawTraceForChain(const QList<ChainSpecs>& chains, const qsizetype index) {return run_trace_for_chain(mRawTrace, chains, index); };
+    inline QList<double> runRawTraceForChain(const QList<ChainSpecs>& chains, const qsizetype index) {
+        const std::vector<double> &trace = run_trace_for_chain(mRawTrace, chains, index);
+        return QList<double>(trace.begin(), trace.end());
+    };
+
+    //inline QList<double> runFormatedTraceForChain(const QList<ChainSpecs>& chains, const qsizetype index) {return run_trace_for_chain(mFormatedTrace, chains, index); };
+    inline QList<double> runFormatedTraceForChain(const QList<ChainSpecs>& chains, const qsizetype index) {
+        const std::vector<double> &trace = run_trace_for_chain(mFormatedTrace, chains, index);
+        return QList<double>(trace.begin(), trace.end());
+    };
 
     QList<double> correlationForChain(const qsizetype index);
 

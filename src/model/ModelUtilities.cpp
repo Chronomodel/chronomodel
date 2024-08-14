@@ -1128,7 +1128,7 @@ short ModelUtilities::HPDOutsideSudyPeriod(const QMap<double, double> &hpd, cons
     return answer;
 }
 
-double sample_in_repartition (const CalibrationCurve* calibrateCurve, const double min, const double max)
+double sample_in_repartition (std::shared_ptr<CalibrationCurve> calibrateCurve, const double min, const double max)
 {
     const double unionTmin = calibrateCurve->mTmin;
     const double unionTmax = calibrateCurve->mTmax;
@@ -1186,17 +1186,17 @@ void sampleInCumulatedRepartition_thetaFixe (Event *event, const StudyPeriodSett
 {
 
     // Creation of the cumulative date distribution
-    const CalibrationCurve &calib =  generate_mixingCalibration(event->mDates, "Mixing Theta Fixed");
+    auto calib =  generate_mixingCalibration(event->mDates, "Mixing Theta Fixed");
 
-    const double maxRepartition = calib.mRepartition.last();
-    const double minRepartition = calib.mRepartition.first();
+    const double maxRepartition = calib->mRepartition.last();
+    const double minRepartition = calib->mRepartition.first();
 
-    const long double t_min_long = calib.mTmin;
-    const long double t_max_long = calib.mTmax;
-    const long double step_long = (t_max_long - t_min_long)/(calib.mRepartition.size()-1);
+    const long double t_min_long = calib->mTmin;
+    const long double t_max_long = calib->mTmax;
+    const long double step_long = (t_max_long - t_min_long)/(calib->mRepartition.size()-1);
 
-    if ( (minRepartition != 0. || maxRepartition != 0.) &&  (calib.mRepartition.size() > 1)) {
-        const double idx = vector_interpolate_idx_for_value(0.5*(maxRepartition - minRepartition) + minRepartition, calib.mRepartition);
+    if ( (minRepartition != 0. || maxRepartition != 0.) &&  (calib->mRepartition.size() > 1)) {
+        const double idx = vector_interpolate_idx_for_value(0.5*(maxRepartition - minRepartition) + minRepartition, calib->mRepartition);
         event->mTheta.mX = t_min_long + idx * step_long;
 
     } else {

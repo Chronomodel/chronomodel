@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -42,7 +42,18 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <cmath>
 #include <QDebug>
 
-GraphViewAbstract::GraphViewAbstract():
+/*GraphViewAbstract::GraphViewAbstract():
+    mCurrentMinX(-HUGE_VAL), mCurrentMaxX(HUGE_VAL),
+    mGraphWidth(150.), mGraphHeight(50), mMarginLeft(50), mMarginRight(10),
+    mMarginTop(5), mMarginBottom(15),
+    mMinX(0.), mMaxX(10.),
+    mMinY(0.),mMaxY(10.)
+{
+
+}*/
+
+GraphViewAbstract::GraphViewAbstract(QWidget* parent):
+    QWidget(parent),
     mCurrentMinX(-HUGE_VAL), mCurrentMaxX(HUGE_VAL),
     mGraphWidth(150.), mGraphHeight(50), mMarginLeft(50), mMarginRight(10),
     mMarginTop(5), mMarginBottom(15),
@@ -52,7 +63,10 @@ GraphViewAbstract::GraphViewAbstract():
 
 }
 
-GraphViewAbstract::~GraphViewAbstract(){}
+GraphViewAbstract::~GraphViewAbstract()
+{
+
+}
 
 # pragma mark Getters
 

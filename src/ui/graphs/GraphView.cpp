@@ -51,7 +51,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 class StudyPeriodSettings;
 
-GraphView::GraphView(QWidget *parent):
+GraphView::GraphView(QWidget* parent):
+    GraphViewAbstract(parent),
     mStepMinWidth(3), // define when the minor scale on axis can appear
     mXAxisLine(true),
     mXAxisArrow(true),
@@ -82,7 +83,6 @@ GraphView::GraphView(QWidget *parent):
     mUnitFunctionX(nullptr),
     mUnitFunctionY(nullptr)
 {
-    GraphViewAbstract::setParent(parent);
     mAxisToolX.mIsHorizontal = true;
     mAxisToolX.mShowArrow = true;
     mAxisToolY.mIsHorizontal = false;
@@ -165,7 +165,7 @@ GraphView::GraphView(const GraphView& graph, QWidget *parent):
    //mBufferBack = QPixmap();
 }
 
-void GraphView::copyFrom(const GraphView &graph)
+void GraphView::copyFrom(const GraphView& graph)
 {
     mStepMinWidth = graph.mStepMinWidth; // define minorCount scale on axis
     mXAxisLine = graph.mXAxisLine;
@@ -228,6 +228,7 @@ GraphView::~GraphView()
     mUnitFunctionY = nullptr;
     mCurves.clear();
     mZones.clear();
+
 }
 
 void GraphView::adjustYScale()
@@ -499,6 +500,7 @@ void GraphView::removeCurve(const QString &name)
             break;
         }
     }
+    mCurves.squeeze();
 }
 
 void GraphView::removeAllCurves()

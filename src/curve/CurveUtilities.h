@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -43,7 +43,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Event.h"
 
 #include <vector>
-#include <string>
 #include <QDataStream>
 
 

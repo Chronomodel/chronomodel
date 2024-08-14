@@ -76,21 +76,19 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <windows.h> //for Qt 6.7
 #endif
 
-MCMCLoopCurve::MCMCLoopCurve(Project &project):
-    MCMCLoop(project),
-    mModel(project.mModel)
+MCMCLoopCurve::MCMCLoopCurve(std::shared_ptr<ModelCurve> model):
+    MCMCLoop(model)
 {
     if (mModel) {
         setMCMCSettings(mModel->mMCMCSettings);
     }
     
-    const QJsonObject &state =   project.mState; //MainWindow::getInstance()->getState();// project->mState;
-    mCurveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+    mCurveSettings = CurveSettings::fromJson(getState_ptr()->value(STATE_CURVE).toObject());
 }
 
 MCMCLoopCurve::~MCMCLoopCurve()
 {
-    //mModel = nullptr;
+   qDebug()<<"[MCMCLoopCurve::~MCMCLoopCurve()]";
 }
 
 #pragma mark MCMC Loop Overloads
@@ -132,7 +130,7 @@ QString MCMCLoopCurve::calibrate()
         for (auto&& date : dates) {
             if (date->mCalibration) {
                 if (date->mCalibration->mVector.isEmpty())
-                    date->calibrate(mProject);
+                    date->calibrate(getProject_ptr());
 
                 if (date->mCalibration->mVector.size() < 6) {
                     const double new_step = date->mCalibration->mStep /5.;

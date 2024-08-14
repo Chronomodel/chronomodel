@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -48,7 +48,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QFile>
 
 class ModelCurve: public std::enable_shared_from_this<ModelCurve>, public Model
-//class ModelCurve: public Model
 {
 public:
     CurveSettings mCurveSettings;
@@ -66,9 +65,8 @@ public:
     bool compute_Y, compute_Z, compute_X_only;
     bool is_curve;
 
-public:
-    ModelCurve(QObject *parent = nullptr);
-    explicit ModelCurve(const QJsonObject &json, QObject *parent = nullptr);
+    ModelCurve(QObject* parent = nullptr);
+    explicit ModelCurve(const QJsonObject& json, QObject* parent = nullptr);
     virtual ~ModelCurve();
 
     void setProject();
@@ -108,17 +106,16 @@ public:
     void memo_PosteriorG_3D(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted);
     void memo_PosteriorG(PosteriorMeanGComposante &postGCompo, const MCMCSplineComposante &splineComposante, const int realyAccepted);
 
-public slots:
-    void saveMapToFile(QFile *file, const QString csvSep, const CurveMap &map);
-
-public:
-
     PosteriorMeanGComposante buildCurveAndMap(const int nbPtsX, const int nbPtsY, const char charComp = 'X', const bool doMap = false, const double mapYMin = 0, double mapYMax = 0);
     // same as void GraphView::exportReferenceCurves()
     void exportMeanGComposanteToReferenceCurves(const PosteriorMeanGComposante pMeanCompoXYZ, const QString &defaultPath, QLocale csvLocale, const QString &csvSep) const;
 
     std::vector<MCMCSpline> fullRunSplineTrace(const QList<ChainSpecs> &chains);
     std::vector<MCMCSpline> runSplineTraceForChain(const QList<ChainSpecs>& chains, const int index);
+
+public slots:
+    void saveMapToFile(QFile *file, const QString csvSep, const CurveMap &map);
+
 
 #pragma mark Loop
     void memo_accept(const unsigned i_chain);

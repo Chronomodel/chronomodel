@@ -39,13 +39,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "CalibrationCurve.h"
 #include "PluginManager.h"
+#include "StdUtilities.h"
 
 CalibrationCurve::CalibrationCurve():
     mName(QString("unkown")),
     mDescription(QString("undefined"))
 {
     mPluginId = "";
-    mPlugin = nullptr;
     mRepartition = QList< double>();
     mVector = QList< double>();
     mMap = QMap<double, double>();
@@ -59,8 +59,7 @@ CalibrationCurve::CalibrationCurve(const CalibrationCurve &other)
 {
     mName = other.mName;
     mPluginId = other.mPluginId;
-    mPlugin = other.mPlugin;
-
+    
     mDescription = other.mDescription;
 
     mRepartition.resize(other.mRepartition.size());
@@ -82,7 +81,6 @@ CalibrationCurve::~CalibrationCurve() noexcept
     mVector.clear();
     mMap.clear();
     mPluginId.clear();
-    mPlugin = nullptr;
 }
 
 QDataStream &operator<<( QDataStream &stream, const CalibrationCurve &data )
@@ -114,10 +112,6 @@ QDataStream &operator>>( QDataStream &stream, CalibrationCurve &data )
     stream >> data.mPluginId;
 
     data.mMap = vector_to_map(data.mVector, data.mTmin, data.mTmax, data.mStep);
-
-    data.mPlugin = PluginManager::getPluginFromId(data.mPluginId);
-    if (data.mPlugin == nullptr && data.mDescription.isEmpty())
-        throw QObject::tr("Calibration plugin could not be loaded : invalid plugin : %1").arg(data.mPluginId);
 
     return stream;
 }

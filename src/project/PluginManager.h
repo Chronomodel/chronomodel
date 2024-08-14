@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -49,8 +49,8 @@ class PluginManager
 public:
     static void loadPlugins();
     static void clearPlugins();
-    static PluginAbstract* getPluginFromId(const QString &pluginId);
-    static PluginAbstract* getPluginFromName(const QString &pluginName);
+    static PluginAbstract* getPluginFromId(const QString& pluginId);
+    static PluginAbstract* getPluginFromName(const QString& pluginName);
     static const QList<PluginAbstract*> &getPlugins();
     static QStringList getPluginsNames();
 

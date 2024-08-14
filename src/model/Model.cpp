@@ -100,9 +100,11 @@ Model::Model(const QJsonObject& json, QObject* parent):
     if (json.contains(STATE_PHASES)) {
         const QJsonArray phases = json.value(STATE_PHASES).toArray();
         mNumberOfPhases = (int) phases.size();
-        for (const auto json : phases)
-             mPhases.append(new Phase(json.toObject(), this));
-
+        for (const auto json : phases) {
+            const QJsonObject& JSONph = json.toObject();
+            Phase* ph = new Phase(JSONph, this);
+            mPhases.append(ph);
+        }
     }
 
     // Sort phases based on items y position
@@ -113,11 +115,14 @@ Model::Model(const QJsonObject& json, QObject* parent):
         mNumberOfEvents = (int) events.size();
 
         for (qsizetype i = 0; i < events.size(); ++i) {
-            const QJsonObject JSONevent = events.at(i).toObject();
+            const QJsonObject& JSONevent = events.at(i).toObject();
 
             if (JSONevent.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
                 try {
-                    mEvents.append(new Event(JSONevent, std::shared_ptr<Model>(this)));
+                    auto ev = new Event(JSONevent);
+                    
+                    mEvents.append(ev);
+                    ev = nullptr;
                     mNumberOfDates += JSONevent.value(STATE_EVENT_DATES).toArray().size();
 
                 }
@@ -130,8 +135,7 @@ Model::Model(const QJsonObject& json, QObject* parent):
                     message.exec();
                 }
             } else {
-                Bound* ek = new Bound(JSONevent, std::shared_ptr<Model>(this));
-                //*ek = Bound::fromJson(JSONevent);
+                Bound* ek = new Bound(JSONevent);//, std::shared_ptr<Model>(this));
                 ek->updateValues(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
                 mEvents.append(ek);
                 ek = nullptr;
@@ -149,6 +153,7 @@ Model::Model(const QJsonObject& json, QObject* parent):
             const QJsonObject constraint = constraints.at(i).toObject();
             EventConstraint* c = new EventConstraint(EventConstraint::fromJson(constraint));
             mEventConstraints.append(c);
+            c = nullptr;
         }
     }
 
@@ -158,6 +163,7 @@ Model::Model(const QJsonObject& json, QObject* parent):
             const QJsonObject constraint = constraints.at(i).toObject();
             PhaseConstraint* c = new PhaseConstraint(PhaseConstraint::fromJson(constraint));
             mPhaseConstraints.append(c);
+            c = nullptr;
         }
     }
 
@@ -174,7 +180,8 @@ Model::Model(const QJsonObject& json, QObject* parent):
         for (qsizetype j=0; j<mPhases.size(); ++j) {
             const int phaseId = mPhases.at(j)->mId;
             if (phasesIds.contains(phaseId)) {
-                mEvents[i]->mPhases.append(mPhases[j]);
+                auto tmpP = mPhases.at(j);
+                mEvents[i]->mPhases.append(tmpP);
                 mPhases[j]->mEvents.append(mEvents[i]);
             }
         }
@@ -210,6 +217,22 @@ Model::Model(const QJsonObject& json, QObject* parent):
 
 Model::~Model()
 {
+    qDebug() << "Model::~Model()";
+    for (auto ev : mEvents) {
+        delete ev;
+    }
+
+    for (auto ph : mPhases) {
+        delete ph;
+    }
+
+    for (auto ev : mEventConstraints) {
+        delete ev;
+    }
+
+    for (auto ph : mPhaseConstraints) {
+        delete ph;
+    }
 }
 
 void Model::clear()
@@ -220,7 +243,7 @@ void Model::clear()
     // - The Event MH variables are reset (freeing trace memory)
     // - The Dates MH variables are reset (freeing trace memory)
     // - The Dates are cleared
-  
+
     mEvents.clear();
     mEventConstraints.clear();
 
@@ -309,7 +332,8 @@ void Model::fromJson(const QJsonObject& json)
 
             if (JSONevent.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
                 try {
-                    mEvents.append(new Event(JSONevent, std::shared_ptr<Model>(this)));
+                    Event* ev = new Event(JSONevent);
+                    mEvents.append(ev);//, std::shared_ptr<Model>(this)));
                     mNumberOfDates += JSONevent.value(STATE_EVENT_DATES).toArray().size();
 
                 }
@@ -322,7 +346,7 @@ void Model::fromJson(const QJsonObject& json)
                     message.exec();
                 }
             } else {
-                Bound* ek = new Bound(JSONevent, std::shared_ptr<Model>(this));
+                Bound* ek = new Bound(JSONevent);//, std::shared_ptr<Model>(this));
                 //*ek = Bound::fromJson(JSONevent);
                 ek->updateValues(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
                 mEvents.append(ek);
@@ -341,6 +365,7 @@ void Model::fromJson(const QJsonObject& json)
             const QJsonObject constraint = co.toObject();
             EventConstraint* c = new EventConstraint(EventConstraint::fromJson(constraint));
             mEventConstraints.append(c);
+            c = nullptr;
         }
     }
 
@@ -350,6 +375,7 @@ void Model::fromJson(const QJsonObject& json)
             const QJsonObject constraint = co.toObject();
             PhaseConstraint* c = new PhaseConstraint(PhaseConstraint::fromJson(constraint));
             mPhaseConstraints.append(c);
+            c = nullptr;
         }
     }
 
@@ -1120,13 +1146,13 @@ void Model::initVariablesForChain()
        initReserve += ( 1 + (c.mMaxBatchs*c.mIterPerBatch) + c.mIterPerBurn + (c.mIterPerAquisition/c.mThinningInterval) );
 
     for (auto&& event : mEvents) {
-       event->mTheta.reset();
+       event->mTheta.clear();
        event->mTheta.reserve(initReserve);
        event->mTheta.mAllAccepts.resize(mChains.size());
        event->mTheta.mLastAccepts.reserve(acceptBufferLen);
        event->mTheta.mLastAcceptsLength = acceptBufferLen;
 
-       event->mS02Theta.reset();
+       event->mS02Theta.clear();
        event->mS02Theta.reserve(initReserve);
        event->mS02Theta.mAllAccepts.resize(mChains.size());
        event->mS02Theta.mLastAccepts.reserve(acceptBufferLen);
@@ -1135,19 +1161,19 @@ void Model::initVariablesForChain()
        // event->mTheta.mAllAccepts.clear(); //don't clean, avalable for cumulate chain
 
        for (auto&& date : event->mDates) {
-            date.mTi.reset();
+            date.mTi.clear();
             date.mTi.reserve(initReserve);
             date.mTi.mAllAccepts.resize(mChains.size());
             date.mTi.mLastAccepts.reserve(acceptBufferLen);
             date.mTi.mLastAcceptsLength = acceptBufferLen;
 
-            date.mSigmaTi.reset();
+            date.mSigmaTi.clear();
             date.mSigmaTi.reserve(initReserve);
             date.mSigmaTi.mAllAccepts.resize(mChains.size());
             date.mSigmaTi.mLastAccepts.reserve(acceptBufferLen);
             date.mSigmaTi.mLastAcceptsLength = acceptBufferLen;
 
-            date.mWiggle.reset();
+            date.mWiggle.clear();
             date.mWiggle.reserve(initReserve);
             date.mWiggle.mAllAccepts.resize(mChains.size());
             date.mWiggle.mLastAccepts.reserve(acceptBufferLen);
@@ -1156,15 +1182,15 @@ void Model::initVariablesForChain()
     }
 
     for (auto&& phase : mPhases) {
-       phase->mAlpha.reset();
-       phase->mBeta.reset();
+       phase->mAlpha.clear();
+       phase->mBeta.clear();
        //phase->mTau.reset();
-       phase->mDuration.reset();
+       phase->mDuration.clear();
 
-        phase->mAlpha.reserve(initReserve);//mRawTrace->reserve(initReserve);
-       phase->mBeta.reserve(initReserve);//.mRawTrace->reserve(initReserve);
+       phase->mAlpha.reserve(initReserve);
+       phase->mBeta.reserve(initReserve);
        //phase->mTau.mRawTrace->reserve(initReserve);
-       phase->mDuration.reserve(initReserve);//.mRawTrace->reserve(initReserve);
+       phase->mDuration.reserve(initReserve);
     }
 }
 
@@ -1863,16 +1889,16 @@ void Model::clearTraces()
 {
     for (const auto& ev : mEvents) {
         for (auto&& date : ev->mDates) {
-            date.reset();
+            date.clear();
         }
-        ev->reset();
+        ev->clear();
     }
 
     for (const auto& ph : mPhases) {
-        ph->mAlpha.reset();
-        ph->mBeta.reset();
+        ph->mAlpha.clear();
+        ph->mBeta.clear();
         //ph->mTau.reset();
-        ph->mDuration.reset();
+        ph->mDuration.clear();
 
         ph->mRawTempo.clear();
         ph->mRawTempoInf.clear();

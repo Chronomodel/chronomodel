@@ -59,7 +59,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 MainWindow::MainWindow(QWidget* parent):
     QMainWindow(parent),
     undo_action(false),
-    redo_action(false)
+    redo_action(false),
+    mProject(std::make_shared<Project>())
 {
 #ifdef DEBUG
     setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + " DEBUG Mode ");
@@ -82,7 +83,7 @@ MainWindow::MainWindow(QWidget* parent):
 */
     mLastPath = QDir::homePath();
 
-    mProject = nullptr;
+    //mProject = nullptr;
 
     /* Creation of ResultsView and ModelView */
     mProjectView = new ProjectView(this);
@@ -558,10 +559,13 @@ void MainWindow::newProject()
 void MainWindow::openProject()
 {
     const QString currentPath = getCurrentPath();
+    // Qt garde la fenetre en memoire pour plus tard. C'est le fonctionnement normal
     const QString path = QFileDialog::getOpenFileName(this,
                                                       tr("Open File"),
                                                       currentPath,
                                                       tr("Chronomodel Project (*.chr)"));
+
+
 
     if (!path.isEmpty()) {
 
@@ -581,11 +585,9 @@ void MainWindow::openProject()
         mProject.reset(new Project());
         connectProject();
 
-        //setAppSettingsAutoSave(): just update mAutoSaveTimer
         mProject->setAppSettingsAutoSave();
         const QFileInfo info(path);
         setCurrentPath(info.absolutePath());
-
 
         // look MainWindows::readSetting()
         if (mProject->load(path) == true) {
@@ -596,7 +598,6 @@ void MainWindow::openProject()
             if ( mProject->mModel!=nullptr && !mProject->mModel->mChains.isEmpty()) {
                     mcmcFinished(); //do initDensities()
             }
-
 
             mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true);
             AppSettings::mIsSaved = true;
@@ -681,7 +682,7 @@ void MainWindow::closeProject()
 
         // Go back to model tab :
         mViewModelAction->trigger();
-        mProject->clearModel();
+        //mProject->clearModel();
         disconnectProject();
 
         //resetInterface();

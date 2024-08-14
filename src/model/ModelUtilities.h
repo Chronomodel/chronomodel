@@ -97,7 +97,7 @@ QString HTML_to_text(const QString &HTML);
 
 //void sampleInCumulatedRepartition (Event *event, const StudyPeriodSettings &settings, const double min, const double max); Obsolete
 
-double sample_in_repartition(const CalibrationCurve *calibrateCurve, const double min, const double max);
+double sample_in_repartition(std::shared_ptr<CalibrationCurve> calibrateCurve, const double min, const double max);
 
 void sampleInCumulatedRepartition_thetaFixe (Event *event, const StudyPeriodSettings &settings);
 

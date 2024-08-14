@@ -62,7 +62,8 @@ void ColoredBar::paintEvent(QPaintEvent *)
 }
 
 
-MultiCalibrationDrawing::MultiCalibrationDrawing(QWidget *parent) : QWidget(parent),
+MultiCalibrationDrawing::MultiCalibrationDrawing(QWidget* parent):
+    QWidget(parent),
     mVerticalSpacer (5),
     mGraphHeight (GraphViewResults::mHeightForVisibleAxis),
     mGraphFont (font()),
@@ -85,6 +86,14 @@ MultiCalibrationDrawing::MultiCalibrationDrawing(QWidget *parent) : QWidget(pare
 
 MultiCalibrationDrawing::~MultiCalibrationDrawing()
 {
+    for (auto g : mListCalibGraph) {
+        delete g;
+        g = nullptr;
+    }
+    for (auto&& panel : mListBar) {
+        delete panel;
+        panel = nullptr;
+    }
 }
 
 

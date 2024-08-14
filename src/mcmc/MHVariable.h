@@ -62,7 +62,7 @@ public:
     explicit MHVariable(const MetropolisVariable& origin);
     virtual ~MHVariable();
 
-    void reset() override;
+    void clear() override;
     void reserve(const qsizetype reserve) override;
     //MHVariable& copy(MHVariable const& origin);
     MHVariable& operator=(const MHVariable& origin);

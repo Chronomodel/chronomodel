@@ -54,13 +54,13 @@ PluginTLForm::PluginTLForm(PluginTL* plugin, QWidget* parent, Qt::WindowFlags fl
     mAverageEdit = new QLineEdit(this);
     mAverageEdit->setAlignment(Qt::AlignHCenter);
     mAverageEdit->setText("0");
-    QDoubleValidator* RValidator = new QDoubleValidator();
+    QDoubleValidator* RValidator = new QDoubleValidator(this);
     mAverageEdit->setValidator(RValidator);
 
     mErrorEdit = new QLineEdit(this);
     mErrorEdit->setAlignment(Qt::AlignHCenter);
     mErrorEdit->setText("30");
-    QDoubleValidator* RplusValidator = new QDoubleValidator();
+    QDoubleValidator* RplusValidator = new QDoubleValidator(this);
     RplusValidator->setBottom(0.0);
     mErrorEdit->setValidator(RplusValidator);
 

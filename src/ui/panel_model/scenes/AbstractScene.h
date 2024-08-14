@@ -40,7 +40,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef ABSTRACTSCENE_H
 #define ABSTRACTSCENE_H
 
-#include "Project.h"
 
 #include <QGraphicsScene>
 
@@ -52,20 +51,7 @@ class ArrowTmpItem;
 class AbstractScene: public QGraphicsScene
 {
     Q_OBJECT
-protected:
-    QGraphicsView* mView;
-    QList<AbstractItem*> mItems;
-    QList<ArrowItem*> mConstraintItems;
 
-    bool mUpdatingItems;
-    bool mAltIsDown;
-
-    bool mShowAllThumbs;
-
-    double mZoom;
-
-    AbstractItem* mCurrentItem;
-    qreal mDeltaGrid;
 
 public:
     bool mDrawingArrow;
@@ -106,6 +92,21 @@ public:
     virtual void sendUpdateProject(const QString& reason, bool notify, bool async) = 0;
 
     void updateConstraintsPos(AbstractItem* movedItem, const QPointF& newPos);
+
+protected:
+    QGraphicsView* mView;
+    QList<AbstractItem*> mItems;
+    QList<ArrowItem*> mConstraintItems;
+
+    bool mUpdatingItems;
+    bool mAltIsDown;
+
+    bool mShowAllThumbs;
+
+    double mZoom;
+
+    AbstractItem* mCurrentItem;
+    qreal mDeltaGrid;
 
 protected:
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* e);

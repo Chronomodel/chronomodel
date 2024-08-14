@@ -52,8 +52,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 /** Default constructor */
 MetropolisVariable::MetropolisVariable():
     mX (0.),
-    mRawTrace (nullptr),
-    mFormatedTrace (nullptr),
+    mRawTrace(std::make_shared<std::vector<double>>()),
+    mFormatedTrace (std::make_shared<std::vector<double>>()),
     mSupport (eR),
     mFormat (DateUtils::eNumeric),
     mExactCredibilityThreshold (0.),
@@ -74,11 +74,16 @@ MetropolisVariable::MetropolisVariable(const MetropolisVariable &origin):
 {
     mX = origin.mX;
     mName = origin.mName;
-    if (origin.mRawTrace && !origin.mRawTrace->isEmpty()) {
+
+    mRawTrace = std::shared_ptr<std::vector<double>>(origin.mRawTrace);
+    mFormatedTrace = std::shared_ptr<std::vector<double>>(origin.mFormatedTrace);
+
+    /*if (origin.mRawTrace && origin.mRawTrace->size() != 0) {
         if (mRawTrace)
             mRawTrace->resize(origin.mRawTrace->size());
         else
-            mRawTrace = new QList<double>(origin.mRawTrace->size());
+           // mRawTrace = new std::vector<double>(origin.mRawTrace->size());
+             mRawTrace.reset(new std::vector<double>(origin.mRawTrace->size()));
         std::copy(origin.mRawTrace->begin(), origin.mRawTrace->end(), mRawTrace->begin());
     }
     if (origin.mFormatedTrace && !origin.mFormatedTrace->isEmpty()) {
@@ -87,7 +92,7 @@ MetropolisVariable::MetropolisVariable(const MetropolisVariable &origin):
         else
             mFormatedTrace = new QList<double>(origin.mFormatedTrace->size());
         std::copy(origin.mFormatedTrace->begin(), origin.mFormatedTrace->end(), mFormatedTrace->begin());
-    }
+    }*/
     mSupport = origin.mSupport;
     mFormat = origin.mFormat;
 
@@ -121,10 +126,11 @@ MetropolisVariable::MetropolisVariable(const MetropolisVariable &origin):
 /** Destructor */
 MetropolisVariable::~MetropolisVariable()
 {
-    delete mRawTrace;
-    mRawTrace = nullptr;
-    delete mFormatedTrace;
-    mFormatedTrace = nullptr;
+    qDebug()<<"delete MetropolisVariable : "<< mName;
+    //delete mRawTrace;
+    //mRawTrace = nullptr;
+    //delete mFormatedTrace;
+    //mFormatedTrace = nullptr;
 }
 
 /** Copy assignment operator */
@@ -132,9 +138,13 @@ MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable& orig
 {
     mX = origin.mX;
     mName = origin.mName;
-    if (origin.mRawTrace) {
+
+    mRawTrace = std::shared_ptr<std::vector<double>>(origin.mRawTrace);
+    mFormatedTrace = std::shared_ptr<std::vector<double>>(origin.mFormatedTrace);
+
+    /*if (origin.mRawTrace) {
         if (mRawTrace == nullptr) {
-            mRawTrace = new QList<double>(*origin.mRawTrace);
+            mRawTrace.reset( new std::vector<double>(*origin.mRawTrace));
         } else {
             mRawTrace->resize(origin.mRawTrace->size());
             std::copy(origin.mRawTrace->begin(), origin.mRawTrace->end(), mRawTrace->begin());
@@ -149,7 +159,8 @@ MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable& orig
             std::copy(origin.mFormatedTrace->begin(), origin.mFormatedTrace->end(), mFormatedTrace->begin());
         }
     }
-    
+    */
+
     mSupport = origin.mSupport;
     mFormat = origin.mFormat;
 
@@ -190,17 +201,10 @@ void MetropolisVariable::memo(double* valueToSave)
     mRawTrace->push_back(*valueToSave);
 }
 
-void MetropolisVariable::reset()
+void MetropolisVariable::clear()
 {
-    if (mRawTrace != nullptr) {
-        mRawTrace->clear();
-        mRawTrace->squeeze();
-    }
-    if (mFormatedTrace != nullptr) {
-        mFormatedTrace->clear();
-        mFormatedTrace->squeeze();
-
-    }
+    mRawTrace->clear();
+    mFormatedTrace->clear();
     mFormatedHisto.clear();
     mChainsHistos.clear();
 
@@ -216,12 +220,24 @@ void MetropolisVariable::reset()
 
 void MetropolisVariable::reserve(const qsizetype reserve)
 {
-    if (!mRawTrace)
-        mRawTrace = new QList<double>();
-    //mRawTrace->reserve(reserve);
-    if (!mFormatedTrace)
+   /* (void) reserve;
+    //delete mRawTrace;
+    if (!mRawTrace) {
+        mRawTrace = std::shared_ptr<std::vector<double>>();
+    } else {
+        mRawTrace->clear();
+    }
+
+    
+    if (!mFormatedTrace) {
         mFormatedTrace = new QList<double>();
-    //mFormatedTrace->reserve(reserve);
+    } else {
+        mFormatedTrace->clear();
+    }
+   */
+
+    mRawTrace->reserve(reserve); // do memory leak
+    mFormatedTrace->reserve(reserve);
 }
 
 void MetropolisVariable::setFormat(const DateUtils::FormatDate fm)
@@ -243,13 +259,15 @@ void MetropolisVariable::setFormat(const DateUtils::FormatDate fm)
  */
 void MetropolisVariable::updateFormatedTrace(const DateUtils::FormatDate fm)
 {
-    if (!mRawTrace)
+    /*if (!mRawTrace)
        return;
     if (!mFormatedTrace) {
         mFormatedTrace = new QList<double>(mRawTrace->size());
     } else {
         mFormatedTrace->resize(mRawTrace->size());
-    }
+    }*/
+
+    mFormatedTrace->resize(mRawTrace->size());
     if (fm == DateUtils::eNumeric || mFormat == DateUtils::eNumeric) {
        std::copy(mRawTrace->cbegin(), mRawTrace->cend(), mFormatedTrace->begin());
 
@@ -469,7 +487,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QList<double> &data
 void MetropolisVariable::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
     //Q_ASSERT_X(!mFormatedTrace->isEmpty(), "[MetropolisVariable::generateHistos]", "mFormatedTrace.isEmpty()");
-    if (mFormatedTrace == nullptr || mFormatedTrace->isEmpty())
+    if (mFormatedTrace == nullptr || mFormatedTrace->size() == 0)
         return;
     const QList<double> &subFullTrace = fullRunFormatedTrace(chains);
     mFormatedHisto = generateHisto(subFullTrace, fftLen, bandwidth, tmin, tmax);
@@ -553,7 +571,7 @@ void MetropolisVariable::generateHPD(const double threshold)
 
 void MetropolisVariable::generateCredibility(const QList<ChainSpecs> &chains, double threshold)
 {
-    if (mRawTrace==nullptr || mRawTrace->isEmpty())  {
+    if (mRawTrace==nullptr || mRawTrace->size() == 0)  {
         mRawCredibility = std::pair<double, double>(1, -1);
 
     } else if (mThresholdUsed != threshold) {
@@ -619,7 +637,7 @@ QMap<double, double> &MetropolisVariable::histoForChain(const qsizetype index)
 }
 
 
-QList<double>::Iterator MetropolisVariable::findIter_element(const long unsigned iter, const QList<ChainSpecs>& chains, const qsizetype chainIndex ) const
+std::vector<double>::iterator MetropolisVariable::findIter_element(const long unsigned iter, const QList<ChainSpecs>& chains, const qsizetype chainIndex ) const
 {
     qsizetype shift = 0;
     for (qsizetype i = 0; i < chainIndex; ++i) {
@@ -853,7 +871,7 @@ QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data )
           break;
     }
 
-    save_qlist(stream, data.mRawTrace);
+    save_container(stream, *data.mRawTrace);
 
     // *out << this->mFormatedTrace; // useless
 
@@ -862,7 +880,7 @@ QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data )
 
 /** Read Data
  */
-QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
+QDataStream &operator>>( QDataStream& stream, MetropolisVariable& data )
 {
     quint8 support;
     stream >> support;
@@ -909,8 +927,12 @@ QDataStream &operator>>( QDataStream &stream, MetropolisVariable &data )
 */
     data.mFormat = DateUtils::eUnknown; // to keep compatibility and force updateFormat
 
-    delete data.mRawTrace;
-    data.mRawTrace = load_qlist_ptr(stream);
+    //delete data.mRawTrace;
+    auto tmp = load_std_vector_ptr(stream);
+    if (tmp == nullptr)
+        data.mRawTrace = std::make_shared<std::vector<double>>();
+    else
+        data.mRawTrace.reset(tmp);
  
     
     // regeneration of this->mFormatedTrace

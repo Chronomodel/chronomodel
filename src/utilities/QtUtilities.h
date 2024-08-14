@@ -41,6 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define QTUTILITIES_H
 
 #include "ModelCurve.h"
+#include "StdUtilities.h"
 
 #include <QStringList>
 #include <QColor>
@@ -229,11 +230,28 @@ QList<T> getVectorDataInRange(const QList<T> &data, const T subMin,const T subMa
 
 }
 
-QList<double>* load_qlist_ptr(QDataStream& stream);
-QList<double> load_qlist(QDataStream& stream);
+QList<double>* load_QList_ptr(QDataStream& stream);
+QList<double> load_QList(QDataStream& stream);
 
-void save_qlist(QDataStream& stream, const QList<double>* data);
-void save_qlist(QDataStream& stream, const QList<double> data);
+
+std::vector<double> load_std_vector(QDataStream& stream);
+
+std::vector<double>* load_std_vector_ptr(QDataStream& stream);
+
+
+template <template<typename...> class Container, class T >
+void save_container(QDataStream& stream, const Container<T> data)
+{
+    qDebug()<<"[save_container] "<< data.size();
+    quint32 size = data.size();
+    stream << size;
+    if (size > 0) {
+        for (auto v : data)
+            stream << v;
+    }
+
+}
+
 
 std::shared_ptr<Project> getProject_ptr();
 std::shared_ptr<ModelCurve> getModel_ptr();

@@ -43,7 +43,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MCMCLoop.h"
 #include "ModelCurve.h"
 #include "StudyPeriodSettings.h"
-#include "Model.h"
 #include "QtCore/qtmetamacros.h"
 
 #include <QObject>
@@ -74,7 +73,7 @@ class PhaseConstraint;
 class PluginAbstract;
 
 
-class Project: public QObject
+class Project: public QObject, std::enable_shared_from_this<Project>
 {
     Q_OBJECT
 public:
@@ -86,18 +85,18 @@ public:
         ExtractEventsFromPhase,
     };
 
-    void initState(const QString &reason);
+    void initState(const QString& reason);
 
     // This is the function to call when the project state is to be modified.
     // An undo command is created and a StateEvent is fired asynchronously.
     // The project state will be modified and the view notified (if required)
-    bool pushProjectState(const QJsonObject &state, const QString &reason, bool notify);
-    void checkStateModification(const QJsonObject &stateNew,const QJsonObject &stateOld);
+    bool pushProjectState(const QJsonObject& state, const QString& reason, bool notify);
+    void checkStateModification(const QJsonObject& stateNew,const QJsonObject& stateOld);
     bool structureIsChanged();
     bool designIsChanged();
     // Sends a StateEvent asynchronously.
     // Called by "SetProjectState" undo/redo commands.
-    void sendUpdateState(const QJsonObject &state, const QString &reason, bool notify);
+    void sendUpdateState(const QJsonObject& state, const QString& reason, bool notify);
 
     // Event handler for events of type "StateEvent".
     // Updates the project state by calling updateState() and send a notification (if required).
@@ -105,10 +104,8 @@ public:
 
     // Update the project state directly.
     // This is not async! so be careful when calling this from views with notify = true
-    void updateState(const QJsonObject &state, const QString &reason, bool notify);
+    void updateState(const QJsonObject& state, const QString& reason, bool notify);
 
-    // Special events for selection... too bad!
-   // void sendEventsSelectionChanged(); // not used
 
     static QJsonObject emptyState();
 
@@ -131,7 +128,7 @@ public:
     void setNoResults(const bool noResults) { mNoResults = noResults;}
     bool withResults() const {return (!mNoResults && mModel != nullptr);}
 
-    bool setSettings(const StudyPeriodSettings &settings);
+    bool setSettings(const StudyPeriodSettings& settings);
 
     bool studyPeriodIsValid();
     void showStudyPeriodWarning();

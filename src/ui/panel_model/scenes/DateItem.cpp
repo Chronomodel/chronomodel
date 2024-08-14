@@ -67,24 +67,24 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
     // set the selection directly to the parent item, here the EventItem
     setFlag(ItemIsSelectable, false);
 
-    mDatesAnimTimer = new QTimeLine(100);
+    mDatesAnimTimer = new QTimeLine(100, this);
     mDatesAnimTimer->setFrameRange(0, 2);
 
-    mDatesAnim = new QGraphicsItemAnimation();
+    mDatesAnim = new QGraphicsItemAnimation(this);
     mDatesAnim->setTimeLine(mDatesAnimTimer);
 
     // Date::fromJson doesn't create mCalibration
     Date d (date);
     const StudyPeriodSettings s = StudyPeriodSettings::fromJson(settings);
 
-     if (d.mPlugin!= nullptr) {
+    if (d.mPlugin!= nullptr) {
         if (!d.mIsValid)
             mCalibThumb = QPixmap();
 
         else {
 
             // Date::calibrate() Controls the validity of the calibration and wiggle curves
-            d.calibrate(s, *getProject_ptr(), true);
+            d.calibrate(s, getProject_ptr(), true);
 
             if (d.mCalibration == nullptr) {
                 date[STATE_DATE_VALID] = false;
@@ -146,7 +146,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
 
         }
     }
-    d.reset();
+    d.clear();
 
 //blockSignals(false);
 }
@@ -156,10 +156,10 @@ DateItem::~DateItem()
     mEventsScene = nullptr;
   //  mDate.~QJsonObject(); // Don't delete the JSON, we need it when we delete an event.
   
-    delete mDatesAnim;
+   /* delete mDatesAnim;
     mDatesAnim = nullptr;
     delete mDatesAnimTimer;
-    mDatesAnimTimer = nullptr;
+    mDatesAnimTimer = nullptr;*/
 
     
 }

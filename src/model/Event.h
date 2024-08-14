@@ -70,7 +70,7 @@ public:
     Type mType;
     int mId;
     //const Model *mModel;
-    std::shared_ptr<Model> mModel;
+    //std::shared_ptr<Model> mModel;
 
     QString mName; //must be public, to be defined by dialogbox
     QColor mColor;
@@ -136,17 +136,17 @@ public:
 
     MHVariable mVg; // sigma G of the event (relative to G(t) that we are trying to estimate)
 
-    CalibrationCurve* mMixingCalibrations; // prepare the future
+    std::shared_ptr<CalibrationCurve> mMixingCalibrations;
 
 #pragma mark Functions
 
-    Event (std::shared_ptr<Model> model = nullptr);
+    Event();
 
-    explicit Event (const QJsonObject& json, std::shared_ptr<Model> model);
+    explicit Event (const QJsonObject& json);
     Event(const Event &origin);
     virtual ~Event();
 
-    virtual Event& operator=(const Event& origin);
+   // virtual Event& operator=(const Event& origin);
     virtual void copyFrom(const Event& event);
 
     static Event fromJson(const QJsonObject& json); // With no model
@@ -154,7 +154,7 @@ public:
 
     inline Type type() const { return mType;}
 
-    void reset();
+    void clear();
     
     static void setCurveCsvDataToJsonEvent(QJsonObject &event, const QMap<QString, double> &CurveData);
     static QString curveDescriptionFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType = CurveSettings::eProcess_None);

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -54,7 +54,7 @@ class ColoredBar: public QWidget
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorsChanged)
 
 public:
-    ColoredBar(QWidget *parent = nullptr);
+    ColoredBar(QWidget* parent = nullptr);
     ~ColoredBar();
     void setColor(QColor &color) {mColor = color;}
     QColor color() const {return mColor;}

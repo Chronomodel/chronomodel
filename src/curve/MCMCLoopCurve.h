@@ -50,7 +50,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <vector>
 
-class Project;
 
 typedef double t_prob;
 
@@ -59,12 +58,11 @@ class MCMCLoopCurve: public MCMCLoop
     Q_OBJECT
 
 public:
-    MCMCLoopCurve(Project &project);
+    MCMCLoopCurve(std::shared_ptr<ModelCurve> model);
     ~MCMCLoopCurve();
 
 protected:
     // Variable for update function
-    std::shared_ptr<ModelCurve> mModel;
 
     t_prob current_ln_h_YWI_2, current_ln_h_YWI_3, current_ln_h_YWI_1_2, current_h_theta, current_h_lambda, current_h_VG;
 

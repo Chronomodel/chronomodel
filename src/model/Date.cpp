@@ -188,6 +188,7 @@ void Date::copyFrom(const Date& date)
     mSigmaTi.setName("SigmaTi of Date : " + date.mName);
     mSigmaTi.mSupport = date.mSigmaTi.mSupport;
     mSigmaTi.mSamplerProposal = date.mSigmaTi.mSamplerProposal;
+
     mWiggle = date.mWiggle;
     mDelta = date.mDelta;
 
@@ -276,8 +277,8 @@ void Date::fromJson(const QJsonObject& json)
 
     mIsCurrent = false;
     mIsSelected = false;
-     
-    auto project = MainWindow::getInstance()->getProject().get();
+
+    auto project = getProject_ptr();// MainWindow::getInstance()->getProject().get();
     mSettings = StudyPeriodSettings::fromJson(project->mState.value(STATE_SETTINGS).toObject()); // StudyPeriodSettings::fromJson is static
     mSubDates = json.value(STATE_DATE_SUB_DATES).toArray();
 
@@ -321,7 +322,7 @@ void Date::fromJson(const QJsonObject& json)
                      */
                     Date sd;
                     sd.fromJson(d.toObject());
-                    sd.calibrate(*project);
+                    sd.calibrate(project);
 
                     if (sd.mCalibration) {
                         tmin = std::min(sd.mCalibration->mTmin, tmin);
@@ -346,7 +347,7 @@ void Date::fromJson(const QJsonObject& json)
         mSigmaTi.mSamplerProposal = MHVariable::eMHAdaptGauss;
     mSigmaTi.setName("Sigma of date : "+ mName);
 
-
+    mWiggle.setName("Wiggle of date : "+ mName);
 
     QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (mUUID);
     if ( it != project->mCalibCurves.end()) {
@@ -533,11 +534,11 @@ QString Date::getWiggleDesc(const QJsonObject& json)
 
 
 
-void Date::reset()
+void Date::clear()
 {
-    mTi.reset();
-    mSigmaTi.reset();
-    mWiggle.reset();
+    mTi.clear();
+    mSigmaTi.clear();
+    mWiggle.clear();
 }
 
 
@@ -549,14 +550,14 @@ void Date::reset()
  * @param truncate Restrict the calib and repartition vectors to where data are
  */
 
-void Date::calibrate(const StudyPeriodSettings &priod_settings, Project &project, bool truncate)
+void Date::calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<Project> project, bool truncate)
 {
     // add the calibration
-    QMap<QString, CalibrationCurve>::iterator it = project.mCalibCurves.find (mUUID);
+    QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (mUUID);
 
-    if ( it == project.mCalibCurves.end()) {
+    if ( it == project->mCalibCurves.end()) {
         qDebug()<<"[Date::calibrate] Curve to create mUUID: "<< mUUID ;
-        project.mCalibCurves.insert(mUUID, CalibrationCurve());
+        project->mCalibCurves.insert(mUUID, CalibrationCurve());
 
     } else {
         CalibrationCurve* d_mCalibration = & it.value();
@@ -580,16 +581,16 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, Project &project
         refMinStep = mPlugin->getMinStepRefsCurve(mData);
 
     } else if (mOrigin == eCombination) {
-        if ( it != project.mCalibCurves.end()) {
+        if ( it != project->mCalibCurves.end()) {
             CalibrationCurve* d_mCalibration = & it.value();
             refMinStep = std::min(refMinStep, d_mCalibration->mStep);
 
         } else {
             for (auto&& sd : mSubDates) {
                 const QString toFind = sd.toObject().value(STATE_DATE_UUID).toString();
-                QMap<QString, CalibrationCurve>::iterator it = project.mCalibCurves.find (toFind);
+                QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
 
-                if ( it != project.mCalibCurves.end()) {
+                if ( it != project->mCalibCurves.end()) {
                     CalibrationCurve* d_mCalibration = & it.value();
                     refMinStep = std::min(refMinStep, d_mCalibration->mStep);
                 }
@@ -603,14 +604,14 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, Project &project
 
     // Update of the new calibration curve
 
-    mCalibration = &project.mCalibCurves[mUUID];
+    mCalibration = &project->mCalibCurves[mUUID];
     mCalibration -> mDescription = getDesc();
     if(priod_settings.mStepForced)
         refMinStep = priod_settings.mStep;
 
     mCalibration->mStep = refMinStep;
     mCalibration->mPluginId = mPlugin->getId();
-    mCalibration->mPlugin = mPlugin;
+    //mCalibration->mPlugin = mPlugin;
     mCalibration->mName = mName;
 
     mCalibHPD.clear();
@@ -814,8 +815,8 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, Project &project
     // If the calibration curve changes, the wiggle curve must be recalculated.
     if (mWiggleCalibration != nullptr)  {
         const QString toFind ("WID::" + mUUID);
-        QMap<QString, CalibrationCurve>::ConstIterator it = project.mCalibCurves.constFind(toFind);
-        project.mCalibCurves.erase(it);
+        QMap<QString, CalibrationCurve>::ConstIterator it = project->mCalibCurves.constFind(toFind);
+        project->mCalibCurves.erase(it);
     }
 
     /* WIGGLE CALIBRATION CURVE */
@@ -831,7 +832,7 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, Project &project
  * @param settings
  * @param project
  */
-void Date::calibrateWiggle(const StudyPeriodSettings &settings, Project &project)
+void Date::calibrateWiggle(const StudyPeriodSettings &settings, std::shared_ptr<Project> project)
 {
     (void) settings;
     // Check if the ref curve is in the plugin list
@@ -844,12 +845,12 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, Project &project
     // We need to keep the calibration curve and then the whole wiggle on the whole support,
     // to allow a more accurate combination when the densities are far away.
     const QString toFind ("WID::" + mUUID);
-    QMap<QString, CalibrationCurve>::iterator it = project.mCalibCurves.find (toFind);
+    QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
 
-    if ( it == project.mCalibCurves.end()) {
+    if ( it == project->mCalibCurves.end()) {
         qDebug() << "[Date::calibrateWiggle] Curve to create Wiggle: "<< toFind ;
         qDebug() << "[Date::calibrateWiggle]create Wiggle descript: " << getWiggleDesc() ;
-        project.mCalibCurves.insert(toFind, CalibrationCurve());
+        project->mCalibCurves.insert(toFind, CalibrationCurve());
         
         
     } else if ( it->mDescription == getWiggleDesc() ) {
@@ -860,11 +861,11 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, Project &project
         
     }
 
-    mWiggleCalibration = & (project.mCalibCurves[toFind]);
+    mWiggleCalibration = & (project->mCalibCurves[toFind]);
 
     mWiggleCalibration->mDescription = getWiggleDesc();
     mWiggleCalibration->mPluginId = mPlugin->getId();
-    mWiggleCalibration->mPlugin = mPlugin;
+   // mWiggleCalibration->mPlugin = mPlugin;
     mWiggleCalibration->mName = mName;
 
     if (mDeltaType == eDeltaFixed) {
@@ -1913,21 +1914,26 @@ void Date::autoSetTiSampler(const bool bSet)
 }
 
 
-CalibrationCurve generate_mixingCalibration(const QList<Date> &dates, const QString description)
+std::shared_ptr<CalibrationCurve> generate_mixingCalibration(const QList<Date> &dates, const QString description)
 {
-    CalibrationCurve mixing_calib;
+    std::shared_ptr<CalibrationCurve> mixing_calib = std::make_shared<CalibrationCurve>();
     if (dates.size() == 1) {
-        mixing_calib = dates.at(0).mWiggleCalibration != nullptr ? *dates.at(0).mWiggleCalibration  :  *dates.at(0).mCalibration;
-        mixing_calib.mDescription = description; //QString("Mixing Calibrations of Event %1").arg(mName);
-        mixing_calib.mPlugin = nullptr;
-        mixing_calib.mPluginId = "";
+        //mixing_calib = dates.at(0).mWiggleCalibration != nullptr ? *dates.at(0).mWiggleCalibration  :  *dates.at(0).mCalibration;
+        if (dates.at(0).mWiggleCalibration != nullptr ) {
+            mixing_calib = std::make_shared<CalibrationCurve>(*dates.at(0).mWiggleCalibration);
+
+        } else {
+            mixing_calib = std::make_shared<CalibrationCurve>(*dates.at(0).mCalibration);
+        }
+
+        mixing_calib->mDescription = description;
+        mixing_calib->mPluginId = "";
 
     } else {
 
-        mixing_calib.mName = description;   //QString("Mixing Calibrations of Event %1").arg(mName);
-        mixing_calib.mDescription = description;  //QString("Mixing Calibrations of Event %1").arg(mName);
-        mixing_calib.mPlugin = nullptr;
-        mixing_calib.mPluginId = "";
+        mixing_calib->mName = description;
+        mixing_calib->mDescription = description;
+        mixing_calib->mPluginId = "";
 
         // 1 - Search for tmin and tmax, distribution curves, identical to the calibration.
         long double unionTmin = +INFINITY;
@@ -1947,13 +1953,13 @@ CalibrationCurve generate_mixingCalibration(const QList<Date> &dates, const QStr
             }
         }
 
-        mixing_calib.mTmin = unionTmin;
-        mixing_calib.mTmax = unionTmax;
+        mixing_calib->mTmin = unionTmin;
+        mixing_calib->mTmax = unionTmax;
         // Adjust Step
         // We take the smallest step, but it does not necessarily correspond to the same curve with unionTmin and unionTmax.
         int union_N = std::ceil((unionTmax-unionTmin)/unionStep);
         unionStep = (unionTmax-unionTmin)/union_N;
-        mixing_calib.mStep = unionStep;
+        mixing_calib->mStep = unionStep;
 
 #ifdef DEBUG
         for (auto&& d : dates) {
@@ -1976,13 +1982,13 @@ CalibrationCurve generate_mixingCalibration(const QList<Date> &dates, const QStr
                 else
                     sum += d.mCalibration->repartition_interpolate(t);
             }
-            mixing_calib.mVector.push_back((sum - sum_old)/(unionStep*n));
-            mixing_calib.mRepartition.push_back(sum/n);
+            mixing_calib->mVector.push_back((sum - sum_old)/(unionStep*n));
+            mixing_calib->mRepartition.push_back(sum/n);
             sum_old = sum;
             i++;
         }
 
-        mixing_calib.mMap = vector_to_map(mixing_calib.mVector, unionTmin, unionTmax, unionStep);
+        mixing_calib->mMap = vector_to_map(mixing_calib->mVector, unionTmin, unionTmax, unionStep);
     }
     return mixing_calib;
 }

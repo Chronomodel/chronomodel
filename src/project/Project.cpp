@@ -40,7 +40,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "CalibrationCurve.h"
 #include "MainWindow.h"
-#include "Model.h"
 #include "ModelCurve.h"
 #include "PluginManager.h"
 #include "MCMCSettingsDialog.h"
@@ -80,6 +79,7 @@ QString res_file_version; // used when loading
 
 Project::Project():
     mName ("ChronoModel Project"),
+    mModel(std::make_shared<ModelCurve>()),
     mLoop (nullptr),
     mDesignIsChanged (true),
     mStructureIsChanged (true),
@@ -136,10 +136,8 @@ Project::~Project()
     mState = QJsonObject();
     mLastSavedState = QJsonObject();
     mCalibCurves.clear();
-    //delete mModel;
-    //mModel = nullptr;
-   // if (mModel)
-   //     mModel.reset(nullptr);
+
+    mModel.reset();
     mLoop = nullptr;
 }
 
@@ -543,6 +541,7 @@ bool Project::load(const QString &path, bool force)
 
     qDebug() << "[Project::load] Loading project file : " << path;
 
+
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QFileInfo info(path);
         MainWindow::getInstance()->setCurrentPath(info.absolutePath());
@@ -836,6 +835,7 @@ bool Project::load(const QString &path, bool force)
             return true;
         }
     }
+    file.close();
     return false;
 }
 
@@ -2207,7 +2207,7 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
 void Project::updateDate(int eventId, int dateIndex)
 {
 
-    const QJsonObject &settingsJson = mState.value(STATE_SETTINGS).toObject();
+    const QJsonObject& settingsJson = mState.value(STATE_SETTINGS).toObject();
     StudyPeriodSettings settings = StudyPeriodSettings::fromJson(settingsJson);
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
 
@@ -2246,6 +2246,7 @@ void Project::updateDate(int eventId, int dateIndex)
 
                         PluginAbstract* plugin = PluginManager::getPluginFromId(date.value(STATE_DATE_PLUGIN_ID).toString());
                         const bool valid = plugin->isDateValid(date.value(STATE_DATE_DATA).toObject(), settings);
+                        plugin = nullptr;
                         date[STATE_DATE_VALID] = valid;
 
                         if (dates[dateIndex].toObject() != date) {
@@ -3100,10 +3101,12 @@ void Project::runChronomodel()
 
     // This is the occasion to clean EVERYTHING using the previous model before deleting it!
     // e.g. : clean the result view with any graphs, ...
-    emit mcmcStarted();
 
-    clearModel();
-    mModel = std::shared_ptr<ModelCurve>(new ModelCurve(mState, this));
+   // clearModel();
+    mModel.reset(new ModelCurve(mState, this));
+    //emit mcmcStarted();
+
+    //mModel = std::shared_ptr<ModelCurve>(new ModelCurve(mState, this));
 
     bool modelOk = false;
     try {
@@ -3118,7 +3121,10 @@ void Project::runChronomodel()
         message.exec();
     }
     if (modelOk) {
-        MCMCLoopChrono loop(*this);
+        emit mcmcStarted();
+
+
+        MCMCLoopChrono loop(mModel);
         //MCMCLoopChrono loop(this);
         MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint);
 
@@ -3170,6 +3176,8 @@ void Project::clearModel()
 {
     if (mModel)
         mModel->clear();
+    //mModel.reset();
+
 
      emit noResult();
 }
@@ -3243,8 +3251,8 @@ void Project::runCurve()
     // ------------------------------------------------------------------------------------------
     //  Start MCMC for Curve
     // ------------------------------------------------------------------------------------------
-    //MCMCLoopCurve loop ((ModelCurve*)mModel, this);
-    MCMCLoopCurve loop (*this);
+
+    MCMCLoopCurve loop (mModel);
     MCMCProgressDialog dialog (&loop, qApp->activeWindow(), Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint);
 
     /* --------------------------------------------------------------------

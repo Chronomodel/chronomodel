@@ -65,7 +65,7 @@ ModelCurve::ModelCurve(QObject *parent):
     mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 }
 
-ModelCurve::ModelCurve(const QJsonObject &json, QObject *parent):
+ModelCurve::ModelCurve(const QJsonObject& json, QObject *parent):
     Model(json, parent)
 {
     mLambdaSpline.mSupport = MetropolisVariable::eR;
@@ -82,14 +82,8 @@ ModelCurve::ModelCurve(const QJsonObject &json, QObject *parent):
 
 ModelCurve::~ModelCurve()
 {
-    Model::clear();
-    mLambdaSpline.reset();
-    mS02Vg.reset();
-    mSpline.clear();
-    mSplinesTrace.clear();
-    mPosteriorMeanG.clear();
-    mPosteriorMeanGByChain.clear();
-
+    qDebug() << "ModelCurve::~ModelCurve()";
+    //clear();
 }
 
 QJsonObject ModelCurve::toJson() const
@@ -841,10 +835,10 @@ void ModelCurve::clearTraces()
     Model::clearTraces();
 
     if (getProject_ptr()->isCurve()) {
-        mLambdaSpline.reset();
+        mLambdaSpline.clear();
     }
 
-    mS02Vg.reset();
+    mS02Vg.clear();
     mSplinesTrace.clear();
 }
 
@@ -919,20 +913,20 @@ void ModelCurve::initVariablesForChain()
     }
 
     for (Event*& event : mEvents) {
-        event->mVg.reset();
+        event->mVg.clear();
         event->mVg.reserve(initReserve);
         event->mVg.mAllAccepts.resize(mChains.size());
         event->mVg.mLastAccepts.reserve(acceptBufferLen);
         event->mVg.mLastAcceptsLength = acceptBufferLen;
     }
 
-    mLambdaSpline.reset();
+    mLambdaSpline.clear();
     mLambdaSpline.reserve(initReserve);
     mLambdaSpline.mAllAccepts.resize(mChains.size());
     mLambdaSpline.mLastAccepts.reserve(acceptBufferLen);
     mLambdaSpline.mLastAcceptsLength = acceptBufferLen;
 
-    mS02Vg.reset();
+    mS02Vg.clear();
     mS02Vg.reserve(initReserve);
     mS02Vg.mAllAccepts.resize(mChains.size());
     mS02Vg.mLastAccepts.reserve(acceptBufferLen);

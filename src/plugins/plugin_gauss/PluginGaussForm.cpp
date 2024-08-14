@@ -52,10 +52,10 @@ PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::Windo
     mErrorLab = new QLabel(tr("Error (sd)"), this);
     mCalibLab = new QLabel(tr("Calibration"), this);
 
-    QDoubleValidator* validator_R = new QDoubleValidator();
+    QDoubleValidator* validator_R = new QDoubleValidator(this);
     validator_R->setLocale(QLocale());
 
-    QDoubleValidator* validator_Rplus = new QDoubleValidator();
+    QDoubleValidator* validator_Rplus = new QDoubleValidator(this);
     validator_Rplus->setBottom(0.0000001);
     validator_Rplus->setLocale(QLocale());
 
@@ -69,7 +69,6 @@ PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::Windo
 
     connect(mErrorEdit, &QLineEdit::textChanged, this, &PluginGaussForm::errorIsValid);
     connect(mAverageEdit, &QLineEdit::textChanged, this, &PluginGaussForm::isValid);
-   //connect(mErrorEdit, &QLineEdit::editingFinished, this, &PluginGaussForm::validOK);
 
     mAverageEdit->setText("0");
     mErrorEdit->setText("50");

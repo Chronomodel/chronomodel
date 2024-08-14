@@ -42,6 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "CurveSettings.h"
 #include "MCMCSettings.h"
+#include "ModelCurve.h"
 
 #include <QThread>
 
@@ -55,12 +56,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #endif
 
 
-class Project;
-
 class MCMCLoop : public QThread
 {
     Q_OBJECT
 public:
+
+    QString mAbortedReason;
+    std::shared_ptr<ModelCurve> mModel;
+
     enum State
     {
         eInit = 0,
@@ -68,12 +71,12 @@ public:
         eAdapting = 2,
         eAquisition = 3
     };
-    
 
-    explicit MCMCLoop (Project &project);
+
+    explicit MCMCLoop (std::shared_ptr<ModelCurve> model);
     virtual ~MCMCLoop();
 
-    void setMCMCSettings(const MCMCSettings &settings);
+    void setMCMCSettings(const MCMCSettings& settings);
     const QList<ChainSpecs>& chains() const;
     void run();
 
@@ -90,7 +93,6 @@ protected:
     CurveSettings mCurveSettings;
 
     virtual QString calibrate() = 0;
-    //virtual void initVariablesForChain() = 0;
     virtual QString initialize() = 0;
 
     QString initialize_time();
@@ -104,9 +106,6 @@ protected:
     int mChainIndex;
     State mState;
 
-public:
-    QString mAbortedReason;
-    Project &mProject;
 };
 
 #endif

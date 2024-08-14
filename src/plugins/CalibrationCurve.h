@@ -42,8 +42,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QString>
 #include <QMap>
+#include <QtCore/qdebug.h>
 
-#include "PluginAbstract.h"
 
 class CalibrationCurve
 {
@@ -52,7 +52,7 @@ public:
     QString mDescription;
 
     QString mPluginId;
-    PluginAbstract* mPlugin;
+    //PluginAbstract* mPlugin;
 
     QList<double> mRepartition;
     QList<double> mVector;
@@ -76,7 +76,7 @@ public:
 
         mPluginId (other.mPluginId),
 
-        mPlugin (other.mPlugin),
+        //mPlugin (other.mPlugin),
         mRepartition(other.mRepartition),
         mVector (other.mVector),
         mMap (other.mMap),
@@ -91,7 +91,7 @@ public:
         other.mMap.clear();
 
         other.mPluginId = nullptr;
-        other.mPlugin = nullptr;
+        //other.mPlugin = nullptr;
     }
 
     /** Destructor */
@@ -110,7 +110,7 @@ public:
     {
         mName = other.mName;
         mPluginId = other.mPluginId;
-        mPlugin = other.mPlugin;
+        //mPlugin = other.mPlugin;
 
         mDescription = other.mDescription;
 
@@ -134,7 +134,7 @@ public:
         other.mMap.clear();
 
         other.mPluginId = nullptr;
-        other.mPlugin = nullptr;
+        //other.mPlugin = nullptr;
         
         return *this;
     }

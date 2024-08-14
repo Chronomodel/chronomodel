@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -42,8 +42,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "StateKeys.h"
 
 EventConstraint::EventConstraint():Constraint(),
-mEventFrom(0),
-mEventTo(0)
+    mEventFrom(nullptr),
+    mEventTo(nullptr)
 {
 
 }
@@ -71,8 +71,8 @@ void EventConstraint::copyFrom(const Constraint& c)
 
 EventConstraint::~EventConstraint()
 {
-    mEventFrom = 0;
-    mEventTo = 0;
+    mEventFrom = nullptr;
+    mEventTo = nullptr;
 }
 
 EventConstraint EventConstraint::fromJson(const QJsonObject& json)

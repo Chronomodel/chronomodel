@@ -40,6 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PhaseItem.h"
 #include "ArrowItem.h"
 #include "ArrowTmpItem.h"
+#include "Project.h"
 #include "QtUtilities.h"
 #include "StateKeys.h"
 
@@ -207,7 +208,7 @@ void PhasesScene::createSceneFromState()
     for (QJsonArray::const_iterator iPhase= phases.constBegin(); iPhase != phases.constEnd(); ++iPhase) {
              // CREATE ITEM
         PhaseItem* phaseItem = new PhaseItem(this, iPhase->toObject());
-        phaseItem->setPhase(iPhase->toObject());
+        //phaseItem->setPhase(iPhase->toObject());
         mItems.append(phaseItem);
         addItem(phaseItem);
     }
@@ -336,6 +337,7 @@ void PhasesScene::updateSceneFromState()
                     item->setPhase(phase);
               //  }
             }
+            item = nullptr;
         }
         if (!itemExists) {
             // CREATE ITEM
@@ -365,6 +367,7 @@ void PhasesScene::updateSceneFromState()
                     phaseItem->setPos(pt.x() + arc4random() % posDelta - posDelta/2,
                                       pt.y() + arc4random() % posDelta - posDelta/2);
 #endif
+                    gview = nullptr;
                 }
 
                 // the new phase item is created randomly near the central point (0, 0)
@@ -395,6 +398,7 @@ void PhasesScene::updateSceneFromState()
             removeItem(constraintItem);
             mConstraintItems.removeOne(constraintItem);
             delete constraintItem;
+            constraintItem = nullptr;
         }
     }
     blockSignals(false);
@@ -408,7 +412,7 @@ void PhasesScene::updateSceneFromState()
         bool itemExists = false;
         for (const auto &ci : mConstraintItems) {
             ci->updatePosition();
-            const QJsonObject &constraintItem = ci->data();
+            const QJsonObject& constraintItem = ci->data();
             if (constraintItem.value(STATE_ID).toInt() == constraint.value(STATE_ID).toInt()) {
                 itemExists = true;
                 if (constraint != constraintItem) {
@@ -600,10 +604,10 @@ bool PhasesScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent*)
     if (phaseClicked ) {
         if (current && (phaseClicked != current)) {
             if (mDrawingArrow && constraintAllowed(current, phaseClicked)) {
-                    createConstraint(current, phaseClicked);
-                    mTempArrow->setVisible(false);
-                    mDrawingArrow = false;
-                   sendUpdateProject("Phase constraint created", true, true);
+                createConstraint(current, phaseClicked);
+                mTempArrow->setVisible(false);
+                mDrawingArrow = false;
+                sendUpdateProject("Phase constraint created", true, true);
 
               }
         }
@@ -613,6 +617,9 @@ bool PhasesScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent*)
         updateStateSelectionFromItem();
         sendUpdateProject("No Item selected", true, false);//  bool notify = true, bool storeUndoCommand = false
     }
+
+    phaseClicked = nullptr;
+    current = nullptr;
 
     return true;
 }
@@ -639,7 +646,7 @@ void PhasesScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent*)
             mTempArrow->setLocked(false);
         }
     }
-
+    current = nullptr;
 }
 
 void PhasesScene::itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)

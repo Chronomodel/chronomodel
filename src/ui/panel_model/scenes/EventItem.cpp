@@ -49,7 +49,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "CurveSettings.h"
 #include "qlocale.h"
 
-EventItem::EventItem(EventsScene* scene, const QJsonObject &event, const QJsonObject &StudyPeriodSettings, QGraphicsItem* parent):
+EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& StudyPeriodSettings, QGraphicsItem* parent):
     AbstractItem(scene, parent),
     mStudyPeriodSettings(StudyPeriodSettings),
     mWithSelectedPhase (false),
@@ -57,6 +57,7 @@ EventItem::EventItem(EventsScene* scene, const QJsonObject &event, const QJsonOb
     mNodeSkin (7.),
     mPhasesHeight (20)
 {
+
     mScene = static_cast<AbstractScene*>(scene);
     mEltsHeight =  DateItem::mTitleHeight +  DateItem::mEltsHeight ;
     mGreyedOut = false;
@@ -81,6 +82,7 @@ EventItem::~EventItem()
 {
     mData = QJsonObject();
     remove_dateItems();
+    mScene = nullptr;
 }
 
 void EventItem::remove_dateItems()
@@ -105,7 +107,7 @@ void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
     EventsScene* itemScene = dynamic_cast<EventsScene*>(mScene);
 
-    if ((this != itemScene->currentEvent()) && (!itemScene->mDrawingArrow) && (e->modifiers() != Qt::ControlModifier)) {// && (!itemScene->mSelectKeyIsDown)) {
+    if ((this != itemScene->currentEvent()) && (!itemScene->mDrawingArrow) && (e->modifiers() != Qt::ControlModifier)) {
         itemScene->clearSelection();
     }
 
@@ -209,8 +211,9 @@ bool EventItem::withSelectedDate() const
 {
     const QList<QGraphicsItem*>& datesItemsList = childItems();
     for (const QGraphicsItem* date : datesItemsList) {
-        if (date && date->isSelected())
-            return true;
+        if (date != nullptr )
+            if (date->isSelected())
+                return true;
     }
     return false;
 }

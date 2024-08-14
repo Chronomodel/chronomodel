@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -41,16 +41,17 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "EventsScene.h"
 #include "Painting.h"
+#include "Project.h"
 #include "QtUtilities.h"
 #include "Painting.h"
 #include "GraphView.h"
 #include "Bound.h"
-#include "Project.h"
 
 #include <QtWidgets>
 
 
-EventKnownItem::EventKnownItem(EventsScene* eventsScene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):EventItem(eventsScene, event, settings, parent),
+EventKnownItem::EventKnownItem(EventsScene* eventsScene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):
+    EventItem(eventsScene, event, settings, parent),
     mThumbH (20)
 {
     mEltsHeight = 60;
@@ -82,8 +83,7 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     const double tmax = settings.value(STATE_SETTINGS_TMAX).toDouble();
     const double step = settings.value(STATE_SETTINGS_STEP).toDouble();
 
-    Bound bound ;
-    bound = Bound::fromJson(event);
+    Bound bound = Bound::fromJson(event);
 
     if ( (tmin<=bound.mFixed) && (bound.mFixed<=tmax) ) {
         bound.updateValues(tmin, tmax, step);

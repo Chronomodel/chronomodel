@@ -135,13 +135,13 @@ public:
     static QString getWiggleDesc(const QJsonObject &json); // used in CalibrationView
     PluginAbstract* getPlugin() const {return mPlugin;}
 
-    void reset();
+    void clear();
 
-    void calibrate(const StudyPeriodSettings &priod_settings, Project &project, bool truncate); // used for item
-    inline void calibrate(Project &project, bool truncate = true) {calibrate(mSettings, project, truncate);};
+    void calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<Project> project, bool truncate); // used for item
+    inline void calibrate(std::shared_ptr<Project> project, bool truncate = true) {calibrate(mSettings, project, truncate);};
 
-    void calibrateWiggle(const StudyPeriodSettings &settings, Project &project);
-    inline void calibrateWiggle(Project &project) {calibrateWiggle(mSettings, project);};
+    void calibrateWiggle(const StudyPeriodSettings &settings, std::shared_ptr<Project> project);
+    inline void calibrateWiggle(std::shared_ptr<Project> project) {calibrateWiggle(mSettings, project);};
 
     double getLikelihoodFromCalib(const double &t) const;
     double getLikelihoodFromWiggleCalib(const double &t) const;
@@ -216,7 +216,7 @@ protected:
 };
 
 
-CalibrationCurve generate_mixingCalibration(const QList<Date> &dates, const QString description = "Mixing Calibrations");
+std::shared_ptr<CalibrationCurve> generate_mixingCalibration(const QList<Date> &dates, const QString description = "Mixing Calibrations");
 
 
 #endif

@@ -44,6 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Project.h"
 #include "QtUtilities.h"
 #include "ModelUtilities.h"
+#include "StdUtilities.h"
 
 #include <QDebug>
 #include <QTime>
@@ -56,11 +57,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #endif
 
 
-MCMCLoop::MCMCLoop(Project &project):
+MCMCLoop::MCMCLoop(std::shared_ptr<ModelCurve> model):
     mChainIndex (0),
-    mState (eBurning),
-    mProject(project)
+    mState (eBurning)
 {
+    mModel = model;//.lock();
     mAbortedReason = QString();
 #ifdef _WIN32
     DWORD process_id =GetCurrentProcessId();
@@ -75,7 +76,7 @@ MCMCLoop::MCMCLoop(Project &project):
 
 MCMCLoop::~MCMCLoop()
 {
-    mProject.mLoop = nullptr;
+    //mProjectLock->mLoop = nullptr;
     //mProject = nullptr;
 }
 
@@ -113,7 +114,7 @@ const QList<ChainSpecs> &MCMCLoop::chains() const
 
 QString MCMCLoop::initialize_time()
 {
-    const auto &mModel= mProject.mModel;
+    //const auto &mModel= mModel;
     tminPeriod = mModel->mSettings.mTmin;
     tmaxPeriod = mModel->mSettings.mTmax;
 
@@ -258,7 +259,7 @@ QString MCMCLoop::initialize_time()
                     // On initialise les theta près des dates ti
                     // ----------------------------------------------------------------
 
-                    uEvent->mMixingCalibrations = new CalibrationCurve(generate_mixingCalibration(uEvent->mDates));
+                    uEvent->mMixingCalibrations = generate_mixingCalibration(uEvent->mDates);
 
                     if (max == min) {
                         uEvent->mTheta.mX = min;
@@ -573,21 +574,21 @@ void MCMCLoop::run()
 
     // initVariableForChain() reserve memory space
 
-    mProject.mModel->initVariablesForChain();
+    mModel->initVariablesForChain();
 
-    mProject.mModel->mLogInit += ModelUtilities::getMCMCSettingsLog(mProject.mModel);
+    mModel->mLogInit += ModelUtilities::getMCMCSettingsLog(mModel);
 
     QStringList seeds;
     for (auto& chain : chains())
          seeds << QString::number(chain.mSeed);
 
-    mProject.mModel->mLogInit += line(tr("List of used chain seeds (to be copied for re-use in MCMC Settings) : ") + seeds.join(";"));
+    mModel->mLogInit += line(tr("List of used chain seeds (to be copied for re-use in MCMC Settings) : ") + seeds.join(";"));
 
 
      // copie la liste des pointeurs, pour garder l'ordre initiale des Events;
      // le mécanisme d'initialisation pour les courbes modifie cette liste, hors il faut la réablir pour les chaines suivantes
-     std::vector<Event*> initListEvents (mProject.mModel->mEvents.size());
-     std::copy(mProject.mModel->mEvents.begin(), mProject.mModel->mEvents.end(), initListEvents.begin() );
+     std::vector<Event*> initListEvents (mModel->mEvents.size());
+     std::copy(mModel->mEvents.begin(), mModel->mEvents.end(), initListEvents.begin() );
 
     unsigned estimatedTotalIter = (unsigned)((int)mLoopChains.size() *(mLoopChains.at(0).mIterPerBurn + mLoopChains.at(0).mIterPerBatch*mLoopChains.at(0).mMaxBatchs + mLoopChains.at(0).mIterPerAquisition));
     unsigned iterDone = 0;
@@ -619,11 +620,11 @@ void MCMCLoop::run()
         chain.mInitElapsedTime = initTime.elapsed();
         initTime.~QElapsedTimer();
 
-        mProject.mModel->mLogInit += "<hr>";
-        mProject.mModel->mLogInit += line(textBold(tr("INIT CHAIN %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()))));
-        mProject.mModel->mLogInit += line("Seed : " + QString::number(chain.mSeed));
+        mModel->mLogInit += "<hr>";
+        mModel->mLogInit += line(textBold(tr("INIT CHAIN %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()))));
+        mModel->mLogInit += line("Seed : " + QString::number(chain.mSeed));
     qDebug()<<" mLogInit Seed :  "<< QString::number(chain.mSeed);
-        mProject.mModel->mLogInit += ModelUtilities:: modelStateDescriptionHTML(mProject.mModel);
+        mModel->mLogInit += ModelUtilities:: modelStateDescriptionHTML(mModel);
         /*
 // Save mLogInit for debug
 #ifdef DEBUG
@@ -748,18 +749,18 @@ void MCMCLoop::run()
         emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()) + " : " + "Adapting ; Total Estimated time left " + DHMS(interTime)));
 
 
-        mProject.mModel->mLogAdapt += "<hr>";
-        mProject.mModel->mLogAdapt += line(textBold(tr("ADAPTATION FOR CHAIN %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()))) );
+        mModel->mLogAdapt += "<hr>";
+        mModel->mLogAdapt += line(textBold(tr("ADAPTATION FOR CHAIN %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()))) );
 
         if (chain.mBatchIndex < chain.mMaxBatchs) {
-            mProject.mModel->mLogAdapt += line("Adapt OK at batch : " + QString::number(chain.mBatchIndex) + "/" + QString::number(chain.mMaxBatchs));
+            mModel->mLogAdapt += line("Adapt OK at batch : " + QString::number(chain.mBatchIndex) + "/" + QString::number(chain.mMaxBatchs));
 
         } else {
-            mProject.mModel->mLogAdapt += line(textRed("Warning : Not adapted after " + QString::number(chain.mBatchIndex) + " batches"));
+            mModel->mLogAdapt += line(textRed("Warning : Not adapted after " + QString::number(chain.mBatchIndex) + " batches"));
         }
 
-        mProject.mModel->mLogAdapt += ModelUtilities::modelStateDescriptionHTML(mProject.mModel) ;
-        mProject.mModel->mLogAdapt += "<hr>";
+        mModel->mLogAdapt += ModelUtilities::modelStateDescriptionHTML(mModel) ;
+        mModel->mLogAdapt += "<hr>";
 
         chain.mAdaptElapsedTime = adaptTime.elapsed();
         adaptTime.~QElapsedTimer();
@@ -807,7 +808,7 @@ void MCMCLoop::run()
                      ++chain.mRealyAccepted;
                 }
 
-                mProject.mModel->memo_accept(mChainIndex);
+                mModel->memo_accept(mChainIndex);
 
             } else {
                     thinningIdx++;
@@ -838,13 +839,13 @@ void MCMCLoop::run()
         }
         chain.mAcquisitionElapsedTime = aquisitionTime.elapsed();
         aquisitionTime.~QElapsedTimer();
-        mProject.mModel->mLogResults += line(tr("Acquisition time elapsed %1").arg(DHMS(chain.mAcquisitionElapsedTime)));
+        mModel->mLogResults += line(tr("Acquisition time elapsed %1").arg(DHMS(chain.mAcquisitionElapsedTime)));
 
         // rétablissement de l'ordre des Events, indispensable en cas de calcul de courbe. Car le update modifie l'ordre des events et utile pour la sauvegarde de ChronoModel_Bash
-        std::copy(initListEvents.begin(), initListEvents.end(), mProject.mModel->mEvents.begin() );
+        std::copy(initListEvents.begin(), initListEvents.end(), mModel->mEvents.begin() );
     }
 
-    mProject.mModel->mChains = mLoopChains;
+    mModel->mChains = mLoopChains;
 
     //-----------------------------------------------------------------------
 
