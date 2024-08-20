@@ -725,7 +725,7 @@ QList<double> calculRepartition(const QMap<double, double>  &calib)
     long double lastV = 0;
     long double rep = 0.;
 
-
+#if QT_VERSION >= QT_VERSION_CHECK(6, 4, 0)
     for (auto [key, value] : calib.asKeyValueRange()) {
         if (value != 0. && lastV != 0.)
             rep += (lastV + value); // step is constant
@@ -734,7 +734,16 @@ QList<double> calculRepartition(const QMap<double, double>  &calib)
 
         repartitionTemp.append(rep);
     }
-
+#else
+    for (auto it = calib.begin(); it != calib.end(); ++it) {
+        //double key = it.key();
+        double value = it.value();
+        if (value != 0. && lastV != 0.)
+            rep += (lastV + value); // step is constant
+        lastV = value;
+        repartitionTemp.append(rep);
+    }
+#endif
     // Normalize repartition
     QList<double> repartition;
     for (auto&& v : repartitionTemp)
