@@ -71,6 +71,9 @@ public:
     static QString convertToAppSettingsFormatStr(const double valueToFormat, const bool forCSV = false);
     static QMap<double, double> convertMapToAppSettingsFormat(const QMap<double, double> &mapToFormat);
 
+    static std::map<double, double> convertMapToAppSettingsFormat(const std::map<double, double> &mapToFormat);
+    static std::map<double, double> convertMapFromAppSettingsFormat(const std::map<double, double> &mapToFormat);
+
     static double convertToFormat(const double valueToFormat, const FormatDate format);
     static double convertFromFormat(const double formattedValue, const FormatDate format);
     /**

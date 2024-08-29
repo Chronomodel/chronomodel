@@ -155,6 +155,11 @@ GraphCurve densityCurve(const QMap<double, double> data,
                                 const QColor &lineColor,
                                 const Qt::PenStyle penStyle = Qt::SolidLine,
                                 const QBrush& brush = Qt::NoBrush) ;
+GraphCurve densityCurve(const std::map<double, double> data,
+                        const QString &name,
+                        const QColor &lineColor,
+                        const Qt::PenStyle penStyle = Qt::SolidLine,
+                        const QBrush& brush = Qt::NoBrush) ;
 
 GraphCurve FunctionCurve(const QMap<double, double> data,
                                 const QString &name,
@@ -165,6 +170,8 @@ GraphCurve FunctionCurve(const QMap<double, double> data,
 
 GraphCurve HPDCurve (QMap<double, double> data,
                      const QString &name, const QColor &color, const bool is_visible = false) ;
+GraphCurve HPDCurve (std::map<double, double> data,
+                    const QString &name, const QColor &color, const bool is_visible = false) ;
 
 GraphCurve topLineSection (const std::pair<double, double> &section,
                            const QString &name,
@@ -184,6 +191,8 @@ GraphCurve shapeCurve (const QMap<double, double> &dataInf, const QMap<double, d
                        const QString &name, const QColor &lineColor, const Qt::PenStyle penStyle,
                        const QBrush &brush, const bool is_visible = false) ;
 
-
+GraphCurve shapeCurve (const std::map<double, double> &dataInf, const std::map<double, double> &dataSup,
+                      const QString &name, const QColor &lineColor, const Qt::PenStyle penStyle,
+                      const QBrush &brush, const bool is_visible = false) ;
 
 #endif

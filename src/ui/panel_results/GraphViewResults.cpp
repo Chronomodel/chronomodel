@@ -53,7 +53,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 int GraphViewResults::mHeightForVisibleAxis = int (4 * AppSettings::heigthUnit()); //look ResultsView::applyAppSettings()
 
-GraphViewResults::GraphViewResults(QWidget *parent):QWidget(parent),
+GraphViewResults::GraphViewResults(QWidget *parent):
+    QWidget(parent),
     mCurrentTypeGraph(ePostDistrib),
     mCurrentVariableList(QList<variable_t>(eThetaEvent)),
     mShowAllChains(true),
@@ -116,7 +117,11 @@ GraphViewResults::GraphViewResults(QWidget *parent):QWidget(parent),
 
 GraphViewResults::~GraphViewResults()
 {
+    delete mOverLaySelect;
+    mOverLaySelect = nullptr;
 
+    delete mGraph;
+    mGraph = nullptr;
 }
 
 void GraphViewResults::generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList)
@@ -139,7 +144,7 @@ void GraphViewResults::setSettings(const StudyPeriodSettings& settings)
     mSettings = settings;
 }
 
-void GraphViewResults::setMCMCSettings(const MCMCSettings& mcmc, const QList<ChainSpecs>& chains)
+void GraphViewResults::setMCMCSettings(const MCMCSettings& mcmc, const std::vector<ChainSpecs>& chains)
 {
     mMCMCSettings = mcmc;
     mChains = chains;
@@ -498,18 +503,19 @@ void GraphViewResults::paintEvent(QPaintEvent* )
 }
 
 
-void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
+void GraphViewResults::generateTraceCurves(const std::vector<ChainSpecs> &chains,
                                            MetropolisVariable* variable,
                                            const QString& name)
 {
     QString prefix = name.isEmpty() ? name : name + " ";
 
-    for (int i = 0; i < chains.size(); ++i) {
+    for (size_t i = 0; i < chains.size(); ++i) {
         GraphCurve curve;
 
         curve.mType = GraphCurve::eQVectorData;
         curve.mName = prefix + "Trace " + QString::number(i);
-        curve.mDataVector = variable->fullTraceForChain(chains, i);
+        const auto &v = variable->fullTraceForChain(chains, i);
+        curve.mDataVector = QList(v.begin(), v.end());
         curve.mPen.setColor(Painting::chainColors.at(i));
         mGraph->add_curve(curve);
 
@@ -532,10 +538,10 @@ void GraphViewResults::generateTraceCurves(const QList<ChainSpecs> &chains,
 }
 
 
-void GraphViewResults::generateAcceptCurves(const QList<ChainSpecs> &chains,
+void GraphViewResults::generateAcceptCurves(const std::vector<ChainSpecs> &chains,
                                             MHVariable* variable)
 {
-    for (int i = 0; i < chains.size(); ++i) {
+    for (size_t i = 0; i < chains.size(); ++i) {
         GraphCurve curve;
         curve.mName = "Accept " + QString::number(i);
         curve.mType = GraphCurve::eQVectorData;
@@ -546,9 +552,9 @@ void GraphViewResults::generateAcceptCurves(const QList<ChainSpecs> &chains,
     mGraph->add_curve(horizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine));
 }
 
-void GraphViewResults::generateCorrelCurves(const QList<ChainSpecs> &chains,
+void GraphViewResults::generateCorrelCurves(const std::vector<ChainSpecs> &chains,
                                             MHVariable* variable){
-    for (int i = 0; i < chains.size(); ++i) {
+    for (size_t i = 0; i < chains.size(); ++i) {
         GraphCurve curve;
         curve.mName = "Correl " + QString::number(i);
         curve.mType = GraphCurve::eQVectorData;

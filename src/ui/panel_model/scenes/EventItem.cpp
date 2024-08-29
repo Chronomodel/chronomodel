@@ -47,18 +47,29 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Project.h"
 #include "ArrowTmpItem.h"
 #include "CurveSettings.h"
-#include "qlocale.h"
+#include "StateKeys.h"
 
-EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonObject& StudyPeriodSettings, QGraphicsItem* parent):
-    AbstractItem(scene, parent),
-    mStudyPeriodSettings(StudyPeriodSettings),
-    mWithSelectedPhase (false),
-    mThumbVisible (true),
-    mNodeSkin (7.),
-    mPhasesHeight (20)
+#include <QLocale>
+
+EventItem::EventItem(QGraphicsItem* parent):
+    AbstractItem(parent),
+    mStudyPeriodSettings(QJsonObject()),
+    mWithSelectedPhase(false),
+    mThumbVisible(true),
+    mNodeSkin(7.),
+    mPhasesHeight(20)
 {
 
-    mScene = static_cast<AbstractScene*>(scene);
+}
+
+EventItem::EventItem(EventsScene* scene, const QJsonObject& eventObj, const QJsonObject& StudyPeriodSettings, QGraphicsItem* parent):
+    AbstractItem(scene, parent),
+    mStudyPeriodSettings(StudyPeriodSettings),
+    mWithSelectedPhase(false),
+    mThumbVisible(true),
+    mNodeSkin(7.),
+    mPhasesHeight(20)
+{
     mEltsHeight =  DateItem::mTitleHeight +  DateItem::mEltsHeight ;
     mGreyedOut = false;
 
@@ -73,8 +84,8 @@ EventItem::EventItem(EventsScene* scene, const QJsonObject& event, const QJsonOb
 
     mCurveLineHeight =  fm.height();
 
-    if (Event::Type (event.value(STATE_EVENT_TYPE).toInt()) == Event::eDefault )
-        EventItem::setEvent(event, StudyPeriodSettings);
+    if (Event::Type (eventObj.value(STATE_EVENT_TYPE).toInt()) == Event::eDefault )
+        EventItem::setEvent(eventObj, StudyPeriodSettings);
 
 }
 
@@ -82,19 +93,28 @@ EventItem::~EventItem()
 {
     mData = QJsonObject();
     remove_dateItems();
-    mScene = nullptr;
 }
 
 void EventItem::remove_dateItems()
 {
     QList<QGraphicsItem*> dateItems = childItems();
     const auto dateItemsSize = dateItems.size() - 1;
-    for (auto j = dateItemsSize; j >= 0; --j) {
+    /*for (auto j = dateItemsSize; j >= 0; --j) {
         if (mScene->getItemsList().contains(dateItems.first()))
             mScene->removeItem(dateItems.first());
 
         delete dateItems.first();
         dateItems.removeFirst();
+
+    }*/
+    for (auto j = dateItemsSize; j >= 0; --j) {
+        auto d = dateItems.at(j);
+        if (mScene->getItemsList().contains(d))
+            mScene->removeItem(d);
+
+        delete d;
+        d = nullptr;
+        dateItems.removeAt(j);
 
     }
     dateItems.clear();
@@ -119,6 +139,7 @@ void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
     }
 
     QGraphicsObject::mousePressEvent(e);
+    itemScene = nullptr;
 }
 
 #pragma mark Event Managment
@@ -166,13 +187,14 @@ void EventItem::setEvent(const QJsonObject &event, const QJsonObject &StudyPerio
             event.value(STATE_COLOR_GREEN).toInt(),
             event.value(STATE_COLOR_BLUE).toInt());
 
-        for (int i = 0; i < dates.size(); ++i) {
-            const QJsonObject date = dates.at(i).toObject();
+       for (const auto& date : dates) {
+            const QJsonObject& dateObj = date.toObject();
 
             try {
-                DateItem* dateItem = new DateItem((EventsScene*) (mScene), date, color, StudyPeriodSettings);
+                DateItem* dateItem = new DateItem(static_cast<EventsScene*>(mScene), dateObj, color, StudyPeriodSettings);
                 dateItem->setParentItem(this);
                 dateItem->setGreyedOut(mGreyedOut);
+                dateItem = nullptr;
             }
             catch(QException &e){
                 QMessageBox message(QMessageBox::Critical,
@@ -183,6 +205,7 @@ void EventItem::setEvent(const QJsonObject &event, const QJsonObject &StudyPerio
                 message.exec();
             }
         }
+
 
     }
 

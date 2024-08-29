@@ -163,7 +163,7 @@ protected:
 
     StudyPeriodSettings mSettings;
     MCMCSettings mMCMCSettings;
-    QList<ChainSpecs> mChains;
+    std::vector<ChainSpecs> mChains;
 
     QColor mMainColor;
 
@@ -184,7 +184,7 @@ public:
     virtual void mousePressEvent(QMouseEvent *event);
 
     void setSettings(const StudyPeriodSettings &settings);
-    void setMCMCSettings(const MCMCSettings &mcmc, const QList<ChainSpecs> &chains);
+    void setMCMCSettings(const MCMCSettings &mcmc, const std::vector<ChainSpecs> &chains);
 
     void setMainColor(const QColor &color);
    // void toggle(const QRect& geometry); //useless
@@ -214,6 +214,7 @@ public:
 
     void setShowNumericalResults(const bool show);
 
+    QFont getGraphFont() const {return mGraphFont;};
     inline GraphView* getGraph() const {return mGraph; }
     inline QList<variable_t> getCurrentVariables() const {return mCurrentVariableList;}
     inline graph_t getCurrentType() const { return mCurrentTypeGraph; }
@@ -224,11 +225,11 @@ public:
     QString getTextAreaToPlainText() const { return mStatArea->toPlainText();}
 
 
-    void generateTraceCurves(const QList<ChainSpecs> &chains, MetropolisVariable* variable, const QString& name = QString());
+    void generateTraceCurves(const std::vector<ChainSpecs> &chains, MetropolisVariable* variable, const QString& name = QString());
 
-    void generateAcceptCurves(const QList<ChainSpecs> &chains, MHVariable* variable);
+    void generateAcceptCurves(const std::vector<ChainSpecs> &chains, MHVariable* variable);
 
-    void generateCorrelCurves(const QList<ChainSpecs> &chains, MHVariable* variable);
+    void generateCorrelCurves(const std::vector<ChainSpecs> &chains, MHVariable* variable);
 
     // This method is used to recreate all curves in mGraph.
     // It is vitual because we want a different behavior in sub-classes (GraphViewDate, GraphViewEvent and GraphViewPhase)
@@ -283,6 +284,7 @@ class Filter : public QObject {
     QPointer<QWidget> m_overlayOn;
 public:
     Filter(QObject * parent = nullptr) : QObject{parent} {}
+
 protected:
     bool eventFilter(QObject * obj, QEvent * ev) override {
         //if (!obj->isWidgetType()) return false;

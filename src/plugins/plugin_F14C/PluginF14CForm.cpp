@@ -69,6 +69,7 @@ PluginF14CForm::PluginF14CForm(PluginF14C* plugin, QWidget* parent, Qt::WindowFl
     mRplusValidator->setBottom(0.0);
     mRplusValidator->setTop(10.0);
     mErrorEdit->setValidator(mRplusValidator);
+    setTabOrder(mAverageEdit, mErrorEdit);
 
     connect(mAverageEdit, &QLineEdit::textChanged, this, &PluginF14CForm::valueIsValid);
     connect(mErrorEdit, &QLineEdit::textChanged, this, &PluginF14CForm::errorIsValid);

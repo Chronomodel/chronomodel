@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -41,15 +41,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define CONSTRAINT_H
 
 #include <QJsonObject>
-#include <QObject>
 
 
-
-class Constraint: public QObject
+class Constraint
 {
 public:
-    Constraint(QObject* parent = 0);
-    Constraint(const Constraint& ec, QObject* parent = 0);
+    Constraint();
+    Constraint(const Constraint& ec);
+    explicit Constraint(const QJsonObject& json);
+
     Constraint& operator=(const Constraint& ec);
     virtual void copyFrom(const Constraint& ec);
     virtual ~Constraint();

@@ -49,7 +49,7 @@ class EventItem : public AbstractItem
 {
     Q_OBJECT
 protected:
-    //QSize mSize;
+
     QJsonObject mStudyPeriodSettings;
     bool mWithSelectedPhase;
     bool mThumbVisible;
@@ -61,10 +61,21 @@ protected:
     qreal mCurveTextHeight;
 
 public:
-    EventItem(EventsScene* scene, const QJsonObject &event, const QJsonObject &StudyPeriodSettings, QGraphicsItem* parent = nullptr);
+    EventItem(QGraphicsItem* parent = nullptr);
+
+    explicit EventItem(EventsScene* scene, const QJsonObject &eventObj, const QJsonObject &StudyPeriodSettings, QGraphicsItem* parent = nullptr);
     virtual ~EventItem();
+
+    enum { Type = UserType + 11 };
+
+    int type() const override
+    {
+        // Enable the use of qgraphicsitem_cast with this item.
+        return Type;
+    };
+
     void remove_dateItems();
-    virtual void setGreyedOut(const bool greyedOut);
+    virtual void setGreyedOut(const bool greyedOut) override;
 
     void setWithSelectedPhase(const bool selected) {mWithSelectedPhase = selected;}
     inline bool withSelectedPhase() { return mWithSelectedPhase;}
@@ -81,13 +92,13 @@ public:
     bool withSelectedDate() const;
     bool isCurveNode() const;
 
-    void mousePressEvent(QGraphicsSceneMouseEvent* e);
+    void mousePressEvent(QGraphicsSceneMouseEvent* e) override;
 
     void updateGreyedOut();
 
 protected:
-    virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
-    virtual void dropEvent(QGraphicsSceneDragDropEvent* e);
+    virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
+    virtual void dropEvent(QGraphicsSceneDragDropEvent* e) override;
 
     int getNumberCurveLines(const CurveSettings &cs) const;
     void paintBoxCurveParameter (QPainter *painter, const QRectF &rectBox, const CurveSettings &cs);

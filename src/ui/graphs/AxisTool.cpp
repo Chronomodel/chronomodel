@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -43,18 +43,17 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphViewAbstract.h"
 
 #include <QtWidgets>
-#include <iostream>
 
 AxisTool::AxisTool():
-mIsHorizontal(true),
-mShowSubs(true),
-mShowSubSubs(true),
-mShowText(true),
-mMinMaxOnly(false),
-mShowArrow(false),
-mMajorScale (100),
-mMinorScaleCount (4),
-mAxisColor(0, 0, 0)
+    mIsHorizontal(true),
+    mShowSubs(true),
+    mShowSubSubs(true),
+    mShowText(true),
+    mMinMaxOnly(false),
+    mShowArrow(false),
+    mMajorScale (100),
+    mMinorScaleCount (4),
+    mAxisColor(0, 0, 0)
 {
 
 }
@@ -356,9 +355,10 @@ QList<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSize,
 }
 
 
-AxisWidget::AxisWidget(DateConversion funct, QWidget* parent):QWidget(parent),
-mMarginLeft(0.),
-mMarginRight(0.)
+AxisWidget::AxisWidget(DateConversion funct, QWidget* parent):
+    QWidget(parent),
+    mMarginLeft(0.),
+    mMarginRight(0.)
 {
     mFormatFunct = funct;
 }

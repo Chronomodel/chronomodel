@@ -46,6 +46,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ModelUtilities.h"
 #include "QtUtilities.h"
+#include "StateKeys.h"
 #include "StdUtilities.h"
 #include "DateUtils.h"
 
@@ -62,8 +63,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 extern QString res_file_version;
 
-Model::Model(QObject* parent):
-    QObject(parent),
+Model::Model():
+    mEvents(QList<Event*>()),
+    mPhases(QList<Phase*>()),
+    mEventConstraints(QList<EventConstraint*>()),
+    mPhaseConstraints(QList<PhaseConstraint*>()),
     mNumberOfPhases(0),
     mNumberOfEvents(0),
     mNumberOfDates(0),
@@ -75,8 +79,11 @@ Model::Model(QObject* parent):
     
 }
 
-Model::Model(const QJsonObject& json, QObject* parent):
-    QObject(parent),
+Model::Model(const QJsonObject& json):
+    mEvents(QList<Event*>()),
+    mPhases(QList<Phase*>()),
+    mEventConstraints(QList<EventConstraint*>()),
+    mPhaseConstraints(QList<PhaseConstraint*>()),
     mNumberOfPhases(0),
     mNumberOfEvents(0),
     mNumberOfDates(0),
@@ -100,10 +107,13 @@ Model::Model(const QJsonObject& json, QObject* parent):
     if (json.contains(STATE_PHASES)) {
         const QJsonArray phases = json.value(STATE_PHASES).toArray();
         mNumberOfPhases = (int) phases.size();
-        for (const auto json : phases) {
-            const QJsonObject& JSONph = json.toObject();
-            Phase* ph = new Phase(JSONph, this);
+
+        for (const auto& json : phases) {
+            const QJsonObject& phaseObj = json.toObject();
+            const auto& ph = new Phase(phaseObj);
             mPhases.append(ph);
+            //ph = nullptr;
+
         }
     }
 
@@ -114,17 +124,17 @@ Model::Model(const QJsonObject& json, QObject* parent):
         QJsonArray events = json.value(STATE_EVENTS).toArray();
         mNumberOfEvents = (int) events.size();
 
-        for (qsizetype i = 0; i < events.size(); ++i) {
-            const QJsonObject& JSONevent = events.at(i).toObject();
+        for (const auto& event : events) {
+            const QJsonObject& eventObj = event.toObject();
 
-            if (JSONevent.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
+            if (eventObj.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
                 try {
-                    auto ev = new Event(JSONevent);
-                    
-                    mEvents.append(ev);
-                    ev = nullptr;
-                    mNumberOfDates += JSONevent.value(STATE_EVENT_DATES).toArray().size();
+                   const auto& ev = new Event(eventObj);
+                   mEvents.append(ev);
 
+                  
+                    mNumberOfDates += eventObj.value(STATE_EVENT_DATES).toArray().size();
+                    //ev = nullptr;
                 }
                 catch(QString error){
                     QMessageBox message(QMessageBox::Critical,
@@ -135,10 +145,10 @@ Model::Model(const QJsonObject& json, QObject* parent):
                     message.exec();
                 }
             } else {
-                Bound* ek = new Bound(JSONevent);//, std::shared_ptr<Model>(this));
-                ek->updateValues(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
+                const auto& ek = new Bound(eventObj);
                 mEvents.append(ek);
-                ek = nullptr;
+
+
             }
         }
     }
@@ -150,20 +160,20 @@ Model::Model(const QJsonObject& json, QObject* parent):
     if (json.contains(STATE_EVENTS_CONSTRAINTS)) {
         const QJsonArray constraints = json.value(STATE_EVENTS_CONSTRAINTS).toArray();
         for (qsizetype i=0; i<constraints.size(); ++i) {
-            const QJsonObject constraint = constraints.at(i).toObject();
-            EventConstraint* c = new EventConstraint(EventConstraint::fromJson(constraint));
+            const QJsonObject &constraintObj = constraints.at(i).toObject();
+            const auto& c = new EventConstraint(constraintObj);
             mEventConstraints.append(c);
-            c = nullptr;
+
         }
     }
 
     if (json.contains(STATE_PHASES_CONSTRAINTS)) {
         const QJsonArray constraints = json.value(STATE_PHASES_CONSTRAINTS).toArray();
         for (qsizetype i=0; i<constraints.size(); ++i) {
-            const QJsonObject constraint = constraints.at(i).toObject();
-            PhaseConstraint* c = new PhaseConstraint(PhaseConstraint::fromJson(constraint));
+            const QJsonObject& constraintObj = constraints.at(i).toObject();
+            const auto& c = new PhaseConstraint(constraintObj);
             mPhaseConstraints.append(c);
-            c = nullptr;
+
         }
     }
 
@@ -180,21 +190,20 @@ Model::Model(const QJsonObject& json, QObject* parent):
         for (qsizetype j=0; j<mPhases.size(); ++j) {
             const int phaseId = mPhases.at(j)->mId;
             if (phasesIds.contains(phaseId)) {
-                auto tmpP = mPhases.at(j);
-                mEvents[i]->mPhases.append(tmpP);
-                mPhases[j]->mEvents.append(mEvents[i]);
+                mEvents[i]->mPhases.append(mPhases.at(j));
+                mPhases[j]->mEvents.append(mEvents.at(i));
             }
         }
 
         // Link des events / contraintes d'event
         for (qsizetype j=0; j<mEventConstraints.size(); ++j) {
-            if (mEventConstraints[j]->mFromId == eventId) {
-                mEventConstraints[j]->mEventFrom = mEvents[i];
-                mEvents[i]->mConstraintsFwd.append(mEventConstraints[j]);
+            if (mEventConstraints.at(j)->mFromId == eventId) {
+                mEventConstraints.at(j)->mEventFrom = mEvents[i];
+                mEvents[i]->mConstraintsFwd.append(mEventConstraints.at(j));
                 
-            } else if (mEventConstraints[j]->mToId == eventId) {
-                mEventConstraints[j]->mEventTo = mEvents[i];
-                mEvents[i]->mConstraintsBwd.append(mEventConstraints[j]);
+            } else if (mEventConstraints.at(j)->mToId == eventId) {
+                mEventConstraints.at(j)->mEventTo = mEvents[i];
+                mEvents[i]->mConstraintsBwd.append(mEventConstraints.at(j));
             }
         }
     }
@@ -203,12 +212,12 @@ Model::Model(const QJsonObject& json, QObject* parent):
         const int phaseId = mPhases.at(i)->mId;
         for (qsizetype j=0; j<mPhaseConstraints.size(); ++j) {
             if (mPhaseConstraints.at(j)->mFromId == phaseId) {
-                mPhaseConstraints[j]->mPhaseFrom = mPhases[i];
-                mPhases[i]->mConstraintsNextPhases.append(mPhaseConstraints[j]);
+                mPhaseConstraints.at(j)->mPhaseFrom = mPhases[i];
+                mPhases[i]->mConstraintsNextPhases.append(mPhaseConstraints.at(j));
                 
             } else if (mPhaseConstraints.at(j)->mToId == phaseId) {
                 mPhaseConstraints[j]->mPhaseTo = mPhases[i];
-                mPhases[i]->mConstraintsPrevPhases.append(mPhaseConstraints[j]);
+                mPhases[i]->mConstraintsPrevPhases.append(mPhaseConstraints.at(j));
             }
         }
 
@@ -217,22 +226,31 @@ Model::Model(const QJsonObject& json, QObject* parent):
 
 Model::~Model()
 {
-    qDebug() << "Model::~Model()";
-    for (auto ev : mEvents) {
+    //qDebug() << "[Model::~Model]";
+    /*for (auto ev : mEvents) {
         delete ev;
     }
+   // mEvents.clear();
+   // mEvents.shrink_to_fit();
 
     for (auto ph : mPhases) {
         delete ph;
     }
+   // mPhases.clear();
+   // mPhases.shrink_to_fit();
 
     for (auto ev : mEventConstraints) {
         delete ev;
     }
+   // mEventConstraints.clear();
+   // mEventConstraints.shrink_to_fit();
 
     for (auto ph : mPhaseConstraints) {
         delete ph;
     }
+*/
+   // mPhaseConstraints.clear();
+   // mPhaseConstraints.shrink_to_fit();
 }
 
 void Model::clear()
@@ -316,7 +334,7 @@ void Model::fromJson(const QJsonObject& json)
         const QJsonArray phases = json.value(STATE_PHASES).toArray();
         mNumberOfPhases = (int) phases.size();
         for (const auto json : phases)
-             mPhases.append(new Phase(json.toObject(), this));
+             mPhases.append(new Phase(json.toObject()));
 
     }
 
@@ -348,7 +366,7 @@ void Model::fromJson(const QJsonObject& json)
             } else {
                 Bound* ek = new Bound(JSONevent);//, std::shared_ptr<Model>(this));
                 //*ek = Bound::fromJson(JSONevent);
-                ek->updateValues(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
+                //ek->updateValues(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
                 mEvents.append(ek);
                 ek = nullptr;
             }
@@ -362,20 +380,20 @@ void Model::fromJson(const QJsonObject& json)
     if (json.contains(STATE_EVENTS_CONSTRAINTS)) {
         const QJsonArray constraints = json.value(STATE_EVENTS_CONSTRAINTS).toArray();
         for (auto& co : constraints) {
-            const QJsonObject constraint = co.toObject();
-            EventConstraint* c = new EventConstraint(EventConstraint::fromJson(constraint));
+            const QJsonObject& constraintObj = co.toObject();
+            EventConstraint* c = new EventConstraint(constraintObj);
             mEventConstraints.append(c);
-            c = nullptr;
+            //c = nullptr;
         }
     }
 
     if (json.contains(STATE_PHASES_CONSTRAINTS)) {
         const QJsonArray constraints = json.value(STATE_PHASES_CONSTRAINTS).toArray();
         for (auto& co : constraints) {
-            const QJsonObject constraint = co.toObject();
-            PhaseConstraint* c = new PhaseConstraint(PhaseConstraint::fromJson(constraint));
+            const QJsonObject& constraintObj = co.toObject();
+            PhaseConstraint* c = new PhaseConstraint(constraintObj);
             mPhaseConstraints.append(c);
-            c = nullptr;
+           // c = nullptr;
         }
     }
 
@@ -614,9 +632,9 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
     rows << headers;
 
     int shift = 0;
-    for (qsizetype i = 0; i < mChains.size(); ++i) {
-        int burnAdaptSize = 1 + mChains.at(i).mIterPerBurn + (mChains.at(i).mBatchIndex * mChains.at(i).mIterPerBatch);
-        int runSize = mChains.at(i).mRealyAccepted;
+    for (const ChainSpecs& chain : mChains) {
+        int burnAdaptSize = 1 + chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
+        int runSize = chain.mRealyAccepted;
 
         for (int j = burnAdaptSize; j<burnAdaptSize + runSize; ++j) {
             QStringList l;
@@ -791,7 +809,7 @@ bool Model::isValid()
         }
     }
 
-    // 4 - Pas de circularité sur les contraintes des Event
+    // 4 - Pas de circularité sur les contraintes des Events
     QList<QList<Event*> > eventBranches;
     try {
         eventBranches = ModelUtilities::getAllEventsBranches(mEvents);
@@ -972,7 +990,7 @@ bool Model::isValid()
 }
 
 // Generate model data
-void Model::generateCorrelations(const QList<ChainSpecs> &chains)
+void Model::generateCorrelations(const std::vector<ChainSpecs> &chains)
 {
 #ifdef DEBUG
     qDebug()<<"[Model::generateCorrelations] in progress";
@@ -984,7 +1002,7 @@ void Model::generateCorrelations(const QList<ChainSpecs> &chains)
 
         if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
 #ifdef USE_THREAD
-            std::thread thTheta ([event] (QList<ChainSpecs> ch) {event->mTheta.generateCorrelations(ch);}, chains);
+            std::thread thTheta ([event] (std::vector<ChainSpecs> ch) {event->mTheta.generateCorrelations(ch);}, chains);
 #else
             event->mTheta.generateCorrelations(chains);
 #endif
@@ -1038,7 +1056,7 @@ void Model::setBandwidth(const double bandwidth)
         updateDensities(mFFTLength, bandwidth, mThreshold);
         mBandwidth = bandwidth;
 
-        emit newCalculus();
+       // emit newCalculus();
     }
 }
 
@@ -1046,7 +1064,7 @@ void Model::setFFTLength(int FFTLength)
 {
     if (mFFTLength != FFTLength) {
         updateDensities(FFTLength, mBandwidth, mThreshold);
-        emit newCalculus();
+        //emit newCalculus();
     }
 }
 
@@ -1056,7 +1074,7 @@ void Model::setHActivity(const double h, const double rangePercent)
         generateActivity(mFFTLength, h, mThreshold, rangePercent);
         mHActivity = h;
 
-        emit newCalculus();
+       // emit newCalculus();
     }
 
 }
@@ -1074,7 +1092,7 @@ void Model::setThreshold(const double threshold)
         generateActivity(mFFTLength, mHActivity, threshold);
         setThresholdToAllModel(threshold);
 
-        emit newCalculus();
+        //emit newCalculus();
     }
 }
 
@@ -1146,52 +1164,52 @@ void Model::initVariablesForChain()
        initReserve += ( 1 + (c.mMaxBatchs*c.mIterPerBatch) + c.mIterPerBurn + (c.mIterPerAquisition/c.mThinningInterval) );
 
     for (auto&& event : mEvents) {
-       event->mTheta.clear();
-       event->mTheta.reserve(initReserve);
+       //event->mTheta.clear();
+       //event->mTheta.reserve(initReserve);
        event->mTheta.mAllAccepts.resize(mChains.size());
-       event->mTheta.mLastAccepts.reserve(acceptBufferLen);
+       //event->mTheta.mLastAccepts.reserve(acceptBufferLen);
        event->mTheta.mLastAcceptsLength = acceptBufferLen;
 
-       event->mS02Theta.clear();
-       event->mS02Theta.reserve(initReserve);
+       //event->mS02Theta.clear();
+       //event->mS02Theta.reserve(initReserve);
        event->mS02Theta.mAllAccepts.resize(mChains.size());
-       event->mS02Theta.mLastAccepts.reserve(acceptBufferLen);
+       //event->mS02Theta.mLastAccepts.reserve(acceptBufferLen);
        event->mS02Theta.mLastAcceptsLength = acceptBufferLen;
 
        // event->mTheta.mAllAccepts.clear(); //don't clean, avalable for cumulate chain
 
        for (auto&& date : event->mDates) {
-            date.mTi.clear();
-            date.mTi.reserve(initReserve);
+            //date.mTi.clear();
+            //date.mTi.reserve(initReserve);
             date.mTi.mAllAccepts.resize(mChains.size());
-            date.mTi.mLastAccepts.reserve(acceptBufferLen);
+            //date.mTi.mLastAccepts.reserve(acceptBufferLen);
             date.mTi.mLastAcceptsLength = acceptBufferLen;
 
-            date.mSigmaTi.clear();
-            date.mSigmaTi.reserve(initReserve);
+            //date.mSigmaTi.clear();
+            //date.mSigmaTi.reserve(initReserve);
             date.mSigmaTi.mAllAccepts.resize(mChains.size());
-            date.mSigmaTi.mLastAccepts.reserve(acceptBufferLen);
+            //date.mSigmaTi.mLastAccepts.reserve(acceptBufferLen);
             date.mSigmaTi.mLastAcceptsLength = acceptBufferLen;
 
-            date.mWiggle.clear();
-            date.mWiggle.reserve(initReserve);
+            //date.mWiggle.clear();
+            //.mWiggle.reserve(initReserve);
             date.mWiggle.mAllAccepts.resize(mChains.size());
-            date.mWiggle.mLastAccepts.reserve(acceptBufferLen);
+            //date.mWiggle.mLastAccepts.reserve(acceptBufferLen);
             date.mWiggle.mLastAcceptsLength = acceptBufferLen;
        }
     }
 
-    for (auto&& phase : mPhases) {
+  /*  for (auto&& phase : mPhases) {
        phase->mAlpha.clear();
        phase->mBeta.clear();
        //phase->mTau.reset();
        phase->mDuration.clear();
 
-       phase->mAlpha.reserve(initReserve);
-       phase->mBeta.reserve(initReserve);
+       //phase->mAlpha.reserve(initReserve);
+       //phase->mBeta.reserve(initReserve);
        //phase->mTau.mRawTrace->reserve(initReserve);
-       phase->mDuration.reserve(initReserve);
-    }
+       //phase->mDuration.reserve(initReserve);
+    }*/
 }
 
 
@@ -1247,7 +1265,7 @@ void Model::updateDensities(int fftLen, double bandwidth, double threshold)
 
 }
 
-void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth)
+void Model::generatePosteriorDensities(const std::vector<ChainSpecs> &chains, int fftLen, double bandwidth)
 {
 #ifdef DEBUG
     QElapsedTimer t;
@@ -1279,7 +1297,7 @@ void Model::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftL
 #endif
 }
 
-void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
+void Model::generateNumericalResults(const std::vector<ChainSpecs> &chains)
 {
 #ifdef DEBUG
     QElapsedTimer t;
@@ -1337,10 +1355,10 @@ void Model::generateNumericalResults(const QList<ChainSpecs> &chains)
 
 
     std::ranges::for_each( mPhases, [chains](Phase* phase) {
-         phase->mAlpha.generateNumericalResults(chains);
-         phase->mBeta.generateNumericalResults(chains);
+         phase->mAlpha.MetropolisVariable::generateNumericalResults(chains);
+         phase->mBeta.MetropolisVariable::generateNumericalResults(chains);
          // phase->mTau.generateNumericalResults(chains);
-         phase->mDuration.generateNumericalResults(chains);
+         phase->mDuration.MetropolisVariable::generateNumericalResults(chains);
     });
 
 
@@ -1537,11 +1555,30 @@ void Model::generateTempo(size_t gridLength)
         // Description des données
         std::vector<double> concaAllTrace;
 
+        const int nRealyAccepted = std::accumulate(mChains.begin(), mChains.end(), 0, [](double sum, ChainSpecs chain){return  sum + chain.mRealyAccepted;});
+
+
         for (const auto& ev : phase->mEvents) {
-            const auto &rawtrace = ev->mTheta.fullRunRawTrace(mChains);
-            concaAllTrace.resize(concaAllTrace.size() + rawtrace.size());
-            std::copy_backward( rawtrace.begin(), rawtrace.end(), concaAllTrace.end() );
+            if (ev->mTheta.mSamplerProposal != MHVariable::eFixe) {
+                const auto &rawtrace = ev->mTheta.fullRunRawTrace(mChains);
+                concaAllTrace.resize(concaAllTrace.size() + rawtrace.size());
+                std::copy_backward( rawtrace.begin(), rawtrace.end(), concaAllTrace.end() );
+
+            } else {
+
+                const size_t begin_size = concaAllTrace.size();
+                concaAllTrace.resize(concaAllTrace.size() + nRealyAccepted);
+                std::fill_n( concaAllTrace.begin()+begin_size, nRealyAccepted, ev->mTheta.mRawTrace->at(0));
+            }
+
         }
+
+
+
+
+
+
+
 
         auto minmaxAll = std::minmax_element(concaAllTrace.begin(), concaAllTrace.end());
         double t_min_data = *minmaxAll.first;
@@ -1551,8 +1588,8 @@ void Model::generateTempo(size_t gridLength)
            // t_min_data = mSettings.mTmin;
             t_max_data = mSettings.mTmax;
         }
-        phase->mValueStack["t_min"] = TValueStack("t_min", t_min_data);
-        phase->mValueStack["t_max"] = TValueStack("t_max", t_max_data);
+        phase->mValueStack.insert_or_assign("t_min", TValueStack( t_min_data));
+        phase->mValueStack.insert_or_assign("t_max", TValueStack( t_max_data));
 
         const double nr = concaAllTrace.size();
 
@@ -1591,10 +1628,10 @@ void Model::generateTempo(size_t gridLength)
        ///# Calculation of the mean and variance
 
         // Variable for Tempo
-        QList<double> infT;
-        QList<double> supT;
+        std::vector<double> infT;
+        std::vector<double> supT;
 
-        QList<double> espT;
+        std::vector<double> espT;
         double pT, eT, vT, infpT;
 
         for (const auto& niT : niTempo) {
@@ -1604,11 +1641,11 @@ void Model::generateTempo(size_t gridLength)
             eT =  n * pT ;
             vT = n * pT * (1-pT);
 
-            espT.append(eT);
+            espT.push_back(eT);
             // Forbidden negative error
             infpT = ( eT < 1.96 * sqrt(vT) ? 0. : eT - 1.96 * sqrt(vT) );
-            infT.append( infpT );
-            supT.append( eT + 1.96 * sqrt(vT));
+            infT.push_back( infpT );
+            supT.push_back( eT + 1.96 * sqrt(vT));
 
         }
 
@@ -1618,16 +1655,19 @@ void Model::generateTempo(size_t gridLength)
         phase->mRawTempoSup = vector_to_map(supT, t_min_data, t_max_data, delta_t);
 
         // close the error curve on mean value
-        const double tEnd = phase->mRawTempo.lastKey();
+        //const double tEnd = phase->mRawTempo.lastKey();
+        const double tEnd = phase->mRawTempo.crbegin()->first;
         const double vEnd = phase->mRawTempo[tEnd];
 
         if ( tEnd <= mSettings.mTmax) {
             phase->mRawTempoInf[tEnd] = vEnd;
             phase->mRawTempoSup[tEnd ] = vEnd;
         }
-        phase->mRawTempo.insert(mSettings.mTmax, vEnd);
+        //phase->mRawTempo.insert(mSettings.mTmax, vEnd);
+        phase->mRawTempo.emplace(mSettings.mTmax, vEnd);
 
-        const double tBegin = phase->mRawTempo.firstKey();
+        //const double tBegin = phase->mRawTempo.firstKey();
+        const double tBegin = phase->mRawTempo.begin()->first;
 
         // We need to add a point with the value 0 for the automatique Y scaling
         if ((tBegin) >= mSettings.mTmin) {
@@ -1795,13 +1835,13 @@ void Model::generateActivity(const size_t gridLength, const double h, const doub
     for (const auto& phase : mPhases) {
         // Curves for error binomial
         const int n = phase->mEvents.size();
-        if (n<2) {
+        /*if (n<2) {
             phase->mActivity = phase->mEvents[0]->mTheta.mFormatedHisto;
             phase->mActivityInf = phase->mEvents[0]->mTheta.mFormatedHisto;
             phase->mActivitySup = phase->mEvents[0]->mTheta.mFormatedHisto;
             phase->mActivityUnifTheo = phase->mEvents[0]->mTheta.mFormatedHisto;
             continue;
-        }
+        }*/
         if (!mBinomiale_Gx.contains(n) || threshold != mThreshold) {
             const std::vector<double> &Rq = binomialeCurveByLog(n, 1. - threshold/100.); //  Détermine la courbe x = r (q)
             mBinomiale_Gx[n] = inverseCurve(Rq); // Pour qActivity, détermine la courbe p = g (x)
@@ -2038,7 +2078,7 @@ void Model::restoreFromFile_v323(QDataStream *in)
     *in >> tmp32;
 
     mChains.clear();
-    mChains.reserve(int (tmp32));
+    //mChains.reserve(int (tmp32));
     for (quint32 i=0 ; i<tmp32; ++i) {
         ChainSpecs ch;
         *in >> ch.burnElapsedTime;
@@ -2058,7 +2098,7 @@ void Model::restoreFromFile_v323(QDataStream *in)
         *in >> ch.mThinningInterval;
         *in >> ch.mRealyAccepted;
         *in >> ch.mTotalIter;
-        mChains.append(ch);
+        mChains.push_back(ch);
     }
 
     // -----------------------------------------------------
@@ -2177,7 +2217,7 @@ void Model::restoreFromFile_v324(QDataStream *in)
     *in >> tmp32;
 
     mChains.clear();
-    mChains.reserve(int (tmp32));
+    //mChains.reserve(int (tmp32));
     for (quint32 i=0 ; i<tmp32; ++i) {
         ChainSpecs ch;
         *in >> ch.burnElapsedTime;
@@ -2197,7 +2237,7 @@ void Model::restoreFromFile_v324(QDataStream *in)
         *in >> ch.mThinningInterval;
         *in >> ch.mRealyAccepted;
         *in >> ch.mTotalIter;
-        mChains.append(ch);
+        mChains.push_back(ch);
     }
 
     // -----------------------------------------------------
@@ -2225,6 +2265,9 @@ void Model::restoreFromFile_v324(QDataStream *in)
     for (Event*& event : mEvents) {
         if (event->mType == Event::eDefault )
             for (auto&& d : event->mDates) {
+                //d.mTi = MHVariable();
+                //d.mSigmaTi = MHVariable();
+                //d.mWiggle = MHVariable();
                 *in >> d.mTi;
                 *in >> d.mSigmaTi;
                 if (d.mDeltaType != Date::eDeltaNone)

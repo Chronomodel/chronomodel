@@ -1125,6 +1125,8 @@ void ResultsView::clearResults()
     mZoomsX.clear();
     mZoomsY.clear();
     mZoomsZ.clear();
+    mCurrentVariableList.clear();
+    mScales.clear();
 
 }
 
@@ -1138,9 +1140,9 @@ void ResultsView::updateModel()
 void ResultsView::initModel()
 {
     auto model = getModel_ptr();
-    disconnect(model.get(), nullptr, nullptr, nullptr);
+    //disconnect(model.get(), nullptr, nullptr, nullptr);
 
-    connect(model.get(), &Model::newCalculus, this, &ResultsView::generateCurves);
+    //connect(model.get(), &Model::newCalculus, this, &ResultsView::generateCurves);
 
     mHasPhases = (model->mPhases.size() > 0);
 
@@ -1709,10 +1711,10 @@ void ResultsView::toggleDisplayDistrib()
 void ResultsView::createChainsControls()
 {
     auto model =getModel_ptr();
-    if (model->mChains.size() != mChainChecks.size()) {
+    if (model->mChains.size() != (size_t)mChainChecks.size()) {
         deleteChainsControls();
 
-        for (int i=0; i<model->mChains.size(); ++i) {
+        for (size_t i=0; i<model->mChains.size(); ++i) {
             CheckBox* check = new CheckBox(tr("Chain %1").arg(QString::number(i+1)), mChainsGroup);
             check->setFixedHeight(16);
             check->setVisible(true);
@@ -1758,6 +1760,7 @@ void ResultsView::createGraphs()
     if (getModel_ptr() == nullptr) {
         return;
     }
+    updateMainVariable();
 
     if (mGraphListTab->currentName() == tr("Events")) {
         createByEventsGraphs();
@@ -1859,14 +1862,9 @@ void ResultsView::createByEventsGraphs()
         if (event->mIsSelected || showAllEvents) {
             if (graphIndexIsInCurrentPage(graphIndex)) {
                 GraphViewEvent* graph = new GraphViewEvent(eventsWidget);
-                graph->setSettings(model->mSettings);
-                graph->setMCMCSettings(model->mMCMCSettings, model->mChains);
                 graph->setEvent(event);
-                graph->setGraphsFont(mFontBut->font());
-                graph->setGraphsThickness(mThicknessCombo->currentIndex());
-                graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
-                graph->setMarginLeft(mMarginLeft);
-                graph->setMarginRight(mMarginRight);
+
+                setGraphicOption(*graph);
 
                 mByEventsGraphs.append(graph);
                 connect(graph, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
@@ -1880,16 +1878,9 @@ void ResultsView::createByEventsGraphs()
                 for (auto&& date : event->mDates) {
                     if (graphIndexIsInCurrentPage(graphIndex)) {
                         GraphViewDate* graph = new GraphViewDate(eventsWidget);
-                        graph->setSettings(model->mSettings);
-                        graph->setMCMCSettings(model->mMCMCSettings, model->mChains);
                         graph->setDate(&date);
-                        graph->setGraphsFont(mFontBut->font());
-                        graph->setGraphsThickness(mThicknessCombo->currentIndex());
-                        graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
                         graph->setItemColor(event->mColor);
-                        graph->setGraphsOpacity(mOpacityCombo->currentIndex()*10);
-                        graph->setMarginLeft(mMarginLeft);
-                        graph->setMarginRight(mMarginRight);
+                        setGraphicOption(*graph);
 
                         mByEventsGraphs.append(graph);
                         connect(graph, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
@@ -1930,14 +1921,9 @@ void ResultsView::createByPhasesGraphs()
         if (phase->mIsSelected || showAllPhases) {
             if (graphIndexIsInCurrentPage(graphIndex)) {
                 GraphViewPhase* graph = new GraphViewPhase(phasesWidget);
-                graph->setSettings(model->mSettings);
-                graph->setMCMCSettings(model->mMCMCSettings, model->mChains);
                 graph->setPhase(phase);
-                graph->setGraphsFont(mFontBut->font());
-                graph->setGraphsThickness(mThicknessCombo->currentIndex());
-                graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
-                graph->setMarginLeft(mMarginLeft);
-                graph->setMarginRight(mMarginRight);
+
+                setGraphicOption(*graph);
 
                 mByPhasesGraphs.append(graph);
                 connect(graph, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
@@ -1948,14 +1934,9 @@ void ResultsView::createByPhasesGraphs()
                 for (const auto& event : phase->mEvents) {
                      if (graphIndexIsInCurrentPage(graphIndex)) {
                         GraphViewEvent* graph = new GraphViewEvent(phasesWidget);
-                        graph->setSettings(model->mSettings);
-                        graph->setMCMCSettings(model->mMCMCSettings, model->mChains);
                         graph->setEvent(event);
-                        graph->setGraphsFont(mFontBut->font());
-                        graph->setGraphsThickness(mThicknessCombo->currentIndex());
-                        graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
-                        graph->setMarginLeft(mMarginLeft);
-                        graph->setMarginRight(mMarginRight);
+
+                        setGraphicOption(*graph);
 
                         mByPhasesGraphs.append(graph);
                         connect(graph, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
@@ -1967,16 +1948,10 @@ void ResultsView::createByPhasesGraphs()
                         for (auto& date : event->mDates) {                            
                             if (graphIndexIsInCurrentPage(graphIndex))  {
                                 GraphViewDate* graph = new GraphViewDate(phasesWidget);
-                                graph->setSettings(model->mSettings);
-                                graph->setMCMCSettings(model->mMCMCSettings, model->mChains);
                                 graph->setDate(&date);
-                                graph->setGraphsFont(mFontBut->font());
-                                graph->setGraphsThickness(mThicknessCombo->currentIndex());
-                                graph->changeXScaleDivision(mMajorScale, mMinorCountScale);
                                 graph->setItemColor(event->mColor);
-                                graph->setGraphsOpacity(mOpacityCombo->currentIndex()*10);
-                                graph->setMarginLeft(mMarginLeft);
-                                graph->setMarginRight(mMarginRight);
+
+                                setGraphicOption(*graph);
 
                                 mByPhasesGraphs.append(graph);
                                 connect(graph, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
@@ -2014,13 +1989,9 @@ void ResultsView::createByCurveGraph()
     blockSignals(true);
     if (mLambdaRadio->isChecked())  {
         GraphViewLambda* graphAlpha = new GraphViewLambda(widget);
-        graphAlpha->setSettings(model->mSettings);
-        graphAlpha->setMCMCSettings(model->mMCMCSettings, model->mChains);
-        graphAlpha->setGraphsFont(mFontBut->font());
-        graphAlpha->setGraphsThickness(mThicknessCombo->currentIndex());
-        graphAlpha->changeXScaleDivision(mMajorScale, mMinorCountScale);
-        graphAlpha->setMarginLeft(mMarginLeft);
-        graphAlpha->setMarginRight(mMarginRight);
+
+        setGraphicOption(*graphAlpha);
+
         graphAlpha->setTitle(tr("Smoothing"));
 
         mByCurveGraphs.append(graphAlpha);
@@ -2029,13 +2000,9 @@ void ResultsView::createByCurveGraph()
 
     } else  if (mS02VgRadio->isChecked())  {
         GraphViewS02* graphS02 = new GraphViewS02(widget);
-        graphS02->setSettings(model->mSettings);
-        graphS02->setMCMCSettings(model->mMCMCSettings, model->mChains);
-        graphS02->setGraphsFont(mFontBut->font());
-        graphS02->setGraphsThickness(mThicknessCombo->currentIndex());
-        graphS02->changeXScaleDivision(mMajorScale, mMinorCountScale);
-        graphS02->setMarginLeft(mMarginLeft);
-        graphS02->setMarginRight(mMarginRight);
+
+        setGraphicOption(*graphS02);
+
         graphS02->setTitle(tr("Curve Shrinkage"));
 
         mByCurveGraphs.append(graphS02);
@@ -2049,7 +2016,7 @@ void ResultsView::createByCurveGraph()
         // insert refpoints for X
         //  const double thresh = 68.4;
 
-        double pt_Ymin, pt_Ymax;
+        double pt_Ymin(0.), pt_Ymax(0.);
         QList<CurveRefPts> eventsPts;
         QList<CurveRefPts> dataPts;
         // Stock the number of ref points per Event and Data
@@ -2241,13 +2208,8 @@ void ResultsView::createByCurveGraph()
          }
 
         GraphViewCurve* graphX = new GraphViewCurve(widget);
-        graphX->setSettings(model->mSettings);
-        graphX->setMCMCSettings(model->mMCMCSettings, model->mChains);
-        graphX->setGraphsFont(mFontBut->font());
-        graphX->setGraphsThickness(mThicknessCombo->currentIndex());
-        graphX->changeXScaleDivision(mMajorScale, mMinorCountScale);
-        graphX->setMarginLeft(mMarginLeft);
-        graphX->setMarginRight(mMarginRight);
+
+        setGraphicOption(*graphX);
 
         QString resultsHTML = ModelUtilities::curveResultsHTML(model);
         graphX->setNumericalResults(resultsHTML);
@@ -2285,13 +2247,8 @@ void ResultsView::createByCurveGraph()
         if (displayY) {
 
             GraphViewCurve* graphY = new GraphViewCurve(widget);
-            graphY->setSettings(model->mSettings);
-            graphY->setMCMCSettings(model->mMCMCSettings, model->mChains);
-            graphY->setGraphsFont(mFontBut->font());
-            graphY->setGraphsThickness(mThicknessCombo->currentIndex());
-            graphY->changeXScaleDivision(mMajorScale, mMinorCountScale);
-            graphY->setMarginLeft(mMarginLeft);
-            graphY->setMarginRight(mMarginRight);
+
+            setGraphicOption(*graphY);
 
             const QString curveTitleY = curveLongName.at(1) ;
 
@@ -2368,13 +2325,8 @@ void ResultsView::createByCurveGraph()
         
         if (displayZ) {
             GraphViewCurve* graphZ = new GraphViewCurve(widget);
-            graphZ->setSettings(model->mSettings);
-            graphZ->setMCMCSettings(model->mMCMCSettings, model->mChains);
-            graphZ->setGraphsFont(mFontBut->font());
-            graphZ->setGraphsThickness(mThicknessCombo->currentIndex());
-            graphZ->changeXScaleDivision(mMajorScale, mMinorCountScale);
-            graphZ->setMarginLeft(mMarginLeft);
-            graphZ->setMarginRight(mMarginRight);
+
+            setGraphicOption(*graphZ);
 
             const QString curveTitleZ = curveLongName.at(2) ;
 
@@ -4349,22 +4301,26 @@ void ResultsView::applyZoomSpin(int value)
 void ResultsView::applyFont()
 {
     bool ok = false;
-    const QFont& currentFont =  mFontBut->font();
-    QFont font(QFontDialog::getFont(&ok, currentFont, this));
+
+    const QFont& currentFont = mFontBut->font();// graphs.at(0)->getGraphFont();/
+
+    const QFont font(QFontDialog::getFont(&ok, currentFont, this));
+
     if (ok) {
-        QList<GraphViewResults*> graphs = allGraphs();
-        for (GraphViewResults*& graph : graphs) {
+        const QList<GraphViewResults*> &graphs = allGraphs();
+        for (const auto& graph : graphs) {
             graph->setGraphsFont(font);
         }
 
-        mFontBut->setText(font.family() + ", " + QString::number(font.pointSizeF()));
+        mFontBut->setText(font.family() + ", " + font.styleName() + ", " +QString::number(font.pointSizeF()));
+        mFontBut->setFont(font);
     }
 }
 
 void ResultsView::applyThickness(int value)
 {
-    QList<GraphViewResults*> graphs = allGraphs();
-    for (GraphViewResults*& graph : graphs) {
+    const QList<GraphViewResults*>& graphs = allGraphs();
+    for (const auto& graph : graphs) {
         graph->setGraphsThickness(value);
     }
 }
@@ -4372,16 +4328,34 @@ void ResultsView::applyThickness(int value)
 void ResultsView::applyOpacity(int value)
 {
     const int opValue = value * 10;
-    QList<GraphViewResults*> graphs = allGraphs();
-    for (GraphViewResults*& graph : graphs) {
+    const QList<GraphViewResults*> &graphs = allGraphs();
+    for (const auto& graph : graphs) {
         graph->setGraphsOpacity(opValue);
     }
 }
+
+
+void ResultsView::setGraphicOption(GraphViewResults& graph)
+{
+    auto model = getModel_ptr();
+    graph.setSettings(model->mSettings);
+    graph.setMCMCSettings(model->mMCMCSettings, model->mChains);
+    graph.setGraphsFont(mFontBut->font());
+    graph.setGraphsThickness(mThicknessCombo->currentIndex());
+    graph.changeXScaleDivision(mMajorScale, mMinorCountScale);
+    graph.setGraphsOpacity(mOpacityCombo->currentIndex()*10);
+    graph.setMarginLeft(mMarginLeft);
+    graph.setMarginRight(mMarginRight);
+
+}
+
+
 
 void ResultsView::applyFFTLength()
 {
     const int len = mFFTLenCombo->currentText().toInt();
     getModel_ptr()->setFFTLength(len);
+    generateCurves();
 }
 
 void ResultsView::applyHActivity()
@@ -4389,17 +4363,21 @@ void ResultsView::applyHActivity()
     const double h = locale().toDouble(mHActivityEdit->text());
     const double rangePercent = locale().toDouble(mRangeThresholdEdit->text());
     getModel_ptr()->setHActivity(h, rangePercent);
+    generateCurves();
 }
+
 void ResultsView::applyBandwidth()
 {
     const double bandwidth = mBandwidthSpin->value();
     getModel_ptr()->setBandwidth(bandwidth);
+    generateCurves();
 }
 
 void ResultsView::applyThreshold()
 {
     const double hpd = locale().toDouble(mThresholdEdit->text());
     getModel_ptr()->setThreshold(hpd);
+    generateCurves();
 }
 
 void ResultsView::applyNextPage()

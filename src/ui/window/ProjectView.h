@@ -40,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef PROJECTVIEW_H
 #define PROJECTVIEW_H
 
-#include "Project.h"
+#include "ModelCurve.h"
 #include "ModelView.h"
 #include "Tabs.h"
 
@@ -57,20 +57,10 @@ class Event;
 class ProjectView: public QWidget
 {
     Q_OBJECT
-private:
-    QStackedWidget* mStack;
-    ModelView* mModelView;
-    ResultsView* mResultsView;
-
-    QWidget* mLogView;
-    QVBoxLayout* mLogLayout;
-    Tabs* mLogTabs;
-    QTextEdit* mLogModelEdit;
-    QTextEdit* mLogInitEdit;
-    QTextEdit* mLogAdaptEdit;
-    QTextEdit* mLogResultsEdit;
 
 public:
+    ModelView* mModelView;
+    ResultsView* mResultsView;
 
     ProjectView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
     ~ProjectView();
@@ -109,6 +99,17 @@ public slots:
     void updateResultsLog(const QString& log);
     
     void toggleCurve(bool toggle);
+
+private:
+    QStackedWidget* mStack;
+
+    QWidget* mLogView;
+    QVBoxLayout* mLogLayout;
+    Tabs* mLogTabs;
+    QTextEdit* mLogModelEdit;
+    QTextEdit* mLogInitEdit;
+    QTextEdit* mLogAdaptEdit;
+    QTextEdit* mLogResultsEdit;
 
 
 };

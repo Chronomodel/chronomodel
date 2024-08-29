@@ -41,11 +41,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Phase.h"
 #include "ColorPicker.h"
 #include "LineEdit.h"
+#include "QtUtilities.h"
+#include "StateKeys.h"
 
 #include <QtWidgets>
 
 
-PhaseDialog::PhaseDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags)
+PhaseDialog::PhaseDialog(QWidget* parent, Qt::WindowFlags flags):
+    QDialog(parent, flags)
 {
     setWindowTitle(tr("Create / Modify phase"));
     setMouseTracking(true);
@@ -103,17 +106,41 @@ PhaseDialog::PhaseDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
     layout->addWidget(buttonBox);
     setLayout(layout);
     
-    Phase phase;
-    setPhase(phase.toJson());
+    // Create empty phase
+
+    _data[STATE_ID] = 0;
+    _data[STATE_NAME] = tr("No Phase Name");
+
+    const auto col = randomColor();
+    _data[STATE_COLOR_RED] = col.red();
+    _data[STATE_COLOR_GREEN] = col.green();
+    _data[STATE_COLOR_BLUE] = col.blue();
+    _data[STATE_ITEM_X] = 0;
+    _data[STATE_ITEM_Y] = 0;
+    _data[STATE_PHASE_TAU_TYPE] = 0;
+    _data[STATE_PHASE_TAU_FIXED] = 0;
+    _data[STATE_PHASE_TAU_MIN] = 0;
+    _data[STATE_PHASE_TAU_MAX] = 0;
+    _data[STATE_IS_SELECTED] = false;
+    _data[STATE_IS_CURRENT] = false;
+
+    mNameEdit->setText(_data.value(STATE_NAME).toString());
+    mNameEdit->selectAll();
+    mColorPicker->setColor(QColor(_data.value(STATE_COLOR_RED).toInt(),
+                                  _data.value(STATE_COLOR_GREEN).toInt(),
+                                  _data.value(STATE_COLOR_BLUE).toInt()));
+
+    mTauTypeCombo->setCurrentIndex(_data.value(STATE_PHASE_TAU_TYPE).toInt());
+    mTauFixedEdit->setText(locale().toString(_data.value(STATE_PHASE_TAU_FIXED).toDouble()));
+
 }
 
 PhaseDialog::~PhaseDialog()
 {
 }
 
-void PhaseDialog::showAppropriateTauOptions(int typeIndex)
+void PhaseDialog::showAppropriateTauOptions()
 {
-    Q_UNUSED(typeIndex)
     Phase::TauType type = Phase::TauType (mTauTypeCombo->currentIndex());
     switch (type) {
         case Phase::eZOnly:
@@ -132,30 +159,32 @@ void PhaseDialog::showAppropriateTauOptions(int typeIndex)
     }
 }
 
-void PhaseDialog::setPhase(const QJsonObject& phase)
+void PhaseDialog::setPhase(QJsonObject phaseObj)
 {
-    mPhase = phase;
-
-    mNameEdit->setText(mPhase.value(STATE_NAME).toString());
+    _data = phaseObj;
+    mNameEdit->setText(phaseObj.value(STATE_NAME).toString());
     mNameEdit->selectAll();
-    mColorPicker->setColor(QColor(mPhase.value(STATE_COLOR_RED).toInt(),
-                                  mPhase.value(STATE_COLOR_GREEN).toInt(),
-                                  mPhase.value(STATE_COLOR_BLUE).toInt()));
-    mTauTypeCombo->setCurrentIndex(mPhase.value(STATE_PHASE_TAU_TYPE).toInt());
-    mTauFixedEdit->setText(locale().toString(mPhase.value(STATE_PHASE_TAU_FIXED).toDouble()));
+    mColorPicker->setColor(QColor(phaseObj.value(STATE_COLOR_RED).toInt(),
+                                  phaseObj.value(STATE_COLOR_GREEN).toInt(),
+                                  phaseObj.value(STATE_COLOR_BLUE).toInt()));
+    mTauTypeCombo->setCurrentIndex(phaseObj.value(STATE_PHASE_TAU_TYPE).toInt());
+    mTauFixedEdit->setText(locale().toString(phaseObj.value(STATE_PHASE_TAU_FIXED).toDouble()));
 
-    showAppropriateTauOptions(mTauTypeCombo->currentIndex());
+    showAppropriateTauOptions();
 }
 
 QJsonObject PhaseDialog::getPhase()
 {
-    mPhase[STATE_NAME] = mNameEdit->text();
-    mPhase[STATE_COLOR_RED] = mColorPicker->getColor().red();
-    mPhase[STATE_COLOR_GREEN] = mColorPicker->getColor().green();
-    mPhase[STATE_COLOR_BLUE] = mColorPicker->getColor().blue();
-    mPhase[STATE_PHASE_TAU_TYPE] = Phase::TauType (mTauTypeCombo->currentIndex());
-    mPhase[STATE_PHASE_TAU_FIXED] = locale().toDouble(mTauFixedEdit->text());
-    return mPhase;
+    QJsonObject phaseObj(_data);
+
+    phaseObj[STATE_NAME] = mNameEdit->text();
+    phaseObj[STATE_COLOR_RED] = mColorPicker->getColor().red();
+    phaseObj[STATE_COLOR_GREEN] = mColorPicker->getColor().green();
+    phaseObj[STATE_COLOR_BLUE] = mColorPicker->getColor().blue();
+    phaseObj[STATE_PHASE_TAU_TYPE] = Phase::TauType (mTauTypeCombo->currentIndex());
+    phaseObj[STATE_PHASE_TAU_FIXED] = locale().toDouble(mTauFixedEdit->text());
+
+    return phaseObj;
 }
 
 bool PhaseDialog::isValid()

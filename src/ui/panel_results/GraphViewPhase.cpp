@@ -136,11 +136,11 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
             mGraph->setYAxisMode(GraphView::eMinMaxHidden);
 
             mTitle = tr("Phase : %1").arg(mPhase->mName);
-            QMap<double, double> &alpha = mPhase->mAlpha.mFormatedHisto;
-            QMap<double, double> &beta = mPhase->mBeta.mFormatedHisto;
+            std::map<double, double> &alpha = mPhase->mAlpha.mFormatedHisto;
+            std::map<double, double> &beta = mPhase->mBeta.mFormatedHisto;
 
-            QMap<double, double> &alphaHPD = mPhase->mAlpha.mFormatedHPD;
-            QMap<double, double> &betaHPD = mPhase->mBeta.mFormatedHPD;
+            std::map<double, double> &alphaHPD = mPhase->mAlpha.mFormatedHPD;
+            std::map<double, double> &betaHPD = mPhase->mBeta.mFormatedHPD;
             /*
              * Detection of one Bound used as boundary != is xor
              * If there is two Bound, the both are egal to 1, thus nothing to do
@@ -149,21 +149,21 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
             const bool betaIsBound = (beta.size()==1);
 
             if (alphaIsBound && !betaIsBound) {
-                const double normPdf = map_max(beta).value();
-                alpha[alpha.firstKey()] =  normPdf;
-                alphaHPD[alphaHPD.firstKey()] = normPdf;
+                const double normPdf = map_max(beta)->second;
+                alpha[alpha.begin()->first] =  normPdf;
+                alphaHPD[alphaHPD.begin()->first] = normPdf;
 
             } else if (betaIsBound && !alphaIsBound) {
-                const double normPdf = map_max(alpha).value();
-                beta[beta.firstKey()] = normPdf;
-                betaHPD[betaHPD.firstKey()] = normPdf;
+                const double normPdf = map_max(alpha)->second;
+                beta[beta.begin()->first] = normPdf;
+                betaHPD[betaHPD.begin()->first] = normPdf;
 
             } else if (alphaIsBound && betaIsBound) {
-                alpha[alpha.firstKey()] =  1.;
-                alphaHPD[alphaHPD.firstKey()] = 1.;
+                alpha[alpha.begin()->first] =  1.;
+                alphaHPD[alphaHPD.begin()->first] = 1.;
 
-                beta[beta.firstKey()] = 1.;
-                betaHPD[betaHPD.firstKey()] = 1.;
+                beta[beta.begin()->first] = 1.;
+                betaHPD[betaHPD.begin()->first] = 1.;
             }
 
             const GraphCurve &curveBegin = densityCurve(alpha, "Post Distrib Begin All Chains", color, Qt::DotLine);
@@ -198,15 +198,16 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
             const GraphZone zoneMax (mSettings.getTmaxFormated(), INFINITY);
             mGraph->add_zone(zoneMax);
 
-            if (!mPhase->mAlpha.mChainsHistos.isEmpty())
-                for (auto i = 0; i<mChains.size(); ++i) {
-                    QMap<double, double> &alpha_i = mPhase->mAlpha.mChainsHistos[i];
-                    QMap<double, double> &beta_i = mPhase->mBeta.mChainsHistos[i];
+            if (!mPhase->mAlpha.mChainsHistos.empty())
+                for (size_t i = 0; i<mChains.size(); ++i) {
+                    std::map<double, double> &alpha_i = mPhase->mAlpha.mChainsHistos[i];
+                    std::map<double, double> &beta_i = mPhase->mBeta.mChainsHistos[i];
+
                     if (alphaIsBound && !betaIsBound) {
-                        alpha_i[alpha_i.firstKey()] =  map_max(beta_i).value();
+                        alpha_i[alpha_i.begin()->first] =  map_max(beta_i)->second;
 
                     } else if (betaIsBound && !alphaIsBound) {
-                        beta_i[beta_i.firstKey()] = map_max(alpha_i).value();
+                        beta_i[beta_i.begin()->first] = map_max(alpha_i)->second;
                     }
 
                     const GraphCurve &curveBegin = densityCurve(alpha_i,
@@ -223,7 +224,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
 
         } else if (mCurrentVariableList.contains(eTempo)) {
 
-            if (!mPhase->mTempo.isEmpty()) {
+            if (!mPhase->mTempo.empty()) {
                 mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
                 mGraph->mLegendY = "Events";
                 mGraph->setFormatFunctX(nullptr);
@@ -269,7 +270,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
 
         } else if (mCurrentVariableList.contains(eActivity)) {
 
-            if (!mPhase->mActivity.isEmpty()) {
+            if (!mPhase->mActivity.empty()) {
                 mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
                 mGraph->mLegendY = "";
                 mGraph->setFormatFunctX(nullptr);
@@ -288,15 +289,15 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
                                                                 "Post Distrib Env All Chains",
                                                                 color, Qt::CustomDashLine, brushColor);
                 /* ------------------------------------------------------------
-             *   Display envelope Uniform
-             * ------------------------------------------------------------*/
+                 *   Display envelope Uniform
+                 * ------------------------------------------------------------*/
 
                 const GraphCurve &curveActivityUnifTheo = densityCurve(mPhase->mActivityUnifTheo,
                                                                        "Post Distrib Unif Mean",
                                                                        Qt::darkGray, Qt::SolidLine);
 
                 if (mPhase->mValueStack.contains("Activity_Threshold") && mPhase->mValueStack.contains("Activity_Significance_Score") )
-                    mGraph->setInfo(QString("Significance Score ( %1 %) = %2").arg(stringForLocal(mPhase->mValueStack.at("Activity_Threshold").mValue), stringForLocal(mPhase->mValueStack.at("Activity_Significance_Score").mValue, true)) );
+                    mGraph->setInfo(QString("Significance Score ( %1 %) = %2").arg(stringForLocal(mPhase->mValueStack.at("Activity_Threshold").value()), stringForLocal(mPhase->mValueStack.at("Activity_Significance_Score").value(), true)) );
 
                 mGraph->setOverArrow(GraphView::eBothOverflow);
 
@@ -305,7 +306,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
 
                 mGraph->add_curve(curveActivityUnifTheo);
 
-                const type_data yMax = std:: max(map_max(mPhase->mActivitySup).value(), map_max(mPhase->mActivityUnifTheo).value());
+                const type_data yMax = std:: max(map_max(mPhase->mActivitySup)->second, map_max(mPhase->mActivityUnifTheo)->second);
 
                 mGraph->setRangeY(0., yMax);
 
@@ -345,9 +346,9 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
 
 
                 /* ------------------------------------
-             *  Theta Credibility
-             * ------------------------------------
-             */
+                 *  Theta Credibility
+                 * ------------------------------------
+                */
                 GraphCurve curveCred = topLineSection(mPhase->mDuration.mFormatedCredibility,
                                                       "Credibility All Chains",
                                                       color);
@@ -357,8 +358,8 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
                 mGraph->resetNothingMessage();
 
 
-            if (!mPhase->mDuration.mChainsHistos.isEmpty())
-                for (int i = 0; i < mChains.size(); ++i) {
+            if (!mPhase->mDuration.mChainsHistos.empty())
+                for (size_t i = 0; i < mChains.size(); ++i) {
                     const GraphCurve &curveDuration = densityCurve(mPhase->mDuration.histoForChain(i),
                                                                    "Post Distrib Chain " + QString::number(i),
                                                                    Painting::chainColors.at(i), Qt::DotLine);
@@ -516,12 +517,12 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 mGraph->setTipXLab("t");
                 mGraph->setTipYLab("A");
 
-                type_data yMax = map_max(mPhase->mActivity).value();
+                type_data yMax = map_max(mPhase->mActivity)->second;
                 if (showError) {
-                    yMax = std:: max(yMax, map_max(mPhase->mActivitySup).value());
+                    yMax = std:: max(yMax, map_max(mPhase->mActivitySup)->second);
                 }
                 if (showActivityUnif) {
-                    yMax = std:: max(yMax, map_max(mPhase->mActivityUnifTheo).value());
+                    yMax = std:: max(yMax, map_max(mPhase->mActivityUnifTheo)->second);
                 }
                 mGraph->setRangeY(0., yMax);
             }

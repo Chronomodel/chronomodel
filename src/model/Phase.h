@@ -61,9 +61,9 @@ public:
         eZOnly = 2
     };
 
-    Phase (const Model* model = nullptr);
+    Phase ();
     Phase (const Phase& phase);
-    explicit Phase (const QJsonObject& json, const Model* model = nullptr);
+    explicit Phase (const QJsonObject& json);
     Phase& operator=(const Phase& phase);
     void copyFrom(const Phase& phase);
     virtual ~Phase();
@@ -88,7 +88,7 @@ public:
 
     std::pair<double, double> getFormatedTimeRange() const;
 
-    void generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
+    void generateHistos(const std::vector<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
     void generateActivity(size_t gridLength, double h, const double threshold, const double timeRangeLevel = 95.);
 
     void update_AlphaBeta(const double tminPeriod, const double tmaxPeriod);
@@ -101,7 +101,7 @@ public:
 
 public:
     int mId;
-    const Model *mModel;
+    //const Model *mModel;
 
     QString mName; //must be public, to be setting by dialogbox
     QColor mColor;
@@ -118,26 +118,26 @@ public:
     MetropolisVariable mDuration;
     QString mDurationCredibility;
 
-    QMap<double, double> mTempo;
-    QMap<double, double> mTempoInf;
-    QMap<double, double> mTempoSup;
+    std::map<double, double> mTempo;
+    std::map<double, double> mTempoInf;
+    std::map<double, double> mTempoSup;
 
-    QMap<double, double> mActivity;
-    QMap<double, double> mActivityInf;
-    QMap<double, double> mActivitySup;
-    QMap<double, double> mActivityUnifTheo;
+    std::map<double, double> mActivity;
+    std::map<double, double> mActivityInf;
+    std::map<double, double> mActivitySup;
+    std::map<double, double> mActivityUnifTheo;
 
 
     // Raw curve without date format
 
-    QMap<double, double> mRawTempo;
-    QMap<double, double> mRawTempoInf;
-    QMap<double, double> mRawTempoSup;
+    std::map<double, double> mRawTempo;
+    std::map<double, double> mRawTempoInf;
+    std::map<double, double> mRawTempoSup;
 
-    QMap<double, double> mRawActivity;
-    QMap<double, double> mRawActivityInf;
-    QMap<double, double> mRawActivitySup;
-    QMap<double, double> mRawActivityUnifTheo;
+    std::map<double, double> mRawActivity;
+    std::map<double, double> mRawActivityInf;
+    std::map<double, double> mRawActivitySup;
+    std::map<double, double> mRawActivityUnifTheo;
 
     std::unordered_map<std::string, TValueStack> mValueStack;
 

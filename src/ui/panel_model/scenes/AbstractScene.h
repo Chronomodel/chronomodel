@@ -65,10 +65,9 @@ public:
     void adjustSceneRect();
 
     void setProject();
-    //std::shared_ptr<Project> getProject() const;
 
     QList<AbstractItem*> getItemsList() const  {return mItems;}
-    bool showAllThumbs() const { return mShowAllThumbs;}
+    bool showAllThumbs() const {return mShowAllThumbs;}
 
 
     qreal deltaGrid() const {return mDeltaGrid;}

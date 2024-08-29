@@ -888,8 +888,8 @@ QString ModelUtilities::activityResultsHTML(const Phase* p)
         return text;
     }
 
-    double t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("t_min").mValue);
-    double t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("t_max").mValue);
+    double t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("t_min").value());
+    double t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("t_max").value());
 
     if (t1>t2)
         std::swap(t1, t2);
@@ -900,34 +900,34 @@ QString ModelUtilities::activityResultsHTML(const Phase* p)
     text += "<hr>";
     text += "<br>";
     text += line(textBold(textOrange(QObject::tr("Activity"))));
-    t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_TimeRange_min").mValue);
-    t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_TimeRange_max").mValue);
+    t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_TimeRange_min").value());
+    t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_TimeRange_max").value());
 
     if (t1>t2)
         std::swap(t1, t2);
 
-    text += line(textOrange(QObject::tr("Activity Time Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg( stringForLocal(p->mValueStack.at("Activity_TimeRange_Level").mValue),
+    text += line(textOrange(QObject::tr("Activity Time Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg( stringForLocal(p->mValueStack.at("Activity_TimeRange_Level").value()),
                                                                                         stringForLocal(t1),
                                                                                         stringForLocal(t2),
                                                                                         DateUtils::getAppSettingsFormatStr())));
 
     text += line(textOrange("Activity Span = " + stringForLocal(t2-t1) ));
-    text += line(textOrange("Activity Theta mean = " + stringForLocal(DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_mean95").mValue)) + " " + DateUtils::getAppSettingsFormatStr()));
-    text += line(textOrange("Activity Theta std = " + stringForLocal(p->mValueStack.at("Activity_std95").mValue) ));
+    text += line(textOrange("Activity Theta mean = " + stringForLocal(DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_mean95").value())) + " " + DateUtils::getAppSettingsFormatStr()));
+    text += line(textOrange("Activity Theta std = " + stringForLocal(p->mValueStack.at("Activity_std95").value()) ));
 
     text += "<br>";
     text += line(textBold(textOrange(QObject::tr("h Estimation"))));
 
-    QString textValue = stringForLocal(p->mValueStack.at("Activity_Significance_Score").mValue, true);
-    const double threshold = p->mValueStack.at("Activity_Threshold").mValue;
-    const auto hActi = p->mValueStack.at("Activity_h").mValue;
+    QString textValue = stringForLocal(p->mValueStack.at("Activity_Significance_Score").value(), true);
+    const double threshold = p->mValueStack.at("Activity_Threshold").value();
+    const auto hActi = p->mValueStack.at("Activity_h").value();
     text += line(textOrange("Significance Score"  + QString(" ( %1 %) = ").arg(threshold) + textValue + QString(" with h = %1").arg(hActi)));
 
     text += line(""); 
-    text += line(textOrange("Activity max"  + QString(" = %1").arg(p->mValueStack.at("Activity_max").mValue) ));
-    text += line(textOrange("Activity mode"  + QString(" = %1").arg(DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_mode").mValue)) + " " + DateUtils::getAppSettingsFormatStr() )) ;
+    text += line(textOrange("Activity max"  + QString(" = %1").arg(p->mValueStack.at("Activity_max").value()) ));
+    text += line(textOrange("Activity mode"  + QString(" = %1").arg(DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_mode").value())) + " " + DateUtils::getAppSettingsFormatStr() )) ;
 
-    const double hUnif = (3.686*p->mValueStack.at("Activity_std95").mValue)/pow(p->mEvents.size(), 1./5.);
+    const double hUnif = (3.686*p->mValueStack.at("Activity_std95").value())/pow(p->mEvents.size(), 1./5.);
     text += "<br>";
     text += line(textOrange("Optimal h (Uniform kernel) = " + stringForLocal(hUnif)));
 
@@ -1103,6 +1103,33 @@ short ModelUtilities::HPDOutsideSudyPeriod(const QMap<double, double> &hpd, cons
     return answer;
 }
 
+short ModelUtilities::HPDOutsideSudyPeriod(const std::map<double, double> &hpd, const std::shared_ptr<ModelCurve> model)
+{
+    std::map<double, double>::const_iterator iter(hpd.begin());
+    short answer = 0;
+    const double tmin = model->mSettings.getTminFormated();
+    const double tmax = model->mSettings.getTmaxFormated();
+    // We suppose QMap is sort <
+    while (iter != hpd.end()) {
+        const double v = iter->second;
+        if (v > 0) {
+            const double t = iter->first;
+            if (t<tmin)
+                answer = -1;
+
+            else if (t>tmax && answer == -1)
+                return 2;
+
+            else if (t>tmax)
+                return 1;
+
+        }
+
+        ++iter;
+    }
+    return answer;
+}
+
 short ModelUtilities::HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const double tmin_formated, const double tmax_formated)
 {
     QMap<double, double>::const_iterator iter(hpd.constBegin());
@@ -1127,6 +1154,32 @@ short ModelUtilities::HPDOutsideSudyPeriod(const QMap<double, double> &hpd, cons
     }
     return answer;
 }
+
+short ModelUtilities::HPDOutsideSudyPeriod(const std::map<double, double> &hpd, const double tmin_formated, const double tmax_formated)
+{
+    std::map<double, double>::const_iterator iter(hpd.begin());
+    short answer = 0;
+    // We suppose QMap is sort <
+    while (iter != hpd.end()) {
+        const double v = iter->second;
+        if (v > 0) {
+            const double t = iter->first;
+            if (t<tmin_formated)
+                answer = -1;
+
+            else if (t>tmax_formated && answer == -1)
+                return 2;
+
+            else if (t>tmax_formated)
+                return 1;
+
+        }
+
+        ++iter;
+    }
+    return answer;
+}
+
 
 double sample_in_repartition (std::shared_ptr<CalibrationCurve> calibrateCurve, const double min, const double max)
 {

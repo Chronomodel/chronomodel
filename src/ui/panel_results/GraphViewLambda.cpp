@@ -119,7 +119,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
         //  Post Distrib Chain i
         // ------------------------------------
 
-        for (int i=0; i<mChains.size(); ++i)  {
+        for (size_t i=0; i<mChains.size(); ++i)  {
             const GraphCurve &curvePostDistribChain = densityCurve(model->mLambdaSpline.histoForChain(i),
                                                                    "Post Distrib Chain " + QString::number(i),
                                                                    Painting::chainColors.at(i),

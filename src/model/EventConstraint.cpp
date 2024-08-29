@@ -41,16 +41,27 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Event.h"
 #include "StateKeys.h"
 
-EventConstraint::EventConstraint():Constraint(),
+EventConstraint::EventConstraint():
+    Constraint(),
     mEventFrom(nullptr),
     mEventTo(nullptr)
 {
 
 }
 
-EventConstraint::EventConstraint(const EventConstraint& ec):Constraint()
+EventConstraint::EventConstraint(const EventConstraint& ec):
+    Constraint(static_cast<Constraint>(ec)),
+    mEventFrom(ec.mEventFrom),
+    mEventTo(ec.mEventTo)
 {
-    EventConstraint::copyFrom(ec);
+}
+
+EventConstraint::EventConstraint(const QJsonObject& json):
+    Constraint(json),
+    mEventFrom(nullptr),
+    mEventTo(nullptr)
+{
+
 }
 
 EventConstraint& EventConstraint::operator=(const EventConstraint& ec)
@@ -61,10 +72,18 @@ EventConstraint& EventConstraint::operator=(const EventConstraint& ec)
 
 void EventConstraint::copyFrom(const Constraint& c)
 {
-    Constraint::copyFrom(c);
+    mId = c.mId;
+    mFromId = c.mFromId;
+    mToId = c.mToId;
+    mEventFrom = nullptr;
+    mEventTo = nullptr;
+}
 
-    const EventConstraint& ec = ((EventConstraint&)c);
-
+void EventConstraint::copyFrom(const EventConstraint& ec)
+{
+    mId = ec.mId;
+    mFromId = ec.mFromId;
+    mToId = ec.mToId;
     mEventFrom = ec.mEventFrom;
     mEventTo = ec.mEventTo;
 }
@@ -77,15 +96,14 @@ EventConstraint::~EventConstraint()
 
 EventConstraint EventConstraint::fromJson(const QJsonObject& json)
 {
-    EventConstraint c;
-    c.mId = json.value(STATE_ID).toInt();
-    c.mFromId = json.value(STATE_CONSTRAINT_BWD_ID).toInt();
-    c.mToId = json.value(STATE_CONSTRAINT_FWD_ID).toInt();
-    return c;
+    EventConstraint ec;
+    ec.mId = json.value(STATE_ID).toInt();
+    ec.mFromId = json.value(STATE_CONSTRAINT_BWD_ID).toInt();
+    ec.mToId = json.value(STATE_CONSTRAINT_FWD_ID).toInt();
+    return ec;
 }
 
 QJsonObject EventConstraint::toJson() const
 {
-    QJsonObject json = Constraint::toJson();
-    return json;
+    return Constraint::toJson();
 }

@@ -40,15 +40,17 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PhaseConstraint.h"
 #include "Phase.h"
 #include "Generator.h"
+#include "StateKeys.h"
 
-PhaseConstraint::PhaseConstraint():Constraint(),
-mGamma(0.f),
-mPhaseFrom(nullptr),
-mPhaseTo(nullptr),
-mGammaType(PhaseConstraint::eGammaUnknown),
-mGammaFixed(1),
-mGammaMin(0),
-mGammaMax(1)
+PhaseConstraint::PhaseConstraint():
+    Constraint(),
+    mGamma(0.),
+    mPhaseFrom(nullptr),
+    mPhaseTo(nullptr),
+    mGammaType(PhaseConstraint::eGammaUnknown),
+    mGammaFixed(1),
+    mGammaMin(0),
+    mGammaMax(1)
 {
 
 }
@@ -56,6 +58,9 @@ mGammaMax(1)
 PhaseConstraint::PhaseConstraint(const PhaseConstraint& pc):
     Constraint()
 {
+    mId = pc.mId;
+    mFromId = pc.mFromId;
+    mToId = pc.mToId;
     mGamma = pc.mGamma;
 
     mPhaseFrom = pc.mPhaseFrom;
@@ -67,6 +72,19 @@ PhaseConstraint::PhaseConstraint(const PhaseConstraint& pc):
     mGammaMax = pc.mGammaMax;
 }
 
+PhaseConstraint::PhaseConstraint (const QJsonObject& json):
+    Constraint(json),
+    mGammaType(PhaseConstraint::GammaType (json.value(STATE_CONSTRAINT_GAMMA_TYPE).toInt())),
+    mGammaFixed(json.value(STATE_CONSTRAINT_GAMMA_FIXED).toDouble()),
+    mGammaMin(json.value(STATE_CONSTRAINT_GAMMA_MIN).toDouble()),
+    mGammaMax(json.value(STATE_CONSTRAINT_GAMMA_MAX).toDouble())
+{
+    mId = json.value(STATE_ID).toInt();
+    mFromId = json.value(STATE_CONSTRAINT_BWD_ID).toInt();
+    mToId = json.value(STATE_CONSTRAINT_FWD_ID).toInt();
+
+}
+
 PhaseConstraint& PhaseConstraint::operator=(const PhaseConstraint& pc)
 {
     copyFrom(pc);
@@ -75,10 +93,16 @@ PhaseConstraint& PhaseConstraint::operator=(const PhaseConstraint& pc)
 
 void PhaseConstraint::copyFrom(const Constraint& c)
 {
-    Constraint::copyFrom(c);
+    mId = c.mId;
+    mFromId = c.mFromId;
+    mToId = c.mToId;
+}
 
-    const PhaseConstraint& pc = (PhaseConstraint&) c;
-
+void PhaseConstraint::copyFrom(const PhaseConstraint& pc)
+{
+    mId = pc.mId;
+    mFromId = pc.mFromId;
+    mToId = pc.mToId;
     mGamma = pc.mGamma;
 
     mPhaseFrom = pc.mPhaseFrom;

@@ -77,7 +77,7 @@ public:
     virtual ~MCMCLoop();
 
     void setMCMCSettings(const MCMCSettings& settings);
-    const QList<ChainSpecs>& chains() const;
+    const std::vector<ChainSpecs> &chains() const;
     void run();
 
 signals:
@@ -102,8 +102,8 @@ protected:
     virtual void finalize() = 0;
     virtual bool adapt(const int batchIndex) = 0;
 
-    QList<ChainSpecs> mLoopChains;
-    int mChainIndex;
+    std::vector<ChainSpecs> mLoopChains;
+    size_t mChainIndex;
     State mState;
 
 };

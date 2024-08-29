@@ -140,9 +140,9 @@ QJsonObject MCMCSettings::toJson() const
     return mcmc;
 }
 
-QList<ChainSpecs> MCMCSettings::getChains() const
+std::vector<ChainSpecs> MCMCSettings::getChains() const
 {
-    QList<ChainSpecs> chains;
+    std::vector<ChainSpecs> chains;
 
     for (int i=0; i<(int)mNumChains; ++i) {
         ChainSpecs chain;
@@ -164,7 +164,7 @@ QList<ChainSpecs> MCMCSettings::getChains() const
         chain.mTotalIter = 0;
         chain.mThinningInterval = mThinningInterval;
         chain.mMixingLevel = mMixingLevel;
-        chains.append(chain);
+        chains.push_back(chain);
     }
     return chains;
 }

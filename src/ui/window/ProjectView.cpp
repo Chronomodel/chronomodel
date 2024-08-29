@@ -43,6 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "ResultsView.h"
 #include "AppSettings.h"
+#include "StateKeys.h"
 
 ProjectView::ProjectView( QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags)
 {
@@ -256,7 +257,8 @@ void ProjectView::applySettings(std::shared_ptr<ModelCurve> &model)
         model->mThreshold = -1;
         model->clearThreshold();
         model->updateDensities(model->mFFTLength, model->mBandwidth, memoThreshold);
-        emit model->newCalculus(); //redraw densities
+        mResultsView->generateCurves();
+        //emit model->newCalculus(); //redraw densities
 
         model->generateModelLog();
         model->generateResultsLog();

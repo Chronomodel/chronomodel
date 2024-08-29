@@ -45,6 +45,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QWidget>
 #include <QJsonObject>
 
+#include "AbstractItem.h"
 #include "Button.h"
 
 class Label;
@@ -63,6 +64,7 @@ class RadioButton;
 class GraphView;
 
 class CurveWidget;
+class EventItem;
 
 
 class EventPropertiesView: public QWidget
@@ -73,17 +75,17 @@ public:
     ~EventPropertiesView();
 
     void updateEvent();
-    const QJsonObject& getEvent() const;
+    const QJsonObject& getEvent();
 
     inline void setCalibChecked(bool checked) { mCalibBut->setChecked(checked);}
     inline bool isCalibChecked() const {return mCalibBut->isChecked();};
     bool hasEvent() const;
     bool hasBound() const;
     bool hasEventWithDates() const;
-    void initEvent(QJsonObject* event = nullptr);
+    void initEvent(QJsonObject *eventObj);
 
 public slots:
-    void setEvent(QJsonObject *event);
+    void setEvent(QJsonObject *eventObj);
     void applyAppSettings();
 
 protected:
@@ -134,7 +136,7 @@ signals:
 
 private:
     int minimumHeight;
-    QJsonObject *mEvent;
+    QJsonObject* mEventObj;
     int mCurrentDateIdx;
 
     QWidget* mTopView;

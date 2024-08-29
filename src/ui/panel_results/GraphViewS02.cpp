@@ -117,8 +117,8 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QList<variable_
         // ------------------------------------
         //  Post Distrib Chain i
         // ------------------------------------
-        if (!model->mS02Vg.mChainsHistos.isEmpty()) {
-            for (qsizetype i=0; i<mChains.size(); ++i)  {
+        if (!model->mS02Vg.mChainsHistos.empty()) {
+            for (size_t i=0; i<mChains.size(); ++i)  {
                 const GraphCurve& curvePostDistribChain = densityCurve(model->mS02Vg.histoForChain(i),
                                                                        "Post Distrib Chain " + QString::number(i),
                                                                        Painting::chainColors.at(i),

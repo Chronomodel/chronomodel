@@ -41,7 +41,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define DATEITEM_H
 
 #include "EventsScene.h"
-#include "StudyPeriodSettings.h"
 
 #include <QObject>
 #include <QGraphicsObject>
@@ -57,21 +56,29 @@ public:
     DateItem(EventsScene* EventsScene, const QJsonObject& date, const QColor& color, const QJsonObject& settings, QGraphicsItem* parent = nullptr);
     virtual ~DateItem();
 
+    enum { Type = UserType + 12 };
+
+    int type() const override
+    {
+        // Enable the use of qgraphicsitem_cast with this item.
+        return Type;
+    };
+
     const QJsonObject& date() const;
     void setOriginalPos(const QPointF pos);
 
     void setGreyedOut(bool greyedOut);
 
-    QRectF boundingRect() const;
+    QRectF boundingRect() const override;
 
     static int mTitleHeight;
     static int mEltsHeight;
 protected:
-    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
-    void mousePressEvent(QGraphicsSceneMouseEvent* e);
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent* e);
-    void mouseMoveEvent(QGraphicsSceneMouseEvent* e);
-    void dropEvent(QGraphicsSceneDragDropEvent* e);
+    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent* e) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent* e) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent* e) override;
+    void dropEvent(QGraphicsSceneDragDropEvent* e) override;
 
 public:
     EventsScene* mEventsScene;

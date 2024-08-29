@@ -57,6 +57,7 @@ PluginUniformForm::PluginUniformForm(PluginUniform* plugin, QWidget* parent, Qt:
     mMaxEdit = new QLineEdit(this);
     mMaxEdit->setAlignment(Qt::AlignHCenter);
     mMaxEdit->setText("100");
+    setTabOrder(mMinEdit, mMaxEdit);
 
     connect(mMinEdit, &QLineEdit::textChanged, this, &PluginUniformForm::valuesAreValid);
     connect(mMaxEdit, &QLineEdit::textChanged, this, &PluginUniformForm::valuesAreValid);

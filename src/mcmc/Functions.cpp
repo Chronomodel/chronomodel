@@ -161,6 +161,91 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &fun)
     return result;
 }
 
+FunctionStat analyseFunction(const std::map<type_data, type_data> &fun)
+{
+    FunctionStat result;
+    if (fun.empty()) {
+        result.max = (type_data)0.;
+        result.mode = (type_data)0.;
+        result.mean = (type_data)0.;
+        result.std = (type_data)(-1.);
+        qDebug() << "[Function::analyseFunction] WARNING : No data !!";
+        return result;
+
+    } else if (fun.size() == 1) {
+        result.max = fun.begin()->first;
+        result.mode = fun.begin()->first;
+        result.mean = fun.begin()->first;
+        result.std = 0.;
+        //qDebug() << "[Function::analyseFunction] WARNING : only one data !! ";
+        result.quartiles.Q1 = fun.begin()->first;
+        result.quartiles.Q2 = fun.begin()->first;
+        result.quartiles.Q3 = fun.begin()->first;
+        return result;
+    }
+
+    type_data max (0.);
+    type_data mode (0.);
+
+    type_data prev_y (0.);
+    QList<type_data> uniformXValues;
+
+    std::map<type_data,type_data>::const_iterator citer = fun.cbegin();
+
+    type_data y_sum = 0;
+    type_data mean = 0;
+    type_data mean_prev;
+    type_data x;
+    type_data y = citer->second;
+    type_data variance = 0;
+
+    // suppression des premiers zéro qui genent le calcul de moyenne
+    for (;citer != fun.cend() && y == 0; ++citer) {
+        y = citer->second;
+    }
+
+    for (;citer != fun.cend(); ++citer) {
+
+        x = citer->first;
+        y = citer->second;
+        y_sum +=  y;
+
+        mean_prev = mean;
+        mean +=  (y / y_sum) * (x - mean_prev);
+        variance += y * (x - mean_prev) * (x - mean);
+
+        // Find max
+        if (max <= y) {
+            max = y;
+            // Tray detection
+            if (prev_y == y) {
+                if (uniformXValues.isEmpty()) {
+                    uniformXValues.append(std::prev(citer)->first); // Adding prev_x
+                }
+                uniformXValues.append(x);
+                // Arbitrary the mode is in the middle of the tray
+                mode = (uniformXValues.first() + uniformXValues.last())/2.;
+
+            } else {
+                uniformXValues.clear(); // If necessary, end of tray
+                mode = x;
+            }
+        }
+        prev_y = y;
+    }
+    variance /=  y_sum;
+
+    result.max = std::move(max);
+    result.mode = std::move(mode);
+    result.std = sqrt(variance);
+    result.mean = std::move(mean);
+
+    const double step = (fun.crbegin()->first - fun.begin()->first) / (double)(fun.size() - 1);
+    std::vector<double> subRepart = calculRepartition(fun);
+    result.quartiles = quartilesForRepartition(subRepart, fun.begin()->first, step);
+
+    return result;
+}
 /**
  * @brief std_Koening Algorithm using the Koenig-Huygens formula, can induce a negative variance
  * return std biaised, must be corrected if unbiais needed
@@ -421,6 +506,31 @@ QList<double> autocorrelation_schoolbook(const QList<double> &trace, const int h
 
 }
 
+QList<double> autocorrelation_schoolbook(const std::vector<double> &trace, const int hmax)
+{
+    QList<double> results;
+    const auto n = trace.size();
+
+    double mean, variance;
+    mean_variance_Knuth(trace, mean, variance);
+    variance *= (double)trace.size();
+
+    results.append(1.); // force the first to exactly 1.
+    double sH = 0.;
+    for (int h = 1; h <= hmax; ++h) {
+        sH = 0.;
+        std::vector<double>::const_iterator iter_H = trace.cbegin() + h;
+        for (std::vector<double>::const_iterator iter = trace.cbegin(); iter != trace.cbegin() + (n-h); ++iter)
+            sH += (*iter - mean) * (*iter_H++ - mean);
+
+        results.append(sH / variance);
+    }
+
+    return results;
+
+}
+
+
 QList<double> autocorrelation_by_convol(const QList<double> &trace, const int hmax)
 {
 
@@ -594,6 +704,47 @@ TraceStat traceStatistic(const QList<type_data> &trace)
     return result;
 }
 
+TraceStat traceStatistic(const std::vector<type_data> &trace)
+{
+    TraceStat result;
+    if (trace.size() == 1) {
+        result.mean = trace.at(0);
+        result.std = 0.; // unbiais
+
+        result.min = trace.at(0);
+        result.max = trace.at(0);
+
+        result.quartiles.Q1 = trace.at(0);
+        result.quartiles.Q2 = trace.at(0);
+        result.quartiles.Q3 = trace.at(0);
+
+        return result;
+    }
+
+    int n = 0;
+    type_data mean = 0.;
+    type_data variance = 0.;
+    type_data previousMean = 0.;
+    type_data previousVariance = 0.;
+
+    for (auto&& x : trace) {
+        n++;
+        previousMean = std::move(mean);
+        previousVariance = std::move(variance);
+        mean = previousMean + (x - previousMean)/n;
+        variance = previousVariance + (x - previousMean)*(x - mean);
+    }
+    result.mean = std::move(mean);
+    result.std = sqrt(variance/(n-1)); // unbiais
+
+    auto minMax = std::minmax_element(trace.begin(), trace.end());
+    result.min = std::move(*minMax.first);
+    result.max = std::move(*minMax.second);
+
+    result.quartiles = quartilesForTrace(trace);
+    return result;
+}
+
 double shrinkageUniform(const double s02)
 {
     //double u = Generator::randomUniform();
@@ -657,6 +808,13 @@ Quartiles quartilesForTrace(const QList<type_data> &trace)
     Quartiles quartiles = quantilesType(trace, 8, 0.25);
     return quartiles;
 }
+
+Quartiles quartilesForTrace(const std::vector<type_data> &trace)
+{
+    Quartiles quartiles = quantilesType(QList<type_data>(trace.begin(), trace.end()), 8, 0.25);
+    return quartiles;
+}
+
 /*
 QList<double> calculRepartition(const QList<double> &calib)
 {
@@ -752,7 +910,63 @@ QList<double> calculRepartition(const QMap<double, double>  &calib)
     return repartition;
 }
 
+std::vector<double> calculRepartition(const std::map<double, double>  &calib)
+{
+    std::vector<double> repartitionTemp;
+
+    // we use long double type because
+    // after several sums, the repartion can be in the double type range
+    long double lastV = 0;
+    long double rep = 0.;
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 4, 0)
+    for (auto [key, value] : calib) {
+        if (value != 0. && lastV != 0.)
+            rep += (lastV + value); // step is constant
+
+        lastV = value;
+
+        repartitionTemp.push_back(rep);
+    }
+#else
+    for (auto it = calib.begin(); it != calib.end(); ++it) {
+        //double key = it.key();
+        double value = it.value();
+        if (value != 0. && lastV != 0.)
+            rep += (lastV + value); // step is constant
+        lastV = value;
+        repartitionTemp.append(rep);
+    }
+#endif
+    // Normalize repartition
+    std::vector<double> repartition;
+    for (auto&& v : repartitionTemp)
+        repartition.push_back(v/rep);
+
+    return repartition;
+}
+
+
 Quartiles quartilesForRepartition(const QList<double> &repartition, const double tmin, const double step)
+{
+    Quartiles quartiles;
+    if (repartition.size()<5) {
+        quartiles.Q1 = tmin;
+        quartiles.Q2 = tmin;
+        quartiles.Q3 = tmin;
+        return quartiles;
+    }
+    const double q1index = vector_interpolate_idx_for_value(0.25, repartition);
+    const double q2index = vector_interpolate_idx_for_value(0.5, repartition);
+    const double q3index = vector_interpolate_idx_for_value(0.75, repartition);
+
+    quartiles.Q1 = tmin + q1index * step;
+    quartiles.Q2 = tmin + q2index * step;
+    quartiles.Q3 = tmin + q3index * step;
+
+    return quartiles;
+}
+Quartiles quartilesForRepartition(const std::vector<double> &repartition, const double tmin, const double step)
 {
     Quartiles quartiles;
     if (repartition.size()<5) {
@@ -825,6 +1039,50 @@ std::pair<double, double> credibilityForTrace(const QList<double> &trace, double
         return credibility;
 }
 
+
+std::pair<double, double> credibilityForTrace(const std::vector<double> &trace, double thresh, double& exactThresholdResult, const QString description)
+{
+    (void) description;
+    std::pair<double, double> credibility(0.,0.);
+    exactThresholdResult = 0.;
+    const size_t n = trace.size();
+    if (n == 1) {
+        credibility.first = trace[0];
+        credibility.second = trace[0];
+        return credibility;
+    }
+
+    if (thresh > 0 && n > 0) {
+        double threshold = std::clamp(thresh, 0.0, 100.0);
+        std::vector<double> sorted (trace);
+        std::sort(sorted.begin(),sorted.end());
+
+        size_t numToRemove = (size_t)floor(n * (1. - threshold / 100.));
+        exactThresholdResult = ((double)n - (double)numToRemove) / (double)n;
+
+        double lmin (0.);
+        size_t foundJ (0);
+
+        for (size_t j=0; j<=numToRemove; ++j) {
+            const double l = sorted.at((n - 1) - numToRemove + j) - sorted.at(j);
+            if ((lmin == 0.) || (l < lmin)) {
+                foundJ = j;
+                lmin = l;
+            }
+        }
+        credibility.first = (double)sorted.at(foundJ);
+        credibility.second = (double)sorted.at((n - 1) - numToRemove + foundJ);
+    }
+
+    if (credibility.first == credibility.second) {
+        //It means : there is only one value
+        exactThresholdResult = 1;
+        //return QPair<double, double>();
+    }
+    //else
+        return credibility;
+}
+
 // Used in generateTempo for credibility
 std::pair<double, double> credibilityForTrace(const QList<int> &trace, double thresh, double& exactThresholdResult, const QString description)
 {
@@ -866,9 +1124,8 @@ std::pair<double, double> credibilityForTrace(const QList<int> &trace, double th
         //return QPair<double, double>();
     }
     //else
-        return credibility;
+    return credibility;
 }
-
 
 /**
  * @brief timeRangeFromTraces
@@ -985,6 +1242,114 @@ std::pair<double, double> timeRangeFromTraces(const QList<double> &trace1, const
     return range;
 }
 
+std::pair<double, double> timeRangeFromTraces(const std::vector<double> &trace1, const std::vector<double> &trace2, const double thresh, const QString description)
+{
+    (void) description;
+    std::pair<double, double> range(- INFINITY, +INFINITY);
+#ifdef DEBUG
+    QElapsedTimer startTime;
+    startTime.start();
+#endif
+    // limit of precision, to accelerate the calculus
+    const double epsilonStep = 0.1/100.;
+
+    // if thresh is equal 0 then return an QPair=(-INFINITY,+INFINITY)
+
+    const size_t n = trace1.size();
+
+    if ( (thresh > 0) && (n > 0) && ((unsigned)trace2.size() == n) ) {
+
+        const double gamma = 1. - thresh/100.;
+
+        double dMin = INFINITY;
+
+        std::vector<double> traceAlpha (trace1);
+        std::vector<double> traceBeta (trace2.size());
+
+        // 1 - map with relation Beta to Alpha
+        std::multimap<double, double> betaAlpha;
+        for(size_t i=0; i<trace1.size(); ++i)
+            betaAlpha.insert(std::pair<double, double>(trace2.at(i),trace1.at(i)) );
+
+        std::copy(trace2.begin(),trace2.end(),traceBeta.begin());
+
+        // keep the beta trace in the same position of the Alpha, so we need to sort them with there values of alpha
+        std::sort(traceBeta.begin(),traceBeta.end(),[&betaAlpha](const double i, const double j){ return betaAlpha.find(i)->second < betaAlpha.find(j)->second  ;} );
+
+        std::sort(traceAlpha.begin(),traceAlpha.end());
+
+        std::vector<double> betaUpper(n);
+
+        // 2- loop on Epsilon to look for a and b with the smallest length
+        for (double epsilon = 0.; epsilon <= gamma; ) {
+
+            // original calcul according to the article const float ha( (traceAlpha.size()-1)*epsilon +1 );
+            // We must decrease of 1 because the array begin at 0
+            const double ha( (traceAlpha.size()-1)*epsilon);
+
+            const size_t haInf ( floor(ha) );
+            const size_t haSup ( ceil(ha) );
+
+            const double a = traceAlpha.at(haInf) + ( (ha-haInf)*(traceAlpha.at(haSup)-traceAlpha.at(haInf)) );
+
+            // 3 - copy only value of beta with alpha greater than a(epsilon)
+            const size_t alphaIdx = ha==haInf ? haInf:haSup;
+
+            const size_t remainingElemt =  n - alphaIdx;
+            betaUpper.resize(remainingElemt);   // allocate space
+
+            // traceBeta is sorted with the value alpha join
+            auto it = std::copy( traceBeta.begin()+ alphaIdx, traceBeta.end(), betaUpper.begin() );
+
+            const size_t betaUpperSize = (size_t) std::distance(betaUpper.begin(), it);
+
+            betaUpper.resize(betaUpperSize);  // shrink container to new size
+
+            /*  std::nth_element has O(N) complexity,
+             *  whereas std::sort has O(Nlog(N)).
+             *  here we don't need complete sorting of the range, so it's advantageous to use it.
+             *
+             * std::nth_element(betaUpper.begin(), betaUpper.begin() + nTarget-1, betaUpper.end());
+             *
+             * in the future with C++17
+             * std::experimental::parallel::nth_element(par,betaUpper.begin(), betaUpper.begin() + nTarget, betaUpper.end());
+             *
+             */
+
+            // 4- We sort all the array
+            std::sort(betaUpper.begin(), betaUpper.end());
+
+            // 5 - Calcul b
+            const double bEpsilon( (1.-gamma)/(1.-epsilon) );
+            // original calcul according to the article const float hb( (betaUpper.size()-1)*bEpsilon +1 );
+            // We must decrease of 1 because the array begin at 0
+            const double hb ( (betaUpper.size() - 1.)*bEpsilon);
+            const int hbInf ( floor(hb) );
+            const int hbSup ( ceil(hb) );
+
+            const double b = betaUpper.at(hbInf) + ( (hb-hbInf)*(betaUpper.at(hbSup)-betaUpper.at(hbInf)) );
+
+            // 6 - keep the shortest length
+
+            if ((b-a) < dMin) {
+                dMin = b - a;
+                range.first = a;
+                range.second = b;
+            }
+
+            epsilon += epsilonStep;
+        }
+    }
+
+
+#ifdef DEBUG
+    qDebug()<<description;
+    qDebug()<<"timeRangeFromTraces done in " + DHMS(startTime.elapsed());
+#endif
+    return range;
+}
+
+
 /**
  * @brief timeRangeFromTraces_old
  * @param trace1
@@ -999,6 +1364,10 @@ std::pair<double, double> transitionRangeFromTraces(const QList<double> &trace1,
     return timeRangeFromTraces(trace1, trace2, thresh, description);
 }
 
+std::pair<double, double> transitionRangeFromTraces(const std::vector<double> &trace1, const std::vector<double> &trace2, const double thresh, const QString description)
+{
+    return timeRangeFromTraces(trace1, trace2, thresh, description);
+}
 
 /**
  * @brief gapRangeFromTraces find the gap between two traces, if there is no solution corresponding to the threshold, we return a QPair=(-INFINITY,+INFINITY)
@@ -1129,6 +1498,129 @@ std::pair<double, double> gapRangeFromTraces(const QList<double> &traceEnd, cons
 
     return range;
 }
+
+std::pair<double, double> gapRangeFromTraces(const std::vector<double> &traceEnd, const std::vector<double> &traceBegin, const double thresh, const QString description)
+{
+    (void) description;
+#ifdef DEBUG
+    QElapsedTimer startTime ;
+    startTime.start();
+#endif
+
+    std::pair<double, double> range = std::pair<double, double>(- INFINITY, + INFINITY);
+
+    // limit of precision, to accelerate the calculus, we set the same as RChronoModel
+    const double epsilonStep = 0.1/100.;
+
+    const auto  n = traceBegin.size();
+
+    if ( (thresh > 0.f) && (n > 0) && (traceEnd.size() == n) ) {
+
+        const double gamma = 1. - thresh/100.;
+
+        double dMax(0.);
+
+        // We must change the type (float to double) to increase the precision
+        std::vector<double> traceBeta (traceEnd.size());
+        std::copy(traceEnd.begin(), traceEnd.end(), traceBeta.begin());
+
+        std::vector<double> traceAlpha (traceBegin.size());
+        std::copy(traceBegin.begin(),traceBegin.end(),traceAlpha.begin());
+
+        // 1 - map with relation Alpha to Beta
+        std::multimap<double, double> alphaBeta;
+        for (size_t i=0; i<traceBegin.size(); ++i)
+            alphaBeta.insert(std::pair<double, double>(traceAlpha.at(i),traceBeta.at(i)) );
+
+        // keep the beta trace in the same position of the Alpha, so we need to sort them with there values of alpha
+        std::sort(traceAlpha.begin(),traceAlpha.end(),[&alphaBeta](const double i, const double j){ return alphaBeta.find(i)->second < alphaBeta.find(j)->second  ;} );
+
+        std::sort(traceBeta.begin(),traceBeta.end());
+
+        std::vector<double> alphaUnder(n);
+
+        // 2- loop on Epsilon to look for a and b with the smallest length
+        // with a const epsilonStep increment, we not reach exactly gamma.
+        // So we have to go hover gamma to find the value for exactly gamma
+
+        for (double epsilon = 0.; epsilon <= gamma; ) {
+
+            const double aEpsilon = 1. - epsilon;
+
+            // Linear interpolation according to R quantile( type=7)
+            // We must decrease of 1 from the original formula because the array begin at 0
+            const double ha( ((double)traceBeta.size()-1.) * aEpsilon);
+
+            const long long haInf( floor(ha) );
+            const long long haSup( ceil(ha) );
+
+            if ((haSup > (int)traceBeta.size()) || (haInf > (int)traceBeta.size()))
+                return range;
+
+            if ((haInf < 0) || (haSup < 0))
+                return range;
+
+            const double a = traceBeta.at(haInf) + ( (ha-(double)haInf)*(traceBeta.at(haSup)-traceBeta.at(haInf)) );
+
+            // 3 - Copy only value of beta with alpha smaller than a(epsilon)!
+            const long long alphaIdx(haSup < n ? haSup : n-1 );//( ha == haInf ? haInf : haSup );//( ha == haSup ? haSup : haInf );// //
+
+            const long long remainingElemt ( alphaIdx );
+            alphaUnder.resize(remainingElemt);   // allocate space
+
+            // traceAlpha is sorted with the value alpha join
+            auto it = std::copy( traceAlpha.begin(), traceAlpha.begin() + alphaIdx, alphaUnder.begin() );
+
+            const long long alphaUnderSize = (long long) std::distance(alphaUnder.begin(), it);
+
+            alphaUnder.resize(alphaUnderSize);  // shrink container to new size
+
+            // 4- We sort all the array
+            std::sort(alphaUnder.begin(), alphaUnder.end());
+
+            // 5 - Calcul b
+            const double bEpsilon( (gamma-epsilon)/(1.-epsilon) );
+
+            // Linear interpolation like in R quantile( type=7)
+
+            const size_t hb( ((double)alphaUnder.size()-1.)* bEpsilon );
+            const size_t hbInf( floor(hb) );
+            const size_t hbSup( ceil(hb) );
+
+            if ((hbSup > alphaUnder.size()) || (hbInf > alphaUnder.size()))
+                return range;
+
+            //if ((hbInf < 0) || (hbSup <0)) // impossible
+            //    return range;
+
+            const double b = alphaUnder.at(hbInf) + ( ((double)hb -(double)hbInf)*(alphaUnder.at(hbSup)-alphaUnder.at(hbInf)) );
+
+            // 6 - keep the longest length
+
+            if ((b-a) >= dMax) {
+                dMax = b - a;
+                range.first = a;
+                range.second = b;
+            }
+            if (epsilon< gamma) {
+                epsilon += epsilonStep;
+                if (epsilon > gamma )
+                    epsilon = gamma;
+
+                // We detect that gamma is passed. To stop the loop we add one more step to exit
+            } else if (epsilon >= gamma)
+                epsilon += epsilonStep;
+        }
+    }
+
+#ifdef DEBUG
+    qDebug()<<"gapRangeFromTraces done in " + DHMS(startTime.elapsed());
+
+#endif
+
+    return range;
+}
+
 
 const QString interval_to_text(const QPair<double, QPair<double, double> > &interval,  DateConversion conversionFunc, const bool forCSV)
 {
@@ -2298,27 +2790,38 @@ std::pair<Matrix2D, MatrixDiag > choleskyLDLT(const Matrix2D &matrix, const size
     return std::pair<Matrix2D, MatrixDiag>(L, D);
 }
 
+/**
+ * @brief abs_minus Calcul std:abs(a-b) for type size_t
+ * @param a
+ * @param b
+ * @return abs(a-b)
+ */
+size_t abs_minus(size_t a, size_t b)
+{
+    return a>b? a-b: b-a;
+}
+
 std::pair<Matrix2D, MatrixDiag > choleskyLDLT(const Matrix2D &matrix, const size_t nbBandes, const size_t shift)
 {
-    const int n = (int)matrix.size();
-    const int n_shift = n-shift; // abs() need integer
+    const size_t n = matrix.size();
+    const size_t n_shift = n>shift? n-shift: 0;//n-shift;
     Matrix2D L = initMatrix2D(n, n);
     MatrixDiag D (n);
 
-    for (int i = shift; i < n_shift; i++) {
+    for (size_t i = shift; i < n_shift; i++) {
             L[i][i] = 1;
-            for (int j = shift; j < std::min(i, n_shift); j++) {
-               if (abs(i - j) <= nbBandes) {
+            for (size_t j = shift; j < std::min(i, n_shift); j++) {
+               if (abs_minus(i, j) <= nbBandes) {
                    L[i][j] = matrix[i][j];
-                   for (int k = shift; k< std::min(j, n_shift); k++) {
+                   for (size_t k = shift; k< std::min(j, n_shift); k++) {
                        L[i][j] -=  L[i][k] * L[j][k] *D[k];
                    }
                    L[i][j] /= D[j];
                }
             }
             D[i] = matrix[i][i];
-            for (int j = shift; j< std::min(i, n_shift); j++)
-                if (abs(i - j) <= nbBandes)
+            for (size_t j = shift; j< std::min(i, n_shift); j++)
+                if (abs_minus(i, j) <= nbBandes)
                     D[i] -=  D[j] * pow(L[i][j], 2.);
       }
 
@@ -2329,8 +2832,8 @@ std::pair<Matrix2D, MatrixDiag > choleskyLDLT(const Matrix2D &matrix, const size
 
 std::pair<Matrix2D, MatrixDiag> choleskyLDLT_Dsup0(const Matrix2D& matrix, const size_t nbBandes, const size_t shift)
 {
-    const int n = (int)matrix.size();
-    const int n_shift = (int)(n-shift);
+    const size_t n = matrix.size();
+    const size_t n_shift = n-shift;
 #ifdef DEBUG
     t_matrix det = determinant_gauss(matrix, shift);
     if (det == 0)
@@ -2339,26 +2842,26 @@ std::pair<Matrix2D, MatrixDiag> choleskyLDLT_Dsup0(const Matrix2D& matrix, const
     Matrix2D L = initMatrix2D(n, n);
     MatrixDiag D =  MatrixDiag (n, 0);
 
-    for (int i = shift; i < n_shift; i++) {
+    for (size_t i = shift; i < n_shift; i++) {
             L[i][i] = 1;
-            for (int j = (int)shift; j < std::min(i, n_shift); j++) {
-               if (abs(i - j) <= nbBandes) {
+            for (size_t j = shift; j < std::min(i, n_shift); j++) {
+               if (abs_minus(i, j) <= nbBandes) {
                    L[i][j] = matrix[i][j];
-                   for (int k = (int)shift; k< std::min(j, n_shift); k++) {
+                   for (size_t k = shift; k< std::min(j, n_shift); k++) {
                        L[i][j] -=  L[i][k] * L[j][k] *D[k];
                    }
                    L[i][j] /= D[j];
                }
             }
             D[i] = matrix[i][i];
-            for (int j = (int)shift; j< std::min(i, n_shift); j++) {
-                if (abs(i - j) <= nbBandes)
+            for (size_t j = shift; j< std::min(i, n_shift); j++) {
+                if (abs_minus(i, j) <= nbBandes)
                     D[i] -=  D[j] * pow(L[i][j], 2.);
             }
 
       }
 #ifdef DEBUG
-    for (auto i = shift; i < n-shift; i++) {
+    for (size_t i = shift; i < n_shift; i++) {
         if (D[i] < 0) {
             qDebug() << "[ Function] choleskyLDLT_Dsup0 : D <0 change to 0"<< (double)D[i];
             D[i] = 0;
@@ -2387,6 +2890,7 @@ std::pair<Matrix2D, MatrixDiag> decompositionCholesky(const Matrix2D &matrix, co
       //if (math_errhandling & MATH_ERREXCEPT) feclearexcept(FE_ALL_EXCEPT);
 
     const size_t dim = matrix.size();
+    const size_t dim_shift = dim>shift? dim-shift: 0;
     Matrix2D matL = initMatrix2D(dim, dim);
     MatrixDiag matD (dim);
 
@@ -2405,14 +2909,14 @@ std::pair<Matrix2D, MatrixDiag> decompositionCholesky(const Matrix2D &matrix, co
         matD[shift] = matrix[shift][shift];
 
         try {
-            for (int i = (int)shift+1; i < (int)(dim-shift); ++i) {
+            for (size_t i = shift+1; i < dim_shift; ++i) {
                 matL[i][shift] = matrix[i][shift] / matD[shift];
                 /*   avec bande */
-                for (int j = shift+1; j < i; ++j) {
-                    if (abs(i - j) <= nbBandes) {
+                for (size_t j = shift+1; j < i; ++j) {
+                    if (abs_minus(i, j) <= nbBandes) {
                         Matrix2D::value_type::value_type _sum = 0.;
-                        for (int k = shift; k < j; ++k) {
-                            if (abs(i - k) <= nbBandes) {
+                        for (size_t k = shift; k < j; ++k) {
+                            if (abs_minus(i, k) <= nbBandes) {
                                 _sum += matL[i][k] * matD[k] * matL[j][k];
                             }
                         }
@@ -2421,8 +2925,8 @@ std::pair<Matrix2D, MatrixDiag> decompositionCholesky(const Matrix2D &matrix, co
                 }
 
                 t_matrix sum = 0.;
-                for (int k = shift; k < i; ++k) {
-                    if (abs(i - k) <= nbBandes) {
+                for (size_t k = shift; k < i; ++k) {
+                    if (abs_minus(i, k) <= nbBandes) {
                         sum += std::pow(matL[i][k], 2.) * matD[k];
                     }
                 }
@@ -2480,7 +2984,7 @@ std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, 
 {
     const Matrix2D &L = decomp.first;
     const MatrixDiag &D = decomp.second;
-    const int n = D.size();
+    const size_t n = D.size();
     std::vector<double> vecGamma (n);
     std::vector<long double> vecU (n);
     std::vector<long double> vecNu (n);
@@ -2489,11 +2993,11 @@ std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, 
         vecU[1] = vecQtY[1];
         vecU[2] = vecQtY[2] - L[2][1] * vecU[1];
 
-        for (int i = 3; i < n-1; ++i) {
+        for (size_t i = 3; i < n-1; ++i) {
             vecU[i] = vecQtY[i] - L[i][i-1] * vecU[i-1] - L[i][i-2] * vecU[i-2]; // pHd : Attention utilisation des variables déjà modifiées
         }
 
-        for (int i = 1; i < n-1; ++i) {
+        for (size_t i = 1; i < n-1; ++i) {
             vecNu[i] = vecU[i] / D[i];
         }
 
@@ -2505,7 +3009,7 @@ std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, 
         if (std::isnan(vecGamma[n-3]))
             vecGamma[n-3] = 0.;
 
-        for (int i = n-4; i > 0; --i) {
+        for (size_t i = n-4; i > 0; --i) {
             vecGamma[i] = vecNu[i] - L[i+1][i] * vecGamma[i+1] - L[i+2][i] * vecGamma[i+2]; // pHd : Attention utilisation des variables déjà modifiées
         }
 
@@ -2560,7 +3064,7 @@ std::vector<long double> resolutionSystemeLineaireCholesky_long(const std::pair<
  */
 Matrix2D Strassen::sub(const Matrix2D &A, const Matrix2D &B)
 {
-    const int n = (int)A.size();
+    const size_t n = A.size();
 
     Matrix2D C  = initMatrix2D(n, n);
 

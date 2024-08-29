@@ -41,6 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ModelUtilities.h"
 #include "QtUtilities.h"
+#include "StateKeys.h"
 #include "StdUtilities.h"
 #include "MainWindow.h"
 
@@ -53,25 +54,41 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <math.h>
 
 
-ModelCurve::ModelCurve(QObject *parent):
-    Model(parent)
+ModelCurve::ModelCurve():
+    Model(),
+    mLambdaSpline(MHVariable()),
+    mS02Vg(MHVariable()),
+    mSO2_beta(0),
+    compute_Y(false),
+    compute_Z(false),
+    compute_X_only(false)
 {
+    mLambdaSpline.setName("mLambdaSpline of Curve");
     mLambdaSpline.mSupport = MetropolisVariable::eR;
     mLambdaSpline.mFormat = DateUtils::eNumeric;
     mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
+    mS02Vg.setName("mS02Vg of Curve");
     mS02Vg.mSupport = MetropolisVariable::eRp;
     mS02Vg.mFormat = DateUtils::eNumeric;
     mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 }
 
-ModelCurve::ModelCurve(const QJsonObject& json, QObject *parent):
-    Model(json, parent)
+ModelCurve::ModelCurve(const QJsonObject& json):
+    Model(json),
+    mLambdaSpline(MHVariable()),
+    mS02Vg(MHVariable()),
+    mSO2_beta(0),
+    compute_Y(false),
+    compute_Z(false),
+    compute_X_only(false)
 {
+    mLambdaSpline.setName("mLambdaSpline of Curve");
     mLambdaSpline.mSupport = MetropolisVariable::eR;
     mLambdaSpline.mFormat = DateUtils::eNumeric;
     mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
+    mS02Vg.setName("mS02Vg of Curve");
     mS02Vg.mSupport = MetropolisVariable::eRp;
     mS02Vg.mFormat = DateUtils::eNumeric;
     mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
@@ -82,8 +99,7 @@ ModelCurve::ModelCurve(const QJsonObject& json, QObject *parent):
 
 ModelCurve::~ModelCurve()
 {
-    qDebug() << "ModelCurve::~ModelCurve()";
-    //clear();
+    qDebug() << "[ModelCurve::~ModelCurve]";
 }
 
 QJsonObject ModelCurve::toJson() const
@@ -179,7 +195,7 @@ void ModelCurve::updateDesignFromJson()
                 for (int k = 0; k<(*iterEvent)->mDates.size(); ++k) {
                     Date& d = (*iterEvent)->mDates[k];
                     for (auto &&dateVal : dates) {
-                        const QJsonObject date = dateVal.toObject();
+                        const QJsonObject& date = dateVal.toObject();
                         const int dateId = date.value(STATE_ID).toInt();
 
                         if (dateId == d.mId) {
@@ -682,7 +698,7 @@ void ModelCurve::generateResultsLog()
     }
 }
 
-void ModelCurve::generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth)
+void ModelCurve::generatePosteriorDensities(const std::vector<ChainSpecs> &chains, int fftLen, double bandwidth)
 {
     Model::generatePosteriorDensities(chains, fftLen, bandwidth);
     if (is_curve) {
@@ -697,7 +713,7 @@ void ModelCurve::generatePosteriorDensities(const QList<ChainSpecs> &chains, int
 
 }
 
-void ModelCurve::generateCorrelations(const QList<ChainSpecs> &chains)
+void ModelCurve::generateCorrelations(const std::vector<ChainSpecs> &chains)
 {
 #ifdef DEBUG
     qDebug()<<"[ModelCurve::generateCorrelations] in progress";
@@ -721,7 +737,7 @@ void ModelCurve::generateCorrelations(const QList<ChainSpecs> &chains)
 #endif
 }
 
-void ModelCurve::generateNumericalResults(const QList<ChainSpecs> &chains)
+void ModelCurve::generateNumericalResults(const std::vector<ChainSpecs> &chains)
 {
     Model::generateNumericalResults(chains);
 
@@ -913,30 +929,30 @@ void ModelCurve::initVariablesForChain()
     }
 
     for (Event*& event : mEvents) {
-        event->mVg.clear();
-        event->mVg.reserve(initReserve);
+        //event->mVg.clear();
+        //event->mVg.reserve(initReserve);
         event->mVg.mAllAccepts.resize(mChains.size());
-        event->mVg.mLastAccepts.reserve(acceptBufferLen);
+        //event->mVg.mLastAccepts.reserve(acceptBufferLen);
         event->mVg.mLastAcceptsLength = acceptBufferLen;
     }
 
-    mLambdaSpline.clear();
-    mLambdaSpline.reserve(initReserve);
+    //mLambdaSpline.clear();
+    //mLambdaSpline.reserve(initReserve);
     mLambdaSpline.mAllAccepts.resize(mChains.size());
-    mLambdaSpline.mLastAccepts.reserve(acceptBufferLen);
+    //mLambdaSpline.mLastAccepts.reserve(acceptBufferLen);
     mLambdaSpline.mLastAcceptsLength = acceptBufferLen;
 
-    mS02Vg.clear();
-    mS02Vg.reserve(initReserve);
+    //mS02Vg.clear();
+    //mS02Vg.reserve(initReserve);
     mS02Vg.mAllAccepts.resize(mChains.size());
-    mS02Vg.mLastAccepts.reserve(acceptBufferLen);
+    //mS02Vg.mLastAccepts.reserve(acceptBufferLen);
     mS02Vg.mLastAcceptsLength = acceptBufferLen;
 
     // Ré-initialisation du stockage des splines
-    mSplinesTrace.clear();
+    //mSplinesTrace.clear();
 
     // Ré-initialisation des résultats
-    mPosteriorMeanGByChain.clear();
+    //mPosteriorMeanGByChain.clear();
     }
 }
 
@@ -1120,7 +1136,7 @@ void ModelCurve::exportMeanGComposanteToReferenceCurves(const PosteriorMeanGComp
         const double step = (xMax - xMin)/(pMeanCompoXYZ.vecG.size() - 1);
 
         rows<<list;
-        rows.reserve(pMeanCompoXYZ.vecG.size());
+        //rows.reserve(pMeanCompoXYZ.vecG.size());
 
         // 3 - Create Row, with each curve
         //  Create data in row
@@ -1159,7 +1175,7 @@ void ModelCurve::exportMeanGComposanteToReferenceCurves(const PosteriorMeanGComp
 
 }
 
-std::vector<MCMCSpline> ModelCurve::fullRunSplineTrace(const QList<ChainSpecs>& chains)
+std::vector<MCMCSpline> ModelCurve::fullRunSplineTrace(const std::vector<ChainSpecs>& chains)
 {
   // Calcul reserve space
     int reserveSize = 0;
@@ -1185,17 +1201,18 @@ std::vector<MCMCSpline> ModelCurve::fullRunSplineTrace(const QList<ChainSpecs>& 
     return splineRunTrace;
 }
 
-std::vector<MCMCSpline> ModelCurve::runSplineTraceForChain(const QList<ChainSpecs>& chains, const int index)
+std::vector<MCMCSpline> ModelCurve::runSplineTraceForChain(const std::vector<ChainSpecs> &chains, const size_t index)
 {
-    int shift = 0;
+    size_t shift = 0;
 
-    for (auto i = 0; i<chains.size(); i++) {
+    for (size_t i = 0; i<chains.size(); i++) {
         const auto &chain = chains.at(i);
         // we add 1 for the init
         //const int burnAdaptSize = 1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch);
         const int burnAdaptSize = 0; // there is only accepted curves
         const int runTraceSize = chain.mRealyAccepted;
         const int firstRunPosition = shift + burnAdaptSize;
+
         if (i == index) {
             return std::vector<MCMCSpline> (mSplinesTrace.begin() + firstRunPosition , mSplinesTrace.begin() + firstRunPosition + runTraceSize);
         }

@@ -48,6 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Generator.h"
 #include "Bound.h"
 #include "QtUtilities.h"
+#include "StateKeys.h"
 #include "StdUtilities.h"
 
 #include <QString>
@@ -63,18 +64,22 @@ Event::Event():
     mName ("no Event Name"),
     mIsCurrent (false),
     mIsSelected (false),
-    mBetaS02(0.),
+    mTheta (MHVariable()),
+    mS02Theta (MHVariable()),
+    mBetaS02 (0.),
     mInitialized (false),
-    mIsNode( false),
+    mIsNode (false),
     mLevel (0),
     mPointType (ePoint),
+    mVg (MHVariable()),
     mMixingCalibrations (std::make_shared<CalibrationCurve>())
 {
-   
+    mTheta.setName("Theta of Event : " + mName);
     mTheta.mSupport = MetropolisVariable::eBounded;
     mTheta.mFormat = DateUtils::eUnknown;
     mTheta.mSamplerProposal = MHVariable::eDoubleExp;
 
+    mS02Theta.setName("S02Theta of Event : " + mName);
     mS02Theta.mSupport = MetropolisVariable::eRpStar;
     mS02Theta.mFormat = DateUtils::eNumeric;
 
@@ -114,6 +119,7 @@ Event::Event():
     mW = 0.;
 
    // MHVariable mVg;
+    mVg.setName("Vg of Event : " + mName);
     mVg.mSupport = MetropolisVariable::eRpStar;
     mVg.mFormat = DateUtils::eNumeric;
     mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
@@ -136,8 +142,8 @@ Event::Event (const QJsonObject& json):
     mIsSelected = json.value(STATE_IS_SELECTED).toBool();
     mIsCurrent = json.value(STATE_IS_CURRENT).toBool();
 
-    mTheta.mSamplerProposal = MHVariable::SamplerProposal (json.value(STATE_EVENT_SAMPLER).toInt());
     mTheta.setName("Theta of Event : " + mName);
+    mTheta.mSamplerProposal = MHVariable::SamplerProposal (json.value(STATE_EVENT_SAMPLER).toInt());
     mTheta.mSupport = MetropolisVariable::eBounded;
     mTheta.mFormat = DateUtils::eUnknown;
     mTheta.mSigmaMH = 1.;
@@ -207,20 +213,9 @@ Event::Event(const Event &origin)
     mConstraintsFwd = origin.mConstraintsFwd;
     mConstraintsBwd = origin.mConstraintsBwd;
 
-
     mTheta = origin.mTheta;
-    /* mTheta.mX = origin.mTheta.mX;
-    mTheta.mSupport = origin.mTheta.mSupport;
-    mTheta.mFormat = origin.mTheta.mFormat;
-    mTheta.mSamplerProposal = origin.mTheta.mSamplerProposal;
-    mTheta.mSigmaMH = origin.mTheta.mSigmaMH;*/
 
     mS02Theta.mX = origin.mS02Theta.mX;
-    /* mS02Theta.mSupport = origin.mS02Theta.mSupport;
-    mS02Theta.mFormat = origin.mS02Theta.mFormat;
-    mS02Theta.mSamplerProposal = origin.mS02Theta.mSamplerProposal;
-    mS02Theta.mSigmaMH = origin.mS02Theta.mSigmaMH;*/
-
 
     mAShrinkage = origin.mAShrinkage;
     mBetaS02 = origin.mBetaS02;
@@ -251,9 +246,6 @@ Event::Event(const Event &origin)
     mW = origin.mW;
 
     mVg = origin.mVg;
-    /*mVg.mSupport = origin.mVg.mSupport;
-    mVg.mFormat = origin.mVg.mFormat;
-    mVg.mSamplerProposal = origin.mVg.mSamplerProposal;*/
 
     mMixingCalibrations = origin.mMixingCalibrations;
 
@@ -331,9 +323,7 @@ Event& Event::operator=(const Event& origin)
 }
 */
 
-/**
- * @todo Check the copy of the color if mJson is not set
- */
+
 void Event::copyFrom(const Event& event)
 {
     mType = event.mType;
@@ -359,17 +349,8 @@ void Event::copyFrom(const Event& event)
     mConstraintsBwd = event.mConstraintsBwd;
 
     mTheta = event.mTheta;
-    /*mTheta.mX = event.mTheta.mX;
-    mTheta.mSupport = event.mTheta.mSupport;
-    mTheta.mFormat = event.mTheta.mFormat;
-    mTheta.mSamplerProposal = event.mTheta.mSamplerProposal;
-    mTheta.mSigmaMH = event.mTheta.mSigmaMH;*/
 
     mS02Theta.mX = event.mS02Theta.mX;
-    /* mS02Theta.mSupport = event.mS02Theta.mSupport;
-    mS02Theta.mFormat = event.mS02Theta.mFormat;
-    mS02Theta.mSamplerProposal = event.mS02Theta.mSamplerProposal;
-    mS02Theta.mSigmaMH = event.mS02Theta.mSigmaMH;*/
 
     mAShrinkage = event.mAShrinkage;
     mBetaS02 = event.mBetaS02;
@@ -409,9 +390,6 @@ void Event::copyFrom(const Event& event)
     mW = event.mW;
 
     mVg = event.mVg;
-   /* mVg.mSupport = event.mVg.mSupport;
-    mVg.mFormat = event.mVg.mFormat;
-    mVg.mSamplerProposal = event.mVg.mSamplerProposal;*/
 
     mMixingCalibrations = event.mMixingCalibrations;
 
@@ -419,7 +397,10 @@ void Event::copyFrom(const Event& event)
 
 Event::~Event()
 {
-   /* mTheta.clear();
+    //qDebug() << "[Event::~Event] Event: ";//<< (mName.isNull()? " Deleted Name": mName);
+
+ /*   mTheta.clear();
+    mTheta.~MHVariable();
     
     for (auto&& date : mDates) {
         date.mTi.clear();
@@ -441,9 +422,8 @@ Event::~Event()
     mVg.clear();
 
     mS02Theta.clear();
-    */
-    //delete mMixingCalibrations;
-    //mMixingCalibrations = nullptr;
+*/
+    mMixingCalibrations = nullptr; //only the pointer
 }
 
 
@@ -451,7 +431,7 @@ Event::~Event()
 
 Event Event::fromJson(const QJsonObject& json)
 {
-    Event event;// = Event();
+    Event event;
     event.mType = Type (json.value(STATE_EVENT_TYPE).toInt());
     event.mId = json.value(STATE_ID).toInt();
     event.mName = json.value(STATE_NAME).toString();
@@ -1501,7 +1481,7 @@ void Event::updateTheta_v4(const double tmin, const double tmax, const double ra
 
 }
 
-void Event::generateHistos(const QList<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+void Event::generateHistos(const std::vector<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
     if (type() != Event::eBound)
         mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
@@ -1512,10 +1492,10 @@ void Event::generateHistos(const QList<ChainSpecs> &chains, const int fftLen, co
         ek->mTheta.mFormatedHisto.clear();
         ek->mTheta.mChainsHistos.clear();
 
-        ek->mTheta.mFormatedHisto.insert(ek->mFixed,1);
+        ek->mTheta.mFormatedHisto.emplace(ek->mFixed, 1);
         // Generate fictifious chains
-        for (int i =0 ;i<chains.size(); ++i)
-            ek->mTheta.mChainsHistos.append(ek->mTheta.mFormatedHisto);
+        for (size_t i =0 ;i<chains.size(); ++i)
+            ek->mTheta.mChainsHistos.push_back(ek->mTheta.mFormatedHisto);
     }
 }
 

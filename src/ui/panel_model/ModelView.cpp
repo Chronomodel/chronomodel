@@ -38,6 +38,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "ModelView.h"
+#include "Bound.h"
+#include "EventDialog.h"
 #include "EventsScene.h"
 #include "PhasesScene.h"
 #include "PhaseItem.h"
@@ -61,6 +63,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Project.h"
 #include "QtUtilities.h"
 #include "StudyPeriodDialog.h"
+#include "PhaseDialog.h"
 
 #include <QtWidgets>
 #include <QtSvg>
@@ -380,7 +383,7 @@ void ModelView::setProject()
     if (!mEventPropertiesView) {
         mEventPropertiesView = new EventPropertiesView(mRightWrapper);
     }
-    mEventPropertiesView->initEvent();
+    mEventPropertiesView->initEvent(nullptr);
     if (!mCalibrationView) {
         mCalibrationView = new CalibrationView(mLeftWrapper);
     }
@@ -409,8 +412,12 @@ void ModelView::updateProject()
     setSettingsValid(settings.mTmin < settings.mTmax);
 
     mEventsScene->updateSceneFromState();
-   // mEventsGlobalView->update();
+    if (mEventsGlobalView->isVisible())
+        mEventsGlobalView->repaint();
+
     mPhasesScene->updateSceneFromState();
+    if (mPhasesGlobalView->isVisible())
+        mPhasesGlobalView->repaint();
 
     // Les sélections dans les scènes doivent être mises à jour après que
     // LES 2 SCENES aient été updatées
@@ -566,7 +573,7 @@ void ModelView::resetInterface()
     mMultiCalibrationView->setVisible(false);
     mMultiCalibrationView->setProject();
 
-    mEventPropertiesView->initEvent();
+    mEventPropertiesView->initEvent(nullptr);
 
     noEventSelected();
 
@@ -599,7 +606,7 @@ bool ModelView::findCalibrateMissing()
     if (!Qevents.isEmpty()) {
         QList<Event> events;
         for (auto&& Qev: Qevents)
-            events.append(Event::fromJson(Qev.toObject()));
+            events.emplace_back(Qev.toObject());
 
         QProgressDialog *progress = new QProgressDialog("Calibration curve missing","Wait" , 1, 10);//, qApp->activeWindow(), Qt::Window);
         progress->setWindowModality(Qt::WindowModal);
@@ -671,14 +678,13 @@ void ModelView::calibrateAll(StudyPeriodSettings newS)
             cal.mRepartition.squeeze();
             cal.mVector.clear();
             cal.mVector.squeeze();
-           // cal.mPlugin = nullptr;
+
         }
         project->mCalibCurves.clear();
 
         QList<Event> events;
         for (auto&& Qev: Qevents) {
-            auto tmpE = Event::fromJson(Qev.toObject());
-            events.append(tmpE);
+            events.emplace_back(Qev.toObject());
         }
 
         QProgressDialog *progress = new QProgressDialog("Calibration in progress...","Wait" , 1, 10);
@@ -835,15 +841,93 @@ void ModelView::createEventInPlace()
 
 void ModelView::createEventKnownInPlace()
 {
-    getProject_ptr()->createEventKnown(0, 0);
+    qDebug() << "[ModelView::createEventKnownInPlace]";
+
+    if (getProject_ptr()->studyPeriodIsValid()) {
+        EventDialog* dialog = new EventDialog(this, tr("New Bound"));
+        if (dialog->exec() == QDialog::Accepted) {
+
+            QJsonObject stateNext = getProject_ptr()->mState;
+            QJsonArray events = stateNext.value(STATE_EVENTS).toArray();
+
+            QJsonObject json;
+
+            json[STATE_EVENT_TYPE] = 1;
+            json[STATE_ID] = getProject_ptr()->getUnusedEventId(events);
+            json[STATE_NAME] = dialog->getName();
+            auto col = dialog->getColor();
+            json[STATE_COLOR_RED] = col.red();
+            json[STATE_COLOR_GREEN] = col.green();
+            json[STATE_COLOR_BLUE] = col.blue();
+            json[STATE_EVENT_SAMPLER] = MHVariable::eFixe;
+
+            json[STATE_ITEM_X] = 0;
+            json[STATE_ITEM_Y] = 0;
+            json[STATE_IS_SELECTED] = false;
+            json[STATE_IS_CURRENT] = false;
+
+            json[STATE_EVENT_POINT_TYPE] = 0;
+            json[STATE_EVENT_X_INC_DEPTH] = 0;
+            json[STATE_EVENT_Y_DEC] = 0;
+            json[STATE_EVENT_Z_F] = 0;
+            json[STATE_EVENT_SX_ALPHA95_SDEPTH] = 0;
+            json[STATE_EVENT_SY] = 0;
+            json[STATE_EVENT_SZ_SF] = 0;
+
+            json[STATE_EVENT_PHASE_IDS] = "";
+
+            json[STATE_EVENT_DATES] = QJsonArray();
+
+            events.append(json);
+            stateNext[STATE_EVENTS] = events;
+
+            getProject_ptr()->pushProjectState(stateNext, "Bound created", true);
+
+        }
+        delete dialog;
+    }
+
 }
 
 void ModelView::createPhaseInPlace()
 {
-    const QRectF viewRect = mPhasesView->rect();
-    const QPointF visiblePos = mPhasesView->mapToScene( int (viewRect.x()), int (viewRect.y()));
+    qDebug() << "[ModelView::createPhaseInPlace]";
 
-    getProject_ptr()->createPhase(visiblePos.x() + viewRect.width()/2., visiblePos.y() + viewRect.height()/2.);
+    if (getProject_ptr()->studyPeriodIsValid()) {
+        PhaseDialog* dialog = new PhaseDialog(this);//qApp->activeWindow());
+
+        if (dialog->exec() == QDialog::Accepted ) {
+            if (dialog->isValid()) {
+                QJsonObject phaseObj = dialog->getPhase();
+                QJsonObject stateNext = getProject_ptr()->mState;
+                QJsonArray phases = stateNext.value(STATE_PHASES).toArray();
+
+                phaseObj[STATE_ID] = getProject_ptr()->getUnusedPhaseId(phases);
+
+                // set Pos.isNull to do ramdom
+                phaseObj[STATE_ITEM_X] = 0;
+                phaseObj[STATE_ITEM_Y] = 0;
+
+                phases.append(phaseObj);
+                stateNext[STATE_PHASES] = phases;
+
+                getProject_ptr()->pushProjectState(stateNext, "Phase created", true);
+
+             } else {
+               QMessageBox message(QMessageBox::Critical,
+                                    tr("Invalid value"),
+                                    dialog->mError,
+                                    QMessageBox::Ok,
+                                    qApp->activeWindow());
+                message.exec();
+                delete dialog;
+                return;
+            }
+
+        }
+        delete dialog;
+    }
+
 }
 
 /**
@@ -898,7 +982,7 @@ void ModelView::showProperties()
 
         // show Properties View
        for (auto item : mEventsScene->selectedItems()) {
-           EventItem* itm = dynamic_cast<EventItem*>(item);
+           const auto& itm = dynamic_cast<EventItem*>(item);
            if (itm != nullptr ) {
                  mEventPropertiesView->setEvent(&itm->mData);
                  break;
@@ -1122,8 +1206,13 @@ void ModelView::togglePropeties(AbstractItem* item)
     mButProperties->setChecked(true);
     mButProperties->update();
       //  updateLayout();
-    mEventPropertiesView->setEvent(&item->mData);
-    showProperties();
+    const auto& eventItem = dynamic_cast<EventItem*>(item);
+
+    if(eventItem) {
+        mEventPropertiesView->setEvent(&item->mData);
+        showProperties();
+    }
+
 
 }
 

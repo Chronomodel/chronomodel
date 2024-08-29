@@ -46,6 +46,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AboutDialog.h"
 #include "AppSettingsDialog.h"
 #include "PluginManager.h"
+#include "ResultsView.h"
 #include "SwitchAction.h"
 #include "RebuildCurveDialog.h"
 #include "AppSettings.h"
@@ -60,7 +61,8 @@ MainWindow::MainWindow(QWidget* parent):
     QMainWindow(parent),
     undo_action(false),
     redo_action(false),
-    mProject(std::make_shared<Project>())
+    mProject(new Project())
+    //mProject(std::make_shared<Project>())
 {
 #ifdef DEBUG
     setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + " DEBUG Mode ");
@@ -559,7 +561,7 @@ void MainWindow::newProject()
 void MainWindow::openProject()
 {
     const QString currentPath = getCurrentPath();
-    // Qt garde la fenetre en memoire pour plus tard. C'est le fonctionnement normal
+    // Qt keeps the QFileDialog window in memory for later. This is normal operation
     const QString path = QFileDialog::getOpenFileName(this,
                                                       tr("Open File"),
                                                       currentPath,
@@ -568,21 +570,24 @@ void MainWindow::openProject()
 
 
     if (!path.isEmpty()) {
+        if (mProject != nullptr) { // if project is closed
+            if (mProject->mState != Project::emptyState()) {
+                mProject->askToSave(tr("Save current project as..."));
 
-        if (mProject != nullptr) {
-            mProject->askToSave(tr("Save current project as..."));
+                disconnectProject();
 
-            disconnectProject();
+                //resetInterface(): clear mEventsScene and mPhasesScene
+                resetInterface();
 
-            //resetInterface(): clear mEventsScene and mPhasesScene, set mProject = nullptr
-            resetInterface();
+            }
 
-        }
-        statusBar()->showMessage(tr("Loading project : %1").arg(path));
-        // assign new project
-        if (mProject != nullptr)
             mProject->clear_calibCurves();
-        mProject.reset(new Project());
+        }
+
+        // assign new project
+        if (mProject == nullptr || mProject->mState.isEmpty() || mProject->mState != Project::emptyState())
+            mProject.reset(new Project());
+
         connectProject();
 
         mProject->setAppSettingsAutoSave();
@@ -590,13 +595,20 @@ void MainWindow::openProject()
         setCurrentPath(info.absolutePath());
 
         // look MainWindows::readSetting()
+        statusBar()->showMessage(tr("Loading project : %1").arg(path));
         if (mProject->load(path) == true) {
+
             activateInterface(true);
 
-            mProjectView->setProject();
             // Create mEventsScene and mPhasesScenes
-            if ( mProject->mModel!=nullptr && !mProject->mModel->mChains.isEmpty()) {
-                    mcmcFinished(); //do initDensities()
+            //if ( mProject->mModel->parent() != nullptr && !mProject->mModel->mChains.empty()) {
+            if ( !mProject->mModel->mChains.empty()) {
+                mcmcFinished(); //do initDensities()
+                mProjectView->mModelView->setProject(); // build scene
+                connect(mProject.get(), &Project::mcmcStarted, mProjectView->mResultsView, &ResultsView::clearResults);
+
+            } else {
+                mProjectView->setProject();
             }
 
             mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true);
@@ -722,7 +734,7 @@ void MainWindow::updateWindowTitle()
 }
 
 /**
- * @brief MainWindow::updateProject come from undo and redo action
+ * @brief MainWindow::updateProject come from undo and redo action and Project::projectStateChanged()
  */
 void MainWindow::updateProject()
 {
@@ -1015,8 +1027,8 @@ void MainWindow::rebuildExportCurve()
             }
         }
 
-        meanG.gx.mapG.min_value =  *std::min_element(begin(meanG.gx.mapG.data), end(meanG.gx.mapG.data));
-        meanG.gx.mapGP.min_value =  *std::min_element(begin(meanG.gx.mapGP.data), end(meanG.gx.mapGP.data));
+        meanG.gx.mapG.min_value = *std::min_element(begin(meanG.gx.mapG.data), end(meanG.gx.mapG.data));
+        meanG.gx.mapGP.min_value = *std::min_element(begin(meanG.gx.mapGP.data), end(meanG.gx.mapGP.data));
 
         if (curveModel->compute_Y) {
             meanG.gy.mapG.min_value = *std::min_element(begin(meanG.gy.mapG.data), end(meanG.gy.mapG.data));
@@ -1030,7 +1042,7 @@ void MainWindow::rebuildExportCurve()
         curveModel->mPosteriorMeanG = std::move(meanG);
 
         // update mPosteriorMeanGByChain
-        for (auto i = 0; i<curveModel->mChains.size(); i++) {
+        for (size_t i = 0; i<curveModel->mChains.size(); i++) {
             const auto &runTraceByChain = curveModel->runSplineTraceForChain(curveModel->mChains, i);
             PosteriorMeanG meanGByChain;
             meanGByChain.gx = clearCompo;
@@ -1278,14 +1290,12 @@ void MainWindow::readSettings(const QString& defaultFilePath)
                 mProjectView->setProject();
 
                 mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, false); // notify false, sinon do updatProject and redo update()
-                // to do, it'is done in project load
-                //if (! mProject->mModel->mChains.isEmpty()) {
+
                 if (mProject->withResults()) {
                     mViewLogAction -> setEnabled(true);
                     mViewResultsAction -> setEnabled(true);
                     mViewResultsAction -> setChecked(true); // Just check the Result Button after computation and mResultsView is show after
 
-                    //mProject->mModel->updateFormatSettings(); // mcmcFinished(mProject->mModel);
                  }
 
             }
@@ -1295,7 +1305,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
     setAppSettings();
     mProjectView->readSettings();
 
-    if (mProject!=nullptr && mProject->mModel!=nullptr && (! mProject->mModel->mChains.isEmpty()) ) {
+    if (mProject!=nullptr && mProject->mModel!=nullptr && (! mProject->mModel->mChains.empty()) ) {
         mProject->mModel->updateDesignFromJson();
         mProjectView->showResults();
    }
@@ -1415,4 +1425,9 @@ void MainWindow::noResult()
 
     mViewModelAction->trigger();
     mProject->setNoResults(true); // set to disable the saving the file *.res
+    if (mProject->mModel != nullptr && !mProject->mModel->mEvents.empty()) {
+        mProject->mModel->clear();
+        //mProject->mModel.reset();
+    }
+
 }

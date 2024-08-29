@@ -74,6 +74,7 @@ double DateUtils::convertToFormat(const double valueToFormat, const FormatDate f
             break;
     }
 }
+
 double DateUtils::convertFromFormat(const double formatedValue, const FormatDate format)
 {
     switch (format) {
@@ -211,6 +212,87 @@ QMap<double, double> DateUtils::convertMapToAppSettingsFormat(const QMap<double,
     }
 
    return mapResult;
+}
+
+std::map<double, double> DateUtils::convertMapToAppSettingsFormat(const std::map<double, double> &mapToFormat)
+{
+    std::map<double, double> mapResult;
+    switch (AppSettings::mFormatDate) {
+    case eCalBP:
+        for (std::map<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
+            mapResult.emplace(1950. - value->first, value->second);
+        break;
+    case eCalB2K:
+        for (std::map<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
+            mapResult.emplace(2000. - value->first, value->second);
+        break;
+    case eDatBP:
+        for (std::map<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
+            mapResult.emplace(value->first - 1950., value->second);
+        break;
+    case eDatB2K:
+        for (std::map<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
+            mapResult.emplace(value->first - 2000., value->second);
+        break;
+    case eKa:
+        for (std::map<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
+            mapResult.emplace((2. - value->first)*1e+03, value->second);
+        break;
+    case eMa:
+        for (std::map<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
+            mapResult.emplace(- value->first*1e+06, value->second);
+        break;
+
+    case eBCAD:
+    case eBCECE:
+    case eNumeric:
+    default:
+        return std::map<double, double>(mapToFormat);
+        break;
+    }
+
+    return mapResult;
+}
+
+std::map<double, double> DateUtils::convertMapFromAppSettingsFormat(const std::map<double, double> &mapToFormat)
+{
+    std::map<double, double> mapResult;
+    switch (AppSettings::mFormatDate) {
+    case eCalBP:
+        for (std::map<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
+            mapResult.emplace(1950. - value->first, value->second);
+        break;
+    case eCalB2K:
+        for (std::map<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
+            mapResult.emplace(2000. - value->first, value->second);
+        break;
+    case eDatBP:
+        for (std::map<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
+            mapResult.emplace(value->first + 1950., value->second);
+        break;
+    case eDatB2K:
+        for (std::map<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
+            mapResult.emplace(value->first + 2000., value->second);
+        break;
+    case eKa:
+        for (std::map<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
+            mapResult.emplace((2. - value->first)*1e+03, value->second);
+        break;
+    case eMa:
+        for (std::map<double, double>::const_iterator value = mapToFormat.cbegin(); value!= mapToFormat.cend(); ++value)
+            mapResult.emplace(- value->first*1e+06, value->second);
+        break;
+
+    case eBCAD:
+    case eBCECE:
+    case eNumeric:
+    default:
+        return std::map<double, double>(mapToFormat);
+        break;
+    }
+
+    return mapResult;
+
 }
 
 bool DateUtils::is_date(const FormatDate format)

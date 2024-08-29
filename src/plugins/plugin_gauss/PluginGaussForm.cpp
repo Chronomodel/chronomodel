@@ -69,6 +69,7 @@ PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::Windo
 
     connect(mErrorEdit, &QLineEdit::textChanged, this, &PluginGaussForm::errorIsValid);
     connect(mAverageEdit, &QLineEdit::textChanged, this, &PluginGaussForm::isValid);
+    setTabOrder(mAverageEdit, mErrorEdit);
 
     mAverageEdit->setText("0");
     mErrorEdit->setText("50");
@@ -88,6 +89,8 @@ PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::Windo
     mBEdit->setAlignment(Qt::AlignHCenter);
     mCEdit = new QLineEdit(this);
     mCEdit->setAlignment(Qt::AlignHCenter);
+    setTabOrder(mAEdit, mBEdit);
+    setTabOrder(mBEdit, mCEdit);
 
     mAEdit->setText("0");
     mBEdit->setText("1");

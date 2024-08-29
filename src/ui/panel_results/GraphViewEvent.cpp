@@ -172,7 +172,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
                 mGraph->add_curve(curveLineBound);
 
                 // generate theorical curves
-                for (int i = 0; i < mChains.size(); ++i) {
+                for (size_t i = 0; i < mChains.size(); ++i) {
                     curveLineBound.mName = "Post Distrib Chain " + QString::number(i);
                     curveLineBound.mPen.setColor(Painting::chainColors.at(i));
 
@@ -201,8 +201,8 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
                  *  Post Distrib Chain i
                  * ------------------------------------
                  */
-                if (!mEvent->mTheta.mChainsHistos.isEmpty())
-                    for (qsizetype i = 0; i < mChains.size(); ++i) {
+                if (!mEvent->mTheta.mChainsHistos.empty())
+                    for (size_t i = 0; i < mChains.size(); ++i) {
                         const GraphCurve &curvePostDistribChain = densityCurve(mEvent->mTheta.mChainsHistos[i],
                                                                                 "Post Distrib Chain " + QString::number(i),
                                                                                 Painting::chainColors.at(i),
@@ -253,8 +253,8 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
                                                         color);
                 curve.mVisible = true;
                 mGraph->add_curve(curve);
-                if (!date.mSigmaTi.mChainsHistos.isEmpty())
-                    for (int j=0; j<mChains.size(); ++j) {
+                if (!date.mSigmaTi.mChainsHistos.empty())
+                    for (size_t j=0; j<mChains.size(); ++j) {
                         const GraphCurve &curveChain = densityCurve(date.mSigmaTi.histoForChain(j),
                                                                      "Post Distrib Date " + QString::number(i) + " Chain " + QString::number(j),
                                                                      Painting::chainColors.at(j));
@@ -274,8 +274,8 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
             curve.mVisible = true;
             mGraph->add_curve(curve);
 
-            if (!mEvent->mS02Theta.mChainsHistos.isEmpty()) {
-                for (int j = 0; j<mChains.size(); ++j) {
+            if (!mEvent->mS02Theta.mChainsHistos.empty()) {
+                for (size_t j = 0; j<mChains.size(); ++j) {
                     const GraphCurve &curveChain = densityCurve(mEvent->mS02Theta.histoForChain(j), "Post Distrib Chain " + QString::number(j), Painting::chainColors.at(j));
                     mGraph->add_curve(curveChain);
                 }
@@ -304,8 +304,8 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
             curve.mVisible = true;
             mGraph->add_curve(curve);
             
-            if (!mEvent->mVg.mChainsHistos.isEmpty()) {
-                for (int j = 0; j<mChains.size(); ++j) {
+            if (!mEvent->mVg.mChainsHistos.empty()) {
+                for (size_t j = 0; j<mChains.size(); ++j) {
                     const GraphCurve &curveChain = densityCurve(mEvent->mVg.histoForChain(j), "Post Distrib Chain " + QString::number(j), Painting::chainColors.at(j));
                     mGraph->add_curve(curveChain);
                 }

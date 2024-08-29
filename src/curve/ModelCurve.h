@@ -65,8 +65,8 @@ public:
     bool compute_Y, compute_Z, compute_X_only;
     bool is_curve;
 
-    ModelCurve(QObject* parent = nullptr);
-    explicit ModelCurve(const QJsonObject& json, QObject* parent = nullptr);
+    ModelCurve();//QObject* parent = nullptr);
+    explicit ModelCurve(const QJsonObject& json);//, QObject* parent = nullptr);
     virtual ~ModelCurve();
 
     void setProject();
@@ -83,9 +83,9 @@ public:
     virtual void generateModelLog();
     virtual void generateResultsLog();
 
-    void generatePosteriorDensities(const QList<ChainSpecs> &chains, int fftLen, double bandwidth);
-    virtual void generateCorrelations(const QList<ChainSpecs> &chains);
-    void generateNumericalResults(const QList<ChainSpecs> &chains);
+    void generatePosteriorDensities(const std::vector<ChainSpecs> &chains, int fftLen, double bandwidth);
+    virtual void generateCorrelations(const std::vector<ChainSpecs> &chains);
+    void generateNumericalResults(const std::vector<ChainSpecs> &chains);
     virtual void generateCredibility(const double thresh);
     void generateHPD(const double thresh);
     
@@ -110,8 +110,8 @@ public:
     // same as void GraphView::exportReferenceCurves()
     void exportMeanGComposanteToReferenceCurves(const PosteriorMeanGComposante pMeanCompoXYZ, const QString &defaultPath, QLocale csvLocale, const QString &csvSep) const;
 
-    std::vector<MCMCSpline> fullRunSplineTrace(const QList<ChainSpecs> &chains);
-    std::vector<MCMCSpline> runSplineTraceForChain(const QList<ChainSpecs>& chains, const int index);
+    std::vector<MCMCSpline> fullRunSplineTrace(const std::vector<ChainSpecs> &chains);
+    std::vector<MCMCSpline> runSplineTraceForChain(const std::vector<ChainSpecs>& chains, const size_t index);
 
 public slots:
     void saveMapToFile(QFile *file, const QString csvSep, const CurveMap &map);

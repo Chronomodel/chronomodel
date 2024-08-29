@@ -51,7 +51,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 
 int DateItem::mTitleHeight (20);
-int DateItem:: mEltsHeight (40);
+int DateItem::mEltsHeight (40);
 
 DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QColor& color, const QJsonObject& settings, QGraphicsItem* parent):QGraphicsObject(parent),
     mEventsScene (EventsScene),
@@ -154,6 +154,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
 DateItem::~DateItem()
 {
     mEventsScene = nullptr;
+    mCalibThumb = QPixmap();
   //  mDate.~QJsonObject(); // Don't delete the JSON, we need it when we delete an event.
   
    /* delete mDatesAnim;

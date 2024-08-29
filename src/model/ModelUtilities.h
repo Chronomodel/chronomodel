@@ -89,8 +89,10 @@ public:
     static QString S02ResultsHTML(const std::shared_ptr<ModelCurve> model = nullptr);
 
     static short HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const std::shared_ptr<ModelCurve> model);
-    static short HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const double tmin_formated, const double tmax_formated);
+    static short HPDOutsideSudyPeriod(const std::map<double, double> &hpd, const std::shared_ptr<ModelCurve> model);
 
+    static short HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const double tmin_formated, const double tmax_formated);
+    static short HPDOutsideSudyPeriod(const std::map<double, double> &hpd, const double tmin_formated, const double tmax_formated);
 
 };
 QString HTML_to_text(const QString &HTML);

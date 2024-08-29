@@ -42,14 +42,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "EventKnownItem.h"
 #include "MainWindow.h"
 #include "PhaseItem.h"
+#include "StateKeys.h"
 
 #include <QtWidgets>
 
 #include <math.h>
 
 
-ArrowItem::ArrowItem(AbstractScene* scene, Type type, const QJsonObject& constraint, QGraphicsItem* parent):QGraphicsItem(parent),
-    mType(type),
+ArrowItem::ArrowItem(AbstractScene* scene, TypeFrom type_from, const QJsonObject& constraint, QGraphicsItem* parent):QGraphicsItem(parent),
+    mTypeFrom(type_from),
     mScene(scene),
     mStart(0, 0),
     mEnd(0., 0),
@@ -121,7 +122,7 @@ void ArrowItem::updatePosition()
     QJsonObject from;
     QJsonObject to;
 
-    if (mType == eEvent) {
+    if (mTypeFrom == eEvent) {
         const QJsonArray &events = state.value(STATE_EVENTS).toArray();
         for (const auto ev : events) {
             const QJsonObject &event = ev.toObject();
@@ -141,7 +142,7 @@ void ArrowItem::updatePosition()
         }
     }
 
-    if (mType == eEvent) {
+    if (mTypeFrom == eEvent) {
         EventItem* ev_from = findEventItemWithJsonId(fromId);
         mStart = ev_from->pos();
 
@@ -565,12 +566,12 @@ QString ArrowItem::getBubbleText() const
 {
     QString bubbleText;
     if (mShowDelete)
-        if (mType == eEvent)
+        if (mTypeFrom == eEvent)
             bubbleText = "X";
         else
             bubbleText = "?";
 
-    else if (mType == ePhase) {
+    else if (mTypeFrom == ePhase) {
             PhaseConstraint::GammaType gammaType = PhaseConstraint::GammaType (mData.value(STATE_CONSTRAINT_GAMMA_TYPE).toInt());
             if (gammaType == PhaseConstraint::eGammaFixed)
                 bubbleText = "hiatus ≥ " + QLocale().toString(mData.value(STATE_CONSTRAINT_GAMMA_FIXED).toDouble());
@@ -584,8 +585,8 @@ QString ArrowItem::getBubbleText() const
 
 EventItem* ArrowItem::findEventItemWithJsonId(const int id)
 {
-    QList<AbstractItem*> listItems = mScene->getItemsList();
-    for (AbstractItem* it: listItems) {
+    auto listItems = mScene->getItemsList();
+    for (const auto &it: listItems) {
         EventItem* ev = static_cast<EventItem*>(it);
         const QJsonObject &evJson = ev->getData();
         if (evJson.value(STATE_ID) == id)
@@ -596,8 +597,8 @@ EventItem* ArrowItem::findEventItemWithJsonId(const int id)
 
 PhaseItem* ArrowItem::findPhaseItemWithJsonId(const int id)
 {
-    QList<AbstractItem*> listItems = mScene->getItemsList();
-    for (AbstractItem* it: listItems) {
+    auto listItems = mScene->getItemsList();
+    for (const auto &it: listItems) {
         PhaseItem* ph = static_cast<PhaseItem*>(it);
         const QJsonObject &phJson = ph->getData();
         if (phJson.value(STATE_ID) == id)

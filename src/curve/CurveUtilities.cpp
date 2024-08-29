@@ -1942,7 +1942,7 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const 
 
             if ( cv <= mini_cv + 1E-16) {
                 mini_cv = cv;
-                mini_cv_idx = CV.size();
+                //mini_cv_idx = CV.size();
             }
             CV.push_back(cv);
             lambda_CV.push_back(lambda_loop);

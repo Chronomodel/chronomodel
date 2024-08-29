@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -45,7 +45,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QString>
 #include <QLabel>
 
-class Phase;
 class Button;
 class LineEdit;
 class QComboBox;
@@ -56,20 +55,7 @@ class PhaseDialog: public QDialog
 {
     Q_OBJECT
 public:
-    PhaseDialog(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Window);
-    ~PhaseDialog();
 
-    void setPhase(const QJsonObject& phase);
-    QJsonObject getPhase();
-
-    bool isValid();
-
-protected slots:
-    void showAppropriateTauOptions(int typeIndex);
-
-
-public:
-    QJsonObject mPhase;
 
     QLabel* mNameLab;
     QLabel* mColorLab;
@@ -82,6 +68,21 @@ public:
     LineEdit* mTauFixedEdit;
 
     QString mError;
+
+public:
+    PhaseDialog(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Window);
+    ~PhaseDialog();
+
+    void setPhase(QJsonObject phaseObj);
+    QJsonObject getPhase();
+
+    bool isValid();
+
+protected slots:
+    void showAppropriateTauOptions();
+
+private :
+    QJsonObject _data;
 };
 
 #endif

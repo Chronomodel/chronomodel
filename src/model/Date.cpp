@@ -65,23 +65,27 @@ Date::Date(const Event *event):
     mColor = Qt::blue;
     mOrigin = eSingleDate;
     mPlugin = nullptr;
+
     mTi.setName("Ti of Date : " + mName);
     mTi.mSupport = MetropolisVariable::eR;
+    mTi.mFormat = DateUtils::eUnknown;
+    mTi.mSamplerProposal = MHVariable::eMHPrior;
 
     mSigmaTi.setName("SigmaTi of Date : " + mName);
     mSigmaTi.mSupport = MetropolisVariable::eRp;
-    mWiggle.mSupport = MetropolisVariable::eR;
-
-    mTi.mFormat = DateUtils::eUnknown;
     mSigmaTi.mFormat = DateUtils::eUnknown;
+    mSigmaTi.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
+    mWiggle.setName("Wiggle of Date : " + mName);
+    mWiggle.mSupport = MetropolisVariable::eR;
     mWiggle.mFormat = DateUtils::eUnknown;
 
     mId = -1;
     mUUID = QString("NONE");
 
-    mTi.mSamplerProposal = MHVariable::eMHPrior;
+
     updateti = &Date::Prior;
-    mSigmaTi.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
 
     mIsValid = false;
     mDelta = 0.;
@@ -125,14 +129,16 @@ void Date::init()
 
     mTi.setName("Ti of Date : " + mName);
     mTi.mSupport = MetropolisVariable::eR;
+    mTi.mFormat = DateUtils::eUnknown;
     mTi.mSamplerProposal = MHVariable::eMHPrior;
 
     mSigmaTi.setName("SigmaTi of Date : " + mName);
     mSigmaTi.mSupport = MetropolisVariable::eRp;
-    mWiggle.mSupport = MetropolisVariable::eR;
-
-    mTi.mFormat = DateUtils::eUnknown;
     mSigmaTi.mFormat = DateUtils::eUnknown;
+    mSigmaTi.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
+    mWiggle.setName("Wiggle of Date : " + mName);
+    mWiggle.mSupport = MetropolisVariable::eR;
     mWiggle.mFormat = DateUtils::eUnknown;
 
     mId = -1;
@@ -173,6 +179,9 @@ void Date::copyFrom(const Date& date)
 {
     mEvent = date.mEvent;
     mTi = date.mTi;
+    /*mTi.setName("Ti of Date : " + date.mName);
+    mTi.mSupport = date.mTi.mSupport;
+    mTi.mSamplerProposal = date.mTi.mSamplerProposal;*/
 
     mId = date.mId;
     mUUID = date.mUUID;
@@ -180,14 +189,12 @@ void Date::copyFrom(const Date& date)
     mName = date.mName;
     mColor = date.mColor;
 
-    mTi.setName("Ti of Date : " + date.mName);
-    mTi.mSupport = date.mTi.mSupport;
-    mTi.mSamplerProposal = date.mTi.mSamplerProposal;
+
 
     mSigmaTi = date.mSigmaTi;
-    mSigmaTi.setName("SigmaTi of Date : " + date.mName);
+    /*mSigmaTi.setName("SigmaTi of Date : " + date.mName);
     mSigmaTi.mSupport = date.mSigmaTi.mSupport;
-    mSigmaTi.mSamplerProposal = date.mSigmaTi.mSamplerProposal;
+    mSigmaTi.mSamplerProposal = date.mSigmaTi.mSamplerProposal;*/
 
     mWiggle = date.mWiggle;
     mDelta = date.mDelta;
@@ -228,6 +235,9 @@ Date::~Date()
     mPlugin = nullptr;
     mCalibration = nullptr;
     mWiggleCalibration = nullptr;
+
+    mTi.clear();
+    mSigmaTi.clear();
 }
 
 bool Date::isNull() const
@@ -1330,7 +1340,7 @@ double Date::getFormatedTmaxCalib()const
     return std::max(DateUtils::convertToAppSettingsFormat(mCalibration->mTmin), DateUtils::convertToAppSettingsFormat(mCalibration->mTmax));
 }
 
-void Date::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+void Date::generateHistos(const std::vector<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
     mTi.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
     mSigmaTi.generateHistos(chains, fftLen, bandwidth);
@@ -1500,7 +1510,6 @@ QPixmap Date::generateCalibThumb(StudyPeriodSettings settings)
 
 double Date::getLikelihoodFromCalib(const double &t) const
 {
-    //return interpolate_value_from_curve(t, mCalibration->mVector, mCalibration->mTmin, mCalibration->mTmax);
     return mCalibration->interpolate(t);
 }
 

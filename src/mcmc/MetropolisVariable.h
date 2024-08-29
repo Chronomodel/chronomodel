@@ -54,13 +54,17 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class TValueStack
 {
 public :
-    std::string mName;
-    double mValue;
-    std::string mComment ;
+    TValueStack();
+    explicit TValueStack(double value = 0., std::string comment = "");
 
-    TValueStack():mName("name"), mValue(0.), mComment("comment") {};
-    explicit TValueStack(std::string name, double value = 0., std::string comment ="") : mName(name), mValue(value), mComment(comment) {};
+    virtual ~TValueStack();
 
+    inline double value() const {return m_value;};
+    inline std::string comment() const {return m_comment;};
+
+protected :
+    double m_value;
+    std::string m_comment ;
 };
 
 class MetropolisVariable
@@ -91,14 +95,14 @@ public:
     // mChainsHistos constains posterior densities for each chain, computed using only the "run" part of the trace.
     // This needs to be re-calculated each time we change fftLength or bandwidth.
     // See generateHistos() for more.
-    QMap<double, double> mFormatedHisto;
-    QList<QMap<double, double> > mChainsHistos;
+    std::map<double, double> mFormatedHisto;
+    std::vector<std::map<double, double> > mChainsHistos;
 
     // List of correlations for each chain.
     // They are calculated once, when the MCMC is ready, from the run part of the trace.
     QList<QList<double> > mCorrelations;
 
-    QMap<double, double> mFormatedHPD;
+    std::map<double, double> mFormatedHPD;
     QList<QPair<double, QPair<double, double> > > mRawHPDintervals;
 
     std::pair<double, double> mRawCredibility;
@@ -136,35 +140,36 @@ public:
     // -----
     //  These functions are time consuming!
     // -----
-    void generateCorrelations(const QList<ChainSpecs> &chains);
+    void generateCorrelations(const std::vector<ChainSpecs> &chains);
 
-    void generateHistos(const QList<ChainSpecs> &chains, const int fftLen = 1024, const double bandwidth = 0.9, const double tmin = 0., const double tmax = 0.);
+    void generateHistos(const std::vector<ChainSpecs> &chains, const int fftLen = 1024, const double bandwidth = 0.9, const double tmin = 0., const double tmax = 0.);
     void memoHistoParameter(const int fftLen = 1024, const double bandwidth = 0.9, const double tmin = 0., const double tmax = 0.);
     bool HistoWithParameter(const int fftLen = 1024, const double bandwidth = 0.9, const double tmin = 0., const double tmax = 0.);
 
     void generateHPD(const double threshold = 95);
-    void generateCredibility(const QList<ChainSpecs>& chains, double threshold = 95.);
+    void generateCredibility(const std::vector<ChainSpecs> &chains, double threshold = 95.);
 
 
     // Virtual because MHVariable subclass adds some information
-    virtual void generateNumericalResults(const QList<ChainSpecs>& chains);
+    virtual void generateNumericalResults(const std::vector<ChainSpecs>& chains);
     void updateFormatedCredibility(const DateUtils::FormatDate fm);
 
 
     QMap<double, double> generateHisto(const QList<double>& data, const int fftLen, const  double bandwidth, const double tmin = 0., const double tmax = 0.);
+    std::map<double, double> generateHisto(const std::vector<double> &dataSrc, const int fftLen, const double bandwidth, const double tmin, const double tmax);
 
     // -----
     // These functions do not make any calculation
     // -----
-    QMap<double, double>& fullHisto();
-    QMap<double, double>& histoForChain(const qsizetype index);
+    std::map<double, double> &fullHisto();
+    std::map<double, double> &histoForChain(const size_t index);
 
     // Full trace for the chain (burn + adapt + run)
-    QList<double> fullTraceForChain(const QList<ChainSpecs> &chains,const qsizetype index);
+    std::vector<double> fullTraceForChain(const std::vector<ChainSpecs> &chains, const size_t index);
 
     // Trace for run part as a vector
     template <template<typename...> class C, typename T>
-    C<T> full_run_trace(C<T>* trace, const QList<ChainSpecs>& chains)
+    C<T> full_run_trace(C<T>* trace, const std::vector<ChainSpecs>& chains)
     {
         if (trace == nullptr || trace->size() == 0)
             return C<T>(0);
@@ -197,7 +202,7 @@ public:
     }
 
     template <typename T>
-    QList<T> full_run_trace(std::vector<T>* trace, const QList<ChainSpecs>& chains)
+    QList<T> full_run_trace(std::vector<T>* trace, const std::vector<ChainSpecs>& chains)
     {
         if (trace == nullptr || trace->size() == 0)
             return QList<T>(0);
@@ -231,13 +236,13 @@ public:
 
 
     template <typename T>
-    QList<T> full_run_trace(std::shared_ptr<std::vector<T>> trace, const QList<ChainSpecs>& chains)
+    std::vector<T> full_run_trace(std::shared_ptr<std::vector<T>> trace, const std::vector<ChainSpecs>& chains)
     {
         if (trace == nullptr || trace->size() == 0)
-            return QList<T>(0);
+            return std::vector<T>(0);
 
         else if (trace->size() == chains.size()) // Cas des variables fixes
-            return QList<T>(trace->begin(), trace->end());
+            return std::vector<T>(trace->begin(), trace->end());
 
         // Calcul reserve space
         int reserveSize = 0;
@@ -245,7 +250,7 @@ public:
         for (const ChainSpecs& chain : chains)
             reserveSize += chain.mRealyAccepted;
 
-        QList<T> result(reserveSize);
+        std::vector<T> result(reserveSize);
 
         int shift = 0;
         int shiftTrace = 0;
@@ -263,15 +268,15 @@ public:
         return result;
     }
 
-    inline QList<double> fullRunFormatedTrace(const QList<ChainSpecs>& chains) {return full_run_trace(mFormatedTrace, chains);}
-    inline QList<double> fullRunRawTrace(const QList<ChainSpecs>& chains) {return full_run_trace(mRawTrace, chains);}
+    inline std::vector<double> fullRunFormatedTrace(const std::vector<ChainSpecs>& chains) {return full_run_trace(mFormatedTrace, chains);}
+    inline std::vector<double> fullRunRawTrace(const std::vector<ChainSpecs>& chains) {return full_run_trace(mRawTrace, chains);}
 
-    std::vector<double>::iterator findIter_element(const long unsigned iter, const QList<ChainSpecs>& chains, const qsizetype chainIndex ) const;
+    std::vector<double>::iterator findIter_element(const long unsigned iter, const std::vector<ChainSpecs>& chains, const size_t index ) const;
 
     // Trace for run part of the chain as a vector
 
     template <template<typename...> class C, typename T>
-    C<T> run_trace_for_chain(C<T>* trace, const QList<ChainSpecs>& chains, const qsizetype index) {
+    C<T> run_trace_for_chain(C<T>* trace, const std::vector<ChainSpecs>& chains, const size_t index) {
 
         if (!trace || trace->size() == 0) {
             return C<T>(0);
@@ -282,7 +287,7 @@ public:
         } else  {
 
             int shift = 0;
-            for (qsizetype i = 0; i<chains.size(); ++i)  {
+            for (size_t i = 0; i<chains.size(); ++i)  {
                 const ChainSpecs& chain = chains.at(i);
                 // We add 1 for the init
                 const int burnAdaptSize = 1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch);
@@ -298,7 +303,7 @@ public:
         }
     }
     template <template<typename...> class C, typename T>
-    C<T> run_trace_for_chain(std::shared_ptr<C<T>> trace, const QList<ChainSpecs>& chains, const qsizetype index) {
+    C<T> run_trace_for_chain(std::shared_ptr<C<T>> trace, const std::vector<ChainSpecs>& chains, const size_t index) {
 
         if (!trace || trace->size() == 0) {
             return C<T>(0);
@@ -309,7 +314,7 @@ public:
         } else  {
 
             int shift = 0;
-            for (qsizetype i = 0; i<chains.size(); ++i)  {
+            for (size_t i = 0; i<chains.size(); ++i)  {
                 const ChainSpecs& chain = chains.at(i);
                 // We add 1 for the init
                 const int burnAdaptSize = 1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch);
@@ -325,18 +330,26 @@ public:
         }
     }
     //inline QList<double> runRawTraceForChain(const QList<ChainSpecs>& chains, const qsizetype index) {return run_trace_for_chain(mRawTrace, chains, index); };
-    inline QList<double> runRawTraceForChain(const QList<ChainSpecs>& chains, const qsizetype index) {
+    /*inline QList<double> runRawTraceForChain(const std::vector<ChainSpecs>& chains, const size_t index) {
         const std::vector<double> &trace = run_trace_for_chain(mRawTrace, chains, index);
         return QList<double>(trace.begin(), trace.end());
+    };*/
+    inline std::vector<double> runRawTraceForChain(const std::vector<ChainSpecs>& chains, const size_t index) {
+        const std::vector<double> &trace = run_trace_for_chain(mRawTrace, chains, index);
+        return std::vector<double>(trace.begin(), trace.end());
     };
 
     //inline QList<double> runFormatedTraceForChain(const QList<ChainSpecs>& chains, const qsizetype index) {return run_trace_for_chain(mFormatedTrace, chains, index); };
-    inline QList<double> runFormatedTraceForChain(const QList<ChainSpecs>& chains, const qsizetype index) {
+    /*inline QList<double> runFormatedTraceForChain(const std::vector<ChainSpecs>& chains, const size_t index) {
         const std::vector<double> &trace = run_trace_for_chain(mFormatedTrace, chains, index);
         return QList<double>(trace.begin(), trace.end());
+    };*/
+    inline std::vector<double> runFormatedTraceForChain(const std::vector<ChainSpecs>& chains, const size_t index) {
+        const std::vector<double> &trace = run_trace_for_chain(mFormatedTrace, chains, index);
+        return std::vector<double>(trace.begin(), trace.end());
     };
 
-    QList<double> correlationForChain(const qsizetype index);
+    QList<double> correlationForChain(const size_t index);
 
     virtual QString resultsString(const QString& noResultMessage = QObject::tr("No result to display"),
                                   const QString& unit = QString()) const;
@@ -347,6 +360,7 @@ public:
 
 private:
     void generateBufferForHisto(double* input, const QList<double>& dataSrc, const int numPts, const double a, const double b);
+    void generateBufferForHisto(double* input, const std::vector<double>& dataSrc, const int numPts, const double a, const double b);
     QMap<double, double> bufferToMap(const double* buffer);
 
 

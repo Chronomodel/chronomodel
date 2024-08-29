@@ -1,11 +1,11 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
-	Philippe LANOS
-	Helori LANOS
- 	Philippe DUFRESNE
+    Philippe LANOS
+    Helori LANOS
+    Philippe DUFRESNE
 
 This software is a computer program whose purpose is to
 create chronological models of archeological data using Bayesian statistics.
@@ -55,7 +55,7 @@ CurveSettings::CurveSettings():
     mLambdaSplineType(CURVE_COEFF_LISSAGE_TYPE_DEFAULT),
     mLambdaSpline(CURVE_ALPHA_LISSAGE_DEFAULT)
 {
-    
+
 }
 
 CurveSettings::CurveSettings(const QJsonObject& json)
@@ -138,7 +138,7 @@ CurveSettings::~CurveSettings()
 CurveSettings CurveSettings::getDefault()
 {
     CurveSettings settings;
-    
+
     settings.mProcessType = CURVE_PROCESS_TYPE_DEFAULT;
     settings.mThreshold = 0;
     settings.mUseErrMesure = CURVE_USE_ERR_MESURE_DEFAULT;
@@ -148,7 +148,7 @@ CurveSettings CurveSettings::getDefault()
     settings.mVarianceFixed = CURVE_VARIANCE_FIXED_DEFAULT;
     settings.mLambdaSplineType = CURVE_COEFF_LISSAGE_TYPE_DEFAULT;
     settings.mLambdaSpline = CURVE_ALPHA_LISSAGE_DEFAULT;
-    
+
     return settings;
 }
 
@@ -171,24 +171,30 @@ CurveSettings CurveSettings::fromJson(const QJsonObject& json)
     CurveSettings settings;
 
     settings.mProcessType = json.contains(STATE_CURVE_PROCESS_TYPE) ? CurveSettings::ProcessType (json.value(STATE_CURVE_PROCESS_TYPE).toInt()) : CURVE_PROCESS_TYPE_DEFAULT;
-    
+
     settings.mThreshold  = json.contains(STATE_CURVE_THRESHOLD) ? json.value(STATE_CURVE_THRESHOLD).toDouble() : 0.;
-    
+
     settings.mUseErrMesure = json.contains(STATE_CURVE_USE_ERR_MESURE) ? json.value(STATE_CURVE_USE_ERR_MESURE).toBool() : CURVE_USE_ERR_MESURE_DEFAULT;
-    
+
     settings.mTimeType = json.contains(STATE_CURVE_TIME_TYPE) ? CurveSettings::ProcessMode (json.value(STATE_CURVE_TIME_TYPE).toInt()) : CURVE_TIME_TYPE_DEFAULT;
-    
+
     settings.mVarianceType = json.contains(STATE_CURVE_VARIANCE_TYPE) ? CurveSettings::ProcessMode (json.value(STATE_CURVE_VARIANCE_TYPE).toInt()) : CURVE_VARIANCE_TYPE_DEFAULT;
-    
+
     settings.mUseVarianceIndividual = json.contains(STATE_CURVE_USE_VARIANCE_INDIVIDUAL) ? json.value(STATE_CURVE_USE_VARIANCE_INDIVIDUAL).toBool() : CURVE_USE_VARIANCE_INDIVIDUAL_DEFAULT;
-    
+
     settings.mVarianceFixed = json.contains(STATE_CURVE_VARIANCE_FIXED) ? json.value(STATE_CURVE_VARIANCE_FIXED).toDouble() : CURVE_VARIANCE_FIXED_DEFAULT;
-    
+
     settings.mLambdaSplineType = json.contains(STATE_CURVE_COEFF_LISSAGE_TYPE) ? CurveSettings::ProcessMode (json.value(STATE_CURVE_COEFF_LISSAGE_TYPE).toInt()) : CURVE_COEFF_LISSAGE_TYPE_DEFAULT;
-    
+
     settings.mLambdaSpline = json.contains(STATE_CURVE_ALPHA_LISSAGE) ? json.value(STATE_CURVE_ALPHA_LISSAGE).toDouble() : CURVE_ALPHA_LISSAGE_DEFAULT;
-    
+
     return settings;
+}
+
+CurveSettings::ProcessType CurveSettings::processType_fromJson(const QJsonObject &json)
+{
+   return json.contains(STATE_CURVE_PROCESS_TYPE) ? CurveSettings::ProcessType (json.value(STATE_CURVE_PROCESS_TYPE).toInt()) : CURVE_PROCESS_TYPE_DEFAULT;
+
 }
 
 QJsonObject CurveSettings::toJson() const
@@ -204,13 +210,13 @@ QJsonObject CurveSettings::toJson() const
     cs[STATE_CURVE_VARIANCE_FIXED] = QJsonValue::fromVariant(mVarianceFixed);
     cs[STATE_CURVE_COEFF_LISSAGE_TYPE] = QJsonValue::fromVariant((int)mLambdaSplineType);
     cs[STATE_CURVE_ALPHA_LISSAGE] = QJsonValue::fromVariant(mLambdaSpline);
-    
+
     return cs;
 }
 
 QDataStream &operator<<( QDataStream &stream, const CurveSettings &data )
 {
-    (void) data;  
+    (void) data;
     return stream;
 }
 

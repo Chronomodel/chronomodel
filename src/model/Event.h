@@ -192,7 +192,7 @@ public:
     void updateS02();
     double h_S02(const double S02);
 
-    void generateHistos(const QList<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
+    void generateHistos(const std::vector<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
 
     void updateW();
 

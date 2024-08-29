@@ -90,7 +90,7 @@ public:
     void restoreDefault();
     QJsonObject toJson() const;
 
-    QList<ChainSpecs> getChains() const;
+    std::vector<ChainSpecs> getChains() const;
 
     int mNumChains;
     int mIterPerAquisition;

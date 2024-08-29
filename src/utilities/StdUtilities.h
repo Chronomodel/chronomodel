@@ -96,16 +96,22 @@ QList<float> normalize_vector(const QList<float> &vector);
 
 QMap<double, double> equal_areas(const QMap<double, double> &mapToModify, const QMap<double, double> &mapWithTargetArea);
 QMap<float, float> equal_areas(const QMap<float, float> &mapToModify, const QMap<float, float> &mapWithTargetArea);
+std::map<double, double> equal_areas(const std::map<double, double>& mapToModify, const std::map<double, double>& mapWithTargetArea);
+
 QMap<double, double> equal_areas(const QMap<double, double> &mapToModify, const double targetArea);
 QMap<float, float> equal_areas(const QMap<float, float> &mapToModify, const float targetArea);
+std::map<double, double> equal_areas(const std::map<double, double> &mapToModify, const double targetArea);
 
 QList<double> equal_areas(const QList<double> &data, const double step, const double area);
 QList<float> equal_areas(const QList<float> &data, const float step, const float area);
+std::vector<double> equal_areas(const std::vector<double>& data, const float step, const float area);
 
 
 QMap<float, float> vector_to_map(const QList<float> &data, const float min, const float max, const float step);
 QMap<double, double> vector_to_map(const QList<double> &data, const double min, const double max, const double step);
 QMap<double, double> vector_to_map(const QList<int> &data, const double min, const double max, const double step);
+
+std::map<double, double> vector_to_map(const std::vector<double> &data, const double min, const double max, const double step);
 
 //There is also RefCurve::interpolate_mean()
 double interpolate_value_from_curve(const double t, const QList<double> &curve, const double curveTmin, const double curveTmax);
@@ -121,6 +127,7 @@ const std::map<double, double> create_HPD2(const QMap<double, double> &density, 
 const std::map<double, double> create_HPD_mapping(const QMap<double, double> &density, std::map<double, double> &area_mapping, const double threshold = 95.);
 
 const std::map<double, double> create_HPD_by_dichotomy(const QMap<double, double> &density, QList<QPair<double, QPair<double, double> > > &intervals_hpd, const double threshold);
+const std::map<double, double> create_HPD_by_dichotomy(const std::map<double, double> &density, QList<QPair<double, QPair<double, double> > > &intervals_hpd, const double threshold);
 
 QList<double> vector_to_histo(const QList<double> &vector, const double tmin, const double tmax, const int nbPts);
 
@@ -239,6 +246,22 @@ T interpolateValueInQMap(const U &key, const QMap<U, T> &map)
     }
 
 }
+template <typename T, typename U>
+T interpolateValueInStdMap(const U &key, const std::map<U, T> &map)
+{
+    if (key <= map.begin()->first) {
+        return map.begin()->second;
+
+    } else if (key >= map.crbegin()->first) {
+        return map.crbegin()->second;
+
+    } else {
+        const auto uIter =  map.upper_bound(key) ;
+        const auto lIter = std::prev(uIter);
+
+        return interpolate(key, lIter->first, uIter->first, lIter->second, uIter->second);
+    }
+}
 
 template <template<typename...> class C, class T>
 T range_max_value(const C<T> &range)
@@ -270,7 +293,19 @@ typename QMap<U, T>::const_iterator map_max(const QMap<U, T> &map)
     return biggest;
 
 }
+template <class U, class T>
+typename std::map<U, T>::const_iterator map_max(const std::map<U, T> &map)
+{
+    typename std::map<U, T>::const_iterator i = map.cbegin();
+    typename std::map<U, T>::const_iterator biggest = i;
+    ++i;
 
+    for (; i != map.cend(); ++i)
+        if (i->second > biggest->second )  biggest = i;
+
+    return biggest;
+
+}
 /**
  * @brief We assume that min and max are in the values of the map
  * @param map
@@ -301,6 +336,28 @@ typename QMap<U, T>::const_iterator map_max(const QMap<U, T> &map, U min, U max)
 
 }
 
+template <class U, class T>
+typename std::map<U, T>::const_iterator map_max(const std::map<U, T> &map, U min, U max)
+{
+    typename std::map<U, T>::const_iterator i = map.cbegin();
+    if (map.lastKey()<min)
+        return i;
+
+    else if (map.begin()->first>max)
+        return i;
+
+    else {
+        while (i->first<min)
+            ++i;
+
+        typename std::map<U, T>::const_iterator biggest = i;
+        for (; i != map.cend() && i->first<=max; ++i)
+            if (*i > *biggest )  biggest = i;
+
+        return biggest;
+    }
+
+}
 /**
  * @brief We assume that min and max are in the values of the map
  * @param map

@@ -56,10 +56,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 /** Default constructor */
 MHVariable::MHVariable():
+    MetropolisVariable(),
     mSigmaMH(0),
     mLastAcceptsLength(0),
-    mGlobalAcceptationPerCent(0),
-    mHistoryAcceptRateMH(nullptr),
+    mGlobalAcceptationPerCent(0.),
+    mHistoryAcceptRateMH(new std::vector<double>()),
     mSamplerProposal(eDoubleExp)
 {
 }
@@ -74,30 +75,39 @@ MHVariable::MHVariable(const MHVariable& origin):
     mSamplerProposal(origin.mSamplerProposal)
 {
     mAllAccepts.clear();
+    mHistoryAcceptRateMH = std::shared_ptr<std::vector<double>>(origin.mHistoryAcceptRateMH);
 
-    if (origin.mHistoryAcceptRateMH && !origin.mHistoryAcceptRateMH->isEmpty()) {
+   /* if (origin.mHistoryAcceptRateMH && !origin.mHistoryAcceptRateMH->isEmpty()) {
         if (mHistoryAcceptRateMH)
             mHistoryAcceptRateMH->resize(origin.mHistoryAcceptRateMH->size());
         else
             mHistoryAcceptRateMH = new QList<double>(origin.mHistoryAcceptRateMH->size());
         std::copy(origin.mHistoryAcceptRateMH->begin(), origin.mHistoryAcceptRateMH->end(), mHistoryAcceptRateMH->begin());
-    }
+    }*/
 
 }
 
 MHVariable::MHVariable(const MetropolisVariable& origin):
     MetropolisVariable(origin),
-    mHistoryAcceptRateMH(nullptr)
+    mSigmaMH(0),
+    mLastAcceptsLength(0),
+    mGlobalAcceptationPerCent(0.),
+    mHistoryAcceptRateMH(std::shared_ptr<std::vector<double>>(new std::vector<double>())),
+    mSamplerProposal(eDoubleExp)
 {
     mAllAccepts.clear();
 }
 
 MHVariable::~MHVariable()
 {
-    qDebug()<<"delete MHVariable" << mName;
-    if (mHistoryAcceptRateMH) // && !mHistoryAcceptRateMH->isEmpty())
-        delete mHistoryAcceptRateMH;
-    mHistoryAcceptRateMH = nullptr;
+    //qDebug() << "[MHVariable::~MHVariable] ";//<< (mName.isNull()? " Deleted Name": mName);
+    /*mAllAccepts.clear();
+    mAllAccepts.shrink_to_fit();
+    mLastAccepts.clear();
+    mLastAccepts.shrink_to_fit();
+*/
+   // mHistoryAcceptRateMH.reset();
+
 }
 
 /**
@@ -156,13 +166,8 @@ bool MHVariable::adapt (const double coef_min, const double coef_max, const doub
 void MHVariable::clear()
 {
     MetropolisVariable::clear();
-
-    if (mHistoryAcceptRateMH != nullptr) {
+    if (mHistoryAcceptRateMH)
         mHistoryAcceptRateMH->clear();
-        delete mHistoryAcceptRateMH;
-        mHistoryAcceptRateMH = nullptr;
-        //mHistoryAcceptRateMH->squeeze();
-    }
 
     mLastAccepts.clear();
     mAllAccepts.clear();
@@ -174,10 +179,10 @@ void MHVariable::clear()
 void MHVariable::reserve(const qsizetype reserve)
 {
     MetropolisVariable::reserve(reserve);
-    //mAllAccepts->reserve(reserve);
-    if (!mHistoryAcceptRateMH)
-        mHistoryAcceptRateMH = new QList<double>();
-    mHistoryAcceptRateMH->reserve(reserve);
+    mAllAccepts.reserve(reserve);
+    /*if (!mHistoryAcceptRateMH)
+        mHistoryAcceptRateMH = new QList<double>();*/
+   // mHistoryAcceptRateMH->reserve(reserve);
 }
 
 
@@ -193,15 +198,16 @@ MHVariable& MHVariable::operator=(const MHVariable& origin)
     mAllAccepts = origin.mAllAccepts;
 
     mGlobalAcceptationPerCent = origin.mGlobalAcceptationPerCent;
-            
-    if (origin.mHistoryAcceptRateMH) {
+
+    mHistoryAcceptRateMH = std::shared_ptr<std::vector<double>>(origin.mHistoryAcceptRateMH);
+    /*if (origin.mHistoryAcceptRateMH) {
         if (mHistoryAcceptRateMH == nullptr) {
             mHistoryAcceptRateMH = new QList<double>(*origin.mHistoryAcceptRateMH);
         } else {
             mHistoryAcceptRateMH->resize(origin.mHistoryAcceptRateMH->size());
             std::copy(origin.mHistoryAcceptRateMH->begin(), origin.mHistoryAcceptRateMH->end(), mHistoryAcceptRateMH->begin());
         }
-    }
+    }*/
       
     mSamplerProposal = origin.mSamplerProposal;
     return *this;
@@ -221,23 +227,23 @@ void MHVariable::saveCurrentAcceptRate()
     mHistoryAcceptRateMH->push_back(100. * getCurrentAcceptRate());
 }
 
-QList<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains, int index)
+QList<double> MHVariable::acceptationForChain(const std::vector<ChainSpecs> &chains, size_t index)
 {
     QList<double> accept(0);
-    int shift = 0;
+    size_t shift = 0;
     const int reserveSize = (int) ceil(chains.at(index).mIterPerBurn + (chains.at(index).mBatchIndex * chains.at(index).mIterPerBatch) + chains.at(index).mRealyAccepted);
-    accept.reserve(reserveSize);
+    //accept.reserve(reserveSize);
 
-    for (int i = 0; i < chains.size(); ++i) {
+    for (size_t i = 0; i < chains.size(); ++i) {
         // We add 1 for the init
-        const int chainSize = 1 +chains.at(i).mIterPerBurn + (chains.at(i).mBatchIndex * chains.at(i).mIterPerBatch) + chains.at(i).mRealyAccepted;
+        const size_t chainSize = 1 +chains.at(i).mIterPerBurn + (chains.at(i).mBatchIndex * chains.at(i).mIterPerBatch) + chains.at(i).mRealyAccepted;
 
         if (i == index) {
             // could be done with
             //accept.resize(chainSize
             //std::copy(from_vector.begin(), from_vector.end(), to_vector.begin());
 
-            for (int j = 0; j < chainSize; ++j)
+            for (size_t j = 0; j < chainSize; ++j)
                 accept.append(mHistoryAcceptRateMH->at(shift + j));
 
             break;
@@ -250,12 +256,12 @@ QList<double> MHVariable::acceptationForChain(const QList<ChainSpecs> &chains, i
 
 
 
-void MHVariable::generateGlobalRunAcceptation(const QList<ChainSpecs> &chains)
+void MHVariable::generateGlobalRunAcceptation(const std::vector<ChainSpecs> &chains)
 {
-    int aquisition = 0.;//std::accumulate(chains.begin(), chains.end(), 0, [](ChainSpecs chain){return  chain.mIterPerAquisition;});
+    int aquisition = 0.;//std::accumulate(chains.begin(), chains.end(), 0, [](double sum, ChainSpecs chain){return  sum+chain.mIterPerAquisition;});
 
     mGlobalAcceptationPerCent = 0;
-    for (qsizetype i = 0 ; i<chains.size(); i++) {
+    for (size_t i = 0 ; i<chains.size(); i++) {
         aquisition += chains.at(i).mAquisitionIterIndex/chains.at(i).mThinningInterval;
         mGlobalAcceptationPerCent += mAllAccepts.at(i);
     }
@@ -265,7 +271,7 @@ void MHVariable::generateGlobalRunAcceptation(const QList<ChainSpecs> &chains)
 }
 
 
-void MHVariable::generateNumericalResults(const QList<ChainSpecs> &chains)
+void MHVariable::generateNumericalResults(const std::vector<ChainSpecs> &chains)
 {
     MetropolisVariable::generateNumericalResults(chains);
     generateGlobalRunAcceptation(chains);
@@ -379,9 +385,8 @@ QDataStream &operator>>(QDataStream& stream, MHVariable& data )
     data.mAllAccepts.clear();
     stream >> data.mAllAccepts;
 
-    delete data.mHistoryAcceptRateMH;
-    data.mHistoryAcceptRateMH = load_QList_ptr(stream);
-    
+    //data.mHistoryAcceptRateMH = load_std_vector_ptr(stream);
+    reload_shared_ptr(data.mHistoryAcceptRateMH, stream);
     
     if (!data.mLastAccepts.isEmpty())
         data.mLastAccepts.clear();

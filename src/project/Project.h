@@ -186,7 +186,7 @@ public:
     void clearModel();
     void createEvent(qreal x, qreal y);
     void createEventKnown(qreal x, qreal y);
-    void createPhase(qreal x, qreal y);
+    void createPhase(qreal x, qreal y, QWidget *parent);
     
     void clear_calibCurves();
 

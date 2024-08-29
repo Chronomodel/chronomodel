@@ -42,6 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Project.h"
 #include "Painting.h"
 #include "QtUtilities.h"
+#include "StateKeys.h"
 
 #include <QtWidgets>
 #include <QVariant>
@@ -425,7 +426,6 @@ void CurveSettingsView::setProject()
     if (project != nullptr)
         setConnections(false);
 
-
     const CurveSettings curveSettings (project->mState.value(STATE_CURVE).toObject());
 
     setSettings(curveSettings);
@@ -441,7 +441,7 @@ void CurveSettingsView::reset()
 
 void CurveSettingsView::save()
 {
-    auto project =getProject_ptr();
+    auto project = getProject_ptr();
     QJsonObject stateNext = project->mState;
     stateNext[STATE_CURVE] = getSettings().toJson();
     project->pushProjectState(stateNext, CURVE_SETTINGS_UPDATED_REASON, true);

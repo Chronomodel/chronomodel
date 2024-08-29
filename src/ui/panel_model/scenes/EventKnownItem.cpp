@@ -41,22 +41,21 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "EventsScene.h"
 #include "Painting.h"
-#include "Project.h"
 #include "QtUtilities.h"
 #include "Painting.h"
 #include "GraphView.h"
-#include "Bound.h"
+#include "StateKeys.h"
 
 #include <QtWidgets>
 
 
-EventKnownItem::EventKnownItem(EventsScene* eventsScene, const QJsonObject& event, const QJsonObject& settings, QGraphicsItem* parent):
-    EventItem(eventsScene, event, settings, parent),
+EventKnownItem::EventKnownItem(EventsScene* eventsScene, const QJsonObject& eventObj, const QJsonObject& settings, QGraphicsItem* parent):
+    EventItem(eventsScene, eventObj, settings, parent),
     mThumbH (20)
 {
     mEltsHeight = 60;
     mSize = QSize(230, 136);
-    EventKnownItem::setEvent(event, settings);
+    EventKnownItem::setEvent(eventObj, settings);
 }
 
 EventKnownItem::~EventKnownItem()
@@ -64,11 +63,11 @@ EventKnownItem::~EventKnownItem()
 
 }
 
-void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& settings)
+void EventKnownItem::setEvent(const QJsonObject& eventObj, const QJsonObject& settings)
 {
     prepareGeometryChange();
 
-    mData = event;
+    mData = eventObj;
     // ----------------------------------------------
     //  Update item position and selection
     // ----------------------------------------------
@@ -81,12 +80,10 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     // ----------------------------------------------
     const double tmin = settings.value(STATE_SETTINGS_TMIN).toDouble();
     const double tmax = settings.value(STATE_SETTINGS_TMAX).toDouble();
-    const double step = settings.value(STATE_SETTINGS_STEP).toDouble();
 
-    Bound bound = Bound::fromJson(event);
+    const double fixed = eventObj[STATE_EVENT_KNOWN_FIXED].toDouble();
 
-    if ( (tmin<=bound.mFixed) && (bound.mFixed<=tmax) ) {
-        bound.updateValues(tmin, tmax, step);
+    if ( (tmin<=fixed) && (fixed<=tmax) ) {
 
         GraphView* graph = new GraphView(); // AbstractItem::mItemWidth
         //graph->setFixedSize(200, 50);
@@ -113,7 +110,7 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
 
         //---------------------
 
-        GraphCurve curve = horizontalSection(qMakePair(bound.mFixed, bound.mFixed),"Bound", Painting::mainColorLight, QBrush(Painting::mainColorLight));
+        GraphCurve curve = horizontalSection(qMakePair(fixed, fixed),"Bound", Painting::mainColorLight, QBrush(Painting::mainColorLight));
         curve.mVisible = true;
         graph->add_curve(curve);
 
@@ -126,12 +123,13 @@ void EventKnownItem::setEvent(const QJsonObject& event, const QJsonObject& setti
     } else
         mThumb = QImage();
 
+    //delete bound;
     // ----------------------------------------------
     //  Repaint based on mEvent
     // ----------------------------------------------
     //update(); Done by prepareGeometryChange() at the function start
-    QJsonObject state = getProject_ptr()->mState;
-    CurveSettings curveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+
+    CurveSettings curveSettings = CurveSettings::fromJson(getState_ptr()->value(STATE_CURVE).toObject());
 
     const int nbLines = getNumberCurveLines(curveSettings);
     mCurveTextHeight = (nbLines>0 ? nbLines*mCurveLineHeight: 0);
@@ -209,8 +207,7 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* , 
         painter->drawImage(thumbRect, mThumb, mThumb.rect());
 
     // Phases
-    QJsonObject state = getProject_ptr()->mState;
-    CurveSettings curveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+    CurveSettings curveSettings = CurveSettings::fromJson(getState_ptr()->value(STATE_CURVE).toObject());
 
     QRectF curveRect(rect.x() + side, rect.y() + top + 3*mEltsMargin + mTitleHeight + mThumbH, rect.width() - 2*side,  mCurveTextHeight);
 

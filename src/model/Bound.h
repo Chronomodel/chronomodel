@@ -57,14 +57,12 @@ public:
     double fixedValue() const;
     double formatedFixedValue() const;
 
-    void updateValues(const double &tmin, const double &tmax, const double &step);
-
     virtual void updateTheta(const double, const double);
 
 
 public:
     double mFixed;
-    QMap<double, double> mValues;
+
 };
 
 #endif

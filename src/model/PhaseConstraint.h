@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -41,8 +41,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define PHASECONSTRAINT_H
 
 #include "Constraint.h"
-#include "MHVariable.h"
-#include "StateKeys.h"
 
 class Phase;
 
@@ -55,23 +53,6 @@ public:
         eGammaFixed = 1,
         eGammaRange = 2
     };
-
-    PhaseConstraint();
-    PhaseConstraint(const PhaseConstraint& pc);
-    PhaseConstraint& operator=(const PhaseConstraint& pc);
-    void copyFrom(const Constraint& pc);
-    virtual ~PhaseConstraint();
-
-    static PhaseConstraint fromJson(const QJsonObject& json);
-    QJsonObject toJson() const;
-
-    void initGamma();
-    void updateGamma();
-
-    std::pair<double, double> getFormatedGapRange() const;
-    std::pair<double, double> getFormatedTransitionRange() const;
-
-public:
     double mGamma;
 
     Phase* mPhaseFrom;
@@ -84,6 +65,24 @@ public:
 
     std::pair<double, double> mGapRange;
     std::pair<double, double> mTransitionRange;
+
+    PhaseConstraint();
+    PhaseConstraint(const PhaseConstraint& pc);
+    explicit PhaseConstraint (const QJsonObject& json);
+
+    PhaseConstraint& operator=(const PhaseConstraint& pc);
+    void copyFrom(const Constraint& c);
+    void copyFrom(const PhaseConstraint& pc);
+    virtual ~PhaseConstraint();
+
+    static PhaseConstraint fromJson(const QJsonObject& json);
+    QJsonObject toJson() const;
+
+    void initGamma();
+    void updateGamma();
+
+    std::pair<double, double> getFormatedGapRange() const;
+    std::pair<double, double> getFormatedTransitionRange() const;
 
 };
 

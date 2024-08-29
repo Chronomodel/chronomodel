@@ -53,11 +53,16 @@ CurveRefPts::~CurveRefPts()
 
 GraphCurve::GraphCurve():
     mType(eDensityData),
+    mData (QMap<type_data, type_data>()),
+    mName(QString()),
     mPen(Qt::black, 1),
     mBrush(Qt::NoBrush),
     mIsRectFromZero(false),
+    mDataVector(QList<type_data>()),
     mHorizontalValue(type_data(0)),
     mVerticalValue(type_data(0)),
+    mSections(std::vector<QPair<type_data, type_data> >()),
+    mShape(std::pair<QMap<type_data, type_data>, QMap<type_data, type_data>> ()),
     mVisible(false)
 {
 }
@@ -67,6 +72,9 @@ GraphCurve::~GraphCurve()
     mData.clear();
     mDataVector.clear();
     mSections.clear();
+
+    mShape.first.clear();
+    mShape.second.clear();
 }
 
 
@@ -89,6 +97,25 @@ GraphCurve densityCurve( const QMap<double, double> data,
     curve.mName = name;
     if (!data.isEmpty()) {
         curve.mData = std::move(data);
+        curve.mPen = QPen(lineColor, 1, penStyle);
+
+        if (penStyle == Qt::CustomDashLine)
+            curve.mPen.setDashPattern(QList<qreal>{5, 5});
+        curve.mBrush = brush;
+        curve.mIsRectFromZero = false; // for Unif-typo. calibs. and curveActivityUnifTheo, invisible for others!
+    }
+    return curve;
+}
+GraphCurve densityCurve( const std::map<double, double> data,
+                        const QString &name,
+                        const QColor &lineColor,
+                        const Qt::PenStyle penStyle,
+                        const QBrush &brush)
+{
+    GraphCurve curve;
+    curve.mName = name;
+    if (!data.empty()) {
+        curve.mData = QMap(data);
         curve.mPen = QPen(lineColor, 1, penStyle);
 
         if (penStyle == Qt::CustomDashLine)
@@ -127,6 +154,18 @@ GraphCurve HPDCurve(QMap<double, double> data, const QString &name, const QColor
     GraphCurve curve;
     curve.mName = name;
     curve.mData = std::move(data);
+    curve.mPen = Qt::NoPen;
+    curve.mBrush = QBrush(color);
+    curve.mIsRectFromZero = true;
+    curve.mVisible = is_visible;
+    return curve;
+}
+
+GraphCurve HPDCurve(std::map<double, double> data, const QString &name, const QColor &color, const bool is_visible)
+{
+    GraphCurve curve;
+    curve.mName = name;
+    curve.mData = QMap(data);
     curve.mPen = Qt::NoPen;
     curve.mBrush = QBrush(color);
     curve.mIsRectFromZero = true;
@@ -184,6 +223,36 @@ GraphCurve shapeCurve(const QMap<double, double> &dataInf, const QMap<double, do
     curve.mType = GraphCurve::eShapeData;
 
     curve.mShape = std::make_pair(dataInf, dataSup);
+    curve.mPen = QPen(lineColor, 1, penStyle);
+
+    if (penStyle == Qt::CustomDashLine) {
+        curve.mPen.setDashPattern(QList<qreal>{2, 2});
+        /*QList<qreal> dashes;
+        qreal space = 5;
+        dashes << 5 << space << 5 << space << 9 << space<< 27 << space << 9 << space;
+        curve.mPen.setDashPattern(dashes);*/
+    }
+
+    curve.mBrush = brush;
+    curve.mIsRectFromZero = false; // for Unif-typo. calibs., invisible for others!
+    curve.mVisible = is_visible;
+    return curve;
+}
+
+GraphCurve shapeCurve(const std::map<double, double> &dataInf, const std::map<double, double> &dataSup,
+                      const QString &name,
+                      const QColor &lineColor,
+                      const Qt::PenStyle penStyle,
+                      const QBrush &brush,
+                      const bool is_visible)
+{
+    GraphCurve curve;
+    curve.mName = name;
+    curve.mType = GraphCurve::eShapeData;
+
+    const QMap<double, double> tmpInf (dataInf);
+    const QMap<double, double> tmpSup (dataSup);
+    curve.mShape = std::make_pair(tmpInf, tmpSup);
     curve.mPen = QPen(lineColor, 1, penStyle);
 
     if (penStyle == Qt::CustomDashLine) {

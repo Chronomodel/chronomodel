@@ -172,6 +172,7 @@ protected:
 public slots:
 
     void clearResults(); // connected to Project::mcmcStarted
+    void generateCurves();
 
 private slots:
 
@@ -186,7 +187,7 @@ private slots:
     // ------------------------------------------------
     void updateMainVariable();
     void createGraphs();
-    void generateCurves();
+
 
     void updateCurvesToShow();
     void updateScales();
@@ -235,6 +236,9 @@ private slots:
     void applyFont();
     void applyThickness(const int value);
     void applyOpacity(const int value);
+
+
+    void setGraphicOption(GraphViewResults &graph);
 
     // Density options
     void applyFFTLength();

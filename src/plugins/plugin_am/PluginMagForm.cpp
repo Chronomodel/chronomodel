@@ -110,7 +110,8 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     mAlpha95Edit->setToolTip(tr("Alpha95 is > 0"));
     mAlpha95Edit->setValidator(validatorRplus);
     connect(mAlpha95Edit, &QLineEdit::textChanged, this, &PluginMagForm::allIsValid);
-
+    setTabOrder(mIncEdit, mAlpha95Edit);
+    setTabOrder(mAlpha95Edit,mDecEdit);
     // --------------------------------------------------------------------------------------- //
     mFieldEdit = new QLineEdit(this);
     mFieldEdit ->setAlignment(Qt::AlignHCenter);
@@ -123,6 +124,7 @@ PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags
     mFieldErrorEdit ->setToolTip(tr("error >0"));
     mFieldErrorEdit->setValidator(validatorRplus);
     connect(mFieldErrorEdit, &QLineEdit::textChanged, this, &PluginMagForm::allIsValid);
+    setTabOrder(mFieldEdit, mFieldErrorEdit);
 
     mMCMCIterationEdit = new QLineEdit(this);
     mMCMCIterationEdit->setAlignment(Qt::AlignHCenter);

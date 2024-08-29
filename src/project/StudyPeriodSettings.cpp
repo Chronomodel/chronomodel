@@ -64,7 +64,10 @@ StudyPeriodSettings::StudyPeriodSettings(const StudyPeriodSettings &s)
 
 StudyPeriodSettings& StudyPeriodSettings::operator=(const StudyPeriodSettings &s)
 {
-    copyFrom(s);
+    mTmin = s.mTmin;
+    mTmax = s.mTmax;
+    mStep = s.mStep;
+    mStepForced = s.mStepForced;
     return *this;
 }
 

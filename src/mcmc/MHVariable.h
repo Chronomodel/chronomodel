@@ -74,10 +74,10 @@ public:
     bool adapt (const double coef_min = 0.42, const double coef_max = 0.46, const double delta = 0.01);
     inline void memo_accept(const unsigned i_chain) {if (mLastAccepts.last()) ++mAllAccepts[i_chain];}
 
-    QList<double> acceptationForChain(const QList<ChainSpecs>& chains, int index);
-    void generateGlobalRunAcceptation(const QList<ChainSpecs>& chains);
+    QList<double> acceptationForChain(const std::vector<ChainSpecs>& chains, size_t index);
+    void generateGlobalRunAcceptation(const std::vector<ChainSpecs>& chains);
 
-    void generateNumericalResults(const QList<ChainSpecs>& chains) override;
+    void generateNumericalResults(const std::vector<ChainSpecs> &chains) override;
     QString resultsString(const QString &noResultMessage = QObject::tr("No result to display"),
                           const QString &unit = QString()) const override;
 
@@ -106,7 +106,7 @@ public:
     // On en affiche des sous-parties (correspondant aux chaines) dans la vue des résultats
     // A stocker dans les résultats!
 
-    QList<double>* mHistoryAcceptRateMH;
+    std::shared_ptr<std::vector<double>> mHistoryAcceptRateMH;
 
     SamplerProposal mSamplerProposal;
 

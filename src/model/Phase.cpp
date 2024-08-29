@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -39,19 +39,23 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "Phase.h"
 
-#include "Model.h"
 #include "Event.h"
 #include "PhaseConstraint.h"
 #include "Generator.h"
 #include "QtUtilities.h"
+#include "StateKeys.h"
 #include "StdUtilities.h"
 
 #include <QtWidgets>
 
-Phase::Phase(const Model* model):
+Phase::Phase():
     mId (0),
-    mModel (model),
     mName ("no Phase Name"),
+    mAlpha(MetropolisVariable()),
+    mBeta(MetropolisVariable()),
+    mDuration(MetropolisVariable()),
+    mValueStack(std::unordered_map<std::string, TValueStack>()),
+    mTau(MetropolisVariable()),
     mTauType (Phase::eTauUnknown),
     mTauFixed (0.),
     mTauMin (0.),
@@ -77,9 +81,9 @@ Phase::Phase(const Model* model):
     mItemY = 0.;
 
     mTimeRange = std::make_pair(- INFINITY, +INFINITY);
-    mValueStack["Activity_TimeRange_Level"] = TValueStack("Activity_TimeRange_Level", 0.);
-    mValueStack["Activity_TimeRange_min"] = TValueStack("Activity_TimeRange_min", 0);
-    mValueStack["Activity_TimeRange_max"] = TValueStack("Activity_TimeRange_max", 0);
+    mValueStack.insert_or_assign("Activity_TimeRange_Level", TValueStack( 0.));
+    mValueStack.insert_or_assign("Activity_TimeRange_min", TValueStack( 0));
+    mValueStack.insert_or_assign("Activity_TimeRange_max",TValueStack(0));
 }
 
 Phase::Phase(const Phase& phase)
@@ -87,10 +91,14 @@ Phase::Phase(const Phase& phase)
     copyFrom(phase);
 }
 
-Phase::Phase (const QJsonObject& json, const Model* model):
-    mId (json.value(STATE_ID).toInt()),
-    mModel (model),
-    mName (json.value(STATE_NAME).toString()),
+Phase::Phase (const QJsonObject& json):
+    mId(json.value(STATE_ID).toInt()),
+    mName(json.value(STATE_NAME).toString()),
+    mAlpha(MetropolisVariable()),
+    mBeta(MetropolisVariable()),
+    mDuration(MetropolisVariable()),
+    mValueStack(std::unordered_map<std::string, TValueStack>()),
+    mTau(MetropolisVariable()),
     mTauType ((Phase::TauType)json.value(STATE_PHASE_TAU_TYPE).toInt()),
     mTauFixed (json.value(STATE_PHASE_TAU_FIXED).toDouble()),
     mTauMin (json.value(STATE_PHASE_TAU_MIN).toDouble()),
@@ -113,17 +121,17 @@ Phase::Phase (const QJsonObject& json, const Model* model):
    mBeta.mSupport = MetropolisVariable::eBounded;
    mBeta.mFormat = DateUtils::eUnknown;
 
-   // mTau.setName("Tau of Phase : " + p.mName);
+   mTau.setName("Tau of Phase : " + mName);
    mTau.mSupport = MetropolisVariable::eRp;
    mTau.mFormat = DateUtils::eNumeric;
 
-   mDuration.setName("Duration of Phase : " + mName);
+    mDuration.setName("Duration of Phase : ");// + mName);
    mDuration.mSupport = MetropolisVariable::eRp;
    mDuration.mFormat = DateUtils::eNumeric;
 
-   mValueStack["Activity_TimeRange_Level"] = TValueStack("Activity_TimeRange_Level", 0.);
-   mValueStack["Activity_TimeRange_min"] = TValueStack("Activity_TimeRange_min", 0);
-   mValueStack["Activity_TimeRange_max"] = TValueStack("Activity_TimeRange_max", 0);
+   mValueStack.emplace("Activity_TimeRange_Level",TValueStack( 0.));
+   mValueStack.emplace("Activity_TimeRange_min", TValueStack(0));
+   mValueStack.emplace("Activity_TimeRange_max", TValueStack( 0));
 }
 
 Phase& Phase::operator=(const Phase& phase)
@@ -135,7 +143,7 @@ Phase& Phase::operator=(const Phase& phase)
 void Phase::copyFrom(const Phase& phase)
 {
     mId = phase.mId;
-    mModel = phase.mModel;
+    //mModel = phase.mModel;
     mName = phase.mName;
     mColor = phase.mColor;
 
@@ -180,6 +188,18 @@ Phase::~Phase()
 
         mConstraintsPrevPhases.clear();
     }
+    mAlpha.clear();
+    mAlpha.~MetropolisVariable();
+
+    mBeta.clear();
+    mBeta.~MetropolisVariable();
+
+    mTau.clear();
+    mTau.~MetropolisVariable();
+
+    mDuration.clear();
+    mDuration.~MetropolisVariable();
+
 }
 
 // Properties
@@ -203,14 +223,14 @@ Phase Phase::fromJson(const QJsonObject &json)
     p.mIsSelected = json.value(STATE_IS_SELECTED).toBool();
     p.mIsCurrent = json.value(STATE_IS_CURRENT).toBool();
 
-    p.mAlpha.setName("Begin of Phase : "+p.mName);
-    p.mBeta.setName("End of Phase : "+p.mName);
-   // p.mTau.setName("Tau of Phase : " + p.mName);
-    p.mDuration.setName("Duration of Phase : "+p.mName);
+    p.mAlpha.setName("Begin of Phase : " + p.mName);
+    p.mBeta.setName("End of Phase : " + p.mName);
+    p.mTau.setName("Tau of Phase : " + p.mName);
+    p.mDuration.setName("Duration of Phase : " + p.mName);
 
-    p.mValueStack["Activity_TimeRange_Level"] = TValueStack("Activity_TimeRange_Level", 0.);
-    p.mValueStack["Activity_TimeRange_min"] = TValueStack("Activity_TimeRange_min", 0);
-    p.mValueStack["Activity_TimeRange_max"] = TValueStack("Activity_TimeRange_max", 0);
+    p.mValueStack.emplace("Activity_TimeRange_Level", TValueStack( 0.));
+    p.mValueStack.emplace("Activity_TimeRange_min", TValueStack( 0));
+    p.mValueStack.emplace("Activity_TimeRange_max", TValueStack( 0));
 
     return p;
 }
@@ -282,9 +302,10 @@ double Phase::sum_gamma_next_phases()
 
 void Phase::init_alpha_beta_phase(QList<Phase*> &phases)
 {
+    auto model = getModel_ptr();
     for (auto phase : phases) {
-        phase->mAlpha.mX = mModel->mSettings.mTmin + phase->sum_gamma_prev_phases();
-        phase->mBeta.mX = mModel->mSettings.mTmax - phase->sum_gamma_next_phases();
+        phase->mAlpha.mX = model->mSettings.mTmin + phase->sum_gamma_prev_phases();
+        phase->mBeta.mX = model->mSettings.mTmax - phase->sum_gamma_next_phases();
     }
 }
 
@@ -583,7 +604,7 @@ void Phase::memoAll()
 #endif
 }
 
-void Phase::generateHistos(const QList<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+void Phase::generateHistos(const std::vector<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {   
     mAlpha.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
     mBeta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
@@ -598,71 +619,73 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     QElapsedTimer tClock;
     tClock.start();
 #endif
-
+    auto model = getModel_ptr();
     // Avoid to redo calculation, when mActivity exist, it happen when the control is changed
-    if (!mRawActivity.isEmpty() && gridLength == mValueStack.at("Activity_GridLength").mValue
-            && h == mValueStack.at("Activity_h").mValue
-            && threshold == mValueStack.at("Activity_Threshold").mValue
-            && timeRangeLevel == mValueStack.at("Activity_TimeRange_Level").mValue)
+    if (!mRawActivity.empty() && gridLength == mValueStack.at("Activity_GridLength").value()
+            && h == mValueStack.at("Activity_h").value()
+            && threshold == mValueStack.at("Activity_Threshold").value()
+            && timeRangeLevel == mValueStack.at("Activity_TimeRange_Level").value())
        return;
 
-    mValueStack["Activity_GridLength"] = TValueStack("Activity_GridLength", gridLength);
-    mValueStack["Activity_h"] = TValueStack("Activity_h", h);
-    mValueStack["Activity_Threshold"] = TValueStack("Activity_Threshold", threshold);
-    mValueStack["Activity_max"] = TValueStack("Activity_max", 0.);
-    mValueStack["Activity_mode"] = TValueStack("Activity_mode", 0.);
-    mValueStack["Activity_TimeRange_Level"] = TValueStack("Activity_TimeRange_Level", 0.);
+    mValueStack.insert_or_assign("Activity_GridLength", TValueStack( gridLength));
+    mValueStack.insert_or_assign("Activity_h", TValueStack( h));
+    mValueStack.insert_or_assign("Activity_Threshold", TValueStack( threshold));
+    mValueStack.insert_or_assign("Activity_max", TValueStack( 0.));
+    mValueStack.insert_or_assign("Activity_mode", TValueStack( 0.));
+    //mValueStack.emplace("Activity_TimeRange_Level", TValueStack( 0.));
 
-    const auto s = &mModel->mSettings;
+    const auto s = &model->mSettings;
     if (mEvents.size() < 1) {
-        mValueStack["Activity_Significance_Score"] = TValueStack("Activity_Significance_Score", 0);
-        mValueStack["R_etendue"] = TValueStack("R_etendue", s->mTmax - s->mTmin);
-        mValueStack["t_min"] = TValueStack("t_min", s->mTmin);
-        mValueStack["t_max"] = TValueStack("t_max", s->mTmax);
+        mValueStack.insert_or_assign("Activity_Significance_Score", TValueStack( 0));
+        mValueStack.insert_or_assign("R_etendue", TValueStack( s->mTmax - s->mTmin));
+        mValueStack.insert_or_assign("t_min", TValueStack( s->mTmin));
+        mValueStack.insert_or_assign("t_max", TValueStack( s->mTmax));
 
+        mValueStack.insert_or_assign("Activity_TimeRange_min", TValueStack( s->mTmin));
+        mValueStack.insert_or_assign("Activity_TimeRange_max", TValueStack( s->mTmax));
 
-       // mValueStack["a_Unif"] = TValueStack("a_Unif", s->mTmin);
-       // mValueStack["b_Unif"] = TValueStack("b_Unif", s->mTmax);
-        mValueStack["Activity_TimeRange_min"] = TValueStack("Activity_TimeRange_min", s->mTmin);
-        mValueStack["Activity_TimeRange_max"] = TValueStack("Activity_TimeRange_max", s->mTmax);
-
-        mValueStack["Activity_min95"] = TValueStack("Activity_min95", s->mTmin);
-        mValueStack["Activity_max95"] = TValueStack("Activity_max95", s->mTmax);
-        mValueStack["Activity_mean95"] = TValueStack("Activity_mean95", (s->mTmax + s->mTmin)/2.);
-        mValueStack["Activity_std95"] = TValueStack("Activity_std95", 0.);
+        mValueStack.insert_or_assign("Activity_min95", TValueStack( s->mTmin));
+        mValueStack.insert_or_assign("Activity_max95", TValueStack( s->mTmax));
+        mValueStack.insert_or_assign("Activity_mean95", TValueStack( (s->mTmax + s->mTmin)/2.));
+        mValueStack.insert_or_assign("Activity_std95", TValueStack( 0.));
         return;
     }
 
     // Curves for error binomial
     const int n = (int)mEvents.size();
-    mRawActivityUnifTheo.clear();
 
-    const std::vector<double>& Gx = mModel->mBinomiale_Gx.at(n);
+    // clear old results
+    mRawActivityUnifTheo.clear();
+    mRawActivity.clear();
+    mRawActivityInf.clear();
+    mRawActivitySup.clear();
+
+    const std::vector<double>& Gx = model->mBinomiale_Gx.at(n);
 
     //---- timeRange
 
-    mValueStack["Activity_TimeRange_Level"] = TValueStack("Activity_TimeRange_Level", timeRangeLevel);
+    mValueStack.insert_or_assign("Activity_TimeRange_Level", TValueStack(timeRangeLevel));
 
-
-    if (mValueStack["Activity_TimeRange_min"].mValue == mValueStack["Activity_TimeRange_max"].mValue || mValueStack["TimeRange Threshold"].mValue != timeRangeLevel) {
-        const std::pair<double, double> timeRange = timeRangeFromTraces( mAlpha.fullRunRawTrace(mModel->mChains),
-                                                                         mBeta.fullRunRawTrace(mModel->mChains), timeRangeLevel, "Time Range for Phase : " + mName);
-        mValueStack["Activity_TimeRange_min"] = TValueStack("Activity_TimeRange_min", timeRange.first);
-        mValueStack["Activity_TimeRange_max"] = TValueStack("Activity_TimeRange_max", timeRange.second);
+    if (mValueStack.at("Activity_TimeRange_min").value() == mValueStack.at("Activity_TimeRange_max").value()
+        || mValueStack.at("Activity_TimeRange_Level").value() != timeRangeLevel) {
+        const std::pair<double, double> timeRange = timeRangeFromTraces( mAlpha.fullRunRawTrace(model->mChains),
+                                                                         mBeta.fullRunRawTrace(model->mChains), timeRangeLevel, "Time Range for Phase : " + mName);
+        mValueStack.insert_or_assign("Activity_TimeRange_min", TValueStack(timeRange.first));
+        mValueStack.insert_or_assign("Activity_TimeRange_max", TValueStack(timeRange.second));
     }
 
-    const double TimeRange_min = mValueStack["Activity_TimeRange_min"].mValue;
-    const double TimeRange_max = mValueStack["Activity_TimeRange_max"].mValue;
+    const double TimeRange_min = mValueStack.at("Activity_TimeRange_min").value();
+    const double TimeRange_max = mValueStack.at("Activity_TimeRange_max").value();
     std::vector<double> concaTrace;
 
     double min95 = +INFINITY;
     double max95 = -INFINITY;
     // Ajout artificiel des events et bornes fixes
-    const int nRealyAccepted = std::accumulate(mModel->mChains.begin(), mModel->mChains.end(), 0, [] (int sum, ChainSpecs c) {return sum + c.mRealyAccepted;});
+    const int nRealyAccepted = std::accumulate(model->mChains.begin(), model->mChains.end(), 0, [] (int sum, ChainSpecs c) {return sum + c.mRealyAccepted;});
 
     for (const auto& ev : mEvents) {
         if (ev->mTheta.mSamplerProposal != MHVariable::eFixe) {
-            const auto &rawtrace = ev->mTheta.fullRunRawTrace(mModel->mChains);
+            const auto &rawtrace = ev->mTheta.fullRunRawTrace(model->mChains);
 
             std::copy_if(rawtrace.begin(), rawtrace.end(),
                          std::back_inserter(concaTrace),
@@ -687,33 +710,30 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     } else
         return;
         */
+    mValueStack.insert_or_assign("Activity_min95", TValueStack( min95));
+    mValueStack.insert_or_assign("Activity_max95",TValueStack( max95));
 
     if (min95 == max95) { // happen when there is only one bound in the phase ???
 
-        qDebug()<<"[Phase::generateActivity] tmin == tmax : " << mName;
+        //qDebug()<<"[Phase::generateActivity] tmin == tmax : " << mName;
 
-        mRawActivity[min95] = 1;
-        // Convertion in the good Date format
+        //mRawActivity[min95] = 1;
 
-        mActivity = DateUtils::convertMapToAppSettingsFormat(mRawActivity);
+        mValueStack.insert_or_assign("Activity_Significance_Score", TValueStack( 0));
+        mValueStack.insert_or_assign("R_etendue", TValueStack( 0));
+        mValueStack.insert_or_assign("a_Unif", TValueStack( min95));
+        mValueStack.insert_or_assign("b_Unif", TValueStack( max95));
 
-        mValueStack["Activity_Significance_Score"] = TValueStack("Activity_Significance_Score", 0);
-        mValueStack["R_etendue"] = TValueStack("R_etendue", 0);
-        mValueStack["a_Unif"] = TValueStack("a_Unif", min95);
-        mValueStack["b_Unif"] = TValueStack("b_Unif", max95);
-        mValueStack["Activity_min95"] = TValueStack("Activity_min95", min95);
-        mValueStack["Activity_max95"] = TValueStack("Activity_max95", max95);
-        mValueStack["Activity_mean95"] = TValueStack("Activity_mean95", min95);
-        mValueStack["Activity_std95"] = TValueStack("Activity_std95", 0.);
-        return;
+        mValueStack.insert_or_assign("Activity_mean95", TValueStack( min95));
+        mValueStack.insert_or_assign("Activity_std95", TValueStack( 0.));
+
 
     } else {
-        mValueStack["Activity_min95"] = TValueStack("Activity_min95", min95);
-        mValueStack["Activity_max95"] = TValueStack("Activity_max95", max95);
+
         double mean95, var95;
         mean_variance_Knuth(concaTrace, mean95, var95);
-        mValueStack["Activity_mean95"] = TValueStack("Activity_mean95", mean95);
-        mValueStack["Activity_std95"] = TValueStack("Activity_std95", sqrt(var95));
+        mValueStack.insert_or_assign("Activity_mean95", TValueStack( mean95));
+        mValueStack.insert_or_assign("Activity_std95", TValueStack( sqrt(var95)));
 
     }
 
@@ -726,12 +746,17 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     const double R_etendue =  max95 - min95;
 
     // prevent h=0 and h >R_etendue;
-    h = std::min( std::max(s->mStep, h),  R_etendue) ;
-    mValueStack["Activity_h"] = TValueStack("Activity_h", h);
+    if (min95 == max95) {
+        h = std::max(s->mStep, h);
+
+    } else {
+        h = std::min( std::max(s->mStep, h),  R_etendue) ;
+    }
+    mValueStack.insert_or_assign("Activity_h", TValueStack( h));
 
     const double h_2 = h/2.;
 
-    const double fUnif = h / R_etendue;
+    const double fUnif = n > 1 ? h / R_etendue : 1.;
 
     const double mid_R =  (max95 + min95)/2.;
 
@@ -759,29 +784,44 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     const double b_Unif_minus_h_2 = b_Unif;
     const double b_Unif_plus_h_2 = b_Unif;
 */
-    mValueStack["a_Unif"] = TValueStack("a_Unif", a_Unif);
-    mValueStack["b_Unif"] = TValueStack("b_Unif", b_Unif);
-    mValueStack["R_etendue"] = TValueStack("R_etendue", R_etendue);
+    mValueStack.insert_or_assign("a_Unif", TValueStack( a_Unif));
+    mValueStack.insert_or_assign("b_Unif", TValueStack( b_Unif));
+    mValueStack.insert_or_assign("R_etendue", TValueStack( R_etendue));
 
-    mRawActivityUnifTheo.insert(a_Unif_minus_h_2,  0.);
 
-    mRawActivityUnifTheo.insert(a_Unif_plus_h_2,  ActivityUnif);
-    mRawActivityUnifTheo.insert(b_Unif_minus_h_2,  ActivityUnif);
-
-    mRawActivityUnifTheo.insert(b_Unif_plus_h_2,  0.);
 
     /// Look for the maximum span containing values \f$ x=2 \f$
 
-    if (min95 == max95) {
+    if (min95 == max95) { // happen when there is only one bound in the phase ???
         qDebug()<<"[Phase::generateActivity] min95 == max95 : " << mName;
-        mRawActivity[min95] = 1;
+        mRawActivity.emplace(a_Unif_minus_h_2,  1./h);
+        //mRawActivity.emplace(a_Unif,  1./h);
+        mRawActivity.emplace(b_Unif_plus_h_2, 1./h);
+
+        mRawActivityInf = mRawActivity;
+        mRawActivitySup = mRawActivity;
 
         // Convertion in the good Date format
         mActivity = DateUtils::convertMapToAppSettingsFormat( mRawActivity);
+        mActivityInf = mActivity;
+        mActivitySup = mActivity;
+
+        mRawActivityUnifTheo = mRawActivity;
+
+        mActivityUnifTheo = mActivity;
+
+        mValueStack.insert_or_assign("Activity_Significance_Score", TValueStack(0.));
+        mValueStack.insert_or_assign("Activity_max", TValueStack( 1./h));
+        mValueStack.insert_or_assign("Activity_mode", TValueStack( a_Unif));
 
         return;
     }
 
+    mRawActivityUnifTheo.emplace(a_Unif_minus_h_2,  0.);
+    mRawActivityUnifTheo.emplace(a_Unif_plus_h_2,  ActivityUnif);
+
+    mRawActivityUnifTheo.emplace(b_Unif_minus_h_2,  ActivityUnif);
+    mRawActivityUnifTheo.emplace(b_Unif_plus_h_2,  0.);
 
 #ifdef DEBUG
     if (max95 > s->mTmax) {
@@ -836,9 +876,10 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
 
     ///# Calculation of the mean and variance
-    QList<double> inf;
-    QList<double> sup;
-    QList<double> esp;
+
+    std::vector<double> esp;
+    std::vector<double> esp_inf;
+    std::vector<double> esp_sup;
     double maxActivity = 0;
     double modeActivity = t_min_grid;
 
@@ -851,7 +892,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
         const double fA = ni / nr;
         const double eA =  fA * n / h;
-        esp.append(eA);
+        esp.push_back(eA);
         if (eA > maxActivity) {
             maxActivity =  eA;
             modeActivity = (nbIt * delta_t) + t_min_grid;
@@ -860,17 +901,28 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 #ifdef DEBUG
        somActivity += eA;
 #endif
-        const double QSup = interpolate_value_from_curve(fA, Gx, 0, 1.)* n / h;
-        sup.append(QSup);
+        double QInf, QSup;
+        if (n == 1) {
+            QInf = eA;
+            QSup = eA;
 
-        const double QInf = findOnOppositeCurve(fA, Gx)* n / h;
-        inf.append(QInf);
+        } else {
+            if (fA == 0) {
+                QInf = 0.;
+                QSup = 0.;
 
+            } else {
+                QSup = interpolate_value_from_curve(fA, Gx, 0, 1.)* n / h;
+                QInf = findOnOppositeCurve(fA, Gx)* n / h;
+            }
+        }
 #ifdef DEBUG
         if (QSup < QInf) {
             qDebug()<<"[Model::generateActivity] QSup < QInf ; f= "<<fA<< " ; QSup = "<<QSup<<" ; QInf = "<<QInf;
         }
 #endif
+        esp_inf.push_back(QInf);
+        esp_sup.push_back(QSup);
         // Calcul du score
         /* Delta(h) = somme sur theta de ( max(Aunif - Ainf) - min(Aunif, Asup) ) / nbre de theta de la grille, nbre de pas de la grille
              */
@@ -879,53 +931,49 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
         double dUnif;
         if ((a_Unif_minus_h_2 < t) && (t < a_Unif_plus_h_2)) {
-            dUnif =  interpolateValueInQMap(t, mRawActivityUnifTheo);
+            dUnif =  interpolateValueInStdMap(t, mRawActivityUnifTheo);
 
         } else if ((a_Unif_plus_h_2 <= t) && (t <= b_Unif_minus_h_2)) {
             dUnif = ActivityUnif;
 
         } else if ((b_Unif_minus_h_2 < t) && (t < b_Unif_plus_h_2)) {
-            dUnif =  interpolateValueInQMap(t, mRawActivityUnifTheo);
+            dUnif =  interpolateValueInStdMap(t, mRawActivityUnifTheo);
 
         } else
             dUnif = 0;
 
-        //UnifScore += std::pow((dUnif - eA)/(QSup-QInf), 2.)/gridLength;
-        //const auto nd = N(dUnif, eA, QSup-QInf);
-        //std::cout<<"N(dUnif)"<<nd;
-        //const double addUnif = exp(-0.5*pow((dUnif - eA)/(QSup-QInf), 2.)); // /(gridLength));
-       // UnifScore +=  exp(-0.5*pow((dUnif - eA)/(QSup-QInf), 2.))/(gridLength); //N(dUnif, eA, QSup-QInf)/gridLength;//
+        if (n > 1) {
 #ifdef DEBUG
-        const double addUnif = std::max(dUnif, QInf) - std::min(dUnif, QSup);
+            const double addUnif = std::max(dUnif, QInf) - std::min(dUnif, QSup);
 
-        if (addUnif>0)
-            qDebug()<<"[Model::generateActivity] t= "<<t<<" add="<< addUnif;
+            if (addUnif>0)
+                qDebug()<<"[Model::generateActivity] t= "<<t<<" add="<< addUnif;
 #endif
-        UnifScore += std::max(dUnif, QInf) - std::min(dUnif, QSup);
-
+            UnifScore += std::max(dUnif, QInf) - std::min(dUnif, QSup);
+        }
         nbIt++;
     }
 
 #ifdef DEBUG
     qDebug()<<"[Model::generateActivity] somme Activity = "<< somActivity << " ; Phase = "<< mName <<"\n";
 #endif
-    mValueStack["Activity_Significance_Score"] = TValueStack("Activity_Significance_Score", UnifScore/(double) gridLength);
-    mValueStack["Activity_max"] = TValueStack("Activity_max", maxActivity);
-    mValueStack["Activity_mode"] = TValueStack("Activity_mode", modeActivity);
+    mValueStack.insert_or_assign("Activity_Significance_Score", TValueStack( UnifScore/(double) gridLength));
+    mValueStack.insert_or_assign("Activity_max", TValueStack( maxActivity));
+    mValueStack.insert_or_assign("Activity_mode", TValueStack( modeActivity));
 
     mRawActivity = vector_to_map(esp, t_min_grid, t_max_grid, delta_t);
-    mRawActivityInf = vector_to_map(inf, t_min_grid, t_max_grid, delta_t);
-    mRawActivitySup = vector_to_map(sup, t_min_grid, t_max_grid, delta_t);
+    mRawActivityInf = vector_to_map(esp_inf, t_min_grid, t_max_grid, delta_t);
+    mRawActivitySup = vector_to_map(esp_sup, t_min_grid, t_max_grid, delta_t);
 
     const double QSup = interpolate_value_from_curve(0., Gx, 0, 1.)* n / h;
     const double QInf = findOnOppositeCurve(0., Gx)* n / h;
 
-    mRawActivitySup.insert(t_min_grid, QSup );
-    mRawActivitySup.insert(t_max_grid, QSup );
+    mRawActivitySup.emplace(t_min_grid, QSup );
+    mRawActivitySup.emplace(t_max_grid, QSup );
 
 
-    mRawActivityInf.insert(t_min_grid, QInf);
-    mRawActivityInf.insert(t_max_grid, QInf);
+    mRawActivityInf.emplace(t_min_grid, QInf);
+    mRawActivityInf.emplace(t_max_grid, QInf);
 
 
     mActivity = DateUtils::convertMapToAppSettingsFormat(mRawActivity);

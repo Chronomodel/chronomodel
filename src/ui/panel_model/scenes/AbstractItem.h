@@ -48,32 +48,41 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class AbstractItem : public QGraphicsObject
 {
 public:
-    AbstractItem(AbstractScene* scene, QGraphicsItem* parent = nullptr);
+    AbstractItem(QGraphicsItem* parent = nullptr);
+    explicit AbstractItem(AbstractScene* scene, QGraphicsItem* parent = nullptr);
     virtual ~AbstractItem();
+
+    enum { Type = UserType + 1 };
+
+    int type() const override
+    {
+        // Enable the use of qgraphicsitem_cast with this item.
+        return Type;
+    };
 
     void setMergeable(bool mergeable, bool shouldRepaint = true);
     virtual void setGreyedOut(const bool greyedOut);
 
     virtual void updateItemPosition(const QPointF& pos);
-    void setSelectedInData(const bool selected);
-    void setCurrentInData(const bool current);
+    void setSelectedInData(bool selected);
+    void setCurrentInData(bool current);
     QJsonObject& getData() {return mData;};
 
     static QFont adjustFont(const QFont &ft, const QString &str, const QRectF &r);
 
     virtual QSizeF sizeF() {return mSize;};
     virtual QRectF rectF() const;
-    virtual QRectF boundingRect() const;
+    virtual QRectF boundingRect() const override;
 
 protected:
-    virtual void mousePressEvent(QGraphicsSceneMouseEvent* e);
-    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent* e);
-    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e);
+    virtual void mousePressEvent(QGraphicsSceneMouseEvent* e) override;
+    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent* e) override;
+    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e) override;
 
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* e);
-    virtual void hoverEnterEvent(QGraphicsSceneHoverEvent* e);
-    virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent* e);
-    virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* e) override;
+    virtual void hoverEnterEvent(QGraphicsSceneHoverEvent* e) override;
+    virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent* e) override;
+    virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
 
 public:
     static int mBorderWidth;

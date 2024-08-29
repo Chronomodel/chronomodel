@@ -67,6 +67,8 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     QDoubleValidator* RplusValidator = new QDoubleValidator(this);
     RplusValidator->setBottom(0.000001);
     mErrorEdit->setValidator(RplusValidator);
+    setTabOrder(mAverageEdit, mErrorEdit);
+
     connect(mErrorEdit, &QLineEdit::textChanged, this, &Plugin14CForm::errorIsValid);
 
     mREdit = new QLineEdit(this);
@@ -77,6 +79,7 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     mRErrorEdit->setText("0");
     mRErrorEdit->setAlignment(Qt::AlignHCenter);
     mRErrorEdit->setValidator(RValidator);
+    setTabOrder(mREdit, mRErrorEdit);
 
     mRefCombo = new QComboBox(this);
     QStringList refCurves = mPlugin->getRefsNames();

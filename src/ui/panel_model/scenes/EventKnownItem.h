@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -46,15 +46,23 @@ class EventKnownItem : public EventItem
 {
     Q_OBJECT
 public:
-    EventKnownItem(EventsScene* eventsScene, const QJsonObject &event, const QJsonObject &settings, QGraphicsItem* parent = 0);
+    EventKnownItem(EventsScene* eventsScene, const QJsonObject &eventObj, const QJsonObject &settings, QGraphicsItem* parent = 0);
     virtual ~EventKnownItem();
 
-    void setEvent(const QJsonObject &event, const QJsonObject &settings);
-    void setDatesVisible(const bool visible);
+    enum { Type = UserType + 13 };
+
+    int type() const override
+    {
+        // Enable the use of qgraphicsitem_cast with this item.
+        return Type;
+    };
+
+    void setEvent(const QJsonObject &eventObj, const QJsonObject &settings) override;
+    void setDatesVisible(const bool visible) override;
 
 protected:
-    virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*);
-    virtual void dropEvent(QGraphicsSceneDragDropEvent* e);
+    virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) override;
+    virtual void dropEvent(QGraphicsSceneDragDropEvent* e) override;
 
     virtual QRectF toggleRect() const;
 

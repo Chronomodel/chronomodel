@@ -49,22 +49,32 @@ class PhaseItem : public AbstractItem
     Q_OBJECT
 // members
 public:
+    enum { Type = UserType + 21 };
+
+    int type() const override
+    {
+        // Enable the use of qgraphicsitem_cast with this item.
+        return Type;
+    };
 
     bool mControlsVisible;
     bool mControlsEnabled;
     bool matLeastOneEventSelected;
     bool mOneEventSelectedOnScene;
 
+    static int mTitleHeight;
+    static int mEltsHeight;
+
  void redrawPhase();
 
 //functions
 protected:
 
-    void paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*);
-    void mousePressEvent(QGraphicsSceneMouseEvent* e);
+    void paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent* e) override;
 
-    void hoverEnterEvent(QGraphicsSceneHoverEvent* e);
-    void hoverLeaveEvent(QGraphicsSceneHoverEvent* e);
+    void hoverEnterEvent(QGraphicsSceneHoverEvent* e) override;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent* e) override;
 
     // size and position of the buttons
     QRectF checkRect() const;

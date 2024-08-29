@@ -47,7 +47,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 #include <QFontMetricsF>
 #include <QtSvg>
+#include <QDataStream>
+
 #include <algorithm>
+#include <iterator>
 
 /**
  * @brief DHMS
@@ -255,7 +258,7 @@ QList<int> stringListToIntList(const QString& listStr, const QString& separator)
     QList<int> result;
     if (!listStr.isEmpty()) {
         QStringList list = listStr.split(separator);
-        for (auto& str : list)
+        for (const auto& str : list)
             result.append(str.toInt());
 
     }
@@ -267,7 +270,7 @@ QList<unsigned> stringListToUnsignedList(const QString &listStr, const QString &
     QList<unsigned> result;
     if (!listStr.isEmpty()) {
         QStringList list = listStr.split(separator);
-        for (auto& str : list)
+        for (const auto& str : list)
             result.append(str.toInt());
 
     }
@@ -277,7 +280,7 @@ QList<unsigned> stringListToUnsignedList(const QString &listStr, const QString &
 QStringList intListToStringList(const QList<int> &intList)
 {
     QStringList list;
-    for (auto& i : intList)
+    for (const auto& i : intList)
         list.append(QString::number(i));
     return list;
 }
@@ -285,7 +288,7 @@ QStringList intListToStringList(const QList<int> &intList)
 QStringList unsignedListToStringList(const QList<unsigned>& unsignedList)
 {
     QStringList list;
-    for (auto& un : unsignedList)
+    for (const auto& un : unsignedList)
         list.append(QString::number(un));
     return list;
 }
@@ -573,6 +576,79 @@ QColor randomColor()
 #endif
 }
 
+
+
+std::map<double, double> getMapDataInRange(const std::map<double, double> data, const double subMin, const  double subMax)
+{
+    if (data.size() == 0)
+        return data;
+
+    if (data.size() == 1) {
+        if (data.begin()->first>=subMin && data.begin()->first<= subMax) {
+            return data;
+        }
+        else
+            return std::map<double, double> ();
+    }
+
+
+    double tBeforeSubMin (0);
+    double vBeforeSubMin (0);
+    bool pointBeforeSubMin =false;
+    double tAfterSubMax (0);
+    double vAfterSubMax (0);
+    bool pointAfterSubMax =false;
+    const double min = data.begin()->first;
+    const double max = data.crbegin()->first;// .lastKey();
+    if (subMin != min || subMax != max) {
+        std::map<double, double> subData;
+        subData.clear();
+        std::map<double, double>::const_iterator iter(data.begin());
+        while (iter != std::prev(data.end(), 2)) { //.hasNext()) {
+            std::advance(iter, 1);
+            double valueT = iter->first;
+            if (valueT >= subMin && valueT <= subMax)
+                subData.emplace(valueT, iter->second);
+
+            else if (valueT<subMin) {
+                pointBeforeSubMin = true;
+                tBeforeSubMin = valueT;
+                vBeforeSubMin = iter->second;
+            }
+            else if ( valueT>subMax && !pointAfterSubMax ){
+                pointAfterSubMax = true;
+                tAfterSubMax = valueT;
+                vAfterSubMax = iter->second;
+            }
+        }
+        // Correct the QMap, with addition of value on the extremum tmin and tmax
+        if (subData.size() > 0) {
+            if (pointBeforeSubMin && subData.find(subMin) == subData.cend()) {
+                double subDataFirst = subData.begin()->second;
+                subData[subMin] = interpolate( subMin, tBeforeSubMin, subData.begin()->first, vBeforeSubMin, subDataFirst );
+            }
+            if (pointAfterSubMax && subData.find(subMax) == subData.cend()) {
+                double subDataLast = subData.crbegin()->second;
+                subData[subMax] = interpolate( subMax, subData.crbegin()->first, tAfterSubMax, subDataLast, vAfterSubMax );
+            }
+
+        } else if (data.size() == 2 && data.begin()->first <= subMin && data.crbegin()->first >= subMax) {
+            subData.emplace(subMin, data.begin()->second);
+            subData.emplace(subMax, data.crbegin()->second);
+
+        } else if (data.begin()->first<=subMin && data.crbegin()->first>=subMax) {
+            subData[subMin] =  interpolateValueInStdMap(subMin, data);
+            subData[subMax] =  interpolateValueInStdMap(subMax, data);
+
+        }
+        return subData;
+    }
+    else {
+        return data;
+    }
+}
+
+
 bool constraintIsCircular(QJsonArray constraints, const int fromId, const int toId)
 {
     for (int i = 0; i<constraints.size(); ++i) {
@@ -747,7 +823,7 @@ QList<double>* load_QList_ptr(QDataStream& stream)
     quint32 size;
     
     stream >> size;
-    QList<double>* data;
+    QList<double>* data = nullptr;
     
     
     if (size>0) {
@@ -761,7 +837,7 @@ QList<double>* load_QList_ptr(QDataStream& stream)
         data = nullptr;
     }
     
-    return data;
+    return std::move(data);
     
 }
 
@@ -802,26 +878,37 @@ QList<double> load_QList(QDataStream& stream)
 }
 
 
-std::vector<double>* load_std_vector_ptr(QDataStream& stream)
+std::shared_ptr<std::vector<double>> load_std_vector_ptr(QDataStream& stream)
 {
     quint32 size;
 
     stream >> size;
-    std::vector<double>* data;
-
+    std::shared_ptr<std::vector<double>> data = std::make_shared<std::vector<double>>();
 
     if (size>0) {
-        data = new std::vector<double>();
         double v;
         for (quint32 i = 0; i < size; ++i) {
             stream >> v;
             data->push_back(v);
         }
-    } else {
-        data = nullptr;
     }
 
     return data;
+}
+
+void reload_shared_ptr(const std::shared_ptr<std::vector<double>>& data, QDataStream& stream)
+{
+    quint32 size;
+    stream >> size;
+
+    if (size>0) {
+        double v;
+        for (quint32 i = 0; i < size; ++i) {
+            stream >> v;
+            data->push_back(v);
+        }
+    }
+    return;
 }
 
 std::shared_ptr<Project> getProject_ptr()

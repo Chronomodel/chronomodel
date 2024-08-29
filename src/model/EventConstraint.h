@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -46,18 +46,22 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class EventConstraint: public Constraint
 {
 public:
+    Event* mEventFrom;
+    Event* mEventTo;
+
     EventConstraint();
     EventConstraint(const EventConstraint& ec);
+    explicit EventConstraint(const QJsonObject& json);
+
     EventConstraint& operator=(const EventConstraint& ec);
+
     void copyFrom(const Constraint& ec);
+    void copyFrom(const EventConstraint& ec);
     virtual ~EventConstraint();
 
     static EventConstraint fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
 
-public:
-    Event* mEventFrom;
-    Event* mEventTo;
 };
 
 #endif

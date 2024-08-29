@@ -53,6 +53,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginManager.h"
 #include "Generator.h"
 #include "AppSettings.h"
+#include "StateKeys.h"
 
 #include <QtWidgets>
 #include <QProgressDialog>
@@ -78,14 +79,13 @@ EventsScene::~EventsScene()
 }
 
 
-
 EventItem* EventsScene::findEventItemWithJsonId(const int id)
 {
-    for (AbstractItem* it: mItems) {
+    for (auto it: mItems) {
         EventItem* ev = static_cast<EventItem*>(it);
-        const QJsonObject evJson = ev->getData();
+        const QJsonObject &evJson = ev->getData();
         if (evJson.value(STATE_ID) == id)
-            return ev;
+            return std::move(ev);
     }
     return nullptr;
 }
@@ -221,7 +221,7 @@ void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool sto
     // State with correct value of the selection
     QJsonArray events = QJsonArray();
 
-    for (auto item : mItems) {
+    for (const auto &item : mItems) {
         events.append(static_cast<EventItem*>(item)->getData());
     }
 
@@ -253,7 +253,7 @@ void EventsScene::setShowAllThumbs(const bool show)
     for (auto item : mItems) {
         bool selectedPhase = false;
         QJsonArray phases = dynamic_cast<EventItem*>(item)->getPhases();
-        for (const QJsonValue phase : phases) {
+        for (const QJsonValue& phase : phases) {
             if ((selectedPhase == false) && (phase.toObject().value(STATE_IS_SELECTED).toBool() == true)) {
                 selectedPhase = true;
             }
@@ -335,31 +335,35 @@ void EventsScene::createSceneFromState()
     qsizetype i = 0;
 
     progress->setLabelText(tr("Create event items"));
-
-    for (QJsonArray::const_iterator citer = eventsInState.constBegin(); citer != eventsInState.constEnd(); ++citer) {
-        const QJsonObject& event = citer->toObject();
+    
+    for (const auto& event : eventsInState) {
+        const QJsonObject& eventObj = event.toObject();
         ++i;
 
         progress->setValue((int)i);
 
        // CREATE ITEM
-        Event::Type type = Event::Type (event.value(STATE_EVENT_TYPE).toInt());
+        const Event::Type type = static_cast<Event::Type>(eventObj.value(STATE_EVENT_TYPE).toInt());
+
 
         if (type == Event::eDefault) {
-            EventItem* newItem = new EventItem(this, event, settings);
+            EventItem* newItem = new EventItem(this, eventObj, settings);
+            //mItems.append(static_cast<AbstractItem*>(newItem));
+            //addItem(static_cast<QGraphicsItem*>(newItem));
             mItems.append(newItem);
             addItem(newItem);
+            newItem = nullptr;
 
         } else {//if(type == Event::eBound)
-            EventItem* newItem = new EventKnownItem(this, event, settings);
+            EventKnownItem* newItem = new EventKnownItem(this, eventObj, settings);
             mItems.append(newItem);
             addItem(newItem);
+            newItem = nullptr;
         }
 
-        qDebug()<<"[EventsScene::createSceneFromState] Create mItems:"<<event.value(STATE_NAME).toString();
+        qDebug()<<"[EventsScene::createSceneFromState] Create mItems:"<<eventObj.value(STATE_NAME).toString();
 
-
-        }
+    }
 
 
     // ------------------------------------------------------
@@ -417,12 +421,13 @@ void EventsScene::updateSceneFromState()
             Event::Type type = Event::Type (event.value(STATE_EVENT_TYPE).toInt());
 
             if (type == Event::eDefault) {
-                        EventItem* eventItem = (EventItem*)mItems[i];
+                        auto eventItem = mItems[i];
 
                         removeItem(eventItem);
                         eventItem = nullptr;
+
             } else if (type == Event::eBound) {
-                        EventKnownItem* eventItem = (EventKnownItem*)mItems[i];
+                        auto eventItem = mItems[i];
                         delete eventItem;
                         eventItem = nullptr;
             }
@@ -526,20 +531,17 @@ void EventsScene::updateSceneFromState()
         if (!events_ids_inNewState.contains(event.value(STATE_ID).toInt())) {
 
             if (type == Event::eDefault) {
-                EventItem* eventItem = (EventItem*)mItems[indexItemToRemove.at(i)];
-                eventItem->remove_dateItems();
-                /*QList<QGraphicsItem*> dateItems = eventItem->childItems();
-
-                const auto dateItemsSize = dateItems.size() -1;
-                for (auto j = dateItemsSize; j >= 0; --j) {
-                    removeItem(dateItems.at(j));
-                    delete dateItems[j];
-                }*/
+                auto eventItem = mItems[indexItemToRemove.at(i)];
+                static_cast<EventItem*>(eventItem)->remove_dateItems();
+                removeItem(eventItem);
                 delete eventItem;
+                eventItem = nullptr;
+
             } else if (type == Event::eBound) {
-                EventKnownItem* boundItem = (EventKnownItem*)mItems[indexItemToRemove.at(i)];
+                auto boundItem = mItems[indexItemToRemove.at(i)];
                 removeItem(boundItem);
                 delete boundItem;
+                boundItem = nullptr;
            }
             //qDebug() << "EventsScene::updateScene Event deleted : " << event.value(STATE_ID).toInt();
 
@@ -619,7 +621,7 @@ void EventsScene::updateSceneFromState()
         if (itemUnkown) {
             // CREATE ITEM
                 Event::Type type = Event::Type (event.value(STATE_EVENT_TYPE).toInt());
-                EventItem* newItem = nullptr;
+                AbstractItem* newItem = nullptr;
                 try {
                     if (type == Event::eDefault)
                         newItem = new EventItem(this, event, settings);
@@ -635,10 +637,12 @@ void EventsScene::updateSceneFromState()
                             const QGraphicsView* gview = gviews[0];
                             const QPointF pt = gview->mapToScene(gview->width()/2, gview->height()/2);
                             const int randCoef = 3;
-                            const qreal shift_x = randCoef * Generator::randomUniform(-DateItem:: mEltsHeight, DateItem:: mEltsHeight);
-                            const qreal shift_y = randCoef * Generator::randomUniform(-DateItem:: mEltsHeight, DateItem:: mEltsHeight);
+                            const qreal shift_x = randCoef * Generator::randomUniform(-DateItem::mEltsHeight, DateItem:: mEltsHeight);
+                            const qreal shift_y = randCoef * Generator::randomUniform(-DateItem::mEltsHeight, DateItem:: mEltsHeight);
 
                             newItem->setPos(pt.x() + shift_x, pt.y() + shift_y);
+                            newItem->mData[STATE_ITEM_X] = pt.x() + shift_x;
+                            newItem->mData[STATE_ITEM_Y] = pt.y() + shift_y;
 
                         }
 
@@ -677,8 +681,9 @@ void EventsScene::updateSceneFromState()
             removeItem(constraintItem);
             mConstraintItems.removeOne(constraintItem);
             //delete constraintItem;
-            constraintItem = nullptr;
+            
         }
+        constraintItem = nullptr;
     }
     blockSignals(false);
     mConstraintItems.squeeze();
@@ -760,10 +765,10 @@ void EventsScene::clean()
     //  Delete all items
     // ------------------------------------------------------
 
-    for (AbstractItem* item : mItems) {
+    for (auto item : mItems) {
         EventItem* eventItem = static_cast<EventItem*>(item);
 
-        eventItem->~EventItem();
+        delete eventItem;//->~EventItem();
 
         item = nullptr;
         eventItem = nullptr;
@@ -805,34 +810,36 @@ void EventsScene::updateStateSelectionFromItem()
         EventItem* curItem = currentEvent();
         QJsonObject currentEvent = QJsonObject();
 
-        for (auto& pItem : mItems) {
-            EventItem* item = static_cast<EventItem*>(pItem);
+        for (const auto& pItem : mItems) {
+            auto item = dynamic_cast<EventItem*>(pItem);
 
-            // without selected update
-            const QJsonObject prevEvent = item->getData();
+            if (item) {
+                // without selected update
+                const QJsonObject prevEvent = item->getData();
 
-            const bool selected = (item->isSelected() || item->withSelectedDate() );
+                const bool selected = (item->isSelected() || item->withSelectedDate() );
 
-            if (selected)
-                ++nbOfSelectedEvent;
+                if (selected)
+                    ++nbOfSelectedEvent;
 
-            const bool isCurrent = (curItem == item);
-            // update mData in AbtractItem
-            item->setSelectedInData(selected);
-            item->setCurrentInData(isCurrent);
-            const QJsonObject nextEvent = item->getData();
+                const bool isCurrent = (curItem == item);
+                // update mData in AbtractItem
+                item->setSelectedInData(selected);
+                item->setCurrentInData(isCurrent);
+                const QJsonObject nextEvent = item->getData();
 
-            if (nextEvent != prevEvent)
-                modified = true;
+                if (nextEvent != prevEvent)
+                    modified = true;
 
-            if (nextEvent.value("item_x").toInt() != prevEvent.value("item_x").toInt() || nextEvent.value("item_y").toInt() != prevEvent.value("item_y").toInt() )
-                movedItem = true;
+                if (nextEvent.value(STATE_ITEM_X).toInt() != prevEvent.value(STATE_ITEM_X).toInt() || nextEvent.value(STATE_ITEM_Y).toInt() != prevEvent.value(STATE_ITEM_Y).toInt() )
+                    movedItem = true;
 
-            updatedEvents.append(std::move(nextEvent));
+                updatedEvents.append(std::move(nextEvent));
 
-            if (isCurrent)
-                currentEvent = curItem->getData();
-
+                if (isCurrent)
+                    currentEvent = curItem->getData();
+            }
+            item = nullptr;
          }
 
         if (modified ) {
@@ -885,7 +892,7 @@ AbstractItem* EventsScene::currentItem()
 {
     QList<QGraphicsItem*> selItems = selectedItems();
     if (!selItems.isEmpty()) {
-        AbstractItem* absItem = dynamic_cast<AbstractItem*>(selItems.first());
+        AbstractItem* absItem = dynamic_cast<EventItem*>(selItems.first());
         return absItem;
 
     } else
@@ -904,6 +911,7 @@ EventItem* EventsScene::currentEvent() const
         EventItem* tmpItem = dynamic_cast< EventItem*>(it);
         if (tmpItem)
             return tmpItem;
+
     }
 
     return nullptr;
@@ -1224,7 +1232,7 @@ void EventsScene::keyReleaseEvent(QKeyEvent* keyEvent)
         //mSelectKeyIsDown = false;
         mTempArrow->setState(ArrowTmpItem::eNormal);
         mTempArrow->setVisible(false);
-        QGraphicsScene::keyReleaseEvent(keyEvent);
+        AbstractScene::keyReleaseEvent(keyEvent);
     }
 #ifdef Q_OS_WIN
     else if (keyEvent->key() == Qt::Key_Shift) {
@@ -1243,7 +1251,7 @@ void EventsScene::keyReleaseEvent(QKeyEvent* keyEvent)
         //mAltIsDown = false;
         mSelectKeyIsDown = false;
         mTempArrow->setVisible(false);
-        QGraphicsScene::keyReleaseEvent(keyEvent);
+        AbstractScene::keyReleaseEvent(keyEvent);
     }
 #endif
 }

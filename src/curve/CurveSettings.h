@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -101,6 +101,9 @@ public:
     void restoreDefault();
     QJsonObject toJson() const;
     
+
+    static ProcessType processType_fromJson(const QJsonObject &json);
+
     bool showX() const;
     bool showY() const;
     bool showZ() const;

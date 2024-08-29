@@ -90,6 +90,7 @@ struct DensityAnalysis
 };
 
 FunctionStat analyseFunction(const QMap<type_data, type_data> &fun);
+FunctionStat analyseFunction(const std::map<type_data, type_data> &fun);
 
 QString FunctionStatToString(const FunctionStat& analysis);
 QString densityAnalysisToString(const DensityAnalysis& analysis);
@@ -117,7 +118,9 @@ void mean_std_unbiais_Knuth(const std::vector<int> &data, double& mean, double& 
 
 double covariance(const std::vector<double>& dataX, const std::vector<double>& dataY);
 
-QList<double> autocorrelation_schoolbook(const QList<double> &trace, const int hmax=40);
+QList<double> autocorrelation_schoolbook(const QList<double> &trace, const int hmax = 40);
+QList<double> autocorrelation_schoolbook(const std::vector<double> &trace, const int hmax = 40);
+
 QList<double> autocorrelation_by_convol(const QList<double> &trace, const int hmax=40);
 
 const std::pair<double, double> linear_regression(const std::vector<double>& dataX, const std::vector<double>& dataY);
@@ -127,18 +130,30 @@ double shrinkageUniform(const double s02);
 inline double dnorm (const double x, const double mu = 0., const double std = 1.) {return exp(-0.5*pow((x - mu)/ std, 2.))/ (sqrt(2.*M_PI)*std);}
 
 Quartiles quartilesForTrace(const QList<type_data> &trace);
+Quartiles quartilesForTrace(const std::vector<type_data> &trace);
+
 TraceStat traceStatistic(const QList<type_data> &trace);
+TraceStat traceStatistic(const std::vector<type_data> &trace);
 
 // QList<double> calculRepartition (const QList<double> &calib);
 QList<double> calculRepartition (const QMap<double, double> &calib);
+std::vector<double> calculRepartition(const std::map<double, double>  &calib);
+
 Quartiles quartilesForRepartition(const QList<double> &repartition, const double tmin, const double step);
+Quartiles quartilesForRepartition(const std::vector<double> &repartition, const double tmin, const double step);
+
 std::pair<double, double> credibilityForTrace(const QList<double> &trace, double thresh, double &exactThresholdResult, const QString description = "Credibility computation");
 std::pair<double, double> credibilityForTrace(const QList<int> &trace, double thresh, double &exactThresholdResult, const QString description = "Credibility computation");
+std::pair<double, double> credibilityForTrace(const std::vector<double> &trace, double thresh, double& exactThresholdResult, const QString description = "Credibility computation");
+
 std::pair<double, double> timeRangeFromTraces(const QList<double> &trace1, const QList<double> &trace2, const double thresh, const QString description ="Time Range Computation");
+std::pair<double, double> timeRangeFromTraces(const std::vector<double> &trace1, const std::vector<double> &trace2, const double thresh, const QString description ="Time Range Computation");
 
 std::pair<double, double> gapRangeFromTraces(const QList<double> &trace1, const QList<double> &trace2, const double thresh, const QString description ="Gap Range Computation");
+std::pair<double, double> gapRangeFromTraces(const std::vector<double> &trace1, const std::vector<double> &trace2, const double thresh, const QString description ="Gap Range Computation");
 
 std::pair<double, double> transitionRangeFromTraces(const QList<double> &trace1, const QList<double> &trace2, const double thresh, const QString description ="Gap Range Computation");
+std::pair<double, double> transitionRangeFromTraces(const std::vector<double> &trace1, const std::vector<double> &trace2, const double thresh, const QString description ="Gap Range Computation");
 
 const QString interval_to_text(const QPair<double, QPair<double, double> > &interval, DateConversion conversionFunc = nullptr, const bool forCSV = false);
 

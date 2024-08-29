@@ -51,6 +51,7 @@ public:
     PhasesScene(QGraphicsView* view, QObject* parent = nullptr);
     virtual ~PhasesScene();
 
+
     void sendUpdateProject(const QString& reason, bool notify, bool async);
     PhaseItem* currentPhase() const;
      void createSceneFromState();

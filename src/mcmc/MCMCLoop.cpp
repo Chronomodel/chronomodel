@@ -76,6 +76,7 @@ MCMCLoop::MCMCLoop(std::shared_ptr<ModelCurve> model):
 
 MCMCLoop::~MCMCLoop()
 {
+    mModel.reset();
     //mProjectLock->mLoop = nullptr;
     //mProject = nullptr;
 }
@@ -103,11 +104,11 @@ void MCMCLoop::setMCMCSettings(const MCMCSettings &s)
         chain.mThinningInterval = s.mThinningInterval;
         chain.mRealyAccepted = 0;
         chain.mMixingLevel = s.mMixingLevel;
-        mLoopChains.append(chain);
+        mLoopChains.push_back(chain);
     }
 }
 
-const QList<ChainSpecs> &MCMCLoop::chains() const
+const std::vector<ChainSpecs> &MCMCLoop::chains() const
 {
     return mLoopChains;
 }
@@ -550,7 +551,7 @@ QString MCMCLoop::initialize_time()
 void MCMCLoop::run()
 {
 #if DEBUG
-    qDebug()<<"[MCMCLoop::run] run()";
+   // qDebug()<<"[MCMCLoop::run] run()";
 #endif
 
     QElapsedTimer startTime;

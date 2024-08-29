@@ -78,15 +78,17 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 QString res_file_version; // used when loading
 
 Project::Project():
-    mName ("ChronoModel Project"),
-    mModel(std::make_shared<ModelCurve>()),
+    mLastSavedState(QJsonObject()),
+    mName ("Empty Project"),
+    mModel(new ModelCurve()),
     mLoop (nullptr),
+    mCalibCurves(QMap<QString, CalibrationCurve>()),
+    mState(emptyState()),
     mDesignIsChanged (true),
     mStructureIsChanged (true),
     mItemsIsMoved (true),
     mNoResults (true)
 {
-    mState = emptyState();
     mLastSavedState = mState;
 
     mAutoSaveTimer = new QTimer(this);
@@ -219,6 +221,7 @@ bool Project::pushProjectState(const QJsonObject &state, const QString &reason, 
         command = nullptr;
 
         if (mStructureIsChanged && (reason != PROJECT_LOADED_REASON) ) {
+            mLastSavedState = mState;
             mState = state;
             AppSettings::mIsSaved = false;
             MainWindow::getInstance()->updateWindowTitle();
@@ -239,7 +242,7 @@ bool Project::pushProjectState(const QJsonObject &state, const QString &reason, 
 
 void Project::sendUpdateState(const QJsonObject &state, const QString &reason, bool notify)
 {
-    //qDebug()<<"[Project::sendUpdateState QGuiApplication::postEvent] "<< reason << notify;
+    qDebug()<<"[Project::sendUpdateState QGuiApplication::postEvent] "<< reason << notify;
 
     /* The event must be allocated on the heap since the post event queue will take ownership of the event
      * and delete it once it has been posted.
@@ -249,7 +252,7 @@ void Project::sendUpdateState(const QJsonObject &state, const QString &reason, b
 
 }
 
-void Project::checkStateModification(const QJsonObject &stateNew, const QJsonObject &stateOld)
+void Project::checkStateModification(const QJsonObject& stateNew, const QJsonObject& stateOld)
 {
     mDesignIsChanged = false;
     mStructureIsChanged = false;
@@ -405,7 +408,7 @@ void Project::checkStateModification(const QJsonObject &stateNew, const QJsonObj
             }
 
         }
-        // Check events  constraintes modification
+        // Check events constraintes modification
         const QJsonArray &eventsConstNew = stateNew.value(STATE_EVENTS_CONSTRAINTS).toArray();
         const QJsonArray &eventsConstOld = stateOld.value(STATE_EVENTS_CONSTRAINTS).toArray();
 
@@ -418,11 +421,21 @@ void Project::checkStateModification(const QJsonObject &stateNew, const QJsonObj
             return;
 
         }
-        const QJsonObject &curveNew = stateNew.value(STATE_CURVE).toObject();
-        const QJsonObject &curveOld = stateOld.value(STATE_CURVE).toObject();
-        if (curveNew != curveOld) {
+        // Check Curve parameters modification
+        const QJsonObject &curve_New = stateNew.value(STATE_CURVE).toObject();
+        const QJsonObject &curve_Old = stateOld.value(STATE_CURVE).toObject();
+        if (curve_New != curve_Old) {
            mStructureIsChanged = true;
            return;
+        }
+
+        // Check MCMC parameters modification
+        const QJsonObject &MCMC_New = stateNew.value(STATE_MCMC).toObject();
+        const QJsonObject &MCMC_Old = stateOld.value(STATE_MCMC).toObject();
+
+        if (MCMC_New != MCMC_Old) {
+            mStructureIsChanged = true;
+            return;
         }
     }
 
@@ -470,6 +483,9 @@ bool Project::designIsChanged()
     return mDesignIsChanged;
 }
 
+
+// Event handler for events of type "StateEvent".
+// Updates the project state by calling updateState() and send a notification (if required).
 bool Project::event(QEvent* e)
 {
     if (e->type() == QEvent::User) {
@@ -500,10 +516,14 @@ bool Project::event(QEvent* e)
 
 }
 
+
+
+// Update the project state directly.
+// This is not async! so be careful when calling this from views with notify = true
 void Project::updateState(const QJsonObject &state, const QString &reason, bool notify)
 {
     qDebug() << " [Project::updateState] ---  reason = " << reason << " notify= " << notify;
-    mState = state; //std::move(state);
+    mState = state;
     if (reason == NEW_PROJECT_REASON)
        showStudyPeriodWarning();
 
@@ -563,7 +583,7 @@ bool Project::load(const QString &path, bool force)
             message.exec();
             return false;
         } else {
-            if (mModel)
+            if (mModel->mNumberOfEvents >0)
                 mModel->clear();
 
             QJsonObject loadingState = jsonDoc.object();
@@ -654,7 +674,7 @@ bool Project::load(const QString &path, bool force)
 
            qDebug() << "[Project::load]  end checkDatesCompatibility";
             //  Check if dates are valid on the current study period
-            mState = QJsonObject();
+            mState = emptyState();
             mState = checkValidDates(loadingState);
 
             recenterProject();
@@ -773,7 +793,9 @@ bool Project::load(const QString &path, bool force)
                     qDebug() << "[Project::load] Loading model file.res : " << dataPath << " size=" << dataFile.size();
 
                     try {
-                         mModel = std::shared_ptr<ModelCurve>(new ModelCurve(mState, this));
+                        // mModel = std::shared_ptr<ModelCurve>(new ModelCurve(mState, this));
+                        mModel.reset(new ModelCurve(mState));
+
                             qDebug() << "[Project::load] Create a ModelCurve";
 
                     }
@@ -806,7 +828,8 @@ bool Project::load(const QString &path, bool force)
                         setNoResults(false);
 
                      } else {
-                            setNoResults(true);
+                         setNoResults(true);
+                         clearModel();
                      }
 
                     } catch (const std::exception & e) {
@@ -817,6 +840,7 @@ bool Project::load(const QString &path, bool force)
                                             QMessageBox::Ok,
                                             qApp->activeWindow());
                         setNoResults(true);
+                        clearModel();
                         message.exec();
                     }
                 } else {
@@ -1215,7 +1239,8 @@ bool Project::saveProjectToFile()
     QFile file_cal(AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".cal");
     QFile file_res(AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res");
 
-     if (mLastSavedState != mState) {
+    // if (mLastSavedState != mState) {
+    if (AppSettings::mIsSaved == false) {
         // création d'une copie du dernier resultat avec succés
      /*   if (mNoResults && file_res.exists() && file_cal.exists()) {
 
@@ -1255,7 +1280,7 @@ bool Project::saveProjectToFile()
 #ifdef DEBUG
      else {
         //qDebug() << "Nothing new to save in project model";
-
+        return true;
     }
 #endif
     if (file_cal.open(QIODevice::WriteOnly)) {
@@ -2457,7 +2482,7 @@ void Project::combineDates(const int eventId, const QList<int>& dateIds)
                         message.exec();
                     } else {
                         // remove merged dates
-                        for (int j=dates.size()-1; j>=0; --j) {
+                        for (qsizetype j=dates.size()-1; j>=0; --j) {
                             QJsonObject date = dates[j].toObject();
                             if (dateIds.contains(date.value(STATE_ID).toInt())) {
                                 dates.removeAt(j);
@@ -2556,12 +2581,14 @@ void Project::updateAllDataInSelectedEvents(const QHash<QString, QVariant>& grou
     pushProjectState(stateNext, "Grouped action applied : " + groupedAction.value("title").toString(), true);
 }
 
-void Project::createPhase(qreal x, qreal y)
+void Project::createPhase(qreal x, qreal y, QWidget* parent)
 {
     if (studyPeriodIsValid()) {
-        PhaseDialog* dialog = new PhaseDialog(qApp->activeWindow());
-        int r (dialog->exec());
-        if (r == int(QDialog::Accepted) ) {
+        PhaseDialog* dialog = new PhaseDialog(parent);//qApp->activeWindow());
+        const Phase& p = Phase();
+        dialog->setPhase(p.toJson());
+
+        if (dialog->exec() == QDialog::Accepted ) {
             if (dialog->isValid()) {
                 QJsonObject phase = dialog->getPhase();
                 QJsonObject stateNext = mState;
@@ -2586,17 +2613,18 @@ void Project::createPhase(qreal x, qreal y)
                 message.exec();
                 return;
             }
-            delete dialog;
+            
         }
+        delete dialog;
     }
 }
 
 void Project::clear_calibCurves()
 {
     mCalibCurves.clear();
-    mLastSavedState = QJsonObject();
-    mState = QJsonObject();
-    mName.clear();
+    //mLastSavedState = QJsonObject();
+    //mState = QJsonObject();
+    //mName.clear();
 }
 
 void Project::updatePhase(const QJsonObject& phaseIn)
@@ -2793,7 +2821,7 @@ void Project::mergePhases(int phaseFromId, int phaseToId)
 QJsonObject Project::getPhasesWithId(const int id)
 {
     const QJsonArray& phases = mState.value(STATE_PHASES).toArray();
-    for (const QJsonValue pha : phases) {
+    for (const QJsonValue &pha : phases) {
         if (pha.toObject().value(STATE_ID) == id)
             return pha.toObject();
     }
@@ -3102,11 +3130,16 @@ void Project::runChronomodel()
     // This is the occasion to clean EVERYTHING using the previous model before deleting it!
     // e.g. : clean the result view with any graphs, ...
 
-   // clearModel();
-    mModel.reset(new ModelCurve(mState, this));
-    //emit mcmcStarted();
-
+    if (mModel) {
+        mModel->clearTraces();
+        mModel->clear();
+        *mModel = ModelCurve(mState);
+    } else
+        mModel = std::shared_ptr<ModelCurve>(new ModelCurve(mState));
+    //mModel.reset();
+    //*mModel = ModelCurve(mState);
     //mModel = std::shared_ptr<ModelCurve>(new ModelCurve(mState, this));
+    //mModel.reset(new ModelCurve(mState, this));
 
     bool modelOk = false;
     try {
@@ -3174,12 +3207,12 @@ void Project::runChronomodel()
 
 void Project::clearModel()
 {
-    if (mModel)
+    if (mModel->mNumberOfEvents >0)
         mModel->clear();
+
     //mModel.reset();
 
-
-     emit noResult();
+    emit noResult();
 }
 
 bool Project::isCurve() const {
@@ -3227,8 +3260,8 @@ void Project::runCurve()
     //  Clear current model and recreate et Curve Model
     //  using the project state
     // ------------------------------------------------------------------------------------------
-    clearModel();
-    mModel = std::shared_ptr<ModelCurve>(new ModelCurve(mState, this));
+    //clearModel();
+    mModel.reset(new ModelCurve(mState));
 
     // ------------------------------------------------------------------------------------------
     //  Check if the model is valid

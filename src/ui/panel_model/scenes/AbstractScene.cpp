@@ -45,7 +45,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QtWidgets>
 
-AbstractScene::AbstractScene(QGraphicsView* view, QObject* parent):QGraphicsScene(parent),
+AbstractScene::AbstractScene(QGraphicsView* view, QObject* parent):
+    QGraphicsScene(parent),
     mDrawingArrow(false),
     mSelectKeyIsDown(false),
     mShowGrid(false),
@@ -64,10 +65,12 @@ AbstractScene::AbstractScene(QGraphicsView* view, QObject* parent):QGraphicsScen
 
 AbstractScene::~AbstractScene()
 {
-    for (auto* i : mItems) {
+    mItems.clear();
+   /* for (auto* i : mItems) {
         delete i;
         i = nullptr;
     }
+*/
     for (auto* ci : mConstraintItems) {
         delete ci;
         ci = nullptr;
@@ -86,7 +89,7 @@ void AbstractScene::updateConstraintsPos(AbstractItem* movedItem, const QPointF&
 {
     Q_UNUSED(newPos);
 
-    AbstractItem* curItem = currentItem();
+    auto curItem = currentItem();
     if (curItem)
         mTempArrow->setFrom(curItem->pos().x(), curItem->pos().y());
 
@@ -133,7 +136,7 @@ bool AbstractScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
 {
     Q_UNUSED(e);
 
-    AbstractItem* current = currentItem();
+    auto current = currentItem();
 
     // if mDrawingArrow is true, an Event is already selected and we can create a Constraint.
     if (mDrawingArrow && current && item && (item != current)) {
@@ -170,7 +173,7 @@ void AbstractScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 {
     Q_UNUSED(e);
     qDebug() << "[AbstractScene::itemEntered]";
-    AbstractItem* current = currentItem();
+    auto current = currentItem();
 
     if (mDrawingArrow && current && item && (item != current)) {
 
@@ -215,8 +218,8 @@ void AbstractScene::itemMoved(AbstractItem* item, QPointF newPos, bool merging)
     Q_UNUSED(newPos);
 
     if (merging) {
-        AbstractItem* colliding = collidingItem(item);
-        for (int i=0; i<mItems.size(); ++i)
+        auto colliding = collidingItem(item);
+        for (qsizetype i=0; i<mItems.size(); ++i)
             mItems[i]->setMergeable( (colliding != nullptr) && ( (mItems.at(i) == item) || (mItems.at(i) == colliding) ) );
 
     }
@@ -249,11 +252,11 @@ void AbstractScene::itemReleased(AbstractItem* item, QGraphicsSceneMouseEvent* e
 {
     Q_UNUSED(e);
     if (item->mMoving) {
-        for (int i=0; i<mItems.size(); ++i)
+        for (qsizetype i=0; i<mItems.size(); ++i)
             mItems[i]->setMergeable(false);
 
         if (e->modifiers() == Qt::ShiftModifier) {
-            AbstractItem* colliding = collidingItem(item);
+            auto colliding = collidingItem(item);
             if (colliding)
                 mergeItems(item, colliding);
         } else {
@@ -293,12 +296,13 @@ void AbstractScene::keyPressEvent(QKeyEvent* keyEvent)
    else if (keyEvent->modifiers() == Qt::AltModifier && selectedItems().count()==1) {
         mAltIsDown = true;
 
-        AbstractItem* curItem = currentItem();
+        auto curItem = currentItem();
         // Check if an item is already selected
         if (curItem) {
             mDrawingArrow = true;
             mTempArrow->setVisible(true);
             mTempArrow->setFrom(curItem->pos().x(), curItem->pos().y());
+
         } else {
             mDrawingArrow = false;
             mTempArrow->setVisible(false);

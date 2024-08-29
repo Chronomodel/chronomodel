@@ -50,9 +50,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QJsonObject>
 
 
-class Model: public QObject
+class Model //: public QObject
 {
-    Q_OBJECT
+   // Q_OBJECT
 public:
     StudyPeriodSettings mSettings;
 
@@ -64,7 +64,7 @@ public:
     QList<EventConstraint*> mEventConstraints;
     QList<PhaseConstraint*> mPhaseConstraints;
 
-    QList<ChainSpecs> mChains;
+    std::vector<ChainSpecs> mChains;
 
     QString mLogModel;
     QString mLogInit;
@@ -87,8 +87,8 @@ protected:
     QStringList mCurveLongName;
 
 public:
-    Model(QObject* parent = nullptr);
-    explicit Model(const QJsonObject& json, QObject* parent = nullptr);
+    Model();//QObject* parent = nullptr);
+    explicit Model(const QJsonObject& json);//, QObject* parent = nullptr);
     virtual ~Model();
 
     //void generateModelLog();
@@ -134,7 +134,7 @@ public:
     void restoreFromFile_v324(QDataStream* in);
 
     // Only trace needed for this :
-    virtual void generateCorrelations(const QList<ChainSpecs>& chains);
+    virtual void generateCorrelations(const std::vector<ChainSpecs>& chains);
 
     double getThreshold() const;
     double getBandwidth() const;
@@ -145,13 +145,13 @@ public:
     void updateDensities(int fftLen, double bandwidth, double threshold);
 
     // Computed from trace using FFT :
-    virtual void generatePosteriorDensities(const QList<ChainSpecs>& chains, int fftLen, double bandwidth);
+    virtual void generatePosteriorDensities(const std::vector<ChainSpecs> &chains, int fftLen, double bandwidth);
     // Trace and Posterior density needed for this :
 
     virtual void generateCredibility(const double threshold);
     virtual void generateHPD(const double threshold);
     // Trace and Posterior density needed for this :
-    virtual void generateNumericalResults(const QList<ChainSpecs>& chains);
+    virtual void generateNumericalResults(const std::vector<ChainSpecs>& chains);
 
     void generateTempo(size_t gridLength);
 
@@ -170,14 +170,14 @@ public:
     virtual void memo_accept(const unsigned i_chain);
     virtual void initVariablesForChain();
 
-public slots:
+//public slots:
     void setThreshold(const double threshold);
     void setBandwidth(const double bandwidth);
     void setFFTLength(int FFTLength);
     void setHActivity(const double h, const double rangePercent);
 
-signals:
-    void newCalculus();
+//signals:
+   // void newCalculus();
 
 
 #pragma mark curve variables

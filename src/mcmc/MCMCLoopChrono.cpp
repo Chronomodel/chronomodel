@@ -72,7 +72,7 @@ QString MCMCLoopChrono::calibrate()
 {
     if (mModel) {
         QList<Event*> &events = mModel->mEvents;
-        events.reserve(mModel->mEvents.size());
+        //events.reserve(mModel->mEvents.size());
         //----------------- Calibrate measurements --------------------------------------
 
         QList<Date*> dates;
@@ -81,7 +81,7 @@ QString MCMCLoopChrono::calibrate()
         for (auto&& e : events)
             nbDates += e->mDates.size();
 
-        dates.reserve(nbDates);
+        //dates.reserve(nbDates);
         for (Event* ev : events) {
             unsigned long num_dates = ev->mDates.size();
             for (unsigned long j = 0; j<num_dates; ++j) {

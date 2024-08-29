@@ -40,14 +40,16 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PhaseItem.h"
 #include "ArrowItem.h"
 #include "ArrowTmpItem.h"
-#include "Project.h"
 #include "QtUtilities.h"
 #include "StateKeys.h"
+#include "Generator.h"
+#include "Project.h"
 
 #include <QtWidgets>
 
 
-PhasesScene::PhasesScene(QGraphicsView* view, QObject* parent):AbstractScene(view, parent)
+PhasesScene::PhasesScene(QGraphicsView* view, QObject* parent):
+    AbstractScene(view, parent)
 {
    connect(this, &QGraphicsScene::selectionChanged, this, &PhasesScene::updateStateSelectionFromItem);
 }
@@ -207,8 +209,7 @@ void PhasesScene::createSceneFromState()
 
     for (QJsonArray::const_iterator iPhase= phases.constBegin(); iPhase != phases.constEnd(); ++iPhase) {
              // CREATE ITEM
-        PhaseItem* phaseItem = new PhaseItem(this, iPhase->toObject());
-        //phaseItem->setPhase(iPhase->toObject());
+        auto phaseItem = new PhaseItem(this, iPhase->toObject());
         mItems.append(phaseItem);
         addItem(phaseItem);
     }
@@ -230,7 +231,7 @@ void PhasesScene::createSceneFromState()
 
     }
 
-     mUpdatingItems = false;
+    mUpdatingItems = false;
 
 
  }
@@ -253,7 +254,7 @@ void PhasesScene::updateSceneFromState()
         // ------------------------------------------------------
         blockSignals(true);
         for (qsizetype i = mItems.size()-1; i >= 0; --i) {
-            PhaseItem* item = (PhaseItem*)mItems[i];
+            auto item = (PhaseItem*)mItems[i];
             mItems.removeAt(i);
             // This is a QObject : call deleteLater instead of delete
             item->deleteLater();
@@ -293,7 +294,7 @@ void PhasesScene::updateSceneFromState()
     bool hasDeleted = false;
     blockSignals(true);
     for (qsizetype i = mItems.size()-1; i >=0 ; --i) {
-        PhaseItem* item = (PhaseItem*)mItems[i];
+        auto item = static_cast<PhaseItem*>(mItems[i]);
         QJsonObject& phase = item->getData();
 
         if (!phases_ids.contains(phase.value(STATE_ID).toInt())) {
@@ -320,7 +321,7 @@ void PhasesScene::updateSceneFromState()
 
         bool itemExists = false;
         for (int j = 0; j<mItems.size(); ++j) {
-            PhaseItem* item = (PhaseItem*)mItems[j];
+            auto item = static_cast<PhaseItem*>(mItems[j]);
             const QJsonObject itemPhase = item->getData();
             if (itemPhase.value(STATE_ID).toInt() == phase.value(STATE_ID).toInt()) {
                 itemExists = true;
@@ -341,32 +342,25 @@ void PhasesScene::updateSceneFromState()
         }
         if (!itemExists) {
             // CREATE ITEM
-            PhaseItem* phaseItem = new PhaseItem(this, phase);
-            mItems.append(phaseItem);
-            addItem(phaseItem);
-            hasCreated = true;
+            AbstractItem* phaseItem = new PhaseItem(this, phase);
 
-            // usefull, changing the selected item force to update the state ??
-            clearSelection();
-
-            // Note : setting an event in (0, 0) tells the scene that this item is new!
+            // Note : setting an phase in (0, 0) tells the scene that this item is new!
             // Thus the scene will move it randomly around currently viewed center point).
             QPointF pos = phaseItem->pos();
             if (pos.isNull()) {
-                const int posDelta (100);
 
                 // With the code above the new phase item is created randomly near the center of the view
                 QList<QGraphicsView*> gviews = views();
                 if (gviews.size() > 0) {
                     QGraphicsView* gview = gviews[0];
                     QPointF pt = gview->mapToScene(gview->width()/2, gview->height()/2);
-#ifdef _WIN32
-                    phaseItem->setPos(pt.x() + rand() % posDelta - posDelta/2,
-                                      pt.y() + rand() % posDelta - posDelta/2);
-#elif defined  __APPLE__
-                    phaseItem->setPos(pt.x() + arc4random() % posDelta - posDelta/2,
-                                      pt.y() + arc4random() % posDelta - posDelta/2);
-#endif
+                    const int randCoef = 3;
+                    const qreal shift_x = randCoef * Generator::randomUniform(-PhaseItem::mEltsHeight, PhaseItem::mEltsHeight);
+                    const qreal shift_y = randCoef * Generator::randomUniform(-PhaseItem::mEltsHeight, PhaseItem::mEltsHeight);
+
+                    phaseItem->setPos(pt.x() + shift_x, pt.y() + shift_y);
+                    phaseItem->mData[STATE_ITEM_X] = pt.x() + shift_x;
+                    phaseItem->mData[STATE_ITEM_Y] = pt.y() + shift_y;
                     gview = nullptr;
                 }
 
@@ -375,7 +369,12 @@ void PhasesScene::updateSceneFromState()
                // phaseItem->setPos( pt.x(), pt.y());
             }
 
+            mItems.append(phaseItem);
+            addItem(phaseItem);
+            hasCreated = true;
 
+            // usefull, changing the selected item force to update the state ??
+            clearSelection();
 #ifdef DEBUG
             qDebug() << "[PhasesScene::updateScene] Phase item created : id = " << phase[STATE_ID].toInt();
 #endif
@@ -462,7 +461,7 @@ void PhasesScene::clean()
     //  Delete all items
     // ------------------------------------------------------
     for (qsizetype i = mItems.size()-1; i>=0; --i) {
-        PhaseItem* item = (PhaseItem*)mItems[i];
+        auto item = static_cast<PhaseItem*>(mItems[i]);
         mItems.removeAt(i);
 
         // ????? This breaks the program!!! Delete abose does the jobs but is it safe?
@@ -502,9 +501,9 @@ void PhasesScene::updateStateSelectionFromItem()
     if (!mUpdatingItems) {
         bool modified = false;
         bool oneSelection = false;
-        PhaseItem* curItem = dynamic_cast<PhaseItem*>(currentItem());
+        auto curItem = dynamic_cast<PhaseItem*>(currentItem());
         blockSignals(true);
-        for (int i=0; i<mItems.size(); ++i) {
+        for (qsizetype i=0; i<mItems.size(); ++i) {
             PhaseItem* item = dynamic_cast<PhaseItem*>(mItems.at(i));
 
             // without selected update
@@ -569,11 +568,11 @@ PhaseItem* PhasesScene::currentPhase() const
     return nullptr;
 }
 
-AbstractItem* PhasesScene::currentItem()
+AbstractItem *PhasesScene::currentItem()
 {
     QList<QGraphicsItem*> items = selectedItems();
     if (items.size() > 0) {
-        PhaseItem* item = dynamic_cast<PhaseItem*>(items.at(0));
+        AbstractItem* item = static_cast<AbstractItem*>(currentPhase());
         if (item)
             return item;
     }
@@ -598,7 +597,7 @@ bool PhasesScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent*)
     qDebug() << "[PhasesScene::itemClicked]";
 
     PhaseItem* phaseClicked = dynamic_cast< PhaseItem*>(item);
-    PhaseItem* current = dynamic_cast< PhaseItem*>(currentItem());
+    PhaseItem* current = currentPhase();//dynamic_cast< PhaseItem*>(currentItem().get());
 
     // if mDrawingArrow is true, an Phase is already selected and we can create a Constraint.
     if (phaseClicked ) {

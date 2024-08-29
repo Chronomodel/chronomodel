@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -41,8 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "StateKeys.h"
 
-Constraint::Constraint(QObject *parent):
-    QObject( parent ),
+Constraint::Constraint():
     mId(-1),
     mFromId(0),
     mToId(0)
@@ -50,13 +49,22 @@ Constraint::Constraint(QObject *parent):
 
 }
 
-Constraint::Constraint(const Constraint& ec, QObject *parent):
-    QObject( parent )
+Constraint::Constraint(const Constraint& ec)
 {
     mId = ec.mId;
     mFromId = ec.mFromId;
     mToId = ec.mToId;
 }
+
+Constraint::Constraint(const QJsonObject& json):
+    mId(json.value(STATE_ID).toInt()),
+    mFromId(json.value(STATE_CONSTRAINT_BWD_ID).toInt()),
+    mToId(json.value(STATE_CONSTRAINT_FWD_ID).toInt())
+{
+
+}
+
+
 
 Constraint& Constraint::operator=(const Constraint& ec)
 {

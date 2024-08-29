@@ -54,30 +54,37 @@ class ArrowItem: public QGraphicsItem
 
     Q_PROPERTY(QJsonObject mData READ data WRITE setData)
 public:
-    enum Type {
+    enum TypeFrom {
         eEvent = 0,
         ePhase = 1
     };
 
-    ArrowItem(AbstractScene* scene, Type type, const QJsonObject& constraint, QGraphicsItem* parent = nullptr);
+    ArrowItem(AbstractScene* scene, TypeFrom type_from, const QJsonObject& constraint, QGraphicsItem* parent = nullptr);
     virtual ~ArrowItem();
 
+    enum { Type = UserType + 1 };
+
+    int type() const override
+    {
+        // Enable the use of qgraphicsitem_cast with this item.
+        return Type;
+    };
     void updatePosition();
     void setFrom(const double x, const double y);
     void setTo(const double x, const double y);
 
     void setGreyedOut(bool greyedOut);
 
-    QRectF boundingRect() const;
-    QPainterPath shape() const;
+    QRectF boundingRect() const override;
+    QPainterPath shape() const override;
 
     QPointF contactPos(const double theta, AbstractItem *e);
 
-    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
-    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e);
-    void mousePressEvent(QGraphicsSceneMouseEvent* e);
-    void hoverMoveEvent(QGraphicsSceneHoverEvent* event);
-    void hoverLeaveEvent(QGraphicsSceneHoverEvent* e);
+    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent* e) override;
+    void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent* e) override;
 
     QRectF getBubbleRect(const QString& text = QString()) const;
     QSizeF getBubbleSize(const QString& text = QString()) const;
@@ -90,7 +97,7 @@ public:
     PhaseItem* findPhaseItemWithJsonId(const int id);
 
 public:
-    Type mType;
+    TypeFrom mTypeFrom;
     QJsonObject mData;
     AbstractScene* mScene;
 

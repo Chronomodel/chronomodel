@@ -45,11 +45,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "CurveUtilities.h"
 #include "Functions.h"
 #include "Generator.h"
+#include "StateKeys.h"
 #include "StdUtilities.h"
 #include "Date.h"
 #include "Project.h"
 #include "Matrix.h"
 #include "MainWindow.h"
+#include "QtUtilities.h"
 #include <cfenv>
 
 
@@ -101,7 +103,7 @@ QString MCMCLoopCurve::calibrate()
 {
     if (mModel) {
         QList<Event*>& events = mModel->mEvents;
-        events.reserve(mModel->mEvents.size());
+        //events.reserve(mModel->mEvents.size());
         
         //----------------- Calibrate measurements --------------------------------------
 
@@ -111,7 +113,7 @@ QString MCMCLoopCurve::calibrate()
         for (auto&& ev : events)
             nbDates += ev->mDates.size();
 
-        dates.reserve(nbDates);
+        //dates.reserve(nbDates);
         for (auto&& ev : events) {
             size_t num_dates = ev->mDates.size();
             for (size_t j = 0; j<num_dates; ++j) {
@@ -5556,7 +5558,7 @@ void MCMCLoopCurve::finalize()
     // Suppression des traces des chaines sans courbes acceptées
 
     int back_position = (int)mModel->mLambdaSpline.mRawTrace->size();
-    for (auto i = mLoopChains.size()-1; i>-1; --i) {
+    for (size_t i = mLoopChains.size()-1; i>-1; --i) {
         ChainSpecs &chain = mLoopChains[i];
         // we add 1 for the init
         const int initBurnAdaptAcceptSize = 1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch) + chain.mRealyAccepted;
@@ -5565,7 +5567,7 @@ void MCMCLoopCurve::finalize()
         if (chain.mRealyAccepted == 0) {
             emit setMessage((tr("Warning : NO POSITIVE curve available with chain n° %1, current seed to change %2").arg (QString::number(i+1), QString::number(chain.mSeed))));
 
-            mLoopChains.remove(i);
+            mLoopChains.erase(mLoopChains.cbegin()+i);
 
             mModel->mPosteriorMeanGByChain.erase(mModel->mPosteriorMeanGByChain.begin() + i);
 
@@ -5616,7 +5618,7 @@ void MCMCLoopCurve::finalize()
         }
         back_position = front_position ;
     }
-    if (mLoopChains.isEmpty()) {
+    if (mLoopChains.empty()) {
         mAbortedReason = QString(tr("Warning : NO POSITIVE curve available "));
         throw mAbortedReason;
     }

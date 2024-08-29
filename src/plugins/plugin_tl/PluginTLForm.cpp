@@ -69,6 +69,8 @@ PluginTLForm::PluginTLForm(PluginTL* plugin, QWidget* parent, Qt::WindowFlags fl
     mYearEdit = new QLineEdit(this);
     mYearEdit->setAlignment(Qt::AlignHCenter);
     mYearEdit->setText(QString::number(QDate::currentDate().year()));
+    setTabOrder(mAverageEdit, mErrorEdit);
+    setTabOrder(mErrorEdit, mYearEdit);
 
     QGridLayout* grid = new QGridLayout();
     grid->setContentsMargins(0, 3, 0, 0);

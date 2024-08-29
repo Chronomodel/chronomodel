@@ -205,6 +205,8 @@ QMap<T, V> getMapDataInRange(const QMap<T, V> data, const T subMin, const  T sub
     }
 }
 
+std::map<double, double> getMapDataInRange(const std::map<double, double> data, const double subMin, const double subMax);
+
 template <typename T>
 QList<T> getVectorDataInRange(const QList<T> &data, const T subMin,const T subMax, const T min, const T max)
 {
@@ -236,17 +238,18 @@ QList<double> load_QList(QDataStream& stream);
 
 std::vector<double> load_std_vector(QDataStream& stream);
 
-std::vector<double>* load_std_vector_ptr(QDataStream& stream);
+std::shared_ptr<std::vector<double> > load_std_vector_ptr(QDataStream& stream);
+void reload_shared_ptr(const std::shared_ptr<std::vector<double> > &data, QDataStream& stream);
 
 
 template <template<typename...> class Container, class T >
-void save_container(QDataStream& stream, const Container<T> data)
+void save_container(QDataStream& stream, const Container<T>& data)
 {
-    qDebug()<<"[save_container] "<< data.size();
-    quint32 size = data.size();
+   // qDebug()<<"[QtUtilities::save_container] "<< data.size();
+    quint32 size = (quint32) data.size();
     stream << size;
     if (size > 0) {
-        for (auto v : data)
+        for (const auto& v : data)
             stream << v;
     }
 

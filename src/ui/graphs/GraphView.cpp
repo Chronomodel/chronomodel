@@ -219,7 +219,6 @@ void GraphView::copyFrom(const GraphView& graph)
     mCurves = graph.mCurves;
     mZones = graph.mZones;
 
-    //mBufferBack = graph.mBufferBack;
 }
 
 GraphView::~GraphView()
@@ -228,6 +227,8 @@ GraphView::~GraphView()
     mUnitFunctionY = nullptr;
     mCurves.clear();
     mZones.clear();
+    refPoints.clear();
+    mInfos.clear();
 
 }
 

@@ -58,6 +58,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class GraphView: public GraphViewAbstract
 {
     Q_OBJECT
+
+    Q_PROPERTY(int thickness MEMBER mThickness READ getGraphsThickness WRITE setGraphsThickness NOTIFY signalCurvesThickness)
+    Q_PROPERTY(QColor backgroundColor MEMBER mBackgroundColor READ getBackgroundColor WRITE setBackgroundColor)
 public:
 
     enum AxisMode
@@ -124,6 +127,8 @@ public:
     void setGraphFont(const QFont& font);
 
     void setGraphsThickness(int value);
+    int getGraphsThickness()const {return mThickness;};
+
     void setCurvesOpacity(int value);
     void setCanControlOpacity(bool can);
 
@@ -211,7 +216,6 @@ protected:
     void mouseMoveEvent(QMouseEvent* e);
 
 protected:
-   // QPixmap	mBufferBack;// déforme trop l'image
 
     AxisTool mAxisToolX;
     AxisTool mAxisToolY;
@@ -273,8 +277,8 @@ public:
     std::vector<CurveRefPts> refPoints;
 
 private:
-     DateConversion mUnitFunctionX;
-     DateConversion mUnitFunctionY;
+    DateConversion mUnitFunctionX;
+    DateConversion mUnitFunctionY;
 
 };
 

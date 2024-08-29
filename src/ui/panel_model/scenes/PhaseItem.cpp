@@ -43,9 +43,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MainWindow.h"
 #include "Project.h"
 #include "ArrowTmpItem.h"
+#include "StateKeys.h"
 
 #include <QtWidgets>
 #include <QLocale>
+
+
+int PhaseItem::mTitleHeight(25);
+int PhaseItem::mEltsHeight(25);
 
 PhaseItem::PhaseItem(AbstractScene* scene, const QJsonObject& phase, QGraphicsItem* parent):
     AbstractItem(scene, parent),
@@ -58,8 +63,7 @@ PhaseItem::PhaseItem(AbstractScene* scene, const QJsonObject& phase, QGraphicsIt
     inPix = new QPixmap(":insert_event.png");
     exPix = new QPixmap(":extract_event.png");
 
-    mTitleHeight = 25;
-    mEltsHeight = 25;
+
 
     setPhase(phase);
 }

@@ -48,11 +48,22 @@ int AbstractItem::mEltsMargin  (4);
 int AbstractItem::mItemWidth (180);
 int AbstractItem::mTitleHeight (20);
 
-AbstractItem::AbstractItem(AbstractScene* scene, QGraphicsItem* parent):QGraphicsObject(parent),
+AbstractItem::AbstractItem(QGraphicsItem* parent):
+    QGraphicsObject(parent),
+    mScene(0),
+    mMergeable(false),
+    mGreyedOut(false)
+{
+
+}
+
+AbstractItem::AbstractItem(AbstractScene* scene, QGraphicsItem* parent):
+    QGraphicsObject(parent),
     mScene(scene),
     mMergeable(false),
     mGreyedOut(false)
 {
+
     setPos(0., 0.);
     setZValue(1.);
     setAcceptHoverEvents(true);
@@ -109,12 +120,12 @@ void AbstractItem::setGreyedOut(const bool greyedOut)
         mGreyedOut = greyedOut;
 }
 
-void AbstractItem::setSelectedInData(const bool selected)
+void AbstractItem::setSelectedInData(bool selected)
 {
     mData[STATE_IS_SELECTED] = selected;
 }
 
-void AbstractItem::setCurrentInData(const bool current)
+void AbstractItem::setCurrentInData(bool current)
 {
     mData[STATE_IS_CURRENT] = current;
 }
