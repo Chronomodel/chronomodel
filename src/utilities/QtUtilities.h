@@ -232,6 +232,31 @@ QList<T> getVectorDataInRange(const QList<T> &data, const T subMin,const T subMa
 
 }
 
+template <typename T>
+std::vector<T> getVectorDataInRange(const std::vector<T> &data, const T subMin,const T subMax, const T min, const T max)
+{
+    Q_ASSERT(!data.empty());
+
+    if (subMin != min || subMax != max)  {
+        std::vector<T> subData;
+        subData.reserve(data.size());
+        size_t idxStart = (size_t) floor(data.size() * (subMin - min) / (max - min));
+        size_t idxEnd = (size_t) floor(data.size() * (subMax - min) / (max - min));
+
+        idxStart = std::max((size_t)0, idxStart);
+        idxEnd = std::min(idxEnd, data.size()-1);
+        // we can use mid()
+        for (size_t i = idxStart; i <= idxEnd; ++i)
+            subData.push_back(data[i]);
+
+        subData.shrink_to_fit();
+        return subData;
+    }
+    else
+        return data;
+
+}
+
 QList<double>* load_QList_ptr(QDataStream& stream);
 QList<double> load_QList(QDataStream& stream);
 

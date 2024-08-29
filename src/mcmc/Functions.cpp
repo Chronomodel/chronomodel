@@ -506,16 +506,16 @@ QList<double> autocorrelation_schoolbook(const QList<double> &trace, const int h
 
 }
 
-QList<double> autocorrelation_schoolbook(const std::vector<double> &trace, const int hmax)
+std::vector<double> autocorrelation_schoolbook(const std::vector<double> &trace, const int hmax)
 {
-    QList<double> results;
+    std::vector<double> results;
     const auto n = trace.size();
 
     double mean, variance;
     mean_variance_Knuth(trace, mean, variance);
     variance *= (double)trace.size();
 
-    results.append(1.); // force the first to exactly 1.
+    results.push_back(1.); // force the first to exactly 1.
     double sH = 0.;
     for (int h = 1; h <= hmax; ++h) {
         sH = 0.;
@@ -523,7 +523,7 @@ QList<double> autocorrelation_schoolbook(const std::vector<double> &trace, const
         for (std::vector<double>::const_iterator iter = trace.cbegin(); iter != trace.cbegin() + (n-h); ++iter)
             sH += (*iter - mean) * (*iter_H++ - mean);
 
-        results.append(sH / variance);
+        results.push_back(sH / variance);
     }
 
     return results;

@@ -96,7 +96,7 @@ public:
     {
         eHisto,
         eDensityData,
-        eQVectorData,
+        eVectorData,
         eHorizontalLine,
         eVerticalLine,
         eHorizontalSections,
@@ -119,7 +119,7 @@ public:
 
     bool mIsRectFromZero; // draw a vertical line when graph value leaves 0 : usefull for HPD and Unif, Typo!
 
-    QList<type_data> mDataVector;
+    std::vector<type_data> mDataVector;
     type_data mHorizontalValue;
     type_data mVerticalValue;
 
@@ -131,7 +131,7 @@ public:
 
 public :
     inline bool isHisto() const {return mType == eHisto;}
-    inline bool isVectorData() const {return mType == eQVectorData;}
+    inline bool isVectorData() const {return mType == eVectorData;}
 
     inline bool isHorizontalLine() const {return mType == eHorizontalLine;}
     inline bool isVerticalLine() const {return mType == eVerticalLine;}

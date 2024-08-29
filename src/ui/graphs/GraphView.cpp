@@ -246,7 +246,7 @@ void GraphView::adjustYScale()
                 } else if (!curve.isVerticalLine() && !curve.isHorizontalSections()) {
 
                     if (curve.isVectorData()) {
-                        const QList<qreal> &subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, qreal (0.), qreal (curve.mDataVector.size()));
+                        const std::vector<qreal> &subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, qreal (0.), qreal (curve.mDataVector.size()));
                         if (!subData.empty()) {
                             yMin = std::min(yMin, range_min_value(subData));
                             yMax = std::max(yMax, range_max_value(subData));
@@ -1337,17 +1337,17 @@ void GraphView::drawCurves(QPainter& painter)
 
                 if (curve.isVectorData()) {
                     // Down sample vector
-                    if (curve.mDataVector.isEmpty())
+                    if (curve.mDataVector.empty())
                         return;
 
-                    QList<type_data> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
+                    std::vector<type_data> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
 
-                    QList<type_data> lightData;
+                    std::vector<type_data> lightData;
                     const type_data dataStep = type_data(subData.size()) / type_data(mGraphWidth);
                     if (dataStep > 1) {
                         for (int i = 0; i < mGraphWidth; ++i) {
                             const int idx = int (floor(i * dataStep));
-                            lightData.append(subData.at(idx));
+                            lightData.push_back(subData.at(idx));
                         }
 
                     } else
@@ -2121,9 +2121,9 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
             if ( !c.mVisible || c.mDataVector.empty() )
                 continue;
 
-            const QList<type_data>& data = c.mDataVector;
+            const std::vector<type_data>& data = c.mDataVector;
             // the new DataVector is longer than the last, we need to expand the size of rows
-            if (data.size()>rowsCount-2) {
+            if (data.size() > rowsCount-2) {
                 abscissesWritten = false;
                 rowsCount = rows.count();
             }
@@ -2142,7 +2142,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
 
             if (abscissesWritten) {
                     rows[0] << c.mName;
-                    for (int i=offset; i<data.size(); ++i)
+                    for (int i = offset; i<data.size(); ++i)
                         rows[i-offset+1]<< locale.toString(data[i],'g', 15);
 
             }

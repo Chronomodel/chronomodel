@@ -760,7 +760,7 @@ void MetropolisVariable::generateCredibility(const std::vector<ChainSpecs> &chai
 void MetropolisVariable::generateCorrelations(const std::vector<ChainSpecs> &chains)
 {
     const int hmax = 40;
-    if (!mCorrelations.isEmpty())
+    if (!mCorrelations.empty())
         mCorrelations.clear();
 
     //mCorrelations.reserve(chains.size());
@@ -772,11 +772,11 @@ void MetropolisVariable::generateCorrelations(const std::vector<ChainSpecs> &cha
         if (trace.size() < hmax)
             continue;
 
-        const QList<double> &results = autocorrelation_schoolbook(trace);
+        const std::vector<double> &results = autocorrelation_schoolbook(trace);
         //QList<double> results = autocorrelation_by_convol(trace); // test
 
         // Correlation ajoutée à la liste (une courbe de corrélation par chaine)
-        mCorrelations.append(results);
+        mCorrelations.push_back(results);
     }
     //ch.display();
 }
@@ -851,12 +851,12 @@ std::vector<double> MetropolisVariable::fullTraceForChain(const std::vector<Chai
 
 
 
-QList<double> MetropolisVariable::correlationForChain(const size_t index)
+std::vector<double> MetropolisVariable::correlationForChain(const size_t index)
 {
     if (index < (size_t)mCorrelations.size())
         return mCorrelations.at(index);
 
-    return QList<double>();
+    return std::vector<double>();
 }
 
 

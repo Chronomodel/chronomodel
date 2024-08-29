@@ -100,7 +100,8 @@ public:
 
     // List of correlations for each chain.
     // They are calculated once, when the MCMC is ready, from the run part of the trace.
-    QList<QList<double> > mCorrelations;
+    //QList<QList<double> > mCorrelations;
+    std::vector<std::vector<double>> mCorrelations;
 
     std::map<double, double> mFormatedHPD;
     QList<QPair<double, QPair<double, double> > > mRawHPDintervals;
@@ -349,7 +350,7 @@ public:
         return std::vector<double>(trace.begin(), trace.end());
     };
 
-    QList<double> correlationForChain(const size_t index);
+    std::vector<double> correlationForChain(const size_t index);
 
     virtual QString resultsString(const QString& noResultMessage = QObject::tr("No result to display"),
                                   const QString& unit = QString()) const;

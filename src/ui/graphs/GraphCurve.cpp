@@ -58,7 +58,7 @@ GraphCurve::GraphCurve():
     mPen(Qt::black, 1),
     mBrush(Qt::NoBrush),
     mIsRectFromZero(false),
-    mDataVector(QList<type_data>()),
+    mDataVector(std::vector<type_data>()),
     mHorizontalValue(type_data(0)),
     mVerticalValue(type_data(0)),
     mSections(std::vector<QPair<type_data, type_data> >()),

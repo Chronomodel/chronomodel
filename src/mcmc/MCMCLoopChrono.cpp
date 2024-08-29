@@ -77,11 +77,12 @@ QString MCMCLoopChrono::calibrate()
 
         QList<Date*> dates;
         // find number of dates, to optimize memory space
-        int nbDates = 0;
+        /*int nbDates = 0;
         for (auto&& e : events)
             nbDates += e->mDates.size();
 
-        //dates.reserve(nbDates);
+        dates.reserve(nbDates);*/
+
         for (Event* ev : events) {
             unsigned long num_dates = ev->mDates.size();
             for (unsigned long j = 0; j<num_dates; ++j) {

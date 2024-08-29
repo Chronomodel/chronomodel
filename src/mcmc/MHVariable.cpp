@@ -227,9 +227,9 @@ void MHVariable::saveCurrentAcceptRate()
     mHistoryAcceptRateMH->push_back(100. * getCurrentAcceptRate());
 }
 
-QList<double> MHVariable::acceptationForChain(const std::vector<ChainSpecs> &chains, size_t index)
+std::vector<double> MHVariable::acceptationForChain(const std::vector<ChainSpecs> &chains, size_t index)
 {
-    QList<double> accept(0);
+    std::vector<double> accept(0);
     size_t shift = 0;
     const int reserveSize = (int) ceil(chains.at(index).mIterPerBurn + (chains.at(index).mBatchIndex * chains.at(index).mIterPerBatch) + chains.at(index).mRealyAccepted);
     //accept.reserve(reserveSize);
@@ -244,7 +244,7 @@ QList<double> MHVariable::acceptationForChain(const std::vector<ChainSpecs> &cha
             //std::copy(from_vector.begin(), from_vector.end(), to_vector.begin());
 
             for (size_t j = 0; j < chainSize; ++j)
-                accept.append(mHistoryAcceptRateMH->at(shift + j));
+                accept.push_back(mHistoryAcceptRateMH->at(shift + j));
 
             break;
         }

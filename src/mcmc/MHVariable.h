@@ -74,7 +74,7 @@ public:
     bool adapt (const double coef_min = 0.42, const double coef_max = 0.46, const double delta = 0.01);
     inline void memo_accept(const unsigned i_chain) {if (mLastAccepts.last()) ++mAllAccepts[i_chain];}
 
-    QList<double> acceptationForChain(const std::vector<ChainSpecs>& chains, size_t index);
+    std::vector<double> acceptationForChain(const std::vector<ChainSpecs>& chains, size_t index);
     void generateGlobalRunAcceptation(const std::vector<ChainSpecs>& chains);
 
     void generateNumericalResults(const std::vector<ChainSpecs> &chains) override;

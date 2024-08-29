@@ -119,7 +119,7 @@ void mean_std_unbiais_Knuth(const std::vector<int> &data, double& mean, double& 
 double covariance(const std::vector<double>& dataX, const std::vector<double>& dataY);
 
 QList<double> autocorrelation_schoolbook(const QList<double> &trace, const int hmax = 40);
-QList<double> autocorrelation_schoolbook(const std::vector<double> &trace, const int hmax = 40);
+std::vector<double> autocorrelation_schoolbook(const std::vector<double> &trace, const int hmax = 40);
 
 QList<double> autocorrelation_by_convol(const QList<double> &trace, const int hmax=40);
 
