@@ -2129,7 +2129,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
             }
 
             if (!abscissesWritten) {
-                for (qsizetype i = offset+rowsCount; i<data.size()+1; ++i) {
+                for (size_t i = offset+rowsCount; i<data.size()+1; ++i) {
                     // we add 1 to the line number, because the index of vector start to 0-> false now 0 is the init
                     rows.append(QStringList(locale.toString(i-rowsCount+1))+emptyColumn);
 

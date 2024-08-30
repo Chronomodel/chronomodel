@@ -1820,7 +1820,7 @@ void ResultsView::updateTotalGraphs()
             ++totalGraphs;
 
         } else {
-            if (!model->mEvents.isEmpty() && isCurve()) {
+            if (!model->mEvents.empty() && isCurve()) {
                 ++totalGraphs;
                 if (model->displayY()) ++totalGraphs;
                 if (model->displayZ()) ++totalGraphs;
@@ -4719,7 +4719,7 @@ void ResultsView::exportResults()
                 const QList<QStringList> phasesTraces = model->getPhasesTraces(csvLocal, false);
                 saveCsvTo(phasesTraces, dirPath + "/Chain_all_Phases.csv", csvSep, false);
 
-                for (int i=0; i<model->mPhases.size(); ++i) {
+                for (size_t i=0; i<model->mPhases.size(); ++i) {
                     const QList<QStringList> phaseTrace = model->getPhaseTrace(i, csvLocal, false);
                     const QString name = model->mPhases.at(i)->mName.toLower().simplified().replace(" ", "_");
                     saveCsvTo(phaseTrace, dirPath + "/Chain_Phase_" + name + ".csv", csvSep, false);

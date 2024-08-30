@@ -252,7 +252,7 @@ void ProjectView::applySettings(std::shared_ptr<ModelCurve> &model)
 {
     mModelView->applyAppSettings();
 
-    if (model && !model->mEvents.isEmpty()) {
+    if (model && !model->mEvents.empty()) {
         const double memoThreshold = model->mThreshold;
         model->mThreshold = -1;
         model->clearThreshold();

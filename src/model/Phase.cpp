@@ -176,13 +176,13 @@ Phase::~Phase()
 
    mEvents.clear();
 
-    if (!mConstraintsNextPhases.isEmpty()) {
+    if (!mConstraintsNextPhases.empty()) {
         for (auto && pc : mConstraintsNextPhases)
             pc = nullptr;
 
         mConstraintsNextPhases.clear();
     }
-    if (!mConstraintsPrevPhases.isEmpty()) {
+    if (!mConstraintsPrevPhases.empty()) {
         for (auto && pc : mConstraintsPrevPhases)
             pc = nullptr;
 
@@ -275,7 +275,7 @@ std::pair<double,double> Phase::getFormatedTimeRange() const
 double Phase::sum_gamma_prev_phases()
 {
     double max_prev = 0.;
-    if (mConstraintsPrevPhases.isEmpty())
+    if (mConstraintsPrevPhases.empty())
         return 0.;
     else {
         for(auto prev_c : mConstraintsPrevPhases) {
@@ -289,7 +289,7 @@ double Phase::sum_gamma_prev_phases()
 double Phase::sum_gamma_next_phases()
 {
     double max_next = 0.;
-    if (mConstraintsNextPhases.isEmpty())
+    if (mConstraintsNextPhases.empty())
         return 0.;
     else {
         for(auto prev_c : mConstraintsNextPhases) {
@@ -300,7 +300,7 @@ double Phase::sum_gamma_next_phases()
 }
 
 
-void Phase::init_alpha_beta_phase(QList<Phase*> &phases)
+void Phase::init_alpha_beta_phase(std::vector<Phase*> &phases)
 {
     auto model = getModel_ptr();
     for (auto phase : phases) {
@@ -311,7 +311,7 @@ void Phase::init_alpha_beta_phase(QList<Phase*> &phases)
 
 void Phase::init_update_alpha_phase(double theta_max_phase_prev)
 {
-    if (mConstraintsNextPhases.isEmpty())
+    if (mConstraintsNextPhases.empty())
         return;
     else {
         for (auto prev_c : mConstraintsNextPhases) {
@@ -326,7 +326,7 @@ void Phase::init_update_alpha_phase(double theta_max_phase_prev)
 
 void Phase::init_update_beta_phase(double beta_sup)
 {
-    if (mConstraintsPrevPhases.isEmpty())
+    if (mConstraintsPrevPhases.empty())
         return;
     else {
         for(auto prev_c : mConstraintsPrevPhases) {
@@ -382,7 +382,7 @@ double Phase::init_min_theta(const double min_default)
 #pragma mark RUN
 double Phase::getMaxThetaEvents(double tmax)
 {
-    Q_ASSERT_X(!mEvents.isEmpty(), "[Phase::getMaxThetaEvents]", QString("No Event in Phase :" + this->mName).toStdString().c_str());
+    Q_ASSERT_X(!mEvents.empty(), "[Phase::getMaxThetaEvents]", QString("No Event in Phase :" + this->mName).toStdString().c_str());
     (void) tmax;
     double theta (mEvents[0]->mTheta.mX);
 
@@ -398,7 +398,7 @@ double Phase::getMaxThetaEvents(double tmax)
  */
 double Phase::getMinThetaEvents(double tmin)
 {
-    Q_ASSERT_X(!mEvents.isEmpty(), "[Phase::getMinThetaEvents]", QString("No Event in Phase :" + mName).toStdString().c_str());
+    Q_ASSERT_X(!mEvents.empty(), "[Phase::getMinThetaEvents]", QString("No Event in Phase :" + mName).toStdString().c_str());
     (void) tmin;
     double theta (mEvents[0]->mTheta.mX);
 
@@ -547,46 +547,46 @@ void Phase::update_Tau(const double tminPeriod, const double tmaxPeriod)
             // Modif PhD 2022
             // model definition
 
-            const int n = (int) mEvents.length();
-            double s = mBeta.mX - mAlpha.mX;
-            const double precision = .0001;
-            const double R = tmaxPeriod - tminPeriod;
-            const double Rp = R/(n-1)*n;
+        const int n = (int) mEvents.size();
+        double s = mBeta.mX - mAlpha.mX;
+        const double precision = .0001;
+        const double R = tmaxPeriod - tminPeriod;
+        const double Rp = R/(n-1)*n;
 
-            const double u = Generator::randomUniform(0.0, 1.0);
+        const double u = Generator::randomUniform(0.0, 1.0);
 
             // solve equation F(x)-u=0
-            const double FbMax = intFx(R, n, Rp, s);
+        const double FbMax = intFx(R, n, Rp, s);
             //double Fb = 1.0 - u;  // pour mémoire
 
-                // Newton
+            // Newton
 
-            double xn = s;
-            double  b1;
-            double itF, p;
-            if ( !isinf(FbMax)) {
-                double Epsilon = R;
+        double xn = s;
+        double  b1;
+        double itF, p;
+        if ( !isinf(FbMax)) {
+            double Epsilon = R;
 
-                while ( Epsilon >= precision/100.) {
+            while ( Epsilon >= precision/100.) {
 
-                    itF = intFx(xn, n, Rp, s);
+                itF = intFx(xn, n, Rp, s);
 
-                    itF = itF - u*FbMax;
-                    p = Px(xn, n, Rp);
+                itF = itF - u*FbMax;
+                p = Px(xn, n, Rp);
 
-                    //b1 = itF != 0. ? (x - (itF / p )): x;
-                    b1 = xn - (itF / p );
-                    Epsilon = abs((xn - b1)/b1);
-                    xn = std::move(b1);
-
-                }
-                 xn = std::max(s, std::min(xn, R));
+                //b1 = itF != 0. ? (x - (itF / p )): x;
+                b1 = xn - (itF / p );
+                Epsilon = abs((xn - b1)/b1);
+                xn = std::move(b1);
 
             }
-
-            mTau.mX = std::move(xn);
+            xn = std::max(s, std::min(xn, R));
 
         }
+
+        mTau.mX = std::move(xn);
+
+    }
 
 }
 

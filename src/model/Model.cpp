@@ -64,10 +64,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 extern QString res_file_version;
 
 Model::Model():
-    mEvents(QList<Event*>()),
-    mPhases(QList<Phase*>()),
-    mEventConstraints(QList<EventConstraint*>()),
-    mPhaseConstraints(QList<PhaseConstraint*>()),
+    mEvents(std::vector<Event*>()),
+    mPhases(std::vector<Phase*>()),
+    mEventConstraints(std::vector<EventConstraint*>()),
+    mPhaseConstraints(std::vector<PhaseConstraint*>()),
     mNumberOfPhases(0),
     mNumberOfEvents(0),
     mNumberOfDates(0),
@@ -80,10 +80,10 @@ Model::Model():
 }
 
 Model::Model(const QJsonObject& json):
-    mEvents(QList<Event*>()),
-    mPhases(QList<Phase*>()),
-    mEventConstraints(QList<EventConstraint*>()),
-    mPhaseConstraints(QList<PhaseConstraint*>()),
+    mEvents(std::vector<Event*>()),
+    mPhases(std::vector<Phase*>()),
+    mEventConstraints(std::vector<EventConstraint*>()),
+    mPhaseConstraints(std::vector<PhaseConstraint*>()),
     mNumberOfPhases(0),
     mNumberOfEvents(0),
     mNumberOfDates(0),
@@ -111,7 +111,7 @@ Model::Model(const QJsonObject& json):
         for (const auto& json : phases) {
             const QJsonObject& phaseObj = json.toObject();
             const auto& ph = new Phase(phaseObj);
-            mPhases.append(ph);
+            mPhases.push_back(ph);
             //ph = nullptr;
 
         }
@@ -130,7 +130,7 @@ Model::Model(const QJsonObject& json):
             if (eventObj.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
                 try {
                    const auto& ev = new Event(eventObj);
-                   mEvents.append(ev);
+                   mEvents.push_back(ev);
 
                   
                     mNumberOfDates += eventObj.value(STATE_EVENT_DATES).toArray().size();
@@ -146,7 +146,7 @@ Model::Model(const QJsonObject& json):
                 }
             } else {
                 const auto& ek = new Bound(eventObj);
-                mEvents.append(ek);
+                mEvents.push_back(ek);
 
 
             }
@@ -162,7 +162,7 @@ Model::Model(const QJsonObject& json):
         for (qsizetype i=0; i<constraints.size(); ++i) {
             const QJsonObject &constraintObj = constraints.at(i).toObject();
             const auto& c = new EventConstraint(constraintObj);
-            mEventConstraints.append(c);
+            mEventConstraints.push_back(c);
 
         }
     }
@@ -172,7 +172,7 @@ Model::Model(const QJsonObject& json):
         for (qsizetype i=0; i<constraints.size(); ++i) {
             const QJsonObject& constraintObj = constraints.at(i).toObject();
             const auto& c = new PhaseConstraint(constraintObj);
-            mPhaseConstraints.append(c);
+            mPhaseConstraints.push_back(c);
 
         }
     }
@@ -182,42 +182,42 @@ Model::Model(const QJsonObject& json):
     //  Must be done here !
     //  nb : Les data sont déjà linkées aux events à leur création
     // ------------------------------------------------------------
-    for (qsizetype i=0; i<mEvents.size(); ++i) {
+    for (size_t i=0; i<mEvents.size(); ++i) {
         int eventId = mEvents.at(i)->mId;
         QList<int> phasesIds = mEvents.at(i)->mPhasesIds;
 
         // Link des events / phases
-        for (qsizetype j=0; j<mPhases.size(); ++j) {
+        for (size_t j=0; j<mPhases.size(); ++j) {
             const int phaseId = mPhases.at(j)->mId;
             if (phasesIds.contains(phaseId)) {
-                mEvents[i]->mPhases.append(mPhases.at(j));
-                mPhases[j]->mEvents.append(mEvents.at(i));
+                mEvents[i]->mPhases.push_back(mPhases.at(j));
+                mPhases[j]->mEvents.push_back(mEvents.at(i));
             }
         }
 
         // Link des events / contraintes d'event
-        for (qsizetype j=0; j<mEventConstraints.size(); ++j) {
+        for (size_t j=0; j<mEventConstraints.size(); ++j) {
             if (mEventConstraints.at(j)->mFromId == eventId) {
                 mEventConstraints.at(j)->mEventFrom = mEvents[i];
-                mEvents[i]->mConstraintsFwd.append(mEventConstraints.at(j));
+                mEvents[i]->mConstraintsFwd.push_back(mEventConstraints.at(j));
                 
             } else if (mEventConstraints.at(j)->mToId == eventId) {
                 mEventConstraints.at(j)->mEventTo = mEvents[i];
-                mEvents[i]->mConstraintsBwd.append(mEventConstraints.at(j));
+                mEvents[i]->mConstraintsBwd.push_back(mEventConstraints.at(j));
             }
         }
     }
     // Link des phases / contraintes de phase
-    for (qsizetype i=0; i<mPhases.size(); ++i) {
+    for (size_t i=0; i<mPhases.size(); ++i) {
         const int phaseId = mPhases.at(i)->mId;
-        for (qsizetype j=0; j<mPhaseConstraints.size(); ++j) {
+        for (size_t j=0; j<mPhaseConstraints.size(); ++j) {
             if (mPhaseConstraints.at(j)->mFromId == phaseId) {
                 mPhaseConstraints.at(j)->mPhaseFrom = mPhases[i];
-                mPhases[i]->mConstraintsNextPhases.append(mPhaseConstraints.at(j));
+                mPhases[i]->mConstraintsNextPhases.push_back(mPhaseConstraints.at(j));
                 
             } else if (mPhaseConstraints.at(j)->mToId == phaseId) {
                 mPhaseConstraints[j]->mPhaseTo = mPhases[i];
-                mPhases[i]->mConstraintsPrevPhases.append(mPhaseConstraints.at(j));
+                mPhases[i]->mConstraintsPrevPhases.push_back(mPhaseConstraints.at(j));
             }
         }
 
@@ -334,7 +334,7 @@ void Model::fromJson(const QJsonObject& json)
         const QJsonArray phases = json.value(STATE_PHASES).toArray();
         mNumberOfPhases = (int) phases.size();
         for (const auto json : phases)
-             mPhases.append(new Phase(json.toObject()));
+             mPhases.push_back(new Phase(json.toObject()));
 
     }
 
@@ -351,7 +351,7 @@ void Model::fromJson(const QJsonObject& json)
             if (JSONevent.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
                 try {
                     Event* ev = new Event(JSONevent);
-                    mEvents.append(ev);//, std::shared_ptr<Model>(this)));
+                    mEvents.push_back(ev);//, std::shared_ptr<Model>(this)));
                     mNumberOfDates += JSONevent.value(STATE_EVENT_DATES).toArray().size();
 
                 }
@@ -364,10 +364,8 @@ void Model::fromJson(const QJsonObject& json)
                     message.exec();
                 }
             } else {
-                Bound* ek = new Bound(JSONevent);//, std::shared_ptr<Model>(this));
-                //*ek = Bound::fromJson(JSONevent);
-                //ek->updateValues(mSettings.mTmin, mSettings.mTmax, mSettings.mStep);
-                mEvents.append(ek);
+                Bound* ek = new Bound(JSONevent);
+                mEvents.push_back(ek);
                 ek = nullptr;
             }
         }
@@ -382,7 +380,7 @@ void Model::fromJson(const QJsonObject& json)
         for (auto& co : constraints) {
             const QJsonObject& constraintObj = co.toObject();
             EventConstraint* c = new EventConstraint(constraintObj);
-            mEventConstraints.append(c);
+            mEventConstraints.push_back(c);
             //c = nullptr;
         }
     }
@@ -392,7 +390,7 @@ void Model::fromJson(const QJsonObject& json)
         for (auto& co : constraints) {
             const QJsonObject& constraintObj = co.toObject();
             PhaseConstraint* c = new PhaseConstraint(constraintObj);
-            mPhaseConstraints.append(c);
+            mPhaseConstraints.push_back(c);
            // c = nullptr;
         }
     }
@@ -402,40 +400,42 @@ void Model::fromJson(const QJsonObject& json)
     //  Must be done here !
     //  nb : Les data sont déjà linkées aux events à leur création
     // ------------------------------------------------------------
-    for (int i=0; i<mEvents.size(); ++i) {
+    for (size_t i=0; i<mEvents.size(); ++i) {
         int eventId = mEvents.at(i)->mId;
         QList<int> phasesIds = mEvents.at(i)->mPhasesIds;
 
         // Link des events / phases
-        for (int j=0; j<mPhases.size(); ++j) {
+        for (size_t j=0; j<mPhases.size(); ++j) {
             const int phaseId = mPhases.at(j)->mId;
             if (phasesIds.contains(phaseId)) {
-                mEvents[i]->mPhases.append(mPhases[j]);
-                mPhases[j]->mEvents.append(mEvents[i]);
+                mEvents[i]->mPhases.push_back(mPhases[j]);
+                mPhases[j]->mEvents.push_back(mEvents[i]);
             }
         }
 
         // Link des events / contraintes d'event
-        for (int j=0; j<mEventConstraints.size(); ++j) {
+        for (size_t j=0; j<mEventConstraints.size(); ++j) {
             if (mEventConstraints[j]->mFromId == eventId) {
                 mEventConstraints[j]->mEventFrom = mEvents[i];
-                mEvents[i]->mConstraintsFwd.append(mEventConstraints[j]);
+                mEvents[i]->mConstraintsFwd.push_back(mEventConstraints[j]);
+
             } else if (mEventConstraints[j]->mToId == eventId) {
                 mEventConstraints[j]->mEventTo = mEvents[i];
-                mEvents[i]->mConstraintsBwd.append(mEventConstraints[j]);
+                mEvents[i]->mConstraintsBwd.push_back(mEventConstraints[j]);
             }
         }
     }
     // Link des phases / contraintes de phase
-    for (int i=0; i<mPhases.size(); ++i) {
+    for (size_t i=0; i<mPhases.size(); ++i) {
         const int phaseId = mPhases.at(i)->mId;
-        for (int j=0; j<mPhaseConstraints.size(); ++j) {
+        for (size_t j=0; j<mPhaseConstraints.size(); ++j) {
             if (mPhaseConstraints.at(j)->mFromId == phaseId) {
                 mPhaseConstraints[j]->mPhaseFrom = mPhases[i];
-                mPhases[i]->mConstraintsNextPhases.append(mPhaseConstraints[j]);
+                mPhases[i]->mConstraintsNextPhases.push_back(mPhaseConstraints[j]);
+
             } else if (mPhaseConstraints.at(j)->mToId == phaseId) {
                 mPhaseConstraints[j]->mPhaseTo = mPhases[i];
-                mPhases[i]->mConstraintsPrevPhases.append(mPhaseConstraints[j]);
+                mPhases[i]->mConstraintsPrevPhases.push_back(mPhaseConstraints[j]);
             }
         }
 
@@ -670,7 +670,7 @@ QList<QStringList> Model::getPhaseTrace(int phaseIdx, const QLocale locale, cons
 
     Phase* phase = nullptr;
     if (phaseIdx >= 0 && phaseIdx < mPhases.size())
-        phase = mPhases.value(phaseIdx);
+        phase = mPhases.at(phaseIdx);
 
     else
         return QList<QStringList>();
@@ -783,7 +783,7 @@ bool Model::isValid()
     bool curveModel = getProject_ptr()->isCurve();
     // 1 - At least one event is required in a model
     // 3 events is needed for a curve
-    if (mEvents.isEmpty()) {
+    if (mEvents.empty()) {
         throw QObject::tr("At least one event is required");
         return false;
 
@@ -793,7 +793,7 @@ bool Model::isValid()
     }
 
     // 2 - The event must contain at least 1 data
-    for (int i = 0; i < mEvents.size(); ++i) {
+    for (size_t i = 0; i < mEvents.size(); ++i) {
         if (mEvents.at(i)->type() == Event::eDefault && mEvents.at(i)->mDates.size() == 0) {
                     throw QObject::tr("The event  \" %1 \" must contain at least 1 data").arg(mEvents.at(i)->mName);
                     return false;
@@ -810,7 +810,7 @@ bool Model::isValid()
     }
 
     // 4 - Pas de circularité sur les contraintes des Events
-    QList<QList<Event*> > eventBranches;
+    std::vector<std::vector<Event*> > eventBranches;
     try {
         eventBranches = ModelUtilities::getAllEventsBranches(mEvents);
     } catch(QString &error){
@@ -819,7 +819,7 @@ bool Model::isValid()
 
     // 5 - Pas de circularité sur les contraintes de phases
     // 6 - Gammas : sur toutes les branches, la somme des gamma min < plage d'étude :
-    QList<QList<Phase*> > phaseBranches;
+    std::vector<std::vector<Phase*> > phaseBranches;
     try {
         phaseBranches = ModelUtilities::getAllPhasesBranches(mPhases, mSettings.mTmax - mSettings.mTmin);
     } catch(QString &error){
@@ -842,7 +842,7 @@ bool Model::isValid()
     // 8 - Bounds : vérifier cohérence des bornes en fonction des contraintes de Events (page 2)
     //  => Modifier les bornes des intervalles des bounds !! (juste dans le modèle servant pour le calcul)
     for (const auto &branche_i : eventBranches) {
-        for (auto j = 0; j<branche_i.size(); j++) {
+        for (size_t j = 0; j<branche_i.size(); j++) {
             Event* event = branche_i.at(j);
             if (event->type() == Event::eBound)  {
                 Bound* bound = dynamic_cast<Bound*>(event);
@@ -854,7 +854,7 @@ bool Model::isValid()
                 // On vérifie toutes les bornes avant et on prend le max
                 // de leurs valeurs fixes ou du début de leur intervalle :
                 double lower = double (mSettings.mTmin);
-                for (auto k = 0; k<j; ++k) {
+                for (size_t k = 0; k<j; ++k) {
                     Event* evt = branche_i.at(k);
                     if (evt->type() == Event::eBound) {
                         lower = qMax(lower, dynamic_cast<Bound*>(evt)->mFixed);
@@ -870,7 +870,7 @@ bool Model::isValid()
                 // Check bound interval upper value
                 // --------------------
                 double upper = mSettings.mTmax;
-                for (auto k = j+1; k<branche_i.size(); ++k) {
+                for (size_t k = j+1; k<branche_i.size(); ++k) {
                     Event* evt = branche_i.at(k);
                     if (evt->type() == Event::eBound) {
                         upper = qMin(upper, dynamic_cast<Bound*>(evt)->mFixed);
@@ -1070,7 +1070,7 @@ void Model::setFFTLength(int FFTLength)
 
 void Model::setHActivity(const double h, const double rangePercent)
 {
-   if (!mPhases.isEmpty()) {
+   if (!mPhases.empty()) {
         generateActivity(mFFTLength, h, mThreshold, rangePercent);
         mHActivity = h;
 
@@ -1253,7 +1253,7 @@ void Model::updateDensities(int fftLen, double bandwidth, double threshold)
     // memo the new value of the Threshold inside all the part of the model: phases, events and dates
     setThresholdToAllModel(threshold);
 
-    if (!mPhases.isEmpty()) {
+    if (!mPhases.empty()) {
         generateTempo(fftLen);
         generateActivity(fftLen, mHActivity, threshold);
     }
@@ -1693,7 +1693,7 @@ void Model::generateTempo(size_t gridLength)
  */
 void Model::clearPosteriorDensities()
 {
-    QList<Event*>::iterator iterEvent = mEvents.begin();
+    std::vector<Event*>::iterator iterEvent = mEvents.begin();
     while (iterEvent != mEvents.end()) {
         for (auto&& date : (*iterEvent)->mDates) {
             date.mTi.mFormatedHisto.clear();
@@ -1710,7 +1710,7 @@ void Model::clearPosteriorDensities()
         ++iterEvent;
     }
 
-    QList<Phase*>::iterator iterPhase = mPhases.begin();
+    std::vector<Phase*>::iterator iterPhase = mPhases.begin();
     while (iterPhase != mPhases.end()) {
         (*iterPhase)->mAlpha.mFormatedHisto.clear();
         (*iterPhase)->mBeta.mFormatedHisto.clear();

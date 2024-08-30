@@ -50,19 +50,19 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QJsonObject>
 
 
-class Model //: public QObject
+class Model
 {
-   // Q_OBJECT
+
 public:
     StudyPeriodSettings mSettings;
 
     MCMCSettings mMCMCSettings;
 
-    QList<Event*> mEvents;
-    QList<Phase*> mPhases;
+    std::vector<Event*> mEvents;
+    std::vector<Phase*> mPhases;
 
-    QList<EventConstraint*> mEventConstraints;
-    QList<PhaseConstraint*> mPhaseConstraints;
+    std::vector<EventConstraint*> mEventConstraints;
+    std::vector<PhaseConstraint*> mPhaseConstraints;
 
     std::vector<ChainSpecs> mChains;
 
@@ -139,7 +139,12 @@ public:
     double getThreshold() const;
     double getBandwidth() const;
     int getFFTLength() const;
-    
+
+    void setThreshold(const double threshold);
+    void setBandwidth(const double bandwidth);
+    void setFFTLength(int FFTLength);
+    void setHActivity(const double h, const double rangePercent);
+
     virtual void setThresholdToAllModel(const double threshold);
     void initDensities();
     void updateDensities(int fftLen, double bandwidth, double threshold);
@@ -170,14 +175,7 @@ public:
     virtual void memo_accept(const unsigned i_chain);
     virtual void initVariablesForChain();
 
-//public slots:
-    void setThreshold(const double threshold);
-    void setBandwidth(const double bandwidth);
-    void setFFTLength(int FFTLength);
-    void setHActivity(const double h, const double rangePercent);
 
-//signals:
-   // void newCalculus();
 
 
 #pragma mark curve variables

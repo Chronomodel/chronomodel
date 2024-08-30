@@ -69,8 +69,7 @@ public:
 
     Type mType;
     int mId;
-    //const Model *mModel;
-    //std::shared_ptr<Model> mModel;
+
 
     QString mName; //must be public, to be defined by dialogbox
     QColor mColor;
@@ -87,9 +86,9 @@ public:
     QList<int> mConstraintsFwdIds;
     QList<int> mConstraintsBwdIds;
 
-    QList<Phase*> mPhases;
-    QList<EventConstraint*> mConstraintsFwd;
-    QList<EventConstraint*> mConstraintsBwd;
+    std::vector<Phase*> mPhases;
+    std::vector<EventConstraint*> mConstraintsFwd;
+    std::vector<EventConstraint*> mConstraintsBwd;
 
     MHVariable mTheta;
     MHVariable mS02Theta;
@@ -168,15 +167,15 @@ public:
 #pragma mark  Functions used within the init MCMC process
 
     // bool getThetaMinPossible(const Event* originEvent, QString &circularEventName,  const QList<Event*> &startEvents, QString &linkStr); // useless
-    bool getThetaMaxPossible(const Event* originEvent, QString &circularEventName,  const QList<Event*> &startEvents);
+    bool getThetaMaxPossible(const Event* originEvent, QString &circularEventName,  const std::vector<Event*> &startEvents);
 
     bool is_direct_older(const Event &origin);
     bool is_direct_younger(const Event &origin);
-    double getThetaMinRecursive_v2(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
-    double getThetaMaxRecursive_v2(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
+    double getThetaMinRecursive_v2(const double defaultValue, const std::vector<Event*> &startEvents = std::vector<Event*>());
+    double getThetaMaxRecursive_v2(const double defaultValue, const std::vector<Event *> &startEvents = std::vector<Event*>());
 
-    double getThetaMinRecursive_v3(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
-    double getThetaMaxRecursive_v3(const double defaultValue, const QList<Event*> &startEvents = QList<Event*>());
+    double getThetaMinRecursive_v3(const double defaultValue, const std::vector<Event *> &startEvents = std::vector<Event*>());
+    double getThetaMaxRecursive_v3(const double defaultValue, const std::vector<Event*> &startEvents = std::vector<Event*>());
 
     virtual void updateTheta(const double tmin, const double tmax) {updateTheta_v3(tmin, tmax);};
 
@@ -210,7 +209,7 @@ inline double get_Gz(Event* e) {return e->mGz;};
 inline double get_Theta(Event* e) {return e->mTheta.mX;};
 inline double get_ThetaReduced(Event* e) {return e->mThetaReduced;};
 
-std::vector<double> get_vector(const std::function <double (Event*)> &fun, const QList<Event *> &events);
+std::vector<double> get_vector(const std::function <double (Event*)> &fun, const std::vector<Event *> &events);
 
 
 #endif

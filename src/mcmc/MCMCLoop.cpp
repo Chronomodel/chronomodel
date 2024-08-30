@@ -119,9 +119,9 @@ QString MCMCLoop::initialize_time()
     tminPeriod = mModel->mSettings.mTmin;
     tmaxPeriod = mModel->mSettings.mTmax;
 
-    QList<Event*>& allEvents (mModel->mEvents);
-    QList<Phase*>& phases (mModel->mPhases);
-    QList<PhaseConstraint*>& phasesConstraints (mModel->mPhaseConstraints);
+    std::vector<Event*>& allEvents (mModel->mEvents);
+    std::vector<Phase*>& phases (mModel->mPhases);
+    std::vector<PhaseConstraint*>& phasesConstraints (mModel->mPhaseConstraints);
 
     if (isInterruptionRequested())
         return ABORTED_BY_USER;
@@ -199,7 +199,7 @@ QString MCMCLoop::initialize_time()
      *  Init theta event, ti, ...
      * ---------------------------------------------------------------- */
 
-    QList<Event*> unsortedEvents = ModelUtilities::unsortEvents(allEvents);
+    std::vector<Event *> unsortedEvents = ModelUtilities::unsortEvents(allEvents);
 
     emit stepChanged(tr("Initializing Events..."), 0, (int)unsortedEvents.size());
     qDebug()<<"[MCMCLoop::initialize_time] mLoopChains seed = "<< mLoopChains[0].mSeed;
@@ -209,7 +209,7 @@ QString MCMCLoop::initialize_time()
         for (Event* ev : unsortedEvents) {
             mModel->initNodeEvents();
             QString circularEventName = "";
-            QList<Event*> startEvents = QList<Event*>();
+            std::vector<Event *> startEvents = std::vector<Event *>();
 
             const bool ok (ev->getThetaMaxPossible (ev, circularEventName, startEvents));
             if (!ok) {

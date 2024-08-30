@@ -58,24 +58,25 @@ bool sortPhases(Phase* p1, Phase* p2) {return (p1->mItemY < p2->mItemY);}
 
 
 // Events Branches
-QList<QList<Event*> > ModelUtilities::getNextBranches(const QList<Event*> &curBranch, Event* lastNode)
+std::vector<std::vector<Event*> > ModelUtilities::getNextBranches(const std::vector<Event*> &curBranch, Event* lastNode)
 {
-    QList<QList<Event*> > branches;
-    QList<EventConstraint*> &cts = lastNode->mConstraintsFwd;
+    std::vector<std::vector<Event*> > branches;
+    const std::vector<EventConstraint*> &cts = lastNode->mConstraintsFwd;
     if (cts.size() > 0) {
         for (auto& ct : cts) {
-            QList<Event*> branch = curBranch;
+            std::vector<Event*> branch = curBranch;
             Event* newNode = ct->mEventTo;
 
             if (newNode->mLevel <= lastNode->mLevel)
                 newNode->mLevel = lastNode->mLevel + 1;
 
-            if (!branch.contains(newNode)) {
-                branch.append(newNode);
-                QList<QList<Event*> > nextBranches = getNextBranches(branch, ct->mEventTo);
+           // if (!branch.contains(newNode)) {
+            if (std::none_of(branch.begin(), branch.end(), [&newNode](auto b){return b == newNode;})) {
+                branch.push_back(newNode);
+                std::vector<std::vector<Event*> > nextBranches = getNextBranches(branch, ct->mEventTo);
 
                 for (auto& nb : nextBranches)
-                    branches.append(nb);
+                    branches.push_back(nb);
 
             } else {
                 QStringList evtNames;
@@ -90,18 +91,18 @@ QList<QList<Event*> > ModelUtilities::getNextBranches(const QList<Event*> &curBr
             }
         }
     } else {
-        branches.append(curBranch);
+        branches.push_back(curBranch);
     }
     return branches;
 }
 
-QList<QList<Event*> > ModelUtilities::getBranchesFromEvent(Event* start)
+std::vector<std::vector<Event*> > ModelUtilities::getBranchesFromEvent(Event* start)
 {
-    QList<Event*> startBranch;
+    std::vector<Event*> startBranch;
     start->mLevel = 0;
-    startBranch.append(start);
+    startBranch.push_back(start);
 
-    QList<QList<Event*> > nextBranches;
+    std::vector<std::vector<Event*> > nextBranches;
     try {
         nextBranches = getNextBranches(startBranch, start);
     } catch(QString error){
@@ -112,19 +113,19 @@ QList<QList<Event*> > ModelUtilities::getBranchesFromEvent(Event* start)
 }
 
 
-QList<QList<Event*> > ModelUtilities::getAllEventsBranches(const QList<Event*>& events)
+std::vector<std::vector<Event*> > ModelUtilities::getAllEventsBranches(const std::vector<Event*>& events)
 {
-    QList<QList<Event*> > branches;
+    std::vector<std::vector<Event*> > branches;
 
     // ----------------------------------------
     //  Put all events level to 0 and
     //  store events at start of branches (= not having constraint backward)
     // ----------------------------------------
-    QList<Event*> starts;
+    std::vector<Event*> starts;
     for (auto&& event : events) {
         event->mLevel = 0;
         if (event->mConstraintsBwd.size() == 0)
-            starts.append(event);
+            starts.push_back(event);
     }
 
     if (starts.size() == 0 && events.size() != 0)
@@ -132,14 +133,14 @@ QList<QList<Event*> > ModelUtilities::getAllEventsBranches(const QList<Event*>& 
 
     else {
         for (auto& s : starts) {
-            QList<QList<Event*> > eventBranches;
+            std::vector<std::vector<Event*> > eventBranches;
             try {
                 eventBranches = getBranchesFromEvent(s);
             } catch(QString error) {
                 throw std::move(error);
             }
             for (auto& eb : eventBranches)
-                branches.append(eb);
+                branches.push_back(eb);
         }
     }
     return branches;
@@ -149,13 +150,13 @@ QList<QList<Event*> > ModelUtilities::getAllEventsBranches(const QList<Event*>& 
 
 
 // Phases Branches
-QList<QList<Phase*> > ModelUtilities::getNextBranches(const QList<Phase*> &curBranch, Phase* lastNode, const double gammaSum, const double maxLength)
+std::vector<std::vector<Phase*> > ModelUtilities::getNextBranches(const std::vector<Phase*> &curBranch, Phase* lastNode, const double gammaSum, const double maxLength)
 {
-    QList<QList<Phase*> > branches;
-    QList<PhaseConstraint*> &cts = lastNode->mConstraintsNextPhases;
+    std::vector<std::vector<Phase*> > branches;
+    const std::vector<PhaseConstraint*> &cts = lastNode->mConstraintsNextPhases;
     if (cts.size() > 0) {
         for (auto& ct : cts) {
-            QList<Phase*> branch = curBranch;
+            std::vector<Phase*> branch = curBranch;
             Phase* newNode = ct->mPhaseTo;
 
             double gamma = gammaSum;
@@ -169,11 +170,12 @@ QList<QList<Phase*> > ModelUtilities::getNextBranches(const QList<Phase*> &curBr
                 if (newNode->mLevel <= lastNode->mLevel)
                     newNode->mLevel = lastNode->mLevel + 1;
 
-                if (!branch.contains(newNode)) {
-                    branch.append(newNode);
-                    QList<QList<Phase*> > nextBranches = getNextBranches(branch, ct->mPhaseTo, gamma, maxLength);
+                //if (!branch.contains(newNode)) {
+                if (std::none_of(branch.begin(), branch.end(), [&newNode](auto b){return b == newNode;})) {
+                    branch.push_back(newNode);
+                    std::vector<std::vector<Phase*> > nextBranches = getNextBranches(branch, ct->mPhaseTo, gamma, maxLength);
                     for (auto& nb : nextBranches)
-                        branches.append(nb);
+                        branches.push_back(nb);
                 }
                 else {
                     QStringList names;
@@ -195,19 +197,19 @@ QList<QList<Phase*> > ModelUtilities::getNextBranches(const QList<Phase*> &curBr
         }
     }
     else
-        branches.append(curBranch);
+        branches.push_back(curBranch);
 
     return branches;
 }
 
-QList<QList<Phase*> > ModelUtilities::getBranchesFromPhase(Phase* start, const double maxLength)
+std::vector<std::vector<Phase*> > ModelUtilities::getBranchesFromPhase(Phase* start, const double maxLength)
 {
     Q_ASSERT(start);
-    QList<Phase*> startBranch;
+    std::vector<Phase*> startBranch;
     start->mLevel = 0;
-    startBranch.append(start);
+    startBranch.push_back(start);
 
-    QList<QList<Phase*> > nextBranches;
+    std::vector<std::vector<Phase*> > nextBranches;
     try {
         nextBranches = getNextBranches(startBranch, start, 0, maxLength);
     } catch(QString error) {
@@ -218,24 +220,24 @@ QList<QList<Phase*> > ModelUtilities::getBranchesFromPhase(Phase* start, const d
 }
 
 
-QList<QList<Phase*> > ModelUtilities::getAllPhasesBranches(const QList<Phase*>& phases, const double maxLength)
+std::vector<std::vector<Phase*> > ModelUtilities::getAllPhasesBranches(const std::vector<Phase*>& phases, const double maxLength)
 {
-    QList<QList<Phase*> > branches;
+    std::vector<std::vector<Phase*> > branches;
 
-    QList<Phase*> starts;
+    std::vector<Phase*> starts;
     for (auto& p : phases) {
         p->mLevel = 0;
         if (p->mConstraintsPrevPhases.size() == 0)
-            starts.append(p);
+            starts.push_back(p);
     }
     if (starts.size() == 0 && phases.size() != 0)
         throw QObject::tr("Circularity found in phases model !");
 
     try {
             for (auto& s : starts) {
-                const QList<QList<Phase*> > &phaseBranches = getBranchesFromPhase(s, maxLength);
+                const std::vector<std::vector<Phase*> > &phaseBranches = getBranchesFromPhase(s, maxLength);
                 for (auto& pb : phaseBranches) {
-                    branches.append(pb);
+                    branches.push_back(pb);
                 }
             }
     } catch (QString error){
@@ -252,9 +254,9 @@ QList<QList<Phase*> > ModelUtilities::getAllPhasesBranches(const QList<Phase*>& 
  * @param events
  * @return
  */
-QList<Event*> ModelUtilities::unsortEvents(const QList<Event*> &events)
+std::vector<Event*> ModelUtilities::unsortEvents(const std::vector<Event*> &events)
 {
-    QList<Event*> results (events);
+    std::vector<Event*> results (events);
     for (auto i = results.size()-1; i > 0; --i){
         std::swap(results[i], results[Generator::randomUniformInt(0, (int)i)]);
     }

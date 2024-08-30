@@ -48,7 +48,7 @@ extern QString res_file_version;
 inline decltype(Event::mThetaReduced) diffX (Event* e0, Event*e1) {return (e1->mThetaReduced - e0->mThetaReduced);}
 
 
-std::vector<t_reduceTime> calculVecH(const QList<Event *> &event)
+std::vector<t_reduceTime> calculVecH(const std::vector<Event *> &event)
 {
     std::vector<double> result (event.size()-1);
     std::transform(event.begin(), event.end()-1, event.begin()+1 , result.begin(), diffX);
@@ -586,7 +586,7 @@ SplineMatrices prepareCalculSpline_WI(const std::vector<t_reduceTime> &vecH)
  * @param sortedEvents
  * @return
  */
-SplineMatrices prepareCalculSpline(const QList<Event *> &sortedEvents, const std::vector<t_reduceTime> &vecH)
+SplineMatrices prepareCalculSpline(const std::vector<Event *> &sortedEvents, const std::vector<t_reduceTime> &vecH)
 {
     const Matrix2D &rMatR = calculMatR(vecH);
     const Matrix2D &rMatQ = calculMatQ(vecH);
@@ -621,7 +621,7 @@ SplineMatrices prepareCalculSpline(const QList<Event *> &sortedEvents, const std
 }
 
 
-SplineResults do_spline(const std::function <double (Event*)> &fun, const SplineMatrices &matrices, const QList<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline)
+SplineResults do_spline(const std::function <double (Event*)> &fun, const SplineMatrices &matrices, const std::vector<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline)
 {
     /*
     * MatB doit rester en copie
@@ -675,13 +675,13 @@ SplineResults do_spline(const std::function <double (Event*)> &fun, const Spline
 }
 
 
-SplineResults doSplineX(const SplineMatrices &matrices, const QList<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline)
+SplineResults doSplineX(const SplineMatrices &matrices, const std::vector<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline)
 {return do_spline(get_Yx, matrices, events, vecH, decomp, lambdaSpline);}
 
-SplineResults doSplineY(const SplineMatrices &matrices, const QList<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambdaSpline)
+SplineResults doSplineY(const SplineMatrices &matrices, const std::vector<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambdaSpline)
 {return do_spline(get_Yy, matrices, events, vecH, decomp, lambdaSpline);}
 
-SplineResults doSplineZ(const SplineMatrices &matrices, const QList<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline)
+SplineResults doSplineZ(const SplineMatrices &matrices, const std::vector<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline)
 {return do_spline(get_Yz, matrices, events, vecH, decomp, lambdaSpline);}
 
 /**
@@ -767,7 +767,7 @@ std::vector<double> calculMatInfluence_origin(const SplineMatrices& matrices, co
 }
 
 
-std::vector<double> calcul_spline_variance(const SplineMatrices& matrices, const QList<Event*> &events, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambdaSpline)
+std::vector<double> calcul_spline_variance(const SplineMatrices& matrices, const std::vector<Event*> &events, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambdaSpline)
 {
     unsigned int n = (unsigned int)events.size();
     std::vector<double> matA = calculMatInfluence_origin(matrices, 1, decomp, lambdaSpline);
@@ -803,7 +803,7 @@ std::vector<double> calcul_spline_variance(const SplineMatrices& matrices, const
  * @param matrices
  * @return
  */
-MCMCSpline currentSpline (QList<Event *> &events, const std::vector<t_reduceTime> &vecH, const SplineMatrices &matrices, const double lambda, bool doY, bool doZ)
+MCMCSpline currentSpline (std::vector<Event *> &events, const std::vector<t_reduceTime> &vecH, const SplineMatrices &matrices, const double lambda, bool doY, bool doZ)
 {
 
     const std::vector<double> &vec_theta_red = get_vector(get_ThetaReduced, events);
@@ -843,7 +843,7 @@ MCMCSpline currentSpline (QList<Event *> &events, const std::vector<t_reduceTime
 
     splineX.vecVarG = vecVarG;
 
-    for (int i = 0; i < events.size(); i++) {
+    for (size_t i = 0; i < events.size(); i++) {
         events[i]->mGx = splineX.vecG[i];
     }
 
@@ -862,7 +862,7 @@ MCMCSpline currentSpline (QList<Event *> &events, const std::vector<t_reduceTime
 
         splineY.vecG = std::move(sy.vecG);
         splineY.vecGamma = std::move(sy.vecGamma);
-        for (int i = 0; i < events.size(); i++) {
+        for (size_t i = 0; i < events.size(); i++) {
             events[i]->mGy = splineY.vecG[i];
         }
         splineY.vecThetaReduced = vec_theta_red;
@@ -882,7 +882,7 @@ MCMCSpline currentSpline (QList<Event *> &events, const std::vector<t_reduceTime
 
         splineZ.vecG = std::move(sz.vecG);
         splineZ.vecGamma = std::move(sz.vecGamma);
-        for (int i = 0; i < events.size(); i++) {
+        for (size_t i = 0; i < events.size(); i++) {
             events[i]->mGz = splineZ.vecG[i];
         }
         splineZ.vecThetaReduced= vec_theta_red;
@@ -899,7 +899,7 @@ MCMCSpline currentSpline (QList<Event *> &events, const std::vector<t_reduceTime
  * @param events must be ordered and spred
  * @return
  */
-MCMCSpline currentSpline_WI (QList<Event *> &events, bool doY, bool doZ, bool use_error)
+MCMCSpline currentSpline_WI (std::vector<Event *> &events, bool doY, bool doZ, bool use_error)
 {
     //Q_ASSERT_X(mModel->mLambdaSpline.mX!=0, "[MCMCLoopCurve::ln_h_YWI_3_update]", "lambdaSpline=0");
 

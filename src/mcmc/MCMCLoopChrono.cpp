@@ -71,7 +71,7 @@ MCMCLoopChrono::~MCMCLoopChrono()
 QString MCMCLoopChrono::calibrate()
 {
     if (mModel) {
-        QList<Event*> &events = mModel->mEvents;
+        std::vector<Event*> &events = mModel->mEvents;
         //events.reserve(mModel->mEvents.size());
         //----------------- Calibrate measurements --------------------------------------
 

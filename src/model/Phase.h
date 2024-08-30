@@ -73,7 +73,7 @@ public:
 
     double sum_gamma_prev_phases();
     double sum_gamma_next_phases();
-    void init_alpha_beta_phase(QList<Phase*> &phases);
+    void init_alpha_beta_phase(std::vector<Phase *> &phases);
     void init_update_alpha_phase(double theta_max_phase_prev);
     void init_update_beta_phase(double beta_sup);
 
@@ -106,9 +106,9 @@ public:
     QString mName; //must be public, to be setting by dialogbox
     QColor mColor;
 
-    QList<Event*> mEvents;
-    QList<PhaseConstraint*> mConstraintsNextPhases;
-    QList<PhaseConstraint*> mConstraintsPrevPhases;
+    std::vector<Event*> mEvents;
+    std::vector<PhaseConstraint*> mConstraintsNextPhases;
+    std::vector<PhaseConstraint*> mConstraintsPrevPhases;
 
     MetropolisVariable mAlpha;
     MetropolisVariable mBeta;

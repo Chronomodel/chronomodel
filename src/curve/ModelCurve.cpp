@@ -181,7 +181,7 @@ void ModelCurve::updateDesignFromJson()
         const int eventId = eventJSON.value(STATE_ID).toInt();
         const QJsonArray dates = eventJSON.value(STATE_EVENT_DATES).toArray();
 
-        QList<Event *>::iterator iterEvent = mEvents.begin();
+        std::vector<Event *>::iterator iterEvent = mEvents.begin();
         while (iterEvent != mEvents.end()) {
             if ((*iterEvent)->mId == eventId) {
                 (*iterEvent)->mName  = eventJSON.value(STATE_NAME).toString();

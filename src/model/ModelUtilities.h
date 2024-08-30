@@ -53,15 +53,15 @@ class ModelUtilities
 {
 public:
 
-    static QList<QList<Event*> > getNextBranches(const QList<Event*>& curBranch, Event* lastNode);
-    static QList<QList<Event*> > getBranchesFromEvent(Event* start);
-    static QList<QList<Event*> > getAllEventsBranches(const QList<Event*>& events);
+    static std::vector<std::vector<Event*> > getNextBranches(const std::vector<Event*>& curBranch, Event* lastNode);
+    static std::vector<std::vector<Event*> > getBranchesFromEvent(Event* start);
+    static std::vector<std::vector<Event*> > getAllEventsBranches(const std::vector<Event*>& events);
 
-    static QList<QList<Phase*> > getNextBranches(const QList<Phase*>& curBranch, Phase* lastNode, const double gammaSum, const double maxLength);
-    static QList<QList<Phase*> > getBranchesFromPhase(Phase* start, const double maxLength);
-    static QList<QList<Phase*> > getAllPhasesBranches(const QList<Phase*>& events, const double maxLength);
+    static std::vector<std::vector<Phase *> > getNextBranches(const std::vector<Phase *> &curBranch, Phase* lastNode, const double gammaSum, const double maxLength);
+    static std::vector<std::vector<Phase*> > getBranchesFromPhase(Phase* start, const double maxLength);
+    static std::vector<std::vector<Phase*> > getAllPhasesBranches(const std::vector<Phase*>& events, const double maxLength);
 
-    static QList<Event*> unsortEvents(const QList<Event*> &events);
+    static std::vector<Event*> unsortEvents(const std::vector<Event*> &events);
     static QString modelDescriptionHTML(const std::shared_ptr<ModelCurve> model);
     static QString getMCMCSettingsLog(const std::shared_ptr<ModelCurve> model = nullptr);
     static QString modelStateDescriptionHTML(const std::shared_ptr<ModelCurve> model = nullptr, QString stateDescript = "");
