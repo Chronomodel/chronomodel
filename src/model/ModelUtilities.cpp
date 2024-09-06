@@ -53,27 +53,34 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <utility>
 
 
-bool sortEvents(Event* e1, Event* e2) {return (e1->mItemY < e2->mItemY);}
-bool sortPhases(Phase* p1, Phase* p2) {return (p1->mItemY < p2->mItemY);}
+
+bool sortEvents(std::shared_ptr<Event> e1, std::shared_ptr<Event> e2)
+{
+    return (e1->mItemY < e2->mItemY);
+}
+
+bool sortPhases(std::shared_ptr<Phase> p1, std::shared_ptr<Phase> p2)
+{
+    return (p1->mItemY < p2->mItemY);
+}
 
 
 // Events Branches
-std::vector<std::vector<Event*> > ModelUtilities::getNextBranches(const std::vector<Event*> &curBranch, Event* lastNode)
+std::vector<std::vector<std::shared_ptr<Event>> > ModelUtilities::getNextBranches(const std::vector<std::shared_ptr<Event>> &curBranch, std::shared_ptr<Event> lastNode)
 {
-    std::vector<std::vector<Event*> > branches;
-    const std::vector<EventConstraint*> &cts = lastNode->mConstraintsFwd;
+    std::vector<std::vector<std::shared_ptr<Event>> > branches;
+    const std::vector<std::shared_ptr<EventConstraint>> &cts = lastNode->mConstraintsFwd;
     if (cts.size() > 0) {
         for (auto& ct : cts) {
-            std::vector<Event*> branch = curBranch;
-            Event* newNode = ct->mEventTo;
+            std::vector<std::shared_ptr<Event>> branch = curBranch;
+            std::shared_ptr<Event> newNode = ct->mEventTo;
 
             if (newNode->mLevel <= lastNode->mLevel)
                 newNode->mLevel = lastNode->mLevel + 1;
 
-           // if (!branch.contains(newNode)) {
-            if (std::none_of(branch.begin(), branch.end(), [&newNode](auto b){return b == newNode;})) {
+            if (!container_contains(branch, newNode)) {
                 branch.push_back(newNode);
-                std::vector<std::vector<Event*> > nextBranches = getNextBranches(branch, ct->mEventTo);
+                std::vector<std::vector<std::shared_ptr<Event>> > nextBranches = getNextBranches(branch, ct->mEventTo);
 
                 for (auto& nb : nextBranches)
                     branches.push_back(nb);
@@ -82,10 +89,10 @@ std::vector<std::vector<Event*> > ModelUtilities::getNextBranches(const std::vec
                 QStringList evtNames;
 
                  for (auto& b : branch)
-                     evtNames << b->mName;
+                     evtNames << b->getQStringName();
 
 
-                evtNames << newNode->mName;
+                evtNames << newNode->getQStringName();
 
                 throw QObject::tr("Circularity found in events model !\rPlease correct this branch :\r") + evtNames.join(" -> ");
             }
@@ -96,13 +103,13 @@ std::vector<std::vector<Event*> > ModelUtilities::getNextBranches(const std::vec
     return branches;
 }
 
-std::vector<std::vector<Event*> > ModelUtilities::getBranchesFromEvent(Event* start)
+std::vector<std::vector<std::shared_ptr<Event>> > ModelUtilities::getBranchesFromEvent(std::shared_ptr<Event> start)
 {
-    std::vector<Event*> startBranch;
+    std::vector<std::shared_ptr<Event>> startBranch;
     start->mLevel = 0;
     startBranch.push_back(start);
 
-    std::vector<std::vector<Event*> > nextBranches;
+    std::vector<std::vector<std::shared_ptr<Event>> > nextBranches;
     try {
         nextBranches = getNextBranches(startBranch, start);
     } catch(QString error){
@@ -113,15 +120,15 @@ std::vector<std::vector<Event*> > ModelUtilities::getBranchesFromEvent(Event* st
 }
 
 
-std::vector<std::vector<Event*> > ModelUtilities::getAllEventsBranches(const std::vector<Event*>& events)
+std::vector<std::vector<std::shared_ptr<Event>> > ModelUtilities::getAllEventsBranches(const std::vector<std::shared_ptr<Event>>& events)
 {
-    std::vector<std::vector<Event*> > branches;
+    std::vector<std::vector<std::shared_ptr<Event>> > branches;
 
     // ----------------------------------------
     //  Put all events level to 0 and
     //  store events at start of branches (= not having constraint backward)
     // ----------------------------------------
-    std::vector<Event*> starts;
+    std::vector<std::shared_ptr<Event>> starts;
     for (auto&& event : events) {
         event->mLevel = 0;
         if (event->mConstraintsBwd.size() == 0)
@@ -133,7 +140,7 @@ std::vector<std::vector<Event*> > ModelUtilities::getAllEventsBranches(const std
 
     else {
         for (auto& s : starts) {
-            std::vector<std::vector<Event*> > eventBranches;
+            std::vector<std::vector<std::shared_ptr<Event>> > eventBranches;
             try {
                 eventBranches = getBranchesFromEvent(s);
             } catch(QString error) {
@@ -150,14 +157,14 @@ std::vector<std::vector<Event*> > ModelUtilities::getAllEventsBranches(const std
 
 
 // Phases Branches
-std::vector<std::vector<Phase*> > ModelUtilities::getNextBranches(const std::vector<Phase*> &curBranch, Phase* lastNode, const double gammaSum, const double maxLength)
+std::vector<std::vector<Phase*> > ModelUtilities::getNextBranches(const std::vector<Phase*> &curBranch, const Phase* lastNode, const double gammaSum, const double maxLength)
 {
     std::vector<std::vector<Phase*> > branches;
-    const std::vector<PhaseConstraint*> &cts = lastNode->mConstraintsNextPhases;
+    const std::vector<std::shared_ptr<PhaseConstraint>> &cts = lastNode->mConstraintsNextPhases;
     if (cts.size() > 0) {
         for (auto& ct : cts) {
             std::vector<Phase*> branch = curBranch;
-            Phase* newNode = ct->mPhaseTo;
+            std::shared_ptr<Phase> newNode = ct->mPhaseTo;
 
             double gamma = gammaSum;
             if (ct->mGammaType == PhaseConstraint::eGammaFixed)
@@ -170,18 +177,17 @@ std::vector<std::vector<Phase*> > ModelUtilities::getNextBranches(const std::vec
                 if (newNode->mLevel <= lastNode->mLevel)
                     newNode->mLevel = lastNode->mLevel + 1;
 
-                //if (!branch.contains(newNode)) {
-                if (std::none_of(branch.begin(), branch.end(), [&newNode](auto b){return b == newNode;})) {
-                    branch.push_back(newNode);
-                    std::vector<std::vector<Phase*> > nextBranches = getNextBranches(branch, ct->mPhaseTo, gamma, maxLength);
+                if (!container_contains(branch, newNode.get())) {
+                    branch.push_back(newNode.get());
+                    std::vector<std::vector<Phase*> > nextBranches = getNextBranches(branch, ct->mPhaseTo.get(), gamma, maxLength);
                     for (auto& nb : nextBranches)
                         branches.push_back(nb);
                 }
                 else {
                     QStringList names;
                     for (auto& b : branch)
-                        names << b->mName;
-                    names << newNode->mName;
+                        names << b->getQStringName();
+                    names << newNode->getQStringName();
 
                     throw QObject::tr("Circularity found in phases model !\rPlease correct this branch :\r") + names.join(" -> ");
                 }
@@ -189,9 +195,9 @@ std::vector<std::vector<Phase*> > ModelUtilities::getNextBranches(const std::vec
             else {
                 QStringList names;
                 for (auto& c : curBranch)
-                    names << c->mName;
+                    names << c->getQStringName();
 
-                names << newNode->mName;
+                names << newNode->getQStringName();
                 throw QObject::tr("Phases branch too long :\r") + names.join(" -> ");
             }
         }
@@ -220,7 +226,7 @@ std::vector<std::vector<Phase*> > ModelUtilities::getBranchesFromPhase(Phase* st
 }
 
 
-std::vector<std::vector<Phase*> > ModelUtilities::getAllPhasesBranches(const std::vector<Phase*>& phases, const double maxLength)
+std::vector<std::vector<Phase *> > ModelUtilities::getAllPhasesBranches(const std::vector<std::shared_ptr<Phase>> &phases, const double maxLength)
 {
     std::vector<std::vector<Phase*> > branches;
 
@@ -228,7 +234,7 @@ std::vector<std::vector<Phase*> > ModelUtilities::getAllPhasesBranches(const std
     for (auto& p : phases) {
         p->mLevel = 0;
         if (p->mConstraintsPrevPhases.size() == 0)
-            starts.push_back(p);
+            starts.push_back(p.get());
     }
     if (starts.size() == 0 && phases.size() != 0)
         throw QObject::tr("Circularity found in phases model !");
@@ -254,9 +260,9 @@ std::vector<std::vector<Phase*> > ModelUtilities::getAllPhasesBranches(const std
  * @param events
  * @return
  */
-std::vector<Event*> ModelUtilities::unsortEvents(const std::vector<Event*> &events)
+std::vector<std::shared_ptr<Event>> ModelUtilities::unsortEvents(const std::vector<std::shared_ptr<Event> > &events)
 {
-    std::vector<Event*> results (events);
+    std::vector<std::shared_ptr<Event>> results (events);
     for (auto i = results.size()-1; i > 0; --i){
         std::swap(results[i], results[Generator::randomUniformInt(0, (int)i)]);
     }
@@ -292,15 +298,15 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
     int i = 0;
     for (auto&& event : model->mEvents) {
         if (event->type() == Event::eBound) {
-            auto bound = dynamic_cast<Bound*>(event);
-            log += line(textRed(QObject::tr("Bound ( %1 / %2 ) : %3 ( %4  phases,  %5 const. back.,  %6 const.fwd.)").arg(QString::number(i+1), QString::number(model->mEvents.size()), bound->mName,
+            auto bound = dynamic_cast<Bound*>(event.get());
+            log += line(textRed(QObject::tr("Bound ( %1 / %2 ) : %3 ( %4  phases,  %5 const. back.,  %6 const.fwd.)").arg(QString::number(i+1), QString::number(model->mEvents.size()), bound->getQStringName(),
                                                                                                                QString::number(bound->mPhases.size()),
                                                                                                                QString::number(bound->mConstraintsBwd.size()),
                                                                                                                QString::number(bound->mConstraintsFwd.size()))));
             log += line(textRed(QObject::tr("- Fixed Value : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(bound->mFixed), DateUtils::getAppSettingsFormatStr() )));
 
         } else {
-            log += line(textBlue(QObject::tr("Event ( %1 / %2 ) : %3 ( %4 data, %5 phases,  %6 const. back.,  %7 const. fwd.)").arg(QString::number(i+1), QString::number(model->mEvents.size()), event->mName,
+            log += line(textBlue(QObject::tr("Event ( %1 / %2 ) : %3 ( %4 data, %5 phases,  %6 const. back.,  %7 const. fwd.)").arg(QString::number(i+1), QString::number(model->mEvents.size()), event->getQStringName(),
                                                                                                                          QString::number(event->mDates.size()),
                                                                                                                          QString::number(event->mPhases.size()),
                                                                                                                          QString::number(event->mConstraintsBwd.size()),
@@ -357,7 +363,7 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
         int j = 0;
         for (auto&& date : event->mDates) {
             log += "<br>";
-            log += line(textBlack(QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j+1), QString::number(event->mDates.size()), date.mName)
+            log += line(textBlack(QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j+1), QString::number(event->mDates.size()), date.getQStringName())
                                   + "<br>" + QObject::tr("- Type : %1").arg(date.mPlugin->getName())
                                   + "<br>" + QObject::tr("- MCMC %1").arg(MHVariable::getSamplerProposalText(date.mTi.mSamplerProposal))
                                   + "<br>" + QObject::tr("- Params : %1").arg(date.getDesc()))
@@ -373,7 +379,7 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
 
     i = 0;
     for (auto &&phase : model->mPhases) {
-        log += line(textOrange(QObject::tr("Phase ( %1 / %2 ) : %3 ( %4 events, %5 const. back., %6 const. fwd.)").arg(QString::number(i+1), QString::number(model->mPhases.size()), phase->mName,
+        log += line(textOrange(QObject::tr("Phase ( %1 / %2 ) : %3 ( %4 events, %5 const. back., %6 const. fwd.)").arg(QString::number(i+1), QString::number(model->mPhases.size()), phase->getQStringName(),
                                                                                                               QString::number(phase->mEvents.size()),
                                                                                                               QString::number(phase->mConstraintsPrevPhases.size()),
                                                                                                               QString::number(phase->mConstraintsNextPhases.size()))
@@ -382,7 +388,7 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
 
         log += textBlue(QObject::tr("Events")) + " : ";
         for (auto &&event : phase->mEvents)
-            log += textBlue(event->mName) + " - ";
+            log += textBlue(event->getQStringName()) + " - ";
 
         log += "<br>";
         log += "<hr>";
@@ -392,7 +398,7 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
 
 
     for (auto&& phaseConst : model->mPhaseConstraints) {
-        log += line(textBold(textGreen( QObject::tr("Succession from %1 to %2").arg(phaseConst->mPhaseFrom->mName, phaseConst->mPhaseTo->mName))));
+        log += line(textBold(textGreen( QObject::tr("Succession from %1 to %2").arg(phaseConst->mPhaseFrom->getQStringName(), phaseConst->mPhaseTo->getQStringName()))));
 
         switch(phaseConst->mGammaType) {
             case PhaseConstraint::eGammaFixed :
@@ -468,14 +474,15 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
         HTMLText += "<hr>";
 
         if (event->type() == Event::eBound) {
-             const Bound* bound = dynamic_cast<const Bound*>(event);
+            const Bound* bound = dynamic_cast<const Bound*>(event.get());
+
             if (bound) {
-                HTMLText += line(textBold(textRed(QObject::tr("Bound ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mEvents.size()), bound->mName))));
+                HTMLText += line(textBold(textRed(QObject::tr("Bound ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mEvents.size()), bound->getQStringName()))));
                 HTMLText += line(textBold(textRed(QObject::tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(bound->mTheta.mX), DateUtils::getAppSettingsFormatStr()))));
             }
 
         }  else {
-            HTMLText += line(textBold(textBlue(QObject::tr("Event ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mEvents.size()), event->mName))));
+            HTMLText += line(textBold(textBlue(QObject::tr("Event ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mEvents.size()), event->getQStringName()))));
             HTMLText += line(textBold(textBlue(QObject::tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(event->mTheta.mX), DateUtils::getAppSettingsFormatStr()))));
             if (event->mTheta.mLastAccepts.size()>2 && event->mTheta.mSamplerProposal!= MHVariable::eFixe) {
                 const auto acceptRate = event->mTheta.getCurrentAcceptRate();
@@ -518,7 +525,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
             }
 
             // Recherche indice de l'event dans la liste de spline, car les events sont réordonnés
-            int thetaIdx;
+            size_t thetaIdx;
             const MCMCSpline& spline =  model->mSpline;
             for (thetaIdx = 0; thetaIdx < model->mEvents.size(); thetaIdx++) {
                 if ( spline.splineX.vecThetaReduced.at(thetaIdx) == event->mThetaReduced)
@@ -545,7 +552,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
             ++j;
             HTMLText += "<br>";
 
-            HTMLText += line(textBold(textBlack(QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j), QString::number(event->mDates.size()), date.mName))));
+            HTMLText += line(textBold(textBlack(QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j), QString::number(event->mDates.size()), date.getQStringName()))));
             HTMLText += line(textBlack(QObject::tr(" - ti : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(date.mTi.mX), DateUtils::getAppSettingsFormatStr())));
             if (date.mTi.mSamplerProposal == MHVariable::eMHPrior) {
                 if (date.mTi.mLastAccepts.size()>2) {
@@ -585,7 +592,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
         int i = 0;
         for (auto& phase : model->mPhases) {
             ++i;
-            HTMLText += line(textBold(textOrange(QObject::tr("Phase ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mPhases.size()), phase->mName))));
+            HTMLText += line(textBold(textOrange(QObject::tr("Phase ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mPhases.size()), phase->getQStringName()))));
             HTMLText += line(textOrange(QObject::tr(" - Begin : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mX), DateUtils::getAppSettingsFormatStr())));
             HTMLText += line(textOrange(QObject::tr(" - End : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mX), DateUtils::getAppSettingsFormatStr())));
             HTMLText += line(textOrange(QObject::tr(" - Tau : %1").arg(stringForLocal(phase->mTau.mX))));
@@ -602,7 +609,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
         int i = 0;
         for (auto& constraint : model->mPhaseConstraints) {
             ++i;
-            HTMLText += line(textGreen(QObject::tr("Succession ( %1 / %2) : from %3 to %4").arg(QString::number(i), QString::number(model->mPhaseConstraints.size()),constraint->mPhaseFrom->mName, constraint->mPhaseTo->mName)));
+            HTMLText += line(textGreen(QObject::tr("Succession ( %1 / %2) : from %3 to %4").arg(QString::number(i), QString::number(model->mPhaseConstraints.size()),constraint->mPhaseFrom->getQStringName(), constraint->mPhaseTo->getQStringName())));
             HTMLText += line(textGreen(QObject::tr(" - Gamma : %1").arg(stringForLocal(constraint->mGamma))));
             //HTMLText += "<br>";
         }
@@ -650,7 +657,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
 QString ModelUtilities::dateResultsHTML(const Date* d, const std::shared_ptr<ModelCurve> &model)
 {
     Q_ASSERT(d);
-    QString text = line(textBold(textBlack(QObject::tr("Data : %1").arg(d->mName)))) + "<br>";
+    QString text = line(textBold(textBlack(QObject::tr("Data : %1").arg(d->getQStringName())))) + "<br>";
     text += line(textBold(textBlack(QObject::tr("Posterior calib. date"))));
 
     if (d->mTi.mSamplerProposal != MHVariable::eFixe && model != nullptr) {
@@ -679,7 +686,7 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const std::shared_ptr<Mod
 QString ModelUtilities::dateResultsHTML(const Date* d, const double tmin_formated, const double tmax_formated)
 {
     Q_ASSERT(d);
-    QString text = line(textBold(textBlack(QObject::tr("Data : %1").arg(d->mName)))) + "<br>";
+    QString text = line(textBold(textBlack(QObject::tr("Data : %1").arg(d->getQStringName())))) + "<br>";
     text += line(textBold(textBlack(QObject::tr("Posterior calib. date"))));
 
     if (d->mTi.mSamplerProposal != MHVariable::eFixe) {
@@ -713,25 +720,25 @@ QString ModelUtilities::sigmaTiResultsHTML(const Date* d)
 {
     Q_ASSERT(d);
     QString text;
-    text += line(textBold(textBlack(QObject::tr("Data : %1").arg(d->mName)))) + "<br>";
+    text += line(textBold(textBlack(QObject::tr("Data : %1").arg(d->getQStringName())))) + "<br>";
 
     text += line(textBold(textBlack(QObject::tr("Posterior Std ti"))));
     text += line(textBlack(d->mSigmaTi.resultsString()));
     return text;
 }
 
-QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, const std::shared_ptr<ModelCurve> model)
+QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const bool withDates, const std::shared_ptr<ModelCurve> model)
 {
     Q_ASSERT(e);
     QString text;
     if (e->mType == Event::eBound) {
-        text += line(textBold(textRed(QObject::tr("Bound : %1").arg(e->mName)))) + "<br>";
+        text += line(textBold(textRed(QObject::tr("Bound : %1").arg(e->getQStringName())))) + "<br>";
         text += line(textBold(textRed(QObject::tr("Posterior Bound Date"))));
         text += line(textRed(e->mTheta.resultsString("", DateUtils::getAppSettingsFormatStr())));
 
     }
     else {
-        text += line(textBold(textBlue(QObject::tr("Event : %1").arg(e->mName)))) + "<br>";
+        text += line(textBold(textBlue(QObject::tr("Event : %1").arg(e->getQStringName())))) + "<br>";
         text += line(textBold(textBlue(QObject::tr("Posterior Event Date"))));
         text += line(textBlue(e->mTheta.resultsString("", DateUtils::getAppSettingsFormatStr())));
 
@@ -757,18 +764,18 @@ QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, c
     return text;
 }
 
-QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, const double tmin_formated, const double tmax_formated, bool with_curve)
+QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const bool withDates, const double tmin_formated, const double tmax_formated, bool with_curve)
 {
     Q_ASSERT(e);
     QString text;
     if (e->mType == Event::eBound) {
-        text += line(textBold(textRed(QObject::tr("Bound : %1").arg(e->mName)))) + "<br>";
+        text += line(textBold(textRed(QObject::tr("Bound : %1").arg(e->getQStringName())))) + "<br>";
         text += line(textBold(textRed(QObject::tr("Posterior Bound Date"))));
         text += line(textRed(e->mTheta.resultsString("", DateUtils::getAppSettingsFormatStr())));
 
     }
     else {
-        text += line(textBold(textBlue(QObject::tr("Event : %1").arg(e->mName)))) + "<br>";
+        text += line(textBold(textBlue(QObject::tr("Event : %1").arg(e->getQStringName())))) + "<br>";
         text += line(textBold(textBlue(QObject::tr("Posterior Event Date"))));
         text += line(textBlue(e->mTheta.resultsString("", DateUtils::getAppSettingsFormatStr())));
 
@@ -794,7 +801,7 @@ QString ModelUtilities::eventResultsHTML(const Event* e, const bool withDates, c
     return text;
 }
 
-QString ModelUtilities::EventS02ResultsHTML(const Event* e)
+QString ModelUtilities::EventS02ResultsHTML(const std::shared_ptr<Event> e)
 {
     Q_ASSERT(e);
     QString text;
@@ -809,16 +816,16 @@ QString ModelUtilities::EventS02ResultsHTML(const Event* e)
     return text;
 }
 
-QString ModelUtilities::VgResultsHTML(const Event* e)
+QString ModelUtilities::VgResultsHTML(const std::shared_ptr<Event> e)
 {
     Q_ASSERT(e);
     QString text;
 
     if (e->mType == Event::eBound) {
-        text += line(textBold(textRed(QObject::tr("Bound : %1").arg(e->mName))));
+        text += line(textBold(textRed(QObject::tr("Bound : %1").arg(e->getQStringName()))));
 
     } else {
-        text += line(textBold(textBlue(QObject::tr("Event : %1").arg(e->mName))));
+        text += line(textBold(textBlue(QObject::tr("Event : %1").arg(e->getQStringName()))));
     }
 
     if (e->mVg.mSamplerProposal == MHVariable::eFixe) {
@@ -832,9 +839,9 @@ QString ModelUtilities::VgResultsHTML(const Event* e)
     return text;
 }
 
-QString ModelUtilities::phaseResultsHTML(const Phase* p)
+QString ModelUtilities::phaseResultsHTML(const std::shared_ptr<Phase> p)
 {
-    QString text = line(textBold(textOrange(QObject::tr("Phase : %1").arg(p->mName))));
+    QString text = line(textBold(textOrange(QObject::tr("Phase : %1").arg(p->getQStringName()))));
     text += line(textOrange(QObject::tr("Number of Events : %1").arg(p->mEvents.size())));
 
     text += "<br>";
@@ -857,9 +864,9 @@ QString ModelUtilities::phaseResultsHTML(const Phase* p)
     return text;
 }
 
-QString ModelUtilities::durationResultsHTML(const Phase* p)
+QString ModelUtilities::durationResultsHTML(const std::shared_ptr<Phase> p)
 {
-   QString text = line(textBold(textOrange(QObject::tr("Phase : %1").arg(p->mName))));
+   QString text = line(textBold(textOrange(QObject::tr("Phase : %1").arg(p->getQStringName()))));
    text += line(textOrange(QObject::tr("Number of Events : %1").arg(p->mEvents.size())));
 
    text += "<br>";
@@ -869,18 +876,18 @@ QString ModelUtilities::durationResultsHTML(const Phase* p)
    return text;
 }
 
-QString ModelUtilities::tempoResultsHTML(const Phase* p)
+QString ModelUtilities::tempoResultsHTML(const std::shared_ptr<Phase> p)
 {
     Q_ASSERT(p);
-    QString text = line(textBold(textOrange(QObject::tr("Phase : %1").arg(p->mName))));
+    QString text = line(textBold(textOrange(QObject::tr("Phase : %1").arg(p->getQStringName()))));
     text += line(textOrange(QObject::tr("Number of Events : %1").arg(p->mEvents.size())));
 
     return text;
 }
 
-QString ModelUtilities::activityResultsHTML(const Phase* p)
+QString ModelUtilities::activityResultsHTML(const std::shared_ptr<Phase> p)
 {
-    QString text = line(textBold(textOrange(QObject::tr("Phase : %1").arg(p->mName))));
+    QString text = line(textBold(textOrange(QObject::tr("Phase : %1").arg(p->getQStringName()))));
     text += line(textOrange(QObject::tr("Number of Events : %1").arg(p->mEvents.size())));
 
     text += "<br>";
@@ -890,8 +897,8 @@ QString ModelUtilities::activityResultsHTML(const Phase* p)
         return text;
     }
 
-    double t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("t_min").value());
-    double t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("t_max").value());
+    double t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("t_min"));
+    double t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("t_max"));
 
     if (t1>t2)
         std::swap(t1, t2);
@@ -902,43 +909,43 @@ QString ModelUtilities::activityResultsHTML(const Phase* p)
     text += "<hr>";
     text += "<br>";
     text += line(textBold(textOrange(QObject::tr("Activity"))));
-    t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_TimeRange_min").value());
-    t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_TimeRange_max").value());
+    t1 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_TimeRange_min"));
+    t2 = DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_TimeRange_max"));
 
     if (t1>t2)
         std::swap(t1, t2);
 
-    text += line(textOrange(QObject::tr("Activity Time Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg( stringForLocal(p->mValueStack.at("Activity_TimeRange_Level").value()),
+    text += line(textOrange(QObject::tr("Activity Time Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg( stringForLocal(p->mValueStack.at("Activity_TimeRange_Level")),
                                                                                         stringForLocal(t1),
                                                                                         stringForLocal(t2),
                                                                                         DateUtils::getAppSettingsFormatStr())));
 
     text += line(textOrange("Activity Span = " + stringForLocal(t2-t1) ));
-    text += line(textOrange("Activity Theta mean = " + stringForLocal(DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_mean95").value())) + " " + DateUtils::getAppSettingsFormatStr()));
-    text += line(textOrange("Activity Theta std = " + stringForLocal(p->mValueStack.at("Activity_std95").value()) ));
+    text += line(textOrange("Activity Theta mean = " + stringForLocal(DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_mean95"))) + " " + DateUtils::getAppSettingsFormatStr()));
+    text += line(textOrange("Activity Theta std = " + stringForLocal(p->mValueStack.at("Activity_std95")) ));
 
     text += "<br>";
     text += line(textBold(textOrange(QObject::tr("h Estimation"))));
 
-    QString textValue = stringForLocal(p->mValueStack.at("Activity_Significance_Score").value(), true);
-    const double threshold = p->mValueStack.at("Activity_Threshold").value();
-    const auto hActi = p->mValueStack.at("Activity_h").value();
+    QString textValue = stringForLocal(p->mValueStack.at("Activity_Significance_Score"), true);
+    const double threshold = p->mValueStack.at("Activity_Threshold");
+    const auto hActi = p->mValueStack.at("Activity_h");
     text += line(textOrange("Significance Score"  + QString(" ( %1 %) = ").arg(threshold) + textValue + QString(" with h = %1").arg(hActi)));
 
     text += line(""); 
-    text += line(textOrange("Activity max"  + QString(" = %1").arg(p->mValueStack.at("Activity_max").value()) ));
-    text += line(textOrange("Activity mode"  + QString(" = %1").arg(DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_mode").value())) + " " + DateUtils::getAppSettingsFormatStr() )) ;
+    text += line(textOrange("Activity max"  + QString(" = %1").arg(p->mValueStack.at("Activity_max")) ));
+    text += line(textOrange("Activity mode"  + QString(" = %1").arg(DateUtils::convertToAppSettingsFormat(p->mValueStack.at("Activity_mode"))) + " " + DateUtils::getAppSettingsFormatStr() )) ;
 
-    const double hUnif = (3.686*p->mValueStack.at("Activity_std95").value())/pow(p->mEvents.size(), 1./5.);
+    const double hUnif = (3.686*p->mValueStack.at("Activity_std95"))/pow(p->mEvents.size(), 1./5.);
     text += "<br>";
     text += line(textOrange("Optimal h (Uniform kernel) = " + stringForLocal(hUnif)));
 
     return text;
 }
 
-QString ModelUtilities::constraintResultsHTML(const PhaseConstraint* p)
+QString ModelUtilities::constraintResultsHTML(const std::shared_ptr<PhaseConstraint> p)
 {
-    QString text = line(textBold(textOrange(QObject::tr("Succession : from %1 to %2").arg(p->mPhaseFrom->mName, p->mPhaseTo->mName))));
+    QString text = line(textBold(textOrange(QObject::tr("Succession : from %1 to %2").arg(p->mPhaseFrom->getQStringName(), p->mPhaseTo->getQStringName()))));
 
     switch(p->mGammaType) {
     case PhaseConstraint::eGammaFixed :
@@ -1237,21 +1244,21 @@ double sample_in_repartition (std::shared_ptr<CalibrationCurve> calibrateCurve, 
 }
 
 
-void sampleInCumulatedRepartition_thetaFixe (Event *event, const StudyPeriodSettings& settings)
+void sampleInCumulatedRepartition_thetaFixe (std::shared_ptr<Event> event, const StudyPeriodSettings& settings)
 {
 
     // Creation of the cumulative date distribution
     auto calib =  generate_mixingCalibration(event->mDates, "Mixing Theta Fixed");
 
-    const double maxRepartition = calib->mRepartition.last();
-    const double minRepartition = calib->mRepartition.first();
+    const double maxRepartition = *calib.mRepartition.crbegin();
+    const double minRepartition = *calib.mRepartition.begin();
 
-    const long double t_min_long = calib->mTmin;
-    const long double t_max_long = calib->mTmax;
-    const long double step_long = (t_max_long - t_min_long)/(calib->mRepartition.size()-1);
+    const long double t_min_long = calib.mTmin;
+    const long double t_max_long = calib.mTmax;
+    const long double step_long = (t_max_long - t_min_long)/(calib.mRepartition.size()-1);
 
-    if ( (minRepartition != 0. || maxRepartition != 0.) &&  (calib->mRepartition.size() > 1)) {
-        const double idx = vector_interpolate_idx_for_value(0.5*(maxRepartition - minRepartition) + minRepartition, calib->mRepartition);
+    if ( (minRepartition != 0. || maxRepartition != 0.) &&  (calib.mRepartition.size() > 1)) {
+        const double idx = vector_interpolate_idx_for_value(0.5*(maxRepartition - minRepartition) + minRepartition, calib.mRepartition);
         event->mTheta.mX = t_min_long + idx * step_long;
 
     } else {

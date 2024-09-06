@@ -125,15 +125,15 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
          */
         if (variableList.contains(eDataTi)) {
             mGraph->setOverArrow(GraphView::eBothOverflow);
-            mTitle = tr("Data : %1").arg(mDate->mName);
+            mTitle = tr("Data : %1").arg(mDate->getQStringName());
 
             mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
             mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
             mGraph->setFormatFunctY(nullptr);
 
             // Calibration
-            const QMap<double,double> &formatedCalib = mDate->getFormatedCalibToShow();
-            const double max_formatedCalib = map_max(formatedCalib).value();
+            const std::map<double,double> &formatedCalib = mDate->getFormatedCalibToShow();
+            const double max_formatedCalib = map_max(formatedCalib)->second;
 
             const GraphCurve &curveCalib = densityCurve(formatedCalib,
                                                         "Calibration",
@@ -196,7 +196,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
             mGraph->add_curve(curveWiggle);
 
             // Calibration
-            const QMap<double, double> &formatedWiggle = mDate->getFormatedWiggleCalibToShow();
+            const std::map<double, double> &formatedWiggle = mDate->getFormatedWiggleCalibToShow();
 
             const GraphCurve &curveWiggleCal = densityCurve(formatedWiggle,
                                                         "Wiggle Calibration",
@@ -249,7 +249,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
          */
         else if (variableList.contains(eSigma)) {
             mGraph->setOverArrow(GraphView::eNone);
-            mTitle = tr("Individual Std : %1").arg(mDate->mName);
+            mTitle = tr("Individual Std : %1").arg(mDate->getQStringName());
 
             mGraph->mLegendX = "";
             mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
@@ -302,11 +302,11 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
         mGraph->setFormatFunctY(nullptr);
 
         if (variableList.contains(eDataTi) && mDate->mTi.mSamplerProposal!= MHVariable::eFixe) {
-            mTitle = tr("Data : %1").arg(mDate->mName);
+            mTitle = tr("Data : %1").arg(mDate->getQStringName());
             generateTraceCurves(mChains, &mDate->mTi);
 
         } else if (variableList.contains(eSigma) && mDate->mSigmaTi.mSamplerProposal!= MHVariable::eFixe) {
-             mTitle = tr("Individual Std : %1").arg(mDate->mName);
+             mTitle = tr("Individual Std : %1").arg(mDate->getQStringName());
              generateTraceCurves(mChains, &mDate->mSigmaTi);
         }
 
@@ -325,11 +325,11 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
         mGraph->autoAdjustYScale(true);
 
         if (variableList.contains(eDataTi) && mDate->mTi.mSamplerProposal!= MHVariable::eFixe) {
-            mTitle = tr("Data : %1").arg(mDate->mName);
+            mTitle = tr("Data : %1").arg(mDate->getQStringName());
             generateAcceptCurves(mChains, &mDate->mTi);
 
         } else if (variableList.contains(eSigma) && mDate->mSigmaTi.mSamplerProposal!= MHVariable::eFixe) {
-            mTitle = tr("Individual Std : %1").arg(mDate->mName);
+            mTitle = tr("Individual Std : %1").arg(mDate->getQStringName());
             generateAcceptCurves(mChains, &mDate->mSigmaTi);
         }
     }
@@ -348,18 +348,18 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
         mGraph->setFormatFunctY(nullptr);
 
         if (variableList.contains(eDataTi) && mDate->mTi.mSamplerProposal!= MHVariable::eFixe) {
-            mTitle = tr("Data : %1").arg(mDate->mName);
+            mTitle = tr("Data : %1").arg(mDate->getQStringName());
            generateCorrelCurves(mChains, &mDate->mTi);
 
         } else if (variableList.contains(eSigma) && mDate->mSigmaTi.mSamplerProposal!= MHVariable::eFixe) {
-             mTitle = tr("Individual Std : %1").arg(mDate->mName);
+             mTitle = tr("Individual Std : %1").arg(mDate->getQStringName());
              generateCorrelCurves(mChains, &mDate->mSigmaTi);
         }
 
         mGraph->setXScaleDivision(10, 10);
     }
     else {
-        mTitle = tr("Data : %1").arg(mDate->mName);
+        mTitle = tr("Data : %1").arg(mDate->getQStringName());
         mGraph->resetNothingMessage();
 
     }

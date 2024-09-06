@@ -247,7 +247,7 @@ std::map<double, double> DateUtils::convertMapToAppSettingsFormat(const std::map
     case eBCECE:
     case eNumeric:
     default:
-        return std::map<double, double>(mapToFormat);
+        return mapToFormat;
         break;
     }
 

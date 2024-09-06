@@ -50,14 +50,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <algorithm>
 
 TValueStack::TValueStack():
-    m_value(0.),
-    m_comment("comment")
+    _value(0.),
+    _comment("comment")
 {
 };
 
 TValueStack::TValueStack(double value, std::string comment):
-    m_value(value),
-    m_comment(comment)
+    _value(value),
+    _comment(comment)
 {
 };
 
@@ -71,20 +71,20 @@ TValueStack::~TValueStack()
 /** Default constructor */
 MetropolisVariable::MetropolisVariable():
     mX (0.),
-    //mRawTrace(std::shared_ptr<std::vector<double>>(new std::vector<double>())),
     mRawTrace(new std::vector<double>()),
-    mFormatedTrace(std::shared_ptr<std::vector<double>>(new std::vector<double>())),
-    //mFormatedTrace(new std::vector<double>()),
-
+    mFormatedTrace(new std::vector<double>()),
     mSupport (eR),
     mFormat (DateUtils::eNumeric),
+    mFormatedHisto(),
+    mFormatedHPD(),
     mExactCredibilityThreshold (0.),
+    mChainsResults(std::vector<DensityAnalysis>()),
     mfftLenUsed (-1),
     mBandwidthUsed (-1.),
     mThresholdUsed (-1.),
     mtminUsed (0.),
     mtmaxUsed (0.),
-    mName("Empty MetropolisVariable")
+    _name("Empty MetropolisVariable")
 {
    mRawCredibility = std::pair<double, double>(1, -1);
    mFormatedCredibility = std::pair<double, double>(1, -1);
@@ -92,30 +92,15 @@ MetropolisVariable::MetropolisVariable():
 }
 
 /** Copy constructor */
-MetropolisVariable::MetropolisVariable(const MetropolisVariable &origin):
+MetropolisVariable::MetropolisVariable(const MetropolisVariable& origin):
     MetropolisVariable()
 {
     mX = origin.mX;
-    mName = origin.mName;
+    _name = origin._name;
 
     mRawTrace = std::shared_ptr<std::vector<double>>(origin.mRawTrace);
     mFormatedTrace = std::shared_ptr<std::vector<double>>(origin.mFormatedTrace);
 
-    /*if (origin.mRawTrace && origin.mRawTrace->size() != 0) {
-        if (mRawTrace)
-            mRawTrace->resize(origin.mRawTrace->size());
-        else
-           // mRawTrace = new std::vector<double>(origin.mRawTrace->size());
-             mRawTrace.reset(new std::vector<double>(origin.mRawTrace->size()));
-        std::copy(origin.mRawTrace->begin(), origin.mRawTrace->end(), mRawTrace->begin());
-    }
-    if (origin.mFormatedTrace && !origin.mFormatedTrace->isEmpty()) {
-        if (mFormatedTrace)
-            mFormatedTrace->resize(origin.mFormatedTrace->size());
-        else
-            mFormatedTrace = new QList<double>(origin.mFormatedTrace->size());
-        std::copy(origin.mFormatedTrace->begin(), origin.mFormatedTrace->end(), mFormatedTrace->begin());
-    }*/
     mSupport = origin.mSupport;
     mFormat = origin.mFormat;
 
@@ -170,7 +155,7 @@ MetropolisVariable::~MetropolisVariable()
 MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable& origin)
 {
     mX = origin.mX;
-    mName = origin.mName;
+    _name = origin._name;
 
     mRawTrace = std::shared_ptr<std::vector<double>>(origin.mRawTrace);
     mFormatedTrace = std::shared_ptr<std::vector<double>>(origin.mFormatedTrace);
@@ -217,10 +202,8 @@ void MetropolisVariable::memo(double* valueToSave)
 
 void MetropolisVariable::clear()
 {
-    if (mRawTrace)
-        mRawTrace->clear();
-    if (mFormatedTrace)
-        mFormatedTrace->clear();
+    mRawTrace->clear();
+    mFormatedTrace->clear();
 
     mFormatedHisto.clear();
     mChainsHistos.clear();
@@ -234,9 +217,10 @@ void MetropolisVariable::clear()
 
     mRawCredibility = std::pair<double, double>(1, -1);
     mFormatedCredibility = std::pair<double, double>(1, -1);
+
 }
 
-void MetropolisVariable::reserve(const qsizetype reserve)
+void MetropolisVariable::reserve(const size_t reserve)
 {
    /* (void) reserve;
     //delete mRawTrace;
@@ -277,24 +261,15 @@ void MetropolisVariable::setFormat(const DateUtils::FormatDate fm)
  */
 void MetropolisVariable::updateFormatedTrace(const DateUtils::FormatDate fm)
 {
-    /*if (!mRawTrace)
-       return;
-    if (!mFormatedTrace) {
-        mFormatedTrace = new QList<double>(mRawTrace->size());
-    } else {
-        mFormatedTrace->resize(mRawTrace->size());
-    }*/
-
-    mFormatedTrace->resize(mRawTrace->size());
     if (fm == DateUtils::eNumeric || mFormat == DateUtils::eNumeric) {
-       std::copy(mRawTrace->cbegin(), mRawTrace->cend(), mFormatedTrace->begin());
+        mFormatedTrace = std::make_shared<std::vector<double>>(*mRawTrace);
 
     //mFormatedTrace = mRawTrace// it's the same pointer, if you delete mFormatedTrace, you delete mRawTrace. If you change the format you change the value of mRawTrace
 
     } else {
+        mFormatedTrace->resize(mRawTrace->size());
         std::transform(mRawTrace->cbegin(), mRawTrace->cend(), mFormatedTrace->begin(), [&fm](const double i) {return DateUtils::convertToFormat(i, fm);});
     }
-    return;
 
 }
 
@@ -320,6 +295,7 @@ void MetropolisVariable::updateFormatedCredibility(const DateUtils::FormatDate f
  @param[in] dataSrc is the trace, with for example one million data
  @remarks Produce a density with the area equal to 1. The smoothing is done with Hsilvermann method.
  **/
+/*
 void MetropolisVariable::generateBufferForHisto(double *input, const QList<double> &dataSrc, const int numPts, const double a, const double b)
 {
     // Work with "double" precision here !
@@ -357,6 +333,7 @@ void MetropolisVariable::generateBufferForHisto(double *input, const QList<doubl
     }
 
 }
+*/
 void MetropolisVariable::generateBufferForHisto(double *input, const std::vector<double> &dataSrc, const int numPts, const double a, const double b)
 {
     // Work with "double" precision here !
@@ -415,6 +392,7 @@ void MetropolisVariable::generateBufferForHisto(double *input, const std::vector
  }
 
  **/
+/*
 QMap<double, double> MetropolisVariable::generateHisto(const QList<double> &dataSrc, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
     mfftLenUsed = fftLen;
@@ -427,7 +405,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QList<double> &data
     if (dataSrc.size() == 1) {
         // value. It can appear with a fixed variable
         result.insert(dataSrc.at(0), 1.) ;
-        qDebug()<<"[MetropolisVariable::generateHisto] One Value = "<< dataSrc.at(0) << mName;
+        qDebug()<<"[MetropolisVariable::generateHisto] One Value = "<< dataSrc.at(0) << _name;
         return result;
     }
 
@@ -437,16 +415,6 @@ QMap<double, double> MetropolisVariable::generateHisto(const QList<double> &data
 
     double sigma = std_unbiais_Knuth(dataSrc);
 
-   /* In the case of Vg and Vt (sigma_ti), there may be very large values that pull the mean.
-    * It is preferable in this case, to evaluate an equivalent of the standard deviation using the quantiles at 15.85%, in the Gaussian case.
-    */
-
-
-   /* code version <3.2.6
-    * if (mSupport == eRp || mSupport== eRpStar) {
-        const Quartiles quartiles = quantilesType(dataSrc, 8, 0.1585);
-        sigma = std::min(sigma, (quartiles.Q3 - quartiles.Q1)/1.34);
-    }*/
 
     // Density Estimation - Simon J. Sheather, Statistical Science 2004, Vol. 19, No. 4, 588–597 DOI 10.1214/088342304000000297
     // Silverman’s rule of thumb. It is given by hSROT = 0.9An−1/5, where A = min{sample standard deviation, (sample interquartile range)/1.34}
@@ -458,7 +426,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QList<double> &data
         // if sigma is null and there are several values, it means: this is a constant value
         // This can occur at the Begin or End of a Phase with a Bound.
         result.insert(dataSrc.at(0), 1.) ;
-        qDebug()<<"[MetropolisVariable::generateHisto] Constant value = "<< dataSrc.at(0) << mName;
+        qDebug()<<"[MetropolisVariable::generateHisto] Constant value = "<< dataSrc.at(0) << _name;
 
         return result;
     }
@@ -536,6 +504,7 @@ QMap<double, double> MetropolisVariable::generateHisto(const QList<double> &data
     }
     return result; // return a map between a and b with a step delta = (b - a) / fftLen;
 }
+*/
 
 std::map<double, double> MetropolisVariable::generateHisto(const std::vector<double> &dataSrc, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
@@ -549,7 +518,7 @@ std::map<double, double> MetropolisVariable::generateHisto(const std::vector<dou
     if (dataSrc.size() == 1) {
         // value. It can appear with a fixed variable
         result.emplace(dataSrc.at(0), 1.) ;
-        qDebug()<<"[MetropolisVariable::generateHisto] One Value = "<< dataSrc.at(0) << mName;
+        qDebug()<<"[MetropolisVariable::generateHisto] One Value = "<< dataSrc.at(0) << _name;
         return result;
     }
 
@@ -580,7 +549,7 @@ std::map<double, double> MetropolisVariable::generateHisto(const std::vector<dou
         // if sigma is null and there are several values, it means: this is a constant value
         // This can occur at the Begin or End of a Phase with a Bound.
         result.emplace(dataSrc.at(0), 1.) ;
-        qDebug()<<"[MetropolisVariable::generateHisto] Constant value = "<< dataSrc.at(0) << mName;
+        qDebug()<<"[MetropolisVariable::generateHisto] Constant value = "<< dataSrc.at(0) << _name;
 
         return result;
     }
@@ -741,7 +710,7 @@ void MetropolisVariable::generateHPD(const double threshold)
         // We don't display the phase duration but we print the numerical HPD result.
         mFormatedHPD = std::map<double, double>();
         mRawHPDintervals.clear();
-        qDebug() << "[MetropolisVariable::generateHPD] WARNING : Cannot generate HPD on empty histo with " << mName;
+        qDebug() << "[MetropolisVariable::generateHPD] WARNING : Cannot generate HPD on empty histo with " << _name;
     }
 }
 
@@ -791,13 +760,12 @@ void MetropolisVariable::generateNumericalResults(const std::vector<ChainSpecs> 
 
     // Results for individual chains
     mChainsResults.clear();
-    mChainsResults.shrink_to_fit();
 
     for (size_t i = 0; i<mChainsHistos.size(); ++i) {
         DensityAnalysis result;
-        result.funcAnalysis = analyseFunction(mChainsHistos.at(i));
-        result.traceAnalysis =  traceStatistic(runFormatedTraceForChain(chains, i)); //quartilesForTrace(runFormatedTraceForChain(chains, i));
-        mChainsResults.append(result);
+        result.funcAnalysis = analyseFunction(mChainsHistos.at(i)); // useless
+        result.traceAnalysis = traceStatistic(runFormatedTraceForChain(chains, i)); // only to compute quartiles
+        mChainsResults.push_back(result);
     }
 }
 
@@ -915,7 +883,7 @@ QString MetropolisVariable::resultsString(const QString &noResultMessage, const 
    return result;
 }
 
-QStringList MetropolisVariable::getResultsList(const QLocale locale, const int precision, const bool withDateFormat)
+QStringList MetropolisVariable::getResultsList(const QLocale locale, const int precision, const bool withDateFormat) const
 {
     QStringList list;
     if (withDateFormat) {
@@ -1009,7 +977,7 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
  */
 QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data )
 {
-    stream << data.mName; // since 2024_08_23
+    stream << data.getQStringName(); // since 2024_08_23
     switch (data.mSupport) {
        case MetropolisVariable::eR : stream << quint8(0); // on R
         break;
@@ -1057,9 +1025,43 @@ QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data )
 
 /** Read Data
  */
+void MetropolisVariable::load_stream_v328(QDataStream& stream)
+{
+    QString str;
+    stream >> str; // since 2024_08_23
+    setName(str);
+
+    quint8 support;
+    stream >> support;
+    switch (int (support)) {
+    case 0 : mSupport = MetropolisVariable::eR; // on R
+        break;
+    case 1 : mSupport = MetropolisVariable::eRp; // on R+
+        break;
+    case 2 : mSupport = MetropolisVariable::eRm; // on R-
+        break;
+    case 3 : mSupport = MetropolisVariable::eRpStar; // on R+*
+        break;
+    case 4 : mSupport = MetropolisVariable::eRmStar; // on R-*
+        break;
+    case 5 : mSupport = MetropolisVariable::eBounded; // on bounded support
+        break;
+    }
+
+    qint16 formatDate;
+    stream >> formatDate; // to keep compatibility
+
+    mFormat = DateUtils::eUnknown; // to keep compatibility and force updateFormat
+
+    reload_shared_ptr(mRawTrace, stream);
+}
+
 QDataStream &operator>>( QDataStream& stream, MetropolisVariable& data )
 {
-    stream >> data.mName; // since 2024_08_23
+    QString str;
+    stream >> str; // since 2024_08_23
+    data.setName(str);
+
     quint8 support;
     stream >> support;
     switch (int (support)) {
@@ -1104,8 +1106,6 @@ QDataStream &operator>>( QDataStream& stream, MetropolisVariable& data )
    }
 */
     data.mFormat = DateUtils::eUnknown; // to keep compatibility and force updateFormat
-
-    //data.mRawTrace = load_std_vector_ptr(stream);
 
     reload_shared_ptr(data.mRawTrace, stream);
     

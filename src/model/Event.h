@@ -44,7 +44,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "CurveSettings.h"
 
 
-#include <QMap>
 #include <QColor>
 #include <QJsonObject>
 
@@ -54,7 +53,7 @@ class EventConstraint;
 
 #define NotS02_BAYESIAN
 
-class Event
+class Event: std::enable_shared_from_this<Event>
 {
 public:
     enum Type {
@@ -71,7 +70,6 @@ public:
     int mId;
 
 
-    QString mName; //must be public, to be defined by dialogbox
     QColor mColor;
 
     double mItemX;
@@ -80,15 +78,15 @@ public:
     bool mIsCurrent;
     bool mIsSelected;
 
-    QList<Date> mDates;
+    std::vector<Date> mDates;
 
-    QList<int> mPhasesIds;
-    QList<int> mConstraintsFwdIds;
-    QList<int> mConstraintsBwdIds;
+    std::vector<int> mPhasesIds;
+    std::vector<int> mConstraintsFwdIds;
+    std::vector<int> mConstraintsBwdIds;
 
-    std::vector<Phase*> mPhases;
-    std::vector<EventConstraint*> mConstraintsFwd;
-    std::vector<EventConstraint*> mConstraintsBwd;
+    std::vector<std::shared_ptr<Phase>> mPhases;
+    std::vector<std::shared_ptr<EventConstraint>> mConstraintsFwd;
+    std::vector<std::shared_ptr<EventConstraint>> mConstraintsBwd;
 
     MHVariable mTheta;
     MHVariable mS02Theta;
@@ -145,6 +143,11 @@ public:
     Event(const Event &origin);
     virtual ~Event();
 
+    inline QString getQStringName() const {return QString::fromStdString(_name);}
+    inline std::string name() const {return _name;}
+    void setName(const std::string name) {_name = name;}
+    void setName(const QString name) {_name = name.toStdString();}
+
    // virtual Event& operator=(const Event& origin);
     virtual void copyFrom(const Event& event);
 
@@ -167,15 +170,15 @@ public:
 #pragma mark  Functions used within the init MCMC process
 
     // bool getThetaMinPossible(const Event* originEvent, QString &circularEventName,  const QList<Event*> &startEvents, QString &linkStr); // useless
-    bool getThetaMaxPossible(const Event* originEvent, QString &circularEventName,  const std::vector<Event*> &startEvents);
+    bool getThetaMaxPossible(Event *originEvent, QString &circularEventName,  const std::vector<Event *> &startEvents);
 
     bool is_direct_older(const Event &origin);
     bool is_direct_younger(const Event &origin);
-    double getThetaMinRecursive_v2(const double defaultValue, const std::vector<Event*> &startEvents = std::vector<Event*>());
-    double getThetaMaxRecursive_v2(const double defaultValue, const std::vector<Event *> &startEvents = std::vector<Event*>());
+    double getThetaMinRecursive_v2(const double defaultValue, const std::vector<Event* > &startEvents = std::vector<Event*>());
+    double getThetaMaxRecursive_v2(const double defaultValue, const std::vector<Event* > &startEvents = std::vector<Event*>());
 
-    double getThetaMinRecursive_v3(const double defaultValue, const std::vector<Event *> &startEvents = std::vector<Event*>());
-    double getThetaMaxRecursive_v3(const double defaultValue, const std::vector<Event*> &startEvents = std::vector<Event*>());
+    double getThetaMinRecursive_v3(const double defaultValue, const std::vector<Event* > &startEvents = std::vector<Event*>());
+    double getThetaMaxRecursive_v3(const double defaultValue, const std::vector<Event* > &startEvents = std::vector<Event*>());
 
     virtual void updateTheta(const double tmin, const double tmax) {updateTheta_v3(tmin, tmax);};
 
@@ -186,7 +189,7 @@ public:
     void updateTheta_v41(const double tmin, const double tmax, const double rate_theta = 1.);
     void updateTheta_v42(const double tmin, const double tmax, const double rate_theta = 1.);
     */
-    void generate_mixingCalibration();
+    //void generate_mixingCalibration();
 
     void updateS02();
     double h_S02(const double S02);
@@ -195,21 +198,23 @@ public:
 
     void updateW();
 
+private:
+    std::string _name; //must be public, to be defined by dialogbox
+
 };
 
-inline double get_Yx(Event* e) {return e->mYx;};
-inline double get_Yy(Event* e) {return e->mYy;};
-inline double get_Yz(Event* e) {return e->mYz;};
-inline double get_Sy(Event* e) {return e->mSy;};
+inline double get_Yx(std::shared_ptr<Event> e) {return e->mYx;};
+inline double get_Yy(std::shared_ptr<Event> e) {return e->mYy;};
+inline double get_Yz(std::shared_ptr<Event> e) {return e->mYz;};
+inline double get_Sy(std::shared_ptr<Event> e) {return e->mSy;};
 
-inline double get_Gx(Event* e) {return e->mGx;};
-inline double get_Gy(Event* e) {return e->mGy;};
-inline double get_Gz(Event* e) {return e->mGz;};
+inline double get_Gx(std::shared_ptr<Event> e) {return e->mGx;};
+inline double get_Gy(std::shared_ptr<Event> e) {return e->mGy;};
+inline double get_Gz(std::shared_ptr<Event> e) {return e->mGz;};
 
-inline double get_Theta(Event* e) {return e->mTheta.mX;};
-inline double get_ThetaReduced(Event* e) {return e->mThetaReduced;};
+inline double get_Theta(std::shared_ptr<Event> e) {return e->mTheta.mX;};
+inline double get_ThetaReduced(std::shared_ptr<Event> e) {return e->mThetaReduced;};
 
-std::vector<double> get_vector(const std::function <double (Event*)> &fun, const std::vector<Event *> &events);
-
+std::vector<double> get_vector(const std::function <double (std::shared_ptr<Event>)> &fun, const std::vector<std::shared_ptr<Event>> &events);
 
 #endif

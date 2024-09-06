@@ -51,7 +51,7 @@ public:
     explicit GraphViewEvent(QWidget *parent = nullptr);
     virtual ~GraphViewEvent();
 
-    void setEvent(Event *event);
+    void setEvent(std::shared_ptr<Event> event);
 
     void generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList);
     void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showVariableList);
@@ -61,7 +61,7 @@ protected:
     void resizeEvent(QResizeEvent* );
 
 private:
-    Event* mEvent;
+    std::shared_ptr<Event> mEvent;
 };
 
 #endif

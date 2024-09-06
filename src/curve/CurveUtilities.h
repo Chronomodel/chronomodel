@@ -153,12 +153,12 @@ typedef struct PosteriorMeanG
 QDataStream &operator<<( QDataStream &stream, const PosteriorMeanG& pMeanG );
 QDataStream &operator>>( QDataStream &stream, PosteriorMeanG& pMeanG );
 
-std::vector<t_reduceTime> calculVecH(const std::vector<Event *> &event);
+std::vector<t_reduceTime> calculVecH(const std::vector<std::shared_ptr<Event>> &event);
 
 Matrix2D calculMatR(const std::vector<t_reduceTime>& rVecH);
 Matrix2D calculMatQ(const std::vector<t_reduceTime> &rVecH);
 
-std::vector<double> createDiagWInv(const QList<Event *> &events);
+std::vector<double> createDiagWInv(const QList<std::shared_ptr<Event> > &events);
 
 
 void conversionIDF(PosteriorMeanG& G);
@@ -176,25 +176,25 @@ public:
 
 #pragma mark Calcul Spline on Event
 
-MCMCSpline currentSpline (std::vector<Event *> &events, const std::vector<t_reduceTime> &vecH, const SplineMatrices &matrices, const double lambda, bool doY, bool doZ);
+MCMCSpline currentSpline (std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const SplineMatrices &matrices, const double lambda, bool doY, bool doZ);
 //MCMCSpline currentSpline_WI (QList<Event *> &events, bool doSortAndSpreadTheta = false, const std::vector<t_reduceTime> &vecH = std::vector<t_reduceTime>(), const SplineMatrices &matrices = SplineMatrices(), bool doY, bool doZ, bool use_error);
-MCMCSpline currentSpline_WI (std::vector<Event *> &events, bool doY, bool doZ, bool use_error);
+MCMCSpline currentSpline_WI (std::vector<std::shared_ptr<Event> > &events, bool doY, bool doZ, bool use_error);
 
-SplineMatrices prepareCalculSpline(const std::vector<Event *> &sortedEvents, const std::vector<t_reduceTime> &vecH);
+SplineMatrices prepareCalculSpline(const std::vector<std::shared_ptr<Event> > &sortedEvents, const std::vector<t_reduceTime> &vecH);
 //SplineMatrices prepareCalculSpline_WI(const QList<Event *> & sortedEvents, const std::vector<t_reduceTime> &vecH);
 
 
 
-SplineResults do_spline(const std::function <double (Event*)> &fun, const SplineMatrices &matrices, const std::vector<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline);
+SplineResults do_spline(const std::function<double (std::shared_ptr<Event>)> &fun, const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline);
 
-SplineResults doSplineX(const SplineMatrices &matrices, const std::vector<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline);
-SplineResults doSplineY(const SplineMatrices &matrices, const std::vector<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambdaSpline);
-SplineResults doSplineZ(const SplineMatrices &matrices, const std::vector<Event *> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline);
+SplineResults doSplineX(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline);
+SplineResults doSplineY(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambdaSpline);
+SplineResults doSplineZ(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline);
 
 std::vector<double> calculMatInfluence_origin(const SplineMatrices &matrices, const int nbBandes, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambda);
 std::vector<double> doSplineError_origin(const SplineMatrices &matrices, const SplineResults &splines, const double lambdaSpline);
 
-std::vector<double> calcul_spline_variance(const SplineMatrices &matrices, const std::vector<Event *> &events, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambdaSpline);
+std::vector<double> calcul_spline_variance(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambdaSpline);
 
 double valeurG(const double t, const MCMCSplineComposante& spline, unsigned long &i0, Model &model);
 double valeurErrG(const double t, const MCMCSplineComposante& spline, unsigned& i0, Model &model);

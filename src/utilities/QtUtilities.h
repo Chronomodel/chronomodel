@@ -58,14 +58,23 @@ QList<QStringList> readCSV(const QString& filePath, const QString& separator = "
 int defaultDpiX();
 qreal dpiScaled(qreal value);
 QColor getContrastedColor(const QColor& color);
-QList<int> stringListToIntList(const QString& listStr, const QString& separator = ",");
-QList<unsigned> stringListToUnsignedList(const QString& listStr, const QString& separator = ",");
+std::vector<int> QStringToStdVectorInt(const QString& listStr, const QString& separator = ",");
+QList<int> QStringToQListInt(const QString &listStr, const QString &separator = ",");
+
+std::vector<unsigned int> QStringToStdVectorUnsigned(const QString& listStr, const QString& separator = ",");
+QList<unsigned int> QStringToQListUnsigned(const QString& listStr, const QString& separator = ",");
+
+QStringList QListIntToQStringList(const QList<int>& intList);
+
+QStringList StdVectorIntToQStringList(const std::vector<int> &intList);
+QStringList QListUnsignedToQStringList(const QList<unsigned>& unsignedList);
+QString QListIntToQString(const QList<int>& intList, const QString& separator = ",");
+
+QString StdVectorIntToQString(const std::vector<int>& intList, const QString& separator = ",");
+QString QListUnsignedToQString(const QList<unsigned>& intList, const QString& separator = ",");
 
 
-QStringList intListToStringList(const QList<int>& intList);
-QStringList unsignedListToStringList(const QList<unsigned>& unsignedList);
-QString intListToString(const QList<int>& intList, const QString& separator = ",");
-QString unsignedListToString(const QList<unsigned>& intList, const QString& separator);
+
 
 QString long_double_to_str(const long double value);
 
@@ -118,7 +127,7 @@ QColor randomColor();
 bool constraintIsCircular(QJsonArray constraints, const int FromId, const int ToId);
 
 
-QString removeZeroAtRight(QString str); // use StdUtilities::eraseZeroAtLeft()
+QString removeZeroAtRight(const QString &str); // use StdUtilities::eraseZeroAtLeft()
 //QString stringWithAppSettings(const double valueToFormat, const bool forcePrecision = false);
 QString stringForGraph(const double valueToFormat);
 QString stringForLocal(const double valueToFormat, const bool forcePrecision = false);
@@ -262,6 +271,7 @@ QList<double> load_QList(QDataStream& stream);
 
 
 std::vector<double> load_std_vector(QDataStream& stream);
+std::vector<bool> load_std_vector_bool(QDataStream& stream);
 
 std::shared_ptr<std::vector<double> > load_std_vector_ptr(QDataStream& stream);
 void reload_shared_ptr(const std::shared_ptr<std::vector<double> > &data, QDataStream& stream);
@@ -280,6 +290,18 @@ void save_container(QDataStream& stream, const Container<T>& data)
 
 }
 
+template <template<typename...> class Container, class T >
+void load_container(QDataStream& stream, Container<T>& data)
+{
+    quint32 siz;
+    T v;
+
+    stream >> siz;
+    Container<T> tmp (siz);
+    std::generate_n(tmp.begin(), siz, [&stream, &v]{stream >> v; return v;});
+
+    std::swap(data, tmp);
+}
 
 std::shared_ptr<Project> getProject_ptr();
 std::shared_ptr<ModelCurve> getModel_ptr();

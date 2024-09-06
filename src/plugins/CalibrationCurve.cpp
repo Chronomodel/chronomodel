@@ -38,26 +38,35 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "CalibrationCurve.h"
-#include "PluginManager.h"
+#include "QtUtilities.h"
 #include "StdUtilities.h"
 
 CalibrationCurve::CalibrationCurve():
-    mName(QString("unkown")),
-    mDescription(QString("undefined"))
+    mDescription("undefined"),
+    mPluginId(""),
+    mRepartition(),
+    mVector(),
+    mMap(),
+    mTmin(-INFINITY),
+    mTmax(INFINITY),
+    mStep(1.),
+    _name("unkown curve")
 {
-    mPluginId = "";
-    mRepartition = QList< double>();
-    mVector = QList< double>();
-    mMap = QMap<double, double>();
-    mTmin = -INFINITY;
-    mTmax = +INFINITY;
-    mStep = 1.;
 
 }
 
-CalibrationCurve::CalibrationCurve(const CalibrationCurve &other)
+CalibrationCurve::CalibrationCurve(const CalibrationCurve &other):
+    mDescription(other.mDescription),
+    mPluginId (other.mPluginId),
+    mRepartition(other.mRepartition),
+    mVector(other.mVector),
+    mMap(other.mMap),
+    mTmin(other.mTmin),
+    mTmax(other.mTmax),
+    mStep(other.mStep),
+    _name (other._name)
 {
-    mName = other.mName;
+   /* _name = other._name;
     mPluginId = other.mPluginId;
     
     mDescription = other.mDescription;
@@ -72,7 +81,7 @@ CalibrationCurve::CalibrationCurve(const CalibrationCurve &other)
 
     mTmin = other.mTmin;
     mTmax = other.mTmax;
-    mStep = other.mStep;
+    mStep = other.mStep;*/
 }
 
 CalibrationCurve::~CalibrationCurve() noexcept
@@ -85,33 +94,43 @@ CalibrationCurve::~CalibrationCurve() noexcept
 
 QDataStream &operator<<( QDataStream &stream, const CalibrationCurve &data )
 {
-    stream << data.mName;
-    stream << data.mDescription;
+    stream << data.getQStringName();
+    stream << QString::fromStdString(data.mDescription);
 
-    stream << data.mRepartition;
-    stream << data.mVector;
+    //stream << data.mRepartition;
+    save_container(stream, data.mRepartition);
+    //stream << &data.mVector;
+    save_container(stream, data.mVector);
     stream << data.mTmin;
     stream << data.mTmax;
     stream << data.mStep;
-    stream << data.mPluginId;
+    stream << QString::fromStdString(data.mPluginId);
 
     return stream;
 }
 
 QDataStream &operator>>( QDataStream &stream, CalibrationCurve &data )
 {
-    stream >> data.mName;
-    stream >> data.mDescription;
-
-    stream >> data.mRepartition;
-    stream >> data.mVector;
+    QString str;
+    stream>> str;
+    data.setName(str);
+    //stream >> data.mName;
+    //stream >> data.mDescription;
+    stream>> str;
+    data.mDescription=str.toStdString();
+    load_container(stream, data.mRepartition);
+    //stream >> data.mRepartition;
+    load_container(stream, data.mVector);
+    //stream >> data.mVector;
     stream >> data.mTmin;
     stream >> data.mTmax;
     stream >> data.mStep;
+    //stream >> data.mPluginId;
+    stream>> str;
+    data.mPluginId = str.toStdString();
 
-    stream >> data.mPluginId;
-
-    data.mMap = vector_to_map(data.mVector, data.mTmin, data.mTmax, data.mStep);
+    auto vecToMap = vector_to_map(data.mVector, data.mTmin, data.mTmax, data.mStep);
+    data.mMap.swap(vecToMap);
 
     return stream;
 }

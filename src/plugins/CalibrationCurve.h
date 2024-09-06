@@ -40,29 +40,29 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef CALIBRATIONCURVE_H
 #define CALIBRATIONCURVE_H
 
-#include <QString>
-#include <QMap>
-#include <QtCore/qdebug.h>
 
+#include <map>
+#include <string>
+
+#include <QDataStream>
+#include <QDebug>
 
 class CalibrationCurve
 {
 public:
-    QString mName;
-    QString mDescription;
 
-    QString mPluginId;
-    //PluginAbstract* mPlugin;
+    std::string mDescription;
 
-    QList<double> mRepartition;
-    QList<double> mVector;
-    QMap<double, double> mMap; // c'est la même chose que mVector, mais dans une QMap. Pour faciliter l'accés
+    std::string mPluginId;
+
+    std::vector<double> mRepartition;
+    std::vector<double> mVector;
+    std::map<double, double> mMap; // c'est la même chose que mVector, mais dans une QMap. Pour faciliter l'accés
 
     double mTmin;
     double mTmax;
     double mStep;
 
-public:
     /** Default constructor */
     CalibrationCurve();
 
@@ -71,27 +71,23 @@ public:
 
     /** Move constructor */
     CalibrationCurve (CalibrationCurve&& other) noexcept : /* noexcept needed to enable optimizations in containers */
-        mName (other.mName),
         mDescription (other.mDescription),
-
         mPluginId (other.mPluginId),
-
-        //mPlugin (other.mPlugin),
         mRepartition(other.mRepartition),
         mVector (other.mVector),
         mMap (other.mMap),
         mTmin (other.mTmin),
         mTmax (other.mTmax),
-        mStep (other.mStep)
+        mStep (other.mStep),
+        _name (other._name)
    {
-        other.mName = nullptr;
-        other.mDescription = nullptr;
+        other._name = "unkown curve";
+        other.mDescription = "undefined";
         other.mRepartition.clear();
         other.mVector.clear();
         other.mMap.clear();
 
-        other.mPluginId = nullptr;
-        //other.mPlugin = nullptr;
+        other.mPluginId = "";
     }
 
     /** Destructor */
@@ -108,9 +104,8 @@ public:
     /** Move assignment operator */
     CalibrationCurve& operator= (CalibrationCurve&& other) noexcept
     {
-        mName = other.mName;
+        _name = other._name;
         mPluginId = other.mPluginId;
-        //mPlugin = other.mPlugin;
 
         mDescription = other.mDescription;
 
@@ -126,18 +121,22 @@ public:
         mTmax = other.mTmax;
         mStep = other.mStep;
 
-        other.mName = nullptr;
-        other.mDescription = nullptr;
+        other._name = "unkown curve";
+        other.mDescription = "undefined";
 
         other.mRepartition.clear();
         other.mVector.clear();
         other.mMap.clear();
 
-        other.mPluginId = nullptr;
-        //other.mPlugin = nullptr;
+        other.mPluginId = "";
         
         return *this;
     }
+
+    inline QString getQStringName() const {return QString::fromStdString(_name);}
+    inline std::string name() const {return _name;}
+    inline void setName(const std::string name) {_name = name;}
+    inline void setName(const QString name) {_name = name.toStdString();}
 
     double interpolate(double t) const {
         // We need at least two points to interpolate
@@ -171,10 +170,10 @@ public:
     double repartition_interpolate(double t) const {
         // We need at least two points to interpolate
         if (mRepartition.size() < 2 || t <= mTmin) {
-            return mRepartition.first();
+            return *mRepartition.cbegin();
 
         } else if (t >= mTmax) {
-            return mRepartition.last();
+            return *mRepartition.crbegin();
         }
 
         const double prop = (t - mTmin) / (mTmax - mTmin);
@@ -188,7 +187,7 @@ public:
         } else if (mRepartition[idxUnder] != 0. && mRepartition[idxUpper] != 0.) {
             // Important for gate: no interpolation around gates
 #ifdef DEBUG
-            if (idxUnder< 0 || idxUpper>=mRepartition.size())
+            if (idxUnder< 0 || idxUpper>=(int)mRepartition.size())
                 qDebug()<<"[repartition_interpolate] idxUnder<= 0 || idxUpper>=mRepartition.size()";
 #endif
             return std::lerp(mRepartition[idxUnder], mRepartition[idxUpper], (idx - idxUnder) / (idxUpper - idxUnder));
@@ -198,6 +197,8 @@ public:
             return 0.;
         }
     }
+private:
+    std::string _name;
 };
 
 QDataStream &operator<<( QDataStream &stream, const CalibrationCurve &data );

@@ -124,10 +124,10 @@ mType(type)
                 Date d (date);
 
                 if (!d.isNull()) {
-                    QListWidgetItem* item = new QListWidgetItem(d.mName);
+                    QListWidgetItem* item = new QListWidgetItem(d.getQStringName());
 
-                    item->setText(d.mName);
-                    item->setData(0x0101, d.mName);
+                    item->setText(d.getQStringName());
+                    item->setData(0x0101, d.getQStringName());
                     item->setData(0x0102, d.mPlugin->getId());
                     item->setData(0x0103, d.getDesc());
                     item->setData(0x0104, d.mId);
@@ -136,7 +136,7 @@ mType(type)
                     item->setData(0x0107, d.mIsValid);
                     item->setData(0x0108, date.value(STATE_DATE_SUB_DATES).toArray().size() > 0);
                     item->setData(0x0109, d.mOrigin);
-                    item->setData(0x0110, d.mUUID);
+                    item->setData(0x0110, QString::fromStdString(d.mUUID));
 
                     mList->addItem(item);
                 }
@@ -153,7 +153,7 @@ mType(type)
     } else if (mType == eEvent) {
         const QJsonArray &events = state[STATE_EVENTS_TRASH].toArray();
 
-        for (int i=0; i<events.size(); ++i) {
+        for (qsizetype i=0; i<events.size(); ++i) {
             QJsonObject event = events[i].toObject();
             QListWidgetItem* item = new QListWidgetItem(event[STATE_NAME].toString());
             item->setData(0x0101, event[STATE_NAME].toString());

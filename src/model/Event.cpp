@@ -43,7 +43,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Date.h"
 #include "Phase.h"
 
-#include "EventConstraint.h"
 #include "PhaseConstraint.h"
 #include "Generator.h"
 #include "Bound.h"
@@ -61,25 +60,39 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 Event::Event():
     mType (eDefault),
     mId (0),
-    mName ("no Event Name"),
     mIsCurrent (false),
     mIsSelected (false),
     mTheta (MHVariable()),
     mS02Theta (MHVariable()),
+    mAShrinkage(0.),
     mBetaS02 (0.),
     mInitialized (false),
     mIsNode (false),
     mLevel (0),
     mPointType (ePoint),
+    mXIncDepth(0.),
+    mYDec(0.),
+    mZField(0.),
+    mS_XA95Depth(0.),
+    mS_Y(0.),
+    mS_ZField(0.),
+    mYx(0.),
+    mYy(0.),
+    mYz(0.),
+    mGx(0.),
+    mGy(0.),
+    mGz(0.),
+    mW(0.),
     mVg (MHVariable()),
-    mMixingCalibrations (std::make_shared<CalibrationCurve>())
+    mMixingCalibrations (nullptr),  //std::make_shared<CalibrationCurve>()),
+    _name ("no Event Name")
 {
-    mTheta.setName("Theta of Event : " + mName);
+    mTheta.setName(std::string("Theta of Event : ") + _name);
     mTheta.mSupport = MetropolisVariable::eBounded;
     mTheta.mFormat = DateUtils::eUnknown;
     mTheta.mSamplerProposal = MHVariable::eDoubleExp;
 
-    mS02Theta.setName("S02Theta of Event : " + mName);
+    mS02Theta.setName(std::string("S02Theta of Event : ") + _name);
     mS02Theta.mSupport = MetropolisVariable::eRpStar;
     mS02Theta.mFormat = DateUtils::eNumeric;
 
@@ -119,7 +132,7 @@ Event::Event():
     mW = 0.;
 
    // MHVariable mVg;
-    mVg.setName("Vg of Event : " + mName);
+    mVg.setName("Vg of Event : " + _name);
     mVg.mSupport = MetropolisVariable::eRpStar;
     mVg.mFormat = DateUtils::eNumeric;
     mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
@@ -127,12 +140,22 @@ Event::Event():
 }
 
 Event::Event (const QJsonObject& json):
+    mAShrinkage(0.),
+    mBetaS02 (0.),
     mIsNode(false),
-    mMixingCalibrations(std::make_shared<CalibrationCurve>())
+    mYx(0.),
+    mYy(0.),
+    mYz(0.),
+    mGx(0.),
+    mGy(0.),
+    mGz(0.),
+    mW(0.),
+    mMixingCalibrations(nullptr)//std::make_shared<CalibrationCurve>())
 {
     mType = Type (json.value(STATE_EVENT_TYPE).toInt());
     mId = json.value(STATE_ID).toInt();
-    mName = json.value(STATE_NAME).toString();
+    setName(json.value(STATE_NAME).toString());
+
     mColor = QColor(json.value(STATE_COLOR_RED).toInt(),
                           json.value(STATE_COLOR_GREEN).toInt(),
                           json.value(STATE_COLOR_BLUE).toInt());
@@ -142,18 +165,18 @@ Event::Event (const QJsonObject& json):
     mIsSelected = json.value(STATE_IS_SELECTED).toBool();
     mIsCurrent = json.value(STATE_IS_CURRENT).toBool();
 
-    mTheta.setName("Theta of Event : " + mName);
+    mTheta.setName(std::string("Theta of Event : ") + _name);
     mTheta.mSamplerProposal = MHVariable::SamplerProposal (json.value(STATE_EVENT_SAMPLER).toInt());
     mTheta.mSupport = MetropolisVariable::eBounded;
     mTheta.mFormat = DateUtils::eUnknown;
     mTheta.mSigmaMH = 1.;
 
-    mVg.setName("VG of Event : " + mName);
+    mVg.setName(std::string("VG of Event : ") + _name);
     mVg.mSupport = MetropolisVariable::eRpStar;
     mVg.mFormat = DateUtils::eNumeric;
     mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
-    mS02Theta.setName("SO2Theta of Event : " + mName);
+    mS02Theta.setName(std::string("SO2Theta of Event : ") + _name);
     mS02Theta.mSupport = MetropolisVariable::eRpStar;
     mS02Theta.mFormat = DateUtils::eNumeric;
 #ifdef S02_BAYESIAN
@@ -162,7 +185,7 @@ Event::Event (const QJsonObject& json):
     mS02Theta.mSamplerProposal = MHVariable::eFixe;
 #endif
 
-    mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
+    mPhasesIds = QStringToStdVectorInt(json.value(STATE_EVENT_PHASE_IDS).toString());
 
     mPointType = PointType (json.value(STATE_EVENT_POINT_TYPE).toInt());
     mXIncDepth = json.value(STATE_EVENT_X_INC_DEPTH).toDouble();
@@ -173,16 +196,17 @@ Event::Event (const QJsonObject& json):
     mS_Y = json.value(STATE_EVENT_SY).toDouble();
     mS_ZField = json.value(STATE_EVENT_SZ_SF).toDouble();
 
-    const QJsonArray dates = json.value(STATE_EVENT_DATES).toArray();
+    const QJsonArray &dates = json.value(STATE_EVENT_DATES).toArray();
     for (auto&& date : dates) {
-        Date dat (date.toObject(), this);
-        dat.autoSetTiSampler(true); // must be after fromJson()
+        try {
+            mDates.emplace_back(date.toObject());
 
-        if (!dat.isNull())
-            mDates.append(dat);
-        else
-            throw QObject::tr("ERROR : data could not be created with plugin %1").arg(date.toObject().value(STATE_DATE_PLUGIN_ID).toString());
-        
+        } catch (...) {
+
+            throw QObject::tr("ERROR : data %1 could not be created with plugin %2").arg(getQStringName(), date.toObject().value(STATE_DATE_PLUGIN_ID).toString());
+        }
+
+
     }
 
 }
@@ -192,8 +216,7 @@ Event::Event(const Event &origin)
     mType = origin.mType;
     mId = origin.mId;
 
-    //mModel = origin.mModel;
-    mName = origin.mName;
+    _name = origin._name;
 
     mColor = origin.mColor;
 
@@ -329,7 +352,7 @@ void Event::copyFrom(const Event& event)
     mType = event.mType;
     mId = event.mId;
 
-    mName = event.mName;
+    _name = event._name;
     mColor = event.mColor;
 
     mItemX = event.mItemX;
@@ -434,7 +457,7 @@ Event Event::fromJson(const QJsonObject& json)
     Event event;
     event.mType = Type (json.value(STATE_EVENT_TYPE).toInt());
     event.mId = json.value(STATE_ID).toInt();
-    event.mName = json.value(STATE_NAME).toString();
+    event.setName(json.value(STATE_NAME).toString());
     event.mColor = QColor(json.value(STATE_COLOR_RED).toInt(),
                           json.value(STATE_COLOR_GREEN).toInt(),
                           json.value(STATE_COLOR_BLUE).toInt());
@@ -446,24 +469,24 @@ Event Event::fromJson(const QJsonObject& json)
 
     event.mTheta = MHVariable();
     event.mTheta.mSamplerProposal = MHVariable::SamplerProposal (json.value(STATE_EVENT_SAMPLER).toInt());
-    event.mTheta.setName("Theta of Event : "+ event.mName);
+    event.mTheta.setName("Theta of Event : "+ event.name());
 
     event.mS02Theta = MHVariable();
-    event.mS02Theta.setName("S02 of Event : "+ event.mName);
+    event.mS02Theta.setName("S02 of Event : "+ event.name());
     event.mS02Theta.mSupport = MHVariable::eRpStar;
 #ifdef S02_BAYESIAN
-    event.mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    event->mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
 #else
     event.mS02Theta.mSamplerProposal = MHVariable::eFixe;
 #endif
 
     event.mVg = MHVariable();
-    event.mVg.setName("VG of Event : " + event.mName);
+    event.mVg.setName("VG of Event : " + event.name());
     event.mVg.mSupport = MetropolisVariable::eRpStar;
     event.mVg.mFormat = DateUtils::eNumeric;
     event.mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
-    event.mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
+    event.mPhasesIds = QStringToStdVectorInt(json.value(STATE_EVENT_PHASE_IDS).toString());
 
     event.mPointType = PointType (json.value(STATE_EVENT_POINT_TYPE).toInt());
     event.mXIncDepth = json.value(STATE_EVENT_X_INC_DEPTH).toDouble();
@@ -477,13 +500,15 @@ Event Event::fromJson(const QJsonObject& json)
     const QJsonArray dates = json.value(STATE_EVENT_DATES).toArray();
 
     for (auto&& date : dates) {
-        Date dat (date.toObject(), &event);
-        dat.autoSetTiSampler(true); // must be after fromJson()
+        //Date dat (date.toObject());
+       // if (!dat.isNull())
+        try {
+            event.mDates.emplace_back(date.toObject());
 
-        if (!dat.isNull())
-            event.mDates.append(dat);
-        else
-            throw QObject::tr("ERROR : data could not be created with plugin %1").arg(date.toObject().value(STATE_DATE_PLUGIN_ID).toString());
+        } catch (...) {
+
+            throw QObject::tr("ERROR : data %1 could not be created with plugin %2").arg(event.getQStringName(), date.toObject().value(STATE_DATE_PLUGIN_ID).toString());
+        }
 
     }
 
@@ -497,7 +522,7 @@ QJsonObject Event::toJson() const
 
     json[STATE_EVENT_TYPE] = mType;
     json[STATE_ID] = mId;
-    json[STATE_NAME] = mName;
+    json[STATE_NAME] = getQStringName();
     json[STATE_COLOR_RED] = mColor.red();
     json[STATE_COLOR_GREEN] = mColor.green();
     json[STATE_COLOR_BLUE] = mColor.blue();
@@ -700,12 +725,12 @@ void Event::clear()
  * @return
  */
 
-bool Event::getThetaMaxPossible(const Event* originEvent, QString& circularEventName,  const std::vector<Event *> &startEvents)
+bool Event::getThetaMaxPossible(Event* originEvent, QString& circularEventName,  const std::vector<Event*> &startEvents)
 {
 #ifdef DEBUG
     QString startList;
-    for (const Event* e : startEvents)
-        startList += e->mName + "->";
+    for (auto e : startEvents)
+        startList += e->getQStringName() + "->";
 #endif
 
     std::vector<Event*> newStartEvents = startEvents;
@@ -741,17 +766,17 @@ bool Event::getThetaMaxPossible(const Event* originEvent, QString& circularEvent
         // Check constraints in Events Scene
         if (!mConstraintsFwd.empty())
             for (const auto& constFwd : mConstraintsFwd) {
-                if (constFwd->mEventTo != originEvent ) {
+                if (constFwd->mEventTo.get() != originEvent ) {
                 //if (!newStartEvents.contains (constFwd->mEventTo)) {
                    // qDebug() << " mConstraintsFwd" << constFwd->mEventTo->mName;
                      const bool _ok = (constFwd->mEventTo)->getThetaMaxPossible (originEvent, circularEventName, newStartEvents);
                      if ( !_ok) {
-                         circularEventName =  serieStr + constFwd->mEventTo->mName +  circularEventName ;
+                         circularEventName =  serieStr + constFwd->mEventTo->getQStringName() +  circularEventName ;
                          return false;
                     }
 
                 } else {
-                    circularEventName = serieStr + constFwd->mEventTo->mName + " ?";
+                    circularEventName = serieStr + constFwd->mEventTo->getQStringName() + " ?";
                     return false;
                 }
             }
@@ -765,18 +790,17 @@ bool Event::getThetaMaxPossible(const Event* originEvent, QString& circularEvent
                     for (const auto& phaseFwd : phase->mConstraintsNextPhases) {
 
                         for (const auto& eventPhaseFwd : phaseFwd->mPhaseTo->mEvents) {
-                            //if (!newStartEvents.contains (eventPhaseFwd)) {
-                            if (std::none_of(newStartEvents.begin(), newStartEvents.end(), [&eventPhaseFwd](auto ev){return ev == eventPhaseFwd;})) {
+                            if (!container_contains(newStartEvents, eventPhaseFwd.get())) {
                                 const bool _ok = eventPhaseFwd->getThetaMaxPossible ( originEvent, circularEventName, newStartEvents);
                                 if (!_ok) {
-                                    circularEventName = " (" + phase->mName + ")" + serieStr + eventPhaseFwd->mName + " (" + phaseFwd->mPhaseTo->mName + ")" +  circularEventName ;
+                                    circularEventName = " (" + phase->getQStringName() + ")" + serieStr + eventPhaseFwd->getQStringName() + " (" + phaseFwd->mPhaseTo->getQStringName() + ")" +  circularEventName ;
                                     return false;
                                 }
 
 
                             }
-                            if (eventPhaseFwd == originEvent ) {
-                                circularEventName = " (" + phase->mName + ")" + serieStr + eventPhaseFwd->mName + " (" + phaseFwd->mPhaseTo->mName + ") !";
+                            if (eventPhaseFwd.get() == originEvent ) {
+                                circularEventName = " (" + phase->getQStringName() + ")" + serieStr + eventPhaseFwd->getQStringName() + " (" + phaseFwd->mPhaseTo->getQStringName() + ") !";
                                 return false;
                             }
                         }
@@ -797,7 +821,7 @@ bool Event::is_direct_older(const Event &origin)
     bool is_direct_link = false;
     if (!mConstraintsFwd.empty()) {
         for (const auto& constFwd : mConstraintsFwd) {
-            if (constFwd->mEventTo != &origin ) {
+            if (constFwd->mEventTo.get() != &origin ) {
                 is_direct_link = (constFwd->mEventTo)->is_direct_older(origin);
 
             } else {
@@ -835,7 +859,7 @@ bool Event::is_direct_younger(const Event &origin)
     bool is_direct_link = false;
     if (!mConstraintsBwd.empty()) {
         for (const auto& constBwd : mConstraintsBwd) {
-            if (constBwd->mEventFrom != &origin ) {
+            if (constBwd->mEventFrom.get() != &origin ) {
                 is_direct_link = (constBwd->mEventFrom)->is_direct_younger(origin);
 
             } else {
@@ -866,7 +890,7 @@ bool Event::is_direct_younger(const Event &origin)
     return false;
 }
 
-double Event::getThetaMinRecursive_v2(const double defaultValue, const std::vector<Event *> &startEvents)
+double Event::getThetaMinRecursive_v2(const double defaultValue, const std::vector<Event* > &startEvents)
 {
      //qDebug()<<"rentre dans getThetaMinRecursive()"<< mName;
     // if the Event is initiated, constraints was controled previously
@@ -877,10 +901,7 @@ double Event::getThetaMinRecursive_v2(const double defaultValue, const std::vect
         return mThetaNode;
 
     }
-    /* else if (startEvents.contains(this)) {
-        return defaultValue;
-    }
-    */
+
     // list of phase under
     bool noPhaseBwd = true;
     if (!mPhases.empty())
@@ -904,9 +925,8 @@ double Event::getThetaMinRecursive_v2(const double defaultValue, const std::vect
 
                 // On recherche la valeur de theta la plus grande de la phase et on soustrait Tau, il ne faut pas faire de récursif
                 // On ne tient pas compte des theta non initialisés. Ils se mettront en place quand sera leur tour
-                //if (!startEvents.contains(event)) {
-                if (std::none_of(startEvents.begin(), startEvents.end(), [&event](auto b){return b == event;})) {
-                   if (event->mInitialized) {
+                if (!container_contains(startEvents, event.get())) {
+                    if (event->mInitialized) {
                        thetaMax = std::max(thetaMax, event-> mTheta.mX);
 
                    } else if (event->mIsNode) {
@@ -934,10 +954,8 @@ double Event::getThetaMinRecursive_v2(const double defaultValue, const std::vect
         double maxTheta = defaultValue;
         if (!mConstraintsBwd.empty())
             for (auto&& constBwd : mConstraintsBwd) {
-                //if (!startEvents.contains(constBwd->mEventFrom)) {
-                auto evFrom = constBwd->mEventFrom;
-                if (std::none_of(startEvents.begin(), startEvents.end(), [&evFrom](auto b){return b == evFrom;})) {
-                     maxTheta = std::max(maxTheta, (constBwd->mEventFrom)->getThetaMinRecursive_v2(defaultValue, newStartEvents));
+                if (!container_contains(startEvents, constBwd->mEventFrom.get())) {
+                    maxTheta = std::max(maxTheta, (constBwd->mEventFrom)->getThetaMinRecursive_v2(defaultValue, newStartEvents));
                     //qDebug()<<" thetaMin "<< mName <<"in constBwd"<<constBwd->mEventFrom->mName << maxTheta;
                 }
             }
@@ -951,9 +969,7 @@ double Event::getThetaMinRecursive_v2(const double defaultValue, const std::vect
                     for (auto&& phaseBwd : phase->mConstraintsPrevPhases) {
 
                         for (auto&& eventPhaseBwd : phaseBwd->mPhaseFrom->mEvents) {
-                            //if (!startEvents.contains(eventPhaseBwd)) {
-                            if (std::none_of(startEvents.begin(), startEvents.end(), [&eventPhaseBwd](auto b){return b == eventPhaseBwd;})) {
-
+                            if (!container_contains(startEvents, eventPhaseBwd.get())) {
                                 maxThetaBwd = std::max(maxThetaBwd, eventPhaseBwd->getThetaMinRecursive_v2(defaultValue, newStartEvents));
                             }
                         }
@@ -974,7 +990,7 @@ double Event::getThetaMinRecursive_v2(const double defaultValue, const std::vect
 }
 
 // utiliser que dans initialize_time
-double Event::getThetaMaxRecursive_v2(const double defaultValue, const std::vector<Event *> &startEvents)
+double Event::getThetaMaxRecursive_v2(const double defaultValue, const std::vector<Event*> &startEvents)
 {
     // if the Event is initialized, constraints was controled previously
     if (mInitialized) {
@@ -984,11 +1000,6 @@ double Event::getThetaMaxRecursive_v2(const double defaultValue, const std::vect
         return mThetaNode;
 
     }
-    /* else if (startEvents.contains(this)) {
-        return defaultValue;
-    }
-    */
-
 
     // list of phase under
     bool noPhaseNext = true;
@@ -1018,25 +1029,19 @@ double Event::getThetaMaxRecursive_v2(const double defaultValue, const std::vect
         if (phase->mTauType != Phase::eTauUnknown) {
             double thetaMin = defaultValue - phase->mTau.mX;
             for (const auto& event : phase->mEvents) {
-                //if (!startEvents.contains(event)) {
-                    //thetaMin = std::min(thetaMin, event->getThetaMaxRecursive(defaultValue, newStartEvents));
-                if (event != this) {
-                //if (!startEvents.contains(event)) {
+                if (event.get() != this) {
+
                     if (event->mInitialized) {
                         thetaMin = std::min(thetaMin, event-> mTheta.mX- phase->mTau.mX);
 
                     } else if (event->mIsNode) {
                         thetaMin = std::min(thetaMin, event-> mThetaNode);
 
-                    }/*  else {
-                        thetaMax = std::max(thetaMax, event->getThetaMaxRecursive(defaultValue, newStartEvents));
-                    } */
+                    }
 
                 }
             }
-            // Si aucune date initialisé minPhase n'est pas évaluable donc égale à defaultValue
-            //if (thetaMin != defaultValue)
-                //minPhases = std::min(minPhases, thetaMin + phase->mTau.mX);
+
             minPhases = thetaMin;
 
         }
@@ -1055,10 +1060,7 @@ double Event::getThetaMaxRecursive_v2(const double defaultValue, const std::vect
         double minTheta = defaultValue;
         if (!mConstraintsFwd.empty())
             for (const auto& constFwd : mConstraintsFwd) {
-                //if (!startEvents.contains(startEvents)) {
-                auto evTo = constFwd->mEventTo;
-                if (std::none_of(startEvents.begin(), startEvents.end(), [&evTo](auto ev){return ev == evTo;})) {
-
+                if (!container_contains(startEvents, constFwd->mEventTo.get())) {
                     minTheta = std::min(minTheta, constFwd->mEventTo->getThetaMaxRecursive_v2(defaultValue, newStartEvents));
                 }
             }
@@ -1073,9 +1075,7 @@ double Event::getThetaMaxRecursive_v2(const double defaultValue, const std::vect
                     for (const auto& phase_next : phase->mConstraintsNextPhases) {
 
                         for (const auto& eventPhaseFwd : phase_next->mPhaseTo->mEvents) {
-                            //if (!newStartEvents.contains(eventPhaseFwd)) {
-                            if (std::none_of(newStartEvents.begin(), newStartEvents.end(), [&eventPhaseFwd](auto ev){return ev == eventPhaseFwd;})){
-
+                            if (!container_contains(newStartEvents, eventPhaseFwd.get())) {
                                 minThetaFwd = std::min(minThetaFwd, eventPhaseFwd->getThetaMaxRecursive_v2(defaultValue, newStartEvents));
                             }
                         }
@@ -1090,7 +1090,7 @@ double Event::getThetaMaxRecursive_v2(const double defaultValue, const std::vect
                     double thetaMin = minPhasesNext;// - phase->mTau.mX;
                     for (const auto& event : phase->mEvents) {
 
-                        if (event != this) {
+                        if (event.get() != this) {
                             if (event->mInitialized) {
                                 thetaMin = std::min(thetaMin, event-> mTheta.mX - phase->mTau.mX);
 
@@ -1101,7 +1101,7 @@ double Event::getThetaMaxRecursive_v2(const double defaultValue, const std::vect
 
                         }
                     }
-                   // minPhasesNext = std::min(minPhasesNext, thetaMin);
+
                 }
 
             }
@@ -1118,7 +1118,7 @@ double Event::getThetaMaxRecursive_v2(const double defaultValue, const std::vect
 
 // Utiliser que dans initialize_time
 // defaultValue = min period
-double Event::getThetaMinRecursive_v3(const double defaultValue, const std::vector<Event*> &startEvents)
+double Event::getThetaMinRecursive_v3(const double defaultValue, const std::vector<Event* > &startEvents)
 {
     if (mInitialized) {
         return mTheta.mX;
@@ -1155,20 +1155,17 @@ double Event::getThetaMinRecursive_v3(const double defaultValue, const std::vect
                 double th_max_phase = defaultValue;
                 if (phase->mTauType != Phase::eTauUnknown) {
                     for (auto th_friend : phase->mEvents) {
-                        if (th_friend->mInitialized == true && th_friend != this ) {
+                        if (th_friend->mInitialized == true && th_friend.get() != this ) {
                             th_max_phase = std::max(th_max_phase, th_friend->mTheta.mX);
                         }
                         // ---
-                        else if (th_friend->mInitialized == false && th_friend != this) {
+                        else if (th_friend->mInitialized == false && th_friend.get() != this) {
                             bool friend_is_under = !this->is_direct_older(*th_friend);
 
                             //qDebug()<<"min recursive fiend="<<th_friend->mName<<" this="<<this->mName<<" je fais"<<friend_is_under;
                             if (friend_is_under) {
                                 for (auto&& constBwd : th_friend->mConstraintsBwd) {
-                                    //if (!startEvents.contains(constBwd->mEventFrom)) {
-                                    auto evFrom = constBwd->mEventFrom;
-                                    if (std::none_of(startEvents.begin(), startEvents.end(), [&evFrom](auto ev){return ev == evFrom;})) {
-
+                                    if (!container_contains(startEvents, constBwd->mEventFrom.get())) {
                                         th_max_phase = std::max(th_max_phase, constBwd->mEventFrom->getThetaMinRecursive_v3(defaultValue, newStartEvents));
                                     }
                                 }
@@ -1191,7 +1188,7 @@ double Event::getThetaMinRecursive_v3(const double defaultValue, const std::vect
 
 // Utilisé que dans initialize_time
 // defaultValue = max period
-double Event::getThetaMaxRecursive_v3(const double defaultValue, const std::vector<Event *> &startEvents)
+double Event::getThetaMaxRecursive_v3(const double defaultValue, const std::vector<Event*> &startEvents)
 {
     if (mInitialized) {
         return mTheta.mX;
@@ -1203,6 +1200,7 @@ double Event::getThetaMaxRecursive_v3(const double defaultValue, const std::vect
         // 1 - remonter les contraintes pour retrouver la valeur la plus grande
         std::vector<Event*> newStartEvents = startEvents;
         newStartEvents.push_back(this);
+
         double min_theta_strati = defaultValue;
         if (!mConstraintsFwd.empty()) {
             for (auto&& constFwd : mConstraintsFwd) {
@@ -1227,19 +1225,17 @@ double Event::getThetaMaxRecursive_v3(const double defaultValue, const std::vect
                 double th_min_phase = defaultValue;
                 if (phase->mTauType != Phase::eTauUnknown) {
                     for (auto th_friend : phase->mEvents) {
-                        if (th_friend->mInitialized == true && th_friend != this ) {
+                        if (th_friend->mInitialized == true && th_friend.get() != this ) {
                             th_min_phase = std::min(th_min_phase, th_friend->mTheta.mX);
                         }
                         // ----
-                        else if (th_friend->mInitialized == false && th_friend != this) {
+                        else if (th_friend->mInitialized == false && th_friend.get() != this) {
                             bool friend_is_upper = !this->is_direct_younger(*th_friend);
 
                             //qDebug()<<"max recursive friend="<<th_friend->mName<<" this="<<this->mName<<" je fais"<<friend_is_upper;
                             if (friend_is_upper) {
                                 for (auto&& constFwd : th_friend->mConstraintsFwd) {
-                                    //if (!startEvents.contains(constFwd->mEventTo)) {
-                                    auto evTo = constFwd->mEventTo;
-                                    if (std::none_of(startEvents.begin(), startEvents.end(), [&evTo](auto b){return b == evTo;})) {
+                                    if (!container_contains(startEvents, constFwd->mEventTo.get())) {
                                         th_min_phase = std::min(th_min_phase, constFwd->mEventTo->getThetaMaxRecursive_v3(defaultValue, newStartEvents));
                                     }
                                 }
@@ -1254,7 +1250,7 @@ double Event::getThetaMaxRecursive_v3(const double defaultValue, const std::vect
 
 
         mIsNode = true;
-        //mTheta.mX = std::min({min_theta_strati, min_theta_phase_strati, min_theta_friend_strati, min_tau_phases});
+
         mTheta.mX = std::min({min_theta_strati, min_theta_phase_strati, min_tau_phases});
 
         return mTheta.mX;
@@ -1287,7 +1283,7 @@ double Event::getThetaMin(double defaultValue)
         if (phase->mTauType != Phase::eTauUnknown) {
             double thetaMax = defaultValue;
             for (const auto& event : phase->mEvents) {
-                if (event != this)
+                if (event.get() != this)
                     thetaMax = std::max(event->mTheta.mX, thetaMax);
             }
             min3 = std::max(min3, thetaMax - phase->mTau.mX);
@@ -1327,7 +1323,7 @@ double Event::getThetaMax(double defaultValue)
         if (phase->mTauType != Phase::eTauUnknown) {
             double thetaMin = defaultValue;
              for (const auto& event : phase->mEvents) {
-                if (event != this)
+                if (event.get() != this)
                     thetaMin = std::min(event->mTheta.mX, thetaMin);
             }
             max3 = std::min(max3, thetaMin + phase->mTau.mX);
@@ -1347,7 +1343,7 @@ double Event::getThetaMax(double defaultValue)
 void Event::updateTheta_v3(const double tmin, const double tmax)
 {
     for (auto&& date : mDates )   {
-        date.updateDate(this);
+        date.updateDate(mTheta.mX, mS02Theta.mX, mAShrinkage);
     }
 
     const double min = getThetaMin(tmin);
@@ -1355,7 +1351,7 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
     //qDebug() << "----------->      in Event::updateTheta(): Event update : " << this->mName << " : " << this->mTheta.mX << " between" << "[" << min << " ; " << max << "]";
 
     if (min > max)
-        throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(mName, QString::number(min), QString::number(max));
+        throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(getQStringName(), QString::number(min), QString::number(max));
 
     // -------------------------------------------------------------------------------------------------
     //  Evaluer theta.
@@ -1388,7 +1384,7 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
 
             }
             catch(QString error) {
-                throw QObject::tr("Error for event : %1 : %2").arg(mName, error);
+                throw QObject::tr("Error for event : %1 : %2").arg(getQStringName(), error);
             }
             break;
         }
@@ -1402,7 +1398,7 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
                 theta = Generator::gaussByBoxMuller(theta_avg, sigma);
                 ++counter;
                 if (counter == 100000000)
-                    throw QObject::tr("No MCMC solution could be found using event method %1 for event named %2 ( %3  trials done)").arg(MHVariable::getSamplerProposalText(mTheta.mSamplerProposal), mName, QString::number(counter));
+                    throw QObject::tr("No MCMC solution could be found using event method %1 for event named %2 ( %3  trials done)").arg(MHVariable::getSamplerProposalText(mTheta.mSamplerProposal), getQStringName(), QString::number(counter));
 
             } while(theta < min || theta > max);
 
@@ -1426,6 +1422,8 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
             break;
         }
     }
+    //qDebug() << "[Event::updateTheta_v3]-----------> Event update : " << getQStringName() << " : " << mTheta.mX << " between" << "[" << min << " ; " << max << "]";
+
 }
 
 
@@ -1434,7 +1432,7 @@ void Event::updateTheta_v4(const double tmin, const double tmax, const double ra
     double rapport;
 
     for (auto&& date : mDates )   {
-       date.updateDate(this);
+       date.updateDate(mTheta.mX, mS02Theta.mX, mAShrinkage);
     }
 
     const double min = getThetaMin(tmin);
@@ -1442,7 +1440,7 @@ void Event::updateTheta_v4(const double tmin, const double tmax, const double ra
     //qDebug() << "----------->      in Event::updateTheta(): Event update : " << this->mName << " : " << this->mTheta.mX << " between" << "[" << min << " ; " << max << "]";
 
     if (min >= max)
-        throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(mName, QString::number(min), QString::number(max));
+        throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(getQStringName(), QString::number(min), QString::number(max));
 
     // -------------------------------------------------------------------------------------------------
     //  Evaluer theta.
@@ -1495,7 +1493,7 @@ void Event::updateTheta_v4(const double tmin, const double tmax, const double ra
     }
 
     mTheta.tryUpdate(theta_try, rapport*rate_theta);
-
+    //qDebug() << "[Event::updateTheta_v4]-----------> Event update : " << getQStringName() << " : " << mTheta.mX << " between" << "[" << min << " ; " << max << "]";
 }
 
 void Event::generateHistos(const std::vector<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
@@ -1615,7 +1613,7 @@ double Event::h_S02(const double S02)
 
 }
 
-std::vector<double> get_vector(const std::function<double (Event*)> &fun, const std::vector<Event*> &events)
+std::vector<double> get_vector(const std::function<double (std::shared_ptr<Event>)> &fun, const std::vector<std::shared_ptr<Event>> &events)
 {
     std::vector<double> vec (events.size());
     std::transform(events.begin(), events.end(), vec.begin(), fun);

@@ -202,7 +202,7 @@ void MCMCSettingsDialog::setSettings(const MCMCSettings& settings)
     mMaxBatchesEdit->setText(mLoc.toString(settings.mMaxBatches));
     mIterPerBatchEdit->setText(mLoc.toString(settings.mIterPerBatch));
     mDownSamplingEdit->setText(mLoc.toString(settings.mThinningInterval));
-    mSeedsEdit->setText(unsignedListToString(settings.mSeeds, ";"));
+    mSeedsEdit->setText(QListUnsignedToQString(settings.mSeeds, ";"));
 
     mLevelEdit->setText(mLoc.toString(settings.mMixingLevel));
 }
@@ -224,7 +224,7 @@ MCMCSettings MCMCSettingsDialog::getSettings()
 
     settings.mMixingLevel = std::clamp(mLoc.toDouble(mLevelEdit->text()), 0.0001, 0.9999);
 
-    settings.mSeeds = stringListToUnsignedList(mSeedsEdit->text(), ";");
+    settings.mSeeds = QStringToQListUnsigned(mSeedsEdit->text(), ";");
 
     return settings;
 }
@@ -409,7 +409,7 @@ void MCMCSettingsDialog::inputControl()
 
     QList<int> seedList;
     if (isValided) {
-        seedList = stringListToIntList(mSeedsEdit->text(), ";");
+        seedList = QStringToQListInt(mSeedsEdit->text(), ";");
         for (auto& seed : seedList)
             if ( seed <= 0) {
                 errorMessage = tr("Each seed must be an integer, bigger than 0");
@@ -418,7 +418,7 @@ void MCMCSettingsDialog::inputControl()
     }
 
     if (isValided) {
-        settings.mSeeds = stringListToUnsignedList(mSeedsEdit->text(), ";");;
+        settings.mSeeds = QStringToQListUnsigned(mSeedsEdit->text(), ";");;
         emit inputValided();
 
    } else

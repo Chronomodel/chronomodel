@@ -55,8 +55,8 @@ public:
     };
     double mGamma;
 
-    Phase* mPhaseFrom;
-    Phase* mPhaseTo;
+    std::shared_ptr<Phase> mPhaseFrom;
+    std::shared_ptr<Phase> mPhaseTo;
 
     GammaType mGammaType;
     double mGammaFixed;

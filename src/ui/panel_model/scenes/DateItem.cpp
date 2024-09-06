@@ -89,7 +89,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
             if (d.mCalibration == nullptr) {
                 date[STATE_DATE_VALID] = false;
                 mCalibThumb = QPixmap();
-                QString mes = tr("Calibration curve not find for the Event %1").arg(d.mName);
+                QString mes = tr("Calibration curve not find for the Event %1").arg(d.getQStringName());
                 //throw mes;
                 QMessageBox message(QMessageBox::Critical,
                                     qApp->applicationName() + " " + qApp->applicationVersion(),
@@ -109,7 +109,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
                 mCalibThumb = QPixmap();
                 //const double newStep = d.mCalibration->mStep/5.;
                // QString mes = tr("Insufficient resolution for the Event %1 \n Decrease the step in the study period box to %2").arg(d.mName, QString::number(newStep));
-                QString mes = tr("Insufficient resolution for the Event %1 ").arg(d.mName);
+                QString mes = tr("Insufficient resolution for the Event %1 ").arg(d.getQStringName());
 
                 //throw mes;
                 QMessageBox message(QMessageBox::Critical,
@@ -138,7 +138,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
               * removing a refCurve
               */
 
-            else if (d.mCalibration && !d.mCalibration->mVector.isEmpty()) {
+            else if (d.mCalibration && !d.mCalibration->mVector.empty()) {
                 mCalibThumb = d.generateCalibThumb(s);
 
             } else

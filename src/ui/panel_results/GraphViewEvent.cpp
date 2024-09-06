@@ -61,7 +61,7 @@ GraphViewEvent::~GraphViewEvent()
     mEvent = nullptr;
 }
 
-void GraphViewEvent::setEvent(Event* event)
+void GraphViewEvent::setEvent(std::shared_ptr<Event> event)
 {
     Q_ASSERT(event);
     mEvent = event;
@@ -121,7 +121,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
     bool isFixedBound = false;
     Bound* bound = nullptr;
     if (mEvent->type() == Event::eBound) {
-        bound = dynamic_cast<Bound*>(mEvent);
+        bound = dynamic_cast<Bound*>(mEvent.get());
         isFixedBound = (bound != nullptr);
     }
     
@@ -129,19 +129,19 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
     //  The graph name depends on the currently displayed variable
     // --------------------------------------------------------------------
     if (mCurrentVariableList.contains(eThetaEvent)) {
-        mTitle = ((mEvent->type()==Event::eBound) ? tr("Bound") : tr("Event")) + " : " + mEvent->mName;
+        mTitle = ((mEvent->type()==Event::eBound) ? tr("Bound") : tr("Event")) + " : " + mEvent->getQStringName();
 
     } else if (mCurrentVariableList.contains(eSigma)) {
         if (typeGraph == ePostDistrib)
-            mTitle = ((mEvent->type() == Event::eBound) ? tr("Bound") : tr("Std Compilation")) + " : " + mEvent->mName;
+            mTitle = ((mEvent->type() == Event::eBound) ? tr("Bound") : tr("Std Compilation")) + " : " + mEvent->getQStringName();
         else
-            mTitle = ((mEvent->type()==Event::eBound) ? tr("Bound") : tr("Event")) + " : " + mEvent->mName;
+            mTitle = ((mEvent->type()==Event::eBound) ? tr("Bound") : tr("Event")) + " : " + mEvent->getQStringName();
 
     } else if (mCurrentVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
-        mTitle = tr("Event Shrinkage") + " : " + mEvent->mName;
+        mTitle = tr("Event Shrinkage") + " : " + mEvent->getQStringName();
 
     } else if (mCurrentVariableList.contains(eVg)) {
-        mTitle = tr("Std gi") + " : " + mEvent->mName;
+        mTitle = tr("Std gi") + " : " + mEvent->getQStringName();
     }
 
     // ------------------------------------------------
@@ -427,7 +427,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
          * ------------------------------------------------
          */
         else if (mCurrentVariableList.contains(eSigma)) {
-            for (int i = 0; i < mEvent->mDates.size(); ++i) {
+            for (int i = 0; i < (int)mEvent->mDates.size(); ++i) {
                 mGraph->setCurveVisible("Post Distrib Date " + QString::number(i) + " All Chains", mShowAllChains);
                 mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
                 for (int j = 0; j < mShowChainList.size(); ++j)

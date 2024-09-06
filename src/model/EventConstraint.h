@@ -46,8 +46,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 class EventConstraint: public Constraint
 {
 public:
-    Event* mEventFrom;
-    Event* mEventTo;
+    std::shared_ptr<Event> mEventFrom;
+    std::shared_ptr<Event> mEventTo;
 
     EventConstraint();
     EventConstraint(const EventConstraint& ec);

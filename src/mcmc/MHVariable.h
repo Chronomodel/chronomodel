@@ -63,7 +63,7 @@ public:
     virtual ~MHVariable();
 
     void clear() override;
-    void reserve(const qsizetype reserve) override;
+    void reserve(const size_t reserve) override;
     //MHVariable& copy(MHVariable const& origin);
     MHVariable& operator=(const MHVariable& origin);
 
@@ -72,7 +72,9 @@ public:
 
     bool tryUpdate(const double x, const double rate);
     bool adapt (const double coef_min = 0.42, const double coef_max = 0.46, const double delta = 0.01);
-    inline void memo_accept(const unsigned i_chain) {if (mLastAccepts.last()) ++mAllAccepts[i_chain];}
+
+    inline bool accept_buffer_full() {return mLastAccepts.size() == mLastAcceptsLength;};
+    inline void memo_accept(const unsigned i_chain) {if (accept_buffer_full()) ++mAllAccepts[i_chain];} // ??
 
     std::vector<double> acceptationForChain(const std::vector<ChainSpecs>& chains, size_t index);
     void generateGlobalRunAcceptation(const std::vector<ChainSpecs>& chains);
@@ -90,15 +92,15 @@ public:
     // Buffer glissant de la taille d'un batch pour calculer la courbe d'évolution
     // du taux d'acceptation chaine par chaine
 
-    QList<bool> mLastAccepts;
+    std::vector<bool> mLastAccepts;
 
-    int mLastAcceptsLength;
+    decltype(mLastAccepts.size()) mLastAcceptsLength;
 
     // Buffer contenant toutes les acceptations cumulées pour toutes les chaines
     // sur les parties acquisition uniquement.
     // A stocker dans le fichier résultats .res !
 
-    QList<long long> mAllAccepts;
+    std::vector<long long> mAllAccepts;
     // Computed at the end as numerical result :
     double mGlobalAcceptationPerCent;
 
@@ -109,6 +111,11 @@ public:
     std::shared_ptr<std::vector<double>> mHistoryAcceptRateMH;
 
     SamplerProposal mSamplerProposal;
+    inline void load_stream(QDataStream& stream) {load_stream_v328(stream);};
+
+private:
+    void load_stream_v328(QDataStream& stream);
+    void load_stream_v327(QDataStream& stream);
 
 };
 

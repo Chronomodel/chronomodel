@@ -59,12 +59,12 @@ public :
 
     virtual ~TValueStack();
 
-    inline double value() const {return m_value;};
-    inline std::string comment() const {return m_comment;};
+    inline double value() const {return _value;};
+    inline std::string comment() const {return _comment;};
 
 protected :
-    double m_value;
-    std::string m_comment ;
+    double _value;
+    std::string _comment ;
 };
 
 class MetropolisVariable
@@ -112,7 +112,7 @@ public:
     double mExactCredibilityThreshold;
 
     DensityAnalysis mResults;
-    QList<DensityAnalysis> mChainsResults;
+    std::vector<DensityAnalysis> mChainsResults;
 
     int mfftLenUsed;
     double mBandwidthUsed;
@@ -121,7 +121,6 @@ public:
     double mtminUsed;
     double mtmaxUsed;
 
-    QString mName;
 public:
     MetropolisVariable();
     explicit MetropolisVariable(const MetropolisVariable& origin);
@@ -132,12 +131,15 @@ public:
     virtual void memo();
     virtual void memo(double* valueToSave);
     virtual void clear();
-    virtual void reserve(const qsizetype reserve);
+    virtual void reserve(const size_t reserve);
 
     void setFormat(const DateUtils::FormatDate fm);
 
-    inline QString getName() {return mName;}
-    void setName(const QString name) {mName = name;}
+    inline QString getQStringName() const {return QString::fromStdString(_name);}
+    inline std::string name() const {return _name;}
+    inline void setName(const std::string name) {_name = name;}
+    inline void setName(const QString name) {_name = name.toStdString();}
+
     // -----
     //  These functions are time consuming!
     // -----
@@ -156,7 +158,7 @@ public:
     void updateFormatedCredibility(const DateUtils::FormatDate fm);
 
 
-    QMap<double, double> generateHisto(const QList<double>& data, const int fftLen, const  double bandwidth, const double tmin = 0., const double tmax = 0.);
+   // QMap<double, double> generateHisto(const QList<double>& data, const int fftLen, const  double bandwidth, const double tmin = 0., const double tmax = 0.);
     std::map<double, double> generateHisto(const std::vector<double> &dataSrc, const int fftLen, const double bandwidth, const double tmin, const double tmax);
 
     // -----
@@ -201,7 +203,7 @@ public:
         }
         return result;
     }
-
+/*
     template <typename T>
     QList<T> full_run_trace(std::vector<T>* trace, const std::vector<ChainSpecs>& chains)
     {
@@ -234,7 +236,7 @@ public:
         }
         return result;
     }
-
+*/
 
     template <typename T>
     std::vector<T> full_run_trace(std::shared_ptr<std::vector<T>> trace, const std::vector<ChainSpecs>& chains)
@@ -330,21 +332,13 @@ public:
             return C<T>(0);
         }
     }
-    //inline QList<double> runRawTraceForChain(const QList<ChainSpecs>& chains, const qsizetype index) {return run_trace_for_chain(mRawTrace, chains, index); };
-    /*inline QList<double> runRawTraceForChain(const std::vector<ChainSpecs>& chains, const size_t index) {
-        const std::vector<double> &trace = run_trace_for_chain(mRawTrace, chains, index);
-        return QList<double>(trace.begin(), trace.end());
-    };*/
+
     inline std::vector<double> runRawTraceForChain(const std::vector<ChainSpecs>& chains, const size_t index) {
         const std::vector<double> &trace = run_trace_for_chain(mRawTrace, chains, index);
         return std::vector<double>(trace.begin(), trace.end());
     };
 
-    //inline QList<double> runFormatedTraceForChain(const QList<ChainSpecs>& chains, const qsizetype index) {return run_trace_for_chain(mFormatedTrace, chains, index); };
-    /*inline QList<double> runFormatedTraceForChain(const std::vector<ChainSpecs>& chains, const size_t index) {
-        const std::vector<double> &trace = run_trace_for_chain(mFormatedTrace, chains, index);
-        return QList<double>(trace.begin(), trace.end());
-    };*/
+
     inline std::vector<double> runFormatedTraceForChain(const std::vector<ChainSpecs>& chains, const size_t index) {
         const std::vector<double> &trace = run_trace_for_chain(mFormatedTrace, chains, index);
         return std::vector<double>(trace.begin(), trace.end());
@@ -355,17 +349,24 @@ public:
     virtual QString resultsString(const QString& noResultMessage = QObject::tr("No result to display"),
                                   const QString& unit = QString()) const;
 
-    QStringList getResultsList(const QLocale locale, const int precision = 0, const bool withDateFormat = true);
+    QStringList getResultsList(const QLocale locale, const int precision = 0, const bool withDateFormat = true) const;
 
     void updateFormatedTrace(const DateUtils::FormatDate fm);
 
+    inline void load_stream(QDataStream& stream) {load_stream_v328(stream);}
+
 private:
-    void generateBufferForHisto(double* input, const QList<double>& dataSrc, const int numPts, const double a, const double b);
-    void generateBufferForHisto(double* input, const std::vector<double>& dataSrc, const int numPts, const double a, const double b);
+
+    std::string _name;
+
+    void generateBufferForHisto(double* input, const std::vector<double> &dataSrc, const int numPts, const double a, const double b);
     QMap<double, double> bufferToMap(const double* buffer);
 
+    void load_stream_v328(QDataStream& stream);
+    //void load_stream_v327(QDataStream& stream);
 
 
+friend class MHVariable;
 };
 
 QDataStream &operator<<( QDataStream& stream, const MetropolisVariable& data );

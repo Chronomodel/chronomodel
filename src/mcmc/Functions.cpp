@@ -966,6 +966,7 @@ Quartiles quartilesForRepartition(const QList<double> &repartition, const double
 
     return quartiles;
 }
+
 Quartiles quartilesForRepartition(const std::vector<double> &repartition, const double tmin, const double step)
 {
     Quartiles quartiles;
@@ -1563,7 +1564,7 @@ std::pair<double, double> gapRangeFromTraces(const std::vector<double> &traceEnd
             const double a = traceBeta.at(haInf) + ( (ha-(double)haInf)*(traceBeta.at(haSup)-traceBeta.at(haInf)) );
 
             // 3 - Copy only value of beta with alpha smaller than a(epsilon)!
-            const long long alphaIdx(haSup < n ? haSup : n-1 );//( ha == haInf ? haInf : haSup );//( ha == haSup ? haSup : haInf );// //
+            const long long alphaIdx(haSup < (double)n ? haSup : (double)(n-1) );//( ha == haInf ? haInf : haSup );//( ha == haSup ? haSup : haInf );// //
 
             const long long remainingElemt ( alphaIdx );
             alphaUnder.resize(remainingElemt);   // allocate space

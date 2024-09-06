@@ -1389,7 +1389,9 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
             if (eventIdx > -1) {
                 QJsonObject dateJson = date.toJson();
                 QJsonArray datesEvent = eventFinded.value(STATE_EVENT_DATES).toArray();
+
                 dateJson[STATE_ID] = project->getUnusedDateId(datesEvent);
+
                 if (dateJson.value(STATE_NAME).toString() == "")
                     dateJson[STATE_NAME] = "No Name " + QString::number(dateJson[STATE_ID].toInt());
                 datesEvent.append(dateJson);
@@ -1406,20 +1408,20 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
             } else {
                 Event event;
                 // eventName=="" must never happen because we set "No Name" in ImportDataView::browse()
-                event.mName = (eventName=="" ? date.mName : eventName);
+                event.setName(eventName =="" ? date.getQStringName() : eventName);
                 event.mId = project->getUnusedEventId(events);
 
-
                 date.mId = 0;
-                if (date.mName == "")
-                    date.mName = "No Name";
+                if (date.name() == "")
+                    date.setName(std::string("No Name"));
 
-                event.mDates.append(date);
+                event.mDates.push_back(date);
                 event.mItemX = e->scenePos().x() + EventCount * deltaX;
                 event.mItemY = e->scenePos().y() + EventCount * deltaY;
                 event.mColor = randomColor();
 
                 QJsonObject eventJson  (event.toJson());
+
                 currentEvent = eventJson;
                 if (i < listCurveData.count()) {
                     Event::setCurveCsvDataToJsonEvent(eventJson, listCurveData.at(i));
@@ -1428,32 +1430,51 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
                 events.append(eventJson);
                 state[STATE_EVENTS] = events;
 
-                //project->pushProjectState(state, NEW_EVEN_BY_CSV_DRAG_REASON, true);
                 ++EventCount;
             }
 
         } else {
-            Bound bound;
-            bound.mType = Event::eBound;
-            bound.mTheta.mSamplerProposal = MHVariable::eFixe;
-            bound.mFixed= date.mData[STATE_EVENT_KNOWN_FIXED].toDouble();
-            // eventName=="" must never happen because we set "No Name" in ImportDataView::browse()
-            bound.mName = ( !date.mName.isEmpty() ? date.mName : "No Name");
-            bound.mId = project->getUnusedEventId(events);
 
-            bound.mItemX = e->scenePos().x() + EventCount * deltaX;
-            bound.mItemY = e->scenePos().y() + EventCount * deltaY;
-            bound.mColor = randomColor();
-            auto boundJson (bound.toJson());
+            // Empty bound QJsonObject
+            QJsonObject json;
 
+            json[STATE_EVENT_TYPE] = 1;
+            json[STATE_ID] = getProject_ptr()->getUnusedEventId(events);
+            json[STATE_NAME] = (!date.name().empty() ? date.getQStringName() : QString("No Name"));
+            auto col = randomColor();
+            json[STATE_COLOR_RED] = col.red();
+            json[STATE_COLOR_GREEN] = col.green();
+            json[STATE_COLOR_BLUE] = col.blue();
+            json[STATE_EVENT_SAMPLER] = MHVariable::eFixe;
+
+            json[STATE_ITEM_X] = e->scenePos().x() + EventCount * deltaX;
+            json[STATE_ITEM_Y] = e->scenePos().y() + EventCount * deltaY;
+            json[STATE_IS_SELECTED] = false;
+            json[STATE_IS_CURRENT] = false;
+
+            json[STATE_EVENT_POINT_TYPE] = 0;
+            json[STATE_EVENT_X_INC_DEPTH] = 0;
+            json[STATE_EVENT_Y_DEC] = 0;
+            json[STATE_EVENT_Z_F] = 0;
+            json[STATE_EVENT_SX_ALPHA95_SDEPTH] = 0;
+            json[STATE_EVENT_SY] = 0;
+            json[STATE_EVENT_SZ_SF] = 0;
+
+            json[STATE_EVENT_PHASE_IDS] = "";
+
+            json[STATE_EVENT_DATES] = QJsonArray();
+            json[STATE_EVENT_KNOWN_FIXED] = date.mData[STATE_EVENT_KNOWN_FIXED].toDouble();
+
+
+            // read curve parameters
             if (i < listCurveData.count()) {
-                Event::setCurveCsvDataToJsonEvent(boundJson, listCurveData.at(i));
+                Event::setCurveCsvDataToJsonEvent(json, listCurveData.at(i));
             }
-            events.append(boundJson);
-            currentEvent = boundJson;
+            events.push_back(json);
+            currentEvent = json;
 
             state[STATE_EVENTS] = events;
-            project->pushProjectState(state, NEW_EVEN_BY_CSV_DRAG_REASON, true);
+
             ++EventCount;
         }
 
@@ -1608,7 +1629,7 @@ QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::de
 
         if (pluginName.contains("bound", Qt::CaseInsensitive)) {
             QStringList dataTmp = dataStr.mid(1, dataStr.size() - 1);
-            date.mName = eventName;
+            date.setName(eventName);
             date.mPlugin = nullptr;
             date.mTi.mSamplerProposal = MHVariable::eMHPrior; //set but not used
 
@@ -1616,7 +1637,7 @@ QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::de
             json.insert(STATE_EVENT_KNOWN_FIXED, csvLocal.toDouble(dataTmp.at(0)));
             date.mData = json;
             date.mIsValid = true ;
-            date.mUUID = QString::fromStdString(Generator::UUID());
+            date.mUUID = Generator::UUID();
 
             // We force the name of the Event in "Bound" to recognize then that it was a bound.
             dates << qMakePair("bound", date);

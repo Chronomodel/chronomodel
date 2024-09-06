@@ -59,6 +59,7 @@ MHVariable::MHVariable():
     MetropolisVariable(),
     mSigmaMH(0),
     mLastAcceptsLength(0),
+    mAllAccepts(),
     mGlobalAcceptationPerCent(0.),
     mHistoryAcceptRateMH(new std::vector<double>()),
     mSamplerProposal(eDoubleExp)
@@ -71,19 +72,13 @@ MHVariable::MHVariable(const MHVariable& origin):
     MetropolisVariable(origin),
     mSigmaMH(origin.mSigmaMH),
     mLastAcceptsLength(origin.mLastAcceptsLength),
+    mAllAccepts(origin.mAllAccepts),
     mGlobalAcceptationPerCent(origin.mGlobalAcceptationPerCent),
     mSamplerProposal(origin.mSamplerProposal)
 {
-    mAllAccepts.clear();
-    mHistoryAcceptRateMH = std::shared_ptr<std::vector<double>>(origin.mHistoryAcceptRateMH);
 
-   /* if (origin.mHistoryAcceptRateMH && !origin.mHistoryAcceptRateMH->isEmpty()) {
-        if (mHistoryAcceptRateMH)
-            mHistoryAcceptRateMH->resize(origin.mHistoryAcceptRateMH->size());
-        else
-            mHistoryAcceptRateMH = new QList<double>(origin.mHistoryAcceptRateMH->size());
-        std::copy(origin.mHistoryAcceptRateMH->begin(), origin.mHistoryAcceptRateMH->end(), mHistoryAcceptRateMH->begin());
-    }*/
+    //mHistoryAcceptRateMH = std::shared_ptr<std::vector<double>>(origin.mHistoryAcceptRateMH);
+    *mHistoryAcceptRateMH = *origin.mHistoryAcceptRateMH;
 
 }
 
@@ -91,22 +86,17 @@ MHVariable::MHVariable(const MetropolisVariable& origin):
     MetropolisVariable(origin),
     mSigmaMH(0),
     mLastAcceptsLength(0),
+    mAllAccepts(),
     mGlobalAcceptationPerCent(0.),
-    mHistoryAcceptRateMH(std::shared_ptr<std::vector<double>>(new std::vector<double>())),
+    mHistoryAcceptRateMH(new std::vector<double>()),
     mSamplerProposal(eDoubleExp)
 {
-    mAllAccepts.clear();
+
 }
 
 MHVariable::~MHVariable()
 {
     //qDebug() << "[MHVariable::~MHVariable] ";//<< (mName.isNull()? " Deleted Name": mName);
-    /*mAllAccepts.clear();
-    mAllAccepts.shrink_to_fit();
-    mLastAccepts.clear();
-    mLastAccepts.shrink_to_fit();
-*/
-   // mHistoryAcceptRateMH.reset();
 
 }
 
@@ -119,7 +109,7 @@ MHVariable::~MHVariable()
 bool MHVariable::tryUpdate(const double x, const double rate)
 {
     if (mLastAccepts.size() >= mLastAcceptsLength)
-        mLastAccepts.removeAt(0);
+        mLastAccepts.erase(mLastAccepts.begin());//removeAt(0);
 
     bool accepted (false);
 
@@ -138,7 +128,7 @@ bool MHVariable::tryUpdate(const double x, const double rate)
     if (accepted) {
         mX = x;
     }
-    mLastAccepts.append(accepted);
+    mLastAccepts.push_back(accepted);
 
     return accepted;
 
@@ -172,11 +162,11 @@ void MHVariable::clear()
     mLastAccepts.clear();
     mAllAccepts.clear();
 
-    mLastAccepts.squeeze();
+    mLastAccepts.shrink_to_fit();
 
 }
 
-void MHVariable::reserve(const qsizetype reserve)
+void MHVariable::reserve(const size_t reserve)
 {
     MetropolisVariable::reserve(reserve);
     mAllAccepts.reserve(reserve);
@@ -215,7 +205,7 @@ MHVariable& MHVariable::operator=(const MHVariable& origin)
 
 double MHVariable::getCurrentAcceptRate() const
 {
-   if (mLastAccepts.isEmpty())
+   if (mLastAccepts.empty())
         return 0.;
 
     return std::count_if(mLastAccepts.begin(), mLastAccepts.end(), [](bool i) { return i; })/ (double) mLastAccepts.size();
@@ -359,10 +349,12 @@ QDataStream &operator<<( QDataStream& stream, const MHVariable& data )
     stream << dynamic_cast<const MetropolisVariable&>(data);
 
     /* owned by MHVariable*/
-    stream << data.mAllAccepts;
+    //stream << data.mAllAccepts;
+    save_container(stream, data.mAllAccepts);
     save_container(stream, *data.mHistoryAcceptRateMH);
     
-    stream << data.mLastAccepts;
+    //stream << data.mLastAccepts;
+    save_container(stream, data.mLastAccepts);
 
     stream << data.mSigmaMH;
     stream << data.mSamplerProposal;
@@ -373,6 +365,57 @@ QDataStream &operator<<( QDataStream& stream, const MHVariable& data )
 /**
  read stream
  */
+void MHVariable::load_stream_v328(QDataStream& stream)
+{
+    /* herited from MetropolisVariable*/
+    MetropolisVariable::load_stream_v328(stream);
+
+    mAllAccepts.clear();
+    //stream >> data.mAllAccepts;
+    load_container(stream, mAllAccepts);
+
+    //data.mHistoryAcceptRateMH = load_std_vector_ptr(stream);
+    reload_shared_ptr(mHistoryAcceptRateMH, stream);
+
+    if (!mLastAccepts.empty())
+        mLastAccepts.clear();
+
+    //stream >> data.mLastAccepts;
+    load_container(stream, mLastAccepts);
+
+    stream >> mSigmaMH;
+    stream >> mSamplerProposal;
+
+}
+
+void MHVariable::load_stream_v327(QDataStream& stream)
+{
+    /* herited from MetropolisVariable*/
+    MetropolisVariable::load_stream_v328(stream);
+
+
+    mAllAccepts.clear();
+
+    QList<long long > tmpAll;
+    stream >> tmpAll;
+    mAllAccepts = std::vector<long long>(tmpAll.begin(), tmpAll.end());
+
+    //data.mHistoryAcceptRateMH = load_std_vector_ptr(stream);
+    reload_shared_ptr(mHistoryAcceptRateMH, stream); // à revoir
+
+    if (!mLastAccepts.empty())
+        mLastAccepts.clear();
+
+    //stream >> data.mLastAccepts;
+    QList<bool> tmpbool;
+    stream >> tmpbool;
+    mLastAccepts = std::vector<bool>(tmpbool.begin(), tmpbool.end());
+
+    stream >> mSigmaMH;
+    stream >> mSamplerProposal;
+
+}
+
 QDataStream &operator>>(QDataStream& stream, MHVariable& data )
 {
     /* herited from MetropolisVariable*/
@@ -383,15 +426,17 @@ QDataStream &operator>>(QDataStream& stream, MHVariable& data )
     data = tmp_data;
     
     data.mAllAccepts.clear();
-    stream >> data.mAllAccepts;
+    //stream >> data.mAllAccepts;
+    load_container(stream, data.mAllAccepts);
 
     //data.mHistoryAcceptRateMH = load_std_vector_ptr(stream);
     reload_shared_ptr(data.mHistoryAcceptRateMH, stream);
     
-    if (!data.mLastAccepts.isEmpty())
+    if (!data.mLastAccepts.empty())
         data.mLastAccepts.clear();
 
-    stream >> data.mLastAccepts;
+    //stream >> data.mLastAccepts;
+    load_container(stream, data.mLastAccepts);
 
     stream >> data.mSigmaMH;
     stream >> data.mSamplerProposal;

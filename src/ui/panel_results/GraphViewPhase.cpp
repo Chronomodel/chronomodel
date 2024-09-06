@@ -63,7 +63,7 @@ GraphViewPhase::~GraphViewPhase()
     mPhase = nullptr;
 }
 
-void GraphViewPhase::setPhase(Phase* phase)
+void GraphViewPhase::setPhase(std::shared_ptr<Phase> phase)
 {
     Q_ASSERT(phase);
 
@@ -135,7 +135,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
             mGraph->setFormatFunctY(nullptr);
             mGraph->setYAxisMode(GraphView::eMinMaxHidden);
 
-            mTitle = tr("Phase : %1").arg(mPhase->mName);
+            mTitle = tr("Phase : %1").arg(mPhase->getQStringName());
             std::map<double, double> &alpha = mPhase->mAlpha.mFormatedHisto;
             std::map<double, double> &beta = mPhase->mBeta.mFormatedHisto;
 
@@ -236,7 +236,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
                 mGraph->setYAxisMode(GraphView::eAllTicks);
                 mGraph->autoAdjustYScale(true);
 
-                mTitle = tr("Phase Tempo : %1").arg(mPhase->mName);
+                mTitle = tr("Phase Tempo : %1").arg(mPhase->getQStringName());
 
                 GraphCurve curveTempo = densityCurve(mPhase->mTempo,
                                                      "Post Distrib All Chains",
@@ -277,7 +277,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
                 mGraph->setFormatFunctY(nullptr);
                 mGraph->setYAxisMode(GraphView::eHidden);
 
-                mTitle = tr("Phase Activity : %1").arg(mPhase->mName);
+                mTitle = tr("Phase Activity : %1").arg(mPhase->getQStringName());
                 GraphCurve curveActivity = densityCurve( mPhase->mActivity,
                                                         "Post Distrib All Chains",
                                                         color, Qt::SolidLine);
@@ -297,7 +297,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
                                                                        Qt::darkGray, Qt::SolidLine);
 
                 if (mPhase->mValueStack.contains("Activity_Threshold") && mPhase->mValueStack.contains("Activity_Significance_Score") )
-                    mGraph->setInfo(QString("Significance Score ( %1 %) = %2").arg(stringForLocal(mPhase->mValueStack.at("Activity_Threshold").value()), stringForLocal(mPhase->mValueStack.at("Activity_Significance_Score").value(), true)) );
+                    mGraph->setInfo(QString("Significance Score ( %1 %) = %2").arg(stringForLocal(mPhase->mValueStack.at("Activity_Threshold")), stringForLocal(mPhase->mValueStack.at("Activity_Significance_Score"), true)) );
 
                 mGraph->setOverArrow(GraphView::eBothOverflow);
 
@@ -329,7 +329,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
             mGraph->setFormatFunctX(nullptr);
             mGraph->setFormatFunctY(nullptr);
             mGraph->setYAxisMode(GraphView::eMinMaxHidden);
-            mTitle = tr("Phase Duration : %1").arg(mPhase->mName);
+            mTitle = tr("Phase Duration : %1").arg(mPhase->getQStringName());
 
             if (mPhase->mDuration.fullHisto().size() > 1) {
                 const GraphCurve &curveDuration = densityCurve(mPhase->mDuration.fullHisto(), "Post Distrib All Chains", color);
@@ -385,7 +385,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
             mGraph->setFormatFunctX(nullptr);
             mGraph->setFormatFunctY(nullptr);
             mGraph->setYAxisMode(GraphView::eMinMax);
-            mTitle = tr("Phase : %1").arg(mPhase->mName);
+            mTitle = tr("Phase : %1").arg(mPhase->getQStringName());
 
             generateTraceCurves(mChains, &(mPhase->mAlpha), "Begin");
             generateTraceCurves(mChains, &(mPhase->mBeta), "End");
@@ -396,7 +396,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
             mGraph->setFormatFunctX(nullptr);
             mGraph->setFormatFunctY(nullptr);
             mGraph->setYAxisMode(GraphView::eMinMax);
-            mTitle = tr("Phase Duration : %1").arg(mPhase->mName);
+            mTitle = tr("Phase Duration : %1").arg(mPhase->getQStringName());
 
             generateTraceCurves(mChains, &(mPhase->mDuration), "Duration");
             mGraph->autoAdjustYScale(true);
@@ -407,7 +407,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
      *  fourth tab : Nothing
      * ------------------------------------------------ */
     else {
-       mTitle = tr("Phase : %1").arg(mPhase->mName);
+       mTitle = tr("Phase : %1").arg(mPhase->getQStringName());
        mGraph->resetNothingMessage();
     }
 

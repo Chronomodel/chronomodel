@@ -71,7 +71,7 @@ MCMCLoopChrono::~MCMCLoopChrono()
 QString MCMCLoopChrono::calibrate()
 {
     if (mModel) {
-        std::vector<Event*> &events = mModel->mEvents;
+        std::vector<std::shared_ptr<Event>> &events = mModel->mEvents;
         //events.reserve(mModel->mEvents.size());
         //----------------- Calibrate measurements --------------------------------------
 
@@ -83,7 +83,7 @@ QString MCMCLoopChrono::calibrate()
 
         dates.reserve(nbDates);*/
 
-        for (Event* ev : events) {
+        for (std::shared_ptr<Event> ev : events) {
             unsigned long num_dates = ev->mDates.size();
             for (unsigned long j = 0; j<num_dates; ++j) {
                 Date* date = &ev->mDates[j];
@@ -100,7 +100,7 @@ QString MCMCLoopChrono::calibrate()
         int i = 0;
         for (auto&& date : dates) {
               if (date->mCalibration) {
-                if (date->mCalibration->mVector.isEmpty())
+                if (date->mCalibration->mVector.empty())
                     date->calibrate(getProject_ptr());
 
                 if (date->mCalibration->mVector.size() < 5) {
@@ -110,13 +110,13 @@ QString MCMCLoopChrono::calibrate()
                     date->mCalibration->mRepartition.clear();
                     date->mCalibration = nullptr;
 
-                    const QString mes = tr("Insufficient resolution for the Event %1 \r Decrease the step in the study period box to %2").arg(date->mName, QString::number(new_step));
+                    const QString mes = tr("Insufficient resolution for the Event %1 \r Decrease the step in the study period box to %2").arg(date->getQStringName(), QString::number(new_step));
                     return (mes);
 
                 }
 
               } else
-                  return (tr("Invalid Model -> No Calibration on Data %1").arg(date->mName));
+                  return (tr("Invalid Model -> No Calibration on Data %1").arg(date->getQStringName()));
 
 
             if (isInterruptionRequested())
@@ -168,7 +168,7 @@ bool MCMCLoopChrono::update_v3()
          * C.1 - Update Alpha, Beta & Duration Phases
          * -------------------------------------------------------------- */
         //  Update Phases -set mAlpha and mBeta ; they coud be used by the Event in the other Phase ----------------------------------------
-        std::for_each(PAR event->mPhases.begin(), event->mPhases.end(), [this] (Phase* p) {p->update_AlphaBeta (tminPeriod, tmaxPeriod);});
+        std::for_each(PAR event->mPhases.begin(), event->mPhases.end(), [this] (std::shared_ptr<Phase> p) {p->update_AlphaBeta (tminPeriod, tmaxPeriod);});
 
     }
 
@@ -176,13 +176,13 @@ bool MCMCLoopChrono::update_v3()
     /* --------------------------------------------------------------
      *  C.2 - Update Tau Phases
      * -------------------------------------------------------------- */
-    std::for_each(PAR mModel->mPhases.begin(), mModel->mPhases.end(), [this] (Phase* p) {p->update_Tau (tminPeriod, tmaxPeriod);});
+    std::for_each(PAR mModel->mPhases.begin(), mModel->mPhases.end(), [this] (std::shared_ptr<Phase> p) {p->update_Tau (tminPeriod, tmaxPeriod);});
 
 
     /* --------------------------------------------------------------
      *  C.3 - Update Phases constraints
      * -------------------------------------------------------------- */
-    std::for_each(PAR mModel->mPhaseConstraints.begin(), mModel->mPhaseConstraints.end(), [] (PhaseConstraint* pc) {pc->updateGamma();});
+    std::for_each(PAR mModel->mPhaseConstraints.begin(), mModel->mPhaseConstraints.end(), [] (std::shared_ptr<PhaseConstraint> pc) {pc->updateGamma();});
 
 
    return true;
@@ -224,7 +224,7 @@ bool MCMCLoopChrono::update_v4()
          * C.1 - Update Alpha, Beta & Duration Phases
          * -------------------------------------------------------------- */
         //  Update Phases -set mAlpha and mBeta ; they coud be used by the Event in the other Phase ----------------------------------------
-        std::for_each(PAR event->mPhases.begin(), event->mPhases.end(), [this] (Phase* p) {p->update_AlphaBeta (tminPeriod, tmaxPeriod);});
+        std::for_each(PAR event->mPhases.begin(), event->mPhases.end(), [this] (std::shared_ptr<Phase> p) {p->update_AlphaBeta (tminPeriod, tmaxPeriod);});
 
     }
 
@@ -232,13 +232,13 @@ bool MCMCLoopChrono::update_v4()
     /* --------------------------------------------------------------
      *  C.2 - Update Tau Phases
      * -------------------------------------------------------------- */
-    std::for_each(PAR mModel->mPhases.begin(), mModel->mPhases.end(), [this] (Phase* p) {p->update_Tau (tminPeriod, tmaxPeriod);});
+    std::for_each(PAR mModel->mPhases.begin(), mModel->mPhases.end(), [this] (std::shared_ptr<Phase> p) {p->update_Tau (tminPeriod, tmaxPeriod);});
 
 
     /* --------------------------------------------------------------
      *  C.3 - Update Phases constraints
      * -------------------------------------------------------------- */
-    std::for_each(PAR mModel->mPhaseConstraints.begin(), mModel->mPhaseConstraints.end(), [] (PhaseConstraint* pc) {pc->updateGamma();});
+    std::for_each(PAR mModel->mPhaseConstraints.begin(), mModel->mPhaseConstraints.end(), [] (std::shared_ptr<PhaseConstraint> pc) {pc->updateGamma();});
 
 
     return true;
@@ -290,7 +290,7 @@ bool MCMCLoopChrono::adapt(const int batchIndex) //original code
 
 void MCMCLoopChrono::memo()
 {
-    for (const auto& event : mModel->mEvents) {
+    for (auto& event : mModel->mEvents) {
         //--------------------- Memo Events -----------------------------------------
         if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
             event->mTheta.memo();
@@ -316,7 +316,7 @@ void MCMCLoopChrono::memo()
     }
 
     //--------------------- Memo Phases -----------------------------------------
-    for (const auto& ph : mModel->mPhases)
+    for (auto& ph : mModel->mPhases)
             ph->memoAll();
 
 }
@@ -325,7 +325,7 @@ void MCMCLoopChrono::memo()
 void MCMCLoopChrono::finalize()
 {
 #ifdef DEBUG
-    qDebug()<<QString("MCMCLoopChrono::finalize");
+    qDebug()<<QString("[MCMCLoopChrono::finalize]");
     QElapsedTimer startTime;
     startTime.start();
 #endif

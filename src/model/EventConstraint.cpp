@@ -90,8 +90,8 @@ void EventConstraint::copyFrom(const EventConstraint& ec)
 
 EventConstraint::~EventConstraint()
 {
-    mEventFrom = nullptr;
-    mEventTo = nullptr;
+   /* mEventFrom = nullptr;
+    mEventTo = nullptr;*/
 }
 
 EventConstraint EventConstraint::fromJson(const QJsonObject& json)

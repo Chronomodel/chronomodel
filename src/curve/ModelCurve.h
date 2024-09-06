@@ -73,9 +73,10 @@ public:
     void updateDesignFromJson();
 
     virtual void saveToFile(QDataStream *out);
-    virtual void restoreFromFile(QDataStream *in) {return restoreFromFile_v324(in);};
+    virtual void restoreFromFile(QDataStream *in) {return restoreFromFile_v328(in);};
     void restoreFromFile_v323(QDataStream* in);
     void restoreFromFile_v324(QDataStream* in);
+    void restoreFromFile_v328(QDataStream* in);
 
     virtual QJsonObject toJson() const;
     virtual void fromJson( const QJsonObject &json);

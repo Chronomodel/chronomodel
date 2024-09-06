@@ -116,8 +116,8 @@ void PhaseConstraint::copyFrom(const PhaseConstraint& pc)
 
 PhaseConstraint::~PhaseConstraint()
 {
-    mPhaseFrom = nullptr;
-    mPhaseTo = nullptr;
+   /* mPhaseFrom = nullptr;
+    mPhaseTo = nullptr;*/
 }
 
 PhaseConstraint PhaseConstraint::fromJson(const QJsonObject& json)

@@ -187,7 +187,8 @@ public:
     void createEvent(qreal x, qreal y);
     void createEventKnown(qreal x, qreal y);
     void createPhase(qreal x, qreal y, QWidget *parent);
-    
+
+    void extracted();
     void clear_calibCurves();
 
     bool isCurve() const;
@@ -233,7 +234,7 @@ public:
     std::shared_ptr<ModelCurve> mModel;
     MCMCLoop* mLoop; //public QThread
 
-    QMap<QString, CalibrationCurve> mCalibCurves;
+    std::map<std::string, CalibrationCurve> mCalibCurves;
     QTimer* mAutoSaveTimer;
     QJsonObject mState;
 

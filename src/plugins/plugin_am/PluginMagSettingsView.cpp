@@ -37,12 +37,14 @@ same conditions as regards security.
 The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
+#if USE_PLUGIN_AM
 
 #include "PluginMagSettingsView.h"
-#if USE_PLUGIN_AM
+
 
 #include "PluginMag.h"
 #include "PluginRefCurveSettingsView.h"
+
 #include <QtWidgets>
 
 
@@ -53,8 +55,8 @@ PluginMagSettingsView::PluginMagSettingsView(PluginMag* plugin, QWidget* parent,
 
     QVBoxLayout* layout = new QVBoxLayout();
     layout->setContentsMargins(0, 0, 0, 0);
-   layout->addWidget(mRefView);
-   setLayout(layout);
+    layout->addWidget(mRefView);
+    setLayout(layout);
 }
 
 PluginMagSettingsView::~PluginMagSettingsView()

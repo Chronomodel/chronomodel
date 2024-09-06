@@ -50,11 +50,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 Phase::Phase():
     mId (0),
-    mName ("no Phase Name"),
     mAlpha(MetropolisVariable()),
     mBeta(MetropolisVariable()),
     mDuration(MetropolisVariable()),
-    mValueStack(std::unordered_map<std::string, TValueStack>()),
+    mValueStack(),
     mTau(MetropolisVariable()),
     mTauType (Phase::eTauUnknown),
     mTauFixed (0.),
@@ -62,7 +61,8 @@ Phase::Phase():
     mTauMax (0.),
     mIsSelected (false),
     mIsCurrent (false),
-    mLevel (0)
+    mLevel (0),
+    _name("no Phase Name")
 {
     mColor = randomColor();
     mAlpha.mSupport = MetropolisVariable::eBounded;
@@ -81,9 +81,25 @@ Phase::Phase():
     mItemY = 0.;
 
     mTimeRange = std::make_pair(- INFINITY, +INFINITY);
-    mValueStack.insert_or_assign("Activity_TimeRange_Level", TValueStack( 0.));
-    mValueStack.insert_or_assign("Activity_TimeRange_min", TValueStack( 0));
-    mValueStack.insert_or_assign("Activity_TimeRange_max",TValueStack(0));
+    mValueStack.emplace("Activity_TimeRange_Level", 0.);
+    mValueStack.emplace("Activity_TimeRange_min", 0.);
+    mValueStack.emplace("Activity_TimeRange_max", 0.);
+
+    mValueStack.emplace("Activity_Significance_Score", 0.);
+    mValueStack.emplace("R_etendue",  0);
+    mValueStack.emplace("a_Unif", -INFINITY);
+    mValueStack.emplace("b_Unif", INFINITY);
+
+    mValueStack.emplace("Activity_min95", 0);
+    mValueStack.emplace("Activity_max95", 0);
+    mValueStack.emplace("Activity_mean95", 0.);
+    mValueStack.emplace("Activity_std95", 0.);
+
+    mValueStack.emplace("Activity_GridLength", 0.);
+    mValueStack.emplace("Activity_h", 0.);
+    mValueStack.emplace("Activity_Threshold", 0.);
+    mValueStack.emplace("Activity_max", 0.);
+    mValueStack.emplace("Activity_mode",  0.);
 }
 
 Phase::Phase(const Phase& phase)
@@ -93,11 +109,10 @@ Phase::Phase(const Phase& phase)
 
 Phase::Phase (const QJsonObject& json):
     mId(json.value(STATE_ID).toInt()),
-    mName(json.value(STATE_NAME).toString()),
     mAlpha(MetropolisVariable()),
     mBeta(MetropolisVariable()),
     mDuration(MetropolisVariable()),
-    mValueStack(std::unordered_map<std::string, TValueStack>()),
+    mValueStack(),
     mTau(MetropolisVariable()),
     mTauType ((Phase::TauType)json.value(STATE_PHASE_TAU_TYPE).toInt()),
     mTauFixed (json.value(STATE_PHASE_TAU_FIXED).toDouble()),
@@ -105,7 +120,8 @@ Phase::Phase (const QJsonObject& json):
     mTauMax (json.value(STATE_PHASE_TAU_MAX).toDouble()),
     mIsSelected (json.value(STATE_IS_SELECTED).toBool()),
     mIsCurrent (json.value(STATE_IS_CURRENT).toBool()),
-    mLevel (0)
+    mLevel (0),
+    _name(json.value(STATE_NAME).toString().toStdString())
 
 {
    mColor = QColor(json.value(STATE_COLOR_RED).toInt(), json.value(STATE_COLOR_GREEN).toInt(), json.value(STATE_COLOR_BLUE).toInt());
@@ -113,25 +129,41 @@ Phase::Phase (const QJsonObject& json):
    mItemX = json.value(STATE_ITEM_X).toDouble();
    mItemY = json.value(STATE_ITEM_Y).toDouble();
 
-   mAlpha.setName("Begin of Phase : " + mName);
+   mAlpha.setName("Begin of Phase : " + _name);
    mAlpha.mSupport = MetropolisVariable::eBounded;
    mAlpha.mFormat = DateUtils::eUnknown;
 
-   mBeta.setName("End of Phase : " + mName);
+   mBeta.setName("End of Phase : " + _name);
    mBeta.mSupport = MetropolisVariable::eBounded;
    mBeta.mFormat = DateUtils::eUnknown;
 
-   mTau.setName("Tau of Phase : " + mName);
+   mTau.setName("Tau of Phase : " + _name);
    mTau.mSupport = MetropolisVariable::eRp;
    mTau.mFormat = DateUtils::eNumeric;
 
-    mDuration.setName("Duration of Phase : ");// + mName);
+   mDuration.setName("Duration of Phase : " + _name);
    mDuration.mSupport = MetropolisVariable::eRp;
    mDuration.mFormat = DateUtils::eNumeric;
 
-   mValueStack.emplace("Activity_TimeRange_Level",TValueStack( 0.));
-   mValueStack.emplace("Activity_TimeRange_min", TValueStack(0));
-   mValueStack.emplace("Activity_TimeRange_max", TValueStack( 0));
+   mValueStack.emplace("Activity_TimeRange_Level", 0.);
+   mValueStack.emplace("Activity_TimeRange_min", 0.);
+   mValueStack.emplace("Activity_TimeRange_max", 0.);
+
+   mValueStack.emplace("Activity_Significance_Score", 0.);
+   mValueStack.emplace("R_etendue",  0.);
+   mValueStack.emplace("a_Unif", -INFINITY);
+   mValueStack.emplace("b_Unif", INFINITY);
+
+   mValueStack.emplace("Activity_min95", 0);
+   mValueStack.emplace("Activity_max95", 0);
+   mValueStack.emplace("Activity_mean95", 0.);
+   mValueStack.emplace("Activity_std95", 0.);
+
+   mValueStack.emplace("Activity_GridLength", 0.);
+   mValueStack.emplace("Activity_h", 0.);
+   mValueStack.emplace("Activity_Threshold", 0.);
+   mValueStack.emplace("Activity_max", 0.);
+   mValueStack.emplace("Activity_mode",  0.);
 }
 
 Phase& Phase::operator=(const Phase& phase)
@@ -143,8 +175,8 @@ Phase& Phase::operator=(const Phase& phase)
 void Phase::copyFrom(const Phase& phase)
 {
     mId = phase.mId;
-    //mModel = phase.mModel;
-    mName = phase.mName;
+
+    _name = phase._name;
     mColor = phase.mColor;
 
     mAlpha = phase.mAlpha;
@@ -167,14 +199,15 @@ void Phase::copyFrom(const Phase& phase)
     mEvents = phase.mEvents;
     mConstraintsNextPhases = phase.mConstraintsNextPhases;
     mConstraintsPrevPhases = phase.mConstraintsPrevPhases;
+    mValueStack = phase.mValueStack;
 }
 
 Phase::~Phase()
 {
-   for (auto && ev: mEvents)
+    /*for (auto && ev: mEvents)
             ev = nullptr;
 
-   mEvents.clear();
+    mEvents.clear();
 
     if (!mConstraintsNextPhases.empty()) {
         for (auto && pc : mConstraintsNextPhases)
@@ -189,17 +222,13 @@ Phase::~Phase()
         mConstraintsPrevPhases.clear();
     }
     mAlpha.clear();
-    mAlpha.~MetropolisVariable();
 
     mBeta.clear();
-    mBeta.~MetropolisVariable();
 
     mTau.clear();
-    mTau.~MetropolisVariable();
 
     mDuration.clear();
-    mDuration.~MetropolisVariable();
-
+*/
 }
 
 // Properties
@@ -211,7 +240,7 @@ Phase Phase::fromJson(const QJsonObject &json)
 {
     Phase p;
     p.mId = json.value(STATE_ID).toInt();
-    p.mName = json.value(STATE_NAME).toString();
+    p.setName(json.value(STATE_NAME).toString());
     p.mColor = QColor(json.value(STATE_COLOR_RED).toInt(), json.value(STATE_COLOR_GREEN).toInt(), json.value(STATE_COLOR_BLUE).toInt());
 
     p.mItemX = json.value(STATE_ITEM_X).toDouble();
@@ -223,14 +252,14 @@ Phase Phase::fromJson(const QJsonObject &json)
     p.mIsSelected = json.value(STATE_IS_SELECTED).toBool();
     p.mIsCurrent = json.value(STATE_IS_CURRENT).toBool();
 
-    p.mAlpha.setName("Begin of Phase : " + p.mName);
-    p.mBeta.setName("End of Phase : " + p.mName);
-    p.mTau.setName("Tau of Phase : " + p.mName);
-    p.mDuration.setName("Duration of Phase : " + p.mName);
+    p.mAlpha.setName("Begin of Phase : " + p._name);
+    p.mBeta.setName("End of Phase : " + p._name);
+    p.mTau.setName("Tau of Phase : " + p._name);
+    p.mDuration.setName("Duration of Phase : " + p._name);
 
-    p.mValueStack.emplace("Activity_TimeRange_Level", TValueStack( 0.));
-    p.mValueStack.emplace("Activity_TimeRange_min", TValueStack( 0));
-    p.mValueStack.emplace("Activity_TimeRange_max", TValueStack( 0));
+    p.mValueStack.emplace("Activity_TimeRange_Level", 0.);
+    p.mValueStack.emplace("Activity_TimeRange_min", 0.);
+    p.mValueStack.emplace("Activity_TimeRange_max", 0.);
 
     return p;
 }
@@ -240,7 +269,7 @@ QJsonObject Phase::toJson() const
     QJsonObject phase;
 
     phase[STATE_ID] = mId;
-    phase[STATE_NAME] = mName;
+    phase[STATE_NAME] = getQStringName();
     phase[STATE_COLOR_RED] = mColor.red();
     phase[STATE_COLOR_GREEN] = mColor.green();
     phase[STATE_COLOR_BLUE] = mColor.blue();
@@ -300,7 +329,7 @@ double Phase::sum_gamma_next_phases()
 }
 
 
-void Phase::init_alpha_beta_phase(std::vector<Phase*> &phases)
+void Phase::init_alpha_beta_phase(std::vector<std::shared_ptr<Phase>> &phases)
 {
     auto model = getModel_ptr();
     for (auto phase : phases) {
@@ -317,7 +346,7 @@ void Phase::init_update_alpha_phase(double theta_max_phase_prev)
         for (auto prev_c : mConstraintsNextPhases) {
             if (mTauType != Phase::TauType::eTauUnknown) {
                 prev_c->mPhaseTo->mAlpha.mX = std::max(prev_c->mPhaseTo->mAlpha.mX, theta_max_phase_prev  + prev_c->mGamma);
-                qDebug()<<"[Phase::init_update_alpha_phase] mise à jour alpha des phases Sup " <<prev_c->mPhaseTo->mName<<" init alpha ="<<prev_c->mPhaseTo->mAlpha.mX;
+                qDebug()<<"[Phase::init_update_alpha_phase] mise à jour alpha des phases Sup " <<prev_c->mPhaseTo->getQStringName()<<" init alpha ="<<prev_c->mPhaseTo->mAlpha.mX;
             }
         }
         return;
@@ -332,7 +361,7 @@ void Phase::init_update_beta_phase(double beta_sup)
         for(auto prev_c : mConstraintsPrevPhases) {
             if (mTauType != Phase::TauType::eTauUnknown) {
                 prev_c->mPhaseFrom->mBeta.mX = std::max(prev_c->mPhaseFrom->mBeta.mX, beta_sup - prev_c->mGamma);
-                qDebug()<<"[Phase::init_update_beta_phase] mise à jour beta des phases Inf " <<prev_c->mPhaseFrom->mName<<" init beta ="<<prev_c->mPhaseFrom->mBeta.mX;
+                qDebug()<<"[Phase::init_update_beta_phase] mise à jour beta des phases Inf " <<prev_c->mPhaseFrom->getQStringName()<<" init beta ="<<prev_c->mPhaseFrom->mBeta.mX;
             }
         }
         return;
@@ -382,12 +411,12 @@ double Phase::init_min_theta(const double min_default)
 #pragma mark RUN
 double Phase::getMaxThetaEvents(double tmax)
 {
-    Q_ASSERT_X(!mEvents.empty(), "[Phase::getMaxThetaEvents]", QString("No Event in Phase :" + this->mName).toStdString().c_str());
+    Q_ASSERT_X(!mEvents.empty(), "[Phase::getMaxThetaEvents]", QString("No Event in Phase :" + this->getQStringName()).toStdString().c_str());
     (void) tmax;
     double theta (mEvents[0]->mTheta.mX);
 
     // All Event must be Initialized
-    std::for_each(mEvents.begin(), mEvents.end(), [&theta] (Event* ev) {theta= std::max(ev->mTheta.mX, theta);});
+    std::for_each(mEvents.begin(), mEvents.end(), [&theta] (std::shared_ptr<Event> ev) {theta= std::max(ev->mTheta.mX, theta);});
     return theta;
 
 }
@@ -398,12 +427,12 @@ double Phase::getMaxThetaEvents(double tmax)
  */
 double Phase::getMinThetaEvents(double tmin)
 {
-    Q_ASSERT_X(!mEvents.empty(), "[Phase::getMinThetaEvents]", QString("No Event in Phase :" + mName).toStdString().c_str());
+    Q_ASSERT_X(!mEvents.empty(), "[Phase::getMinThetaEvents]", QString("No Event in Phase :" + getQStringName()).toStdString().c_str());
     (void) tmin;
     double theta (mEvents[0]->mTheta.mX);
 
     // All Event must be Initialized
-    std::for_each(mEvents.begin(), mEvents.end(), [&theta] (Event* ev){theta= std::min(ev->mTheta.mX, theta);});
+    std::for_each(mEvents.begin(), mEvents.end(), [&theta] (std::shared_ptr<Event> ev){theta= std::min(ev->mTheta.mX, theta);});
     return theta;
 }
 
@@ -594,13 +623,14 @@ void Phase::memoAll()
 {
     mAlpha.memo();
     mBeta.memo();
+    mDuration.memo();
    // if (mTauType == eZOnly)
      //   mTau.memo();
-    mDuration.memo();
+
 
 #ifdef DEBUG
     if (mBeta.mX - mAlpha.mX < 0.)
-        qDebug()<<"[Phase::memoAll] : "<<mName<<" Warning mBeta.mX - mAlpha.mX<0";
+        qDebug()<<"[Phase::memoAll] : "<<getQStringName()<<" Warning mBeta.mX - mAlpha.mX<0";
 #endif
 }
 
@@ -621,33 +651,33 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 #endif
     auto model = getModel_ptr();
     // Avoid to redo calculation, when mActivity exist, it happen when the control is changed
-    if (!mRawActivity.empty() && gridLength == mValueStack.at("Activity_GridLength").value()
-            && h == mValueStack.at("Activity_h").value()
-            && threshold == mValueStack.at("Activity_Threshold").value()
-            && timeRangeLevel == mValueStack.at("Activity_TimeRange_Level").value())
+    if (!mRawActivity.empty() && gridLength == mValueStack.at("Activity_GridLength")
+            && h == mValueStack.at("Activity_h")
+            && threshold == mValueStack.at("Activity_Threshold")
+            && timeRangeLevel == mValueStack.at("Activity_TimeRange_Level"))
        return;
 
-    mValueStack.insert_or_assign("Activity_GridLength", TValueStack( gridLength));
-    mValueStack.insert_or_assign("Activity_h", TValueStack( h));
-    mValueStack.insert_or_assign("Activity_Threshold", TValueStack( threshold));
-    mValueStack.insert_or_assign("Activity_max", TValueStack( 0.));
-    mValueStack.insert_or_assign("Activity_mode", TValueStack( 0.));
+    mValueStack.insert_or_assign("Activity_GridLength", gridLength);
+    mValueStack.insert_or_assign("Activity_h", h);
+    mValueStack.insert_or_assign("Activity_Threshold", threshold);
+    mValueStack.insert_or_assign("Activity_max", 0.);
+    mValueStack.insert_or_assign("Activity_mode",  0.);
     //mValueStack.emplace("Activity_TimeRange_Level", TValueStack( 0.));
 
     const auto s = &model->mSettings;
     if (mEvents.size() < 1) {
-        mValueStack.insert_or_assign("Activity_Significance_Score", TValueStack( 0));
-        mValueStack.insert_or_assign("R_etendue", TValueStack( s->mTmax - s->mTmin));
-        mValueStack.insert_or_assign("t_min", TValueStack( s->mTmin));
-        mValueStack.insert_or_assign("t_max", TValueStack( s->mTmax));
+        mValueStack.insert_or_assign("Activity_Significance_Score",  0);
+        mValueStack.insert_or_assign("R_etendue", ( s->mTmax - s->mTmin));
+        mValueStack.insert_or_assign("t_min", s->mTmin);
+        mValueStack.insert_or_assign("t_max", s->mTmax);
 
-        mValueStack.insert_or_assign("Activity_TimeRange_min", TValueStack( s->mTmin));
-        mValueStack.insert_or_assign("Activity_TimeRange_max", TValueStack( s->mTmax));
+        mValueStack.insert_or_assign("Activity_TimeRange_min", s->mTmin);
+        mValueStack.insert_or_assign("Activity_TimeRange_max", s->mTmax);
 
-        mValueStack.insert_or_assign("Activity_min95", TValueStack( s->mTmin));
-        mValueStack.insert_or_assign("Activity_max95", TValueStack( s->mTmax));
-        mValueStack.insert_or_assign("Activity_mean95", TValueStack( (s->mTmax + s->mTmin)/2.));
-        mValueStack.insert_or_assign("Activity_std95", TValueStack( 0.));
+        mValueStack.insert_or_assign("Activity_min95", s->mTmin);
+        mValueStack.insert_or_assign("Activity_max95", s->mTmax);
+        mValueStack.insert_or_assign("Activity_mean95",  (s->mTmax + s->mTmin)/2.);
+        mValueStack.insert_or_assign("Activity_std95", 0.);
         return;
     }
 
@@ -664,18 +694,18 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
     //---- timeRange
 
-    mValueStack.insert_or_assign("Activity_TimeRange_Level", TValueStack(timeRangeLevel));
+    mValueStack.insert_or_assign("Activity_TimeRange_Level", timeRangeLevel);
 
-    if (mValueStack.at("Activity_TimeRange_min").value() == mValueStack.at("Activity_TimeRange_max").value()
-        || mValueStack.at("Activity_TimeRange_Level").value() != timeRangeLevel) {
+    if (mValueStack.at("Activity_TimeRange_min") == mValueStack.at("Activity_TimeRange_max")
+        || mValueStack.at("Activity_TimeRange_Level") != timeRangeLevel) {
         const std::pair<double, double> timeRange = timeRangeFromTraces( mAlpha.fullRunRawTrace(model->mChains),
-                                                                         mBeta.fullRunRawTrace(model->mChains), timeRangeLevel, "Time Range for Phase : " + mName);
-        mValueStack.insert_or_assign("Activity_TimeRange_min", TValueStack(timeRange.first));
-        mValueStack.insert_or_assign("Activity_TimeRange_max", TValueStack(timeRange.second));
+                                                                         mBeta.fullRunRawTrace(model->mChains), timeRangeLevel, "Time Range for Phase : " + getQStringName());
+        mValueStack.insert_or_assign("Activity_TimeRange_min", timeRange.first);
+        mValueStack.insert_or_assign("Activity_TimeRange_max", timeRange.second);
     }
 
-    const double TimeRange_min = mValueStack.at("Activity_TimeRange_min").value();
-    const double TimeRange_max = mValueStack.at("Activity_TimeRange_max").value();
+    const double TimeRange_min = mValueStack.at("Activity_TimeRange_min");
+    const double TimeRange_max = mValueStack.at("Activity_TimeRange_max");
     std::vector<double> concaTrace;
 
     double min95 = +INFINITY;
@@ -710,30 +740,28 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     } else
         return;
         */
-    mValueStack.insert_or_assign("Activity_min95", TValueStack( min95));
-    mValueStack.insert_or_assign("Activity_max95",TValueStack( max95));
+    mValueStack.insert_or_assign("Activity_min95", min95);
+    mValueStack.insert_or_assign("Activity_max95", max95);
 
     if (min95 == max95) { // happen when there is only one bound in the phase ???
 
         //qDebug()<<"[Phase::generateActivity] tmin == tmax : " << mName;
 
-        //mRawActivity[min95] = 1;
+        mValueStack.insert_or_assign("Activity_Significance_Score", 0);
+        mValueStack.insert_or_assign("R_etendue",  0);
+        mValueStack.insert_or_assign("a_Unif", min95);
+        mValueStack.insert_or_assign("b_Unif", max95);
 
-        mValueStack.insert_or_assign("Activity_Significance_Score", TValueStack( 0));
-        mValueStack.insert_or_assign("R_etendue", TValueStack( 0));
-        mValueStack.insert_or_assign("a_Unif", TValueStack( min95));
-        mValueStack.insert_or_assign("b_Unif", TValueStack( max95));
-
-        mValueStack.insert_or_assign("Activity_mean95", TValueStack( min95));
-        mValueStack.insert_or_assign("Activity_std95", TValueStack( 0.));
+        mValueStack.insert_or_assign("Activity_mean95", min95);
+        mValueStack.insert_or_assign("Activity_std95", 0.);
 
 
     } else {
 
         double mean95, var95;
         mean_variance_Knuth(concaTrace, mean95, var95);
-        mValueStack.insert_or_assign("Activity_mean95", TValueStack( mean95));
-        mValueStack.insert_or_assign("Activity_std95", TValueStack( sqrt(var95)));
+        mValueStack.insert_or_assign("Activity_mean95", mean95);
+        mValueStack.insert_or_assign("Activity_std95", sqrt(var95));
 
     }
 
@@ -752,7 +780,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     } else {
         h = std::min( std::max(s->mStep, h),  R_etendue) ;
     }
-    mValueStack.insert_or_assign("Activity_h", TValueStack( h));
+    mValueStack.insert_or_assign("Activity_h", h);
 
     const double h_2 = h/2.;
 
@@ -784,16 +812,16 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     const double b_Unif_minus_h_2 = b_Unif;
     const double b_Unif_plus_h_2 = b_Unif;
 */
-    mValueStack.insert_or_assign("a_Unif", TValueStack( a_Unif));
-    mValueStack.insert_or_assign("b_Unif", TValueStack( b_Unif));
-    mValueStack.insert_or_assign("R_etendue", TValueStack( R_etendue));
+    mValueStack.insert_or_assign("a_Unif", a_Unif);
+    mValueStack.insert_or_assign("b_Unif", b_Unif);
+    mValueStack.insert_or_assign("R_etendue", R_etendue);
 
 
 
     /// Look for the maximum span containing values \f$ x=2 \f$
 
     if (min95 == max95) { // happen when there is only one bound in the phase ???
-        qDebug()<<"[Phase::generateActivity] min95 == max95 : " << mName;
+        qDebug()<<"[Phase::generateActivity] min95 == max95 : " << getQStringName();
         mRawActivity.emplace(a_Unif_minus_h_2,  1./h);
         //mRawActivity.emplace(a_Unif,  1./h);
         mRawActivity.emplace(b_Unif_plus_h_2, 1./h);
@@ -810,9 +838,9 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
         mActivityUnifTheo = mActivity;
 
-        mValueStack.insert_or_assign("Activity_Significance_Score", TValueStack(0.));
-        mValueStack.insert_or_assign("Activity_max", TValueStack( 1./h));
-        mValueStack.insert_or_assign("Activity_mode", TValueStack( a_Unif));
+        mValueStack.insert_or_assign("Activity_Significance_Score", 0.);
+        mValueStack.insert_or_assign("Activity_max",  1./h);
+        mValueStack.insert_or_assign("Activity_mode", a_Unif);
 
         return;
     }
@@ -931,13 +959,13 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
         double dUnif;
         if ((a_Unif_minus_h_2 < t) && (t < a_Unif_plus_h_2)) {
-            dUnif =  interpolateValueInStdMap(t, mRawActivityUnifTheo);
+            dUnif = interpolateValueInStdMap(t, mRawActivityUnifTheo);
 
         } else if ((a_Unif_plus_h_2 <= t) && (t <= b_Unif_minus_h_2)) {
             dUnif = ActivityUnif;
 
         } else if ((b_Unif_minus_h_2 < t) && (t < b_Unif_plus_h_2)) {
-            dUnif =  interpolateValueInStdMap(t, mRawActivityUnifTheo);
+            dUnif = interpolateValueInStdMap(t, mRawActivityUnifTheo);
 
         } else
             dUnif = 0;
@@ -955,15 +983,23 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     }
 
 #ifdef DEBUG
-    qDebug()<<"[Model::generateActivity] somme Activity = "<< somActivity << " ; Phase = "<< mName <<"\n";
+    qDebug()<<"[Model::generateActivity] somme Activity = "<< somActivity << " ; Phase = "<< getQStringName() <<"\n";
 #endif
-    mValueStack.insert_or_assign("Activity_Significance_Score", TValueStack( UnifScore/(double) gridLength));
-    mValueStack.insert_or_assign("Activity_max", TValueStack( maxActivity));
-    mValueStack.insert_or_assign("Activity_mode", TValueStack( modeActivity));
+    mValueStack.insert_or_assign("Activity_Significance_Score", UnifScore/(double) gridLength);
+    mValueStack.insert_or_assign("Activity_max", maxActivity);
+    mValueStack.insert_or_assign("Activity_mode", modeActivity);
 
-    mRawActivity = vector_to_map(esp, t_min_grid, t_max_grid, delta_t);
-    mRawActivityInf = vector_to_map(esp_inf, t_min_grid, t_max_grid, delta_t);
-    mRawActivitySup = vector_to_map(esp_sup, t_min_grid, t_max_grid, delta_t);
+    //mRawActivity = //vector_to_map(esp, t_min_grid, t_max_grid, delta_t);
+    //mRawActivityInf = vector_to_map(esp_inf, t_min_grid, t_max_grid, delta_t);
+    //mRawActivitySup = vector_to_map(esp_sup, t_min_grid, t_max_grid, delta_t);
+
+    auto acti = vector_to_map(esp, t_min_grid, t_max_grid, delta_t);
+
+    mRawActivity.swap(acti);
+    acti = vector_to_map(esp_inf, t_min_grid, t_max_grid, delta_t);
+    mRawActivityInf.swap(acti);
+    acti = vector_to_map(esp_sup, t_min_grid, t_max_grid, delta_t);
+    mRawActivitySup.swap(acti);
 
     const double QSup = interpolate_value_from_curve(0., Gx, 0, 1.)* n / h;
     const double QInf = findOnOppositeCurve(0., Gx)* n / h;
@@ -976,12 +1012,24 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     mRawActivityInf.emplace(t_max_grid, QInf);
 
 
-    mActivity = DateUtils::convertMapToAppSettingsFormat(mRawActivity);
+    /*mActivity = DateUtils::convertMapToAppSettingsFormat(mRawActivity);
     mActivityInf = DateUtils::convertMapToAppSettingsFormat(mRawActivityInf);
     mActivitySup = DateUtils::convertMapToAppSettingsFormat(mRawActivitySup);
 
-    mActivityUnifTheo = DateUtils::convertMapToAppSettingsFormat(mRawActivityUnifTheo);
+    mActivityUnifTheo = DateUtils::convertMapToAppSettingsFormat(mRawActivityUnifTheo);*/
 
+
+    acti = DateUtils::convertMapToAppSettingsFormat(mRawActivity);
+    mActivity.swap(acti);
+
+    acti = DateUtils::convertMapToAppSettingsFormat(mRawActivityInf);
+    mActivityInf.swap(acti);
+
+    acti = DateUtils::convertMapToAppSettingsFormat(mRawActivitySup);
+    mActivitySup.swap(acti);
+
+    acti = DateUtils::convertMapToAppSettingsFormat(mRawActivityUnifTheo);
+    mActivityUnifTheo.swap(acti);
 
 #ifdef DEBUG
     qDebug() <<  QString("[Phase::generateActivity] done in " + DHMS(tClock.elapsed()));

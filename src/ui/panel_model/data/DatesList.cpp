@@ -92,8 +92,8 @@ void DatesList::setEvent(const QJsonObject &event)
                                    | Qt::ItemIsEnabled
                                    | Qt::ItemNeverHasChildren);
 
-                    item->setText(d.mName);
-                    item->setData(0x0101, d.mName);
+                    item->setText(d.getQStringName());
+                    item->setData(0x0101, d.getQStringName());
                     item->setData(0x0102, d.mPlugin->getId());
                     item->setData(0x0103, d.getDesc());
                     item->setData(0x0104, d.mId);
@@ -102,7 +102,7 @@ void DatesList::setEvent(const QJsonObject &event)
                     item->setData(0x0107, d.mIsValid);
                     item->setData(0x0108, date.value(STATE_DATE_SUB_DATES).toArray().size() > 0);
                     item->setData(0x0109, d.mOrigin);
-                    item->setData(0x0110, d.mUUID);
+                    item->setData(0x0110, QString::fromStdString(d.mUUID));
                     
                     addItem(item);
                 }

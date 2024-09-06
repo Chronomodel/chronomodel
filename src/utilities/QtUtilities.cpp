@@ -248,36 +248,62 @@ QColor getContrastedColor(const QColor& color)
     return frontColor;
 }
 
-QString removeZeroAtRight(QString str)
+QString removeZeroAtRight(const QString &str)
 {
     return QString::fromStdString(removeZeroAtRight(str.toStdString()));
 }
 
-QList<int> stringListToIntList(const QString& listStr, const QString& separator)
+std::vector<int> QStringToStdVectorInt(const QString &listStr, const QString &separator)
+{
+    std::vector<int> result;
+    if (!listStr.isEmpty()) {
+        QStringList list = listStr.split(separator);
+        for (const auto& str : list)
+            result.push_back(str.toInt());
+
+    }
+    return result;
+}
+
+
+QList<int> QStringToQListInt(const QString &listStr, const QString &separator)
 {
     QList<int> result;
     if (!listStr.isEmpty()) {
         QStringList list = listStr.split(separator);
         for (const auto& str : list)
-            result.append(str.toInt());
+            result.push_back(str.toInt());
 
     }
     return result;
 }
 
-QList<unsigned> stringListToUnsignedList(const QString &listStr, const QString &separator)
+std::vector<unsigned> QStringToStdVectorUnsigned(const QString &listStr, const QString &separator)
+{
+    std::vector<unsigned> result;
+    if (!listStr.isEmpty()) {
+        QStringList list = listStr.split(separator);
+        for (const auto& str : list)
+            result.push_back(str.toInt());
+
+    }
+    return result;
+}
+
+QList<unsigned> QStringToQListUnsigned(const QString &listStr, const QString &separator)
 {
     QList<unsigned> result;
     if (!listStr.isEmpty()) {
         QStringList list = listStr.split(separator);
         for (const auto& str : list)
-            result.append(str.toInt());
+            result.push_back(str.toInt());
 
     }
     return result;
 }
 
-QStringList intListToStringList(const QList<int> &intList)
+
+QStringList QListIntToQStringList(const QList<int> &intList)
 {
     QStringList list;
     for (const auto& i : intList)
@@ -285,7 +311,15 @@ QStringList intListToStringList(const QList<int> &intList)
     return list;
 }
 
-QStringList unsignedListToStringList(const QList<unsigned>& unsignedList)
+QStringList StdVectorIntToQStringList(const std::vector<int> &intList)
+{
+    QStringList list;
+    for (const auto& i : intList)
+        list.append(QString::number(i));
+    return list;
+}
+
+QStringList QListUnsignedToQStringList(const QList<unsigned>& unsignedList)
 {
     QStringList list;
     for (const auto& un : unsignedList)
@@ -293,15 +327,21 @@ QStringList unsignedListToStringList(const QList<unsigned>& unsignedList)
     return list;
 }
 
-QString intListToString(const QList<int>& intList, const QString& separator)
+QString QListIntToQString(const QList<int>& intList, const QString& separator)
 {
-    QStringList list = intListToStringList(intList);
+    QStringList list = QListIntToQStringList(intList);
     return list.join(separator);
 }
 
-QString unsignedListToString(const QList<unsigned> &intList, const QString &separator)
+QString StdVectorIntToQString(const std::vector<int>& intList, const QString& separator)
 {
-    QStringList list = unsignedListToStringList(intList);
+    QStringList list = StdVectorIntToQStringList(intList);
+    return list.join(separator);
+}
+
+QString QListUnsignedToQString(const QList<unsigned> &intList, const QString &separator)
+{
+    QStringList list = QListUnsignedToQStringList(intList);
     return list.join(separator);
 }
 
@@ -841,7 +881,8 @@ QList<double>* load_QList_ptr(QDataStream& stream)
     
 }
 
-std::vector<double> load_std_vector(QDataStream& stream) {
+std::vector<double> load_std_vector(QDataStream& stream)
+{
     quint32 size;
 
     stream >> size;
@@ -857,6 +898,25 @@ std::vector<double> load_std_vector(QDataStream& stream) {
 
     return data;
 }
+
+std::vector<bool> load_std_vector_bool(QDataStream& stream)
+{
+    quint32 size;
+
+    stream >> size;
+    std::vector<bool> data;
+
+    if (size>0) {
+        bool v;
+        for (quint32 i = 0; i < size; ++i) {
+            stream >> v;
+            data.push_back(v);
+        }
+    }
+
+    return data;
+}
+
 
 QList<double> load_QList(QDataStream& stream)
 {
@@ -901,14 +961,13 @@ void reload_shared_ptr(const std::shared_ptr<std::vector<double>>& data, QDataSt
     quint32 size;
     stream >> size;
 
-    if (size>0) {
+    if (size > 0) {
         double v;
         for (quint32 i = 0; i < size; ++i) {
             stream >> v;
             data->push_back(v);
         }
     }
-    return;
 }
 
 std::shared_ptr<Project> getProject_ptr()

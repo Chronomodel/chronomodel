@@ -81,11 +81,11 @@ protected:
     std::pair<Matrix2D, MatrixDiag> try_decomp_QTQ;
     std::pair<Matrix2D, MatrixDiag> try_decomp_matB;
 
-    std::vector<Event*> initListEvents;
+    std::vector<std::shared_ptr<Event>> initListEvents;
 
 private:
-    std::vector<Event*> mPointEvent;
-    std::vector<Event*> mNodeEvent;
+    std::vector<std::shared_ptr<Event>> mPointEvent;
+    std::vector<std::shared_ptr<Event>> mNodeEvent;
     qsizetype mFirstEventIndex; // Utile pour VG global, correspond au premier Event qui n'est pas un Bound
     double Var_residual_spline;
     double var_Y;
@@ -93,8 +93,8 @@ private:
 #pragma mark function
 protected:
 
-    void orderEventsByThetaReduced(std::vector<Event*> &event);
-    void spreadEventsThetaReduced0(std::vector<Event*> &sortedEvents, t_reduceTime spreadSpan = 0.);
+    void orderEventsByThetaReduced(std::vector<std::shared_ptr<Event> > &event);
+    void spreadEventsThetaReduced0(std::vector<std::shared_ptr<Event>> &sortedEvents, t_reduceTime spreadSpan = 0.);
     //std::thread::id mTh_id_memoCurve;
     //std::thread mTh_memoCurve;
 
@@ -130,11 +130,11 @@ protected:
     
 private:
 
-    static t_prob h_YWI_AY(const SplineMatrices& matrices, const std::vector<Event *> &events, const  double lambdaSpline, const std::vector< t_reduceTime> &vecH, const bool hasY = false, const bool hasZ = false);
+    static t_prob h_YWI_AY(const SplineMatrices& matrices, const std::vector<std::shared_ptr<Event>> &events, const  double lambdaSpline, const std::vector< t_reduceTime> &vecH, const bool hasY = false, const bool hasZ = false);
 
-    static t_prob h_YWI_AY_composanteX(const SplineMatrices &matrices, const std::vector<Event *> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp_matB, const std::pair<Matrix2D, MatrixDiag > &decomp_QTQ, const double lambdaSpline);
-    static t_prob h_YWI_AY_composanteY(const SplineMatrices &matrices, const std::vector<Event *> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp_matB, const std::pair<Matrix2D, MatrixDiag > &decomp_QTQ, const double lambdaSpline);
-    static t_prob h_YWI_AY_composanteZ(const SplineMatrices &matrices, const std::vector<Event *> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp_matB, const std::pair<Matrix2D, MatrixDiag > &decomp_QTQ, const double lambdaSpline);
+    static t_prob h_YWI_AY_composanteX(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp_matB, const std::pair<Matrix2D, MatrixDiag > &decomp_QTQ, const double lambdaSpline);
+    static t_prob h_YWI_AY_composanteY(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp_matB, const std::pair<Matrix2D, MatrixDiag > &decomp_QTQ, const double lambdaSpline);
+    static t_prob h_YWI_AY_composanteZ(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp_matB, const std::pair<Matrix2D, MatrixDiag > &decomp_QTQ, const double lambdaSpline);
 
     t_prob h_YWI_AY_composanteZ_decomp(const SplineMatrices& matrices, const QList<Event *> &events, const double lambdaSpline, const std::vector< t_reduceTime> &vecH);
 
@@ -169,12 +169,12 @@ private:
          return std::transform_reduce(PAR matDq.cbegin()+1, matDq.cend()-1, matD.begin()+1, 0., std::plus{}, [](double val1,  double val2) { return log(val1/val2); });
      }
 
-     static t_prob ln_h_YWI_3_update_ASYNC(const SplineMatrices &matrices, const std::vector<Event *> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag> &decomp_matB, const double lambdaSpline, const bool hasY, const bool hasZ);
-     static t_prob ln_h_YWI_3_update(const SplineMatrices &matrices, const std::vector<Event *> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag> &decomp_matB, const double lambdaSpline, const bool hasY, const bool hasZ);
+     static t_prob ln_h_YWI_3_update_ASYNC(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag> &decomp_matB, const double lambdaSpline, const bool hasY, const bool hasZ);
+     static t_prob ln_h_YWI_3_update(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag> &decomp_matB, const double lambdaSpline, const bool hasY, const bool hasZ);
 
-     static t_prob ln_h_YWI_3_X(const SplineMatrices &matrices, const std::vector<Event *> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp_matB, const double lambdaSpline);
-     static t_prob ln_h_YWI_3_Y(const SplineMatrices &matrices, const std::vector<Event *> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp_matB, const double lambdaSpline);
-     static t_prob ln_h_YWI_3_Z(const SplineMatrices &matrices, const std::vector<Event *> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp_matB, const double lambdaSpline);
+     static t_prob ln_h_YWI_3_X(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp_matB, const double lambdaSpline);
+     static t_prob ln_h_YWI_3_Y(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp_matB, const double lambdaSpline);
+     static t_prob ln_h_YWI_3_Z(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp_matB, const double lambdaSpline);
 
      static std::pair<Matrix2D, MatrixDiag> decomp_matB (const SplineMatrices &matrices, const double lambdaSpline)
      {
@@ -196,34 +196,34 @@ private:
 
 
      static t_prob h_lambda(const SplineMatrices &matrices, const int nb_noeuds, const  double lambdaSpline) ;
-     t_prob h_theta (const QList<Event *> &events) const;
-     static double h_theta_Event (const Event * e);
+     t_prob h_theta (const QList<std::shared_ptr<Event>> &events) const;
+     static double h_theta_Event (const std::shared_ptr<Event> e);
 
 
-     inline t_prob h_VG_Event(const Event * e, double S02_Vg) const;
+     inline t_prob h_VG_Event(const std::shared_ptr<Event> &e, double S02_Vg) const;
 
-     t_prob h_S02_Vg(const std::vector<Event *> &events, double S02_Vg) const;
-     double h_S02_Vg_K_old(const std::vector<Event *> events, double S02_Vg, double try_Vg);
+     t_prob h_S02_Vg(const std::vector<std::shared_ptr<Event> > &events, double S02_Vg) const;
+     double h_S02_Vg_K_old(const std::vector<std::shared_ptr<Event> > events, double S02_Vg, double try_Vg);
 
-     t_prob rate_h_S02_Vg_test(const std::vector<Event *> &events, double S02_Vg, double try_S02) const;
+     t_prob rate_h_S02_Vg_test(const std::vector<std::shared_ptr<Event>> &events, double S02_Vg, double try_S02) const;
      t_prob rate_h_S02_Vg(const std::vector<Event *> &pointEvents, double S02_Vg, double try_S02) const;
 
-     double S02_Vg_Yx(std::vector<Event *> &events, const SplineMatrices &matricesWI, std::vector<t_reduceTime> &vecH, const double lambdaSpline);
-     double S02_Vg_Yy(std::vector<Event *> &events, const SplineMatrices &matricesWI, std::vector<t_reduceTime> &vecH, const double lambdaSpline);
-     double S02_Vg_Yz(std::vector<Event *> &events, const SplineMatrices &matricesWI, std::vector<t_reduceTime> &vecH, const double lambdaSpline);
+     double S02_Vg_Yx(std::vector<std::shared_ptr<Event>> &events, const SplineMatrices &matricesWI, std::vector<t_reduceTime> &vecH, const double lambdaSpline);
+     double S02_Vg_Yy(std::vector<std::shared_ptr<Event>> &events, const SplineMatrices &matricesWI, std::vector<t_reduceTime> &vecH, const double lambdaSpline);
+     double S02_Vg_Yz(std::vector<std::shared_ptr<Event>> &events, const SplineMatrices &matricesWI, std::vector<t_reduceTime> &vecH, const double lambdaSpline);
 
      static double S02_lambda_WI(const SplineMatrices &matrices, const int nb_noeuds);
 
-     double Calcul_Variance_Rice (const std::vector<Event *> &events) const;
+     double Calcul_Variance_Rice (const std::vector<std::shared_ptr<Event>> &events) const;
 
-     void prepareEventsY(const std::vector<Event *> &events);
-     void prepareEventY(Event * const event);
+     void prepareEventsY(const std::vector<std::shared_ptr<Event>> &events);
+     void prepareEventY(std::shared_ptr<Event> const event);
 
 
-     double minimalThetaDifference(std::vector<Event *> &events);
-     double minimalThetaReducedDifference(std::vector<Event *> &events);
+     double minimalThetaDifference(std::vector<std::shared_ptr<Event>> &events);
+     double minimalThetaReducedDifference(std::vector<std::shared_ptr<Event>> &events);
 
-     void spreadEventsTheta(std::vector<Event *> &events, double minStep = 1e-6); // not used
+     void spreadEventsTheta(std::vector<std::shared_ptr<Event>> &events, double minStep = 1e-6); // not used
 
     inline  double yearTime(double reduceTime) ;
 
@@ -246,12 +246,12 @@ private:
     double rate_h_lambda_K(const double current_lambda, const double try_lambda, const double schrinkageLambda, const int n);
     double S02_lambda_WIK (const Matrix2D &K, const int nb_noeuds);
     double h_lambda_Komlan(const Matrix2D &K, const Matrix2D &K_new, const int nb_noeuds, const double &lambdaSpline);
-    double rapport_Theta(const std::function<double (Event *)> &fun, const std::vector<Event *> &lEvents, const Matrix2D &K, const Matrix2D &K_new, const double lambdaSpline);
+    double rapport_Theta(const std::function<double (std::shared_ptr<Event>)> &fun, const std::vector<std::shared_ptr<Event>> &lEvents, const Matrix2D &K, const Matrix2D &K_new, const double lambdaSpline);
 
-    MatrixDiag createDiagWInv_Vg0(const std::vector<Event*>& lEvents);
+    MatrixDiag createDiagWInv_Vg0(const std::vector<std::shared_ptr<Event> > &lEvents);
 
-    SplineMatrices prepareCalculSpline_W_Vg0(const std::vector<Event *> &sortedEvents, std::vector<double> &vecH);
-    MCMCSpline samplingSpline_multi(std::vector<Event *> &lEvents, std::vector<Event *> &lEventsinit, std::vector<double> vecYx, std::vector<double> vecYstd, const Matrix2D &RR, const Matrix2D &R_1QT, const Matrix2D &Q, const Matrix2D &QT, const Matrix2D &matK);
+    SplineMatrices prepareCalculSpline_W_Vg0(const std::vector<std::shared_ptr<Event> > &sortedEvents, std::vector<double> &vecH);
+    MCMCSpline samplingSpline_multi(std::vector<std::shared_ptr<Event>> &lEvents, std::vector<std::shared_ptr<Event>> &lEventsinit, std::vector<double> vecYx, std::vector<double> vecYstd, const Matrix2D &RR, const Matrix2D &R_1QT, const Matrix2D &Q, const Matrix2D &QT, const Matrix2D &matK);
 
     std::vector<double> multinormal_sampling (const std::vector<double> &mu, const Matrix2D &a);
 
@@ -262,9 +262,9 @@ private:
     std::vector<double> multiMatByVectCol0(const Matrix2D &KKK, const std::vector<double> &gg);
 
 
-    double h_exp_fX_theta (Event* e, const MCMCSpline &s, unsigned idx);
-    std::vector<double> sampling_spline (std::vector<Event *> &lEvents, SplineMatrices matrices);
-    t_prob h_S02_Vg_K(const std::vector<Event *> events, const double S02_Vg, const double try_Vg);
+    double h_exp_fX_theta (std::shared_ptr<Event> e, const MCMCSpline &s, unsigned idx);
+    std::vector<double> sampling_spline (std::vector<std::shared_ptr<Event>> &lEvents, SplineMatrices matrices);
+    t_prob h_S02_Vg_K(const std::vector<std::shared_ptr<Event>> events, const double S02_Vg, const double try_Vg);
 
     std::pair<Matrix2D, std::vector<double>> decompositionCholeskyKK(const Matrix2D &matrix, const int nbBandes, const int shift);
 

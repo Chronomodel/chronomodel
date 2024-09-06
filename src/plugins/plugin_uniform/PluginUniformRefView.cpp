@@ -68,7 +68,8 @@ void PluginUniformRefView::setDate(const Date& date, const StudyPeriodSettings& 
     GraphViewRefAbstract::setDate(date, settings);
     
     if (date.mOrigin == Date::eSingleDate) { // not a combination
-
+        // nothing to do
+        /*
         double tminDisplay;
         double tmaxDisplay;
 
@@ -96,15 +97,15 @@ void PluginUniformRefView::setDate(const Date& date, const StudyPeriodSettings& 
         mGraph->showInfos(true);
         mGraph->setFormatFunctX(nullptr);
 
-        /* ----------------------------------------------
-         *  Reference curve
-         * ---------------------------------------------- */
+        // ----------------------------------------------
+        //  Reference curve
+        // ----------------------------------------------
         GraphCurve curve;
         curve.mName = "Reference";
         curve.mPen.setColor(Painting::mainColorDark);
 
         GraphCurve gCurve;
-        gCurve.mName = date.mName;
+        gCurve.mName = date.getQStringName();
 
         QColor curveColor(QColor(100, 50, 140) );
         gCurve.mPen.setColor(curveColor);
@@ -121,7 +122,7 @@ void PluginUniformRefView::setDate(const Date& date, const StudyPeriodSettings& 
         mGraph->add_curve(gCurve);
         mGraph->setRangeX(tminDisplay, tmaxDisplay);
         mGraph->setCurrentX(tminDisplay, tmaxDisplay);
-
+        */
 
         // Y scale and RangeY are define in graphView::zommX()
 
@@ -157,10 +158,12 @@ void PluginUniformRefView::zoomX(const double min, const double max)
 {
     mGraph->zoomX(min, max);
 }
+
 void PluginUniformRefView::setMarginRight(const int margin)
 {
     mGraph->setMarginRight(margin);
 }
+
 void PluginUniformRefView::resizeEvent(QResizeEvent* e)
 {
     Q_UNUSED(e);

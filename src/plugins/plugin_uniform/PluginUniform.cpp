@@ -258,11 +258,11 @@ QJsonObject PluginUniform::mergeDates(const QJsonArray& dates)
             withWiggle = withWiggle || hasWiggle;
 
             if (hasWiggle) {
-                const QString toFind = "WID::" + d.toObject().value(STATE_DATE_UUID).toString();
-                QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
+                const std::string toFind = "WID::" + d.toObject().value(STATE_DATE_UUID).toString().toStdString();
+                auto it = project->mCalibCurves.find(toFind);
 
                 if ( it!=project->mCalibCurves.end()) {
-                    CalibrationCurve* d_mCalibration = & it.value();
+                    std::unique_ptr<CalibrationCurve> d_mCalibration (& it->second);
                     min = std::max(d_mCalibration->mTmin, min);
                     max = std::min(d_mCalibration->mTmax, max);
 

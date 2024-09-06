@@ -580,7 +580,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                 GraphCurve calibCurve;
                 GraphView* calibGraph = new GraphView(this);
 
-                 if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.isEmpty()) {
+                 if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.empty()) {
                     calibCurve = densityCurve(d.getFormatedCalibToShow(), "Calibration", penColor);
                     calibCurve.mVisible = true;
                     calibGraph->add_curve(calibCurve);
@@ -588,7 +588,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                     // Drawing the wiggle
                     if (d.mDeltaType !=  Date::eDeltaNone) {
 
-                        const QMap<double, double> &calibWiggle = normalize_map(d.getFormatedWiggleCalibToShow(), map_max(calibCurve.mData).value());
+                        const std::map<double, double> &calibWiggle = normalize_map(d.getFormatedWiggleCalibToShow(), map_max(calibCurve.mData).value());
                         GraphCurve curveWiggle = densityCurve(calibWiggle, "Wiggle", Qt::red);
                         curveWiggle.mVisible = true;
                         calibGraph->add_curve(curveWiggle);
@@ -601,11 +601,11 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
 
                 listAxisVisible.append(true);
                 if (&ev != preEvent) {
-                    graphList.append(new GraphTitle(tr("Event : %1 ").arg(eventName), curveDescription, d.mName, this));
+                    graphList.append(new GraphTitle(tr("Event : %1 ").arg(eventName), curveDescription, d.getQStringName(), this));
                     colorList.append(color);
 
                 } else {
-                    graphList.append(new GraphTitle("", d.mName, this));
+                    graphList.append(new GraphTitle("", d.getQStringName(), this));
                     colorList.append(color);
 
                     listAxisVisible[listAxisVisible.size()-2] = false;
@@ -614,7 +614,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                 preEvent =  &ev ;
 
 
-                if (d.mIsValid && d.mCalibration != nullptr && !d.mCalibration->mVector.isEmpty()) {
+                if (d.mIsValid && d.mCalibration != nullptr && !d.mCalibration->mVector.empty()) {
                     // hpd is calculate only on the study Period
                     const QMap<type_data, type_data> &subData = getMapDataInRange(calibCurve.mData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
@@ -981,16 +981,16 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             for (const auto&& date : dates) {
                 Date d (date.toObject());
 
-                if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.isEmpty()) {
+                if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.empty()) {
 
                     d.autoSetTiSampler(true); // needed if calibration is not done
 
-                    const QMap<double, double> &calibMap = d.getFormatedCalibMap();
+                    const std::map<double, double> &calibMap = d.getFormatedCalibMap();
                     // hpd is calculate only on the study Period
 
-                    const QMap<double, double> &subData = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+                    const std::map<double, double> &subData = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
-                    if (!subData.isEmpty()) {
+                    if (!subData.empty()) {
 
                         // hpd results
                         QList<QPair<double, QPair<double, double> > > intervals;
@@ -1548,16 +1548,16 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             for (const auto&& date : dates) {
                 Date d (date.toObject());
 
-                if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.isEmpty()) {
+                if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.empty()) {
 
                     d.autoSetTiSampler(true); // needed if calibration is not done
 
-                    const QMap<double, double> &calibMap = d.getFormatedCalibMap();
+                    const std::map<double, double> &calibMap = d.getFormatedCalibMap();
                     // hpd is calculate only on the study Period
 
-                    const QMap<double, double> &subData = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+                    const std::map<double, double> &subData = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
-                    if (!subData.isEmpty()) {
+                    if (!subData.empty()) {
 
                         // hpd results
                         QList<QPair<double, QPair<double, double> > > intervals ;
@@ -2566,21 +2566,21 @@ void MultiCalibrationView::exportResults()
                     if (isCurve) {
                         statLine.append(curveParamList);
                     }
-                    statLine << d.mPlugin->getName() << d.mName << QChar(34) + d.getDesc() + QChar(34); // For CSV mode, text recognition
+                    statLine << d.mPlugin->getName() << d.getQStringName() << QChar(34) + d.getDesc() + QChar(34); // For CSV mode, text recognition
 
                     const bool isUnif = false;// (d.mPlugin->getName() == "Unif");
-                    if (d.mIsValid && !d.mCalibration->mVector.isEmpty() && !isUnif) {
+                    if (d.mIsValid && !d.mCalibration->mVector.empty() && !isUnif) {
 
                         // d.autoSetTiSampler(true); // needed if calibration is not done
-                        const QMap<double, double> &calibMap = d.getFormatedCalibMap();
+                        const std::map<double, double> &calibMap = d.getFormatedCalibMap();
 
                         // hpd is calculate only on the study Period
-                        QMap<double, double> periodCalib = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+                        std::map<double, double> periodCalib = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
                         periodCalib = equal_areas(periodCalib, 1.);
                         DensityAnalysis results;
                         results.funcAnalysis = analyseFunction(periodCalib);
 
-                        if (!periodCalib.isEmpty()) {
+                        if (!periodCalib.empty()) {
 
                             statLine << csvLocal.toString(results.funcAnalysis.mode) << csvLocal.toString(results.funcAnalysis.mean) << csvLocal.toString(results.funcAnalysis.std);
                             statLine << csvLocal.toString(results.funcAnalysis.quartiles.Q1) << csvLocal.toString(results.funcAnalysis.quartiles.Q2) << csvLocal.toString(results.funcAnalysis.quartiles.Q3);
@@ -2681,24 +2681,24 @@ void MultiCalibrationView::showStat()
                         resultsStr += "<hr>";
                     }
 
-                    resultsStr += "<br><strong>" + d.mName + "</strong> (" + d.mPlugin->getName() + ")" +"<br> <i>" + d.getDesc() + "</i><br> ";
+                    resultsStr += "<br><strong>" + d.getQStringName() + "</strong> (" + d.mPlugin->getName() + ")" +"<br> <i>" + d.getDesc() + "</i><br> ";
 
-                    if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.isEmpty()) {
+                    if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.empty()) {
 
                         const bool isUnif = false; //(d.mPlugin->getName() == "Unif");
 
                         if (!isUnif) {
                             d.autoSetTiSampler(true); // needed if calibration is not done
 
-                            const QMap<double, double> &calibMap = d.getFormatedCalibMap();
+                            const std::map<double, double> &calibMap = d.getFormatedCalibMap();
                             // hpd is calculate only on the study Period
 
-                            QMap<double, double> subData = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+                            std::map<double, double> subData = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
                             subData = equal_areas(subData, 1.);
                             DensityAnalysis results;
                             results.funcAnalysis = analyseFunction(subData);
 
-                            if (!subData.isEmpty()) {
+                            if (!subData.empty()) {
 
                                 resultsStr += "<br>" + FunctionStatToString(results.funcAnalysis);
 

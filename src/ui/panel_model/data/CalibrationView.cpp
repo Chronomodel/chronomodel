@@ -248,8 +248,8 @@ void CalibrationView::setDate(const Date& d)
     try {
         mDate = d;
 
-        mDrawing->setTitle(mDate.mName + " (" + mDate.mPlugin->getName() + ")");
-        qDebug() << "[CalibrationView::setDate] mUUID "<<mDate.mName << mDate.mUUID;
+        mDrawing->setTitle(mDate.getQStringName() + " (" + mDate.mPlugin->getName() + ")");
+        qDebug() << "[CalibrationView::setDate] mUUID "<<mDate.getQStringName() << mDate.mUUID;
         const double t1 = mSettings.getTminFormated();
         const double t2 = mSettings.getTmaxFormated();
         if (mDate.mIsValid) {
@@ -268,7 +268,7 @@ void CalibrationView::setDate(const Date& d)
         mEndEdit->setText(stringForGraph(mTmaxDisplay));
 
         if (std::isinf(-mTminDisplay) || std::isinf(mTmaxDisplay))
-            throw(tr("CalibrationView::setDate ") + mDate.mPlugin->getName() + mDate.mCalibration->mName + locale().toString(mDate.mCalibration->mTmin) + locale().toString(mDate.mCalibration->mTmax));
+            throw(tr("CalibrationView::setDate ") + mDate.mPlugin->getName() + mDate.mCalibration->getQStringName() + locale().toString(mDate.mCalibration->mTmin) + locale().toString(mDate.mCalibration->mTmax));
 
         updateScroll();
 
@@ -333,7 +333,7 @@ void CalibrationView::updateGraphs()
         mResultsText->clear();
 
         if (mDate.mIsValid) {
-            const QMap<double, double> &calibToShow = mDate.getFormatedCalibToShow();
+            const std::map<double, double> &calibToShow = mDate.getFormatedCalibToShow();
             GraphCurve calibCurve = densityCurve(calibToShow, "Calibration", penColor);
             calibCurve.mVisible = true;
             QFontMetrics fm (mCalibGraph->font());
@@ -344,8 +344,8 @@ void CalibrationView::updateGraphs()
             GraphCurve calibWiggleCurve;
 
             if (mDate.mDeltaType != Date::eDeltaNone) {
-                const QMap<double, double> &wiggleCalibMap =  mDate.getFormatedWiggleCalibToShow();
-                const QMap<double, double> &calibWiggle = normalize_map(wiggleCalibMap, map_max(calibCurve.mData).value());
+                const std::map<double, double> &wiggleCalibMap =  mDate.getFormatedWiggleCalibToShow();
+                const std::map<double, double> &calibWiggle = normalize_map(wiggleCalibMap, map_max(calibCurve.mData).value());
                 calibWiggleCurve = densityCurve(calibWiggle, "Wiggle", Qt::red);
                 calibWiggleCurve.mVisible = true;
                 mCalibGraph->add_curve(calibWiggleCurve);
@@ -356,9 +356,9 @@ void CalibrationView::updateGraphs()
             mHPDEdit->setText(input);
 
             // hpd results
-            QMap<type_data, type_data> periodCalib = getMapDataInRange(mDate.getFormatedCalibMap(), mSettings.getTminFormated(), mSettings.getTmaxFormated());
+            std::map<type_data, type_data> periodCalib = getMapDataInRange(mDate.getFormatedCalibMap(), mSettings.getTminFormated(), mSettings.getTmaxFormated());
             periodCalib = equal_areas(periodCalib, 1.);
-            QMap<double, double> hpd;
+            std::map<double, double> hpd;
             QList<QPair<double, QPair<double, double> > > formated_intervals;
             const double thresh = std::clamp(locale().toDouble(input), 0., 100.);
 
@@ -367,18 +367,18 @@ void CalibrationView::updateGraphs()
                 hpd = getMapDataInRange(mDate.getFormatedCalibMap(), mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
                 if (periodCalib.size()<10)
-                    formated_intervals.append(qMakePair(1., qMakePair(periodCalib.firstKey(), periodCalib.lastKey() ) ));
+                    formated_intervals.append(qMakePair(1., qMakePair(periodCalib.cbegin()->first, periodCalib.crbegin()->first ) ));
                 else
-                    formated_intervals.append(qMakePair(1.- 2*mDate.threshold_limit, qMakePair(periodCalib.firstKey(), periodCalib.lastKey() ) ));
+                    formated_intervals.append(qMakePair(1.- 2*mDate.threshold_limit, qMakePair(periodCalib.cbegin()->first, periodCalib.crbegin()->first ) ));
 
             } else {
                 // do QMap<type_data, type_data> mData; to calcul HPD on study Period
-                hpd = QMap<double, double>(create_HPD_by_dichotomy(periodCalib, formated_intervals, thresh));
+                hpd = std::map<double, double>(create_HPD_by_dichotomy(periodCalib, formated_intervals, thresh));
 
             }
 
 
-            if (!hpd.isEmpty()) {
+            if (!hpd.empty()) {
                 GraphCurve hpdCurve;
                 hpdCurve.mName = "Calibration HPD";
                 hpdCurve.mPen = brushColor;
@@ -399,9 +399,9 @@ void CalibrationView::updateGraphs()
                     mCalibGraph->setRangeY(0., yMax);
                 }
 
-                const QMap<type_data, type_data> &displayHpd = getMapDataInRange(hpd, mTminDisplay, mTmaxDisplay);
+                const std::map<type_data, type_data> &displayHpd = getMapDataInRange(hpd, mTminDisplay, mTmaxDisplay);
 
-                hpdCurve.mData = normalize_map(displayHpd, yMax);
+                hpdCurve.mData = QMap(normalize_map(displayHpd, yMax));
                 hpdCurve.mVisible = true;
                 mCalibGraph->add_curve(hpdCurve);
 
@@ -415,7 +415,7 @@ void CalibrationView::updateGraphs()
             // ------------------------------------------------------------
             QString resultsStr;
 
-            if (!periodCalib.isEmpty()) {
+            if (!periodCalib.empty()) {
                 DensityAnalysis results;
                 results.funcAnalysis = analyseFunction(periodCalib);
                 resultsStr += FunctionStatToString(results.funcAnalysis);
@@ -629,7 +629,7 @@ void CalibrationView::copyImage()
 
 void CalibrationView::copyText()
 {
-    QString text = mDate.mName + " (" + mDate.mPlugin->getName() + ")" +"<br>" + mDate.getDesc() + "<br>" + mResultsText->toPlainText();
+    QString text = mDate.getQStringName() + " (" + mDate.mPlugin->getName() + ")" +"<br>" + mDate.getDesc() + "<br>" + mResultsText->toPlainText();
     QApplication::clipboard()->setText(text.replace("<br>", "\r"));
 }
 

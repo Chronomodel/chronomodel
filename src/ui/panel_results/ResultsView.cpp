@@ -1164,8 +1164,8 @@ void ResultsView::initModel()
 
         double minY = +INFINITY;
         double maxY = -INFINITY;
-        minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mXIncDepth, x);});
-        maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mXIncDepth, x);});
+        minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, std::shared_ptr<Event> e) {return std::min(e->mXIncDepth, x);});
+        maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, std::shared_ptr<Event> e) {return std::max(e->mXIncDepth, x);});
         int i = 0;
         for (const auto &g : gx.vecG) {
             const auto e = 1.96*sqrt(gx.vecVarG.at(i));
@@ -1191,8 +1191,8 @@ void ResultsView::initModel()
 
             minY = +INFINITY;
             maxY = -INFINITY;
-            minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mYDec, x);});
-            maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mYDec, x);});
+            minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, std::shared_ptr<Event> e) {return std::min(e->mYDec, x);});
+            maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, std::shared_ptr<Event> e) {return std::max(e->mYDec, x);});
             int i = 0;
             for (const auto &g : gy.vecG) {
                 const auto e = 1.96*sqrt(gy.vecVarG.at(i));
@@ -1216,8 +1216,8 @@ void ResultsView::initModel()
 
                 minY = +INFINITY;
                 maxY = -INFINITY;
-                minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mZField, x);});
-                maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mZField, x);});
+                minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, std::shared_ptr<Event> e) {return std::min(e->mZField, x);});
+                maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, std::shared_ptr<Event> e) {return std::max(e->mZField, x);});
                 int i = 0;
                 for (const auto &g : gz.vecG) {
                     const auto e = 1.96*sqrt(gz.vecVarG.at(i));
@@ -2082,7 +2082,7 @@ void ResultsView::createByCurveGraph()
                         for (const auto& date: event->mDates) {
                             // --- Calibration Date
 
-                            const QMap<double, double> &calibMap = date.getRawCalibMap();
+                            const std::map<double, double> &calibMap = date.getRawCalibMap();
                             // hpd is calculate only on the study Period
 
                             // hpd results
@@ -2108,7 +2108,7 @@ void ResultsView::createByCurveGraph()
                                 dPts.Ymax = pt_Ymax;
                                 dPts.color = event->mColor;
                                 dPts.type = CurveRefPts::eDotLineCross;
-                                dPts.comment = event->mName;
+                                dPts.comment = event->getQStringName();
                                 // memo Data Points
                                 nb_dataPts++;
                                 dataPts.append(dPts);
@@ -2122,7 +2122,7 @@ void ResultsView::createByCurveGraph()
                                 dPts.Ymax = pt_Ymax;
                                 dPts.color = event->mColor;
                                 dPts.type = CurveRefPts::eCross;
-                                dPts.comment = event->mName;
+                                dPts.comment = event->getQStringName();
                                 // memo Data Points
                                 nb_dataPts++;
                                 dataPts.append(dPts);
@@ -2138,7 +2138,7 @@ void ResultsView::createByCurveGraph()
                             evPts.Ymax = pt_Ymax;
                             evPts.color = event->mColor;
                             evPts.type = CurveRefPts::eRoundLine;;
-                            evPts.comment = event->mName;
+                            evPts.comment = event->getQStringName();
                             // memo Data Points
                             eventsPts.append(evPts);
                             hpdPerEvent.push_back(1);
@@ -2154,7 +2154,7 @@ void ResultsView::createByCurveGraph()
                                 evPts.Ymax = pt_Ymax;
                                 evPts.color = event->mColor;
                                 evPts.type = CurveRefPts::eLine;
-                                evPts.comment = event->mName;
+                                evPts.comment = event->getQStringName();
                                 // memo Data Points
                                 eventsPts.append(evPts);
                             }
@@ -2166,7 +2166,7 @@ void ResultsView::createByCurveGraph()
                                 evPts.Ymax = pt_Ymax;
                                 evPts.color = event->mColor;
                                 evPts.type = CurveRefPts::eDotLine;
-                                evPts.comment = event->mName;
+                                evPts.comment = event->getQStringName();
                                 // memo Data Points
                                 eventsPts.append(evPts);
 
@@ -2179,13 +2179,13 @@ void ResultsView::createByCurveGraph()
 
                     } else {
 
-                        evPts.Xmin = static_cast<Bound*>(event)->mFixed;
-                        evPts.Xmax = static_cast<Bound*>(event)->mFixed;
+                        evPts.Xmin = static_cast<Bound*>(event.get())->mFixed;
+                        evPts.Xmax = static_cast<Bound*>(event.get())->mFixed;
                         evPts.Ymin = pt_Ymin;
                         evPts.Ymax = pt_Ymax;
                         evPts.type = CurveRefPts::ePoint;
                         evPts.color = event->mColor;
-                        evPts.comment = event->mName;
+                        evPts.comment = event->getQStringName();
 
                         dPts.Xmin = evPts.Xmin;//event->mTheta.mX; // always the same value
                         dPts.Xmax = evPts.Xmax;
@@ -2194,7 +2194,7 @@ void ResultsView::createByCurveGraph()
                         dPts.Ymax = pt_Ymax;
                         dPts.color = event->mColor;
                         dPts.type = CurveRefPts::eRoundLine;
-                        dPts.comment = event->mName;
+                        dPts.comment = event->getQStringName();
 
                         // memo Data Points
                         dataPts.append(dPts);
@@ -4072,8 +4072,8 @@ void ResultsView::findOptimalX()
 
         double minY = +INFINITY;
         double maxY = -INFINITY;
-        minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mXIncDepth, x);});
-        maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mXIncDepth, x);});
+        minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, std::shared_ptr<Event> e) {return std::min(e->mXIncDepth, x);});
+        maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, std::shared_ptr<Event> e) {return std::max(e->mXIncDepth, x);});
         int i = 0;
         for (auto g : *vec) {
             const auto e = 1.96*sqrt(vecVar->at(i));
@@ -4121,8 +4121,8 @@ void ResultsView::findOptimalY()
 
         double minY = +INFINITY;
         double maxY = -INFINITY;
-        minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mYDec, x);});
-        maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mYDec, x);});
+        minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, std::shared_ptr<Event> e) {return std::min(e->mYDec, x);});
+        maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, std::shared_ptr<Event> e) {return std::max(e->mYDec, x);});
         int i = 0;
         for (auto g : *vec) {
             const auto e = 1.96*sqrt(vecVar->at(i));
@@ -4167,8 +4167,8 @@ void ResultsView::findOptimalZ()
 
         double minY = +INFINITY;
         double maxY = -INFINITY;
-        minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, Event* e) {return std::min(e->mZField, x);});
-        maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, Event* e) {return std::max(e->mZField, x);});
+        minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, std::shared_ptr<Event> e) {return std::min(e->mZField, x);});
+        maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, std::shared_ptr<Event> e) {return std::max(e->mZField, x);});
         int i = 0;
         for (auto g : *vec) {
             const auto e = 1.96*sqrt(vecVar->at(i));
@@ -4721,7 +4721,7 @@ void ResultsView::exportResults()
 
                 for (size_t i=0; i<model->mPhases.size(); ++i) {
                     const QList<QStringList> phaseTrace = model->getPhaseTrace(i, csvLocal, false);
-                    const QString name = model->mPhases.at(i)->mName.toLower().simplified().replace(" ", "_");
+                    const QString name = model->mPhases.at(i)->getQStringName().toLower().simplified().replace(" ", "_");
                     saveCsvTo(phaseTrace, dirPath + "/Chain_Phase_" + name + ".csv", csvSep, false);
                 }
             }

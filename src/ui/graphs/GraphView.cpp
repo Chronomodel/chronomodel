@@ -1355,9 +1355,9 @@ void GraphView::drawCurves(QPainter& painter)
 
                     bool isFirst = true;
 
-                    for (int i = 0; i<lightData.size(); ++i) {
+                    for (size_t i = 0; i<lightData.size(); ++i) {
                         // Use "dataStep" only if lightData is different of subData !
-                        const type_data valueX = mCurrentMinX + ((dataStep > 1) ? i * dataStep : i);
+                        const type_data valueX = mCurrentMinX + ((dataStep > 1) ? i * dataStep : (type_data)i);
                         const type_data valueY = lightData.at(i);
 
                         if (valueX >= mCurrentMinX && valueX <= mCurrentMaxX && mMinY<= valueY && valueY <= mMaxY) {
@@ -2123,7 +2123,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
 
             const std::vector<type_data>& data = c.mDataVector;
             // the new DataVector is longer than the last, we need to expand the size of rows
-            if (data.size() > rowsCount-2) {
+            if ((qsizetype)data.size() > rowsCount-2) {
                 abscissesWritten = false;
                 rowsCount = rows.count();
             }
@@ -2142,7 +2142,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
 
             if (abscissesWritten) {
                     rows[0] << c.mName;
-                    for (int i = offset; i<data.size(); ++i)
+                for (int i = offset; i<(int)data.size(); ++i)
                         rows[i-offset+1]<< locale.toString(data[i],'g', 15);
 
             }

@@ -151,7 +151,7 @@ inline V interpolate(const T& x, const T& x0, const T& x1, const V& y0, const V&
  * @return interpolated index for a given value. If the value is smaller than all vector values, 0 is returned. If the value is greater than all vector values, (vector.size() - 1) is returned.
  */
 template <template<typename...> class Container, class T >
-T vector_interpolate_idx_for_value(const T value, const Container<T> &vector, int idxInf = 0, int idxSup = 0)
+T vector_interpolate_idx_for_value(const T value, const Container<T> &vector, decltype(vector.size()) idxInf = 0, decltype(vector.size()) idxSup = 0)
 {
     if (idxSup == 0)
         idxSup = (int)vector.size() - 1;
@@ -508,18 +508,32 @@ T sinc(const T x, const T L=1)
         return (sin( x * L) / x );
 }
 
+template<typename T >
+QMap<T, T> normalize_map(const QMap<T, T> &map, const T max = 1)
+{
+    QMap<T, T> result;
+    if (!map.empty()) {
+        const T max_value = map_max(map).value();
 
+        // can be done with std::generate !!
+        for( auto it = map.begin(); it != map.end(); ++it)
+            result[it.key()] = (it.value() / max_value)*max;
+
+    }
+
+    return result;
+}
 
 template <template<typename...> class Container, class T >
 Container<T, T> normalize_map(const Container<T, T> &map, const T max = 1)
 {
     Container<T, T> result;
-    if (!map.isEmpty()) {
-        const T max_value = map_max(map).value();
+    if (!map.empty()) {
+        const T max_value = map_max(map)->second;
 
         // can be done with std::generate !!
         for( typename Container<T, T>::const_iterator it = map.begin(); it != map.end(); ++it)
-            result[it.key()] = (it.value() / max_value)*max;
+            result[it->first] = (it->second / max_value)*max;
 
     }
 
@@ -575,7 +589,12 @@ std::vector<double> inverseCurve(const std::vector<double> &Rp, const int x_frac
 
 double findOnOppositeCurve (const double x, const std::vector<double> &Gx);
 
-
+template <template<typename...> class Container, class T >
+bool container_contains(const Container<T>& vec, const T& value) {
+    return !std::none_of(vec.begin(), vec.end(), [&value](const T& element) {
+        return element == value;
+    });
+}
 
 class Chronometer
 {

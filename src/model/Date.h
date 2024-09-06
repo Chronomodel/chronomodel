@@ -71,16 +71,14 @@ public:
         eDeltaRange = 2
     };
 
-    const Event* mEvent;
     MHVariable mTi;// t i de la date
     MHVariable mSigmaTi; // sigma i de la date (par rapport au fait)
     MHVariable mWiggle;
     double mDelta;
 
     int mId;
-    QString mUUID;
+    std::string mUUID;
 
-    QString mName; // must be public, to be setting by dialogbox
     QColor mColor;
 
     QJsonObject mData;
@@ -110,10 +108,9 @@ public:
     constexpr static const double threshold_limit = 0.00001;
 
 public:
-
-    Date (const Event* event = nullptr);
+    Date ();
     virtual ~Date();
-    Date(const QJsonObject &json, const Event* event = nullptr);
+    Date(const QJsonObject &json);
     Date(PluginAbstract* plugin);
     Date(const Date& date);
     Date& operator=(const Date& date);
@@ -124,6 +121,13 @@ public:
 
     void fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
+
+
+    inline QString getQStringName() const {return QString::fromStdString(_name);}
+    inline std::string name() const {return _name;}
+    void setName(const std::string name) {_name = name;}
+    void setName(const QString name) {_name = name.toStdString();}
+
 
     static Date fromCSV(const QStringList &dataStr, const QLocale& csvLocale, const StudyPeriodSettings settings);
     QStringList toCSV(const QLocale& csvLocale) const;
@@ -146,16 +150,16 @@ public:
     double getLikelihoodFromCalib(const double &t) const;
     double getLikelihoodFromWiggleCalib(const double &t) const;
 
-    const QMap<double, double> getFormatedCalibMap() const;
-    const QMap<double, double> getFormatedWiggleCalibMap() const;
+    const std::map<double, double> getFormatedCalibMap() const;
+    const std::map<double, double> getFormatedWiggleCalibMap() const;
     
-    const QMap<double, double> getFormatedCalibToShow() const;
-    const QMap<double, double> getFormatedWiggleCalibToShow() const;
+    const std::map<double, double> getFormatedCalibToShow() const;
+    const std::map<double, double> getFormatedWiggleCalibToShow() const;
 
-    const QMap<double, double> &getRawCalibMap() const ;
-    inline const QMap<double, double> &getRawWiggleCalibMap() const;
+    const std::map<double, double> &getRawCalibMap() const ;
+    inline const std::map<double, double> &getRawWiggleCalibMap() const;
 
-    QList<double> getFormatedRepartition() const;
+    std::vector<double> getFormatedRepartition() const;
 
     QPixmap generateCalibThumb(StudyPeriodSettings settings);
     QPixmap generateUnifThumb(StudyPeriodSettings settings);
@@ -173,22 +177,22 @@ public:
     double getFormatedTminCalib() const;
     double getFormatedTmaxCalib() const;
 
-    void initDelta(Event* event);
+    void initDelta();
 
-    void updateDate(Event *event);
+    void updateDate(const double theta_mX, const double S02Theta_mX, const double AShrinkage);
 
-    void updateTi(Event* event);
+    void updateTi(const double theta_mX);
    // void updateTi_v4(Event* event);
 
     void autoSetTiSampler(const bool bSet);
 
-    void updateDelta(Event *event);
-    void updateSigmaShrinkage(Event *event);
-    void updateSigmaShrinkage_K(Event* event);
+    void updateDelta(const double theta_mX);
+    void updateSigmaShrinkage(const double theta_mX, const double S02Theta_mX, const double AShrinkage);
+   // void updateSigmaShrinkage_K(const Event *event);
    // void updateSigma_v4(Event* event);
 
-    void updateSigmaJeffreys(Event* event);
-    void updateSigmaReParam(Event* event);
+    void updateSigmaJeffreys(const double theta_mX);
+   // void updateSigmaReParam(const Event* event);
     inline void updateWiggle() { mWiggle.mX = mTi.mX + mDelta;};
 
     void generateHistos(const std::vector<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
@@ -196,16 +200,16 @@ public:
     double fProposalDensity(const double t, const double t0);
 
     // List of samplingFunction
-    void Prior(Event* event);//fMHSymetric(Event* event);
-    void Inversion(Event* event);
+    void Prior(const double theta_mX);//fMHSymetric(Event* theta_mX);
+    void Inversion(const double theta_mX);
 
-    void MHAdaptGauss(Event* event);//void fMHSymGaussAdapt(Event *event);
+    void MHAdaptGauss(const double theta_mX);//void fMHSymGaussAdapt(Event *event);
 
-    void PriorWithArg(Event* event);//fMHSymetricWithArg(Event *event);
-    void MHAdaptGaussWithArg(Event* event);//void fMHSymGaussAdaptWithArg(Event* event);
-    void InversionWithArg(Event* event);
+    void PriorWithArg(const double theta_mX);//fMHSymetricWithArg(Event *event);
+    void MHAdaptGaussWithArg(const double theta_mX);//void fMHSymGaussAdaptWithArg(Event* theta_mX);
+    void InversionWithArg(const double theta_mX);
 
-    typedef void (Date::*samplingFunction)(Event* event);
+    typedef void (Date::*samplingFunction)(const double theta_mX);
 
 protected:
     double mTminRefCurve;
@@ -213,10 +217,14 @@ protected:
 
     samplingFunction updateti;
 
+private:
+
+    std::string _name;
+
 };
 
 
-std::shared_ptr<CalibrationCurve> generate_mixingCalibration(const QList<Date> &dates, const QString description = "Mixing Calibrations");
+CalibrationCurve generate_mixingCalibration(const std::vector<Date> &dates, const std::string description = "Mixing Calibrations");
 
 
 #endif

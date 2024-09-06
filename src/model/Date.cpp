@@ -57,44 +57,44 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QDebug>
 
-Date::Date(const Event *event):
-    mEvent (event),
-    mName("No Named Date"),
-    mMixingLevel(0.99)
-{
-    mColor = Qt::blue;
-    mOrigin = eSingleDate;
-    mPlugin = nullptr;
 
-    mTi.setName("Ti of Date : " + mName);
+
+Date::Date():
+    mDelta(0.),
+    mUUID(""),
+    mColor(Qt::blue),
+    mOrigin(eSingleDate),
+    mPlugin(nullptr),
+    mDeltaType(eDeltaNone),
+    mDeltaFixed(0.),
+    mDeltaMin(-INFINITY),
+    mDeltaMax(+INFINITY),
+    mDeltaAverage(0.),
+    mDeltaError(0.),
+    mMixingLevel(0.99),
+    _name("No Named Date")
+{
+
+    mTi.setName("Ti of Date : " + _name);
     mTi.mSupport = MetropolisVariable::eR;
     mTi.mFormat = DateUtils::eUnknown;
     mTi.mSamplerProposal = MHVariable::eMHPrior;
 
-    mSigmaTi.setName("SigmaTi of Date : " + mName);
+    mSigmaTi.setName("SigmaTi of Date : " + _name);
     mSigmaTi.mSupport = MetropolisVariable::eRp;
     mSigmaTi.mFormat = DateUtils::eUnknown;
     mSigmaTi.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
-    mWiggle.setName("Wiggle of Date : " + mName);
+    mWiggle.setName("Wiggle of Date : " + _name);
     mWiggle.mSupport = MetropolisVariable::eR;
     mWiggle.mFormat = DateUtils::eUnknown;
 
     mId = -1;
-    mUUID = QString("NONE");
-
 
     updateti = &Date::Prior;
 
-
     mIsValid = false;
-    mDelta = 0.;
-    mDeltaType = eDeltaNone;
-    mDeltaFixed = 0.;
-    mDeltaMin = 0.;
-    mDeltaMax = 0.;
-    mDeltaAverage = 0.;
-    mDeltaError = 0.;
+
     mIsCurrent = false;
     mIsSelected = false;
    // mSubTDates.clear();
@@ -106,18 +106,19 @@ Date::Date(const Event *event):
     mWiggleCalibration = nullptr;
 }
 
-Date::Date(const QJsonObject& json, const Event *event):
-    mEvent (event)
-
+Date::Date(const QJsonObject& json):
+    mDeltaFixed(0.),
+    mDeltaMin(-INFINITY),
+    mDeltaMax(+INFINITY),
+    mDeltaAverage(0.),
+    mDeltaError(0.)
 {
-    init();
     fromJson(json);
+    autoSetTiSampler(true); // must be after fromJson()
 }
 
-Date::Date(PluginAbstract* plugin):
-mName("No Named TDate")
+Date::Date(PluginAbstract* plugin)
 {
-    init();
     mPlugin = plugin;
 }
 
@@ -127,22 +128,22 @@ void Date::init()
     mOrigin = eSingleDate;
     mPlugin = nullptr;
 
-    mTi.setName("Ti of Date : " + mName);
+    mTi.setName("Ti of Date : " + _name);
     mTi.mSupport = MetropolisVariable::eR;
     mTi.mFormat = DateUtils::eUnknown;
     mTi.mSamplerProposal = MHVariable::eMHPrior;
 
-    mSigmaTi.setName("SigmaTi of Date : " + mName);
+    mSigmaTi.setName("SigmaTi of Date : " + _name);
     mSigmaTi.mSupport = MetropolisVariable::eRp;
     mSigmaTi.mFormat = DateUtils::eUnknown;
     mSigmaTi.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
-    mWiggle.setName("Wiggle of Date : " + mName);
+    mWiggle.setName("Wiggle of Date : " + _name);
     mWiggle.mSupport = MetropolisVariable::eR;
     mWiggle.mFormat = DateUtils::eUnknown;
 
     mId = -1;
-    mUUID = QString("NONE");
+    mUUID = "";
 
     mIsValid = true;
     mDelta = 0.;
@@ -177,7 +178,8 @@ Date& Date::operator=(const Date& date)
 
 void Date::copyFrom(const Date& date)
 {
-    mEvent = date.mEvent;
+    //if (date.mEvent)
+    //    *mEvent = *date.mEvent;
     mTi = date.mTi;
     /*mTi.setName("Ti of Date : " + date.mName);
     mTi.mSupport = date.mTi.mSupport;
@@ -186,7 +188,7 @@ void Date::copyFrom(const Date& date)
     mId = date.mId;
     mUUID = date.mUUID;
 
-    mName = date.mName;
+    _name = date._name;
     mColor = date.mColor;
 
 
@@ -257,17 +259,17 @@ QColor Date::getEventColor() const
 void Date::fromJson(const QJsonObject& json)
 {
     mId = json.value(STATE_ID).toInt();
-    mName = json.value(STATE_NAME).toString();
+    setName(json.value(STATE_NAME).toString());
     mColor = QColor(json.value(STATE_COLOR_RED).toInt(),
                     json.value(STATE_COLOR_GREEN).toInt(),
                     json.value(STATE_COLOR_BLUE).toInt());
 
 
 
-    mUUID = json.value(STATE_DATE_UUID).toString();
+    mUUID = json.value(STATE_DATE_UUID).toString().toStdString();
 
-    if (mUUID.isEmpty())
-        mUUID = QString::fromStdString( Generator::UUID());
+    if (mUUID.empty())
+        mUUID = Generator::UUID();
 
     // Copy plugin specific values for this data :
     mData = json.value(STATE_DATE_DATA).toObject();
@@ -311,18 +313,18 @@ void Date::fromJson(const QJsonObject& json)
             for (auto&& d : mSubDates ) {
 
                 const bool hasWiggle (d.toObject().value(STATE_DATE_DELTA_TYPE).toInt() != eDeltaNone);
-                QString toFind;
+                std::string toFind;
                 if (hasWiggle) {
-                    toFind = "WID::" + d.toObject().value(STATE_DATE_UUID).toString();
+                    toFind = "WID::" + d.toObject().value(STATE_DATE_UUID).toString().toStdString();
 
                 } else {
-                     toFind = d.toObject().value(STATE_DATE_UUID).toString();
+                     toFind = d.toObject().value(STATE_DATE_UUID).toString().toStdString();
                 }
 
-                QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
+                auto it = project->mCalibCurves.find(toFind);
 
                 if ( it != project->mCalibCurves.end()) {
-                    CalibrationCurve* d_mCalibration = & it.value();
+                    CalibrationCurve* d_mCalibration = & it->second;
                     tmin = std::min(d_mCalibration->mTmin, tmin);
                     tmax = std::max(d_mCalibration->mTmax, tmax);
 
@@ -348,29 +350,29 @@ void Date::fromJson(const QJsonObject& json)
         }
     }
 
-    mTi.setName("Theta of date : "+ mName);
+    mTi.setName("Theta of date : "+ _name);
     mTi.mSamplerProposal = (MHVariable::SamplerProposal)json.value(STATE_DATE_SAMPLER).toInt();
 
     if ((MHVariable::SamplerProposal)json.value(STATE_DATE_SAMPLER).toInt() == MHVariable::eFixe)
         mSigmaTi.mSamplerProposal = MHVariable::eFixe;
     else
         mSigmaTi.mSamplerProposal = MHVariable::eMHAdaptGauss;
-    mSigmaTi.setName("Sigma of date : "+ mName);
+    mSigmaTi.setName("Sigma of date : "+ _name);
 
-    mWiggle.setName("Wiggle of date : "+ mName);
+    mWiggle.setName("Wiggle of date : "+ _name);
 
-    QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (mUUID);
+    std::map<std::string, CalibrationCurve>::iterator it = project->mCalibCurves.find (mUUID);
     if ( it != project->mCalibCurves.end()) {
-        mCalibration = & it.value();
+        mCalibration = & it->second;
 
      } else {
         mCalibration = nullptr;
      }
 
-    QString toFind = "WID::" + mUUID;
+    std::string toFind = "WID::" + mUUID;
     it = project->mCalibCurves.find (toFind);
     if ( it != project->mCalibCurves.end()) {
-        mWiggleCalibration = & it.value();
+        mWiggleCalibration = & it->second;
 
     } else {
         mWiggleCalibration = nullptr;
@@ -382,8 +384,8 @@ QJsonObject Date::toJson() const
 {
     QJsonObject json;
     json[STATE_ID] = mId;
-    json[STATE_DATE_UUID] = mUUID;
-    json[STATE_NAME] = mName;
+    json[STATE_DATE_UUID] = QString::fromStdString(mUUID);
+    json[STATE_NAME] = getQStringName();
     json[STATE_DATE_DATA] = mData;
     json[STATE_DATE_ORIGIN] = mOrigin;
     if (mPlugin)
@@ -424,7 +426,7 @@ long double Date::getLikelihood(const double& t) const
             
         } else if (mOrigin == eCombination) { 
             // If needed run the wiggle calculation
-            if (mCalibration == nullptr || mCalibration->mVector.isEmpty()) {
+            if (mCalibration == nullptr || mCalibration->mVector.empty()) {
                 return mPlugin->getLikelihoodCombine(t, mSubDates, mSettings.mStep);
 
             } else {
@@ -448,7 +450,7 @@ QPair<long double, long double> Date::getLikelihoodArg(const double t) const
             return mPlugin->getLikelihoodArg(t, mData);
             
         }  else if (mOrigin == eCombination) {
-                     if (mCalibration->mVector.isEmpty()) {
+                     if (mCalibration->mVector.empty()) {
                          return QPair<long double, long double>(log(mPlugin->getLikelihoodCombine(t, mSubDates, mSettings.mStep)), 1.l);
 
                      } else {
@@ -563,15 +565,15 @@ void Date::clear()
 void Date::calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<Project> project, bool truncate)
 {
     // add the calibration
-    QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (mUUID);
+    std::map<std::string, CalibrationCurve>::iterator it = project->mCalibCurves.find (mUUID);
 
     if ( it == project->mCalibCurves.end()) {
         qDebug()<<"[Date::calibrate] Curve to create mUUID: "<< mUUID ;
-        project->mCalibCurves.insert(mUUID, CalibrationCurve());
+        project->mCalibCurves.insert_or_assign(mUUID, CalibrationCurve());
 
     } else {
-        CalibrationCurve* d_mCalibration = & it.value();
-        if ( d_mCalibration->mDescription == getDesc() ) {
+        const CalibrationCurve& d_mCalibration = it->second;
+        if ( d_mCalibration.mDescription == getDesc().toStdString() ) {
             // Controls whether the curve has already been calculated using the description
             calibrateWiggle(priod_settings, project);
 
@@ -592,17 +594,18 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<
 
     } else if (mOrigin == eCombination) {
         if ( it != project->mCalibCurves.end()) {
-            CalibrationCurve* d_mCalibration = & it.value();
-            refMinStep = std::min(refMinStep, d_mCalibration->mStep);
+            const CalibrationCurve& d_mCalibration = it->second;
+            refMinStep = std::min(refMinStep, d_mCalibration.mStep);
+
 
         } else {
             for (auto&& sd : mSubDates) {
-                const QString toFind = sd.toObject().value(STATE_DATE_UUID).toString();
-                QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
+                const std::string toFind = sd.toObject().value(STATE_DATE_UUID).toString().toStdString();
+                auto it = project->mCalibCurves.find(toFind);
 
                 if ( it != project->mCalibCurves.end()) {
-                    CalibrationCurve* d_mCalibration = & it.value();
-                    refMinStep = std::min(refMinStep, d_mCalibration->mStep);
+                    const CalibrationCurve& d_mCalibration = it->second;
+                    refMinStep = std::min(refMinStep, d_mCalibration.mStep);
                 }
 
             }
@@ -615,14 +618,14 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<
     // Update of the new calibration curve
 
     mCalibration = &project->mCalibCurves[mUUID];
-    mCalibration -> mDescription = getDesc();
+    mCalibration -> mDescription = getDesc().toStdString();
     if(priod_settings.mStepForced)
         refMinStep = priod_settings.mStep;
 
     mCalibration->mStep = refMinStep;
-    mCalibration->mPluginId = mPlugin->getId();
-    //mCalibration->mPlugin = mPlugin;
-    mCalibration->mName = mName;
+    mCalibration->mPluginId = mPlugin->getId().toStdString();
+
+    mCalibration->setName(_name);
 
     mCalibHPD.clear();
     mCalibration->mMap.clear();
@@ -643,7 +646,7 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<
     if (!priod_settings.mStepForced) {
         int nb_step_frac = 0;
 
-        while ( mCalibration->mVector.isEmpty() && std::count_if (mCalibration->mVector.begin(), mCalibration->mVector.end(), [](double v){return std::isnormal(v);}) < 22 && nb_step_frac < 50) {
+        while ( mCalibration->mVector.empty() && std::count_if (mCalibration->mVector.begin(), mCalibration->mVector.end(), [](double v){return std::isnormal(v);}) < 22 && nb_step_frac < 50) {
             ++nb_step_frac;
             mCalibration->mStep = refMinStep / (double)nb_step_frac;
 
@@ -654,8 +657,8 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<
             // Correction de mStep apres arrondi
             mCalibration->mStep = long_step;
 
-            QList<double> calibrationTemp;
-            QList<double> repartitionTemp;
+            std::vector<double> calibrationTemp;
+            std::vector<double> repartitionTemp;
 
             /* We use long double type because
              * after several sums, the repartition can be in the double type range
@@ -668,12 +671,12 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<
                 const long double t = mTminRefCurve + i * long_step;
                 const long double v =  getLikelihood(t);
 
-                calibrationTemp.append(v);
+                calibrationTemp.push_back(v);
 
                 if (v != 0.l && lastV != 0.l)
                     rep += (lastV + v); //step is constant
 
-                repartitionTemp.append(rep);
+                repartitionTemp.push_back(rep);
 
                 lastV = v;
             }
@@ -682,7 +685,7 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<
              *  Restrict the calibration and distribution vectors to the locations of the data.
              */
 
-            if (repartitionTemp.last() > 0.) {
+            if (*repartitionTemp.crbegin() > 0.) {
                 if (truncate && repartitionTemp.size() > 10) {
                     const long double threshold = threshold_limit;
                     const double th_min= (threshold * rep);
@@ -695,8 +698,8 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<
                     tmaxCal = mTminRefCurve + maxIdx * long_step;
 
                     // Truncate both functions where data live
-                    mCalibration->mVector = calibrationTemp.mid(minIdx, (maxIdx - minIdx) + 1);
-                    mCalibration->mRepartition = repartitionTemp.mid(minIdx, (maxIdx - minIdx) + 1);
+                    mCalibration->mVector.assign(calibrationTemp.begin()+minIdx, calibrationTemp.begin()+(maxIdx + 1));
+                    mCalibration->mRepartition.assign(repartitionTemp.begin()+minIdx, repartitionTemp.begin()+(maxIdx + 1));
 
                     /* NOTE ABOUT THIS APPROXIMATION :
                      * By truncating the calib and repartition, the calib density's area is not 1 anymore!
@@ -736,12 +739,12 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<
 
         }
     } else {
-        QList<double> calibrationTemp;
-        QList<double> repartitionTemp;
+        std::vector<double> calibrationTemp;
+        std::vector<double> repartitionTemp;
 
         const long double v0 = getLikelihood(mTminRefCurve);
-        calibrationTemp.append(v0);
-        repartitionTemp.append(v0);
+        calibrationTemp.push_back(v0);
+        repartitionTemp.push_back(v0);
         long double lastRepVal = v0;
 
         /* We use long double type because
@@ -758,12 +761,12 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<
             const long double t = mTminRefCurve + i * long_step;
             const long double v = getLikelihood(t);
 
-            calibrationTemp.append(double(v));
+            calibrationTemp.push_back(double(v));
             rep = lastRepVal;
             if (v != 0.l && lastV != 0.l)
                 rep = lastRepVal + long_step * (lastV + v) / 2.l;
 
-            repartitionTemp.append(double (rep));
+            repartitionTemp.push_back(double (rep));
             lastRepVal = rep;
             lastV = v;
         }
@@ -773,7 +776,7 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<
          *  Restrict the calibration and distribution vectors to the locations of the data.
          */
 
-        if (repartitionTemp.last() > 0.) {
+        if (*repartitionTemp.crbegin() > 0.) {
             if (truncate && repartitionTemp.size() > 10) {
                 const double threshold = threshold_limit;
 
@@ -784,8 +787,8 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<
                 tmaxCal = mTminRefCurve + maxIdx * long_step;
 
                 // Truncate both functions where data live
-                mCalibration->mVector = calibrationTemp.mid(minIdx, (maxIdx - minIdx) + 1);
-                mCalibration->mRepartition = repartitionTemp.mid(minIdx, (maxIdx - minIdx) + 1);
+                mCalibration->mVector.assign(calibrationTemp.begin()+minIdx, calibrationTemp.begin()+(maxIdx + 1));
+                mCalibration->mRepartition.assign(repartitionTemp.begin()+ minIdx, repartitionTemp.begin()+(maxIdx + 1));
 
                 /* NOTE ABOUT THIS APPROXIMATION :
                  * By truncating the calib and repartition, the calib density's area is not 1 anymore!
@@ -824,8 +827,8 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<
     }
     // If the calibration curve changes, the wiggle curve must be recalculated.
     if (mWiggleCalibration != nullptr)  {
-        const QString toFind ("WID::" + mUUID);
-        QMap<QString, CalibrationCurve>::ConstIterator it = project->mCalibCurves.constFind(toFind);
+        const std::string toFind ("WID::" + mUUID);
+        std::map<std::string, CalibrationCurve>::const_iterator it = project->mCalibCurves.find(toFind);
         project->mCalibCurves.erase(it);
     }
 
@@ -854,16 +857,16 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, std::shared_ptr<
 
     // We need to keep the calibration curve and then the whole wiggle on the whole support,
     // to allow a more accurate combination when the densities are far away.
-    const QString toFind ("WID::" + mUUID);
-    QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find (toFind);
+    const std::string toFind ("WID::" + mUUID);
+    auto it = project->mCalibCurves.find(toFind);
 
     if ( it == project->mCalibCurves.end()) {
         qDebug() << "[Date::calibrateWiggle] Curve to create Wiggle: "<< toFind ;
         qDebug() << "[Date::calibrateWiggle]create Wiggle descript: " << getWiggleDesc() ;
-        project->mCalibCurves.insert(toFind, CalibrationCurve());
+        project->mCalibCurves.insert_or_assign(toFind, CalibrationCurve());
         
         
-    } else if ( it->mDescription == getWiggleDesc() ) {
+    } else if ( it->second.mDescription == getWiggleDesc().toStdString() ) {
         // Controls whether the curve has already been calculated using the description
         qDebug() << "[Date::calibrateWiggle] The curve already exists Wiggle:" << toFind ;
         qDebug() << "[Date::calibrateWiggle] Wiggle descript: " << getWiggleDesc() ;
@@ -873,14 +876,14 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, std::shared_ptr<
 
     mWiggleCalibration = & (project->mCalibCurves[toFind]);
 
-    mWiggleCalibration->mDescription = getWiggleDesc();
-    mWiggleCalibration->mPluginId = mPlugin->getId();
+    mWiggleCalibration->mDescription = getWiggleDesc().toStdString();
+    mWiggleCalibration->mPluginId = mPlugin->getId().toStdString();
    // mWiggleCalibration->mPlugin = mPlugin;
-    mWiggleCalibration->mName = mName;
+    mWiggleCalibration->setName(_name);
 
     if (mDeltaType == eDeltaFixed) {
-        mWiggleCalibration->mVector = QList(mCalibration->mVector); // mVector and repartition are the same as mCalibration
-        mWiggleCalibration->mRepartition = QList(mCalibration->mRepartition);
+        mWiggleCalibration->mVector = mCalibration->mVector; // mVector and repartition are the same as mCalibration
+        mWiggleCalibration->mRepartition = mCalibration->mRepartition;
         mWiggleCalibration->mTmin = mCalibration->mTmin + mDeltaFixed;
         mWiggleCalibration->mTmax = mCalibration->mTmax + mDeltaFixed;
         mWiggleCalibration->mStep = mCalibration->mStep;
@@ -889,7 +892,7 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, std::shared_ptr<
         return;
     }
 
-    QList<double> calibrationTemp;
+    std::vector<double> calibrationTemp;
     const QPair<double, double> tminTmax = mPlugin->getTminTmaxRefsCurve(mData);
     const double minRefCurve = tminTmax.first;
     const double maxRefCurve = tminTmax.second;
@@ -898,14 +901,14 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, std::shared_ptr<
 
 
     const double nbRefPts = 1. + round((maxRefCurve - minRefCurve) / double(mCalibration->mStep));
-    calibrationTemp.append(getLikelihood(minRefCurve));
+    calibrationTemp.push_back(getLikelihood(minRefCurve));
 
     /* We use long double type because
      * after several sums, the repartition can be in the double type range
      */
     for (int i = 1; i <= nbRefPts; ++i) {
         const double t = minRefCurve + double (i) * mCalibration->mStep;
-        calibrationTemp.append(double(getLikelihood(t)));
+        calibrationTemp.push_back(double(getLikelihood(t)));
     }
 
     mWiggleCalibration->mStep = mCalibration->mStep;
@@ -915,12 +918,12 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, std::shared_ptr<
     /* --------------------------------------------------
      *  Calibrate on the whole calibration period (= ref curve definition domain)
      * -------------------------------------------------- */
-    QList<double> curve;
+    std::vector<double> curve;
     switch (mDeltaType) {
         case eDeltaFixed: //obsolete
             //mWiggleCalibration = mCalibration;
-            mWiggleCalibration->mVector = QList(mCalibration->mVector); // mVector and repartition are the same as mCalibration
-            mWiggleCalibration->mRepartition = QList(mCalibration->mRepartition);
+            mWiggleCalibration->mVector = mCalibration->mVector; // mVector and repartition are the same as mCalibration
+            mWiggleCalibration->mRepartition = mCalibration->mRepartition;
             mWiggleCalibration->mTmin = mCalibration->mTmin + mDeltaFixed;
             mWiggleCalibration->mTmax = mCalibration->mTmax + mDeltaFixed;
             mWiggleCalibration->mStep = mCalibration->mStep;
@@ -1027,7 +1030,7 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, std::shared_ptr<
 
 
             for ( int i = 0; i < N ; i++) {
-                curve.append(outputReal[i]);
+                curve.push_back(outputReal[i]);
             }
 
             mWiggleCalibration->mVector = equal_areas(curve, mWiggleCalibration->mStep, 1.);
@@ -1099,7 +1102,7 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, std::shared_ptr<
 
 
             for ( int i = 0; i < N ; i++) {
-                curve.append(outputReal[i]);
+                curve.push_back(outputReal[i]);
             }
 
 
@@ -1120,8 +1123,8 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, std::shared_ptr<
             
         default:
             //mWiggleCalibration = mCalibration;
-            mWiggleCalibration->mVector = QList(mCalibration->mVector); // mVector and repartition are the same as mCalibration
-            mWiggleCalibration->mRepartition = QList(mCalibration->mRepartition);
+            mWiggleCalibration->mVector = mCalibration->mVector; // mVector and repartition are the same as mCalibration
+            mWiggleCalibration->mRepartition = mCalibration->mRepartition;
             mWiggleCalibration->mTmin = mCalibration->mTmin + mDeltaFixed;
             mWiggleCalibration->mTmax = mCalibration->mTmax + mDeltaFixed;
             mWiggleCalibration->mStep = mCalibration->mStep;
@@ -1139,9 +1142,9 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, std::shared_ptr<
     long double lastV (0.l);
     long double rep;
     long double lastRep (0.l);
-    QList<double>::iterator itR = mWiggleCalibration->mRepartition.begin();
+    std::vector<double>::iterator itR = mWiggleCalibration->mRepartition.begin();
 
-    for (QList<double>::iterator itt (itR); itt != mWiggleCalibration->mRepartition.end(); ++itt) {
+    for (std::vector<double>::iterator itt (itR); itt != mWiggleCalibration->mRepartition.end(); ++itt) {
         lastV = v;
         v = (long double) (*itt );
 
@@ -1159,7 +1162,7 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, std::shared_ptr<
     /* ------------------------------------------------------------------
      * Restrict the calib and repartition vectors to where data are
      * ------------------------------------------------------------------ */
-    if (mWiggleCalibration->mRepartition.last() > 0.) {
+    if (*mWiggleCalibration->mRepartition.crbegin() > 0.) {
 
         const double threshold = threshold_limit;// 0.00001;
         const int minIdx = int (floor(vector_interpolate_idx_for_value(double(threshold * lastRep), mWiggleCalibration->mRepartition)));
@@ -1169,8 +1172,11 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, std::shared_ptr<
         const double tmaxCal = mWiggleCalibration->mTmin + maxIdx * mWiggleCalibration->mStep;
 
         // Truncate both functions where data live
-        mWiggleCalibration->mVector = mWiggleCalibration->mVector.mid(minIdx, (maxIdx - minIdx) + 1);
-        mWiggleCalibration->mRepartition = mWiggleCalibration->mRepartition.mid(minIdx, (maxIdx - minIdx) + 1);
+        //mWiggleCalibration->mVector = mWiggleCalibration->mVector.mid(minIdx, (maxIdx - minIdx) + 1);
+        //mWiggleCalibration->mRepartition = mWiggleCalibration->mRepartition.mid(minIdx, (maxIdx - minIdx) + 1);
+        mWiggleCalibration->mVector.assign(mWiggleCalibration->mVector.begin() + minIdx, mWiggleCalibration->mVector.begin()+(maxIdx + 1));
+        mWiggleCalibration->mRepartition.assign(mWiggleCalibration->mRepartition.begin()+minIdx, mWiggleCalibration->mRepartition.begin()+(maxIdx + 1));
+
 
         // Stretch repartition curve so it goes from 0 to 1
         mWiggleCalibration->mRepartition = stretch_vector(mWiggleCalibration->mRepartition, 0., 1.);
@@ -1188,15 +1194,15 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, std::shared_ptr<
 }
 
 
-const QMap<double, double> &Date::getRawCalibMap() const
+const std::map<double, double> &Date::getRawCalibMap() const
 {
     return mCalibration->mMap;
 }
 
-const QMap<double, double> Date::getFormatedCalibMap() const
+const std::map<double, double> Date::getFormatedCalibMap() const
 {
-    if (mCalibration->mVector.isEmpty())
-        return QMap<double, double>();
+    if (mCalibration->mVector.empty())
+        return std::map<double, double>();
 
     return DateUtils::convertMapToAppSettingsFormat(mCalibration->mMap);
 
@@ -1208,16 +1214,16 @@ const QMap<double, double> Date::getFormatedCalibMap() const
  * @return const QMap<double, double>
  */
 
-const QMap<double, double> Date::getFormatedCalibToShow() const
+const std::map<double, double> Date::getFormatedCalibToShow() const
 {
-    if (mCalibration->mVector.isEmpty())
-        return QMap<double, double>();
+    if (mCalibration->mVector.empty())
+        return std::map<double, double>();
 
-    QMap<double, double> calib = getRawCalibMap();
+    std::map<double, double> calib = getRawCalibMap();
 
-    if (mCalibration->mRepartition.last() > 0.) {
+    if (*mCalibration->mRepartition.crbegin() > 0.) {
         double tminCal, tmaxCal;
-        QList<double> curve;
+        std::vector<double> curve;
         const double threshold  = 0.01 * (*std::max_element(mCalibration->mVector.begin(), mCalibration->mVector.end()));
 
         int minIdx = 0;
@@ -1235,7 +1241,9 @@ const QMap<double, double> Date::getFormatedCalibToShow() const
         tminCal = mCalibration->mTmin + minIdx * mCalibration->mStep;
         tmaxCal = mCalibration->mTmin + maxIdx * mCalibration->mStep;
 
-        curve = mCalibration->mVector.mid(minIdx, (maxIdx - minIdx) + 1);
+        //curve = mCalibration->mVector.mid(minIdx, (maxIdx - minIdx) + 1);
+        curve.assign(mCalibration->mVector.begin()+minIdx, mCalibration->mVector.begin()+(maxIdx + 1));
+
         curve = equal_areas(curve, mCalibration->mStep, 1.);
         calib = vector_to_map(curve, tminCal, tmaxCal, mCalibration->mStep );
 
@@ -1243,36 +1251,36 @@ const QMap<double, double> Date::getFormatedCalibToShow() const
         calib = mCalibration->mMap;
     }
 
-    calib[calib.firstKey() - mCalibration->mStep] = 0.;
-    calib[calib.lastKey() + mCalibration->mStep] = 0.;
+    calib[calib.cbegin()->first - mCalibration->mStep] = 0.;
+    calib[calib.crbegin()->first + mCalibration->mStep] = 0.;
 
     return DateUtils::convertMapToAppSettingsFormat(calib);
 }
 
-inline const QMap<double, double> &Date::getRawWiggleCalibMap() const
+inline const std::map<double, double> &Date::getRawWiggleCalibMap() const
 {
     return mWiggleCalibration->mMap;
 }
 
-const QMap<double, double> Date::getFormatedWiggleCalibMap() const
+const std::map<double, double> Date::getFormatedWiggleCalibMap() const
 {
-    if (mWiggleCalibration == nullptr || mWiggleCalibration->mVector.isEmpty())
-        return QMap<double, double>();
+    if (mWiggleCalibration == nullptr || mWiggleCalibration->mVector.empty())
+        return std::map<double, double>();
     return DateUtils::convertMapToAppSettingsFormat(mWiggleCalibration->mMap);
 }
 
 
 
-const QMap<double, double> Date::getFormatedWiggleCalibToShow() const
+const std::map<double, double> Date::getFormatedWiggleCalibToShow() const
 {
-    if (mWiggleCalibration == nullptr || mWiggleCalibration->mVector.isEmpty())
-        return QMap<double, double>();
+    if (mWiggleCalibration == nullptr || mWiggleCalibration->mVector.empty())
+        return std::map<double, double>();
 
-    QMap<double, double> calib = getRawWiggleCalibMap();
+    std::map<double, double> calib = getRawWiggleCalibMap();
 
 
     double tminCal, tmaxCal;
-    QList<double> curve;
+    std::vector<double> curve;
     const double threshold  = 0.01 * (*std::max_element(mWiggleCalibration->mVector.begin(), mWiggleCalibration->mVector.end()));
 
     int minIdx = 0;
@@ -1290,26 +1298,27 @@ const QMap<double, double> Date::getFormatedWiggleCalibToShow() const
     tminCal = mWiggleCalibration->mTmin + minIdx * mWiggleCalibration->mStep;
     tmaxCal = mWiggleCalibration->mTmin + maxIdx * mWiggleCalibration->mStep;
 
-    curve = mWiggleCalibration->mVector.mid(minIdx, (maxIdx - minIdx) + 1);
+    //curve = mWiggleCalibration->mVector.mid(minIdx, (maxIdx - minIdx) + 1);
+    curve.assign(mWiggleCalibration->mVector.begin()+minIdx, mWiggleCalibration->mVector.begin()+(maxIdx + 1));
     curve = equal_areas(curve, mWiggleCalibration->mStep, 1.);
     calib = vector_to_map(curve, tminCal, tmaxCal, mWiggleCalibration->mStep );
 
-    calib[calib.firstKey()] = 0.;
-    calib[calib.lastKey()] = 0.;
+    calib[calib.cbegin()->first] = 0.;
+    calib[calib.crbegin()->first] = 0.;
 
     return DateUtils::convertMapToAppSettingsFormat(std::move(calib));
 }
 
 
-QList<double> Date::getFormatedRepartition() const
+std::vector<double> Date::getFormatedRepartition() const
 {
     if (DateUtils::convertToAppSettingsFormat(mCalibration->mTmin)>DateUtils::convertToAppSettingsFormat(mCalibration->mTmax)) {
        // reverse the QVector and complement, we suppose it's the same step
-        QList<double> repart;
-        double lastValue = mCalibration->mRepartition.last();
-        QList<double>::const_iterator iter = mCalibration->mRepartition.cend()-1;
+        std::vector<double> repart;
+        double lastValue = *mCalibration->mRepartition.crbegin();
+        std::vector<double>::const_iterator iter = mCalibration->mRepartition.cend()-1;
         while (iter != mCalibration->mRepartition.cbegin()-1) {
-             repart.append(lastValue-(*iter));
+             repart.push_back(lastValue-(*iter));
              --iter;
         }
         return repart;
@@ -1406,7 +1415,7 @@ QPixmap Date::generateUnifThumb(StudyPeriodSettings settings)
             // Drawing the wiggle
             if (mDeltaType != eDeltaNone) {
 
-                QMap<double, double> calibWiggle = normalize_map(getMapDataInRange(getRawWiggleCalibMap(), tmin, tmax));
+                std::map<double, double> calibWiggle = normalize_map(getMapDataInRange(getRawWiggleCalibMap(), tmin, tmax));
                 GraphCurve curveWiggle = densityCurve(calibWiggle, "Wiggle", Qt::red);
                 curveWiggle.mVisible = true;
                 graph.add_curve(curveWiggle);
@@ -1442,10 +1451,10 @@ QPixmap Date::generateCalibThumb(StudyPeriodSettings settings)
         const double tmin = settings.mTmin;
         const double tmax = settings.mTmax;
 
-        const QMap<double, double> &calib = normalize_map(getMapDataInRange(getRawCalibMap(), tmin, tmax));
+        const std::map<double, double> &calib = normalize_map(getMapDataInRange(getRawCalibMap(), tmin, tmax));
 
-        qDebug()<<"[Date::generateCalibThumb] mName "<< mCalibration->mName << mCalibration->mVector.size() << calib.size();
-        if (calib.isEmpty())
+        qDebug()<<"[Date::generateCalibThumb] mName "<< mCalibration->getQStringName() << mCalibration->mVector.size() << calib.size();
+        if (calib.empty())
             return QPixmap();
 
         const QColor color = mPlugin->getColor();
@@ -1460,7 +1469,7 @@ QPixmap Date::generateCalibThumb(StudyPeriodSettings settings)
         // Drawing the wiggle
         if (mDeltaType != eDeltaNone) {
 
-            const QMap<double, double> calibWiggle = normalize_map(getMapDataInRange(getRawWiggleCalibMap(), tmin, tmax));
+            const std::map<double, double> calibWiggle = normalize_map(getMapDataInRange(getRawWiggleCalibMap(), tmin, tmax));
 
             GraphCurve curveWiggle = densityCurve(calibWiggle, "Wiggle", Qt::blue, Qt::SolidLine, QBrush(Qt::NoBrush));
             curveWiggle.mVisible = true;
@@ -1516,7 +1525,7 @@ double Date::getLikelihoodFromCalib(const double &t) const
 double Date::getLikelihoodFromWiggleCalib(const double &t) const
 {
     // test si mWiggleCalibration existe, sinon calcul de la valeur
-    if (mWiggleCalibration == nullptr || mWiggleCalibration->mVector.isEmpty()) {
+    if (mWiggleCalibration == nullptr || mWiggleCalibration->mVector.empty()) {
 
         if (mDeltaType == eDeltaRange) {
             long double d = mPlugin->getLikelihood(t, mData);
@@ -1549,27 +1558,28 @@ double Date::getLikelihoodFromWiggleCalib(const double &t) const
 
 }
 
-void Date::updateDate(Event* event)
+void Date::updateDate(const double theta_mX, const double S02Theta_mX, const double AShrinkage)
 {
-    updateDelta(event);
-    updateTi(event);
-    updateSigmaShrinkage(event);
+    updateDelta(theta_mX);
+    updateTi(theta_mX);
+    updateSigmaShrinkage(theta_mX, S02Theta_mX, AShrinkage);
     updateWiggle();
 }
 
-void Date::updateTi(Event *event)
+void Date::updateTi(const double theta_mX)
 {
-    (this->*updateti) (event);
+    (this->*updateti) (theta_mX);
 }
 
 
 /**
  * @brief TDate::initDelta Init the wiggle shift
  */
-void Date::initDelta(Event*)
+void Date::initDelta()
 {
     switch (mDeltaType) {
         case eDeltaNone:
+            mDelta = 0.;
             break;
         
         case eDeltaRange:
@@ -1594,12 +1604,13 @@ void Date::initDelta(Event*)
     mWiggle.mLastAccepts.clear();
 }
 
-void Date::updateDelta(Event* event)
+void Date::updateDelta(const double theta_mX)
 {
-    const double lambdai = event->mTheta.mX - mTi.mX;
+    const double lambdai = theta_mX - mTi.mX;
     
     switch (mDeltaType) {
         case eDeltaNone:
+            mDelta = 0.;
             break;
         
         case eDeltaRange:
@@ -1624,12 +1635,12 @@ void Date::updateDelta(Event* event)
     }
 }
 
-void Date::updateSigmaJeffreys(Event* event)
+void Date::updateSigmaJeffreys(const double theta_mX)
 {
     // ------------------------------------------------------------------------------------------
     //  Echantillonnage MH avec marcheur gaussien adaptatif sur le log de vi (vérifié)
     // ------------------------------------------------------------------------------------------
-    const double lambda = pow(mTi.mX - (event->mTheta.mX - mDelta), 2) / 2.;
+    const double lambda = pow(mTi.mX - (theta_mX - mDelta), 2) / 2.;
 
     const double a (.0001); //precision
     const double b (pow(mSettings.mTmax - mSettings.mTmin, 2.));
@@ -1650,12 +1661,12 @@ void Date::updateSigmaJeffreys(Event* event)
     mSigmaTi.tryUpdate(sqrt(V2), rapport);
 }
 
-void Date::updateSigmaShrinkage(Event* event)
+void Date::updateSigmaShrinkage(const double theta_mX, const double S02Theta_mX, const double AShrinkage)
 {
     // ------------------------------------------------------------------------------------------
     //  Echantillonnage MH avec marcheur gaussien adaptatif sur le log de vi (vérifié)
     // ------------------------------------------------------------------------------------------
-    const double mu = pow(mTi.mX - (event->mTheta.mX - mDelta), 2.) / 2.;
+    const double mu = pow(mTi.mX - (theta_mX - mDelta), 2.) / 2.;
 
     const int logVMin = -6;
     const int logVMax = 100;
@@ -1667,7 +1678,7 @@ void Date::updateSigmaShrinkage(Event* event)
     double rapport  = -1.;
     if (logV2 >= logVMin && logV2 <= logVMax) {
         const double x1 = exp(-mu * (V1 - V2) / (V1 * V2));
-        const double x2 = pow((event->mS02Theta.mX + V1) / (event->mS02Theta.mX + V2), event->mAShrinkage + 1.);
+        const double x2 = pow((S02Theta_mX + V1) / (S02Theta_mX + V2), AShrinkage + 1.);
         rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1 ; // (V2 / V1) est le jacobien!
 
     }
@@ -1681,7 +1692,8 @@ void Date::updateSigmaShrinkage(Event* event)
 
 }
 
-void Date::updateSigmaShrinkage_K(Event* event)
+/*
+void Date::updateSigmaShrinkage_K(const Event* event)
 {
     const double lambda = pow(mTi.mX - (event->mTheta.mX - mDelta), 2.) / 2.;
     const double V1 = mSigmaTi.mX * mSigmaTi.mX;
@@ -1719,7 +1731,7 @@ void Date::updateSigmaShrinkage_K(Event* event)
 
 }
 
-void Date::updateSigmaReParam(Event* event)
+void Date::updateSigmaReParam(const Event *event)
 {
     // ------------------------------------------------------------------------------------------
     //  Echantillonnage MH avec marcheur gaussien adaptatif sur le log de vi (vérifié)
@@ -1749,7 +1761,7 @@ void Date::updateSigmaReParam(Event* event)
 #endif
     mSigmaTi.tryUpdate(sqrt(V2), rapport);
 }
-
+*/
 /*
 void Date::updateSigma_v4(Event* event)
 {
@@ -1789,7 +1801,7 @@ Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale, const S
     PluginAbstract* plugin = PluginManager::getPluginFromName(pluginName);
     if (plugin) {
         QStringList dataTmp = dataStr.mid(1,dataStr.size()-1);
-        date.mName = dataTmp.at(0);
+        date.setName(dataTmp.at(0));
         date.mPlugin = plugin;
         date.mTi.mSamplerProposal = plugin->getDataMethod();
         date.mData = plugin->fromCSV(dataTmp, csvLocale);
@@ -1834,7 +1846,7 @@ Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale, const S
 
         }
         date.mIsValid = plugin->isDateValid(date.mData, settings);
-        date.mUUID = QString::fromStdString(Generator::UUID());
+        date.mUUID = Generator::UUID();
     }
 
     plugin = nullptr;
@@ -1846,7 +1858,7 @@ QStringList Date::toCSV(const QLocale &csvLocale) const
     QStringList csv;
 
     csv << mPlugin->getName();
-    csv << mName;
+    csv << getQStringName();
     csv << mPlugin->toCSV(mData, csvLocale);
 
     switch (mDeltaType) {
@@ -1923,26 +1935,26 @@ void Date::autoSetTiSampler(const bool bSet)
 }
 
 
-std::shared_ptr<CalibrationCurve> generate_mixingCalibration(const QList<Date> &dates, const QString description)
+CalibrationCurve generate_mixingCalibration(const std::vector<Date> &dates, const std::string description)
 {
-    std::shared_ptr<CalibrationCurve> mixing_calib = std::make_shared<CalibrationCurve>();
+    CalibrationCurve mixing_calib;
     if (dates.size() == 1) {
         //mixing_calib = dates.at(0).mWiggleCalibration != nullptr ? *dates.at(0).mWiggleCalibration  :  *dates.at(0).mCalibration;
         if (dates.at(0).mWiggleCalibration != nullptr ) {
-            mixing_calib = std::make_shared<CalibrationCurve>(*dates.at(0).mWiggleCalibration);
+            mixing_calib = *dates.at(0).mWiggleCalibration;
 
         } else {
-            mixing_calib = std::make_shared<CalibrationCurve>(*dates.at(0).mCalibration);
+            mixing_calib = *dates.at(0).mCalibration;
         }
 
-        mixing_calib->mDescription = description;
-        mixing_calib->mPluginId = "";
+        mixing_calib.mDescription = description;
+        mixing_calib.mPluginId = "";
 
     } else {
 
-        mixing_calib->mName = description;
-        mixing_calib->mDescription = description;
-        mixing_calib->mPluginId = "";
+        mixing_calib.setName(description);
+        mixing_calib.mDescription = description;
+        mixing_calib.mPluginId = "";
 
         // 1 - Search for tmin and tmax, distribution curves, identical to the calibration.
         long double unionTmin = +INFINITY;
@@ -1950,29 +1962,29 @@ std::shared_ptr<CalibrationCurve> generate_mixingCalibration(const QList<Date> &
         long double unionStep = INFINITY;
 
         for (auto&& d : dates) {
-            if (d.mWiggleCalibration != nullptr && !d.mWiggleCalibration->mVector.isEmpty() ) {
+            if (d.mWiggleCalibration != nullptr && !d.mWiggleCalibration->mVector.empty() ) {
                 unionTmin = std::min(unionTmin, (long double)d.mWiggleCalibration->mTmin);
                 unionTmax = std::max(unionTmax, (long double)d.mWiggleCalibration->mTmax);
                 unionStep = std::min(unionStep,(long double) d.mWiggleCalibration->mStep);
 
-            } else if (d.mCalibration != nullptr && !d.mCalibration->mVector.isEmpty() ) {
+            } else if (d.mCalibration != nullptr && !d.mCalibration->mVector.empty() ) {
                 unionTmin = std::min(unionTmin, (long double)d.mCalibration->mTmin);
                 unionTmax = std::max(unionTmax, (long double)d.mCalibration->mTmax);
                 unionStep = std::min(unionStep, (long double)d.mCalibration->mStep);
             }
         }
 
-        mixing_calib->mTmin = unionTmin;
-        mixing_calib->mTmax = unionTmax;
+        mixing_calib.mTmin = unionTmin;
+        mixing_calib.mTmax = unionTmax;
         // Adjust Step
         // We take the smallest step, but it does not necessarily correspond to the same curve with unionTmin and unionTmax.
         int union_N = std::ceil((unionTmax-unionTmin)/unionStep);
         unionStep = (unionTmax-unionTmin)/union_N;
-        mixing_calib->mStep = unionStep;
+        mixing_calib.mStep = unionStep;
 
 #ifdef DEBUG
         for (auto&& d : dates) {
-            qDebug()<< "generate_mixing"<<d.mName <<d.mCalibration->mRepartition.last();
+            qDebug()<< "generate_mixing"<<d.getQStringName() << *d.mCalibration->mRepartition.crbegin();
         }
 #endif
         // 2 - Creation of the cumulative distribution curves in the interval
@@ -1991,13 +2003,13 @@ std::shared_ptr<CalibrationCurve> generate_mixingCalibration(const QList<Date> &
                 else
                     sum += d.mCalibration->repartition_interpolate(t);
             }
-            mixing_calib->mVector.push_back((sum - sum_old)/(unionStep*n));
-            mixing_calib->mRepartition.push_back(sum/n);
+            mixing_calib.mVector.push_back((sum - sum_old)/(unionStep*n));
+            mixing_calib.mRepartition.push_back(sum/n);
             sum_old = sum;
             i++;
         }
 
-        mixing_calib->mMap = vector_to_map(mixing_calib->mVector, unionTmin, unionTmax, unionStep);
+        mixing_calib.mMap = vector_to_map(mixing_calib.mVector, unionTmin, unionTmax, unionStep);
     }
     return mixing_calib;
 }
@@ -2007,7 +2019,7 @@ std::shared_ptr<CalibrationCurve> generate_mixingCalibration(const QList<Date> &
  * @brief MH proposal = prior distribution
  *
  */
-void Date::Prior(Event *event)
+void Date::Prior(const double theta_mX)
 {
      // Ici, le marcheur est forcément gaussien avec H(theta i) : double_exp (gaussien tronqué)
     /*   double tmin = date->mSettings.mTmin;
@@ -2018,7 +2030,7 @@ void Date::Prior(Event *event)
          date->mTheta.tryUpdate(theta, rapport);
     */
 
-    const double tiNew = Generator::gaussByBoxMuller(event->mTheta.mX - mDelta, mSigmaTi.mX);
+    const double tiNew = Generator::gaussByBoxMuller(theta_mX - mDelta, mSigmaTi.mX);
     const double rapport = getLikelihood(tiNew) / getLikelihood(mTi.mX);
 
     mTi.tryUpdate(tiNew, rapport);
@@ -2029,9 +2041,9 @@ void Date::Prior(Event *event)
  * @brief identic as Prior but use getLikelyhoodArg, when plugin offer it
  *
  */
-void Date::PriorWithArg(Event *event)
+void Date::PriorWithArg(const double theta_mX)
 {
-    const double tiNew = Generator::gaussByBoxMuller(event->mTheta.mX - mDelta, mSigmaTi.mX);
+    const double tiNew = Generator::gaussByBoxMuller(theta_mX - mDelta, mSigmaTi.mX);
 
     QPair<long double, long double> argOld, argNew;
 
@@ -2095,7 +2107,7 @@ double Date::fProposalDensity(const double t, const double t0)
  *  @brief MH proposal = Distribution of Calibrated date, ti is defined on set R (real numbers)
  *  @brief simulation according to uniform shrinkage with s parameter
  */
-void Date::Inversion(Event *event)
+void Date::Inversion(const double theta_mX)
 {
     const double u1 = Generator::randomUniform();
     double tiNew;
@@ -2116,8 +2128,8 @@ void Date::Inversion(Event *event)
     const double rapport1 = getLikelihood(tiNew) / getLikelihood(mTi.mX);
 
     const double rapport2 = exp((-0.5 / (mSigmaTi.mX * mSigmaTi.mX)) *
-                          (pow(tiNew - (event->mTheta.mX - mDelta), 2) -
-                           pow(mTi.mX - (event->mTheta.mX - mDelta), 2))
+                          (pow(tiNew - (theta_mX - mDelta), 2) -
+                           pow(mTi.mX - (theta_mX - mDelta), 2))
                           );
 
     const double rapport3 = fProposalDensity(mTi.mX, tiNew) /
@@ -2126,7 +2138,7 @@ void Date::Inversion(Event *event)
     mTi.tryUpdate(tiNew, rapport1 * rapport2 * rapport3);
 }
 
-void Date::InversionWithArg(Event *event)
+void Date::InversionWithArg(const double theta_mX)
 {
     const double u1 = Generator::randomUniform();
     double tiNew;
@@ -2154,7 +2166,7 @@ void Date::InversionWithArg(Event *event)
     argNew = getLikelihoodArg(tiNew);
 
     const long double logGRapport = argNew.second - argOld.second;
-    const long double logHRapport = (-0.5l/powl(mSigmaTi.mX, 2.)) * (  powl(tiNew - (event->mTheta.mX - mDelta), 2.) - powl(mTi.mX - (event->mTheta.mX - mDelta), 2.) ); // modif 2020-09-28
+    const long double logHRapport = (-0.5l/powl(mSigmaTi.mX, 2.)) * (  powl(tiNew - (theta_mX - mDelta), 2.) - powl(mTi.mX - (theta_mX - mDelta), 2.) ); // modif 2020-09-28
 
     const long double rapport = sqrt(argOld.first/argNew.first) * exp(logGRapport+logHRapport);
 
@@ -2168,12 +2180,12 @@ void Date::InversionWithArg(Event *event)
 /**
  * @brief MH proposal = Adaptatif Gaussian random walk, ti is defined on set R (real numbers)
  */
-void Date::MHAdaptGauss(Event* event)
+void Date::MHAdaptGauss(const double theta_mX)
 {
     const double tiNew = Generator::gaussByBoxMuller(mTi.mX, mTi.mSigmaMH);
     double rapport = getLikelihood(tiNew) / getLikelihood(mTi.mX);
-    rapport *= exp((-0.5/(mSigmaTi.mX * mSigmaTi.mX)) * (   pow(tiNew - (event->mTheta.mX - mDelta), 2)
-                                                           - pow(mTi.mX - (event->mTheta.mX - mDelta), 2)
+    rapport *= exp((-0.5/(mSigmaTi.mX * mSigmaTi.mX)) * (   pow(tiNew - (theta_mX - mDelta), 2)
+                                                           - pow(mTi.mX - (theta_mX - mDelta), 2)
                                                                  ));
 
     mTi.tryUpdate(tiNew, rapport);
@@ -2185,7 +2197,7 @@ void Date::MHAdaptGauss(Event* event)
  *
  * @brief identic as fMHSymGaussAdapt but use getLikelyhoodArg, when plugin offer it
  */
-void Date::MHAdaptGaussWithArg(Event *event)//fMHSymGaussAdaptWithArg(Event *event)
+void Date::MHAdaptGaussWithArg(const double theta_mX)//fMHSymGaussAdaptWithArg(Event *event)
 {
     const double tiNew = Generator::gaussByBoxMuller(mTi.mX, mTi.mSigmaMH);
 
@@ -2195,8 +2207,8 @@ void Date::MHAdaptGaussWithArg(Event *event)//fMHSymGaussAdaptWithArg(Event *eve
     argNew = getLikelihoodArg(tiNew);
 
     const long double logGRapport = argNew.second - argOld.second;
-    const long double logHRapport = (-0.5 / (mSigmaTi.mX * mSigmaTi.mX)) * (  pow(tiNew - (event->mTheta.mX - mDelta), 2)
-                                                                      - pow(mTi.mX - (event->mTheta.mX - mDelta), 2)
+    const long double logHRapport = (-0.5 / (mSigmaTi.mX * mSigmaTi.mX)) * (  pow(tiNew - (theta_mX - mDelta), 2)
+                                                                      - pow(mTi.mX - (theta_mX - mDelta), 2)
                                                                       );
 
     const long double rapport = sqrt(argOld.first / argNew.first) * exp(logGRapport+logHRapport);

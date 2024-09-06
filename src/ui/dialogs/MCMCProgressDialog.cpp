@@ -52,8 +52,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <windows.h> //for Qt 6.7
 #endif
 
-MCMCProgressDialog::MCMCProgressDialog(MCMCLoop* loop, QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags),
-mLoop(loop)
+MCMCProgressDialog::MCMCProgressDialog(MCMCLoop* loop, QWidget* parent, Qt::WindowFlags flags):
+    QDialog(parent, flags),
+    mLoop(loop)
 {
     setWindowTitle(tr("MCMC in progress..."));
 

@@ -58,11 +58,11 @@ public:
 
     MCMCSettings mMCMCSettings;
 
-    std::vector<Event*> mEvents;
-    std::vector<Phase*> mPhases;
+    std::vector<std::shared_ptr<Event>> mEvents;
+    std::vector<std::shared_ptr<Phase>> mPhases;
+    std::vector<std::shared_ptr<EventConstraint>> mEventConstraints;
+    std::vector<std::shared_ptr<PhaseConstraint>> mPhaseConstraints;
 
-    std::vector<EventConstraint*> mEventConstraints;
-    std::vector<PhaseConstraint*> mPhaseConstraints;
 
     std::vector<ChainSpecs> mChains;
 
@@ -87,8 +87,8 @@ protected:
     QStringList mCurveLongName;
 
 public:
-    Model();//QObject* parent = nullptr);
-    explicit Model(const QJsonObject& json);//, QObject* parent = nullptr);
+    Model();
+    explicit Model(const QJsonObject& json);
     virtual ~Model();
 
     //void generateModelLog();
@@ -102,7 +102,7 @@ public:
 
     QList<QStringList> getStats(const QLocale locale, const int precision, const bool withDateFormat = false);
     QList<QStringList> getPhasesTraces(QLocale locale, const bool withDateFormat = false);
-    QList<QStringList> getPhaseTrace(int phaseIdx, const QLocale locale, const bool withDateFormat = false);
+    QList<QStringList> getPhaseTrace(size_t phaseIdx, const QLocale locale, const bool withDateFormat = false);
     QList<QStringList> getEventsTraces(const QLocale locale, const bool withDateFormat = false);
 
     inline QStringList getCurvesName () const {return mCurveName;}
@@ -128,10 +128,12 @@ public:
     double yearTime(t_reduceTime reduceTime);
 
     virtual void saveToFile(QDataStream* out);
-    virtual void restoreFromFile(QDataStream* in) {return restoreFromFile_v323(in);};
+
+    virtual void restoreFromFile(QDataStream* in) {return restoreFromFile_v328(in);};
 
     void restoreFromFile_v323(QDataStream* in);
     void restoreFromFile_v324(QDataStream* in);
+    void restoreFromFile_v328(QDataStream* in);
 
     // Only trace needed for this :
     virtual void generateCorrelations(const std::vector<ChainSpecs>& chains);
@@ -158,7 +160,7 @@ public:
     // Trace and Posterior density needed for this :
     virtual void generateNumericalResults(const std::vector<ChainSpecs>& chains);
 
-    void generateTempo(size_t gridLength);
+    void generateTempo(const size_t gridLength);
 
     void generateActivity(const size_t gridLenth, const double h, const double threshold, const double rangePercent = 95.);
     void generateActivityBinomialeCurve(const int n, std::vector<double>& C1x, std::vector<double>& C2x, const double alpha = .05);

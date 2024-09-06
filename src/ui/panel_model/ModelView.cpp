@@ -38,7 +38,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "ModelView.h"
-#include "Bound.h"
 #include "EventDialog.h"
 #include "EventsScene.h"
 #include "PhasesScene.h"
@@ -642,8 +641,8 @@ bool ModelView::findCalibrateMissing()
                 }
                 // look inside project->mCalibCurves, if there is a missing calibration
                 // to try to rebuild it after
-                const QString toFind (date.mUUID);
-                QMap<QString, CalibrationCurve>::iterator it = getProject_ptr()->mCalibCurves.find(toFind);
+                const std::string toFind (date.mUUID);
+                auto it = getProject_ptr()->mCalibCurves.find(toFind);
                 if ( it == getProject_ptr()->mCalibCurves.end()) {
                     calibMissing = true;
                     continue;
@@ -671,15 +670,12 @@ void ModelView::calibrateAll(StudyPeriodSettings newS)
     /* If the Events Scene isEmpty (i.e. when the project is created)
     * There is no date to calibrate
     */
-    if (!Qevents.isEmpty()) {
+    if (!Qevents.empty()) {
         for (auto && cal : project->mCalibCurves) {
-            cal.mMap.clear();
-            cal.mRepartition.clear();
-            cal.mRepartition.squeeze();
-            cal.mVector.clear();
-            cal.mVector.squeeze();
-
-        }
+            cal.second.mMap.clear();
+            cal.second.mRepartition.clear();
+            cal.second.mVector.clear();
+         }
         project->mCalibCurves.clear();
 
         QList<Event> events;

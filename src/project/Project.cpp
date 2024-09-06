@@ -82,7 +82,7 @@ Project::Project():
     mName ("Empty Project"),
     mModel(new ModelCurve()),
     mLoop (nullptr),
-    mCalibCurves(QMap<QString, CalibrationCurve>()),
+    mCalibCurves(std::map<std::string, CalibrationCurve>()),
     mState(emptyState()),
     mDesignIsChanged (true),
     mStructureIsChanged (true),
@@ -135,8 +135,10 @@ Project::~Project()
     mAutoSaveTimer->stop();
     disconnect(mAutoSaveTimer, &QTimer::timeout, this, &Project::save);
     MainWindow::getInstance()->getUndoStack()->clear();
+
     mState = QJsonObject();
     mLastSavedState = QJsonObject();
+    clear_calibCurves();
     mCalibCurves.clear();
 
     mModel.reset();
@@ -722,7 +724,7 @@ bool Project::load(const QString &path, bool force)
                             if (message.exec() == QMessageBox::Yes) {
                                 // loading cal curve
                                 try {
-                                    mCalibCurves = QMap<QString, CalibrationCurve>();
+                                    mCalibCurves = std::map<std::string, CalibrationCurve>();
                                     quint32 siz;
                                     in >> siz;
                                     for (int i = 0; i < int(siz); ++i) {
@@ -730,7 +732,7 @@ bool Project::load(const QString &path, bool force)
                                         in >> descript;
                                         CalibrationCurve cal;
                                         in >> cal;
-                                        mCalibCurves.insert(descript, cal);
+                                        mCalibCurves.insert_or_assign(descript.toStdString(), cal);
                                     }
 
                                  }
@@ -750,7 +752,7 @@ bool Project::load(const QString &path, bool force)
 
                         } else {
                             // loading cal curve
-                            mCalibCurves = QMap<QString, CalibrationCurve>();
+                            mCalibCurves = std::map<std::string, CalibrationCurve>();
                             quint32 siz;
                             in >> siz;
                             for (int i = 0; i < int(siz); ++i) {
@@ -758,7 +760,7 @@ bool Project::load(const QString &path, bool force)
                                 in >> descript;
                                 CalibrationCurve cal;
                                 in >> cal;
-                                mCalibCurves.insert(descript,cal);
+                                mCalibCurves.insert_or_assign(descript.toStdString(),cal);
                             }
                         }
 
@@ -787,16 +789,16 @@ bool Project::load(const QString &path, bool force)
 
             QFileInfo fi(dataFile);
             dataFile.open(QIODevice::ReadOnly);
-            if (fi.isFile() && !mCalibCurves.isEmpty()) {
+            if (fi.isFile() && !mCalibCurves.empty()) {
                 if (dataFile.exists()) {
 
                     qDebug() << "[Project::load] Loading model file.res : " << dataPath << " size=" << dataFile.size();
 
                     try {
-                        // mModel = std::shared_ptr<ModelCurve>(new ModelCurve(mState, this));
-                        mModel.reset(new ModelCurve(mState));
+                        mModel.reset();
+                        mModel = std::make_shared<ModelCurve>(mState);
 
-                            qDebug() << "[Project::load] Create a ModelCurve";
+                        qDebug() << "[Project::load] Create a ModelCurve";
 
                     }
                     catch (const std::exception & e) {
@@ -1113,11 +1115,11 @@ bool Project::insert(const QString &path, QJsonObject &return_state)
               event[STATE_ITEM_Y] = event.value(STATE_ITEM_Y).toDouble() - (maxYEventNew + minYEventNew)/2. ;
               event[STATE_ID] = event.value(STATE_ID).toInt() + maxIDEvent;
 
-              QList<int> mPhasesIds  = stringListToIntList(event.value(STATE_EVENT_PHASE_IDS).toString(), ",");
-              for ( int i = 0; i<mPhasesIds.size(); ++i)
+              std::vector<int> mPhasesIds  = QStringToStdVectorInt(event.value(STATE_EVENT_PHASE_IDS).toString(), ",");
+              for (size_t i = 0; i<mPhasesIds.size(); ++i)
                   mPhasesIds[i] += maxIDPhase;
 
-              event[STATE_EVENT_PHASE_IDS] = intListToString( mPhasesIds, ",");
+              event[STATE_EVENT_PHASE_IDS] = StdVectorIntToQString( mPhasesIds, ",");
 
               eventJSON = event;
            }
@@ -1292,9 +1294,9 @@ bool Project::saveProjectToFile()
         out << qApp->applicationVersion();
         // save Calibration Curve
         out << quint32 (mCalibCurves.size());
-        for (QMap<QString, CalibrationCurve>::const_iterator it = mCalibCurves.cbegin() ; it != mCalibCurves.cend(); ++it) {
-            out << it.key();
-            out << it.value();
+        for (auto it = mCalibCurves.cbegin() ; it != mCalibCurves.cend(); ++it) {
+            out << QString::fromStdString(it->first);
+            out << it->second;
         }
         file_cal.close();
 
@@ -1555,7 +1557,8 @@ void Project::createEvent(qreal x, qreal y)
         EventDialog* dialog = new EventDialog(qApp->activeWindow(), tr("New Event"));
         if (dialog->exec() == QDialog::Accepted) {
             Event event = Event();
-            event.mName = dialog->getName();
+            event.setName(dialog->getName());
+
             event.mColor= dialog->getColor();
             QJsonObject eventJSON (event.toJson());
             eventJSON[STATE_ITEM_X] = x;
@@ -1573,7 +1576,8 @@ void Project::createEventKnown(qreal x, qreal y)
         EventDialog* dialog = new EventDialog(qApp->activeWindow(), tr("New Bound"));
         if (dialog->exec() == QDialog::Accepted) {
             Bound bound = Bound();
-            bound.mName = dialog->getName();
+            bound.setName(dialog->getName());
+
             bound.mColor= dialog->getColor();
             QJsonObject eventJSON (bound.toJson());
             eventJSON[STATE_ITEM_X] = x;
@@ -1960,7 +1964,7 @@ Date Project::createDateFromPlugin(PluginAbstract* plugin)
                 date.mPlugin = plugin;
                 date.mData = form->getData();
 
-                date.mName = dialog.getName();
+                date.setName(dialog.getName());
                 date.mTi.mSamplerProposal = dialog.getMethod();
                 date.mDeltaType = dialog.getDeltaType();
                 date.mDeltaFixed = dialog.getDeltaFixed();
@@ -1968,7 +1972,7 @@ Date Project::createDateFromPlugin(PluginAbstract* plugin)
                 date.mDeltaMax = dialog.getDeltaMax();
                 date.mDeltaAverage = dialog.getDeltaAverage();
                 date.mDeltaError = dialog.getDeltaError();
-                date.mUUID =QString::fromStdString(Generator::UUID()); // Add UUID since version 2.1.3
+                date.mUUID = Generator::UUID(); // Add UUID since version 2.1.3
             } else {
                 QMessageBox message(QMessageBox::Critical,
                                     tr("Invalid data"),
@@ -2621,6 +2625,11 @@ void Project::createPhase(qreal x, qreal y, QWidget* parent)
 
 void Project::clear_calibCurves()
 {
+    for (auto c: mCalibCurves) {
+        c.second.mMap.clear();
+        c.second.mRepartition.clear();
+        c.second.mVector.clear();
+    }
     mCalibCurves.clear();
     //mLastSavedState = QJsonObject();
     //mState = QJsonObject();
@@ -3133,9 +3142,11 @@ void Project::runChronomodel()
     if (mModel) {
         mModel->clearTraces();
         mModel->clear();
-        *mModel = ModelCurve(mState);
+        mModel.reset();
+        mModel = std::make_shared<ModelCurve>(mState);
+
     } else
-        mModel = std::shared_ptr<ModelCurve>(new ModelCurve(mState));
+        mModel = std::make_shared<ModelCurve>(mState);//std::shared_ptr<ModelCurve>(new ModelCurve(mState));
     //mModel.reset();
     //*mModel = ModelCurve(mState);
     //mModel = std::shared_ptr<ModelCurve>(new ModelCurve(mState, this));
@@ -3207,7 +3218,7 @@ void Project::runChronomodel()
 
 void Project::clearModel()
 {
-    if (mModel->mNumberOfEvents >0)
+    if (mModel && mModel->mNumberOfEvents >0)
         mModel->clear();
 
     //mModel.reset();

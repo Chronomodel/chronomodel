@@ -82,11 +82,8 @@ struct TraceStat{
 
 struct DensityAnalysis
 {
-   // Quartiles quartiles;
     FunctionStat funcAnalysis;
     TraceStat traceAnalysis;
-   // type_data xmin;
-   // type_data xmax;
 };
 
 FunctionStat analyseFunction(const QMap<type_data, type_data> &fun);
@@ -285,7 +282,7 @@ inline bool isEven( T value )
  * @return
  */
 template <template<typename...> class C, typename T>
-QPair<int, T> gammaQuartile(const C<T> &trace, const int quartileType, const double p)
+std::pair<int, T> gammaQuartile(const C<T> &trace, const int quartileType, const double p)
 {
     const int n = (int)trace.size();
     int j = 0;
@@ -387,9 +384,9 @@ Quartiles quantilesType(const C<T>& trace, const int quartileType, const double 
     Quartiles Q;
     C<T> traceSorted (trace);
 
-    QPair<int, double> parQ1 = gammaQuartile(trace, quartileType, p); // first is j and second is gamma
-    QPair<int, double> parQ2 = gammaQuartile(trace, quartileType, 0.5);
-    QPair<int, double> parQ3 = gammaQuartile(trace, quartileType, 1-p);
+    decltype(gammaQuartile(trace, quartileType, p)) parQ1 = gammaQuartile(trace, quartileType, p); // first is j and second is gamma
+    decltype(gammaQuartile(trace, quartileType, p))  parQ2 = gammaQuartile(trace, quartileType, 0.5);
+    decltype(gammaQuartile(trace, quartileType, p))  parQ3 = gammaQuartile(trace, quartileType, 1-p);
 
     std::sort(traceSorted.begin(), traceSorted.end());
 
@@ -397,7 +394,7 @@ Quartiles quantilesType(const C<T>& trace, const int quartileType, const double 
     if (parQ1.first <= 0)
        Q.Q1 = (double)traceSorted.front();
 
-    else if (parQ1.first < traceSorted.size())
+    else if (parQ1.first < (int)traceSorted.size())
             Q.Q1 = (1.- parQ1.second)*(double)traceSorted.at(parQ1.first-1) + parQ1.second*(double)traceSorted.at(parQ1.first);
     else
         Q.Q1 = (double)traceSorted.back();
@@ -406,7 +403,7 @@ Quartiles quantilesType(const C<T>& trace, const int quartileType, const double 
     if (parQ2.first <= 0)
        Q.Q2 = (double)traceSorted.front();
 
-    else if (parQ2.first < traceSorted.size())
+    else if (parQ2.first < (int)traceSorted.size())
             Q.Q2 = (1.- parQ2.second)*(double)traceSorted.at(parQ2.first-1) + parQ2.second*(double)traceSorted.at(parQ2.first);
     else
         Q.Q2 = (double)traceSorted.back();
@@ -415,7 +412,7 @@ Quartiles quantilesType(const C<T>& trace, const int quartileType, const double 
     if (parQ3.first <= 0)
        Q.Q3 = (double)traceSorted.front();
 
-    else if (parQ3.first < traceSorted.size())
+    else if (parQ3.first < (int)traceSorted.size())
             Q.Q3 = (1.- parQ3.second)*(double)traceSorted.at(parQ3.first-1) + parQ3.second*(double)traceSorted.at(parQ3.first);
     else
         Q.Q3 = (double)traceSorted.back();

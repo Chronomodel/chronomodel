@@ -63,12 +63,12 @@ ModelCurve::ModelCurve():
     compute_Z(false),
     compute_X_only(false)
 {
-    mLambdaSpline.setName("mLambdaSpline of Curve");
+    mLambdaSpline.setName(std::string("mLambdaSpline of Curve"));
     mLambdaSpline.mSupport = MetropolisVariable::eR;
     mLambdaSpline.mFormat = DateUtils::eNumeric;
     mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
-    mS02Vg.setName("mS02Vg of Curve");
+    mS02Vg.setName(std::string("mS02Vg of Curve"));
     mS02Vg.mSupport = MetropolisVariable::eRp;
     mS02Vg.mFormat = DateUtils::eNumeric;
     mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
@@ -83,12 +83,12 @@ ModelCurve::ModelCurve(const QJsonObject& json):
     compute_Z(false),
     compute_X_only(false)
 {
-    mLambdaSpline.setName("mLambdaSpline of Curve");
+    mLambdaSpline.setName(std::string("mLambdaSpline of Curve"));
     mLambdaSpline.mSupport = MetropolisVariable::eR;
     mLambdaSpline.mFormat = DateUtils::eNumeric;
     mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
-    mS02Vg.setName("mS02Vg of Curve");
+    mS02Vg.setName(std::string("mS02Vg of Curve"));
     mS02Vg.mSupport = MetropolisVariable::eRp;
     mS02Vg.mFormat = DateUtils::eNumeric;
     mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
@@ -181,10 +181,10 @@ void ModelCurve::updateDesignFromJson()
         const int eventId = eventJSON.value(STATE_ID).toInt();
         const QJsonArray dates = eventJSON.value(STATE_EVENT_DATES).toArray();
 
-        std::vector<Event *>::iterator iterEvent = mEvents.begin();
+        auto iterEvent = mEvents.begin();
         while (iterEvent != mEvents.end()) {
             if ((*iterEvent)->mId == eventId) {
-                (*iterEvent)->mName  = eventJSON.value(STATE_NAME).toString();
+                (*iterEvent)->setName(eventJSON.value(STATE_NAME).toString());
                 (*iterEvent)->mItemX = eventJSON.value(STATE_ITEM_X).toDouble();
                 (*iterEvent)->mItemY = eventJSON.value(STATE_ITEM_Y).toDouble();
                 (*iterEvent)->mIsSelected = eventJSON.value(STATE_IS_SELECTED).toBool();
@@ -192,14 +192,14 @@ void ModelCurve::updateDesignFromJson()
                                               eventJSON.value(STATE_COLOR_GREEN).toInt(),
                                               eventJSON.value(STATE_COLOR_BLUE).toInt());
 
-                for (int k = 0; k<(*iterEvent)->mDates.size(); ++k) {
+                for (size_t k = 0; k<(*iterEvent)->mDates.size(); ++k) {
                     Date& d = (*iterEvent)->mDates[k];
                     for (auto &&dateVal : dates) {
                         const QJsonObject& date = dateVal.toObject();
                         const int dateId = date.value(STATE_ID).toInt();
 
                         if (dateId == d.mId) {
-                            d.mName = date.value(STATE_NAME).toString();
+                            d.setName(date.value(STATE_NAME).toString());
                             d.mColor = (*iterEvent)->mColor;
                             break;
                         }
@@ -219,7 +219,7 @@ void ModelCurve::updateDesignFromJson()
 
         for (const auto& p : mPhases) {
             if (p->mId == phaseId) {
-                p->mName = phaseJSON.value(STATE_NAME).toString();
+                p->setName(phaseJSON.value(STATE_NAME).toString());
                 p->mItemX = phaseJSON.value(STATE_ITEM_X).toDouble();
                 p->mItemY = phaseJSON.value(STATE_ITEM_Y).toDouble();
                 p->mColor = QColor(phaseJSON.value(STATE_COLOR_RED).toInt(),
@@ -249,9 +249,9 @@ void ModelCurve::settings_from_Json(const QJsonObject &json)
 
     is_curve = mCurveSettings.mProcessType != CurveSettings::eProcess_None;
 
-    for (Event* &event: mEvents) {
+    for (std::shared_ptr<Event> &event: mEvents) {
         if (event->type() ==  Event::eBound)
-               event->mTheta.mSamplerProposal = MHVariable::eFixe;
+            event->mTheta.mSamplerProposal = MHVariable::eFixe;
 
         else if (event->type() ==  Event::eDefault) {
                 if (is_curve && mCurveSettings.mTimeType == CurveSettings::eModeFixed) {
@@ -274,13 +274,13 @@ void ModelCurve::settings_from_Json(const QJsonObject &json)
 
     }
 
-    mLambdaSpline.setName( "lambdaSpline");
+    mLambdaSpline.setName(std::string("lambdaSpline"));
     if (mCurveSettings.mLambdaSplineType == CurveSettings::eModeFixed)
         mLambdaSpline.mSamplerProposal = MHVariable::eFixe;
     else
         mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
-    mS02Vg.setName("S02Vg");
+    mS02Vg.setName(std::string("S02Vg"));
     if (mCurveSettings.mVarianceType == CurveSettings::eModeFixed)
         mS02Vg.mSamplerProposal = MHVariable::eFixe;
     else
@@ -319,7 +319,7 @@ void ModelCurve::saveToFile(QDataStream *out)
     //  Write events VG
     // -----------------------------------------------------
 
-    for (Event*& event : mEvents)
+    for (std::shared_ptr<Event>& event : mEvents)
         *out << event->mVg;
 
     *out << mLambdaSpline;
@@ -402,7 +402,35 @@ void ModelCurve::restoreFromFile_v324(QDataStream* in)
 
 }
 
-/* C' était le même algorithme que MCMCCurve::memo_PosteriorG()
+void ModelCurve::restoreFromFile_v328(QDataStream* in)
+{
+    Model::restoreFromFile_v328(in);
+
+    for (auto&& e : mEvents)
+        e->mVg.load_stream(*in);
+
+
+    quint32 tmp32;
+    mLambdaSpline.load_stream(*in);
+
+    //*in >> mS02Vg;
+    mS02Vg.load_stream(*in);
+
+    *in >> tmp32;
+    mSplinesTrace.resize(tmp32);
+    for (auto& splin : mSplinesTrace)
+        *in >> splin;
+
+    *in >> mPosteriorMeanG;
+
+    *in >> tmp32;
+    mPosteriorMeanGByChain.resize(tmp32);
+    for (auto& pMByChain : mPosteriorMeanGByChain)
+        *in >> pMByChain;
+
+}
+
+/* C'était le même algorithme que MCMCCurve::memo_PosteriorG()
  */
 /** @obsolete
  *  memo_Posterior à changer, elle inclue la conversion IDF
@@ -669,7 +697,7 @@ void ModelCurve::updateFormatSettings()
     Model::updateFormatSettings();
 
     if (is_curve) {
-        for (Event* &event : mEvents)
+        for (std::shared_ptr<Event> &event : mEvents)
             event->mVg.setFormat(DateUtils::eNumeric);
 
         mLambdaSpline.setFormat(DateUtils::eNumeric);
@@ -702,7 +730,7 @@ void ModelCurve::generatePosteriorDensities(const std::vector<ChainSpecs> &chain
 {
     Model::generatePosteriorDensities(chains, fftLen, bandwidth);
     if (is_curve) {
-        for (Event* &event : mEvents) {
+        for (std::shared_ptr<Event> &event : mEvents) {
             event->mVg.generateHistos(chains, fftLen, bandwidth);
         }
 
@@ -742,7 +770,7 @@ void ModelCurve::generateNumericalResults(const std::vector<ChainSpecs> &chains)
     Model::generateNumericalResults(chains);
 
     if (is_curve) {
-        for (Event*& event : mEvents) {
+        for (std::shared_ptr<Event>& event : mEvents) {
             event->mVg.generateNumericalResults(chains);
         }
         mLambdaSpline.generateNumericalResults(chains);
@@ -756,7 +784,7 @@ void ModelCurve::clearThreshold()
     Model::clearThreshold();
 
     if (getProject_ptr()->isCurve()) {
-        for (Event*& event : mEvents)
+        for (std::shared_ptr<Event>& event : mEvents)
             event->mVg.mThresholdUsed = -1.;
 
         mLambdaSpline.mThresholdUsed = -1.;
@@ -774,7 +802,7 @@ void ModelCurve::generateCredibility(const double thresh)
     Model::generateCredibility(thresh);
 
     if (getProject_ptr()->isCurve()) {
-        for (Event*& event : mEvents) {
+        for (const auto& event : mEvents) {
             event->mVg.generateCredibility(mChains, thresh);
         }
         mLambdaSpline.generateCredibility(mChains, thresh);
@@ -791,7 +819,7 @@ void ModelCurve::generateHPD(const double thresh)
     Model::generateHPD(thresh);
 
     if (getProject_ptr()->isCurve()) {
-        for (Event*& event : mEvents) {
+        for (const auto& event : mEvents) {
             if (event->type() != Event::eBound) {
                 if (event->mVg.mSamplerProposal != MHVariable::eFixe)
                     event->mVg.generateHPD(thresh);
@@ -810,7 +838,7 @@ void ModelCurve::clearPosteriorDensities()
 {
     Model::clearPosteriorDensities();
     if (getProject_ptr()->isCurve()) {
-        for (Event*& event : mEvents) {
+        for (std::shared_ptr<Event>& event : mEvents) {
             if (event->type() != Event::eBound) {
                 event->mVg.mFormatedHisto.clear();
                 event->mVg.mChainsHistos.clear();
@@ -829,7 +857,7 @@ void ModelCurve::clearCredibilityAndHPD()
 {
     Model::clearCredibilityAndHPD();
     if (getProject_ptr()->isCurve()) {
-        for (Event*& event : mEvents) {
+        for (std::shared_ptr<Event>& event : mEvents) {
             if (event->type() != Event::eBound) {
                 event->mVg.mFormatedHPD.clear();
                 event->mVg.mFormatedCredibility = std::pair<double, double>(1, -1);
@@ -870,7 +898,7 @@ void ModelCurve::setThresholdToAllModel(const double threshold)
 {
     Model::setThresholdToAllModel(threshold);
     if (getProject_ptr()->isCurve()) {
-        for (Event*& event : mEvents)
+        for (std::shared_ptr<Event>& event : mEvents)
             event->mVg.mThresholdUsed = mThreshold;
 
         mLambdaSpline.mThresholdUsed = mThreshold;
@@ -922,13 +950,13 @@ void ModelCurve::initVariablesForChain()
     if (getProject_ptr()->isCurve()) {
     // today we have the same acceptBufferLen for every chain
     const int acceptBufferLen =  mChains.at(0).mIterPerBatch;
-    int initReserve = 0;
+    /*int initReserve = 0;
 
     for (auto& c: mChains) {
         initReserve += ( 1 + (c.mMaxBatchs*c.mIterPerBatch) + c.mIterPerBurn + (c.mIterPerAquisition/c.mThinningInterval) );
     }
-
-    for (Event*& event : mEvents) {
+    */
+    for (std::shared_ptr<Event>& event : mEvents) {
         //event->mVg.clear();
         //event->mVg.reserve(initReserve);
         event->mVg.mAllAccepts.resize(mChains.size());

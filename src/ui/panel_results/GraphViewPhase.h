@@ -51,7 +51,7 @@ public:
     explicit GraphViewPhase(QWidget *parent = nullptr);
     virtual ~GraphViewPhase();
 
-    void setPhase(Phase* phase);
+    void setPhase(std::shared_ptr<Phase> phase);
 
     void generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList);
     void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showVariableList);
@@ -63,7 +63,7 @@ protected:
  //   void updateLayout();
 
 private:
-    Phase* mPhase;
+    std::shared_ptr<Phase> mPhase;
 
 };
 

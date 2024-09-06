@@ -53,15 +53,15 @@ class ModelUtilities
 {
 public:
 
-    static std::vector<std::vector<Event*> > getNextBranches(const std::vector<Event*>& curBranch, Event* lastNode);
-    static std::vector<std::vector<Event*> > getBranchesFromEvent(Event* start);
-    static std::vector<std::vector<Event*> > getAllEventsBranches(const std::vector<Event*>& events);
+    static std::vector<std::vector<std::shared_ptr<Event>>> getNextBranches(const std::vector<std::shared_ptr<Event>> &curBranch, std::shared_ptr<Event> lastNode);
+    static std::vector<std::vector<std::shared_ptr<Event>>> getBranchesFromEvent(std::shared_ptr<Event> start);
+    static std::vector<std::vector<std::shared_ptr<Event>>> getAllEventsBranches(const std::vector<std::shared_ptr<Event>>& events);
 
-    static std::vector<std::vector<Phase *> > getNextBranches(const std::vector<Phase *> &curBranch, Phase* lastNode, const double gammaSum, const double maxLength);
-    static std::vector<std::vector<Phase*> > getBranchesFromPhase(Phase* start, const double maxLength);
-    static std::vector<std::vector<Phase*> > getAllPhasesBranches(const std::vector<Phase*>& events, const double maxLength);
+    static std::vector<std::vector<Phase *> > getNextBranches(const std::vector<Phase *> &curBranch, const Phase *lastNode, const double gammaSum, const double maxLength);
+    static std::vector<std::vector<Phase *> > getBranchesFromPhase(Phase *start, const double maxLength);
+    static std::vector<std::vector<Phase*> > getAllPhasesBranches(const std::vector<std::shared_ptr<Phase> > &events, const double maxLength);
 
-    static std::vector<Event*> unsortEvents(const std::vector<Event*> &events);
+    static std::vector<std::shared_ptr<Event>> unsortEvents(const std::vector<std::shared_ptr<Event>> &events);
     static QString modelDescriptionHTML(const std::shared_ptr<ModelCurve> model);
     static QString getMCMCSettingsLog(const std::shared_ptr<ModelCurve> model = nullptr);
     static QString modelStateDescriptionHTML(const std::shared_ptr<ModelCurve> model = nullptr, QString stateDescript = "");
@@ -72,17 +72,17 @@ public:
     static QString dateResultsHTML(const Date* d, const double tmin_formated, const double tmax_formated);
     static QString sigmaTiResultsHTML(const Date* d);
 
-    static QString eventResultsHTML(const Event* e, const bool withDates, const std::shared_ptr<ModelCurve> model = nullptr);
-    static QString eventResultsHTML(const Event* e, const bool withDates, const double tmin_formated, const double tmax_formated, bool with_curve = false);
-    static QString EventS02ResultsHTML(const Event* e);
-    static QString VgResultsHTML(const Event* e);
+    static QString eventResultsHTML(const std::shared_ptr<Event> e, const bool withDates, const std::shared_ptr<ModelCurve> model = nullptr);
+    static QString eventResultsHTML(const std::shared_ptr<Event> e, const bool withDates, const double tmin_formated, const double tmax_formated, bool with_curve = false);
+    static QString EventS02ResultsHTML(const std::shared_ptr<Event> e);
+    static QString VgResultsHTML(const std::shared_ptr<Event> e);
 
-    static QString phaseResultsHTML(const Phase* p);
+    static QString phaseResultsHTML(const std::shared_ptr<Phase> p);
 
-    static QString tempoResultsHTML(const Phase* p);
-    static QString activityResultsHTML(const Phase* p);
-    static QString durationResultsHTML(const Phase* p);
-    static QString constraintResultsHTML(const PhaseConstraint* p);
+    static QString tempoResultsHTML(const std::shared_ptr<Phase> p);
+    static QString activityResultsHTML(const std::shared_ptr<Phase> p);
+    static QString durationResultsHTML(const std::shared_ptr<Phase> p);
+    static QString constraintResultsHTML(const std::shared_ptr<PhaseConstraint> p);
 
     static QString curveResultsHTML(const std::shared_ptr<ModelCurve> model = nullptr);
     static QString lambdaResultsHTML(const std::shared_ptr<ModelCurve> model = nullptr);
@@ -101,13 +101,13 @@ QString HTML_to_text(const QString &HTML);
 
 double sample_in_repartition(std::shared_ptr<CalibrationCurve> calibrateCurve, const double min, const double max);
 
-void sampleInCumulatedRepartition_thetaFixe (Event *event, const StudyPeriodSettings &settings);
+void sampleInCumulatedRepartition_thetaFixe (std::shared_ptr<Event> event, const StudyPeriodSettings &settings);
 
 // These 2 global functions are used to sort events and phases lists in result view
 
-bool sortEvents(Event* e1, Event* e2);
-bool sortPhases(Phase* p1, Phase* p2);
 
+bool sortEvents(std::shared_ptr<Event> e1, std::shared_ptr<Event> e2);
+bool sortPhases(std::shared_ptr<Phase> p1, std::shared_ptr<Phase> p2);
 
 
 #endif

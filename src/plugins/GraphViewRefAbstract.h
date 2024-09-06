@@ -137,7 +137,7 @@ public:
 
             GraphCurve gCurve;
             gCurve.mVisible = true;
-            gCurve.mName = sd.mName;
+            gCurve.mName = sd.getQStringName();
 
             QColor curveColor( i<210 ? Painting::chainColors[i] : randomColor());
 
@@ -152,7 +152,7 @@ public:
             
             const auto &project = MainWindow::getInstance()->getProject();
 
-            QString toFind;
+            std::string toFind;
             if (sd.mDeltaType == Date::eDeltaNone) {
                 toFind = sd.mUUID;
 
@@ -160,12 +160,12 @@ public:
                 toFind = "WID::" + sd.mUUID;
             }
 
-            QMap<QString, CalibrationCurve>::iterator it = project->mCalibCurves.find(toFind);
+            std::map<std::string, CalibrationCurve>::iterator it = project->mCalibCurves.find(toFind);
 
             if ( it != project->mCalibCurves.end())
-                sd.mCalibration = & it.value();
+                sd.mCalibration = & it->second;
 
-            QMap<double, double> calib;
+            std::map<double, double> calib;
             if (sd.mDeltaType != Date::eDeltaNone) {
                 calib = normalize_map(getMapDataInRange(sd.getFormatedWiggleCalibMap(), tminDisplay, tmaxDisplay));
 
@@ -173,7 +173,7 @@ public:
                 calib = normalize_map(getMapDataInRange(sd.getFormatedCalibMap(), tminDisplay, tmaxDisplay));
             }
 
-            gCurve.mData = calib;
+            gCurve.mData = QMap(calib);
             gCurve.mType = GraphCurve::CurveType::eDensityData;
             mGraph->add_curve(gCurve);
             mGraph->setRangeX(tminDisplay, tmaxDisplay);

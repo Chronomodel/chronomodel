@@ -71,9 +71,15 @@ public:
     static Phase fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
 
+
+    inline QString getQStringName() const {return QString::fromStdString(_name);}
+    inline std::string name() const {return _name;}
+    void setName(const std::string name) {_name = name;}
+    void setName(const QString name) {_name = name.toStdString();}
+
     double sum_gamma_prev_phases();
     double sum_gamma_next_phases();
-    void init_alpha_beta_phase(std::vector<Phase *> &phases);
+    void init_alpha_beta_phase(std::vector<std::shared_ptr<Phase> > &phases);
     void init_update_alpha_phase(double theta_max_phase_prev);
     void init_update_beta_phase(double beta_sup);
 
@@ -101,14 +107,11 @@ public:
 
 public:
     int mId;
-    //const Model *mModel;
-
-    QString mName; //must be public, to be setting by dialogbox
     QColor mColor;
 
-    std::vector<Event*> mEvents;
-    std::vector<PhaseConstraint*> mConstraintsNextPhases;
-    std::vector<PhaseConstraint*> mConstraintsPrevPhases;
+    std::vector<std::shared_ptr<Event>> mEvents;
+    std::vector<std::shared_ptr<PhaseConstraint>> mConstraintsNextPhases;
+    std::vector<std::shared_ptr<PhaseConstraint>> mConstraintsPrevPhases;
 
     MetropolisVariable mAlpha;
     MetropolisVariable mBeta;
@@ -139,7 +142,7 @@ public:
     std::map<double, double> mRawActivitySup;
     std::map<double, double> mRawActivityUnifTheo;
 
-    std::unordered_map<std::string, TValueStack> mValueStack;
+    std::unordered_map<std::string, double> mValueStack;
 
     MetropolisVariable mTau;
     TauType mTauType;
@@ -154,6 +157,9 @@ public:
     bool mIsCurrent;
 
     int mLevel; // ?? is it usefull ??
+
+private:
+    std::string _name;
 
 };
 

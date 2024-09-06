@@ -49,7 +49,7 @@ Bound::Bound():
     Event(),
     mFixed (0.)
 {
-    mName = "no Bound Name";
+    setName(std::string("no Bound Name"));
     mType = eBound;
     mPointType = ePoint;
     mTheta.mSamplerProposal = MHVariable::eFixe;
@@ -62,7 +62,7 @@ Bound::Bound(const QJsonObject &json):
 {
     mType = Type (json[STATE_EVENT_TYPE].toInt());
     mId = json[STATE_ID].toInt();
-    mName =  json[STATE_NAME].toString();
+    setName(json[STATE_NAME].toString());
     mColor = QColor(json[STATE_COLOR_RED].toInt(),
                            json[STATE_COLOR_GREEN].toInt(),
                            json[STATE_COLOR_BLUE].toInt());
@@ -79,7 +79,7 @@ Bound::Bound(const QJsonObject &json):
     else
         mFixed = 0.;
 
-    mPhasesIds = stringListToIntList(json.value(STATE_EVENT_PHASE_IDS).toString());
+    mPhasesIds = QStringToStdVectorInt(json.value(STATE_EVENT_PHASE_IDS).toString());
 
     mPointType = PointType (json.value(STATE_EVENT_POINT_TYPE).toInt());
 
@@ -100,7 +100,7 @@ Bound::Bound(const QJsonObject &json):
 
 Bound::~Bound()
 {
-    Event::~Event();
+   // Event::~Event();
 }
 
 // JSON
@@ -117,7 +117,7 @@ QJsonObject Bound::toJson() const
     json[STATE_EVENT_TYPE] = mType;
     json[STATE_ID] = mId;
 
-    json[STATE_NAME] = mName;
+    json[STATE_NAME] = getQStringName();
 
     json[STATE_COLOR_RED] = mColor.red();
     json[STATE_COLOR_GREEN] = mColor.green();
