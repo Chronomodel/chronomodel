@@ -81,7 +81,6 @@ public:
     };
     double mX;
     std::shared_ptr<std::vector<double>> mRawTrace;
-    //QList<double>* mFormatedTrace;
     std::shared_ptr<std::vector<double>> mFormatedTrace;
 
 
@@ -127,10 +126,15 @@ public:
 
     virtual ~MetropolisVariable();
     virtual MetropolisVariable& operator=(const MetropolisVariable& origin);
+    virtual MetropolisVariable& operator=(MetropolisVariable&& origin) noexcept;
 
     virtual void memo();
     virtual void memo(double* valueToSave);
     virtual void clear();
+    virtual void shrink_to_fit() noexcept;
+    virtual void clear_and_shrink() noexcept;
+
+    virtual void clearPosteriorDensities();
     virtual void reserve(const size_t reserve);
 
     void setFormat(const DateUtils::FormatDate fm);

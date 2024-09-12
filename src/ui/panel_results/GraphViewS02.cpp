@@ -55,8 +55,6 @@ GraphViewS02::~GraphViewS02()
 {
 }
 
-
-
 void GraphViewS02::paintEvent(QPaintEvent* e)
 {
     GraphViewResults::paintEvent(e);

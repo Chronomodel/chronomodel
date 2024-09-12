@@ -49,7 +49,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "StudyPeriodSettings.h"
 
 #include "Project.h"
-#include "MainWindow.h"
 #include "GraphCurve.h"
 #include "GraphView.h"
 
@@ -60,9 +59,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 Date::Date():
+    mTi(),
+    mSigmaTi(),
+    mWiggle(),
     mDelta(0.),
     mUUID(""),
     mColor(Qt::blue),
+    mData(),
     mOrigin(eSingleDate),
     mPlugin(nullptr),
     mDeltaType(eDeltaNone),
@@ -71,7 +74,12 @@ Date::Date():
     mDeltaMax(+INFINITY),
     mDeltaAverage(0.),
     mDeltaError(0.),
+    mCalibration(nullptr),
+    mWiggleCalibration(nullptr),
+    mCalibHPD(),
+    mSubDates(),
     mMixingLevel(0.99),
+    updateti(nullptr),
     _name("No Named Date")
 {
 
@@ -91,7 +99,7 @@ Date::Date():
 
     mId = -1;
 
-    updateti = &Date::Prior;
+
 
     mIsValid = false;
 
@@ -102,24 +110,61 @@ Date::Date():
     mTminRefCurve = -INFINITY;
     mTmaxRefCurve = INFINITY;
 
-    mCalibration = nullptr;
-    mWiggleCalibration = nullptr;
 }
 
 Date::Date(const QJsonObject& json):
+    mTi(),
+    mSigmaTi(),
+    mWiggle(),
+    mDelta(0.),
+    mUUID(""),
+    mColor(Qt::blue),
+    mData(),
+    mOrigin(eSingleDate),
+    mPlugin(nullptr),
+    mDeltaType(eDeltaNone),
     mDeltaFixed(0.),
     mDeltaMin(-INFINITY),
     mDeltaMax(+INFINITY),
     mDeltaAverage(0.),
-    mDeltaError(0.)
+    mDeltaError(0.),
+    mCalibration(nullptr),
+    mWiggleCalibration(nullptr),
+    mCalibHPD(),
+    mSubDates(),
+    mMixingLevel(0.99),
+    updateti(nullptr),
+    _name("No Named Date")
 {
     fromJson(json);
     autoSetTiSampler(true); // must be after fromJson()
 }
 
-Date::Date(PluginAbstract* plugin)
+Date::Date(PluginAbstract* plugin):
+    mTi(),
+    mSigmaTi(),
+    mWiggle(),
+    mDelta(0.),
+    mUUID(""),
+    mColor(Qt::blue),
+    mData(),
+    mOrigin(eSingleDate),
+
+    mPlugin(plugin),
+    mDeltaType(eDeltaNone),
+    mDeltaFixed(0.),
+    mDeltaMin(-INFINITY),
+    mDeltaMax(+INFINITY),
+    mDeltaAverage(0.),
+    mDeltaError(0.),
+    mCalibration(nullptr),
+    mWiggleCalibration(nullptr),
+    mCalibHPD(),
+    mSubDates(),
+    mMixingLevel(0.99),
+    updateti(nullptr),
+    _name("No Named Date")
 {
-    mPlugin = plugin;
 }
 
 void Date::init()
@@ -157,6 +202,8 @@ void Date::init()
     mIsSelected = false;
    // mSubTDates.clear();
 
+    updateti = nullptr;
+
     mTminRefCurve = -INFINITY;
     mTmaxRefCurve = INFINITY;
 
@@ -165,11 +212,68 @@ void Date::init()
 
 }
 
+/** copy constructor */
 Date::Date(const Date& date)
 {
     copyFrom(date);
 }
 
+/** move constructor */
+Date::Date(Date&& other) noexcept
+{
+    moveFrom(std::move(other));
+}
+
+/** Copy move operator */
+Date& Date::operator=(Date&& other) noexcept
+{
+    if (this != &other) { // Vérification d'auto-assignation
+        // Transférer les ressources de l'autre objet
+        moveFrom(std::move(other));
+    }
+    return *this;
+}
+
+void Date::moveFrom(Date&& other) noexcept
+{
+    // Transférer les membres de l'autre objet
+    mTi = other.mTi;
+    mSigmaTi = std::move(other.mSigmaTi);
+    mWiggle = std::move(other.mWiggle);
+    mDelta = other.mDelta;
+    mUUID = other.mUUID;
+    mColor = other.mColor;
+    mData = other.mData;
+    mOrigin = other.mOrigin;
+    mPlugin = other.mPlugin;
+    mDeltaType = other.mDeltaType;
+    mDeltaFixed = other.mDeltaFixed;
+    mDeltaMin = other.mDeltaMin;
+    mDeltaMax = other.mDeltaMax;
+    mDeltaAverage = other.mDeltaAverage;
+    mDeltaError = other.mDeltaError;
+    mCalibration = other.mCalibration;
+    mWiggleCalibration = other.mWiggleCalibration;
+    mCalibHPD = other.mCalibHPD;
+    mSubDates = other.mSubDates;
+    mMixingLevel = other.mMixingLevel;
+    updateti = other.updateti;
+    _name = other._name;
+
+
+
+    // Réinitialiser l'autre objet
+
+    other.mPlugin = nullptr;
+    other.mCalibration = nullptr;
+    other.mWiggleCalibration = nullptr;
+    other.mCalibHPD.clear();
+    other._name = "No Named Date";
+    other.updateti = nullptr;
+
+}
+
+/** Copy assignment operator */
 Date& Date::operator=(const Date& date)
 {
     copyFrom(date);
@@ -178,12 +282,7 @@ Date& Date::operator=(const Date& date)
 
 void Date::copyFrom(const Date& date)
 {
-    //if (date.mEvent)
-    //    *mEvent = *date.mEvent;
     mTi = date.mTi;
-    /*mTi.setName("Ti of Date : " + date.mName);
-    mTi.mSupport = date.mTi.mSupport;
-    mTi.mSamplerProposal = date.mTi.mSamplerProposal;*/
 
     mId = date.mId;
     mUUID = date.mUUID;
@@ -191,12 +290,7 @@ void Date::copyFrom(const Date& date)
     _name = date._name;
     mColor = date.mColor;
 
-
-
     mSigmaTi = date.mSigmaTi;
-    /*mSigmaTi.setName("SigmaTi of Date : " + date.mName);
-    mSigmaTi.mSupport = date.mSigmaTi.mSupport;
-    mSigmaTi.mSamplerProposal = date.mSigmaTi.mSamplerProposal;*/
 
     mWiggle = date.mWiggle;
     mDelta = date.mDelta;
@@ -240,6 +334,7 @@ Date::~Date()
 
     mTi.clear();
     mSigmaTi.clear();
+    updateti = nullptr;
 }
 
 bool Date::isNull() const
@@ -553,6 +648,12 @@ void Date::clear()
     mWiggle.clear();
 }
 
+void Date::shrink_to_fit() noexcept
+{
+    mTi.shrink_to_fit();
+    mSigmaTi.shrink_to_fit();
+    mWiggle.shrink_to_fit();
+}
 
 /**
  * @brief TDate::calibrate

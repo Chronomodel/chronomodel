@@ -586,7 +586,7 @@ bool Project::load(const QString &path, bool force)
             return false;
         } else {
             if (mModel->mNumberOfEvents >0)
-                mModel->clear();
+                mModel->clear_and_shrink();
 
             QJsonObject loadingState = jsonDoc.object();
             QStringList projectVersionList;
@@ -769,11 +769,11 @@ bool Project::load(const QString &path, bool force)
                 calFile.close();
             } else {
                 setNoResults(true);
-                clearModel();
+                clear_and_shrink_model();
                 return true;
             }
 
-            clearModel();
+            clear_and_shrink_model();
 
             /* -------------------- Load results -------------------- */
             /* Changement du fichier *.res dés la version 3.2.2; disparition de la sauvegarde de mFormat dans les MetropolisVariable */
@@ -810,7 +810,7 @@ bool Project::load(const QString &path, bool force)
                                             qApp->activeWindow());
                         message.exec();
 
-                        clearModel();
+                        clear_and_shrink_model();
                         return false;
                     }
 
@@ -824,14 +824,13 @@ bool Project::load(const QString &path, bool force)
                         QDataStream in(&file);
 
                         mModel->restoreFromFile(&in);
-                        file.close();
-                        mModel->generateCorrelations(mModel->mChains);
 
+                        mModel->generateCorrelations(mModel->mChains);
                         setNoResults(false);
 
                      } else {
                          setNoResults(true);
-                         clearModel();
+                         clear_and_shrink_model();
                      }
 
                     } catch (const std::exception & e) {
@@ -842,19 +841,19 @@ bool Project::load(const QString &path, bool force)
                                             QMessageBox::Ok,
                                             qApp->activeWindow());
                         setNoResults(true);
-                        clearModel();
+                        clear_and_shrink_model();
                         message.exec();
                     }
                 } else {
                     qDebug() << "[Project::load] no file.res : "<< dataPath;
 
                     setNoResults(true);
-                    clearModel();
+                    clear_and_shrink_model();
                 }
             } else {
                 qDebug() << "[Project::load] no file.res : "<< dataPath;
                 setNoResults(true);
-                clearModel();
+                clear_and_shrink_model();
             }
             // --------------------
 
@@ -1164,7 +1163,7 @@ bool Project::insert(const QString &path, QJsonObject &return_state)
 
            unselectedAllInState(return_state); // modify mState
 
-           clearModel();
+           clear_model();
 
            qDebug() << "[Project::insert]  unselectedAllInState";
            return true;
@@ -1646,7 +1645,7 @@ void Project::deleteSelectedEvents()
     // send to clear the propertiesView
     emit currentEventChanged(nullptr);
 
-    clearModel();
+    clear_model();
     MainWindow::getInstance() -> setResultsEnabled(false);
     MainWindow::getInstance() -> setLogEnabled(false);
 }
@@ -2334,7 +2333,7 @@ void Project::deleteDates(int eventId, const QList<int>& dateIndexes)
             break;
         }
     }
-    clearModel();
+    clear_model();
     MainWindow::getInstance() -> setResultsEnabled(false);
     MainWindow::getInstance() -> setLogEnabled(false);
 }
@@ -2625,15 +2624,14 @@ void Project::createPhase(qreal x, qreal y, QWidget* parent)
 
 void Project::clear_calibCurves()
 {
-    for (auto c: mCalibCurves) {
+    for (auto &c: mCalibCurves) {
         c.second.mMap.clear();
         c.second.mRepartition.clear();
+        c.second.mRepartition.shrink_to_fit();
         c.second.mVector.clear();
+        c.second.mVector.shrink_to_fit();
     }
     mCalibCurves.clear();
-    //mLastSavedState = QJsonObject();
-    //mState = QJsonObject();
-    //mName.clear();
 }
 
 void Project::updatePhase(const QJsonObject& phaseIn)
@@ -2729,7 +2727,7 @@ void Project::deleteSelectedPhases()
 
     pushProjectState(stateNext, "Phase(s) deleted", true);
 
-    clearModel();
+    clear_model();
     MainWindow::getInstance() -> setResultsEnabled(false);
     MainWindow::getInstance() -> setLogEnabled(false);
 }
@@ -2830,7 +2828,7 @@ void Project::mergePhases(int phaseFromId, int phaseToId)
 QJsonObject Project::getPhasesWithId(const int id)
 {
     const QJsonArray& phases = mState.value(STATE_PHASES).toArray();
-    for (const QJsonValue &pha : phases) {
+    for (const QJsonValue pha : phases) {
         if (pha.toObject().value(STATE_ID) == id)
             return pha.toObject();
     }
@@ -3142,15 +3140,12 @@ void Project::runChronomodel()
     if (mModel) {
         mModel->clearTraces();
         mModel->clear();
+        mModel->shrink_to_fit();
         mModel.reset();
         mModel = std::make_shared<ModelCurve>(mState);
 
     } else
-        mModel = std::make_shared<ModelCurve>(mState);//std::shared_ptr<ModelCurve>(new ModelCurve(mState));
-    //mModel.reset();
-    //*mModel = ModelCurve(mState);
-    //mModel = std::shared_ptr<ModelCurve>(new ModelCurve(mState, this));
-    //mModel.reset(new ModelCurve(mState, this));
+        mModel = std::make_shared<ModelCurve>(mState);
 
     bool modelOk = false;
     try {
@@ -3169,7 +3164,7 @@ void Project::runChronomodel()
 
 
         MCMCLoopChrono loop(mModel);
-        //MCMCLoopChrono loop(this);
+
         MCMCProgressDialog dialog(&loop, qApp->activeWindow(), Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint);
 
         /* --------------------------------------------------------------------
@@ -3204,24 +3199,33 @@ void Project::runChronomodel()
                                         qApp->activeWindow());
                     message.exec();
                 }
-                clearModel();
+                clear_model();
             }
         }
         // Dialog is never "rejected", so this should never happen :
         else {
             qDebug() << "[Project::runChronomodel] ERROR : MCMCProgressDialog::rejected : Should NEVER happen !";
-            clearModel();
+            clear_model();
         }
     }
 }
 
 
-void Project::clearModel()
+void Project::clear_and_shrink_model()
 {
-    if (mModel && mModel->mNumberOfEvents >0)
+    if (mModel && mModel->mNumberOfEvents > 0) {
+        mModel->clear_and_shrink();
+    }
+
+    emit noResult();
+}
+
+void Project::clear_model()
+{
+    if (mModel && mModel->mNumberOfEvents > 0) {
         mModel->clear();
 
-    //mModel.reset();
+    }
 
     emit noResult();
 }
@@ -3329,12 +3333,12 @@ void Project::runCurve()
                     qApp->activeWindow());
                 message.exec();
             }
-            clearModel();
+            clear_model();
         }
     }
     // Dialog is never "rejected", so this should never happen :
     else {
         qDebug() << "[Project::runCurve] ERROR : MCMCProgressDialog::rejected : Should NEVER happen !";
-        clearModel();
+        clear_model();
     }
 }

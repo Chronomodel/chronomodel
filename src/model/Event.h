@@ -143,6 +143,7 @@ public:
     Event(const Event &origin);
     virtual ~Event();
 
+
     inline QString getQStringName() const {return QString::fromStdString(_name);}
     inline std::string name() const {return _name;}
     void setName(const std::string name) {_name = name;}
@@ -157,6 +158,8 @@ public:
     inline Type type() const { return mType;}
 
     void clear();
+    void shrink_to_fit() noexcept;
+    void clear_and_shrink() noexcept;
     
     static void setCurveCsvDataToJsonEvent(QJsonObject &event, const QMap<QString, double> &CurveData);
     static QString curveDescriptionFromJsonEvent(QJsonObject &event, CurveSettings::ProcessType processType = CurveSettings::eProcess_None);

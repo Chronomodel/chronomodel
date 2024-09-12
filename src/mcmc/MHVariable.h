@@ -59,10 +59,17 @@ public:
 
     MHVariable();
     explicit MHVariable(const MHVariable& origin);
+    /** move constructor */
+    MHVariable(MHVariable&& other) noexcept;
+
     explicit MHVariable(const MetropolisVariable& origin);
     virtual ~MHVariable();
+    void shrink_to_fit() noexcept override;
 
     void clear() override;
+    void clear_and_shrink() noexcept override;
+
+    void clearPosteriorDensities() override;
     void reserve(const size_t reserve) override;
     //MHVariable& copy(MHVariable const& origin);
     MHVariable& operator=(const MHVariable& origin);

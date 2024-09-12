@@ -79,7 +79,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QFontDialog>
 
 
-ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
+ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
+    QWidget(parent, flags),
     mMargin(5),
     mOptionsW(250),
     mMarginLeft(40),
@@ -1098,6 +1099,10 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent,
 
 ResultsView::~ResultsView()
 {
+    deleteAllGraphsInList(mByEventsGraphs);
+    deleteAllGraphsInList(mByPhasesGraphs);
+    deleteAllGraphsInList(mByCurveGraphs);
+
 }
 
 

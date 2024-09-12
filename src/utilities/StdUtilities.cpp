@@ -403,7 +403,7 @@ QList<float> equal_areas(const QList<float>& data, const float step, const float
 std::vector<double> equal_areas(const std::vector<double>& data, const float step, const float area)
 {
     if (data.empty())
-        return std::vector<double>();
+        return {};
 
     long double srcArea (0.l);
     long double lastV = data.at(0);
@@ -436,7 +436,7 @@ QMap<double, double> vector_to_map(const QList<double>& data, const double min, 
     QMap<double, double> map;
 
     if (data.isEmpty())
-        return map;
+        return {};
 
     if (min == max)
         map.insert(min, data.at(0));
@@ -481,17 +481,19 @@ std::map<double, double> vector_to_map(const std::vector<double>& data, const do
 {
     Q_ASSERT(max>=min && !data.empty());
     std::map<double, double> map ;
-    if (min == max)
-        map.emplace(min, data.at(0));
+    if (min == max) {
+        if (data.empty()){
+            return {};
+        } else {
+            map.emplace(min, data.at(0));
+        }
 
-    else {
-        const int nbPts = 1 + (int)round((max - min) / step); // step is not usefull, it's must be data.size/(max-min+1)
-        double t;
-        for (int i = 0; i<nbPts; ++i) {
-            t = min + i * step;
+    } else {
+        const size_t nbPts = std::min (1 + (size_t)round((max - min) / step), data.size()); // step is not usefull, it's must be data.size/(max-min+1)
 
-            if (i < (int)data.size())
-                map.emplace(t,  double (data.at(i)));
+        for (size_t i = 0; i<nbPts; ++i) {
+            auto t = min + i * step;
+            map.emplace(t,  double (data.at(i)));
 
         }
     }
@@ -502,10 +504,14 @@ QMap<float, float> vector_to_map(const QList<float>& data, const float min, cons
 {
     Q_ASSERT(max>=min && !data.isEmpty());
     QMap<float, float> map;
-    if (min == max)
-        map.insert(min, data.at(0));
+    if (min == max) {
+        if (data.empty()){
+            return {};
+        } else {
+            map.insert(min, data.at(0));
+        }
 
-    else {
+    } else {
         const int nbPts = 1 + int (round((max - min) / step)); // step is not usefull, it's must be data.size/(max-min+1)
         for (int i=0; i<nbPts; ++i) {
             float t = min + i * step;

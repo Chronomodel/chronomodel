@@ -2373,11 +2373,12 @@ Matrix2D multiplyMatrixBanded_Winograd(const Matrix2D& a, const Matrix2D& b, con
     const size_t a_col = a[0].size();
     const size_t b_row = b.size();
     const size_t b_col = b[0].size();
-    if (a_row != b_row && a_row!= a_col && b_row != b_col)
-        std::cerr<< "[Function] multiplyMatrixBanded_Winograd() matrix are not square";
+    if (a_row != a_col || b_row != b_col || a_row != b_row) {
+        std::cerr << "[Function multiplyMatrixBanded_Winograd] matrices are not square" << std::endl;
+    }
 #endif
 
-    const int n = (int)a.size();
+    const int n = static_cast<int>(a.size());
     Matrix2D c = initMatrix2D(n, n);
 
     for (int i = 0; i < n-bandwidth; ++i) {

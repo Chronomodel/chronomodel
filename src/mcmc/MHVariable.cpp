@@ -58,6 +58,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 MHVariable::MHVariable():
     MetropolisVariable(),
     mSigmaMH(0),
+    mLastAccepts(),
     mLastAcceptsLength(0),
     mAllAccepts(),
     mGlobalAcceptationPerCent(0.),
@@ -67,10 +68,10 @@ MHVariable::MHVariable():
 }
 
 /** Copy constructor */
-
 MHVariable::MHVariable(const MHVariable& origin):
     MetropolisVariable(origin),
     mSigmaMH(origin.mSigmaMH),
+    mLastAccepts(origin.mLastAccepts),
     mLastAcceptsLength(origin.mLastAcceptsLength),
     mAllAccepts(origin.mAllAccepts),
     mGlobalAcceptationPerCent(origin.mGlobalAcceptationPerCent),
@@ -82,9 +83,26 @@ MHVariable::MHVariable(const MHVariable& origin):
 
 }
 
+/** move constructor */
+MHVariable::MHVariable(MHVariable&& other) noexcept
+{
+    MetropolisVariable(std::move(other));
+    mSigmaMH = std::move(other.mSigmaMH);
+    mLastAccepts = std::move(other.mLastAccepts);
+    mLastAcceptsLength = std::move(other.mLastAcceptsLength);
+    mAllAccepts = std::move(other.mAllAccepts);
+    mGlobalAcceptationPerCent = std::move(other.mGlobalAcceptationPerCent);
+    mSamplerProposal = std::move(other.mSamplerProposal);
+    mHistoryAcceptRateMH.swap(other.mHistoryAcceptRateMH);
+
+    other.mHistoryAcceptRateMH.reset();
+
+}
+
 MHVariable::MHVariable(const MetropolisVariable& origin):
     MetropolisVariable(origin),
     mSigmaMH(0),
+    mLastAccepts(),
     mLastAcceptsLength(0),
     mAllAccepts(),
     mGlobalAcceptationPerCent(0.),
@@ -156,23 +174,53 @@ bool MHVariable::adapt (const double coef_min, const double coef_max, const doub
 void MHVariable::clear()
 {
     MetropolisVariable::clear();
-    if (mHistoryAcceptRateMH)
+    if (mHistoryAcceptRateMH) {
         mHistoryAcceptRateMH->clear();
+    }
 
     mLastAccepts.clear();
+
     mAllAccepts.clear();
 
+}
+
+void MHVariable::shrink_to_fit() noexcept
+{
+    MetropolisVariable::shrink_to_fit();
+    if (mHistoryAcceptRateMH) {
+        mHistoryAcceptRateMH->shrink_to_fit();
+    }
+    mLastAccepts.shrink_to_fit();
+    mAllAccepts.shrink_to_fit();
+
+}
+
+void MHVariable::clear_and_shrink() noexcept
+{
+    MetropolisVariable::clear_and_shrink();
+    if (mHistoryAcceptRateMH) {
+        mHistoryAcceptRateMH->clear();
+        mHistoryAcceptRateMH->shrink_to_fit();
+    }
+
+    mLastAccepts.clear();
     mLastAccepts.shrink_to_fit();
 
+    mAllAccepts.clear();
+    mAllAccepts.shrink_to_fit();
+
+}
+
+void MHVariable::clearPosteriorDensities()
+{
+    MetropolisVariable::clearPosteriorDensities();
 }
 
 void MHVariable::reserve(const size_t reserve)
 {
     MetropolisVariable::reserve(reserve);
     mAllAccepts.reserve(reserve);
-    /*if (!mHistoryAcceptRateMH)
-        mHistoryAcceptRateMH = new QList<double>();*/
-   // mHistoryAcceptRateMH->reserve(reserve);
+
 }
 
 

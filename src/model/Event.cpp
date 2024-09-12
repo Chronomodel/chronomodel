@@ -62,8 +62,15 @@ Event::Event():
     mId (0),
     mIsCurrent (false),
     mIsSelected (false),
-    mTheta (MHVariable()),
-    mS02Theta (MHVariable()),
+    mPhasesIds(),
+    mConstraintsFwdIds(),
+    mConstraintsBwdIds(),
+    mPhases(),
+    mConstraintsFwd(),
+    mConstraintsBwd(),
+
+    mTheta (),
+    mS02Theta (),
     mAShrinkage(0.),
     mBetaS02 (0.),
     mInitialized (false),
@@ -83,8 +90,8 @@ Event::Event():
     mGy(0.),
     mGz(0.),
     mW(0.),
-    mVg (MHVariable()),
-    mMixingCalibrations (nullptr),  //std::make_shared<CalibrationCurve>()),
+    mVg (),
+    mMixingCalibrations (nullptr),
     _name ("no Event Name")
 {
     mTheta.setName(std::string("Theta of Event : ") + _name);
@@ -140,6 +147,12 @@ Event::Event():
 }
 
 Event::Event (const QJsonObject& json):
+    mPhasesIds(),
+    mConstraintsFwdIds(),
+    mConstraintsBwdIds(),
+    mPhases(),
+    mConstraintsFwd(),
+    mConstraintsBwd(),
     mAShrinkage(0.),
     mBetaS02 (0.),
     mIsNode(false),
@@ -150,7 +163,7 @@ Event::Event (const QJsonObject& json):
     mGy(0.),
     mGz(0.),
     mW(0.),
-    mMixingCalibrations(nullptr)//std::make_shared<CalibrationCurve>())
+    mMixingCalibrations(nullptr)
 {
     mType = Type (json.value(STATE_EVENT_TYPE).toInt());
     mId = json.value(STATE_ID).toInt();
@@ -421,31 +434,6 @@ void Event::copyFrom(const Event& event)
 Event::~Event()
 {
     //qDebug() << "[Event::~Event] Event: ";//<< (mName.isNull()? " Deleted Name": mName);
-
- /*   mTheta.clear();
-    mTheta.~MHVariable();
-    
-    for (auto&& date : mDates) {
-        date.mTi.clear();
-        date.mSigmaTi.clear();
-        date.mWiggle.clear();
-    }
-
-    mDates.clear();
-
-    if (!mPhases.isEmpty())
-        mPhases.clear();
-
-    if (!mConstraintsFwd.isEmpty())
-       mConstraintsFwd.clear();
-
-    if (!mConstraintsBwd.isEmpty())
-        mConstraintsBwd.clear();
-
-    mVg.clear();
-
-    mS02Theta.clear();
-*/
     mMixingCalibrations = nullptr; //only the pointer
 }
 
@@ -707,14 +695,45 @@ QList<double> Event::curveParametersFromJsonEvent(QJsonObject &event, CurveSetti
 // MCMC
 void Event::clear()
 {
+    for (auto &dat:mDates) {
+        dat.clear();
+    }
+    mDates.clear();
     mTheta.clear();
+
     mVg.clear();
     mInitialized = false;
     mIsNode = false;
     mThetaNode = HUGE_VAL;//__builtin_inf();//INFINITY;
 }
 
+void Event::shrink_to_fit() noexcept
+{
+    for (auto &dat:mDates) {
+        dat.shrink_to_fit();
+    }
+    mTheta.shrink_to_fit();
+    mVg.shrink_to_fit();
+}
 
+void Event::clear_and_shrink() noexcept
+{
+    for (auto &dat:mDates) {
+        dat.clear();
+        dat.shrink_to_fit();
+    }
+    mDates.clear();
+    mDates.shrink_to_fit();
+    mTheta.clear();
+    mTheta.shrink_to_fit();
+
+    mVg.clear();
+    mVg.shrink_to_fit();
+
+    mInitialized = false;
+    mIsNode = false;
+    mThetaNode = HUGE_VAL;//__builtin_inf();//INFINITY;
+}
 /**
  * @brief Event::getThetaMaxPossible
  * Vérifie si l'initialisation est possible, controle la circularité,
@@ -1470,8 +1489,6 @@ void Event::updateTheta_v4(const double tmin, const double tmax, const double ra
     } else { //Q2
         theta_try = Generator::gaussByDoubleExp(ti_avg, sigma, min, max);
     }
-
-    //qDebug()<<"theta_try="<< theta_try;
 
     // Calcul rapport MH
 

@@ -617,11 +617,12 @@ QColor randomColor()
 }
 
 
-
-std::map<double, double> getMapDataInRange(const std::map<double, double> data, const double subMin, const  double subMax)
+/*
+std::map<double, double> getMapDataInRange(const std::map<double, double> &data, const double subMin, const  double subMax)
 {
-    if (data.size() == 0)
-        return data;
+    if (data.empty()) {
+        return {};
+    }
 
     if (data.size() == 1) {
         if (data.begin()->first>=subMin && data.begin()->first<= subMax) {
@@ -687,7 +688,53 @@ std::map<double, double> getMapDataInRange(const std::map<double, double> data, 
         return data;
     }
 }
+*/
+std::map<double, double> getMapDataInRange(const std::map<double, double>& data, const double subMin, const double subMax) {
+    if (data.empty()) {
+        return {};
+    }
 
+    std::map<double, double> subData;
+
+    // Vérifiez si subMin et subMax sont en dehors des limites de data
+    if (subMin > data.rbegin()->first || subMax < data.begin()->first) {
+        return subData; // Retourne une map vide
+    }
+
+    // Itération sur les éléments de la map
+    for (auto iter = data.begin(); iter != data.end(); ++iter) {
+        double valueT = iter->first;
+
+        if (valueT >= subMin && valueT <= subMax) {
+            subData.emplace(valueT, iter->second);
+        } else if (valueT < subMin) {
+            // Enregistrez le point avant subMin
+            if (iter != std::prev(data.end())) {
+                double tBeforeSubMin = valueT;
+                double vBeforeSubMin = iter->second;
+                if (subData.empty()) {
+                    subData[subMin] = interpolate(subMin, tBeforeSubMin, std::next(iter)->first, vBeforeSubMin, std::next(iter)->second);
+                }
+            }
+        } else if (valueT > subMax) {
+            // Enregistrez le point après subMax
+            if (subData.empty()) {
+                double tAfterSubMax = valueT;
+                double vAfterSubMax = iter->second;
+                subData[subMax] = interpolate(subMax, std::prev(iter)->first, tAfterSubMax, std::prev(iter)->second, vAfterSubMax);
+            }
+            break; // Pas besoin de continuer si nous avons dépassé subMax
+        }
+    }
+
+    // Si subData est vide et que data a exactement deux éléments
+    if (subData.empty() && data.size() == 2) {
+        subData.emplace(data.begin()->first, data.begin()->second);
+        subData.emplace(data.rbegin()->first, data.rbegin()->second);
+    }
+
+    return subData;
+}
 
 bool constraintIsCircular(QJsonArray constraints, const int fromId, const int toId)
 {
@@ -956,7 +1003,7 @@ std::shared_ptr<std::vector<double>> load_std_vector_ptr(QDataStream& stream)
     return data;
 }
 
-void reload_shared_ptr(const std::shared_ptr<std::vector<double>>& data, QDataStream& stream)
+void reload_shared_ptr(const std::shared_ptr<std::vector<double>> data, QDataStream& stream)
 {
     quint32 size;
     stream >> size;
@@ -965,7 +1012,7 @@ void reload_shared_ptr(const std::shared_ptr<std::vector<double>>& data, QDataSt
         double v;
         for (quint32 i = 0; i < size; ++i) {
             stream >> v;
-            data->push_back(v);
+            data->push_back(v);//test
         }
     }
 }

@@ -183,7 +183,9 @@ public:
     void updatePhaseConstraint(const int constraintId);
     int getUnusedPhaseConstraintId(const QJsonArray &constraints);
 
-    void clearModel();
+    void clear_and_shrink_model();
+    void clear_model();
+
     void createEvent(qreal x, qreal y);
     void createEventKnown(qreal x, qreal y);
     void createPhase(qreal x, qreal y, QWidget *parent);

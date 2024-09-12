@@ -118,6 +118,8 @@ public:
 
     bool isValid();
     void clear();
+    void shrink_to_fit();
+    void clear_and_shrink() noexcept;
 
     void initNodeEvents(); // use in MCMCLoopChrono::initialize()
     QString initializeTheta();

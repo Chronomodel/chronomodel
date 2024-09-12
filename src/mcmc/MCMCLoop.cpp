@@ -118,9 +118,9 @@ QString MCMCLoop::initialize_time()
     tminPeriod = mModel->mSettings.mTmin;
     tmaxPeriod = mModel->mSettings.mTmax;
 
-    std::vector<std::shared_ptr<Event>>& allEvents (mModel->mEvents);
-    std::vector<std::shared_ptr<Phase>>& phases (mModel->mPhases);
-    std::vector<std::shared_ptr<PhaseConstraint>>& phasesConstraints (mModel->mPhaseConstraints);
+    std::vector<std::shared_ptr<Event>> &allEvents (mModel->mEvents);
+    std::vector<std::shared_ptr<Phase>> &phases (mModel->mPhases);
+    std::vector<std::shared_ptr<PhaseConstraint>> &phasesConstraints (mModel->mPhaseConstraints);
 
     if (isInterruptionRequested())
         return ABORTED_BY_USER;

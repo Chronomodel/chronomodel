@@ -64,10 +64,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 extern QString res_file_version;
 
 Model::Model():
-   /* mEvents(std::vector<std::shared_ptr<Event>>()),
-    mPhases(std::vector<std::shared_ptr<Phase>>()),
-    mEventConstraints(std::vector<std::shared_ptr<EventConstraint>>()),
-    mPhaseConstraints(std::vector<std::shared_ptr<PhaseConstraint>>()),*/
     mEvents(),
     mPhases(),
     mEventConstraints(),
@@ -85,10 +81,6 @@ Model::Model():
 }
 
 Model::Model(const QJsonObject& json):
-    /*mEvents(std::vector<std::shared_ptr<Event>>()),
-    mPhases(std::vector<std::shared_ptr<Phase>>()),
-    mEventConstraints(std::vector<std::shared_ptr<EventConstraint>>()),
-    mPhaseConstraints(std::vector<std::shared_ptr<PhaseConstraint>>()),*/
     mEvents(),
     mPhases(),
     mEventConstraints(),
@@ -118,7 +110,7 @@ Model::Model(const QJsonObject& json):
         const QJsonArray phases = json.value(STATE_PHASES).toArray();
         mNumberOfPhases = (int) phases.size();
 
-        for (const auto& json : phases) {
+        for (const auto json : phases) {
             const QJsonObject& phaseObj = json.toObject();
             const auto& ph = std::make_shared<Phase>(phaseObj);
             mPhases.push_back(ph);
@@ -133,7 +125,7 @@ Model::Model(const QJsonObject& json):
         QJsonArray events = json.value(STATE_EVENTS).toArray();
         mNumberOfEvents = (int) events.size();
 
-        for (const auto& event : events) {
+        for (const auto event : events) {
             const QJsonObject& eventObj = event.toObject();
 
             if (eventObj.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
@@ -262,14 +254,16 @@ void Model::clear()
 {
     mCurveName.clear();
     mCurveLongName.clear();
-    // Deleting an event executes these main following actions :
-    // - The Event MH variables are reset (freeing trace memory)
-    // - The Dates MH variables are reset (freeing trace memory)
-    // - The Dates are cleared
 
+    for (auto &ev: mEvents) {
+        ev->clear();
+    }
     mEvents.clear();
     mEventConstraints.clear();
 
+    for (auto &ph: mPhases) {
+        ph->clear();
+    }
     mPhases.clear();
     mPhaseConstraints.clear();
 
@@ -279,6 +273,76 @@ void Model::clear()
     mLogAdapt.clear();
     mLogResults.clear();
 }
+
+void Model::shrink_to_fit()
+{
+    mCurveName.shrink_to_fit();
+    mCurveLongName.shrink_to_fit();
+
+    for (auto &ev: mEvents) {
+        for (auto &dat: ev->mDates) {
+            dat.shrink_to_fit();
+        }
+        ev->shrink_to_fit();
+    }
+    mEvents.shrink_to_fit();
+
+    mEventConstraints.shrink_to_fit();
+
+    for (auto &ph: mPhases) {
+        ph->shrink_to_fit();
+    }
+    mPhases.shrink_to_fit();
+    mPhaseConstraints.shrink_to_fit();
+
+    mChains.shrink_to_fit();
+    mLogModel.shrink_to_fit();
+    mLogInit.shrink_to_fit();
+    mLogAdapt.shrink_to_fit();
+    mLogResults.shrink_to_fit();
+}
+
+void Model::clear_and_shrink() noexcept
+{
+    mCurveName.clear();
+    mCurveName.shrink_to_fit();
+
+    mCurveLongName.clear();
+    mCurveLongName.shrink_to_fit();
+
+    for (auto &ev: mEvents) {
+        ev->clear_and_shrink();
+    }
+    mEvents.clear();
+    mEvents.shrink_to_fit();
+
+    mEventConstraints.clear();
+
+    for (auto &ph: mPhases) {
+        ph->clear_and_shrink();
+    }
+    mPhases.clear();
+    mPhases.shrink_to_fit();
+
+    mPhaseConstraints.clear();
+    mPhaseConstraints.shrink_to_fit();
+
+    mChains.clear();
+    mChains.shrink_to_fit();
+
+    mLogModel.clear();
+    mLogModel.shrink_to_fit();
+
+    mLogInit.clear();
+    mLogInit.shrink_to_fit();
+
+    mLogAdapt.clear();
+    mLogAdapt.shrink_to_fit();
+
+    mLogResults.clear();
+    mLogResults.shrink_to_fit();
+}
+
 
 /**
  * @brief Model::updateFormatSettings, set all date format according to the Application Preference, date format
@@ -1283,10 +1347,8 @@ void Model::generatePosteriorDensities(const std::vector<ChainSpecs> &chains, in
     const double tmax = mSettings.getTmaxFormated();
 
     for (const auto& event : mEvents) {
-       // if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
-            event->mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+        event->mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
 
-      //  }
         if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
             event->mS02Theta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
 
@@ -1636,7 +1698,6 @@ void Model::generateTempo(const size_t gridLength)
         double pT, eT, vT, infpT;
 
         for (const auto& niT : niTempo) {
-
             // Compute Tempo
             pT = niT/ nr;
             eT =  n * pT ;
@@ -1701,35 +1762,35 @@ void Model::generateTempo(const size_t gridLength)
  */
 void Model::clearPosteriorDensities()
 {
-    std::vector<std::shared_ptr<Event>>::iterator iterEvent = mEvents.begin();
-    while (iterEvent != mEvents.end()) {
-        for (auto&& date : (*iterEvent)->mDates) {
-            date.mTi.mFormatedHisto.clear();
-            date.mSigmaTi.mFormatedHisto.clear();
-            date.mTi.mChainsHistos.clear();
-            date.mSigmaTi.mChainsHistos.clear();
+    for (auto &event : mEvents) {
+        for (auto&& date : event->mDates) {
+            date.mTi.clearPosteriorDensities();
+            date.mSigmaTi.clearPosteriorDensities();
+            date.mWiggle.clearPosteriorDensities();
         }
-        (*iterEvent)->mTheta.mFormatedHisto.clear();
-        (*iterEvent)->mTheta.mChainsHistos.clear();
-
-        (*iterEvent)->mS02Theta.mFormatedHisto.clear();
-        (*iterEvent)->mS02Theta.mChainsHistos.clear();
-
-        ++iterEvent;
+        event->mTheta.clearPosteriorDensities();
+        event->mS02Theta.clearPosteriorDensities();
     }
 
-    std::vector<std::shared_ptr<Phase>>::iterator iterPhase = mPhases.begin();
-    while (iterPhase != mPhases.end()) {
-        (*iterPhase)->mAlpha.mFormatedHisto.clear();
-        (*iterPhase)->mBeta.mFormatedHisto.clear();
-       // (*iterPhase)->mTau.mFormatedHisto.clear();
-        (*iterPhase)->mDuration.mFormatedHisto.clear();
+    for (auto &phase : mPhases) {
+        phase->mAlpha.clearPosteriorDensities();
+        phase->mBeta.clearPosteriorDensities();
+        phase->mDuration.clearPosteriorDensities();
 
-        (*iterPhase)->mAlpha.mChainsHistos.clear();
-        (*iterPhase)->mBeta.mChainsHistos.clear();
-        //(*iterPhase)->mTau.mChainsHistos.clear();
-        (*iterPhase)->mDuration.mChainsHistos.clear();
-        ++iterPhase;
+        phase->mTempo.clear();
+        phase->mTempoInf.clear();
+        phase->mTempoSup.clear();
+        phase->mActivity.clear();
+        phase->mActivityInf.clear();
+        phase->mActivitySup.clear();
+        phase->mRawTempo.clear();
+        phase->mRawTempoInf.clear();
+        phase->mRawTempoSup.clear();
+        phase->mRawActivity.clear();
+        phase->mRawActivityInf.clear();
+        phase->mRawActivitySup.clear();
+
+        phase->mTau.clear();
     }
 }
 
@@ -1943,30 +2004,7 @@ void Model::clearTraces()
     }
 
     for (const auto& ph : mPhases) {
-        ph->mAlpha.clear();
-        ph->mBeta.clear();
-        //ph->mTau.reset();
-        ph->mDuration.clear();
-
-        ph->mRawTempo.clear();
-        ph->mRawTempoInf.clear();
-        ph->mRawTempoSup.clear();
-
-        ph->mTempo.clear();
-        ph->mTempoInf.clear();
-        ph->mTempoSup.clear();
-
-        ph->mRawActivity.clear();
-        ph->mRawActivityInf.clear();
-        ph->mRawActivitySup.clear();
-
-        ph->mActivity.clear();
-        ph->mActivityInf.clear();
-        ph->mActivitySup.clear();
-
-        ph->mRawActivityUnifTheo.clear();
-        ph->mActivityUnifTheo.clear();
-
+        ph->clear();
     }
 }
 

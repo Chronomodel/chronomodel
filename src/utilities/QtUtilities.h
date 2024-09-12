@@ -214,7 +214,7 @@ QMap<T, V> getMapDataInRange(const QMap<T, V> data, const T subMin, const  T sub
     }
 }
 
-std::map<double, double> getMapDataInRange(const std::map<double, double> data, const double subMin, const double subMax);
+std::map<double, double> getMapDataInRange(const std::map<double, double> &data, const double subMin, const double subMax);
 
 template <typename T>
 QList<T> getVectorDataInRange(const QList<T> &data, const T subMin,const T subMax, const T min, const T max)
@@ -241,6 +241,7 @@ QList<T> getVectorDataInRange(const QList<T> &data, const T subMin,const T subMa
 
 }
 
+/*
 template <typename T>
 std::vector<T> getVectorDataInRange(const std::vector<T> &data, const T subMin,const T subMax, const T min, const T max)
 {
@@ -264,6 +265,34 @@ std::vector<T> getVectorDataInRange(const std::vector<T> &data, const T subMin,c
     else
         return data;
 
+}*/
+
+template <typename T>
+std::vector<T> getVectorDataInRange(const std::vector<T>& data, const T subMin, const T subMax, const T min, const T max)
+{
+    if (data.empty()) {
+        throw std::invalid_argument("Input vector is empty.");
+    }
+
+    if (subMin == min && subMax == max) {
+        return data; // Return the entire vector if the ranges are equal
+    }
+
+    // Calculate indices
+    size_t idxStart = static_cast<size_t>(std::floor(data.size() * (subMin - min) / (max - min)));
+    size_t idxEnd = static_cast<size_t>(std::floor(data.size() * (subMax - min) / (max - min)));
+
+    // Ensure indices are within bounds
+    idxStart = std::max(static_cast<size_t>(0), idxStart);
+    idxEnd = std::min(idxEnd, data.size() - 1);
+
+    // Create a vector to hold the subrange
+    std::vector<T> subData;
+    subData.reserve(idxEnd - idxStart + 1); // Reserve space for the expected number of elements
+
+    // Use std::copy to copy the range
+    std::copy(data.begin() + idxStart, data.begin() + idxEnd + 1, std::back_inserter(subData));
+    return subData;
 }
 
 QList<double>* load_QList_ptr(QDataStream& stream);
@@ -274,10 +303,10 @@ std::vector<double> load_std_vector(QDataStream& stream);
 std::vector<bool> load_std_vector_bool(QDataStream& stream);
 
 std::shared_ptr<std::vector<double> > load_std_vector_ptr(QDataStream& stream);
-void reload_shared_ptr(const std::shared_ptr<std::vector<double> > &data, QDataStream& stream);
+void reload_shared_ptr(const std::shared_ptr<std::vector<double> > data, QDataStream& stream);
 
 
-template <template<typename...> class Container, class T >
+/*template <template<typename...> class Container, class T >
 void save_container(QDataStream& stream, const Container<T>& data)
 {
    // qDebug()<<"[QtUtilities::save_container] "<< data.size();
@@ -288,9 +317,30 @@ void save_container(QDataStream& stream, const Container<T>& data)
             stream << v;
     }
 
+}*/
+template <template<typename...> class Container, class T>
+void save_container(QDataStream& stream, const Container<T>& data)
+{
+    quint32 size = static_cast<quint32>(data.size());
+    stream << size;
+
+    if (stream.status() != QDataStream::Ok) {
+        // Gérer l'erreur de flux ici
+        return;
+    }
+
+    if (size > 0) {
+        for (const auto& v : data) {
+            stream << v;
+            if (stream.status() != QDataStream::Ok) {
+                // Gérer l'erreur de flux ici
+                return;
+            }
+        }
+    }
 }
 
-template <template<typename...> class Container, class T >
+/*template <template<typename...> class Container, class T >
 void load_container(QDataStream& stream, Container<T>& data)
 {
     quint32 siz;
@@ -301,6 +351,31 @@ void load_container(QDataStream& stream, Container<T>& data)
     std::generate_n(tmp.begin(), siz, [&stream, &v]{stream >> v; return v;});
 
     std::swap(data, tmp);
+}*/
+
+template <template<typename...> class Container, class T>
+void load_container(QDataStream& stream, Container<T>& data)
+{
+    quint32 siz;
+    stream >> siz;
+
+    if (stream.status() != QDataStream::Ok) {
+        // Gérer l'erreur de lecture ici
+        return;
+    }
+
+    data.resize(siz);
+
+    // Utilisation de std::generate pour remplir le conteneur
+    std::generate(data.begin(), data.end(), [&stream]() {
+        T v;
+        stream >> v;
+        if (stream.status() != QDataStream::Ok) {
+            // Gérer l'erreur de lecture ici
+            throw std::runtime_error("Error reading from stream");
+        }
+        return v;
+    });
 }
 
 std::shared_ptr<Project> getProject_ptr();

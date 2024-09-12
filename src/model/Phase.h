@@ -68,6 +68,10 @@ public:
     void copyFrom(const Phase& phase);
     virtual ~Phase();
 
+    void clear();
+    void shrink_to_fit();
+    void clear_and_shrink() noexcept;
+
     static Phase fromJson(const QJsonObject& json);
     QJsonObject toJson() const;
 

@@ -76,9 +76,13 @@ MetropolisVariable::MetropolisVariable():
     mSupport (eR),
     mFormat (DateUtils::eNumeric),
     mFormatedHisto(),
+    mChainsHistos(),
+    mCorrelations(),
     mFormatedHPD(),
+    mRawHPDintervals(),
     mExactCredibilityThreshold (0.),
-    mChainsResults(std::vector<DensityAnalysis>()),
+    mResults(),
+    mChainsResults(),
     mfftLenUsed (-1),
     mBandwidthUsed (-1.),
     mThresholdUsed (-1.),
@@ -98,8 +102,10 @@ MetropolisVariable::MetropolisVariable(const MetropolisVariable& origin):
     mX = origin.mX;
     _name = origin._name;
 
-    mRawTrace = std::shared_ptr<std::vector<double>>(origin.mRawTrace);
-    mFormatedTrace = std::shared_ptr<std::vector<double>>(origin.mFormatedTrace);
+    //mRawTrace = std::shared_ptr<std::vector<double>>(origin.mRawTrace);
+    //mFormatedTrace = std::shared_ptr<std::vector<double>>(origin.mFormatedTrace);
+    mRawTrace = std::make_shared<std::vector<double>>(*origin.mRawTrace);
+    mFormatedTrace = std::make_shared<std::vector<double>>(*origin.mFormatedTrace);
 
     mSupport = origin.mSupport;
     mFormat = origin.mFormat;
@@ -134,21 +140,6 @@ MetropolisVariable::MetropolisVariable(const MetropolisVariable& origin):
 /** Destructor */
 MetropolisVariable::~MetropolisVariable()
 {
-#ifdef DEBUG
-   // qDebug() << "[MetropolisVariable::~MetropolisVariable] ";//<< (mName.isNull()? " Deleted Name": mName);
-   // if (mName == "Empty MetropolisVariable")
-   //     qDebug()<<"delete MetropolisVariable : "<< mName;
-#endif
-
-   /* mChainsHistos.clear();
-    mChainsResults.clear();
-    mFormatedHisto.clear();
-    mRawHPDintervals.clear();
-*/
-    // std::shared_ptr<std::vector<double>>
-    //mRawTrace.reset();
-    //mFormatedTrace.reset();
-
 }
 
 /** Copy assignment operator */
@@ -157,8 +148,8 @@ MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable& orig
     mX = origin.mX;
     _name = origin._name;
 
-    mRawTrace = std::shared_ptr<std::vector<double>>(origin.mRawTrace);
-    mFormatedTrace = std::shared_ptr<std::vector<double>>(origin.mFormatedTrace);
+    mRawTrace = std::make_shared<std::vector<double>>(*origin.mRawTrace);
+    mFormatedTrace = std::make_shared<std::vector<double>>(*origin.mFormatedTrace);
 
     mSupport = origin.mSupport;
     mFormat = origin.mFormat;
@@ -189,6 +180,50 @@ MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable& orig
 }
 
 /** Move assignment operator */
+MetropolisVariable& MetropolisVariable::operator=(MetropolisVariable&& origin) noexcept
+{
+    if (this != &origin) { // Vérification de l'auto-assignement
+        // Transférer les membres
+        mX = std::move(origin.mX);
+        _name = std::move(origin._name);
+
+        mRawTrace = std::move(origin.mRawTrace);
+        mFormatedTrace = std::move(origin.mFormatedTrace);
+
+        mSupport = std::move(origin.mSupport);
+        mFormat = std::move(origin.mFormat);
+
+        mFormatedHisto = std::move(origin.mFormatedHisto);
+        mChainsHistos = std::move(origin.mChainsHistos);
+
+        mCorrelations = std::move(origin.mCorrelations);
+
+        mFormatedHPD = std::move(origin.mFormatedHPD);
+        mRawCredibility = std::move(origin.mRawCredibility);
+        mRawHPDintervals = std::move(origin.mRawHPDintervals);
+        mFormatedCredibility = std::move(origin.mFormatedCredibility);
+
+        mExactCredibilityThreshold = std::move(origin.mExactCredibilityThreshold);
+
+        mResults = std::move(origin.mResults);
+        mChainsResults = std::move(origin.mChainsResults);
+
+        mfftLenUsed = origin.mfftLenUsed;
+        mBandwidthUsed = origin.mBandwidthUsed;
+        mThresholdUsed = origin.mThresholdUsed;
+
+        mtminUsed = origin.mtminUsed;
+        mtmaxUsed = origin.mtmaxUsed;
+
+        // Laisser l'objet source dans un état valide
+        // (par exemple, réinitialiser les pointeurs ou les ressources)
+        origin.mRawTrace.reset();
+        origin.mFormatedTrace.reset();
+        // Réinitialiser d'autres membres si nécessaire
+    }
+
+    return *this;
+}
 
 void MetropolisVariable::memo()
 {
@@ -204,13 +239,72 @@ void MetropolisVariable::clear()
 {
     mRawTrace->clear();
     mFormatedTrace->clear();
+    mFormatedHisto.clear();
+
+    mChainsHistos.clear();
+    mCorrelations.clear();
+    mRawHPDintervals.clear();
+    mFormatedHPD.clear();
+
+    mChainsResults.clear();
+    mRawCredibility = std::pair<double, double>(1, -1);
+    mFormatedCredibility = std::pair<double, double>(1, -1);
+
+}
+
+void MetropolisVariable::shrink_to_fit() noexcept
+{
+    mRawTrace->shrink_to_fit();
+    mFormatedTrace->shrink_to_fit();
+    mChainsHistos.shrink_to_fit();
+    mCorrelations.shrink_to_fit();
+    mRawHPDintervals.shrink_to_fit();
+    mChainsResults.shrink_to_fit();
+}
+
+void MetropolisVariable::clear_and_shrink() noexcept
+{
+    mRawTrace->clear();
+    mRawTrace->shrink_to_fit();
+
+    mFormatedTrace->clear();
+    mFormatedTrace->shrink_to_fit();
 
     mFormatedHisto.clear();
+    mChainsHistos.shrink_to_fit();
+
+    mChainsHistos.clear();
+    mChainsHistos.shrink_to_fit();
+
+    mCorrelations.clear();
+    mCorrelations.shrink_to_fit();
+
+    mRawHPDintervals.clear();
+    mRawHPDintervals.shrink_to_fit();
+
+    mFormatedHPD.clear();
+
+    mChainsResults.clear();
+    mChainsResults.shrink_to_fit();
+
+    mRawCredibility = std::pair<double, double>(1, -1);
+    mFormatedCredibility = std::pair<double, double>(1, -1);
+}
+
+
+void MetropolisVariable::clearPosteriorDensities()
+{
+    //mRawTrace->clear(); // not a posterior
+    mFormatedTrace->clear();
+
+    mFormatedHisto.clear();
+
     mChainsHistos.clear();
 
     mCorrelations.clear();
 
     mRawHPDintervals.clear();
+
     mFormatedHPD.clear();
 
     mChainsResults.clear();
@@ -222,22 +316,6 @@ void MetropolisVariable::clear()
 
 void MetropolisVariable::reserve(const size_t reserve)
 {
-   /* (void) reserve;
-    //delete mRawTrace;
-    if (!mRawTrace) {
-        mRawTrace = std::shared_ptr<std::vector<double>>();
-    } else {
-        mRawTrace->clear();
-    }
-
-    
-    if (!mFormatedTrace) {
-        mFormatedTrace = new QList<double>();
-    } else {
-        mFormatedTrace->clear();
-    }
-   */
-
     mRawTrace->reserve(reserve); // do memory leak
     mFormatedTrace->reserve(reserve);
 }
@@ -392,119 +470,6 @@ void MetropolisVariable::generateBufferForHisto(double *input, const std::vector
  }
 
  **/
-/*
-QMap<double, double> MetropolisVariable::generateHisto(const QList<double> &dataSrc, const int fftLen, const double bandwidth, const double tmin, const double tmax)
-{
-    mfftLenUsed = fftLen;
-    mBandwidthUsed = bandwidth;
-    mtmaxUsed = tmax;
-    mtminUsed = tmin;
-
-    QMap<double, double> result;
-
-    if (dataSrc.size() == 1) {
-        // value. It can appear with a fixed variable
-        result.insert(dataSrc.at(0), 1.) ;
-        qDebug()<<"[MetropolisVariable::generateHisto] One Value = "<< dataSrc.at(0) << _name;
-        return result;
-    }
-
-
-    const int inputSize = fftLen;
-    const int outputSize = 2 * (inputSize / 2 + 1);
-
-    double sigma = std_unbiais_Knuth(dataSrc);
-
-
-    // Density Estimation - Simon J. Sheather, Statistical Science 2004, Vol. 19, No. 4, 588–597 DOI 10.1214/088342304000000297
-    // Silverman’s rule of thumb. It is given by hSROT = 0.9An−1/5, where A = min{sample standard deviation, (sample interquartile range)/1.34}
-    const Quartiles quartiles = quantilesType(dataSrc, 8, 0.1585);
-    sigma = std::min(sigma, (quartiles.Q3 - quartiles.Q1)/1.34);
-
-
-    if (sigma == 0) {
-        // if sigma is null and there are several values, it means: this is a constant value
-        // This can occur at the Begin or End of a Phase with a Bound.
-        result.insert(dataSrc.at(0), 1.) ;
-        qDebug()<<"[MetropolisVariable::generateHisto] Constant value = "<< dataSrc.at(0) << _name;
-
-        return result;
-    }
-
-    const double h = bandwidth * sigma * pow(dataSrc.size(), -1./5.);
-    const double a = range_min_value(dataSrc) - 4. * h;
-    const double b = range_max_value(dataSrc) + 4. * h;
-
-    double* input = (double*) fftw_malloc(inputSize * sizeof(double));
-    generateBufferForHisto(input, dataSrc, inputSize, a, b);
-
-    double* output = (double*) fftw_malloc(outputSize * sizeof(double));
-
-    if (input != nullptr) {
-        // ----- FFT -----
-        // http://www.fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html#One_002dDimensional-DFTs-of-Real-Data
-        //https://jperalta.wordpress.com/2006/12/12/using-fftw3/
-        fftw_plan plan_forward = fftw_plan_dft_r2c_1d(inputSize, input, (fftw_complex*)output, FFTW_ESTIMATE);
-        fftw_execute(plan_forward);
-
-        for (int i=0; i<outputSize/2; ++i) {
-            const double s = 2. * M_PI * i / (b-a);
-            const double factor = exp(-0.5 * s * s * h * h);
-
-            output[2*i] *= factor;
-            output[2*i + 1] *= factor;
-        }
-
-        fftw_plan plan_backward = fftw_plan_dft_c2r_1d(inputSize, (fftw_complex*)output, input, FFTW_ESTIMATE);
-        fftw_execute(plan_backward);
-
-        // ----- FFT Buffer to result map -----
-
-        double tBegin = a;
-        double tEnd = b;
-        switch(mSupport)
-        {
-              case eR :// on R
-                  // nothing to do already done by default
-              break;
-              case eRp : // on R+
-                  tBegin = 0.;
-              break;
-              case eRm :// on R-
-                  tEnd = 0;;
-              break;
-              case eRpStar : // on R+*
-                  tBegin = 0.;
-              break;
-              case eRmStar :// on R-*
-                  tEnd = 0.;
-              break;
-              case eBounded : // on [tmin;tmax]
-                  tBegin = tmin;
-                  tEnd = tmax;
-              break;
-        }
-        const double delta = (b - a) / (inputSize-1);
-
-        for (int i = 0; i<inputSize; ++i) {
-             const double t = a + (double)i * delta;
-             result[t] = std::max(0., input[i]); // the histogram must not have a negative value
-        }
-
-        result = getMapDataInRange(result, tBegin, tEnd);
-
-        fftw_free(input);
-        fftw_free(output);
-        input = nullptr;
-        output = nullptr;
-        fftw_destroy_plan(plan_forward);
-        fftw_destroy_plan(plan_backward);
-
-        result = equal_areas(result, 1.); // normalize the output area du to the fftw and the case (t >= tmin && t<= tmax)
-    }
-    return result; // return a map between a and b with a step delta = (b - a) / fftLen;
-}
-*/
 
 std::map<double, double> MetropolisVariable::generateHisto(const std::vector<double> &dataSrc, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
@@ -731,6 +696,10 @@ void MetropolisVariable::generateCorrelations(const std::vector<ChainSpecs> &cha
     const int hmax = 40;
     if (!mCorrelations.empty())
         mCorrelations.clear();
+
+    //mCorrelations = std::vector<std::vector<double>>(chains.size(), std::vector<double>(40, 1.)); // test
+    //return;
+
 
     //mCorrelations.reserve(chains.size());
     //Chronometer ch ("[MetropolisVariable::generateCorrelations]");

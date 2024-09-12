@@ -50,11 +50,24 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 Phase::Phase():
     mId (0),
-    mAlpha(MetropolisVariable()),
-    mBeta(MetropolisVariable()),
-    mDuration(MetropolisVariable()),
+    mAlpha(),
+    mBeta(),
+    mTimeRange(),
+    mDuration(),
+    mTempo(),
+    mTempoInf(),
+    mTempoSup(),
+    mActivity(),
+    mActivityInf(),
+    mActivitySup(),
+    mRawTempo(),
+    mRawTempoInf(),
+    mRawTempoSup(),
+    mRawActivity(),
+    mRawActivityInf(),
+    mRawActivitySup(),
     mValueStack(),
-    mTau(MetropolisVariable()),
+    mTau(),
     mTauType (Phase::eTauUnknown),
     mTauFixed (0.),
     mTauMin (0.),
@@ -81,6 +94,11 @@ Phase::Phase():
     mItemY = 0.;
 
     mTimeRange = std::make_pair(- INFINITY, +INFINITY);
+
+    mValueStack.emplace("t_min", -INFINITY);
+    mValueStack.emplace("t_max", INFINITY);
+
+
     mValueStack.emplace("Activity_TimeRange_Level", 0.);
     mValueStack.emplace("Activity_TimeRange_min", 0.);
     mValueStack.emplace("Activity_TimeRange_max", 0.);
@@ -109,11 +127,24 @@ Phase::Phase(const Phase& phase)
 
 Phase::Phase (const QJsonObject& json):
     mId(json.value(STATE_ID).toInt()),
-    mAlpha(MetropolisVariable()),
-    mBeta(MetropolisVariable()),
-    mDuration(MetropolisVariable()),
+    mAlpha(),
+    mBeta(),
+    mTimeRange(),
+    mDuration(),
+    mTempo(),
+    mTempoInf(),
+    mTempoSup(),
+    mActivity(),
+    mActivityInf(),
+    mActivitySup(),
+    mRawTempo(),
+    mRawTempoInf(),
+    mRawTempoSup(),
+    mRawActivity(),
+    mRawActivityInf(),
+    mRawActivitySup(),
     mValueStack(),
-    mTau(MetropolisVariable()),
+    mTau(),
     mTauType ((Phase::TauType)json.value(STATE_PHASE_TAU_TYPE).toInt()),
     mTauFixed (json.value(STATE_PHASE_TAU_FIXED).toDouble()),
     mTauMin (json.value(STATE_PHASE_TAU_MIN).toDouble()),
@@ -144,6 +175,9 @@ Phase::Phase (const QJsonObject& json):
    mDuration.setName("Duration of Phase : " + _name);
    mDuration.mSupport = MetropolisVariable::eRp;
    mDuration.mFormat = DateUtils::eNumeric;
+
+   mValueStack.emplace("t_min", -INFINITY);
+   mValueStack.emplace("t_max", INFINITY);
 
    mValueStack.emplace("Activity_TimeRange_Level", 0.);
    mValueStack.emplace("Activity_TimeRange_min", 0.);
@@ -204,33 +238,78 @@ void Phase::copyFrom(const Phase& phase)
 
 Phase::~Phase()
 {
-    /*for (auto && ev: mEvents)
-            ev = nullptr;
 
-    mEvents.clear();
-
-    if (!mConstraintsNextPhases.empty()) {
-        for (auto && pc : mConstraintsNextPhases)
-            pc = nullptr;
-
-        mConstraintsNextPhases.clear();
-    }
-    if (!mConstraintsPrevPhases.empty()) {
-        for (auto && pc : mConstraintsPrevPhases)
-            pc = nullptr;
-
-        mConstraintsPrevPhases.clear();
-    }
-    mAlpha.clear();
-
-    mBeta.clear();
-
-    mTau.clear();
-
-    mDuration.clear();
-*/
 }
 
+void Phase::clear()
+{
+    mAlpha.clear();
+    mBeta.clear();
+    mTau.clear();
+    mDuration.clear();
+
+    mRawTempo.clear();
+    mRawTempoInf.clear();
+    mRawTempoSup.clear();
+
+    mTempo.clear();
+    mTempoInf.clear();
+    mTempoSup.clear();
+
+    mRawActivity.clear();
+    mRawActivityInf.clear();
+    mRawActivitySup.clear();
+
+    mActivity.clear();
+    mActivityInf.clear();
+    mActivitySup.clear();
+
+    mRawActivityUnifTheo.clear();
+    mActivityUnifTheo.clear();
+}
+
+void Phase::shrink_to_fit()
+{
+    mAlpha.shrink_to_fit();
+    mBeta.shrink_to_fit();
+    mTau.shrink_to_fit();
+    mDuration.shrink_to_fit();
+
+}
+
+void Phase::clear_and_shrink() noexcept
+{
+    mAlpha.clear();
+    mAlpha.shrink_to_fit();
+
+    mBeta.clear();
+    mBeta.shrink_to_fit();
+
+    mTau.clear();
+    mTau.shrink_to_fit();
+
+    mDuration.clear();
+    mDuration.shrink_to_fit();
+
+    mRawTempo.clear();
+    mRawTempoInf.clear();
+    mRawTempoSup.clear();
+
+    mTempo.clear();
+    mTempoInf.clear();
+    mTempoSup.clear();
+
+    mRawActivity.clear();
+    mRawActivityInf.clear();
+    mRawActivitySup.clear();
+
+    mActivity.clear();
+    mActivityInf.clear();
+    mActivitySup.clear();
+
+    mRawActivityUnifTheo.clear();
+    mActivityUnifTheo.clear();
+}
 // Properties
 
 /**
@@ -307,7 +386,7 @@ double Phase::sum_gamma_prev_phases()
     if (mConstraintsPrevPhases.empty())
         return 0.;
     else {
-        for(auto prev_c : mConstraintsPrevPhases) {
+        for(const auto &prev_c : mConstraintsPrevPhases) {
             max_prev = std::max(max_prev, prev_c->mGamma + prev_c->mPhaseFrom->sum_gamma_prev_phases());
         }
         return max_prev;
@@ -321,7 +400,7 @@ double Phase::sum_gamma_next_phases()
     if (mConstraintsNextPhases.empty())
         return 0.;
     else {
-        for(auto prev_c : mConstraintsNextPhases) {
+        for(const auto &prev_c : mConstraintsNextPhases) {
             max_next = std::max(max_next, prev_c->mGamma + prev_c->mPhaseTo->sum_gamma_next_phases());
         }
         return max_next;
@@ -343,7 +422,7 @@ void Phase::init_update_alpha_phase(double theta_max_phase_prev)
     if (mConstraintsNextPhases.empty())
         return;
     else {
-        for (auto prev_c : mConstraintsNextPhases) {
+        for (const auto &prev_c : mConstraintsNextPhases) {
             if (mTauType != Phase::TauType::eTauUnknown) {
                 prev_c->mPhaseTo->mAlpha.mX = std::max(prev_c->mPhaseTo->mAlpha.mX, theta_max_phase_prev  + prev_c->mGamma);
                 qDebug()<<"[Phase::init_update_alpha_phase] mise à jour alpha des phases Sup " <<prev_c->mPhaseTo->getQStringName()<<" init alpha ="<<prev_c->mPhaseTo->mAlpha.mX;
@@ -358,7 +437,7 @@ void Phase::init_update_beta_phase(double beta_sup)
     if (mConstraintsPrevPhases.empty())
         return;
     else {
-        for(auto prev_c : mConstraintsPrevPhases) {
+        for(const auto &prev_c : mConstraintsPrevPhases) {
             if (mTauType != Phase::TauType::eTauUnknown) {
                 prev_c->mPhaseFrom->mBeta.mX = std::max(prev_c->mPhaseFrom->mBeta.mX, beta_sup - prev_c->mGamma);
                 qDebug()<<"[Phase::init_update_beta_phase] mise à jour beta des phases Inf " <<prev_c->mPhaseFrom->getQStringName()<<" init beta ="<<prev_c->mPhaseFrom->mBeta.mX;
@@ -946,7 +1025,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
         }
 #ifdef DEBUG
         if (QSup < QInf) {
-            qDebug()<<"[Model::generateActivity] QSup < QInf ; f= "<<fA<< " ; QSup = "<<QSup<<" ; QInf = "<<QInf;
+            qDebug()<<"[Phase::generateActivity] QSup < QInf ; f= "<<fA<< " ; QSup = "<<QSup<<" ; QInf = "<<QInf;
         }
 #endif
         esp_inf.push_back(QInf);
@@ -974,8 +1053,8 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 #ifdef DEBUG
             const double addUnif = std::max(dUnif, QInf) - std::min(dUnif, QSup);
 
-            if (addUnif>0)
-                qDebug()<<"[Model::generateActivity] t= "<<t<<" add="<< addUnif;
+           // if (addUnif>0)
+              //  qDebug()<<"[Phase::generateActivity] t= "<<t<<" add="<< addUnif;
 #endif
             UnifScore += std::max(dUnif, QInf) - std::min(dUnif, QSup);
         }
@@ -983,7 +1062,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     }
 
 #ifdef DEBUG
-    qDebug()<<"[Model::generateActivity] somme Activity = "<< somActivity << " ; Phase = "<< getQStringName() <<"\n";
+    qDebug()<<"[Phase::generateActivity] somme Activity = "<< somActivity << " ; Phase = "<< getQStringName() <<"\n";
 #endif
     mValueStack.insert_or_assign("Activity_Significance_Score", UnifScore/(double) gridLength);
     mValueStack.insert_or_assign("Activity_max", maxActivity);

@@ -113,7 +113,10 @@ public:
     Date(const QJsonObject &json);
     Date(PluginAbstract* plugin);
     Date(const Date& date);
+    Date(Date&& other) noexcept;
+
     Date& operator=(const Date& date);
+    Date& operator=(Date&& other) noexcept;
     void copyFrom(const Date& date);
 
     void init();
@@ -140,7 +143,7 @@ public:
     PluginAbstract* getPlugin() const {return mPlugin;}
 
     void clear();
-
+    void shrink_to_fit() noexcept;
     void calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<Project> project, bool truncate); // used for item
     inline void calibrate(std::shared_ptr<Project> project, bool truncate = true) {calibrate(mSettings, project, truncate);};
 
@@ -220,6 +223,7 @@ protected:
 private:
 
     std::string _name;
+    void moveFrom(Date&& other) noexcept;
 
 };
 

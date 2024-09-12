@@ -87,6 +87,23 @@ typedef struct MCMCSplineComposante
         vecGamma.clear();
         vecVarG.clear();
     }
+    void shrink_to_fit() {
+        vecThetaReduced.shrink_to_fit();
+        vecG.shrink_to_fit();
+        vecGamma.shrink_to_fit();
+        vecVarG.shrink_to_fit();
+    }
+    void clear_and_shrink() {
+        vecThetaReduced.clear();
+        vecG.clear();
+        vecGamma.clear();
+        vecVarG.clear();
+
+        vecThetaReduced.shrink_to_fit();
+        vecG.shrink_to_fit();
+        vecGamma.shrink_to_fit();
+        vecVarG.shrink_to_fit();
+    }
 } MCMCSplineComposante;
 
 QDataStream &operator<<( QDataStream& stream, const MCMCSplineComposante& spline );
@@ -101,6 +118,16 @@ typedef struct MCMCSpline
         splineX.clear();
         splineY.clear();
         splineZ.clear();
+    }
+    void shrink_to_fit() {
+        splineX.shrink_to_fit();
+        splineY.shrink_to_fit();
+        splineZ.shrink_to_fit();
+    }
+    void clear_and_shrink() {
+        splineX.clear_and_shrink();
+        splineY.clear_and_shrink();
+        splineZ.clear_and_shrink();
     }
     
 } MCMCSpline;
@@ -132,6 +159,32 @@ typedef struct PosteriorMeanGComposante
         mapG.clear();
         mapGP.clear();
     }
+    void shrink_to_fit() {
+        vecG.shrink_to_fit();
+        vecGP.shrink_to_fit();
+        vecGS.shrink_to_fit();
+        vecVarG.shrink_to_fit();
+        vecVarianceG.shrink_to_fit();
+        vecVarErrG.shrink_to_fit();
+    }
+    void clear_and_shrink() {
+        vecG.clear();
+        vecGP.clear();
+        vecGS.clear();
+        vecVarG.clear();
+        vecVarianceG.clear();
+        vecVarErrG.clear();
+
+        vecG.shrink_to_fit();
+        vecGP.shrink_to_fit();
+        vecGS.shrink_to_fit();
+        vecVarG.shrink_to_fit();
+        vecVarianceG.shrink_to_fit();
+        vecVarErrG.shrink_to_fit();
+
+        mapG.clear();
+        mapGP.clear();
+    }
     
 } PosteriorMeanGComposante;
 
@@ -147,6 +200,16 @@ typedef struct PosteriorMeanG
         gx.clear();
         gy.clear();
         gz.clear();
+    }
+    void shrink_to_fit() {
+        gx.shrink_to_fit();
+        gy.shrink_to_fit();
+        gz.shrink_to_fit();
+    }
+    void clear_and_shrink() {
+        gx.clear_and_shrink();
+        gy.clear_and_shrink();
+        gz.clear_and_shrink();
     }
 } PosteriorMeanG;
 

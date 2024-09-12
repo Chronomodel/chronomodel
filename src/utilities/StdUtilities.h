@@ -154,7 +154,7 @@ template <template<typename...> class Container, class T >
 T vector_interpolate_idx_for_value(const T value, const Container<T> &vector, decltype(vector.size()) idxInf = 0, decltype(vector.size()) idxSup = 0)
 {
     if (idxSup == 0)
-        idxSup = (int)vector.size() - 1;
+        idxSup = vector.size() - 1;
 
     if (value < vector.front())
         return T (0);
@@ -166,7 +166,7 @@ T vector_interpolate_idx_for_value(const T value, const Container<T> &vector, de
 
     if (idxSup > idxInf) {
         do {
-            const int idxMid = idxInf + int (floor((idxSup - idxInf) / 2.));
+            const decltype(vector.size()) idxMid = idxInf + decltype(vector.size()) (floor((idxSup - idxInf) / 2.));
             const T valueMid = vector.at(idxMid);
 
             if (value < valueMid)

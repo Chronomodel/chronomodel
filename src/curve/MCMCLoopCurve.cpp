@@ -200,7 +200,7 @@ QString MCMCLoopCurve::initialize_321()
 {
     updateLoop = &MCMCLoopCurve::update_321;
 
-    std::vector<std::shared_ptr<Event>>& allEvents (mModel->mEvents);
+    std::vector<std::shared_ptr<Event>> &allEvents (mModel->mEvents);
 
     if (mCurveSettings.mVarianceType == CurveSettings::eModeFixed)
         mCurveSettings.mUseVarianceIndividual = false;
@@ -209,7 +209,7 @@ QString MCMCLoopCurve::initialize_321()
     mPointEvent.clear();
 
     if (mCurveSettings.mUseVarianceIndividual && mCurveSettings.mVarianceType == CurveSettings::eModeBayesian) {
-        for (std::shared_ptr<Event> ev : allEvents) {
+        for (std::shared_ptr<Event> &ev : allEvents) {
             if (mModel->is_curve && ev->mTheta.mSamplerProposal!= MHVariable::eFixe) {
                 ev->mTheta.mSamplerProposal = MHVariable::eMHAdaptGauss;
             }
@@ -221,7 +221,7 @@ QString MCMCLoopCurve::initialize_321()
             ev->mS02Theta.mSamplerProposal = MHVariable::eFixe; // not yet integrate within update_321
         }
     } else {
-        for (std::shared_ptr<Event> ev : allEvents) {
+        for (const std::shared_ptr<Event> &ev : allEvents) {
             if (mModel->is_curve && ev->mTheta.mSamplerProposal!= MHVariable::eFixe) {
                 ev->mTheta.mSamplerProposal = MHVariable::eMHAdaptGauss;
             }

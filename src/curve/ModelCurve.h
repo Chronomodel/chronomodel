@@ -95,6 +95,8 @@ public:
     void clearCredibilityAndHPD();
     void clearTraces();
     void clear();
+    void shrink_to_fit() noexcept;
+    void clear_and_shrink() noexcept;
 
     virtual void updateFormatSettings();
     

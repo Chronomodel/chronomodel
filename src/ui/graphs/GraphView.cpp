@@ -80,6 +80,8 @@ GraphView::GraphView(QWidget* parent):
     mTipHeight(40.),
     mTipVisible(false),
     mUseTip(true),
+    mCurves(),
+    mZones(),
     mUnitFunctionX(nullptr),
     mUnitFunctionY(nullptr)
 {
@@ -133,6 +135,8 @@ GraphView::GraphView(const GraphView& graph, QWidget *parent):
     mTipHeight(graph.mTipHeight),
     mTipVisible(graph.mTipVisible),
     mUseTip(graph.mUseTip),
+    mCurves(),
+    mZones(),
     mUnitFunctionX(nullptr),
     mUnitFunctionY(nullptr)
 {

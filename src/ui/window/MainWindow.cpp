@@ -500,8 +500,12 @@ void MainWindow::newProject()
         yesCreate= true;
 
     if (yesCreate) {
-        if (mProject)
+        if (mProject->mModel != nullptr && !mProject->mModel->mEvents.empty()) {
+            if (mProjectView->mResultsView)
+                mProjectView->mResultsView->clearResults();
+            mProject->clear_and_shrink_model();
             mProject->clear_calibCurves();
+        }
         mProject.reset(new Project());
         //Project* newProject = new Project();
          // just update mAutoSaveTimer to avoid open the save() dialog box
@@ -580,7 +584,12 @@ void MainWindow::openProject()
                 resetInterface();
 
             }
+            if (mProjectView->mResultsView)
+                mProjectView->mResultsView->clearResults();
 
+            if (mProject->mModel != nullptr && !mProject->mModel->mEvents.empty()) {
+                mProject->mModel->clear_and_shrink();
+            }
             mProject->clear_calibCurves();
         }
 
@@ -597,6 +606,9 @@ void MainWindow::openProject()
         // look MainWindows::readSetting()
         statusBar()->showMessage(tr("Loading project : %1").arg(path));
         if (mProject->load(path) == true) {
+
+            if (mProjectView->mResultsView)
+                mProjectView->mResultsView->clearResults();
 
             activateInterface(true);
 
@@ -694,15 +706,17 @@ void MainWindow::closeProject()
 
         // Go back to model tab :
         mViewModelAction->trigger();
-        //mProject->clearModel();
+
         disconnectProject();
 
-        //resetInterface();
         clearInterface();
 
         activateInterface(false);
         mViewResultsAction->setEnabled(false);
-
+        if (mProjectView->mResultsView)
+            mProjectView->mResultsView->clearResults();
+        //delete mProjectView->mResultsView;
+        mProject->clear_and_shrink_model();
         mProject->clear_calibCurves();
         mProject.reset();
         updateWindowTitle();
@@ -1422,12 +1436,14 @@ void MainWindow::noResult()
     mViewLogAction -> setEnabled(false);
     mViewResultsAction -> setEnabled(false);
     mViewResultsAction -> setChecked(false);
+    if (mProjectView->mResultsView)
+        mProjectView->mResultsView->clearResults();
 
     mViewModelAction->trigger();
     mProject->setNoResults(true); // set to disable the saving the file *.res
     if (mProject->mModel != nullptr && !mProject->mModel->mEvents.empty()) {
         mProject->mModel->clear();
-        //mProject->mModel.reset();
+
     }
 
 }

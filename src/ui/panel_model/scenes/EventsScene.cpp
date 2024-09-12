@@ -253,7 +253,7 @@ void EventsScene::setShowAllThumbs(const bool show)
     for (auto item : mItems) {
         bool selectedPhase = false;
         QJsonArray phases = dynamic_cast<EventItem*>(item)->getPhases();
-        for (const QJsonValue& phase : phases) {
+        for (const QJsonValue phase : phases) {
             if ((selectedPhase == false) && (phase.toObject().value(STATE_IS_SELECTED).toBool() == true)) {
                 selectedPhase = true;
             }
@@ -336,7 +336,7 @@ void EventsScene::createSceneFromState()
 
     progress->setLabelText(tr("Create event items"));
     
-    for (const auto& event : eventsInState) {
+    for (const auto event : eventsInState) {
         const QJsonObject& eventObj = event.toObject();
         ++i;
 
@@ -766,23 +766,22 @@ void EventsScene::clean()
     // ------------------------------------------------------
 
     for (auto item : mItems) {
-        EventItem* eventItem = static_cast<EventItem*>(item);
+        EventItem* eventItem = dynamic_cast<EventItem*>(item);
+        if (eventItem)
+            delete eventItem;
 
-        delete eventItem;//->~EventItem();
-
-        item = nullptr;
-        eventItem = nullptr;
     }
-    mItems.clear();
+    mItems.clear(); // Clear the container after deleting items
     // ------------------------------------------------------
     //  Delete all constraints
     // ------------------------------------------------------
     for (auto i = mConstraintItems.size()-1; i >= 0; --i) {
         ArrowItem* constraintItem = mConstraintItems[i];
         removeItem(constraintItem);
-        mConstraintItems.removeOne(constraintItem);
+        //mConstraintItems.removeOne(constraintItem);
+        mConstraintItems.removeAt(i); // Use removeAt to avoid issues with iterators
         delete constraintItem;
-        constraintItem = nullptr;
+
     }
     mConstraintItems.clear();
 

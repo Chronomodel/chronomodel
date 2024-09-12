@@ -56,8 +56,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 ModelCurve::ModelCurve():
     Model(),
-    mLambdaSpline(MHVariable()),
-    mS02Vg(MHVariable()),
+    mLambdaSpline(),
+    mS02Vg(),
     mSO2_beta(0),
     compute_Y(false),
     compute_Z(false),
@@ -76,8 +76,8 @@ ModelCurve::ModelCurve():
 
 ModelCurve::ModelCurve(const QJsonObject& json):
     Model(json),
-    mLambdaSpline(MHVariable()),
-    mS02Vg(MHVariable()),
+    mLambdaSpline(),
+    mS02Vg(),
     mSO2_beta(0),
     compute_Y(false),
     compute_Z(false),
@@ -840,16 +840,13 @@ void ModelCurve::clearPosteriorDensities()
     if (getProject_ptr()->isCurve()) {
         for (std::shared_ptr<Event>& event : mEvents) {
             if (event->type() != Event::eBound) {
-                event->mVg.mFormatedHisto.clear();
-                event->mVg.mChainsHistos.clear();
+                event->mVg.clearPosteriorDensities();
             }
         }
 
-        mLambdaSpline.mFormatedHisto.clear();
-        mLambdaSpline.mChainsHistos.clear();
+        mLambdaSpline.clearPosteriorDensities();
 
-        mS02Vg.mFormatedHisto.clear();
-        mS02Vg.mChainsHistos.clear();
+        mS02Vg.clearPosteriorDensities();
     }
 }
 
@@ -880,18 +877,72 @@ void ModelCurve::clearTraces()
 
     if (getProject_ptr()->isCurve()) {
         mLambdaSpline.clear();
+        mPosteriorMeanG.clear();
+        for (auto &pbc : mPosteriorMeanGByChain) {
+            pbc.clear();
+        }
+        mPosteriorMeanGByChain.clear();
     }
 
     mS02Vg.clear();
+    for (auto &s : mSplinesTrace) {
+        s.clear();
+    }
     mSplinesTrace.clear();
 }
 
 void ModelCurve::clear()
 {
-    Model::clear();
     clearTraces();
     clearCredibilityAndHPD();
     clearPosteriorDensities();
+    Model::clear();
+}
+
+void ModelCurve::shrink_to_fit() noexcept
+{
+    Model::shrink_to_fit();
+
+    if (getProject_ptr()->isCurve()) {
+        mLambdaSpline.shrink_to_fit();
+        for (auto &pbc : mPosteriorMeanGByChain) {
+            pbc.shrink_to_fit();
+        }
+
+        mPosteriorMeanGByChain.shrink_to_fit();
+
+        mPosteriorMeanG.shrink_to_fit();
+
+    }
+
+    mS02Vg.shrink_to_fit();
+    for (auto &s : mSplinesTrace) {
+        s.shrink_to_fit();
+    }
+    mSplinesTrace.shrink_to_fit();
+}
+
+
+void ModelCurve::clear_and_shrink() noexcept
+{
+    Model::clear_and_shrink();
+    if (getProject_ptr()->isCurve()) {
+        mLambdaSpline.clear_and_shrink();
+        mPosteriorMeanG.clear_and_shrink();
+        for (auto &pbc : mPosteriorMeanGByChain) {
+            pbc.clear_and_shrink();
+        }
+        mPosteriorMeanGByChain.clear();
+        mPosteriorMeanGByChain.shrink_to_fit();
+    }
+
+    mS02Vg.clear_and_shrink();
+    for (auto &s : mSplinesTrace) {
+        s.clear_and_shrink();
+    }
+    mSplinesTrace.clear();
+    mSplinesTrace.shrink_to_fit();
+
 }
 
 void ModelCurve::setThresholdToAllModel(const double threshold)

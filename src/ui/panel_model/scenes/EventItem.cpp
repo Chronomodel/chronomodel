@@ -187,7 +187,7 @@ void EventItem::setEvent(const QJsonObject &event, const QJsonObject &StudyPerio
             event.value(STATE_COLOR_GREEN).toInt(),
             event.value(STATE_COLOR_BLUE).toInt());
 
-       for (const auto& date : dates) {
+        for (const auto date : dates) {
             const QJsonObject& dateObj = date.toObject();
 
             try {

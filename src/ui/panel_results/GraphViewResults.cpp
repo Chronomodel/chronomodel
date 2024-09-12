@@ -71,7 +71,6 @@ GraphViewResults::GraphViewResults(QWidget *parent):
     setGeometry(QRect(0, 0, parentWidget()->width(), 20 * AppSettings::heigthUnit()));
     setMouseTracking(true);
 
-
     mGraph = new GraphView(this);
     mGraph->setMouseTracking(true);
 

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -40,15 +40,19 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphZone.h"
 
 GraphZone::GraphZone():
-mXStart(0),
-mXEnd(0),
-mColor(Qt::black)
+    mXStart(0),
+    mXEnd(0),
+    mColor(Qt::black),
+    mText("")
 {
 
 }
 
-GraphZone::GraphZone(const double XMin, const double XMax, const QString text, const QColor color):mXStart(XMin), mXEnd(XMax),
-    mColor(color), mText(text)
+GraphZone::GraphZone(const double XMin, const double XMax, const QString text, const QColor color):
+    mXStart(XMin),
+    mXEnd(XMax),
+    mColor(color),
+    mText(text)
 {
 }
 
