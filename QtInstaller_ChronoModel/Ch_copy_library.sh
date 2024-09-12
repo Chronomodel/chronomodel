@@ -16,14 +16,14 @@ echo "$  1 Script copie qt librairie "
 # -------------------------------------------------------
 ROOT_PATH=$(dirname $0)
 
-RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_7_0_for_macOS-Release/build/release/
+RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_7_2_for_macOS-Release/build/release/
 BUNDLE="$RELEASE_PATH"chronomodel.app
 echo "copie dans le BUNDLE $BUNDLE"
 
-QT_BIN_PATH=/Users/dufresne/Qt/6.7.0/macos/bin
-QT_LIB_PATH=/Users/dufresne/Qt/6.7.0/macos/lib
-QT_PLUGINS_PATH=/Users/dufresne/Qt/6.7.0/macos/plugins
-VERSION=3.2.7
+QT_BIN_PATH=/Users/dufresne/Qt/6.7.2/macos/bin
+QT_LIB_PATH=/Users/dufresne/Qt/6.7.2/macos/lib
+QT_PLUGINS_PATH=/Users/dufresne/Qt/6.7.2/macos/plugins
+VERSION=3.2.8
 
 # le texte suivant est remplacé par macdeployqt
 # -------------------------------------------------------
@@ -100,5 +100,5 @@ PLIST=${BUNDLE}/Contents/Info.plist
 /usr/libexec/Plistbuddy -c "Add :CFBundleDocumentTypes:0:CFBundleTypeIconFile string Chronomodel.icns" "$PLIST"
 /usr/libexec/Plistbuddy -c "Add :CFBundleDocumentTypes:0:CFBundleTypeName string Chronomodel Project" "$PLIST"
 
-echo "$ 0.4.1 $PLIST final"
+echo "$ 4.1 $PLIST final"
 /usr/libexec/PlistBuddy -x -c "Print" "$PLIST"

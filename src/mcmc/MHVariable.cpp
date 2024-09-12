@@ -269,7 +269,7 @@ std::vector<double> MHVariable::acceptationForChain(const std::vector<ChainSpecs
 {
     std::vector<double> accept(0);
     size_t shift = 0;
-    const int reserveSize = (int) ceil(chains.at(index).mIterPerBurn + (chains.at(index).mBatchIndex * chains.at(index).mIterPerBatch) + chains.at(index).mRealyAccepted);
+    //const int reserveSize = (int) ceil(chains.at(index).mIterPerBurn + (chains.at(index).mBatchIndex * chains.at(index).mIterPerBatch) + chains.at(index).mRealyAccepted);
     //accept.reserve(reserveSize);
 
     for (size_t i = 0; i < chains.size(); ++i) {
