@@ -46,6 +46,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QDialog>
 #include <QSpinBox>
 #include <QComboBox>
+#include <QtWidgets/qgridlayout.h>
 
 class RebuildCurveDialog : public QDialog
 {
@@ -64,7 +65,7 @@ public:
 
     bool doCurve() const {return curveCB->isChecked();}
     bool doMap() const {return mapCB->isChecked();}
-    QString compo();
+   // QString compo();
     void setCompoList (QStringList &list);
 
 protected slots:
@@ -90,51 +91,55 @@ protected slots:
     void setOkEnabled();
 
 private:
-    QLabel *label;
-    QLineEdit *lineEdit;
-    QCheckBox *curveCB;
-    QCheckBox *mapCB;
-    QDialogButtonBox *buttonBox;
+    QLabel* label;
+    QLineEdit* lineEdit;
+    QCheckBox* curveCB;
+    QCheckBox* mapCB;
+    QDialogButtonBox* buttonBox;
 
-    QSpinBox *XspinBox;
-    QSpinBox *YspinBox;
+    QSpinBox* XspinBox;
+    QSpinBox* YspinBox;
 
     QStringList mCompoList;
 
     // 3 composantes possibles
-    QLineEdit *Y1minEdit;
+    QLineEdit* Y1minEdit;
     bool Y1MinOK = true;
     bool Y1MaxOK = true;
     QLineEdit *Y1maxEdit;
 
-    QLineEdit *Y2minEdit;
+    QLineEdit* Y2minEdit;
     bool Y2MinOK = true;
     bool Y2MaxOK = true;
     QLineEdit *Y2maxEdit;
 
-    QLineEdit *Y3minEdit;
+    QLineEdit* Y3minEdit;
     bool Y3MinOK = true;
     bool Y3MaxOK = true;
     QLineEdit *Y3maxEdit;
 
     // 3 derrivées possibles
-    QLineEdit *Y1pminEdit;
+    QLineEdit* Y1pminEdit;
     bool Y1pMinOK = true;
     bool Y1pMaxOK = true;
-    QLineEdit *Y1pmaxEdit;
+    QLineEdit* Y1pmaxEdit;
 
-    QLineEdit *Y2pminEdit;
+    QLineEdit* Y2pminEdit;
     bool Y2pMinOK = true;
     bool Y2pMaxOK = true;
-    QLineEdit *Y2pmaxEdit;
+    QLineEdit* Y2pmaxEdit;
 
-    QLineEdit *Y3pminEdit;
+    QLineEdit* Y3pminEdit;
     bool Y3pMinOK = true;
     bool Y3pMaxOK = true;
     QLineEdit *Y3pmaxEdit;
 
     std::vector< std::pair<double, double>> mYTabMinMax;
     std::vector< std::pair<double, double>> mYpTabMinMax;
+
+    QGridLayout* _setting_1_Grid;
+    QGridLayout* _setting_2_Grid;
+    QGridLayout* _setting_3_Grid;
 
 signals:
     void OkEnabled(bool enabled = true) ;
