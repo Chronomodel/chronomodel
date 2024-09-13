@@ -96,7 +96,7 @@ public slots:
 
     void applySettings(std::shared_ptr<ModelCurve> &model);
     void applyFilesSettings(std::shared_ptr<ModelCurve> &model);
-    void updateResultsLog(const QString& log);
+    void updateResultsLog();
     
     void toggleCurve(bool toggle);
 

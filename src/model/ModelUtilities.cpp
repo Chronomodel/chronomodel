@@ -396,7 +396,6 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
         ++i;
     }
 
-
     for (auto&& phaseConst : model->mPhaseConstraints) {
         log += line(textBold(textGreen( QObject::tr("Succession from %1 to %2").arg(phaseConst->mPhaseFrom->getQStringName(), phaseConst->mPhaseTo->getQStringName()))));
 
@@ -425,7 +424,6 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
         if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Depth )
             log += line(textGreen(QObject::tr(" - Minimal Rate : %1").arg(stringForLocal(model->mCurveSettings.mThreshold))));
 
-
         if (model->mCurveSettings.mUseErrMesure) {
             log += line(textGreen( QObject::tr(" - Use Measurement Error")));
         }
@@ -446,7 +444,6 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
         } else {
             log += line(textGreen( QObject::tr(" - Std gi : Fixed = %1").arg(QString::number(sqrt(model->mCurveSettings.mVarianceFixed)))));
         }
-
 
         if (model->mCurveSettings.mLambdaSplineType == CurveSettings::eModeBayesian) {
             log += line(textGreen( QObject::tr(" - Smoothing : Bayesian")));

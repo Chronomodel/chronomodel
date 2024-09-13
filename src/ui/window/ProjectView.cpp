@@ -207,6 +207,7 @@ void ProjectView::showModel()
 
 void ProjectView::showResults()
 {
+    auto model = getModel_ptr();
     mResultsView->clearResults();
     mStack->setCurrentIndex(1);
     
@@ -216,9 +217,7 @@ void ProjectView::showResults()
 
 void ProjectView::showLog()
 {
-    getModel_ptr()->mLogResults.clear();
-    getModel_ptr()->generateResultsLog();
-    updateResultsLog(getModel_ptr()->getResultsLog());
+    updateResultsLog();
     mStack->setCurrentIndex(2);
 }
 
@@ -258,15 +257,11 @@ void ProjectView::applySettings(std::shared_ptr<ModelCurve> &model)
         model->clearThreshold();
         model->updateDensities(model->mFFTLength, model->mBandwidth, memoThreshold);
         mResultsView->generateCurves();
-        //emit model->newCalculus(); //redraw densities
 
-        model->generateModelLog();
-        model->generateResultsLog();
-
-        mLogModelEdit->setText(model->getModelLog());
         mLogInitEdit->setText(model->getInitLog());
         mLogAdaptEdit->setText(model->getAdaptLog());
-        updateResultsLog(model->getResultsLog());
+
+        updateResultsLog();
 
     }
 }
@@ -308,25 +303,39 @@ void ProjectView::updateResults()
 {
     auto model = getModel_ptr();
 
-    if (model) {
+    if (model && !model->mEvents.empty()) {
+
         model->updateDesignFromJson();
 
         mResultsView->updateModel();
     }
 }
 
-void ProjectView::updateResultsLog(const QString& log)
+void ProjectView::updateResultsLog()
 {
+    auto model = getModel_ptr();
+
+    if (model && !model->mEvents.empty()) {
+
+        model->updateDesignFromJson();
+
+        model->generateModelLog();
+        mLogModelEdit->setText(model->getModelLog());
+
+        model->generateResultsLog();
+        mLogResultsEdit->setText(model->getResultsLog());
+
+    }
 #ifdef Q_OS_MAC
     const QFont font (qApp->font());
     QString styleSh = "QLineEdit { border-radius: 5px; font: "+ QString::number(font.pointSize()) + "px ;font-family: "+font.family() + ";}";
     mLogResultsEdit->setStyleSheet(styleSh);
 #endif
-    mLogResultsEdit->setHtml(log);
+
 
 }
 
-void ProjectView::showLogTab(const int &i)
+void ProjectView::showLogTab(const int& i)
 {
     mLogTabs->setTab(i, true);
 
