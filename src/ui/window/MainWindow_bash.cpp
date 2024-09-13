@@ -48,7 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AppSettingsDialog.h"
 #include "AppSettings.h"
 #include "QtUtilities.h"
-#include "CalibrationCurve.h"
+#include "StateKeys.h"
 
 #include <QtWidgets>
 #include <QLocale>
@@ -515,7 +515,7 @@ void MainWindow::closeProject()
 
         // Go back to model tab :
         //mViewModelAction->trigger();
-        mProject->clearModel();
+        mProject->clear_and_shrink_model();
         disconnectProject();
 
         resetInterface();
@@ -806,7 +806,7 @@ void MainWindow::calibrateAll()
                     Date d (date.toObject());
                     d.autoSetTiSampler(true);
 
-                    d.calibrate(s, *mProject, true);
+                    d.calibrate(s, mProject, true);
 
                     ++position;
                     progress->setValue(position);
@@ -833,33 +833,39 @@ void MainWindow::runModel()
 
         AppSettings::mLastDir = chrFile.path(); // usefull for project.save()
         AppSettings::mLastFile = chrFile.baseName();
-        //QString fileRun = AppSettings::mLastDir + "/" + AppSettings::mLastFile;
+
         qDebug()<<"Run file"<< AppSettings::mLastDir + "/" + AppSettings::mLastFile;
         mProjectView->mLog->append("Run File : " + textBold(chrFile.baseName()));
         if (!mProject)
             mProject.reset(new Project());
 
         else if (mProject->mModel) {
-            mProject->mModel->clear();
+            mProject->mModel->clear_and_shrink();
 
         }
         try {
             mProject->load(path, true);
             AppSettings::mAutoSave = true; // usefull to disable savebox in run()
-
+            AppSettings::mIsSaved = true;
             mProjectView->mLog->append("    Calibration");
             mProjectView->repaint();
             calibrateAll();
             mProjectView->mLog->append("    Start Run");
             startTime.start();
             mProject->run();
-            if (mProject->mModel->mEvents.at(0)->mTheta.mRawTrace->isEmpty())
+            if (mProject->mModel->mEvents.at(0)->mTheta.mRawTrace->empty())
                 throw QObject::tr("Error in RUN");
+
             mProjectView->mLog->append("    End Run, time elapsed "+ DHMS(startTime.elapsed()));
             mProject->setNoResults(false);
             mProjectView->repaint();
             mProjectView->mLog->append("    Start Saving");
+            AppSettings::mAutoSave = true; // usefull to disable savebox in run()
+            AppSettings::mIsSaved = false;
             mProject->save();
+
+            mProjectView->mLog->append("    Saved File : " + textBold( AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res"));
+
             mProjectView->mLog->append(textGreen("    End Saving") );
             mProjectView->mLog->append(textGreen("") );
 
@@ -870,6 +876,7 @@ void MainWindow::runModel()
 
     }
 
+    AppSettings::mAutoSave = false; // usefull to stop autosaving
     mProjectView->mLog->append(QDateTime::currentDateTime().toString("dddd dd MMMM yyyy"));
     mProjectView->mLog->append(textBold("End Bash Project at ") + QTime::currentTime().toString("hh:mm:ss.zzz") );
 }

@@ -43,6 +43,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MCMCLoop.h"
 #include "ModelCurve.h"
 #include "StudyPeriodSettings.h"
+#include "CalibrationCurve.h"
+
 #include "QtCore/qtmetamacros.h"
 
 #include <QObject>
