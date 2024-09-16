@@ -48,9 +48,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 
 #include <cstdlib>
-#include <iostream>
 
-
+const unsigned k_sigma = 5;
 
 PluginTL::PluginTL()
 {
@@ -199,23 +198,22 @@ QPair<double,double> PluginTL::getTminTmaxRefsCurve(const QJsonObject &data) con
     const double error = data.value(DATE_TL_ERROR_STR).toDouble();
     const double ref_year = data.value(DATE_TL_REF_YEAR_STR).toDouble();
 
-    const double k = 5.;
-
-    double tmin = ref_year - age - k * error;
-    double tmax = ref_year - age + k * error;
+    double tmin = ref_year - age - k_sigma * error;
+    double tmax = ref_year - age + k_sigma * error;
 
     return QPair<double, double>(tmin, tmax);
 }
 
 double PluginTL::getMinStepRefsCurve(const QJsonObject &data) const
 {
+    const int frac = 101;
     const double age = data.value(DATE_TL_AGE_STR).toDouble();
     const double error = data.value(DATE_TL_ERROR_STR).toDouble();
     const double ref_year = data.value(DATE_TL_REF_YEAR_STR).toDouble();
 
-    const double tmin = ref_year - age - 2. * error;
-    const double tmax = ref_year - age + 2. * error;
-    return std::abs(tmax-tmin)/ 10.;
+    const double tmin = ref_year - age - k_sigma * error;
+    const double tmax = ref_year - age + k_sigma * error;
+    return std::abs(tmax-tmin)/ frac;
 
 
 }
