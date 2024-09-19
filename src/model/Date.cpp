@@ -56,24 +56,28 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QDebug>
 
-
-
 Date::Date():
     mTi(),
     mSigmaTi(),
     mWiggle(),
     mDelta(0.),
+    mId(-1),
     mUUID(""),
     mColor(Qt::blue),
     mData(),
     mOrigin(eSingleDate),
+
     mPlugin(nullptr),
+    mIsValid(false),
     mDeltaType(eDeltaNone),
     mDeltaFixed(0.),
     mDeltaMin(-INFINITY),
     mDeltaMax(+INFINITY),
     mDeltaAverage(0.),
     mDeltaError(0.),
+
+    mIsCurrent(false),
+    mIsSelected(false),
     mCalibration(nullptr),
     mWiggleCalibration(nullptr),
     mCalibHPD(),
@@ -99,14 +103,6 @@ Date::Date():
 
     mId = -1;
 
-
-
-    mIsValid = false;
-
-    mIsCurrent = false;
-    mIsSelected = false;
-   // mSubTDates.clear();
-
     mTminRefCurve = -INFINITY;
     mTmaxRefCurve = INFINITY;
 
@@ -122,12 +118,15 @@ Date::Date(const QJsonObject& json):
     mData(),
     mOrigin(eSingleDate),
     mPlugin(nullptr),
+    mIsValid(false),
     mDeltaType(eDeltaNone),
     mDeltaFixed(0.),
     mDeltaMin(-INFINITY),
     mDeltaMax(+INFINITY),
     mDeltaAverage(0.),
     mDeltaError(0.),
+    mIsCurrent(false),
+    mIsSelected(false),
     mCalibration(nullptr),
     mWiggleCalibration(nullptr),
     mCalibHPD(),
@@ -151,12 +150,15 @@ Date::Date(PluginAbstract* plugin):
     mOrigin(eSingleDate),
 
     mPlugin(plugin),
+    mIsValid(false),
     mDeltaType(eDeltaNone),
     mDeltaFixed(0.),
     mDeltaMin(-INFINITY),
     mDeltaMax(+INFINITY),
     mDeltaAverage(0.),
     mDeltaError(0.),
+    mIsCurrent(false),
+    mIsSelected(false),
     mCalibration(nullptr),
     mWiggleCalibration(nullptr),
     mCalibHPD(),
@@ -241,17 +243,23 @@ void Date::moveFrom(Date&& other) noexcept
     mSigmaTi = std::move(other.mSigmaTi);
     mWiggle = std::move(other.mWiggle);
     mDelta = other.mDelta;
+    mId = other.mId;
     mUUID = other.mUUID;
     mColor = other.mColor;
     mData = other.mData;
     mOrigin = other.mOrigin;
+
     mPlugin = other.mPlugin;
+    mIsValid = other.mIsValid;
     mDeltaType = other.mDeltaType;
     mDeltaFixed = other.mDeltaFixed;
     mDeltaMin = other.mDeltaMin;
     mDeltaMax = other.mDeltaMax;
     mDeltaAverage = other.mDeltaAverage;
     mDeltaError = other.mDeltaError;
+    mIsCurrent = other.mIsCurrent;
+    mIsSelected = other.mIsSelected;
+
     mCalibration = other.mCalibration;
     mWiggleCalibration = other.mWiggleCalibration;
     mCalibHPD = other.mCalibHPD;
@@ -259,8 +267,6 @@ void Date::moveFrom(Date&& other) noexcept
     mMixingLevel = other.mMixingLevel;
     updateti = other.updateti;
     _name = other._name;
-
-
 
     // Réinitialiser l'autre objet
 
@@ -270,6 +276,7 @@ void Date::moveFrom(Date&& other) noexcept
     other.mCalibHPD.clear();
     other._name = "No Named Date";
     other.updateti = nullptr;
+    other.mId = -1;
 
 }
 
@@ -283,24 +290,17 @@ Date& Date::operator=(const Date& date)
 void Date::copyFrom(const Date& date)
 {
     mTi = date.mTi;
-
-    mId = date.mId;
-    mUUID = date.mUUID;
-
-    _name = date._name;
-    mColor = date.mColor;
-
     mSigmaTi = date.mSigmaTi;
-
     mWiggle = date.mWiggle;
     mDelta = date.mDelta;
-
+    mId = date.mId;
+    mUUID = date.mUUID;
+    mColor = date.mColor;
     mData = date.mData;
     mOrigin = date.mOrigin;
+
     mPlugin = date.mPlugin;
-
     mIsValid = date.mIsValid;
-
     mDeltaType = date.mDeltaType;
     mDeltaFixed = date.mDeltaFixed;
     mDeltaMin = date.mDeltaMin;
@@ -310,17 +310,14 @@ void Date::copyFrom(const Date& date)
 
     mIsCurrent = date.mIsCurrent;
     mIsSelected = date.mIsSelected;
-
     mCalibration = date.mCalibration;
     mWiggleCalibration = date.mWiggleCalibration;
-
     mCalibHPD = date.mCalibHPD;
     mSettings = date.mSettings;
-
     mSubDates = date.mSubDates;
     mMixingLevel = date.mMixingLevel;
-
     updateti = date.updateti;
+    _name = date._name;
 
     mTminRefCurve = date.mTminRefCurve;
     mTmaxRefCurve = date.mTmaxRefCurve;
@@ -1946,6 +1943,7 @@ Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale, const S
             }
 
         }
+        date.mSettings = settings;
         date.mIsValid = plugin->isDateValid(date.mData, settings);
         date.mUUID = Generator::UUID();
     }

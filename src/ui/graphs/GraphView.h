@@ -261,10 +261,8 @@ protected:
     bool  mTipVisible;
     bool  mUseTip;
 
-    int mCurveMaxResolution;
     QList<GraphCurve> mCurves;
     QList<GraphZone> mZones;
-
 
     QPainter mPrevPainter;
 

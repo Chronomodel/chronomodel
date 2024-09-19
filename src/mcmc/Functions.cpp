@@ -1625,14 +1625,13 @@ std::pair<double, double> gapRangeFromTraces(const std::vector<double> &traceEnd
 
 const QString interval_to_text(const QPair<double, QPair<double, double> > &interval,  DateConversion conversionFunc, const bool forCSV)
 {
-    const double perCent = interval.first;
     double inter1 = (conversionFunc ? conversionFunc(interval.second.first) : interval.second.first );
     double inter2 = (conversionFunc ? conversionFunc(interval.second.second) : interval.second.second );
     if (inter1>inter2)
         std::swap(inter1, inter2);
 
     if (forCSV)
-         return stringForCSV(inter1) + AppSettings::mCSVCellSeparator + stringForCSV(inter2) + AppSettings::mCSVCellSeparator + stringForCSV(perCent);
+         return stringForCSV(inter1) + AppSettings::mCSVCellSeparator + stringForCSV(inter2) + AppSettings::mCSVCellSeparator + stringForCSV(interval.first*100.);
     else
          return "[ " + stringForLocal(inter1) + " ; " + stringForLocal(inter2) + " ] (" + stringForLocal(interval.first*100.) + "%)";
 
