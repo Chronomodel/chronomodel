@@ -59,7 +59,7 @@ class MultiCalibrationView: public QWidget
 {
     Q_OBJECT
 public:
-    MultiCalibrationView(QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
+    MultiCalibrationView(QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
 
     ~MultiCalibrationView();
 
@@ -71,7 +71,7 @@ public:
 
 
 protected:
-    void paintEvent(QPaintEvent* e);
+    void paintEvent(QPaintEvent *e);
     void resizeEvent(QResizeEvent*);
     void updateLayout();
     MultiCalibrationDrawing* scatterPlot(const double thres);
@@ -130,7 +130,6 @@ private:
     Button* mScatterClipBut;
     Button* mFitClipBut;
     ColorPicker* mColorPicker;
-
 
     Label* mGraphHeightLab;
     LineEdit* mGraphHeightEdit;

@@ -77,7 +77,7 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mDrawing = new MultiCalibrationDrawing(this);
 
     mStatArea = new QTextEdit(this);
-    mStatArea->setFrameStyle(QFrame::HLine);
+    mStatArea->setFrameStyle(QFrame::NoFrame);
     mStatArea->setPalette(palette_BW);
 
     mStatArea->setText(tr("Nothing to display"));
