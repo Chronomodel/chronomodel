@@ -38,6 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "GraphViewResults.h"
+#include "ModelUtilities.h"
 #include "Painting.h"
 #include "MainWindow.h"
 #include "MHVariable.h"
@@ -372,6 +373,10 @@ void GraphViewResults::setShowNumericalResults(const bool show)
 {
     mShowNumResults = show;
     mStatArea->setVisible(show);
+}
+ GraphView* GraphViewResults::getGraph() const
+{
+    return mGraph;
 }
 
 void GraphViewResults::setMarginLeft (qreal &m)

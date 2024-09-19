@@ -40,7 +40,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef GRAPHVIEWRESULTS_H
 #define GRAPHVIEWRESULTS_H
 
-#include "ModelUtilities.h"
 #include "StudyPeriodSettings.h"
 #include "MCMCSettings.h"
 
@@ -274,7 +273,7 @@ public:
     void setShowNumericalResults(const bool show);
 
     QFont getGraphFont() const {return mGraphFont;};
-    inline GraphView getGraph()  {return mGraph; }
+    GraphView *getGraph() const;  //{return mGraph; }
     inline QList<variable_t> getCurrentVariables() const {return mCurrentVariableList;}
     inline graph_t getCurrentType() const { return mCurrentTypeGraph; }
 

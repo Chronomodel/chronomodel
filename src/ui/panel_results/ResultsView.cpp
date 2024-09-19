@@ -72,7 +72,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "ModelUtilities.h"
 #include "AppSettings.h"
-#include "ModelCurve.h"
 
 #include <QtWidgets>
 #include <QtSvg>
@@ -2487,7 +2486,7 @@ void ResultsView::updateGraphsMinMax()
 
         } else if (mMainVariable == GraphViewResults::eSigma) {
             mResultMinT = 0;
-            mResultMaxT = getGraphsMax(listGraphs, "Post Distrib", 1.) / 10;
+            mResultMaxT = getGraphsMax(listGraphs, "Post Distrib", 1.) / 3.;//10;
 
         } else if (mMainVariable == GraphViewResults::eLambda) {
             mResultMinT = getGraphsMin(listGraphs, "Lambda", -20.);
@@ -2517,36 +2516,32 @@ void ResultsView::updateGraphsMinMax()
     }
 }
 
-double ResultsView::getGraphsMax(const QList<GraphViewResults*> &graphs, const QString &title, const double maxFloor)
+double ResultsView::getGraphsMax(const QList<GraphViewResults*> &graphs, const QString &title, double maxFloor)
 {
-    double max = 0.;
-
     for (const auto& graphWrapper : graphs) {
-        const QList<GraphCurve> curves = graphWrapper->getGraph().getCurves();
+        const QList<GraphCurve> &curves = graphWrapper->getGraph()->getCurves();
         for (const auto& curve : curves) {
             if (!curve.mData.isEmpty() && curve.mName.contains(title)) {
-                max = std::max(max, curve.mData.lastKey());
+                maxFloor = std::max(maxFloor, curve.mData.lastKey());
             }
         }
     }
 
-    return std::max(maxFloor, ceil(max));
+    return maxFloor;
 }
 
-double ResultsView::getGraphsMin(const QList<GraphViewResults*> &graphs, const QString &title, const double minFloor)
+double ResultsView::getGraphsMin(const QList<GraphViewResults*> &graphs, const QString &title, double minCeil)
 {
-    double min = 0.;
-
     for (const auto& graphWrapper : graphs) {
-        const QList<GraphCurve> curves = graphWrapper->getGraph().getCurves();
+        const QList<GraphCurve> &curves = graphWrapper->getGraph()->getCurves();
         for (const auto& curve : curves) {
             if (!curve.mData.isEmpty() && curve.mName.contains(title) && (curve.mVisible == true)) {
-                min = std::min(min, curve.mData.firstKey());
+                minCeil = std::min(minCeil, curve.mData.firstKey());
             }
         }
     }
 
-    return std::min(minFloor, floor(min));
+    return minCeil;
 }
 
 /**
@@ -4765,7 +4760,7 @@ void ResultsView::exportResults()
                 // --------------   Saving Curve Ref
                 int i = 0;
                 for (auto&& graph : mByCurvesGraphs) {
-                    graph->getGraph().exportReferenceCurves ("", QLocale::English, ",",  model->mSettings.mStep, dirPath + "/Curve_"+list_names.at(i) + "_ref.csv" );
+                    graph->getGraph()->exportReferenceCurves ("", QLocale::English, ",",  model->mSettings.mStep, dirPath + "/Curve_"+list_names.at(i) + "_ref.csv" );
                     i++;
                 }
 
@@ -4800,7 +4795,7 @@ void ResultsView::exportResults()
                 // --------------   Saving Curve Ref
                 i = 0;
                 for (auto&& graph : mByCurvesGraphs) {
-                    graph->getGraph().exportReferenceCurves ("", QLocale::English, ",",  model->mSettings.mStep, dirPath + "/Curve_"+list_names.at(i) + "_ref.csv" );
+                    graph->getGraph()->exportReferenceCurves ("", QLocale::English, ",",  model->mSettings.mStep, dirPath + "/Curve_"+list_names.at(i) + "_ref.csv" );
                     i++;
                 }
 
@@ -4954,8 +4949,8 @@ GraphViewResults::variable_t ResultsView::getMainVariable() const
         return GraphViewResults::eSigma;
     else if (mCurrentVariableList.contains(GraphViewResults::eVg))
         return GraphViewResults::eVg;
-    else if (mCurrentVariableList.contains(GraphViewResults::eSigma))
-        return GraphViewResults::eSigma;
+    //else if (mCurrentVariableList.contains(GraphViewResults::eSigma))
+    //    return GraphViewResults::eSigma;
 
     else if (mCurrentVariableList.contains(GraphViewResults::eBeginEnd))
         return GraphViewResults::eBeginEnd;

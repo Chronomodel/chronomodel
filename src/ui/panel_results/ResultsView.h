@@ -119,8 +119,8 @@ protected:
     bool hasSelectedGraphs();
     
     void updateGraphsMinMax();
-    double getGraphsMax(const QList<GraphViewResults*>& graphs, const QString& title, const double maxFloor);
-    double getGraphsMin(const QList<GraphViewResults*>& graphs, const QString& title, const double minFloor);
+    double getGraphsMax(const QList<GraphViewResults*>& graphs, const QString& title, double maxFloor = -INFINITY);
+    double getGraphsMin(const QList<GraphViewResults*>& graphs, const QString& title, double minCeil = INFINITY);
 
     
     // ------------------------------------
