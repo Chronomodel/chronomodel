@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -39,20 +39,18 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "CurveWidget.h"
 #include "Painting.h"
-//#include "CurveSettings.h"
+
 #include <QtWidgets>
 
 
-CurveWidget::CurveWidget(QWidget* parent):QWidget(parent)
+CurveWidget::CurveWidget(QWidget* parent):
+    QWidget(parent)
 {
-
 
 }
 
-void CurveWidget::paintEvent(QPaintEvent* e)
+void CurveWidget::paintEvent(QPaintEvent* )
 {
-    Q_UNUSED(e);
-    
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     

@@ -48,16 +48,16 @@ class GraphViewLambda: public GraphViewResults
 {
     Q_OBJECT
 public:
-    explicit GraphViewLambda(QWidget *parent = nullptr);
+    explicit GraphViewLambda(QWidget* parent = nullptr);
     virtual ~GraphViewLambda();
 
     virtual void generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList);
     void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showVariableList);
 
-protected:
+/*protected:
     void paintEvent(QPaintEvent* e);
     void resizeEvent(QResizeEvent* );
-
+*/
 
 };
 

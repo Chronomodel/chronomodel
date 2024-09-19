@@ -38,6 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "ModelView.h"
+
 #include "EventDialog.h"
 #include "EventsScene.h"
 #include "PhasesScene.h"
@@ -603,7 +604,7 @@ bool ModelView::findCalibrateMissing()
     * There is no date to calibrate
     */
     if (!Qevents.isEmpty()) {
-        QList<Event> events;
+        std::vector<Event> events;
         for (auto&& Qev: Qevents)
             events.emplace_back(Qev.toObject());
 
@@ -678,7 +679,7 @@ void ModelView::calibrateAll(StudyPeriodSettings newS)
          }
         project->mCalibCurves.clear();
 
-        QList<Event> events;
+        std::vector<Event> events;
         for (auto&& Qev: Qevents) {
             events.emplace_back(Qev.toObject());
         }

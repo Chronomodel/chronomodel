@@ -47,28 +47,35 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtSvg>
 #include <QMessageBox>
 #include <QPointer>
+#include <QTextEdit>
 
 
 //  Constructor / Destructor
 
 int GraphViewResults::mHeightForVisibleAxis = int (4 * AppSettings::heigthUnit()); //look ResultsView::applyAppSettings()
 
-GraphViewResults::GraphViewResults(QWidget *parent):
+GraphViewResults::GraphViewResults(QWidget* parent):
     QWidget(parent),
     mCurrentTypeGraph(ePostDistrib),
     mCurrentVariableList(QList<variable_t>(eThetaEvent)),
+    mTitle("No Title"),
+    mItemColor(Painting::borderDark),
     mShowAllChains(true),
+    mShowChainList(),
     mShowVariableList(eThetaEvent),
+    mStatHTMLText("Nothing to display"),
     mShowNumResults(false),
     mIsSelected(false),
     mShowSelectedRect(true),
+    mSettings(),
+    mMCMCSettings(),
+    mChains(),
     mMainColor(Painting::borderDark),
     mMargin(5),
     mLineH(20),
     mTopShift(0),
-    mGraphFont(font())
+    mGraphFont()
 {
-    setGeometry(QRect(0, 0, parentWidget()->width(), 20 * AppSettings::heigthUnit()));
     setMouseTracking(true);
 
     mGraph = new GraphView(this);
@@ -94,33 +101,38 @@ GraphViewResults::GraphViewResults(QWidget *parent):
     mGraph->setMargins(50, 10, 5, mGraphFont.pointSize() * 2.2); // make setMarginRight seMarginLeft ...
     mGraph->setRangeY(0, 1);
 
-    mStatArea = new QTextEdit(this);
-    mStatArea->setFrameStyle(QFrame::HLine);
+    mStatArea = new ScrollableLabel(this);
+    mStatArea->setText(mStatHTMLText);
+    //mStatArea->setParent(this);
+
+   /* mStatArea->setFrameStyle(QFrame::HLine);
     QPalette palette = mStatArea->palette();
     palette.setColor(QPalette::Base, Qt::white);
     palette.setColor(QPalette::Text, Qt::black);
     mStatArea->setPalette(palette);
 
     mStatArea->setFontFamily(mGraphFont.family());
-    mStatArea->setFontPointSize(mGraphFont.pointSizeF());
-    mStatArea->setText(tr("Nothing to display"));
-    mStatArea->setVisible(false);
-    mStatArea->setReadOnly(true);
+    mStatArea->setFontPointSize(mGraphFont.pointSizeF());*/
 
-     /* OverLaySelect must be created after mGraph, because it must be refresh after/over the graph
-      */
-     mOverLaySelect = new Overlay (this);
+
+
+    //mStatArea->setVisible(false);
+    //mStatArea->setReadOnly(true);
+   // mStatArea->setAutoFillBackground(true);
+    //mStatArea.setFrameStyle(QFrame::NoFrame); // Enlève le cadre
+    // Compense le bug de Qt sous windows qui fait apparaitre une barre au milieu
+   // mStatArea->setStyleSheet("QTextEdit { border: 1px solid gray; }");
+
+    /* OverLaySelect must be created after mGraph, because it must be refresh after/over the graph
+    */
+    mOverLaySelect = new Overlay (this);
     setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
 
 }
 
 GraphViewResults::~GraphViewResults()
 {
-    delete mOverLaySelect;
-    mOverLaySelect = nullptr;
 
-    delete mGraph;
-    mGraph = nullptr;
 }
 
 void GraphViewResults::generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList)
@@ -214,7 +226,7 @@ void GraphViewResults::saveAsImage()
         //QFileInfo fileInfo = QFileInfo(fileName);
         bool asSvg = fileName.endsWith(".svg");
         if (asSvg) {
-            if (mGraph)
+           // if (mGraph)
                 mGraph->saveAsSVG(fileName, mTitle, "GraphViewResults",true);
 
         } else {
@@ -273,7 +285,7 @@ void GraphViewResults::imageToClipboard()
 void GraphViewResults::resultsToClipboard()
 {
     QClipboard* clipboard = QApplication::clipboard();
-    clipboard->setText( mStatArea->toPlainText());
+    clipboard->setText(HTML_to_text( mStatHTMLText));// mStatArea->toPlainText());
 }
 
 /**
@@ -348,10 +360,6 @@ void GraphViewResults::saveGraphData() const
 
 }
 
-void GraphViewResults::setNumericalResults (const QString &resultsHTML)
-{
-    mStatArea->setHtml(resultsHTML);
-}
 
 void GraphViewResults::showNumericalResults(const bool show)
 {
@@ -379,8 +387,8 @@ void GraphViewResults::setGraphsFont(const QFont& font)
 {
     // Recalcule mTopShift based on the new font, and position the graph according :
     mGraphFont = font;
-    mStatArea->setFontFamily(font.family());
-    mStatArea->setFontPointSize(font.pointSizeF());
+    //mStatArea->setFontFamily(font.family());
+    //mStatArea->setFontPointSize(font.pointSizeF());
     mGraph->setFont(font);
     updateLayout();
 }
@@ -395,30 +403,33 @@ void GraphViewResults::setGraphsOpacity(int value)
     mGraph->setCurvesOpacity(value);
 }
 
-void GraphViewResults::resizeEvent(QResizeEvent* e)
+void GraphViewResults::resizeEvent(QResizeEvent*)
 {
-    (void) e;
     updateLayout();
 }
 
 void GraphViewResults::updateLayout()
 {
-     // Define the rigth margin, according to the max on the scale
+    // Define the rigth margin, according to the max on the scale
     QFont fontTitle (mGraphFont);
     fontTitle.setBold(true);
     fontTitle.setPointSizeF(mGraphFont.pointSizeF() * 1.1);
     QFontMetricsF fmTitle (fontTitle);
     mTopShift = int (2 * fmTitle.height()) ;
 
-    QRect graphRect(0, int (mTopShift), width(), int (height() - mTopShift));
     QFontMetricsF fm (mGraphFont);
 
     if (mShowNumResults) {
-        mGraph->setGeometry(graphRect.adjusted(0, 0, int (-width()/3. -1), 0 ));
-        mStatArea->setGeometry(graphRect.adjusted(int (width()*2./3. + 2.), int (-mTopShift + 2 ), -4, -2));
+        mGraph->setGeometry(0, mTopShift, int (width()*2./3. -1), height() - mTopShift);
+
+        const int area_x = width()*2./3. + 2.;
+        const int area_w = width() - area_x -2 - 2;
+
+        mStatArea->setGeometry(area_x, 2, area_w, height() - 2);
+        //mStatArea->setText(mStatText);
 
     } else {
-        mGraph->setGeometry(graphRect);
+        mGraph->setGeometry(0, mTopShift, width(), height() - mTopShift);
     }
 
     const bool axisVisible = (height() >= mHeightForVisibleAxis);
@@ -432,9 +443,8 @@ void GraphViewResults::updateLayout()
 
 }
 
-void GraphViewResults::mousePressEvent(QMouseEvent *event)
+void GraphViewResults::mousePressEvent(QMouseEvent*)
 {
-    (void) event;
     setSelected(!isSelected());
     update();
     emit selected();
@@ -466,9 +476,10 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     QString graphInfo = mGraph->getInfo();
    if (!graphInfo.isEmpty()) {
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 8, 0))
-        if (mShowNumResults)
-             p.drawText(QRectF(width()*2/3. - fmTitle.horizontalAdvance(graphInfo) - 3 * AppSettings::widthUnit(),  mTopShift - fmTitle.capHeight()-fmTitle.descent(), fmTitle.horizontalAdvance(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
-         else
+       if (mShowNumResults) {
+            p.drawText(QRectF(width()*2/3. - fmTitle.horizontalAdvance(graphInfo) - 3 * AppSettings::widthUnit(),  mTopShift - fmTitle.capHeight()-fmTitle.descent(), fmTitle.horizontalAdvance(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
+
+       } else
             p.drawText(QRectF(width() - fmTitle.horizontalAdvance(graphInfo) - 3 * AppSettings::widthUnit(), mTopShift - fmTitle.capHeight()-fmTitle.descent() , fmTitle.horizontalAdvance(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
 #else
        if (mShowNumResults)
@@ -482,8 +493,8 @@ void GraphViewResults::paintEvent(QPaintEvent* )
    //    qApp->processEvents();
 
     p.setPen(QColor(105, 105, 105));
-    if (mShowNumResults)
-        p.drawRect(mStatArea->geometry().adjusted(-1, -1, 1, 1));
+   // if (mShowNumResults) // cadre autour des stat
+   //     p.drawRect(mStatArea.geometry());//->geometry().adjusted(-1, -1, 1, 1));
 
     p.end();
 

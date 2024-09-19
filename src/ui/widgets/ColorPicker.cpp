@@ -47,8 +47,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 Q_PROPERTY(QColor mColor READ getColor WRITE setColor)
 
-ColorPicker::ColorPicker(const QColor &color, QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-mColor(color)
+ColorPicker::ColorPicker(const QColor &color, QWidget* parent, Qt::WindowFlags flags):
+    QWidget(parent, flags),
+    mColor(color)
 {
     setFixedHeight(20);
 }

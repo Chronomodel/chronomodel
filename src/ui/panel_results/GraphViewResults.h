@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -59,6 +59,59 @@ class Button;
 class MHVariable;
 class MetropolisVariable;
 class Model;
+
+/**
+ * @brief The ScrollableLabel class
+ * This widget was created to replace the QEditText, which crashed when the "show Stat." box was folded and unfolded several times.
+ * This component is simpler, but provides fewer options.
+ * Compensates for the bug in Qt under Windows that causes a bar to appear in the middle.
+ */
+class ScrollableLabel : public QScrollArea {
+
+private:
+    QLabel* label;
+
+public:
+    ScrollableLabel(QWidget *parent = nullptr) :
+        QScrollArea(parent)
+    {
+        // Création du widget principal
+        QWidget *mainWidget = new QWidget(parent);
+        QVBoxLayout *layout = new QVBoxLayout(parent);
+
+        // QLabel creation
+        label = new QLabel(parent);
+        // Enable text selection
+        label->setTextInteractionFlags(Qt::TextSelectableByMouse);
+        label->setText("<h1>Titre</h1>"
+                       "<p>This is an <b>example</b> of text in <i>HTML</i>.</p>"
+                       "<ul>"
+                       "<li>Element 1</li>"
+                       "<li>Element 2</li>"
+                       "<li>Element 3</li>"
+                       "</ul>");
+        label->setWordWrap(true); // Enables line feed
+
+        // Add QLabel to layout
+        layout->addWidget(label);
+        // Creating a QFrame for the frame
+       // QFrame *frame = new QFrame(parent);
+        //frame->setFrameShape(QFrame::StyledPanel);
+       // frame->setStyleSheet("QFrame { border: 1px solid gray; }");
+       // frame->setLayout(layout);
+
+        mainWidget->setLayout(layout);
+        setWidget(mainWidget);
+        setWidgetResizable(true); // Allows the widget to adjust to the size of the QScrollArea
+    }
+
+    void setText(const QString &HTMLtext) {
+        label->setText(HTMLtext);
+    }
+
+
+};
+
 
 class Overlay : public QWidget {
 public:
@@ -139,6 +192,9 @@ public:
         eLambda,
         eS02Vg
     };
+
+
+
     static int mHeightForVisibleAxis ;
     // member
 protected:
@@ -157,6 +213,8 @@ protected:
     QList<bool> mShowChainList;
     QList<variable_t> mShowVariableList;
 
+    ScrollableLabel* mStatArea;
+    QString mStatHTMLText;
     bool mShowNumResults;
     bool mIsSelected;
     bool mShowSelectedRect;
@@ -167,7 +225,8 @@ protected:
 
     QColor mMainColor;
 
-    QTextEdit* mStatArea;
+   /* QTextEdit* mStatArea;
+    QString mStatText;*/
 
     qreal mMargin;
     qreal mLineH;
@@ -181,7 +240,7 @@ public:
     explicit GraphViewResults(QWidget *parent = nullptr);
     virtual ~GraphViewResults();
 
-    virtual void mousePressEvent(QMouseEvent *event);
+    virtual void mousePressEvent(QMouseEvent *);
 
     void setSettings(const StudyPeriodSettings &settings);
     void setMCMCSettings(const MCMCSettings &mcmc, const std::vector<ChainSpecs> &chains);
@@ -215,14 +274,14 @@ public:
     void setShowNumericalResults(const bool show);
 
     QFont getGraphFont() const {return mGraphFont;};
-    inline GraphView* getGraph() const {return mGraph; }
+    inline GraphView getGraph()  {return mGraph; }
     inline QList<variable_t> getCurrentVariables() const {return mCurrentVariableList;}
     inline graph_t getCurrentType() const { return mCurrentTypeGraph; }
-    
-   // GraphView::Rendering getRendering() const  { return mGraph->getRendering(); }
-    QString getResultsText() const {return HTML_to_text(mStatArea->toHtml());}
-    QString getTextAreaToHtml() const { return mStatArea->toHtml();}
-    QString getTextAreaToPlainText() const { return mStatArea->toPlainText();}
+
+    QString getTextAreaToHtml() const { return QString();};//mStatArea->toHtml();}
+    // GraphView::Rendering getRendering() const  { return mGraph->getRendering(); }
+    QString getResultsText() const {return QString();};// HTML_to_text(mStatArea->toHtml());}
+    QString getTextAreaToPlainText() const { return QString();};//mStatArea->toPlainText();}
 
 
     void generateTraceCurves(const std::vector<ChainSpecs> &chains, MetropolisVariable* variable, const QString& name = QString());
@@ -241,16 +300,20 @@ public:
     virtual void updateCurvesToShow(bool showAllChains, const QList<bool> &showChainList, const QList<variable_t> &showVariableList);
 
 
-    inline void changeYScaleDivision(const Scale &sc) const {mGraph->setYScaleDivision(sc);};
-    inline void changeYScaleDivision(const double major, const int minor) const {mGraph->setYScaleDivision(major, minor);};
+    inline void changeYScaleDivision(const Scale &sc) {mGraph->setYScaleDivision(sc);};
+    inline void changeYScaleDivision(const double major, const int minor) {mGraph->setYScaleDivision(major, minor);};
+
+    // This is not from QWidget : we create this function to update the layout from different places (eg: in resizeEvent()).
+    // It is vitual because we want a different behavior in subclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
+    void updateLayout();
+    void showNumericalResults(const bool show);
+    inline void setNumericalResults(const QString &resultsHTML){mStatHTMLText = resultsHTML; mStatArea->setText(mStatHTMLText);};
 
 public slots:
     void setRange(type_data min, type_data max);
     void setCurrentX(type_data min, type_data max);
 
     void zoom(type_data min, type_data max);
-    void showNumericalResults(const bool show);
-    void setNumericalResults(const QString &resultsHTML);
 
     void saveAsImage();
     void imageToClipboard();
@@ -262,12 +325,8 @@ public slots:
 protected:
 
     // These methods are from QWidget and we want to modify their behavior
-    virtual void paintEvent(QPaintEvent* e);
-    virtual void resizeEvent(QResizeEvent* e);
-
-    // This is not from QWidget : we create this function to update the layout from different places (eg: in resizeEvent()).
-    // It is vitual because we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
-    virtual void updateLayout();
+    void paintEvent(QPaintEvent* e);
+    void resizeEvent(QResizeEvent*);
 
 signals:
     void unfoldToggled(bool toggled);

@@ -40,11 +40,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ScrollCompressor.h"
 #include "Painting.h"
 
-ScrollCompressor::ScrollCompressor(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-mProp(0.5),
-mIsDragging(false),
-mShowText(true),
-mIsVertical(true)
+ScrollCompressor::ScrollCompressor(QWidget* parent, Qt::WindowFlags flags):
+    QWidget(parent, flags),
+    mProp(0.5),
+    mIsDragging(false),
+    mShowText(true),
+    mIsVertical(true)
 {
     setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
 }

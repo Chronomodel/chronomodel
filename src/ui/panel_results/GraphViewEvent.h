@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -48,7 +48,7 @@ class GraphViewEvent: public GraphViewResults
 {
     Q_OBJECT
 public:
-    explicit GraphViewEvent(QWidget *parent = nullptr);
+    explicit GraphViewEvent(QWidget* parent = nullptr);
     virtual ~GraphViewEvent();
 
     void setEvent(std::shared_ptr<Event> event);
@@ -56,10 +56,10 @@ public:
     void generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList);
     void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showVariableList);
 
-protected:
+/*protected:
     void paintEvent(QPaintEvent* e);
     void resizeEvent(QResizeEvent* );
-
+*/
 private:
     std::shared_ptr<Event> mEvent;
 };

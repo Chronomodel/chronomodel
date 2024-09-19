@@ -40,14 +40,16 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Label.h"
 #include "Painting.h"
 
-Label::Label(QWidget* parent):QLabel(parent),
+Label::Label(QWidget* parent):
+    QLabel(parent),
     mIsTitle(false),
-mAdjustText(true)
+    mAdjustText(true)
 {
     init();
 }
 
-Label::Label(const QString& text, QWidget* parent):QLabel(text, parent),
+Label::Label(const QString& text, QWidget* parent):
+    QLabel(text, parent),
     mIsTitle(false)
 {
     init();

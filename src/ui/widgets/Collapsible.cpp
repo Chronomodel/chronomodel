@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2020
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -42,8 +42,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QPainter>
 #include <QPainterPath>
 
-CollapsibleHeader::CollapsibleHeader(Collapsible* collapsible, Qt::WindowFlags flags):QWidget(collapsible, flags),
-mCollapsible(collapsible)
+CollapsibleHeader::CollapsibleHeader(Collapsible* collapsible, Qt::WindowFlags flags):
+    QWidget(collapsible, flags),
+    mCollapsible(collapsible)
 {
     setCursor(QCursor(Qt::PointingHandCursor));
 }

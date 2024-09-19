@@ -48,17 +48,14 @@ class GraphViewDate: public GraphViewResults
 {
     Q_OBJECT
 public:
-    explicit GraphViewDate(QWidget *parent = nullptr);
+    explicit GraphViewDate(QWidget* parent = nullptr);
     virtual ~GraphViewDate();
 
-    void setDate(Date *date);
+    void setDate(Date* date);
     void updateColor(const QColor& color);
 
     void generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList);
     void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& variableList);
-
-//protected:
-   // void paintEvent(QPaintEvent* e);
 
 private:
     Date* mDate;

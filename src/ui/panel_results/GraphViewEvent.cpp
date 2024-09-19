@@ -49,7 +49,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 
-GraphViewEvent::GraphViewEvent(QWidget *parent):GraphViewResults(parent),
+GraphViewEvent::GraphViewEvent(QWidget *parent):
+    GraphViewResults(parent),
     mEvent(nullptr)
 {
     setMainColor(QColor(100, 100, 100));
@@ -69,16 +70,6 @@ void GraphViewEvent::setEvent(std::shared_ptr<Event> event)
     update();
 }
 
-
-void GraphViewEvent::paintEvent(QPaintEvent* e)
-{
-    GraphViewResults::paintEvent(e);
-}
-
-void GraphViewEvent::resizeEvent(QResizeEvent* )
-{
-    updateLayout();
-}
 
 void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable_t> &variableList)
 {

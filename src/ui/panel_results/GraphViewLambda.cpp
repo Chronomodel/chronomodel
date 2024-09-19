@@ -39,14 +39,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "GraphViewLambda.h"
 #include "GraphView.h"
-#include "ModelCurve.h"
 #include "Painting.h"
 #include "ModelUtilities.h"
 #include "QtUtilities.h"
 
 #include <QtWidgets>
 
-GraphViewLambda::GraphViewLambda(QWidget *parent):GraphViewResults(parent)
+GraphViewLambda::GraphViewLambda(QWidget* parent):
+    GraphViewResults(parent)
 {
     setMainColor(Painting::borderDark);
     mGraph->setBackgroundColor(QColor(210, 210, 210));
@@ -56,7 +56,7 @@ GraphViewLambda::~GraphViewLambda()
 {
 }
 
-void GraphViewLambda::paintEvent(QPaintEvent* e)
+/*void GraphViewLambda::paintEvent(QPaintEvent* e)
 {
     GraphViewResults::paintEvent(e);
 }
@@ -65,7 +65,7 @@ void GraphViewLambda::resizeEvent(QResizeEvent* )
 {
     updateLayout();
 }
-
+*/
 void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList)
 {
     auto model = getModel_ptr();

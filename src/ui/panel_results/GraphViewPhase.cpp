@@ -51,16 +51,18 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 // Constructor / Destructor
 
-GraphViewPhase::GraphViewPhase(QWidget *parent):GraphViewResults(parent),
+GraphViewPhase::GraphViewPhase(QWidget* parent):
+    GraphViewResults(parent),
     mPhase(nullptr)
 {
     setMainColor(Painting::borderDark);
     mGraph->setBackgroundColor(QColor(210, 210, 210));
+//mStatArea->setText(tr("Nothing to display"));
 }
 
 GraphViewPhase::~GraphViewPhase()
 {
-    mPhase = nullptr;
+   // mPhase = nullptr;
 }
 
 void GraphViewPhase::setPhase(std::shared_ptr<Phase> phase)
@@ -69,16 +71,6 @@ void GraphViewPhase::setPhase(std::shared_ptr<Phase> phase)
 
     mPhase = phase;
     setItemColor(mPhase->mColor);
-}
-
-void GraphViewPhase::paintEvent(QPaintEvent* e)
-{
-    GraphViewResults::paintEvent(e);
-}
-
-void GraphViewPhase::resizeEvent(QResizeEvent* )
-{
-    updateLayout();
 }
 
 void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList)
@@ -111,6 +103,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
     } else if (mCurrentVariableList.contains(eActivity)) {
         resultsHTML = ModelUtilities::activityResultsHTML(mPhase);
     }
+
     setNumericalResults(resultsHTML);
 
     mGraph->setOverArrow(GraphView::eNone);

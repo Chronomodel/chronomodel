@@ -72,7 +72,7 @@ void GraphViewCurve::setComposanteGChains(const QList<PosteriorMeanGComposante>&
     mComposanteGChains = composanteChains;
 }
 
-void GraphViewCurve::paintEvent(QPaintEvent* e)
+/*void GraphViewCurve::paintEvent(QPaintEvent* e)
 {
     GraphViewResults::paintEvent(e);
 }
@@ -81,7 +81,7 @@ void GraphViewCurve::resizeEvent(QResizeEvent* )
 {
     updateLayout();
 }
-
+*/
 void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList)
 {
     GraphViewResults::generateCurves(typeGraph, variableList);
@@ -441,7 +441,7 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
 
     mGraph->setCurveVisible("Map", mShowAllChains && (showG||showGP) && showMap);
 
-    mGraph->setCurveVisible("G", mShowAllChains && showG); 
+    mGraph->setCurveVisible("G", mShowAllChains && showG);
     mGraph->setCurveVisible("G Env", mShowAllChains && showGError && showG);
 
     mGraph->set_points_visible("Events Points", showEventsPoints);

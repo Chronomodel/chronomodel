@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -43,12 +43,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QtWidgets>
 
-CheckBox::CheckBox(QWidget* parent):QCheckBox(parent)
+CheckBox::CheckBox(QWidget* parent):
+    QCheckBox(parent)
 {
     setCursor(Qt::PointingHandCursor);
 }
 
-CheckBox::CheckBox(const QString& text, QWidget* parent):QCheckBox(text, parent)
+CheckBox::CheckBox(const QString& text, QWidget* parent):
+    QCheckBox(text, parent)
 {
     setCursor(Qt::PointingHandCursor);
 }

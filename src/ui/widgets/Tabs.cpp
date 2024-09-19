@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -40,9 +40,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Tabs.h"
 #include "Painting.h"
 
-Tabs::Tabs(QWidget* parent):QWidget(parent),
-mTabHeight(40),
-mCurrentIndex(0)
+Tabs::Tabs(QWidget* parent):
+    QWidget(parent),
+    mTabHeight(40),
+    mCurrentIndex(0)
 {
     setFont(QFont());
 }

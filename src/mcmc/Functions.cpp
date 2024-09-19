@@ -3640,6 +3640,9 @@ std::pair<double, double> solve_quadratic(const double y, const double a, const 
                 y2 = s1;
             }
 
+        } else {
+            y1 = 0.;
+            y2 = 0.;
         }
 
     }

@@ -300,11 +300,15 @@ private:
 
     QScrollArea* mEventsScrollArea;
     QScrollArea* mPhasesScrollArea;
-    QScrollArea* mCurveScrollArea;
+    QScrollArea* mCurvesScrollArea;
+
+    QWidget* mEventsWidget;
+    QWidget* mPhasesWidget;
+    QWidget* mCurvesWidget;
 
     QList<GraphViewResults*> mByEventsGraphs;
     QList<GraphViewResults*> mByPhasesGraphs;
-    QList<GraphViewResults*> mByCurveGraphs;
+    QList<GraphViewResults*> mByCurvesGraphs;
 
     QVBoxLayout* mOptionsLayout;
     // ---------------------------------------------------------------------

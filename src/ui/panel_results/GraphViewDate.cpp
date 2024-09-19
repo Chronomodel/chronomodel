@@ -48,10 +48,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 
 
-GraphViewDate::GraphViewDate(QWidget *parent):GraphViewResults(parent),
+GraphViewDate::GraphViewDate(QWidget *parent):
+    GraphViewResults(parent),
     mDate(nullptr)
-    //,
-    //mColor(Qt::blue)
 {
     setMainColor(QColor(155, 155, 155));
     mGraph->setBackgroundColor(Qt::white);
@@ -252,7 +251,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
             mTitle = tr("Individual Std : %1").arg(mDate->getQStringName());
 
             mGraph->mLegendX = "";
-            mGraph->setFormatFunctX(nullptr);//DateUtils::convertToAppSettingsFormat);
+            mGraph->setFormatFunctX(nullptr);
             mGraph->setFormatFunctY(nullptr);
 
             //  Post Distrib All Chains

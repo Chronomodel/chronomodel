@@ -54,7 +54,7 @@ GraphViewS02::GraphViewS02(QWidget *parent):GraphViewResults(parent)
 GraphViewS02::~GraphViewS02()
 {
 }
-
+/*
 void GraphViewS02::paintEvent(QPaintEvent* e)
 {
     GraphViewResults::paintEvent(e);
@@ -64,7 +64,7 @@ void GraphViewS02::resizeEvent(QResizeEvent* )
 {
     updateLayout();
 }
-
+*/
 void GraphViewS02::generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList)
 {
     auto model = getModel_ptr();

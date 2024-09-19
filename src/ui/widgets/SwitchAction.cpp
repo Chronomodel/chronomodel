@@ -41,7 +41,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Painting.h"
 #include <QtWidgets>
 
-SwitchWidget::SwitchWidget(QWidget* parent):QWidget(parent),
+SwitchWidget::SwitchWidget(QWidget* parent):
+    QWidget(parent),
     mAction(nullptr),
     mText ("None"),
     mToggled(false)
@@ -50,7 +51,8 @@ SwitchWidget::SwitchWidget(QWidget* parent):QWidget(parent),
 
 }
 
-SwitchWidget::SwitchWidget(QWidget* parent, QWidgetAction* action):QWidget(parent),
+SwitchWidget::SwitchWidget(QWidget* parent, QWidgetAction* action):
+    QWidget(parent),
     mAction(action),
     mToggled(false)
 {

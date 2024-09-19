@@ -738,7 +738,7 @@ QList<QStringList> Model::getPhaseTrace(size_t phaseIdx, const QLocale locale, c
     QList<QStringList> rows;
 
     std::shared_ptr<Phase> phase = nullptr;
-    if (phaseIdx >= 0 && phaseIdx < mPhases.size())
+    if (phaseIdx < mPhases.size())
         phase = mPhases.at(phaseIdx);
 
     else

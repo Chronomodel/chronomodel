@@ -107,6 +107,7 @@ GraphView::GraphView(QWidget* parent):
 }
 
 GraphView::GraphView(const GraphView& graph, QWidget *parent):
+    GraphViewAbstract(parent),
     mStepMinWidth(graph.mStepMinWidth), // define minorCount scale on axis
     mXAxisLine(graph.mXAxisLine),
     mXAxisArrow(graph.mXAxisArrow),

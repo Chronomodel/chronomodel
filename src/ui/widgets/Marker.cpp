@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -41,9 +41,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QPainter>
 
-Marker::Marker(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-   mPen(Qt::red),
-   mBrush(Qt::red)
+Marker::Marker(QWidget* parent, Qt::WindowFlags flags):
+    QWidget(parent, flags),
+    mPen(Qt::red),
+    mBrush(Qt::red)
 {
     mPen.setStyle(Qt::SolidLine);
     mBrush.setStyle(Qt::SolidPattern);

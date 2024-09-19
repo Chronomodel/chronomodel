@@ -42,7 +42,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QFont>
 #include <QtWidgets>
 
-LineEdit::LineEdit(QWidget* parent):QLineEdit(parent),
+LineEdit::LineEdit(QWidget* parent):
+    QLineEdit(parent),
     mAdjustText(true)
 {
     setParent(parent);

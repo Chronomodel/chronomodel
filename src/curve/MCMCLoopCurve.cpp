@@ -4848,11 +4848,11 @@ void MCMCLoopCurve::memo()
         PosteriorMeanG* meanG = &mModel->mPosteriorMeanG;
         PosteriorMeanG* chainG = &mModel->mPosteriorMeanGByChain[mChainIndex];
 
-        double minY_X, minY_Y, minY_Z;
-        double maxY_X, maxY_Y, maxY_Z;
+        double minY_X = 0., minY_Y = 0., minY_Z = 0.;
+        double maxY_X = 0., maxY_Y = 0., maxY_Z = 0.;
 
-        double minY_GP_X, minY_GP_Y, minY_GP_Z;
-        double maxY_GP_X, maxY_GP_Y, maxY_GP_Z;
+        double minY_GP_X = 0., minY_GP_Y = 0., minY_GP_Z = 0.;
+        double maxY_GP_X = 0., maxY_GP_Y = 0., maxY_GP_Z = 0.;
 
         minY_X = meanG->gx.mapG.minY();
         maxY_X = meanG->gx.mapG.maxY();

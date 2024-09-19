@@ -53,7 +53,7 @@ public:
 private:
 
 protected:
-    void paintEvent(QPaintEvent* event);
+    void paintEvent(QPaintEvent*);
 
 };
 

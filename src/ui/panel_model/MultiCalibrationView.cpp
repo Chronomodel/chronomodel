@@ -56,7 +56,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QLocale>
 
 
-MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
+MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flags):
+    QWidget(parent, flags),
     mDrawing (nullptr),
     mMajorScale (100),
     mMinorScale (4),
@@ -739,7 +740,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             graph3->setTipYLab(cs.Z_short_name());
 
             graph3->setMarginTop(graph3->fontMetrics().height()/2.);
-
+            [[fallthrough]];
         case CurveSettings::eProcess_Spherical:
         case CurveSettings::eProcess_Unknwon_Dec:
         case CurveSettings::eProcess_2D:
@@ -763,7 +764,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             graph2->showYAxisSubTicks(true);
             graph2->setTipYLab(cs.Y_short_name());
             graph2->setMarginTop(graph2->fontMetrics().height()/2.);
-
+            [[fallthrough]];
         case CurveSettings::eProcess_None:
         case CurveSettings::eProcess_Univariate:
         case CurveSettings::eProcess_Depth:
@@ -1133,13 +1134,13 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
         case CurveSettings::eProcess_3D:
             graph3->set_points(curveDataPointsZ);
             graph3->setTipYLab(cs.Z_short_name());
-
+    [[fallthrough]];
         case CurveSettings::eProcess_Spherical:
         case CurveSettings::eProcess_Unknwon_Dec:
         case CurveSettings::eProcess_2D:
             graph2->set_points(curveDataPointsY);
             graph2->setTipYLab(cs.Y_short_name());
-
+[[fallthrough]];
         default:
             graph1->setTipYLab(cs.X_short_name());
             graph1->set_points(curveDataPointsX);
@@ -1300,7 +1301,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 
             graph3->setMarginTop(graph3->fontMetrics().height()/2.);
 
-
+[[fallthrough]];
     case CurveSettings::eProcess_Spherical:
     case CurveSettings::eProcess_Unknwon_Dec:
     case CurveSettings::eProcess_2D:
@@ -1324,7 +1325,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             graph2->showYAxisSubTicks(true);
             graph2->setTipYLab(cs.Y_short_name());
             graph2->setMarginTop(graph2->fontMetrics().height()/2.);
-
+[[fallthrough]];
     case CurveSettings::eProcess_None:
     case CurveSettings::eProcess_Univariate:
     case CurveSettings::eProcess_Depth:
@@ -1722,6 +1723,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                     nullValue = true;
                     break;
                 }
+                [[fallthrough]];
             case CurveSettings::eProcess_2D:
             case CurveSettings::eProcess_Unknwon_Dec:
             case CurveSettings::eProcess_Spherical:
@@ -1730,6 +1732,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                     nullValue = true;
                     break;
                 }
+                [[fallthrough]];
             case CurveSettings::eProcess_Univariate:
             case CurveSettings::eProcess_Inclination:
             case CurveSettings::eProcess_Declination:
@@ -1860,13 +1863,13 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
         case CurveSettings::eProcess_3D:
             graph3->set_points(curveDataPointsZ);
             graph3->setTipYLab(cs.Z_short_name());
-
+            [[fallthrough]];
         case CurveSettings::eProcess_Spherical:
         case CurveSettings::eProcess_Unknwon_Dec:
         case CurveSettings::eProcess_2D:
             graph2->set_points(curveDataPointsY);
             graph2->setTipYLab(cs.Y_short_name());
-
+            [[fallthrough]];
         default:
             graph1->setTipYLab(cs.X_short_name());
             graph1->set_points(curveDataPointsX);

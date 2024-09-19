@@ -48,15 +48,15 @@ class GraphViewS02: public GraphViewResults
 {
     Q_OBJECT
 public:
-    explicit GraphViewS02(QWidget *parent = nullptr);
+    explicit GraphViewS02(QWidget* parent = nullptr);
     virtual ~GraphViewS02();
 
     void generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList);
     void updateCurvesToShow(bool showAllChains, const QList<bool> &showChainList, const QList<variable_t> &showVariableList);
-
+/*
 protected:
     void paintEvent(QPaintEvent* e);
-    void resizeEvent(QResizeEvent* );
+    void resizeEvent(QResizeEvent* );*/
 
 };
 

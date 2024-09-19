@@ -1051,7 +1051,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
         if (n > 1) {
 #ifdef DEBUG
-            const double addUnif = std::max(dUnif, QInf) - std::min(dUnif, QSup);
+            //const double addUnif = std::max(dUnif, QInf) - std::min(dUnif, QSup);
 
            // if (addUnif>0)
               //  qDebug()<<"[Phase::generateActivity] t= "<<t<<" add="<< addUnif;

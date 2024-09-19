@@ -224,7 +224,8 @@ Event::Event (const QJsonObject& json):
 
 }
 /** Copy constructor */
-Event::Event(const Event &origin)
+Event::Event(const Event &origin):
+    std::enable_shared_from_this<Event>()
 {
     mType = origin.mType;
     mId = origin.mId;

@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #if USE_PLUGIN_UNIFORM
 
-#include "../PluginAbstract.h"
+#include "PluginAbstract.h"
 
 #define DATE_UNIFORM_MIN_STR "min"
 #define DATE_UNIFORM_MAX_STR "max"
