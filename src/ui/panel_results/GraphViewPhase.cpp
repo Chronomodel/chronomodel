@@ -47,8 +47,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "DateUtils.h"
 #include "ModelUtilities.h"
 
-#include <QtWidgets>
-
 // Constructor / Destructor
 
 GraphViewPhase::GraphViewPhase(QWidget* parent):
@@ -57,7 +55,6 @@ GraphViewPhase::GraphViewPhase(QWidget* parent):
 {
     setMainColor(Painting::borderDark);
     mGraph->setBackgroundColor(QColor(210, 210, 210));
-//mStatArea->setText(tr("Nothing to display"));
 }
 
 GraphViewPhase::~GraphViewPhase()
@@ -68,7 +65,6 @@ GraphViewPhase::~GraphViewPhase()
 void GraphViewPhase::setPhase(std::shared_ptr<Phase> phase)
 {
     Q_ASSERT(phase);
-
     mPhase = phase;
     setItemColor(mPhase->mColor);
 }
@@ -83,6 +79,9 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
     mGraph->remove_all_zones();
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
+
+    mGraph->setOverArrow(GraphView::eNone);
+    mGraph->setFormatFunctY(nullptr);
 
     QPen defaultPen;
     defaultPen.setWidthF(1.);
@@ -106,7 +105,6 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
 
     setNumericalResults(resultsHTML);
 
-    mGraph->setOverArrow(GraphView::eNone);
 
     /* -------------first tab : posterior distrib-----------------------------------
      *  Possible curves :

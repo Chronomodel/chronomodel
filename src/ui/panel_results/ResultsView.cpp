@@ -122,33 +122,31 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
 
     mMarker = new Marker(this);
 
+    mEventsWidget = new QWidget(this);
+    mEventsWidget->setMouseTracking(true);
+
     mEventsScrollArea = new QScrollArea(this);
     mEventsScrollArea->QScrollArea::setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     mEventsScrollArea->horizontalScrollBar()->setEnabled(false);
     mEventsScrollArea->setMouseTracking(true);
-
-    mEventsWidget = new QWidget(this);
-    mEventsWidget->setMouseTracking(true);
-
     mEventsScrollArea->setWidget(mEventsWidget);
+
+    mPhasesWidget = new QWidget(this);
+    mPhasesWidget->setMouseTracking(true);
 
     mPhasesScrollArea = new QScrollArea(this);
     mPhasesScrollArea->QScrollArea::setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     mPhasesScrollArea->horizontalScrollBar()->setEnabled(false);
     mPhasesScrollArea->setMouseTracking(true);
-
-    mPhasesWidget = new QWidget(this);
-    mPhasesWidget->setMouseTracking(true);
     mPhasesScrollArea->setWidget(mPhasesWidget);
+
+    mCurvesWidget = new QWidget(this);
+    mCurvesWidget->setMouseTracking(true);
 
     mCurvesScrollArea = new QScrollArea(this);
     mCurvesScrollArea->QScrollArea::setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     mCurvesScrollArea->horizontalScrollBar()->setEnabled(false);
-
     mCurvesScrollArea->setMouseTracking(true);
-
-    mCurvesWidget = new QWidget(this);
-    mCurvesWidget->setMouseTracking(true);
     mCurvesScrollArea->setWidget(mCurvesWidget);
 
     connect(mGraphTypeTabs, static_cast<void (Tabs::*)(const qsizetype&)>(&Tabs::tabClicked), this, &ResultsView::applyGraphTypeTab);
@@ -1862,14 +1860,10 @@ void ResultsView::createByEventsGraphs()
     // ----------------------------------------------------------------------
     //  Iterate through all events and create corresponding graphs
     // ----------------------------------------------------------------------
-    delete mEventsWidget;
-    mEventsWidget = new QWidget(this);
-    mEventsScrollArea->setWidget(mEventsWidget);
     int graphIndex = 0;
 
     blockSignals(true);
     for (const auto& event : model->mEvents) {
-
         if (event->mIsSelected || showAllEvents) {
             if (graphIndexIsInCurrentPage(graphIndex)) {
                 GraphViewEvent* graph = new GraphViewEvent(mEventsWidget);
@@ -1879,13 +1873,10 @@ void ResultsView::createByEventsGraphs()
 
                 mByEventsGraphs.append(graph);
                 connect(graph, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
-
-
             }
             ++graphIndex;
                 
             if (mEventsDatesUnfoldCheck->isChecked()) {
-              //  blockSignals(true);
                 for (auto&& date : event->mDates) {
                     if (graphIndexIsInCurrentPage(graphIndex)) {
                         GraphViewDate* graph = new GraphViewDate(mEventsWidget);
@@ -1898,12 +1889,11 @@ void ResultsView::createByEventsGraphs()
                     }
                     ++graphIndex;
                 }
-              // blockSignals(false);
             }
 
         }
     }
-    blockSignals(true);
+    blockSignals(false);
 }
 
 void ResultsView::createByPhasesGraphs()
@@ -1915,33 +1905,30 @@ void ResultsView::createByPhasesGraphs()
     }
 
     // ----------------------------------------------------------------------
-    //  Disconnect and delete existing graphs
-    // ----------------------------------------------------------------------
-    deleteAllGraphsInList(mByPhasesGraphs);
-
-    // ----------------------------------------------------------------------
     // Show all, unless at least one is selected
     // ----------------------------------------------------------------------
     const bool showAllPhases = ! model->hasSelectedPhases();
 
     // ----------------------------------------------------------------------
+    //  Disconnect and delete existing graphs
+    // ----------------------------------------------------------------------
+    deleteAllGraphsInList(mByPhasesGraphs);
+
+    // ----------------------------------------------------------------------
     //  Iterate through all, and create corresponding graphs
     // ----------------------------------------------------------------------
-    //QWidget* phasesWidget = mPhasesScrollArea->widget();
     int graphIndex = 0;
 
+    blockSignals(true);
     for (const auto& phase : model->mPhases) {
         if (phase->mIsSelected || showAllPhases) {
             if (graphIndexIsInCurrentPage(graphIndex)) {
                 GraphViewPhase* graph = new GraphViewPhase(mPhasesWidget);
                 graph->setPhase(phase);
-                graph->setParent(mPhasesWidget);
+
                 setGraphicOption(*graph);
 
-                //phaseLayout->addWidget(graph);
-
                 mByPhasesGraphs.append(graph);
-
                 connect(graph, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
             }
             ++graphIndex;
@@ -1953,9 +1940,6 @@ void ResultsView::createByPhasesGraphs()
                         graph->setEvent(event);
 
                         setGraphicOption(*graph);
-
-                        //phaseLayout->addWidget(graph);
-
 
                         mByPhasesGraphs.append(graph);
                         connect(graph, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
@@ -1984,11 +1968,8 @@ void ResultsView::createByPhasesGraphs()
                 }
             }
         }
-        // Ajouter le widget de contenu à la QScrollArea
-        mPhasesScrollArea->setWidget(mPhasesWidget);
-        mPhasesScrollArea->setWidgetResizable(true); // Permet au widget de contenu de redimensionner
     }
-
+    blockSignals(false);
 }
 
 void ResultsView::createByCurveGraph()
@@ -2009,23 +1990,19 @@ void ResultsView::createByCurveGraph()
     //  Disconnect and delete existing graphs
     // ----------------------------------------------------------------------
     deleteAllGraphsInList(mByCurvesGraphs);
-    
-    //QWidget* widget = mCurveScrollArea->widget();
+
     blockSignals(true);
     if (mLambdaRadio->isChecked())  {
         GraphViewLambda* graphAlpha = new GraphViewLambda(mCurvesWidget);
-
         setGraphicOption(*graphAlpha);
 
         graphAlpha->setTitle(tr("Smoothing"));
 
         mByCurvesGraphs.append(graphAlpha);
-
         connect(graphAlpha, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
 
     } else  if (mS02VgRadio->isChecked())  {
         GraphViewS02* graphS02 = new GraphViewS02(mCurvesWidget);
-
         setGraphicOption(*graphS02);
 
         graphS02->setTitle(tr("Curve Shrinkage"));

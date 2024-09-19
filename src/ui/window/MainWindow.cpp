@@ -185,7 +185,6 @@ void MainWindow::setCurrentPath(const QString& path)
 void MainWindow::createActions()
 {
     //QWhatsThis::createAction();
-   // setMouseTracking(true);
 
     mAppSettingsAction = new QAction(QIcon(":settings_p.png"), tr("Settings"), this);
     connect(mAppSettingsAction, &QAction::triggered, this, &MainWindow::appSettings);

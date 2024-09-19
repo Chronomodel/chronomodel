@@ -44,11 +44,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ModelUtilities.h"
 #include "Painting.h"
 
-
-#include <QtWidgets>
-
-
-
 GraphViewEvent::GraphViewEvent(QWidget *parent):
     GraphViewResults(parent),
     mEvent(nullptr)
@@ -59,7 +54,7 @@ GraphViewEvent::GraphViewEvent(QWidget *parent):
 
 GraphViewEvent::~GraphViewEvent()
 {
-    mEvent = nullptr;
+    //mEvent = nullptr;
 }
 
 void GraphViewEvent::setEvent(std::shared_ptr<Event> event)
@@ -67,7 +62,7 @@ void GraphViewEvent::setEvent(std::shared_ptr<Event> event)
     Q_ASSERT(event);
     mEvent = event;
     setItemColor(mEvent->mColor);
-    update();
+    //update();
 }
 
 
