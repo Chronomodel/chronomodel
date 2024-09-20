@@ -286,7 +286,7 @@ void GraphViewResults::imageToClipboard()
 void GraphViewResults::resultsToClipboard()
 {
     QClipboard* clipboard = QApplication::clipboard();
-    clipboard->setText(HTML_to_text( mStatHTMLText));// mStatArea->toPlainText());
+    clipboard->setText(html_to_plain_text(mStatHTMLText));// mStatArea->toPlainText());
 }
 
 /**

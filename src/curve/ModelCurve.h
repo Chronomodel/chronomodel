@@ -66,7 +66,7 @@ public:
     bool is_curve;
 
     ModelCurve();//QObject* parent = nullptr);
-    explicit ModelCurve(const QJsonObject& json);//, QObject* parent = nullptr);
+    explicit ModelCurve(const QJsonObject &json);//, QObject* parent = nullptr);
     virtual ~ModelCurve();
 
     void setProject();
@@ -74,9 +74,9 @@ public:
 
     virtual void saveToFile(QDataStream *out);
     virtual void restoreFromFile(QDataStream *in) {return restoreFromFile_v328(in);};
-    void restoreFromFile_v323(QDataStream* in);
-    void restoreFromFile_v324(QDataStream* in);
-    void restoreFromFile_v328(QDataStream* in);
+    void restoreFromFile_v323(QDataStream *in);
+    void restoreFromFile_v324(QDataStream *in);
+    void restoreFromFile_v328(QDataStream *in);
 
     virtual QJsonObject toJson() const;
     virtual void fromJson( const QJsonObject &json);
@@ -91,7 +91,7 @@ public:
     void generateHPD(const double thresh);
     
     virtual void clearThreshold();
-    void clearPosteriorDensities();
+    virtual void remove_smoothed_densities();
     void clearCredibilityAndHPD();
     void clearTraces();
     void clear();

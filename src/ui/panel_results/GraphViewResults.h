@@ -40,6 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef GRAPHVIEWRESULTS_H
 #define GRAPHVIEWRESULTS_H
 
+#include "ModelUtilities.h"
 #include "StudyPeriodSettings.h"
 #include "MCMCSettings.h"
 
@@ -279,8 +280,8 @@ public:
 
     QString getTextAreaToHtml() const { return QString();};//mStatArea->toHtml();}
     // GraphView::Rendering getRendering() const  { return mGraph->getRendering(); }
-    QString getResultsText() const {return QString();};// HTML_to_text(mStatArea->toHtml());}
-    QString getTextAreaToPlainText() const { return QString();};//mStatArea->toPlainText();}
+    //QString getResultsText() const {return mStatHTMLText;}; // useless
+    QString getTextAreaToPlainText() const { return html_to_plain_text(mStatHTMLText);};
 
 
     void generateTraceCurves(const std::vector<ChainSpecs> &chains, MetropolisVariable* variable, const QString& name = QString());

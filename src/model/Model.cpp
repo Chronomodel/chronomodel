@@ -132,10 +132,8 @@ Model::Model(const QJsonObject& json):
                 try {
                    const auto& ev = std::make_shared<Event>(eventObj);
                    mEvents.push_back(ev);
-
-
                   
-                    mNumberOfDates += eventObj.value(STATE_EVENT_DATES).toArray().size();
+                   mNumberOfDates += eventObj.value(STATE_EVENT_DATES).toArray().size();
 
                 }
                 catch(QString error){
@@ -184,42 +182,47 @@ Model::Model(const QJsonObject& json):
     //  Must be done here !
     //  nb : Les data sont déjà linkées aux events à leur création
     // ------------------------------------------------------------
-    for (size_t i=0; i<mEvents.size(); ++i) {
-        int eventId = mEvents.at(i)->mId;
-        std::vector<int> phasesIds = mEvents.at(i)->mPhasesIds;
+
+
+    for (auto &event : mEvents) {
+        int eventId = event->mId;
+        std::vector<int> phasesIds = event->mPhasesIds;
 
         // Link des events / phases
-        for (size_t j=0; j<mPhases.size(); ++j) {
-            const int phaseId = mPhases.at(j)->mId;
+        for (auto &phase : mPhases) {
+            const int phaseId = phase->mId;
             if (container_contains(phasesIds, phaseId)) {
-                mEvents[i]->mPhases.push_back(mPhases.at(j));
-                mPhases[j]->mEvents.push_back(mEvents.at(i));
+                event->mPhases.push_back(phase);
+                phase->mEvents.push_back(event);
             }
         }
 
         // Link des events / contraintes d'event
-        for (size_t j=0; j<mEventConstraints.size(); ++j) {
-            if (mEventConstraints.at(j)->mFromId == eventId) {
-                mEventConstraints.at(j)->mEventFrom = mEvents[i];
-                mEvents[i]->mConstraintsFwd.push_back(mEventConstraints.at(j));
+        for (auto &ec : mEventConstraints) {
+            if (ec->mFromId == eventId) {
+                ec->mEventFrom = event;
+                event->mConstraintsFwd.push_back(ec);
                 
-            } else if (mEventConstraints.at(j)->mToId == eventId) {
-                mEventConstraints.at(j)->mEventTo = mEvents[i];
-                mEvents[i]->mConstraintsBwd.push_back(mEventConstraints.at(j));
+            } else if (ec->mToId == eventId) {
+                ec->mEventTo = event;
+                event->mConstraintsBwd.push_back(ec);
             }
         }
     }
+
     // Link des phases / contraintes de phase
-    for (size_t i=0; i<mPhases.size(); ++i) {
-        const int phaseId = mPhases.at(i)->mId;
-        for (size_t j=0; j<mPhaseConstraints.size(); ++j) {
-            if (mPhaseConstraints.at(j)->mFromId == phaseId) {
-                mPhaseConstraints.at(j)->mPhaseFrom = mPhases[i];
-                mPhases[i]->mConstraintsNextPhases.push_back(mPhaseConstraints.at(j));
+
+    for (auto &phase : mPhases) {
+        const int phaseId = phase->mId;
+
+        for (auto &pc : mPhaseConstraints) {
+            if (pc->mFromId == phaseId) {
+                pc->mPhaseFrom = phase;
+                phase->mConstraintsNextPhases.push_back(pc);
                 
-            } else if (mPhaseConstraints.at(j)->mToId == phaseId) {
-                mPhaseConstraints[j]->mPhaseTo = mPhases[i];
-                mPhases[i]->mConstraintsPrevPhases.push_back(mPhaseConstraints.at(j));
+            } else if (pc->mToId == phaseId) {
+                pc->mPhaseTo = phase;
+                phase->mConstraintsPrevPhases.push_back(pc);
             }
         }
 
@@ -229,25 +232,6 @@ Model::Model(const QJsonObject& json):
 Model::~Model()
 {
     //qDebug() << "[Model::~Model]";
-    /*for (auto ev : mEvents) {
-        delete ev;
-    }
-
-
-    for (auto ph : mPhases) {
-        delete ph;
-    }
-
-
-    for (auto ev : mEventConstraints) {
-        delete ev;
-    }
-
-
-    for (auto ph : mPhaseConstraints) {
-        delete ph;
-    }
-*/
 }
 
 void Model::clear()
@@ -862,9 +846,9 @@ bool Model::isValid()
     }
 
     // 2 - The event must contain at least 1 data
-    for (size_t i = 0; i < mEvents.size(); ++i) {
-        if (mEvents.at(i)->type() == Event::eDefault && mEvents.at(i)->mDates.size() == 0) {
-                    throw QObject::tr("The event  \" %1 \" must contain at least 1 data").arg(mEvents.at(i)->getQStringName());
+    for (const auto& event : mEvents) {
+        if (event->type() == Event::eDefault && event->mDates.size() == 0) {
+                    throw QObject::tr("The event  \" %1 \" must contain at least 1 data").arg(event->getQStringName());
                     return false;
 
         }
@@ -1114,7 +1098,7 @@ void Model::generateCorrelations(const std::vector<ChainSpecs> &chains)
     }
 
 #ifdef DEBUG
-    qDebug() <<  "=> [Model::generateCorrelations] done in " + DHMS(t.elapsed());
+    qDebug() <<  "[Model::generateCorrelations] done in " + DHMS(t.elapsed());
 #endif
 
 }
@@ -1309,7 +1293,7 @@ void Model::initDensities()
 
 void Model::updateDensities(int fftLen, double bandwidth, double threshold)
 {
-    clearPosteriorDensities();
+    remove_smoothed_densities();//clearPosteriorDensities();
 
     if (getProject_ptr()->mLoop)
         emit getProject_ptr()->mLoop->setMessage(QObject::tr("Computing posterior distributions and numerical results"));
@@ -1434,7 +1418,7 @@ void Model::generateNumericalResults(const std::vector<ChainSpecs> &chains)
 #endif
 
 #ifdef DEBUG
-    qDebug() <<  "=> Model::generateNumericalResults done in " + DHMS(t.elapsed()) ;
+    qDebug() <<  "[Model::generateNumericalResults] done in " + DHMS(t.elapsed()) ;
 #endif
 }
 
@@ -1760,22 +1744,22 @@ void Model::generateTempo(const size_t gridLength)
 /**
  *  @brief Clear model data
  */
-void Model::clearPosteriorDensities()
+void Model::remove_smoothed_densities()
 {
     for (auto &event : mEvents) {
         for (auto&& date : event->mDates) {
-            date.mTi.clearPosteriorDensities();
-            date.mSigmaTi.clearPosteriorDensities();
-            date.mWiggle.clearPosteriorDensities();
+            date.mTi.remove_smoothed_densities();
+            date.mSigmaTi.remove_smoothed_densities();
+            date.mWiggle.remove_smoothed_densities();
         }
-        event->mTheta.clearPosteriorDensities();
-        event->mS02Theta.clearPosteriorDensities();
+        event->mTheta.remove_smoothed_densities();
+        event->mS02Theta.remove_smoothed_densities();
     }
 
     for (auto &phase : mPhases) {
-        phase->mAlpha.clearPosteriorDensities();
-        phase->mBeta.clearPosteriorDensities();
-        phase->mDuration.clearPosteriorDensities();
+        phase->mAlpha.remove_smoothed_densities();
+        phase->mBeta.remove_smoothed_densities();
+        phase->mDuration.remove_smoothed_densities();
 
         phase->mTempo.clear();
         phase->mTempoInf.clear();

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2021
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -47,7 +47,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QIcon>
 #include <QString>
-#include <QVector>
 
 class ModelUtilities
 {
@@ -95,16 +94,16 @@ public:
     static short HPDOutsideSudyPeriod(const std::map<double, double> &hpd, const double tmin_formated, const double tmax_formated);
 
 };
-QString HTML_to_text(const QString &HTML);
 
-//void sampleInCumulatedRepartition (Event *event, const StudyPeriodSettings &settings, const double min, const double max); Obsolete
+std::string html_to_plain_text(const std::string &html);
+QString html_to_plain_text(const QString &html);
+
 
 double sample_in_repartition(std::shared_ptr<CalibrationCurve> calibrateCurve, const double min, const double max);
 
 void sampleInCumulatedRepartition_thetaFixe (std::shared_ptr<Event> event, const StudyPeriodSettings &settings);
 
 // These 2 global functions are used to sort events and phases lists in result view
-
 
 bool sortEvents(std::shared_ptr<Event> e1, std::shared_ptr<Event> e2);
 bool sortPhases(std::shared_ptr<Phase> p1, std::shared_ptr<Phase> p2);

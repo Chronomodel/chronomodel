@@ -51,6 +51,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QObject>
 
 #include <utility>
+#include <regex>
 
 
 
@@ -1265,22 +1266,48 @@ void sampleInCumulatedRepartition_thetaFixe (std::shared_ptr<Event> event, const
 
 }
 
-QString HTML_to_text(const QString &HTML)
+std::string html_to_plain_text(const std::string &html)
 {
-        QString result;
-        // Search and replace carriage return
-        QString HTML2 (HTML);
-        HTML2.replace("<br>","\r");
+    // Remplace les balises <br> et <p> par des retours à la ligne
+    std::string text = std::regex_replace(html, std::regex("<br\\s*/?>"), "\n");
 
-        //HTLM tag suppression
-        bool balise_open = false;
-        for (auto c : HTML2) {
-            if (c == '<')
-                balise_open = true;
-            else if (c == '>')
-                balise_open = false;
-            else if (balise_open)
-                result.append(c);
+    // Remplace <p> par un retour à la ligne
+    text = std::regex_replace(text, std::regex("<p[^>]*>"), "\n");
+
+    // Supprime les balises HTML
+    text = std::regex_replace(text, std::regex("<[^>]*>"), " ");
+
+    // Remplace les entités HTML par leurs caractères correspondants
+    std::unordered_map<std::string, std::string> htmlEntities = {
+        {"&lt;", "<"},
+        {"&gt;", ">"},
+        {"&amp;", "&"},
+        {"&quot;", "\""},
+        {"&apos;", "'"},
+        // Ajoutez d'autres entités HTML si nécessaire
+    };
+
+    for (const auto& entity : htmlEntities) {
+        size_t pos = 0;
+        while ((pos = text.find(entity.first, pos)) != std::string::npos) {
+            text.replace(pos, entity.first.length(), entity.second);
+            pos += entity.second.length();
         }
-        return result;
+    }
+
+    // Supprime les espaces supplémentaires tout en préservant les retours à la ligne
+    text = std::regex_replace(text, std::regex("[ ]+"), " ");  // Remplace les espaces multiples par un seul espace
+    text = std::regex_replace(text, std::regex("\n +"), "\n"); // Supprime les espaces après un retour à la ligne
+    text = std::regex_replace(text, std::regex(" +\n"), "\n"); // Supprime les espaces avant un retour à la ligne
+
+    // Supprime les espaces en début et fin de chaîne
+    text = std::regex_replace(text, std::regex("^\\s+|\\s+$"), "");
+
+    return text;
+}
+
+
+QString html_to_plain_text(const QString &html)
+{
+   return QString::fromStdString(html_to_plain_text(html.toStdString()));
 }

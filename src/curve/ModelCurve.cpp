@@ -834,19 +834,19 @@ void ModelCurve::generateHPD(const double thresh)
     }
 }
 
-void ModelCurve::clearPosteriorDensities()
+void ModelCurve::remove_smoothed_densities()
 {
-    Model::clearPosteriorDensities();
+    Model::remove_smoothed_densities();
     if (getProject_ptr()->isCurve()) {
         for (std::shared_ptr<Event>& event : mEvents) {
             if (event->type() != Event::eBound) {
-                event->mVg.clearPosteriorDensities();
+                event->mVg.remove_smoothed_densities();
             }
         }
 
-        mLambdaSpline.clearPosteriorDensities();
+        mLambdaSpline.remove_smoothed_densities();
 
-        mS02Vg.clearPosteriorDensities();
+        mS02Vg.remove_smoothed_densities();
     }
 }
 
@@ -895,7 +895,7 @@ void ModelCurve::clear()
 {
     clearTraces();
     clearCredibilityAndHPD();
-    clearPosteriorDensities();
+    remove_smoothed_densities();
     Model::clear();
 }
 

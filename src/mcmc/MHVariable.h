@@ -69,7 +69,7 @@ public:
     void clear() override;
     void clear_and_shrink() noexcept override;
 
-    void clearPosteriorDensities() override;
+    void remove_smoothed_densities() override;
     void reserve(const size_t reserve) override;
     //MHVariable& copy(MHVariable const& origin);
     MHVariable& operator=(const MHVariable& origin);

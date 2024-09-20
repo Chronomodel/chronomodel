@@ -134,7 +134,7 @@ public:
     virtual void shrink_to_fit() noexcept;
     virtual void clear_and_shrink() noexcept;
 
-    virtual void clearPosteriorDensities();
+    virtual void remove_smoothed_densities();
     virtual void reserve(const size_t reserve);
 
     void setFormat(const DateUtils::FormatDate fm);

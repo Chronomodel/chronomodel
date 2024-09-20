@@ -292,7 +292,7 @@ void MetropolisVariable::clear_and_shrink() noexcept
 }
 
 
-void MetropolisVariable::clearPosteriorDensities()
+void MetropolisVariable::remove_smoothed_densities()
 {
     //mRawTrace->clear(); // not a posterior
     mFormatedTrace->clear();
@@ -301,7 +301,7 @@ void MetropolisVariable::clearPosteriorDensities()
 
     mChainsHistos.clear();
 
-    mCorrelations.clear();
+    //mCorrelations.clear(); // ne dépand pas de la fftw
 
     mRawHPDintervals.clear();
 

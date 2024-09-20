@@ -168,7 +168,7 @@ public:
     void generateActivityBinomialeCurve(const int n, std::vector<double>& C1x, std::vector<double>& C2x, const double alpha = .05);
 
     virtual void clearTraces();
-    virtual void clearPosteriorDensities();
+    virtual void remove_smoothed_densities();//clearPosteriorDensities();
     virtual void clearCredibilityAndHPD();
     virtual void clearThreshold();
     

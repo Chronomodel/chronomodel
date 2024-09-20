@@ -118,11 +118,11 @@ macx{
 
 	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
         #QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14 # OS X 10.9 	Mavericks oct 2013  # essai sinon 10.14
-        #QMAKE_MACOSX_DEPLOYMENT_TARGET = 12 # Since 2022-10-11 work with fftw 3.3.2
+        QMAKE_MACOSX_DEPLOYMENT_TARGET = 12 # Since 2022-10-11 work with fftw 3.3.2
 
        # Spécifiez la version minimale de macOS requise
         #QMAKE_REQUIRED_MAC_OS_X_VERSION = 13
-        QMAKE_MACOSX_DEPLOYMENT_TARGET = 13 # work with fftw 3.3.10
+        #QMAKE_MACOSX_DEPLOYMENT_TARGET = 13 # work with fftw 3.3.10
 
         message("QMAKE_MACOSX_DEPLOYMENT_TARGET = $$QMAKE_MACOSX_DEPLOYMENT_TARGET")
 
@@ -188,11 +188,11 @@ macx{
 
 	# this is to include fftw.h in the code :
 	# INCLUDEPATH += $$_PRO_FILE_PWD_/lib/FFTW/mac
-        #INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.2.2/mac # for macos 12
-        #LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.2.2/mac" -lfftw3
+        INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.2.2/mac # for macos 12
+        LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.2.2/mac" -lfftw3
 
-        INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac # with intel and arm, for macos 13
-        LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac" -lfftw3
+       # INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac # with intel and arm, for macos 14
+       # LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.3.10/mac" -lfftw3
         
         
 

@@ -211,9 +211,9 @@ void MHVariable::clear_and_shrink() noexcept
 
 }
 
-void MHVariable::clearPosteriorDensities()
+void MHVariable::remove_smoothed_densities()
 {
-    MetropolisVariable::clearPosteriorDensities();
+    MetropolisVariable::remove_smoothed_densities();
 }
 
 void MHVariable::reserve(const size_t reserve)
