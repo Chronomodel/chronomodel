@@ -47,10 +47,16 @@ class Bound: public Event
 public:
 
     Bound();
+    Bound(const Bound& origin);
     virtual ~Bound();
+
     explicit Bound(const QJsonObject& json);
 
-    static Bound fromJson(const QJsonObject& json);
+    virtual Bound& operator=(const Bound& origin);
+    /** Move assignment operator */
+    virtual Bound& operator=(Bound&& origin) noexcept;
+
+    static const Bound fromJson(const QJsonObject& json);
     virtual QJsonObject toJson() const;
 
     void setFixedValue(const double& value);

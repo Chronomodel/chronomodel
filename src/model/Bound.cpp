@@ -57,7 +57,14 @@ Bound::Bound():
     mS02Theta.mSamplerProposal = MHVariable::eFixe;
 }
 
-Bound::Bound(const QJsonObject &json):
+Bound::Bound(const Bound& origin):
+    Event(origin),
+    mFixed (origin.mFixed)
+{
+}
+
+
+Bound::Bound(const QJsonObject& json):
     Event(json)
 {
     mType = Type (json[STATE_EVENT_TYPE].toInt());
@@ -98,15 +105,66 @@ Bound::Bound(const QJsonObject &json):
     mS02Theta.mSamplerProposal = MHVariable::eFixe;
 }
 
+/** Copy assignment operator */
+Bound& Bound::operator=(const Bound& origin)
+{
+    Event::operator=(origin);
+    mFixed = origin.mFixed;
+    return *this;
+}
+/** Move assignment operator */
+Bound& Bound::operator=(Bound&& origin) noexcept
+{
+    Event::operator=(origin);
+    mFixed = origin.mFixed;
+    return *this;
+}
+
+
 Bound::~Bound()
 {
-   // Event::~Event();
 }
 
 // JSON
-Bound Bound::fromJson(const QJsonObject &json)
+const Bound Bound::fromJson(const QJsonObject &json)
 {
-    Bound bound(json);
+    Bound bound;
+    bound.mType = Type (json[STATE_EVENT_TYPE].toInt());
+    bound.mId = json[STATE_ID].toInt();
+    bound.setName(json[STATE_NAME].toString());
+    bound.mColor = QColor(json[STATE_COLOR_RED].toInt(),
+                    json[STATE_COLOR_GREEN].toInt(),
+                    json[STATE_COLOR_BLUE].toInt());
+
+    bound.mTheta.mSamplerProposal= MHVariable::eFixe;
+    bound.mItemX = json[STATE_ITEM_X].toDouble();
+    bound.mItemY = json[STATE_ITEM_Y].toDouble();
+    bound.mIsSelected = json[STATE_IS_SELECTED].toBool();
+    bound.mIsCurrent = json[STATE_IS_CURRENT].toBool();
+
+    if (json.contains(STATE_EVENT_KNOWN_FIXED))
+       bound. mFixed = json[STATE_EVENT_KNOWN_FIXED].toDouble();
+
+    else
+        bound.mFixed = 0.;
+
+    bound.mPhasesIds = QStringToStdVectorInt(json.value(STATE_EVENT_PHASE_IDS).toString());
+
+    bound.mPointType = PointType (json.value(STATE_EVENT_POINT_TYPE).toInt());
+
+    bound.mXIncDepth = json.value(STATE_EVENT_X_INC_DEPTH).toDouble();
+    bound.mYDec = json.value(STATE_EVENT_Y_DEC).toDouble();
+    bound.mZField = json.value(STATE_EVENT_Z_F).toDouble();
+
+    bound.mS_XA95Depth = json.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble();
+    bound.mS_Y = json.value(STATE_EVENT_SY).toDouble();
+    bound.mS_ZField = json.value(STATE_EVENT_SZ_SF).toDouble();
+
+    bound.mVg.mSupport = MetropolisVariable::eRp;
+    bound.mVg.mFormat = DateUtils::eNumeric;
+    bound.mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
+    bound.mS02Theta.mSamplerProposal = MHVariable::eFixe;
     return bound;
 }
 

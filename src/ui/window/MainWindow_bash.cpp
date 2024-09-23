@@ -779,16 +779,16 @@ void MainWindow::calibrateAll()
     if (!Qevents.isEmpty()) {
         mProject->mCalibCurves.clear();
         QList<Event> events;
-        for (auto&& Qev: Qevents)
-            events.append(Event::fromJson(Qev.toObject()));
+        for (auto&& Qev: Qevents) {
+            events.emplace_back(Qev.toObject());
+        }
 
-        //QProgressDialog *progress = new QProgressDialog("Calibration curve generation -----2","Wait" , 1, 10, qApp->activeWindow(), Qt::Widget);
         QProgressDialog *progress = new QProgressDialog("Calibration in progress...","Wait" , 1, 10);
         progress->setWindowModality(Qt::WindowModal);
         progress->setCancelButton(nullptr);
         progress->setMinimumDuration(4);
         progress->setMinimum(0);
-        //progress->setMinimumWidth(7 * AppSettings::widthUnit());
+
         progress->setMinimumWidth(int (progress->fontMetrics().boundingRect(progress->labelText()).width() * 1.5));
 
         int position(0);

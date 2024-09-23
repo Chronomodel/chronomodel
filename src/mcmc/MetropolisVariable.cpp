@@ -135,8 +135,6 @@ MetropolisVariable::MetropolisVariable(const MetropolisVariable& origin):
 }
 
 
-
-
 /** Destructor */
 MetropolisVariable::~MetropolisVariable()
 {

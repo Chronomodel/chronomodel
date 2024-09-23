@@ -137,23 +137,32 @@ public:
 
 #pragma mark Functions
 
+    /** Default constructor */
     Event();
 
+    /** Copy constructor */
+    Event(const Event& origin);
+
     explicit Event (const QJsonObject& json);
-    Event(const Event &origin);
+
+    /** Destructor */
     virtual ~Event();
 
+    /** Copy assignment operator */
+    virtual Event& operator=(const Event& origin);
+
+    /** Move assignment operator */
+    virtual Event& operator=(Event&& origin) noexcept;
+
+    virtual void copyFrom(const Event& event);
+
+    static const Event fromJson(const QJsonObject& json);
+    virtual QJsonObject toJson() const;
 
     inline QString getQStringName() const {return QString::fromStdString(_name);}
     inline std::string name() const {return _name;}
     void setName(const std::string name) {_name = name;}
     void setName(const QString name) {_name = name.toStdString();}
-
-   // virtual Event& operator=(const Event& origin);
-    virtual void copyFrom(const Event& event);
-
-    static Event fromJson(const QJsonObject& json); // With no model
-    virtual QJsonObject toJson() const;
 
     inline Type type() const { return mType;}
 

@@ -60,15 +60,17 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 Event::Event():
     mType (eDefault),
     mId (0),
+    mItemX(0.),
+    mItemY(0.),
     mIsCurrent (false),
     mIsSelected (false),
     mPhasesIds(),
     mConstraintsFwdIds(),
     mConstraintsBwdIds(),
     mPhases(),
+
     mConstraintsFwd(),
     mConstraintsBwd(),
-
     mTheta (),
     mS02Theta (),
     mAShrinkage(0.),
@@ -89,6 +91,8 @@ Event::Event():
     mGx(0.),
     mGy(0.),
     mGz(0.),
+    mThetaReduced(0.),
+    mSy(0.),
     mW(0.),
     mVg (),
     mMixingCalibrations (nullptr),
@@ -110,8 +114,7 @@ Event::Event():
 #endif
 
     // Item initial position :
-    mItemX = 0.;
-    mItemY = 0.;
+
 
     // Note : setting an event in (0, 0) tells the scene that this item is new!
     // Thus the scene will move it randomly around the currently viewed center point.
@@ -119,24 +122,8 @@ Event::Event():
     //  Curve
     // --------------------------------------------------------
 
-    // Valeurs entrées par l'utilisateur
-    mXIncDepth = 0.;
-    mYDec = 0.;
-    mZField = 0.;
-
-    mS_XA95Depth = 0.;
-    mS_Y = 0.;
-    mS_ZField = 0.;
-
-    // Valeurs préparées (projetées)
-    mYx = 0.;
-    mYy = 0.;
-    mYz = 0.;
-
     // Valeurs utilisée pour les calculs
-    mThetaReduced = 0.;
-    mSy = 0.;
-    mW = 0.;
+
 
    // MHVariable mVg;
     mVg.setName("Vg of Event : " + _name);
@@ -289,50 +276,28 @@ Event::Event(const Event &origin):
 }
 
 /** Copy assignment operator */
-/*
 Event& Event::operator=(const Event& origin)
 {
     mType = origin.mType;
     mId = origin.mId;
-
-    //mModel = origin.mModel;
-    mName = origin.mName;
-
-    mColor = origin.mColor;
-
     mItemX = origin.mItemX;
     mItemY = origin.mItemY;
-
     mIsCurrent = origin.mIsCurrent;
     mIsSelected = origin.mIsSelected;
-
-    mDates = origin.mDates;
-
     mPhasesIds = origin.mPhasesIds;
     mConstraintsFwdIds = origin.mConstraintsFwdIds;
     mConstraintsBwdIds = origin.mConstraintsBwdIds;
-
     mPhases = origin.mPhases;
     mConstraintsFwd = origin.mConstraintsFwd;
     mConstraintsBwd = origin.mConstraintsBwd;
 
-
     mTheta = origin.mTheta;
-
-
-    mS02Theta.mX = origin.mS02Theta.mX;
-
-
-
+    mS02Theta = origin.mS02Theta;
     mAShrinkage = origin.mAShrinkage;
     mBetaS02 = origin.mBetaS02;
     mInitialized = origin.mInitialized;
-
     mIsNode = origin.mIsNode;
-    mThetaNode = origin.mThetaNode;
-
     mLevel = origin.mLevel;
-    // Valeurs entrées par l'utilisateur
     mPointType = origin.mPointType;
     mXIncDepth = origin.mXIncDepth;
     mYDec = origin.mYDec;
@@ -341,24 +306,29 @@ Event& Event::operator=(const Event& origin)
     mS_XA95Depth = origin.mS_XA95Depth;
     mS_Y = origin.mS_Y;
     mS_ZField = origin.mS_ZField;
-
-    // Valeurs préparées (projetées)
     mYx = origin.mYx;
     mYy = origin.mYy;
     mYz = origin.mYz;
-
-    // Valeurs utilisée pour les calculs
+    mGx = origin.mGx;
+    mGy = origin.mGy;
+    mGz = origin.mGz;
     mThetaReduced = origin.mThetaReduced;
     mSy = origin.mSy;
+
     mW = origin.mW;
-
     mVg = origin.mVg;
-
-
     mMixingCalibrations = origin.mMixingCalibrations;
+    _name = origin._name;
+
+    mColor = origin.mColor;
+
+    mDates = origin.mDates;
+
+    mThetaNode = origin.mThetaNode;
+
     return *this;
 }
-*/
+
 
 
 void Event::copyFrom(const Event& event)
@@ -432,6 +402,73 @@ void Event::copyFrom(const Event& event)
 
 }
 
+/** Move assignment operator */
+Event& Event::operator=(Event&& origin) noexcept
+{
+    if (this != &origin) {
+        mType = origin.mType;
+        mId = origin.mId;
+        mItemX = origin.mItemX;
+        mItemY = origin.mItemY;
+        mIsCurrent = origin.mIsCurrent;
+        mIsSelected = origin.mIsSelected;
+        mPhasesIds = std::move(origin.mPhasesIds);
+        mConstraintsFwdIds = std::move(origin.mConstraintsFwdIds);
+        mConstraintsBwdIds = std::move(origin.mConstraintsBwdIds);
+        mPhases = std::move(origin.mPhases);
+        mConstraintsFwd = std::move(origin.mConstraintsFwd);
+        mConstraintsBwd = std::move(origin.mConstraintsBwd);
+
+        mTheta = std::move(origin.mTheta);
+        mS02Theta = std::move(origin.mS02Theta);
+        mAShrinkage = origin.mAShrinkage;
+        mBetaS02 = origin.mBetaS02;
+        mInitialized = origin.mInitialized;
+        mIsNode = origin.mIsNode;
+        mLevel = origin.mLevel;
+        mPointType = origin.mPointType;
+        mXIncDepth = origin.mXIncDepth;
+        mYDec = origin.mYDec;
+        mZField = origin.mZField;
+
+        mS_XA95Depth = origin.mS_XA95Depth;
+        mS_Y = origin.mS_Y;
+        mS_ZField = origin.mS_ZField;
+        mYx = origin.mYx;
+        mYy = origin.mYy;
+        mYz = origin.mYz;
+        mGx = origin.mGx;
+        mGy = origin.mGy;
+        mGz = origin.mGz;
+        mThetaReduced = origin.mThetaReduced;
+        mSy = origin.mSy;
+
+        mW = origin.mW;
+        mVg = origin.mVg;
+        mMixingCalibrations = origin.mMixingCalibrations;
+        _name = origin._name;
+
+        mColor = std::move(origin.mColor);
+
+        mDates = std::move(origin.mDates);
+
+        mThetaNode = origin.mThetaNode;
+
+        origin.mMixingCalibrations.reset();
+        origin.mTheta.clear_and_shrink();
+        origin.mS02Theta.clear_and_shrink();
+        origin.mPhases.clear();
+        origin.mPhasesIds.clear();
+        origin.mConstraintsBwd.clear();
+        origin.mConstraintsBwdIds.clear();
+        origin.mConstraintsFwd.clear();
+        origin.mConstraintsFwdIds.clear();
+        origin.mDates.clear();
+    }
+    return *this;
+}
+
+
 Event::~Event()
 {
     //qDebug() << "[Event::~Event] Event: ";//<< (mName.isNull()? " Deleted Name": mName);
@@ -441,7 +478,7 @@ Event::~Event()
 
 // JSON
 
-Event Event::fromJson(const QJsonObject& json)
+Event const Event::fromJson(const QJsonObject& json)
 {
     Event event;
     event.mType = Type (json.value(STATE_EVENT_TYPE).toInt());
