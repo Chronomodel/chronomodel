@@ -1,12 +1,12 @@
 ChronoModel project
 "http://www.chronomodel.com"
 version 3.0
-2021-07-07
+2024-09-23
 
 ——————————————————
 CREDITS
 ——————————————————
-Copyright ©2021 CNRS
+Copyright ©2024 CNRS
 used under the terms:
 CeCILL FREE SOFTWARE LICENSE AGREEMENT
 Version 2.1 dated 2013-06-21
@@ -38,9 +38,9 @@ The build_all_mac.sh contains everything to:
 - create a package ready to deploy
 
 In your Terminal, go to the project path and then type :
-sh build_all_mac.sh 2.0 /your/absolute/path/to/Qt/5.10.0/clang_64/bin/
+sh build_all_mac.sh 3.2 /your/absolute/path/to/Qt/6.7.2/clang_64/bin/
 
-Note : 2.0 is the version number. We use it when releasing official versions.
+Note : 3.2 is the version number. We use it when releasing official versions.
 You may choose what you want instead when building by yourself.
 
 ——————————————————
@@ -64,21 +64,21 @@ Without it, Qt may fail to compile the resource file Chronomodel.rc
 - Install Qt 6 and use the following lines to make a batch file
 
 cls
-set "QTDIR=C:\QT\6.1.2"
-set PATH=%PATH%;%QTDIR%\bin\;C:\Qt\Tools\mingw810_64\bin\
+set "QTDIR=C:\QT\6.7.2"
+set PATH=%PATH%;%QTDIR%\bin\;C:\Qt\Tools\mingw1310_64\bin\
 
-set "QMAKESPEC=%QTDIR%\mingw81_64\mkspecs\win32-g++"
+set "QMAKESPEC=%QTDIR%\mingw_64\mkspecs\win32-g++"
 set "DIRPROJECT=%HOMEPATH%\Documents\GitHub\chronomodel"
 
-rem %QTDIR%\mingw81_64\bin\qmake.exe -project %Overwrite the file .pro
+rem %QTDIR%\mingw_64\bin\qmake.exe -project %Overwrite the file .pro
 echo qmake
- %QTDIR%\mingw81_64\bin\qmake.exe -makefile
+ %QTDIR%\mingw_64\bin\qmake.exe -makefile
 
 echo MAJ linguistic
- %QTDIR%\mingw81_64\bin\lupdate.exe %DIRPROJECT%\Chronomodel.pro
- %QTDIR%\mingw81_64\bin\lrelease.exe %DIRPROJECT%\Chronomodel.pro
+ %QTDIR%\mingw_64\bin\lupdate.exe %DIRPROJECT%\Chronomodel.pro
+ %QTDIR%\mingw_64\bin\lrelease.exe %DIRPROJECT%\Chronomodel.pro
 
-C:\Qt\Tools\mingw810_64\bin\mingw32-make.exe
+C:\Qt\Tools\mingw1310_64\bin\mingw32-make.exe
 
 
 ——————————————————
