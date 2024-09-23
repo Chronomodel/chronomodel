@@ -24,7 +24,7 @@ echo " 4 - Copy file chronomodel.exe in the installer-packages-winOS\chronomodel
 copy C:\Users\Lanos\Documents\github\chronomodel\build\Desktop_Qt_6_7_2_MinGW_64_bit-Release\build\release\chronomodel.exe C:\Users\Lanos\Documents\github\chronomodel\QtInstaller_ChronoModel\installer-packages-winOS\chronomodel_QtIFW.composant1\data
 
 echo " 5 - Copy file chronomodel_bash.exe in the installer-packages-winOS\chronomodel_QtIFW.composant2"
-copy C:\Users\Lanos\Documents\github\chronomodel\build\bash\Desktop_Qt_6_7_2_MinGW_64_bit-Release\build\release\chronomodel_bash.exe C:\Users\Lanos\Documents\github\chronomodel\QtInstaller_ChronoModel\installer-packages-winOS\chronomodel_QtIFW.composant2\data
+copy C:\Users\Lanos\Documents\github\chronomodel\build\Desktop_Qt_6_7_2_MinGW_64_bit-Release\build\release\chronomodel_bash.exe C:\Users\Lanos\Documents\github\chronomodel\QtInstaller_ChronoModel\installer-packages-winOS\chronomodel_QtIFW.composant2\data
 
 set VERSION=3.2.8
 set DATE_STR = %date:~6,4%%date:~3,2%%date:~0,2%
