@@ -262,7 +262,7 @@ QJsonObject PluginUniform::mergeDates(const QJsonArray& dates)
                 auto it = project->mCalibCurves.find(toFind);
 
                 if ( it!=project->mCalibCurves.end()) {
-                    std::unique_ptr<CalibrationCurve> d_mCalibration (& it->second);
+                    auto d_mCalibration (& it->second);
                     min = std::max(d_mCalibration->mTmin, min);
                     max = std::min(d_mCalibration->mTmax, max);
 
