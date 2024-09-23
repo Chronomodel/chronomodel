@@ -6,24 +6,35 @@
 
 clear
 # _________________________
-echo "$  1 Script compile Curves installer "
+echo "  1 Script compile Curves installer "
 # -------------------------------------------------------
 
 # -------------------------------------------------------
 #	Vérifier que le chemin de Qt est bien celui de la machine
 # -------------------------------------------------------
 
-QT_BIN_PATH=/Users/dufresne/Qt/Tools/QtInstallerFramework/4.5/bin
+QT_BIN_PATH=/Users/dufresne/Qt/Tools/QtInstallerFramework/4.8/bin
 
 # _________________________
-echo "$  2 copy the folder Calib in Data "
+echo "  2 copy the folder Calib in Data "
 # -------------------------------------------------------
 
-DEPLOY_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/deploy/
+DEPLOY_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/deploy/Calib
 
-cp -R $DEPLOY_PATH installer-packages/curves.composant1/data
+cp -R $DEPLOY_PATH installer-packages/curves.composant1/data/Calib
 
-VERSION=3.2.7
+VERSION=3.2.8
 
-echo "$  2 Execution de binarycreator"
-${QT_BIN_PATH}/binarycreator --offline-only -c installer-config/config.xml -p installer-packages --compression 9 Curves_Installer_v${VERSION} 
+DATE_FILE=$(date '+%Y%m%d')
+
+INSTALLER=ChronoModel_v${VERSION}_Curves_Installer_Qt6.7.2_macOS_${DATE_FILE}
+
+echo "  3 Execution de binarycreator"
+#${QT_BIN_PATH}/binarycreator --offline-only -c installer-config/config.xml -p installer-packages --compression 9 ChronoModel_Curves_Installer_v${VERSION} 
+
+${QT_BIN_PATH}/binarycreator --offline-only -c installer-config/config_macOS.xml -p installer-packages --compression 9 $INSTALLER
+
+echo " 4 - Created file : " $INSTALLER
+# _________________________
+echo " 5 - View the BUNDLE : /Users/dufresne/ChronoModel-SoftWare/chronomodel/QtInstaller_ChronoModel"
+# -------------------------------------------------------
