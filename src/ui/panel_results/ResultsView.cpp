@@ -444,6 +444,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mTimeSpin->setDecimals(3);
     mTimeSpin->setValue(sliderToZoom(mXSlider->value()));
     mTimeSpin->setToolTip(tr("Enter zoom value to magnify the curves on X span"));
+    mTimeSpin->setFixedWidth(mOptionsW/3); //for windows new spin box
 
     mMajorScaleLab = new QLabel(tr("Major Interval"), mSpanGroup);
     mMajorScaleLab->setFixedHeight(h);
@@ -673,6 +674,8 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mZoomSpin->setRange(mZoomSlider->minimum(), mZoomSlider->maximum());
     mZoomSpin->setValue(mZoomSlider->value());
     mZoomSpin->setToolTip(tr("Enter zoom value to magnify the curves on Y scale"));
+    mZoomSpin->setFixedWidth(mOptionsW/3); //for windows new spin box
+
 
     mLabFont = new QLabel(tr("Font"), mGraphicGroup);
     mLabFont->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
