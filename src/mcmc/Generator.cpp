@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -144,7 +144,7 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
     long double c = 0.0;
     long double f0 = 0.0;
 
-    if (x_min < 0. && x_max > 0.) {
+    if ((x_min < 0.) && (x_max > 0.)) {
         exp_x_min = expl(x_min);
         exp_minus_x_max = expl(-x_max);
         c = 1. - 0.5 * (exp_x_min + exp_minus_x_max);
@@ -159,19 +159,24 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
             exp_x_max = expl(x_max);
         }
     }
-    //info = "DoubleExp : exp_x_min = " + QString::number(exp_x_min) + ", exp_x_max = " + QString::number(exp_x_max);
-    //qDebug() <<"DoubleExp : exp_x_min = "<<exp_x_min;
-    //qDebug() << "exp(10 000=="<<exp((long double)(1000));
-    //qDebug() << "DOUBLE EXP DoubleExp : errno apres = "<<strerror(errno);
 #ifdef DEBUG
     if (errno != 0) {
-        qDebug() << "DOUBLE EXP : errno apres exp_minus_x_max = "<<strerror(errno);
-        qDebug() <<"DoubleExp : mean = "<< mean<<" min="<<min<<" max="<<max<<" sigma"<<sigma;
-        qDebug() <<" x_min="<< (double)(x_min)<<" x_max="<<(double)(x_max);
+        qDebug() <<  "[Generator::gaussByDoubleExp] errno =  " + QString::fromStdString(std::strerror(errno));
+        qDebug() << " mean = " << mean << " min=" << min << " max=" << max << " sigma" << sigma;
+        qDebug() <<" x_min=" << (double)(x_min) << " x_max=" << (double)(x_max);
 
-        errno=0;
     }
 #endif
+    if (errno != 0) {
+        qDebug() <<  "[Generator::gaussByDoubleExp] errno =  " + QString::fromStdString(std::strerror(errno));
+        if (fetestexcept(FE_UNDERFLOW | FE_UNDERFLOW)) {
+            feclearexcept(FE_ALL_EXCEPT);
+            errno = 0;
+            //qDebug() <<  "[Generator::gaussByDoubleExp] reset domain valid  errno =  " + QString::fromStdString(std::strerror(errno));
+        }
+        //qDebug() <<  "[Generator::gaussByDoubleExp] reset errno =  " + QString::fromStdString(std::strerror(errno));
+    }
+
     double ur = 1.0;
     long double rap = 0.0;
 
@@ -196,8 +201,11 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
         }
 
         if (errno != 0) {
-            //qDebug() << "DOUBLE EXP dans boucle = "<<strerror(errno);
-            throw "DoubleExp could not find a solution after " + QString::number(limit) + " trials! This may be due to Taylor unsufficients developpement orders. Please try to run the calculations again!";
+            if (fetestexcept(FE_UNDERFLOW | FE_UNDERFLOW)) {
+                feclearexcept(FE_ALL_EXCEPT);
+                errno = 0;
+            } else
+                throw "[Generator::gaussByDoubleExp] errno =  " + QString::fromStdString(std::strerror(errno));
         }
         ur = randomUniform();
 
@@ -214,7 +222,7 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
     }
 
     if (trials == limit)
-        throw "DoubleExp could not find a solution after " + QString::number(limit) + " trials! This may bed ue to Taylor unsufficients developpement orders. Please try to run the calculations again!";
+        throw "[Generator::gaussByDoubleExp] could not find a solution after " + QString::number(limit) + " trials! This may bed ue to Taylor unsufficients developpement orders. Please try to run the calculations again!";
 #ifdef DEBUG
     if ((x<x_min) || (x>x_max)) {
         qDebug() << "DOUBLE EXP DoubleExp : x = "<<(double)(x);
