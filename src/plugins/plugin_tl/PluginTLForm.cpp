@@ -56,6 +56,7 @@ PluginTLForm::PluginTLForm(PluginTL* plugin, QWidget* parent, Qt::WindowFlags fl
     mAverageEdit->setText("0");
     QDoubleValidator* RValidator = new QDoubleValidator(this);
     mAverageEdit->setValidator(RValidator);
+    mAverageEdit->setStyleSheet("QLineEdit { border: 0px; }");
 
     mErrorEdit = new QLineEdit(this);
     mErrorEdit->setAlignment(Qt::AlignHCenter);
@@ -63,12 +64,14 @@ PluginTLForm::PluginTLForm(PluginTL* plugin, QWidget* parent, Qt::WindowFlags fl
     QDoubleValidator* RplusValidator = new QDoubleValidator(this);
     RplusValidator->setBottom(0.0);
     mErrorEdit->setValidator(RplusValidator);
+    mErrorEdit->setStyleSheet("QLineEdit { border: 0px; }");
 
     connect(mErrorEdit, &QLineEdit::textChanged, this, &PluginTLForm::errorIsValid);
 
     mYearEdit = new QLineEdit(this);
     mYearEdit->setAlignment(Qt::AlignHCenter);
     mYearEdit->setText(QString::number(QDate::currentDate().year()));
+    mYearEdit->setStyleSheet("QLineEdit { border: 0px; }");
     setTabOrder(mAverageEdit, mErrorEdit);
     setTabOrder(mErrorEdit, mYearEdit);
 

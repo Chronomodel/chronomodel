@@ -288,8 +288,9 @@ public:
         if (!trace || trace->size() == 0) {
             return C<T>(0);
 
-        } else if (trace->size() == 1) { // Cas des variables fixes
-            return C<T>(*trace);
+        } else if (trace->size() == chains.size()) { // Cas des variables fixes
+            return C<T>(trace->at(index));
+            //return C<T>(*trace);
 
         } else  {
 
@@ -315,8 +316,9 @@ public:
         if (!trace || trace->size() == 0) {
             return C<T>(0);
 
-        } else if (trace->size() == 1) { // Cas des variables fixes
-            return C<T>(*trace);
+        } else if (trace->size() == chains.size()) { // Cas des variables fixes
+            return C<T>(trace.get()->at(index));
+            //return C<T>(*trace);
 
         } else  {
 

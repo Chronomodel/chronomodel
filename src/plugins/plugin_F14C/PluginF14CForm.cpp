@@ -59,12 +59,14 @@ PluginF14CForm::PluginF14CForm(PluginF14C* plugin, QWidget* parent, Qt::WindowFl
     mAverageEdit->setText("1");
     mAverageEdit->setAlignment(Qt::AlignHCenter);
     mRValidator = new QDoubleValidator(0., 10., -1, this);
+    mAverageEdit->setStyleSheet("QLineEdit { border: 0px; }");
     mAverageEdit->setValidator(mRValidator);
 
     mErrorEdit = new QLineEdit(this);
     QLocale locale;
     mErrorEdit->setText(locale.toString(0.1));
     mErrorEdit->setAlignment(Qt::AlignHCenter);
+    mErrorEdit->setStyleSheet("QLineEdit { border: 0px; }");
     mRplusValidator = new QDoubleValidator(this);
     mRplusValidator->setBottom(0.0);
     mRplusValidator->setTop(10.0);

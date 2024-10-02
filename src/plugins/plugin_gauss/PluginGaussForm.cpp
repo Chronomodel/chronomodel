@@ -62,10 +62,12 @@ PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::Windo
     mAverageEdit = new QLineEdit(this);
     mAverageEdit->setAlignment(Qt::AlignHCenter);  
     mAverageEdit->setValidator(validator_R);
+    mAverageEdit->QWidget::setStyleSheet("QLineEdit { border: 0px; }");
 
     mErrorEdit = new QLineEdit(this);
     mErrorEdit->setAlignment(Qt::AlignHCenter);
     mErrorEdit->setValidator(validator_Rplus);
+    mErrorEdit->QWidget::setStyleSheet("QLineEdit { border: 0px; }");
 
     connect(mErrorEdit, &QLineEdit::textChanged, this, &PluginGaussForm::errorIsValid);
     connect(mAverageEdit, &QLineEdit::textChanged, this, &PluginGaussForm::isValid);
@@ -85,10 +87,15 @@ PluginGaussForm::PluginGaussForm(PluginGauss* plugin, QWidget* parent, Qt::Windo
 
     mAEdit = new QLineEdit(this);
     mAEdit->setAlignment(Qt::AlignHCenter);
+    mAEdit->setStyleSheet("QLineEdit { border: 0px; }");
+
     mBEdit = new QLineEdit(this);
     mBEdit->setAlignment(Qt::AlignHCenter);
+    mBEdit->setStyleSheet("QLineEdit { border: 0px; }");
+
     mCEdit = new QLineEdit(this);
     mCEdit->setAlignment(Qt::AlignHCenter);
+    mCEdit->setStyleSheet("QLineEdit { border: 0px; }");
     setTabOrder(mAEdit, mBEdit);
     setTabOrder(mBEdit, mCEdit);
 

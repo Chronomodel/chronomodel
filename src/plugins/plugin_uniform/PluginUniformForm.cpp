@@ -53,11 +53,13 @@ PluginUniformForm::PluginUniformForm(PluginUniform* plugin, QWidget* parent, Qt:
     mMinEdit = new QLineEdit(this);
     mMinEdit->setAlignment(Qt::AlignHCenter);
     mMinEdit->setText("0");
+    mMinEdit->setStyleSheet("QLineEdit { border: 0px; }");
 
     mMaxEdit = new QLineEdit(this);
     mMaxEdit->setAlignment(Qt::AlignHCenter);
     mMaxEdit->setText("100");
     setTabOrder(mMinEdit, mMaxEdit);
+    mMaxEdit->setStyleSheet("QLineEdit { border: 0px; }");
 
     connect(mMinEdit, &QLineEdit::textChanged, this, &PluginUniformForm::valuesAreValid);
     connect(mMaxEdit, &QLineEdit::textChanged, this, &PluginUniformForm::valuesAreValid);

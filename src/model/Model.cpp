@@ -1424,6 +1424,7 @@ void Model::generateNumericalResults(const std::vector<ChainSpecs> &chains)
 
 void Model::clearThreshold()
 {
+    mThreshold = -1.;
     std::ranges::for_each( mEvents, [](std::shared_ptr<Event> ev) {
          ev->mTheta.mThresholdUsed = -1.;
          ev->mS02Theta.mThresholdUsed = -1.;

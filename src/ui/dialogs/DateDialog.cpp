@@ -66,7 +66,7 @@ DateDialog::DateDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, f
     mNameEdit = new QLineEdit(this);
     mNameEdit->setAlignment(Qt::AlignHCenter);
     mNameEdit->setText("New Data");
-    //mNameEdit->QWidget::setStyleSheet("QLineEdit { border-radius: 5px; }");
+    mNameEdit->QWidget::setStyleSheet("QLineEdit { border: 0px; }");
     mNameEdit->selectAll();
     mNameEdit->setFocus();
 

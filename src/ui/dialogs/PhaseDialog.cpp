@@ -132,7 +132,7 @@ PhaseDialog::PhaseDialog(QWidget* parent, Qt::WindowFlags flags):
 
     mTauTypeCombo->setCurrentIndex(_data.value(STATE_PHASE_TAU_TYPE).toInt());
     mTauFixedEdit->setText(locale().toString(_data.value(STATE_PHASE_TAU_FIXED).toDouble()));
-
+    showAppropriateTauOptions();
 }
 
 PhaseDialog::~PhaseDialog()

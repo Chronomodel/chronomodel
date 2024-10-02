@@ -60,6 +60,7 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     mAverageEdit->setAlignment(Qt::AlignHCenter);
     QDoubleValidator* RValidator = new QDoubleValidator(this);
     mAverageEdit->setValidator(RValidator);
+    mAverageEdit->setStyleSheet("QLineEdit { border: 0px; }");
 
     mErrorEdit = new QLineEdit(this);
     mErrorEdit->setText("30");
@@ -67,6 +68,7 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     QDoubleValidator* RplusValidator = new QDoubleValidator(this);
     RplusValidator->setBottom(0.000001);
     mErrorEdit->setValidator(RplusValidator);
+    mErrorEdit->setStyleSheet("QLineEdit { border: 0px; }");
     setTabOrder(mAverageEdit, mErrorEdit);
 
     connect(mErrorEdit, &QLineEdit::textChanged, this, &Plugin14CForm::errorIsValid);
@@ -74,11 +76,13 @@ Plugin14CForm::Plugin14CForm(Plugin14C* plugin, QWidget* parent, Qt::WindowFlags
     mREdit = new QLineEdit(this);
     mREdit->setText("0");
     mREdit->setAlignment(Qt::AlignHCenter);
+    mREdit->setStyleSheet("QLineEdit { border: 0px; }");
 
     mRErrorEdit = new QLineEdit(this);
     mRErrorEdit->setText("0");
     mRErrorEdit->setAlignment(Qt::AlignHCenter);
     mRErrorEdit->setValidator(RValidator);
+    mRErrorEdit->setStyleSheet("QLineEdit { border: 0px; }");
     setTabOrder(mREdit, mRErrorEdit);
 
     mRefCombo = new QComboBox(this);
