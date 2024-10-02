@@ -16,7 +16,7 @@ echo " 1 - Script compile intaller "
 # _________________________
 echo " 2 - Copy the ChronoModel BUNDLE "
 
-# make -j12 in /Users/dufresne/ChronoModel-SoftWare/build-Chronomodel-Qt_6_7_0_for_macOS-Release
+# make -j12 in /Users/dufresne/ChronoModel-SoftWare/build-Chronomodel-Qt_6_7_2_for_macOS-Release
 
 RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_7_2_for_macOS-Release/build/release/
 
