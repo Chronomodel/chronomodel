@@ -213,13 +213,15 @@ macx{
 }
 
 win32{
-        INCLUDEPATH += lib/fftw-3.2.2
+
         contains(QT_ARCH, i386) {
             message("32-bit")
+            INCLUDEPATH += lib/fftw-3.2.2/win32
             LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.2.2/win32" -lfftw3-3
 
         } else { # to compile with a x64 machine
             message("64-bit")
+            INCLUDEPATH += lib/fftw-3.2.2/win64
             LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.2.2/win64" -lfftw3-3
         }
 }
