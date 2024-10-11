@@ -78,7 +78,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 QString res_file_version; // used when loading
 
 Project::Project():
-    mLastSavedState(QJsonObject()),
     mName ("Empty Project"),
     mModel(new ModelCurve()),
     mLoop (nullptr),
@@ -89,8 +88,6 @@ Project::Project():
     mItemsIsMoved (true),
     mNoResults (true)
 {
-    mLastSavedState = mState;
-
     mAutoSaveTimer = new QTimer(this);
     connect(mAutoSaveTimer, &QTimer::timeout, this, &Project::save);
 
@@ -137,7 +134,6 @@ Project::~Project()
     MainWindow::getInstance()->getUndoStack()->clear();
 
     mState = QJsonObject();
-    mLastSavedState = QJsonObject();
     clear_calibCurves();
     mCalibCurves.clear();
 
@@ -192,7 +188,50 @@ QJsonObject Project::emptyState()
  */
 bool Project::pushProjectState(const QJsonObject &state, const QString &reason, bool notify)
 {
-    if (reason == NEW_PROJECT_REASON || reason == PROJECT_LOADED_REASON ) {
+    mStructureIsChanged = false;
+    mDesignIsChanged = false;
+    mItemsIsMoved = false;
+
+    if (reason != NEW_PROJECT_REASON && reason != PROJECT_LOADED_REASON ) {
+        qDebug()<<"[Project::pushProjectState] "<< reason << notify;
+
+        if (mReasonChangeStructure.contains(reason))
+            mStructureIsChanged = true;
+
+        else if (mReasonChangeDesign.contains(reason))
+            mDesignIsChanged = true;
+
+        else if (mReasonChangePosition.contains(reason))
+            mItemsIsMoved = true;
+
+        else
+            checkStateModification(state, mState);
+
+        SetProjectState* command = new SetProjectState(this, mState, state, reason, false);// notify);
+        MainWindow::getInstance()->getUndoStack()->push(command); // connected to SetProjectState::redo] if notify emit mProject->projectStateChanged()
+        command = nullptr;
+    }
+
+    // Pushes cmd on the stack or merges it with the most recently executed command.
+    //In either case, executes cmd by calling its redo() function
+
+    if (mStructureIsChanged) {
+        AppSettings::mIsSaved = false;
+        emit noResult(); // connected to MainWindows::noResults
+
+    } else if (mDesignIsChanged || mItemsIsMoved ) {
+        AppSettings::mIsSaved = false;
+    }
+
+    updateState(state, reason, notify); // if notify emit Project::projectStateChanged()
+    /*
+     * Project::projectStateChanged() is connected to MainWindows::updateProject()
+     */
+   // MainWindow::getInstance()->updateWindowTitle();
+    return true;
+
+    //--- old code
+   /* if (reason == NEW_PROJECT_REASON || reason == PROJECT_LOADED_REASON ) {
 
         SetProjectState* command = new SetProjectState(this, QJsonObject(), state, reason, notify);
         MainWindow::getInstance()->getUndoStack()->push(command);
@@ -222,23 +261,25 @@ bool Project::pushProjectState(const QJsonObject &state, const QString &reason, 
         MainWindow::getInstance()->getUndoStack()->push(command);
         command = nullptr;
 
-        if (mStructureIsChanged && (reason != PROJECT_LOADED_REASON) ) {
+        if (mStructureIsChanged) {// && (reason != PROJECT_LOADED_REASON) ) {
             mLastSavedState = mState;
             mState = state;
             AppSettings::mIsSaved = false;
-            MainWindow::getInstance()->updateWindowTitle();
+            //MainWindow::getInstance()->updateWindowTitle();
             emit noResult(); // connected to MainWindows::noResults
-            return true;
+
+        } else if (mDesignIsChanged || mItemsIsMoved ) {
+            AppSettings::mIsSaved = false;
         }
 
     }
-    if (mStructureIsChanged || mDesignIsChanged || mItemsIsMoved )
-        AppSettings::mIsSaved = false;
+    //if (mStructureIsChanged || mDesignIsChanged || mItemsIsMoved )
+     //   AppSettings::mIsSaved = false;
 
     updateState(state, reason, notify);
     MainWindow::getInstance()->updateWindowTitle();
     return true;
-
+    */
 }
 
 
@@ -525,7 +566,7 @@ bool Project::event(QEvent* e)
 void Project::updateState(const QJsonObject &state, const QString &reason, bool notify)
 {
     qDebug() << " [Project::updateState] ---  reason = " << reason << " notify= " << notify;
-    mState = state;
+    mState = std::move(state);
     if (reason == NEW_PROJECT_REASON)
        showStudyPeriodWarning();
 
@@ -546,6 +587,8 @@ bool Project::load(const QString &path, bool force)
 {
     bool newerProject = false;
     bool olderProject = false;
+
+    const QString appVersionStr = QApplication::applicationVersion();
 
     QFileInfo checkFile(path);
     if (!checkFile.exists() || !checkFile.isFile()) {
@@ -594,7 +637,6 @@ bool Project::load(const QString &path, bool force)
                 const QString projectVersionStr = loadingState.value(STATE_APP_VERSION).toString();
                 projectVersionList = projectVersionStr.split(".");
 
-                const QString appVersionStr = QApplication::applicationVersion();
                 const QStringList appVersionList = appVersionStr.split(".");
 
                 if (loadingState.value(STATE_SETTINGS).isNull()) {
@@ -670,25 +712,26 @@ bool Project::load(const QString &path, bool force)
             //  Ask all plugins if dates are corrects.
             //  If not, it may be an incompatibility between plugins versions (new parameter added for example...)
             //  This function gives a chance to plugins to modify dates saved with old versions in order to use them with the new version.
-           qDebug() << "[Project::load]  begin checkDatesCompatibility";
-           bool isCorrected;
-           loadingState = checkDatesCompatibility(loadingState, isCorrected);
+            qDebug() << "[Project::load]  begin checkDatesCompatibility";
+            bool isCorrected;
+            loadingState = checkDatesCompatibility(loadingState, isCorrected);
 
-           qDebug() << "[Project::load]  end checkDatesCompatibility";
+            qDebug() << "[Project::load]  end checkDatesCompatibility";
             //  Check if dates are valid on the current study period
             mState = emptyState();
             mState = checkValidDates(loadingState);
 
+            if (olderProject)
+                AppSettings::mIsSaved = false; //force saving later
+            else
+                AppSettings::mIsSaved = true;
             recenterProject();
-            // When openning a project, it is maked as saved : mState == mLastSavedState
-            mLastSavedState = mState;
 
             qDebug() << "[Project::load]  unselectedAllInState";
             unselectedAllInState(mState); // modify mState
 
             // If a version update is to be done :
-           // QJsonObject state = mState;
-            mState[STATE_APP_VERSION] = qApp->applicationVersion();
+            mState[STATE_APP_VERSION] = appVersionStr;
 
            // -------------------- look for the calibration file --------------------
 
@@ -696,76 +739,64 @@ bool Project::load(const QString &path, bool force)
             QFileInfo calfi(caliPath);
 
             if (calfi.isFile() && !isCorrected && force == false) {
-                // load Calibration Curve
+                // Load Calibration Curve
                 QFile calFile(caliPath);
-                if (calFile.open(QIODevice::ReadOnly)) {
+                if (calFile.open(QIODevice::ReadOnly) && calFile.exists()) {
+                    qDebug() << "[Project::load] Loading model file.cal : " << calFile.fileName() << " size =" << calFile.size();
+                    QDataStream in(&calFile);
 
-                    if (calFile.exists()) {
-                        qDebug() << "[Project::load] Loading model file.cal : " << calFile.fileName() << " size =" << calFile.size();
-                        QDataStream in(&calFile);
+                    int QDataStreamVersion;
+                    in >> QDataStreamVersion;
+                    in.setVersion(QDataStreamVersion);
+                    if (in.version()!= QDataStream::Qt_6_4) {
+                            //setNoResults(true);
+                            clear_and_shrink_model();
+                            return true;
+                    }
 
-                        int QDataStreamVersion;
-                        in >> QDataStreamVersion;
-                        in.setVersion(QDataStreamVersion);
-                        if (in.version()!= QDataStream::Qt_5_5)
-                                return false;
+                    QString caliVersion;
+                    in >> caliVersion;
+                    // prepare the future
+                    mCalibCurves.clear();
+                    if (caliVersion != appVersionStr) {
+                        QFileInfo fileInfo(calFile);
+                        QString filename(fileInfo.fileName());
+                        QString strMessage = tr("%1 has been done with a different version = %2").arg(filename, caliVersion) + " \n (" + tr("current") + " =  "
+                                + qApp->applicationVersion() + ") \n"+ tr("Do you really want to load the calibration file: *.chr.cal ?");
+                        QString strTitle = tr("Compatibility risk");
+                        QMessageBox message(QMessageBox::Question, strTitle, strMessage, QMessageBox::Yes | QMessageBox::No, qApp->activeWindow());
+                        if (message.exec() == QMessageBox::No) {
+                                setNoResults(true);
+                                clear_and_shrink_model();
+                                return true;
+                        }
 
-                        QString caliVersion;
-                        in >> caliVersion;
-                        // prepare the future
-                         mCalibCurves.clear();
-                        if (caliVersion != qApp->applicationVersion()) {
-                            QFileInfo fileInfo(calFile);
-                            QString filename(fileInfo.fileName());
-                            QString strMessage = tr("%1 has been done with a different version = %2").arg(filename, caliVersion) + " \n (" + tr("current") + " =  "
-                                    + qApp->applicationVersion() + ") \n"+ tr("Do you really want to load the calibration file: *.chr.cal ?");
-                            QString strTitle = tr("Compatibility risk");
-                            QMessageBox message(QMessageBox::Question, strTitle, strMessage, QMessageBox::Yes | QMessageBox::No, qApp->activeWindow());
-                            if (message.exec() == QMessageBox::Yes) {
-                                // loading cal curve
-                                try {
-                                    mCalibCurves = std::map<std::string, CalibrationCurve>();
-                                    quint32 siz;
-                                    in >> siz;
-                                    for (int i = 0; i < int(siz); ++i) {
-                                        QString descript;
-                                        in >> descript;
-                                        CalibrationCurve cal;
-                                        in >> cal;
-                                        mCalibCurves.insert_or_assign(descript.toStdString(), cal);
-                                    }
-
-                                 }
-                                catch (const std::exception & e) {
-
-                                    QMessageBox message(QMessageBox::Warning,
-                                                        tr("Error loading project "),
-                                                        tr("The Calibration file could not be loaded.") + "\r" +
-                                                        tr("Error %1").arg(e.what()),
-                                                        QMessageBox::Ok,
-                                                        qApp->activeWindow());
-                                    message.exec();
-                                  // return true;
-                                }
-
-                            }
-
-                        } else {
-                            // loading cal curve
-                            mCalibCurves = std::map<std::string, CalibrationCurve>();
-                            quint32 siz;
-                            in >> siz;
-                            for (int i = 0; i < int(siz); ++i) {
-                                QString descript;
-                                in >> descript;
-                                CalibrationCurve cal;
-                                in >> cal;
-                                mCalibCurves.insert_or_assign(descript.toStdString(),cal);
-                            }
+                    }
+                    // loading cal curve
+                    try {
+                        mCalibCurves = std::map<std::string, CalibrationCurve>();
+                        quint32 siz;
+                        in >> siz;
+                        for (int i = 0; i < int(siz); ++i) {
+                            QString descript;
+                            in >> descript;
+                            CalibrationCurve cal;
+                            in >> cal;
+                            mCalibCurves.insert_or_assign(descript.toStdString(), cal);
                         }
 
                      }
-                 }
+                    catch (const std::exception & e) {
+                        QMessageBox message(QMessageBox::Warning,
+                                            tr("Error loading project "),
+                                            tr("The Calibration file could not be loaded.") + "\r" +
+                                            tr("Error %1").arg(e.what()),
+                                            QMessageBox::Ok,
+                                            qApp->activeWindow());
+                        message.exec();
+                    }
+
+                }
                 calFile.close();
             } else {
                 setNoResults(true);
@@ -789,7 +820,7 @@ bool Project::load(const QString &path, bool force)
 
             QFileInfo fi(dataFile);
             dataFile.open(QIODevice::ReadOnly);
-            if (fi.isFile() && !mCalibCurves.empty()) {
+            if (fi.isFile()) { // if there is only bounds mCalibCurves.empty()) {
                 if (dataFile.exists()) {
 
                     qDebug() << "[Project::load] Loading model file.res : " << dataPath << " size=" << dataFile.size();
@@ -985,10 +1016,7 @@ bool Project::insert(const QString &path, QJsonObject &return_state)
            const QJsonArray &phases = mState.value(STATE_PHASES).toArray();
 
            if (phases.isEmpty()) {
-               //minXPhase = 0;
                maxXPhase = 0;
-               //minYPhase = 0;
-               //maxYPhase = 0;
 
            } else {
                for (auto&& phaseJSON : phases) {
@@ -1013,10 +1041,7 @@ bool Project::insert(const QString &path, QJsonObject &return_state)
 
            const QJsonArray &events = mState.value(STATE_EVENTS).toArray();
            if (events.isEmpty()) {
-               //minXEvent = 0;
                maxXEvent = 0;
-               //minYEvent = 0;
-               //maxYEvent = 0;
 
            } else {
                for (auto&& eventJSON : events) {
@@ -1038,7 +1063,7 @@ bool Project::insert(const QString &path, QJsonObject &return_state)
                maxIDEventConstraint += 1;
             }
 
-           // 2- find min X and  min -max Y in the imported project
+           // 2- Find min X and  min -max Y in the imported project
            double minXEventNew (HUGE_VAL);
            double minYEventNew (HUGE_VAL), maxYEventNew (-HUGE_VAL);
            const QJsonArray &eventsNew = loadedState.value(STATE_EVENTS).toArray();
@@ -1196,7 +1221,7 @@ bool Project::saveAs(const QString& dialogTitle)
 
         // We need to reset mLastSavedState because it corresponds
         // to the last saved state in the previous file.
-        mLastSavedState = QJsonObject();
+        //mLastSavedState = QJsonObject();
 
         return saveProjectToFile();
     }
@@ -1240,10 +1265,12 @@ bool Project::saveProjectToFile()
     QFile file_cal(AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".cal");
     QFile file_res(AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res");
 
-    // if (mLastSavedState != mState) {
-    if (AppSettings::mIsSaved == false) {
-        // création d'une copie du dernier resultat avec succés
-     /*   if (mNoResults && file_res.exists() && file_cal.exists()) {
+    /*
+     * Save in case of no backup or different version.
+     */
+    if (AppSettings::mIsSaved == false || mState[STATE_APP_VERSION] != QApplication::applicationVersion()) {
+        // Creation of a copy of the last successful result
+        /*   if (mNoResults && file_res.exists() && file_cal.exists()) {
 
             file_chr.copy(path + "_bak");
 
@@ -1251,7 +1278,7 @@ bool Project::saveProjectToFile()
 
             file_res.copy(path + ".res_bak");
         }
-     */
+        */
 
         if (file_chr.open(QIODevice::ReadWrite | QIODevice::Text)) {
 
@@ -1259,8 +1286,6 @@ bool Project::saveProjectToFile()
 
             // reset version number
             mState[STATE_APP_VERSION] = QApplication::applicationVersion();
-
-            mLastSavedState = mState;
 
             QJsonDocument jsonDoc(mState);
             QByteArray textDoc = jsonDoc.toJson(QJsonDocument::Indented);
@@ -1287,10 +1312,10 @@ bool Project::saveProjectToFile()
     if (file_cal.open(QIODevice::WriteOnly)) {
 
         QDataStream out(&file_cal);
-        out.setVersion(QDataStream::Qt_5_5);
+        out.setVersion(QDataStream::Qt_6_4);
         out << out.version();
 
-        out << qApp->applicationVersion();
+        out << QApplication::applicationVersion();
         // save Calibration Curve
         out << quint32 (mCalibCurves.size());
         for (auto it = mCalibCurves.cbegin() ; it != mCalibCurves.cend(); ++it) {
@@ -1300,7 +1325,7 @@ bool Project::saveProjectToFile()
         file_cal.close();
 
         AppSettings::mIsSaved = true;
-     }
+    }
 
     QFileInfo checkFile(file_res.fileName());
     if (checkFile.exists() && checkFile.isFile())
@@ -1316,7 +1341,7 @@ bool Project::saveProjectToFile()
         //  Create file
         // -----------------------------------------------------
         //QFileInfo info(fileName);
-        // QFile file(info.path() + info.baseName() + ".~res"); // when we could do a compressed file
+        //QFile file(info.path() + info.baseName() + ".~res"); // when we could do a compressed file
         //QFile file(info.path() + info.baseName() + ".res");
 
         if (file_res.open(QIODevice::WriteOnly)) {
@@ -3187,6 +3212,7 @@ void Project::runChronomodel()
             if (loop.mAbortedReason.isEmpty()) {
                 //Memo of the init variable state to show in Log view
                 //mModel->mLogInit = loop.getChainsLog() + loop.getInitLog();
+                AppSettings::mIsSaved = false;
                 emit mcmcFinished();
 
 
@@ -3321,6 +3347,7 @@ void Project::runCurve()
         if (loop.mAbortedReason.isEmpty()) {
             //Memo of the init variable state to show in Log view
             //mModel->mLogInit = loop.getChainsLog() + loop.getInitLog();
+            AppSettings::mIsSaved = false;
             dialog.setFinishedState();
             emit mcmcFinished();
 

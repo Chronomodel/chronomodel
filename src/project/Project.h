@@ -231,8 +231,6 @@ signals:
 
 public:
 
-    QJsonObject mLastSavedState;
-
     QString mName;
 
     std::shared_ptr<ModelCurve> mModel;

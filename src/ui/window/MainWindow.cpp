@@ -64,11 +64,12 @@ MainWindow::MainWindow(QWidget* parent):
     mProject(new Project())
     //mProject(std::make_shared<Project>())
 {
-#ifdef DEBUG
+/*#ifdef DEBUG
     setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + " DEBUG Mode ");
 #else
     setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() );
 #endif
+*/
     setMouseTracking(true);
   /*  QPalette tooltipPalette;
     tooltipPalette.setColor(QPalette::ToolTipBase, Qt::white);
@@ -84,8 +85,6 @@ MainWindow::MainWindow(QWidget* parent):
     testButton->setGeometry(QRect(150,70, 30,20));
 */
     mLastPath = QDir::homePath();
-
-    //mProject = nullptr;
 
     /* Creation of ResultsView and ModelView */
     mProjectView = new ProjectView(this);
@@ -580,11 +579,11 @@ void MainWindow::openProject()
                 disconnectProject();
 
                 //resetInterface(): clear mEventsScene and mPhasesScene
-                resetInterface();
+                resetInterface(); // do mResultsView->clearResults();
 
             }
-            if (mProjectView->mResultsView)
-                mProjectView->mResultsView->clearResults();
+            else if (mProjectView->mResultsView)
+                    mProjectView->mResultsView->clearResults();
 
             if (mProject->mModel != nullptr && !mProject->mModel->mEvents.empty()) {
                 mProject->mModel->clear_and_shrink();
@@ -604,7 +603,7 @@ void MainWindow::openProject()
 
         // look MainWindows::readSetting()
         statusBar()->showMessage(tr("Loading project : %1").arg(path));
-        if (mProject->load(path) == true) {
+        if (mProject->load(path) == true) { // load() set AppSettings::mIsSaved
 
             if (mProjectView->mResultsView)
                 mProjectView->mResultsView->clearResults();
@@ -613,6 +612,7 @@ void MainWindow::openProject()
 
             // Create mEventsScene and mPhasesScenes
             //if ( mProject->mModel->parent() != nullptr && !mProject->mModel->mChains.empty()) {
+            AppSettings::mIsSaved = true;
             if ( !mProject->mModel->mChains.empty()) {
                 mcmcFinished(); //do initDensities()
                 mProjectView->mModelView->setProject(); // build scene
@@ -623,7 +623,7 @@ void MainWindow::openProject()
             }
 
             mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true);
-            AppSettings::mIsSaved = true;
+
             updateWindowTitle();
          }
 
@@ -699,7 +699,7 @@ void MainWindow::closeProject()
         mUndoStack->clear();
 
         mProject->initState(CLOSE_PROJECT_REASON);
-        mProject->mLastSavedState = mProject->mState;//emptyState();
+
         AppSettings::mLastDir = QString();
         AppSettings::mLastFile = QString();
 
@@ -736,29 +736,28 @@ void MainWindow::saveProjectAs()
 void MainWindow::updateWindowTitle()
 {
     const QString saved_sign = AppSettings::mIsSaved ?  " ✓ " : QString(" ● ");
-#ifdef DEBUG
-    const QString file_name = " DEBUG Mode " + (AppSettings::mLastFile.isEmpty() ?  "" : QString(" - ") + AppSettings::mLastFile  + saved_sign);
-#else
-     const QString file_name = (AppSettings::mLastFile.isEmpty() ?  "" : QString(" - ") + AppSettings::mLastFile + saved_sign);
-#endif
+#//ifdef DEBUG
+ //   const QString file_name = " DEBUG Mode " + (AppSettings::mLastFile.isEmpty() ?  "" : QString(" - ") + AppSettings::mLastFile  + saved_sign);
+#//else
+    const QString file_name = (AppSettings::mLastFile.isEmpty() ?  "No Project" : AppSettings::mLastFile + saved_sign);
+#//endif
 
-    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + file_name);
-
+//    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + file_name);// see main.cpp for the application name
+    setWindowTitle(file_name);
 }
 
 /**
- * @brief MainWindow::updateProject come from undo and redo action and Project::projectStateChanged()
+ * @brief MainWindow::updateProject come from undo and redo action and Project::projectStateChanged() and Project::pushProjectState(
  */
 void MainWindow::updateProject()
 {
     qDebug()<<"[MainWindow::updateProject]";
-    mProject->checkStateModification(mProject->mState, mProject->mLastSavedState);
+   /*
     if (mProject->structureIsChanged())
-        noResult();
-
+        noResult(); // done by push
+*/
     mRunAction->setEnabled(true);
     mProjectView->updateProject();
-    AppSettings::mIsSaved = false;
     updateWindowTitle();
 
 }
@@ -1295,9 +1294,11 @@ void MainWindow::readSettings(const QString& defaultFilePath)
                 activateInterface(true);
                 // updateWindowTitle(); done by pushProjectState
                 connectProject();
-                if (mProject->withResults())
-                    mcmcFinished(); //do initDensities()
 
+                AppSettings::mIsSaved = true;
+                if (mProject->withResults()) {
+                    mcmcFinished(); //do initDensities()
+                }
                 mProject->setAppSettingsAutoSave();
 
                 mProjectView->setProject();
@@ -1424,7 +1425,7 @@ void MainWindow::mcmcFinished()
 
     // Tell the views to update
     mProjectView->initResults();
-    AppSettings::mIsSaved = false;
+    //AppSettings::mIsSaved = false;
     updateWindowTitle();
 
 
