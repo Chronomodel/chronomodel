@@ -103,7 +103,12 @@ int main(int argc, char *argv[])
     ChronoApp a(argc, argv);
 
     a.setApplicationName("ChronoModel");
-    a.setApplicationDisplayName("ChronoModel");
+#ifdef DEBUG
+    const QString application_name = "ChronoModel v" + version.toString() +  " DEBUG Mode ";
+#else
+    const QString application_name = "ChronoModel v" + version.toString();
+#endif
+    a.setApplicationDisplayName(application_name); // sous windows correspond au nom affiché
     a.setApplicationVersion(version.toString());  // must match value in Chronomodel.pro
     a.setOrganizationDomain("http://www.chronomodel.com");
     a.setOrganizationName("CNRS");
