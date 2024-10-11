@@ -5561,17 +5561,17 @@ void MCMCLoopCurve::finalize()
 */
 #pragma omp parallel for
 
-    // Suppression des traces des chaines sans courbes acceptées
+    // Removing traces of chains without accepted curves
 
     int back_position = (int)mModel->mLambdaSpline.mRawTrace->size();
-    for (size_t i = mLoopChains.size()-1; i>-1; --i) {
-        ChainSpecs &chain = mLoopChains[i];
+    size_t i = 0;
+    for (auto chain = mLoopChains.rbegin(); chain != mLoopChains.rend(); chain++) {
         // we add 1 for the init
-        const int initBurnAdaptAcceptSize = 1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch) + chain.mRealyAccepted;
+        const int initBurnAdaptAcceptSize = 1 + chain->mIterPerBurn + int (chain->mBatchIndex * chain->mIterPerBatch) + chain->mRealyAccepted;
 
         const int front_position = back_position - initBurnAdaptAcceptSize;
-        if (chain.mRealyAccepted == 0) {
-            emit setMessage((tr("Warning : NO POSITIVE curve available with chain n° %1, current seed to change %2").arg (QString::number(i+1), QString::number(chain.mSeed))));
+        if (chain->mRealyAccepted == 0) {
+            emit setMessage((tr("Warning : NO POSITIVE curve available with chain n° %1, current seed to change %2").arg (QString::number(i+1), QString::number(chain->mSeed))));
 
             mLoopChains.erase(mLoopChains.cbegin()+i);
 
@@ -5589,7 +5589,7 @@ void MCMCLoopCurve::finalize()
                 mModel->mS02Vg.mAllAccepts.erase(mModel->mS02Vg.mAllAccepts.begin() + i);
             }
 
-            for (auto ev : mModel->mEvents) {
+            for (const auto &ev : mModel->mEvents) {
                 if (ev->mTheta.mSamplerProposal != MHVariable::eFixe) {
                     ev->mTheta.mRawTrace->erase(ev->mTheta.mRawTrace->cbegin() + front_position, ev->mTheta.mRawTrace->cbegin() + back_position);
                     ev->mTheta.mHistoryAcceptRateMH->erase(ev->mTheta.mHistoryAcceptRateMH->cbegin() + front_position, ev->mTheta.mHistoryAcceptRateMH->cbegin() + back_position);
@@ -5623,6 +5623,7 @@ void MCMCLoopCurve::finalize()
             }
         }
         back_position = front_position ;
+        i++;
     }
     if (mLoopChains.empty()) {
         mAbortedReason = QString(tr("Warning : NO POSITIVE curve available "));

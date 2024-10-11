@@ -481,7 +481,7 @@ std::map<double, double> MetropolisVariable::generateHisto(const std::vector<dou
     if (dataSrc.size() == 1) {
         // value. It can appear with a fixed variable
         result.emplace(dataSrc.at(0), 1.) ;
-        qDebug()<<"[MetropolisVariable::generateHisto] One Value = "<< dataSrc.at(0) << _name;
+        //qDebug()<<"[MetropolisVariable::generateHisto] One Value = "<< dataSrc.at(0) << _name;
         return result;
     }
 

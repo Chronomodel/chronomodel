@@ -317,8 +317,8 @@ public:
             return C<T>(0);
 
         } else if (trace->size() == chains.size()) { // Cas des variables fixes
-            return C<T>(trace.get()->at(index));
-            //return C<T>(*trace);
+            return C<T> (trace->begin() + index, trace->begin() + index + 1 );
+
 
         } else  {
 
