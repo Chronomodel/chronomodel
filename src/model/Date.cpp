@@ -1498,6 +1498,9 @@ QPixmap Date::generateUnifThumb(StudyPeriodSettings settings)
             graph.showYAxisValues(false);
             graph.showYAxisLine(false);
 
+            graph.setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
+            graph.setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+
             graph.setXAxisMode(GraphView::eHidden);
             graph.setYAxisMode(GraphView::eHidden);
 
@@ -1592,6 +1595,9 @@ QPixmap Date::generateCalibThumb(StudyPeriodSettings settings)
         graph.showYAxisSubTicks(false);
         graph.showYAxisValues(false);
 
+
+        graph.setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
+        graph.setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
         graph.setXAxisMode(GraphView::eHidden);
         graph.setYAxisMode(GraphView::eHidden);
         graph.showYAxisLine(false);

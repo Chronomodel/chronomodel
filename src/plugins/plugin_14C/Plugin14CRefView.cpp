@@ -51,6 +51,10 @@ Plugin14CRefView::Plugin14CRefView(QWidget* parent):GraphViewRefAbstract(parent)
 {
     mMeasureColor = QColor(98, 113, 123, 240);
     mGraph = new GraphView(this);
+
+    mGraph->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
+    mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eAllTicks);
     mGraph->setTipXLab("t");
