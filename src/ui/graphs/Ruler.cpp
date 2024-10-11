@@ -198,7 +198,9 @@ void Ruler::setCurrent(const double min, const double max)
 
         mScrollBar->setPageStep(int(pageStep));
         mScrollBar->setRange(0, int(scrollRange));
+        blockSignals(true);
         mScrollBar->setValue(int(value));
+        blockSignals(false);
     }
 
     updateLayout();
