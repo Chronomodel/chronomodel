@@ -256,6 +256,9 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mKnownGraph->showYAxisSubTicks(false);
     mKnownGraph->showYAxisValues(false);
 
+    mKnownGraph->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
+    mKnownGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+
     mKnownGraph->setXAxisMode(GraphView::eMinMax);
     mKnownGraph->setYAxisMode(GraphView::eMinMax);
 

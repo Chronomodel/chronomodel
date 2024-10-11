@@ -563,6 +563,9 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
             calibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
             calibGraph->setOverArrow(GraphView::eNone);
 
+
+            calibGraph->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
+            calibGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
             calibGraph->setYAxisMode(GraphView::eHidden);
             calibGraph->showYAxisLine(false);
 
@@ -733,6 +736,10 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             graph3->setOverArrow(GraphView::eNone);
             graph3->setTipXLab("t");
 
+
+            graph3->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
+            graph3->setYAxisSupport(AxisTool::AxisSupport::eMin_Max);
+
             graph3->autoAdjustYScale(true);
 
             graph3->setYAxisMode(GraphView::eAllTicks);
@@ -757,6 +764,9 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             graph2->changeXScaleDivision(mMajorScale, mMinorScale);
             graph2->setOverArrow(GraphView::eNone);
             graph2->setTipXLab("t");
+
+            graph2->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
+            graph2->setYAxisSupport(AxisTool::AxisSupport::eMin_Max);
 
             graph2->autoAdjustYScale(true);
 

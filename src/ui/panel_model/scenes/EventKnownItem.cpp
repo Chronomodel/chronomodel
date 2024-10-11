@@ -105,6 +105,9 @@ void EventKnownItem::setEvent(const QJsonObject& eventObj, const QJsonObject& se
         graph->showYAxisSubTicks(false);
         graph->showYAxisValues(false);
 
+        graph->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
+        graph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+
         graph->setXAxisMode(GraphView::eHidden);
         graph->setYAxisMode(GraphView::eHidden);
 

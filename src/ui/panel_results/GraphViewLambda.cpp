@@ -203,6 +203,10 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
         }
         
         mGraph->setTipXLab(tr("Log10 Smoothing"));
+
+        mGraph->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
+        mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+
         mGraph->setYAxisMode(GraphView::eHidden);
         mGraph->showInfos(false);
         mGraph->clearInfos();
@@ -226,6 +230,8 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
         mGraph->setTipXLab(tr("Iteration"));
         mGraph->setTipYLab(tr("Log10 Smoothing"));
 
+        mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+        mGraph->setYAxisSupport(AxisTool::AxisSupport::eMin_Max);
         mGraph->setYAxisMode(GraphView::eMinMaxHidden);
         mGraph->showInfos(false);
         mGraph->autoAdjustYScale(true);
@@ -243,6 +249,9 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
 
         mGraph->setTipXLab(tr("Iteration"));
         mGraph->setTipYLab(tr("Rate"));
+
+        mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+        mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
 
         mGraph->setYAxisMode(GraphView::eMinMax );
         mGraph->showInfos(false);
@@ -266,6 +275,10 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
           }
           mGraph->setTipXLab("h");
           mGraph->setTipYLab(tr("Value"));
+
+          mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+          mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+
           mGraph->setYAxisMode(GraphView::eMinMax);
           mGraph->showInfos(false);
           mGraph->clearInfos();

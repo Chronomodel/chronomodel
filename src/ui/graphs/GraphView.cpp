@@ -192,7 +192,7 @@ void GraphView::copyFrom(const GraphView& graph)
     mBackgroundColor =graph.mBackgroundColor;
     mThickness = graph.mThickness;
     mOpacity = graph.mOpacity;
-    mCanControlOpacity =graph.mCanControlOpacity;
+    mCanControlOpacity = graph.mCanControlOpacity;
     mTipX = graph.mTipX;
     mTipY = graph.mTipY;
     mTipComment = graph.mTipComment;
@@ -248,6 +248,7 @@ void GraphView::adjustYScale()
                 if (curve.isVertical()) { // used for the measurement in the calibration process
                     yMin = std::min(yMin, curve.mData.firstKey());
                     yMax = std::max(yMax, curve.mData.lastKey());
+
                 } else if (!curve.isVerticalLine() && !curve.isHorizontalSections()) {
 
                     if (curve.isVectorData()) {
@@ -291,22 +292,35 @@ void GraphView::adjustYScale()
         }
 
         if (yMax >= yMin) {
-            if (mAxisToolY.mMinMaxOnly || !mYAxisTicks) {
-                if (yMax == yMin) {
-                    if (yMax>0) {
-                        yMin = 0.;
-                    } else {
-                        yMax = 0.;
-                    }
-                }
-                setRangeY(yMin, yMax);
 
-            } else {
+            if (mAxisToolY.mSupport == AxisTool::AxisSupport::eMin_Max) {// || !mYAxisTicks) {
+                if (yMax == yMin) {
+                        if (yMax>0) {
+                            yMin = 0.;
+                        } else {
+                            yMax = 0.;
+                        }
+                }
+
+            } else if (mAxisToolY.mSupport == AxisTool::AxisSupport::eAllways_Positive) {// || !mYAxisTicks) {
+                        yMin = 0.;
+
+
+            } else if (mAxisToolY.mSupport == AxisTool::AxisSupport::eAllways_Negative) {// || !mYAxisTicks) {
+                yMax = 0.;
+
+
+            }  else {
                 Scale yScale;
                 yScale.findOptimal(yMin, yMax, 7);
-                setRangeY(yScale.min, yScale.max);
                 setYScaleDivision(yScale);
+
+                yMin = yScale.min;
+                yMax = yScale.max;
+
             }
+            setRangeY(yMin, yMax);
+
         }
     }
 }
@@ -393,8 +407,8 @@ void GraphView::showYAxisValues(bool show)   { mYAxisValues = show;}
 
 void GraphView::setXAxisMode(AxisMode mode)
 {
-   mXAxisMode = mode;
-        mAxisToolX.mShowText = (mXAxisMode != eHidden);
+    mXAxisMode = mode;
+    mAxisToolX.mShowText = (mXAxisMode != eHidden);
 }
 
 void GraphView::setYAxisMode(AxisMode mode)
@@ -402,7 +416,8 @@ void GraphView::setYAxisMode(AxisMode mode)
     if (mYAxisMode != mode) {
         mYAxisMode = mode;
 
-        mAxisToolY.mMinMaxOnly = (mYAxisMode == eMinMax);
+       // mAxisToolY.mMinMaxOnly = (mYAxisMode == eMinMax);
+
         switch (mYAxisMode) {
         case eMinMax:
             showYAxisValues(false);
@@ -931,7 +946,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
                          maxData = std::max(maxData, section.second);
 
 
-             if ( maxData <= mCurrentMinX) {
+             if ( maxData < mCurrentMinX) {
                  const qreal xl = mMarginLeft + 2*arrowSize;
                  const QPolygonF LeftTriangle (std::initializer_list<QPointF>({ QPointF(xl - arrowSize*1.5, yo),
                                                                       QPointF(xl, yo - arrowSize),
@@ -960,7 +975,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
                          minData = std::min(minData, section.first);
              }
 
-             if (mCurrentMaxX <= minData) {
+             if (mCurrentMaxX < minData) {
                  const qreal xr = mGraphWidth + mMarginLeft - 2*arrowSize;
                  const QPolygonF RigthTriangle (std::initializer_list<QPointF>({ QPointF(xr + arrowSize*1.5, yo),
                                                                       QPointF(xr, yo - arrowSize),

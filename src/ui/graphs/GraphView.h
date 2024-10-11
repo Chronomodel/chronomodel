@@ -112,6 +112,9 @@ public:
     void showYAxisSubTicks(bool show);
     void showYAxisValues(bool show);
 
+    void setXAxisSupport(AxisTool::AxisSupport support) {mAxisToolX.mSupport = support;};
+    void setYAxisSupport(AxisTool::AxisSupport support) {mAxisToolY.mSupport = support;};
+
     void setXAxisMode(AxisMode mode);
     void setYAxisMode(AxisMode mode);
 
@@ -139,6 +142,7 @@ public:
     void removeCurve(const QString& name);
     void removeAllCurves();
     void reserveCurves(const int size);
+    void squeezeCurves() {mCurves.squeeze();};
     void setCurveVisible(const QString& name, const bool visible);
     GraphCurve* getCurve(const QString& name);
     const QList<GraphCurve>& getCurves() const;

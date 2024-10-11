@@ -49,7 +49,8 @@ AxisTool::AxisTool():
     mShowSubs(true),
     mShowSubSubs(true),
     mShowText(true),
-    mMinMaxOnly(false),
+    //mMinMaxOnly(false),
+    mSupport(AxisSupport::eAllways_Positive),
     mShowArrow(false),
     mMajorScale (100),
     mMinorScaleCount (4),
@@ -150,7 +151,7 @@ QList<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSize,
 
         p.drawLine(QLineF(xo, yo, xo + w, yo)); // QLineF() done a smaller line
 
-        if (mMinMaxOnly) {
+        if (mSupport == AxisSupport::eMin_Max) {
             if (mShowText) {
                 QRectF tr(xo, yo, w, h);
 
@@ -272,7 +273,7 @@ QList<qreal> AxisTool::paint(QPainter &p, const QRectF &r, qreal graduationSize,
             p.drawLine(QLineF(xov, y, xov - graduationSize, y));
         }
 
-        if (mMinMaxOnly) { // used on posterior densities Maybe change the type of the text exp ou float
+        if (mSupport == AxisSupport::eMin_Max) { // used on posterior densities Maybe change the type of the text exp ou float
             if (mShowText) {
 
                  const QString textStarVal = (valueFormatFunc ? stringForLocal(valueFormatFunc(mStartVal)) : stringForGraph(mStartVal) );

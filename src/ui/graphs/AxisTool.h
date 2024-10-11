@@ -70,6 +70,13 @@ struct Scale
 class AxisTool
 {
 public:
+    enum AxisSupport
+    {
+        eMin_Max = 'N',
+        eAllTip = 'A',
+        eAllways_Positive = '+',
+        eAllways_Negative = '-'
+    };
     AxisTool();
     void updateValues(const int &totalPix, const int &minDeltaPix, const qreal &minVal, const qreal &maxVal);
     qreal getXForValue(const qreal &value);
@@ -88,7 +95,7 @@ public:
     bool mShowSubs;
     bool mShowSubSubs;
     bool mShowText;
-    bool mMinMaxOnly;
+    AxisSupport mSupport;//bool mMinMaxOnly;
     bool mShowArrow;
 
     int mTotalPix;
@@ -106,7 +113,8 @@ private:
     int mTextInc; // set the step for the scale's text
 };
 
-class AxisWidget: public QWidget, public AxisTool{
+class AxisWidget: public QWidget, public AxisTool
+{
 public:
     AxisWidget(DateConversion funct = nullptr, QWidget* parent = nullptr);
 

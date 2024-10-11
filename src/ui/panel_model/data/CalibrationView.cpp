@@ -172,8 +172,12 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):
     mCalibGraph = new GraphView(mDrawing);
 
     //mCalibGraph->setRendering(GraphView::eHD);
-    mCalibGraph->setYAxisMode(GraphView::eHidden);
+
+    mCalibGraph->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
+    mCalibGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+
     mCalibGraph->setXAxisMode(GraphView::eAllTicks);
+    mCalibGraph->setYAxisMode(GraphView::eHidden);
     mCalibGraph->setMouseTracking(true);
 
     mResultsText = new QTextEdit(this);

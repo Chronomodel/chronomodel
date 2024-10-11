@@ -290,6 +290,12 @@ public:
 
     void generateCorrelCurves(const std::vector<ChainSpecs> &chains, MHVariable* variable);
 
+    void graph_reset();
+    void graph_density();
+    void graph_trace();
+    void graph_acceptation();
+    void graph_correlation();
+
     // This method is used to recreate all curves in mGraph.
     // It is vitual because we want a different behavior in sub-classes (GraphViewDate, GraphViewEvent and GraphViewPhase)
     virtual void generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList);

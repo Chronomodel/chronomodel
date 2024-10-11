@@ -155,6 +155,7 @@ GraphCurve densityCurve(const QMap<double, double> data,
                                 const QColor &lineColor,
                                 const Qt::PenStyle penStyle = Qt::SolidLine,
                                 const QBrush& brush = Qt::NoBrush) ;
+
 GraphCurve densityCurve(const std::map<double, double> data,
                         const QString &name,
                         const QColor &lineColor,

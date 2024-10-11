@@ -481,11 +481,13 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     QString graphInfo = mGraph->getInfo();
    if (!graphInfo.isEmpty()) {
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 8, 0))
+       const QRectF info_metrics = fmTitle.boundingRect(graphInfo);
        if (mShowNumResults) {
-            p.drawText(QRectF(width()*2/3. - fmTitle.horizontalAdvance(graphInfo) - 3 * AppSettings::widthUnit(),  mTopShift - fmTitle.capHeight()-fmTitle.descent(), fmTitle.horizontalAdvance(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
+            p.drawText(QRectF(width()*2/3. - info_metrics.width() - 3,  mTopShift - info_metrics.height(), info_metrics.width(), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
 
        } else
-            p.drawText(QRectF(width() - fmTitle.horizontalAdvance(graphInfo) - 3 * AppSettings::widthUnit(), mTopShift - fmTitle.capHeight()-fmTitle.descent() , fmTitle.horizontalAdvance(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
+           p.drawText(QRectF(width() - info_metrics.width() - 3 , mTopShift - info_metrics.height() , info_metrics.width(), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
+
 #else
        if (mShowNumResults)
             p.drawText(QRectF(width()*2/3. - fmTitle.width(graphInfo) - 3 * AppSettings::widthUnit(),  mTopShift - fmTitle.ascent()-fmTitle.descent(), fmTitle.width(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
@@ -493,9 +495,6 @@ void GraphViewResults::paintEvent(QPaintEvent* )
            p.drawText(QRectF(width() - fmTitle.width(graphInfo)  - 3 * AppSettings::widthUnit(), mTopShift - fmTitle.ascent()-fmTitle.descent() , fmTitle.width(graphInfo), mTopShift), Qt::AlignTop | Qt::AlignLeft, graphInfo);
 #endif
    }
-   // force le rafraichissement
-  // if (!graphInfo.isEmpty())
-   //    qApp->processEvents();
 
     p.setPen(QColor(105, 105, 105));
    // if (mShowNumResults) // cadre autour des stat
@@ -517,13 +516,12 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     mItemColor = itemColor;
 }
 
-
 void GraphViewResults::generateTraceCurves(const std::vector<ChainSpecs> &chains,
                                            MetropolisVariable* variable,
                                            const QString& name)
 {
     QString prefix = name.isEmpty() ? name : name + " ";
-
+    mGraph->reserveCurves(4*chains.size());
     for (size_t i = 0; i < chains.size(); ++i) {
         GraphCurve curve;
 
@@ -555,6 +553,7 @@ void GraphViewResults::generateTraceCurves(const std::vector<ChainSpecs> &chains
 
 void GraphViewResults::generateAcceptCurves(const std::vector<ChainSpecs> &chains, MHVariable* variable)
 {
+    mGraph->reserveCurves(chains.size()+1);
     for (size_t i = 0; i < chains.size(); ++i) {
         GraphCurve curve;
         curve.mName = "Accept " + QString::number(i);
@@ -568,6 +567,7 @@ void GraphViewResults::generateAcceptCurves(const std::vector<ChainSpecs> &chain
 
 void GraphViewResults::generateCorrelCurves(const std::vector<ChainSpecs> &chains, MHVariable* variable)
 {
+    mGraph->reserveCurves(3*chains.size());
     for (size_t i = 0; i < chains.size(); ++i) {
         GraphCurve curve;
         curve.mName = "Correl " + QString::number(i);
@@ -595,5 +595,90 @@ void GraphViewResults::generateCorrelCurves(const std::vector<ChainSpecs> &chain
         mGraph->add_curve(curveLimitLower);
         mGraph->add_curve(curveLimitUpper);
     }
+}
+
+void GraphViewResults::graph_reset()
+{
+    mGraph->removeAllCurves();
+    mGraph->remove_all_zones();
+    mGraph->squeezeCurves();
+    mGraph->showInfos(false);
+    mGraph->clearInfos();
+    mGraph->resetNothingMessage();
+    mGraph->setOverArrow(GraphView::eNone);
+    mGraph->setFormatFunctX(nullptr);
+    mGraph->setFormatFunctY(nullptr);
+}
+
+void GraphViewResults::graph_density()
+{
+    mGraph->setOverArrow(GraphView::eBothOverflow);
+
+    mGraph->setTipYLab("");
+    mGraph->setTipXLab("t");
+
+    mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
+
+    mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
+    mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+
+    mGraph->autoAdjustYScale(true);
+
+    mGraph->setXAxisMode(GraphView::eAllTicks);
+    mGraph->setYAxisMode(GraphView::eHidden);
+    // ------------------------------------------------------------
+    //  Add zones outside study period
+    // ------------------------------------------------------------
+    const GraphZone zoneMin (-INFINITY, mSettings.getTminFormated());
+    mGraph->add_zone(zoneMin);
+
+    const GraphZone zoneMax (mSettings.getTmaxFormated(), INFINITY);
+    mGraph->add_zone(zoneMax);
+
+}
+
+void GraphViewResults::graph_trace()
+{
+    mGraph->setOverArrow(GraphView::eNone);
+    mGraph->mLegendX = tr("Iterations");
+
+    mGraph->setTipXLab(tr("Iteration"));
+    mGraph->setTipYLab("t");
+
+    mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+    mGraph->setYAxisSupport(AxisTool::AxisSupport::eMin_Max);
+
+    mGraph->setYAxisMode(GraphView::eMinMaxHidden);
+
+    mGraph->autoAdjustYScale(true);
+}
+
+void GraphViewResults::graph_acceptation()
+{
+    mGraph->setOverArrow(GraphView::eNone);
+    mGraph->mLegendX = tr("Iterations");
+    mGraph->setTipXLab(tr("Iteration"));
+    mGraph->setTipYLab(tr("Rate"));
+
+    mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
+    mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+    mGraph->setYAxisMode(GraphView::eMinMaxHidden );
+
+    mGraph->autoAdjustYScale(false);
+    mGraph->setRangeY(0, 100); // do repaintGraph() !!
+}
+
+void GraphViewResults::graph_correlation()
+{
+    mGraph->setOverArrow(GraphView::eNone);
+    mGraph->setTipXLab("h");
+    mGraph->setTipYLab(tr("Value"));
+    mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+    mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllTip);
+    mGraph->setYAxisMode(GraphView::eMinMaxHidden);
+
+    mGraph->autoAdjustYScale(false);
+    mGraph->setRangeY(-1, 1);
+    mGraph->setXScaleDivision(10, 10);
 }
 

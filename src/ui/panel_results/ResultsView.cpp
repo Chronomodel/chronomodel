@@ -1262,6 +1262,11 @@ void ResultsView::initModel()
     mFFTLenCombo->setCurrentText(stringForLocal(model->getFFTLength()));
     mBandwidthSpin->setValue(model->getBandwidth());
 
+    mZooms.clear();
+    mZoomsX.clear();
+    mZoomsY.clear();
+    mZoomsZ.clear();
+
     updateGraphsMinMax();
     applyStudyPeriod();
     updateOptionsWidget();
