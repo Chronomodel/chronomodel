@@ -1675,24 +1675,39 @@ void Model::generateTempo(const size_t gridLength)
 
        ///# Calculation of the mean and variance
 
+
         // Variable for Tempo
         std::vector<double> infT;
         std::vector<double> supT;
 
         std::vector<double> espT;
-        double pT, eT, vT, infpT;
+        double pT, eT;
 
         for (const auto& niT : niTempo) {
             // Compute Tempo
             pT = niT/ nr;
             eT =  n * pT ;
-            vT = n * pT * (1-pT);
-
             espT.push_back(eT);
-            // Forbidden negative error
-            infpT = ( eT < 1.96 * sqrt(vT) ? 0. : eT - 1.96 * sqrt(vT) );
+
+            // Calculation of 95% Gaussian error with z score=1.959
+            double vT, infpT;
+            vT = n * pT * (1-pT);
+            infpT = ( eT < 1.96 * sqrt(vT) ? 0. : eT - 1.96 * sqrt(vT) );// Forbidden negative error
             infT.push_back( infpT );
             supT.push_back( eT + 1.96 * sqrt(vT));
+
+            // binomial error test with 95% (or mThreshold) CI
+/*            if (!mBinomiale_Gx.contains(n) ) {
+                const std::vector<double> &Rq = binomialeCurveByLog(n, 1. - mThreshold/100.); //  Determine the curve x = r (q)
+                mBinomiale_Gx[n] = inverseCurve(Rq);
+            }
+
+            const std::vector<double>& Gx = mBinomiale_Gx.at(n);
+            auto QInf = interpolate_value_from_curve(pT, Gx, 0., 1.)*n ;
+            auto QSup = findOnOppositeCurve(pT, Gx)*n;
+            supT.push_back( QInf);
+            infT.push_back( QSup );
+*/            //qDebug()<<"generateTempo GX "<<phase->getQStringName()<< n <<" eT="<< eT <<eT+1.96*sqrt(vT)<<infpT<<" Gx:" <<QSup<<QInf;
 
         }
 

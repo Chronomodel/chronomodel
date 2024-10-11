@@ -994,6 +994,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     int nbIt = 0;
 #ifdef DEBUG
     double somActivity = 0;
+    double somKScore = 0;
 #endif
     for (const auto& ni : NiTot) {
 
@@ -1014,14 +1015,14 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
             QSup = eA;
 
         } else {
-            if (fA == 0) {
+            /*if (fA == 0) {
                 QInf = 0.;
                 QSup = 0.;
 
-            } else {
+            } else {*/
                 QSup = interpolate_value_from_curve(fA, Gx, 0, 1.)* n / h;
                 QInf = findOnOppositeCurve(fA, Gx)* n / h;
-            }
+          //  }
         }
 #ifdef DEBUG
         if (QSup < QInf) {
@@ -1051,10 +1052,12 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
         if (n > 1) {
 #ifdef DEBUG
-            //const double addUnif = std::max(dUnif, QInf) - std::min(dUnif, QSup);
+            if (dUnif>0) {
+                const double addUnif = dUnif>eA ? (dUnif - eA)/QSup: (eA -dUnif)/ QInf;
+                somKScore += addUnif;
+                //qDebug()<<"[Phase::generateActivity] t= "<<t<<" add="<< addUnif<< " eA="<<eA<<" dUnif="<<dUnif<<" QSup="<<QSup<<" QInf="<<QInf;
+            }
 
-           // if (addUnif>0)
-              //  qDebug()<<"[Phase::generateActivity] t= "<<t<<" add="<< addUnif;
 #endif
             UnifScore += std::max(dUnif, QInf) - std::min(dUnif, QSup);
         }
@@ -1062,15 +1065,13 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     }
 
 #ifdef DEBUG
-    qDebug()<<"[Phase::generateActivity] somme Activity = "<< somActivity << " ; Phase = "<< getQStringName() <<"\n";
+    //qDebug()<<"[Phase::generateActivity] Phase = "<< getQStringName()<<" somme Activity = "<< somActivity  <<"\n";
+    qDebug()<<"[Phase::generateActivity] Phase = "<< getQStringName()<<" mean KScore = "<< somKScore/(double) gridLength <<"\n";
 #endif
+    //mValueStack.insert_or_assign("Activity_Significance_Score", somKScore/(double) gridLength);
     mValueStack.insert_or_assign("Activity_Significance_Score", UnifScore/(double) gridLength);
     mValueStack.insert_or_assign("Activity_max", maxActivity);
     mValueStack.insert_or_assign("Activity_mode", modeActivity);
-
-    //mRawActivity = //vector_to_map(esp, t_min_grid, t_max_grid, delta_t);
-    //mRawActivityInf = vector_to_map(esp_inf, t_min_grid, t_max_grid, delta_t);
-    //mRawActivitySup = vector_to_map(esp_sup, t_min_grid, t_max_grid, delta_t);
 
     auto acti = vector_to_map(esp, t_min_grid, t_max_grid, delta_t);
 
