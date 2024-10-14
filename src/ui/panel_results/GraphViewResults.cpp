@@ -420,7 +420,7 @@ void GraphViewResults::updateLayout()
     fontTitle.setBold(true);
     fontTitle.setPointSizeF(mGraphFont.pointSizeF() * 1.1);
     QFontMetricsF fmTitle (fontTitle);
-    mTopShift = int (2 * fmTitle.height()) ;
+    mTopShift = int (2.5 * fmTitle.height()) ;
 
     QFontMetricsF fm (mGraphFont);
 
@@ -457,12 +457,13 @@ void GraphViewResults::mousePressEvent(QMouseEvent*)
 
 void GraphViewResults::paintEvent(QPaintEvent* )
 {
-    // write mTitle above the graph
+    // Write mTitle above the graph
     QFont fontTitle(mGraphFont);
     fontTitle.setPointSizeF(mGraphFont.pointSizeF()*1.1);
     fontTitle.setBold(true);
     QFontMetrics fmTitle(fontTitle);
 
+    const QRectF title_metrics = fmTitle.boundingRect(mTitle);
     QPainter p(this);
 
     p.fillRect(rect(), mGraph->getBackgroundColor());
@@ -470,6 +471,7 @@ void GraphViewResults::paintEvent(QPaintEvent* )
 
     p.setPen(Qt::black);
 
+    //p.drawText(QRectF( 2 * AppSettings::widthUnit(), 0, fmTitle.horizontalAdvance(mTitle), mTopShift), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
     p.drawText(QRectF( 2 * AppSettings::widthUnit(), 0, fmTitle.horizontalAdvance(mTitle), mTopShift), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
 
     p.setFont(QFont(mGraphFont.family(), mGraphFont.pointSize(), -1 , true));
