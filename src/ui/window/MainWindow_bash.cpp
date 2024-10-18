@@ -510,7 +510,6 @@ void MainWindow::closeProject()
         mUndoStack->clear();
 
         mProject->initState(CLOSE_PROJECT_REASON);
-        mProject->mLastSavedState = mProject->mState;//emptyState();
         AppSettings::mLastDir = QString();
 
         // Go back to model tab :
