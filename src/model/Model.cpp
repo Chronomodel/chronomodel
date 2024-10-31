@@ -1690,14 +1690,15 @@ void Model::generateTempo(const size_t gridLength)
             espT.push_back(eT);
 
             // Calculation of 95% Gaussian error with z score=1.959
+            /*
             double vT, infpT;
             vT = n * pT * (1-pT);
             infpT = ( eT < 1.96 * sqrt(vT) ? 0. : eT - 1.96 * sqrt(vT) );// Forbidden negative error
             infT.push_back( infpT );
             supT.push_back( eT + 1.96 * sqrt(vT));
-
-            // binomial error test with 95% (or mThreshold) CI
-/*            if (!mBinomiale_Gx.contains(n) ) {
+            */
+            // binomial (Clopper-Pearson) error  with 95% (or mThreshold) CI
+            if (!mBinomiale_Gx.contains(n) ) {
                 const std::vector<double> &Rq = binomialeCurveByLog(n, 1. - mThreshold/100.); //  Determine the curve x = r (q)
                 mBinomiale_Gx[n] = inverseCurve(Rq);
             }
@@ -1707,7 +1708,7 @@ void Model::generateTempo(const size_t gridLength)
             auto QSup = findOnOppositeCurve(pT, Gx)*n;
             supT.push_back( QInf);
             infT.push_back( QSup );
-*/            //qDebug()<<"generateTempo GX "<<phase->getQStringName()<< n <<" eT="<< eT <<eT+1.96*sqrt(vT)<<infpT<<" Gx:" <<QSup<<QInf;
+            //qDebug()<<"generateTempo GX "<<phase->getQStringName()<< n <<" eT="<< eT <<eT+1.96*sqrt(vT)<<infpT<<" Gx:" <<QSup<<QInf;
 
         }
 

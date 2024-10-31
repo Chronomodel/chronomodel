@@ -427,7 +427,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mCurrentTMaxEdit->setFixedHeight(h);
     mCurrentTMaxEdit->setToolTip(tr("Enter a maximal value to display the curves"));
 
-    mXLab = new QLabel(tr("time"), mSpanGroup);
+    mXLab = new QLabel(tr("Time"), mSpanGroup);
     mXLab->setFixedHeight(h);
     mXLab->setAlignment(Qt::AlignCenter);
 
@@ -800,7 +800,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mDensityOptsGroup = new QWidget();
 
     mCredibilityCheck = new CheckBox(tr("Show Confidence Bar"));
-    mCredibilityCheck->setFixedHeight(16);
+    mCredibilityCheck->setFixedHeight(h);
     mCredibilityCheck->setChecked(true);
 
     mThreshLab = new QLabel(tr("Confidence Level (%)"), mDensityOptsGroup);
@@ -3368,6 +3368,8 @@ void ResultsView::updateOptionsWidget()
         QVBoxLayout* phasesUnfoldErrorGroupLayout = new QVBoxLayout();
         phasesUnfoldErrorGroupLayout->setContentsMargins(15, 0, 0, 0);
 
+        mErrCheck->setText("Error");
+
         if (mBeginEndRadio->isChecked() || mDurationRadio->isChecked()) {
 
            mErrCheck->hide();
@@ -3376,6 +3378,7 @@ void ResultsView::updateOptionsWidget()
         } else if (mTempoRadio->isChecked()) {
 
             mErrCheck->show();
+            mErrCheck->setText("Error Clopper-Pearson");
             phasesUnfoldErrorGroupLayout->addWidget(mErrCheck, Qt::AlignLeft);
             totalH += h;
             mActivityUnifCheck->hide();
@@ -3592,7 +3595,7 @@ void ResultsView::updateOptionsWidget()
         mFFTLenCombo->setFixedHeight(20);
 
         mCredibilityCheck->show();
-        mCredibilityCheck->setFixedHeight(20);
+        mCredibilityCheck->setFixedHeight(15);
 
         int nbObject = 0;
 
