@@ -1256,7 +1256,7 @@ std::vector<double> binomialeCurveByLog(const int n, const double alpha, const i
 
                prev_sum = sum_p;
 
-           }
+            }
             if (x == -1) {
                 x = interpolate( q , last_q, 1., last_x, (double) n);
 

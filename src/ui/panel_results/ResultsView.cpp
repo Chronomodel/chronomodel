@@ -3590,6 +3590,10 @@ void ResultsView::updateOptionsWidget()
         mFFTLenLab->setFixedHeight(20);
         mFFTLenCombo->show();
         mFFTLenCombo->setFixedHeight(20);
+
+        mCredibilityCheck->show();
+        mCredibilityCheck->setFixedHeight(20);
+
         int nbObject = 0;
 
         if (mMainVariable == GraphViewResults::eActivity) {
@@ -3603,8 +3607,6 @@ void ResultsView::updateOptionsWidget()
             mThresholdEdit->show();
             mThresholdEdit->setFixedHeight(20);
 
-            mCredibilityCheck->hide();
-            mCredibilityCheck->setFixedHeight(0);
 
             mBandwidthLab->hide();
             mBandwidthLab->setFixedHeight(0);
@@ -3629,9 +3631,6 @@ void ResultsView::updateOptionsWidget()
             mThresholdEdit->hide();
             mThresholdEdit->setFixedHeight(0);
 
-            mCredibilityCheck->hide();
-            mCredibilityCheck->setFixedHeight(0);
-
             mBandwidthLab->hide();
             mBandwidthLab->setFixedHeight(0);
             mBandwidthSpin->hide();
@@ -3641,6 +3640,8 @@ void ResultsView::updateOptionsWidget()
             mHActivityLab->setFixedHeight(0);
             mHActivityEdit->hide();
             mHActivityEdit->setFixedHeight(0);
+
+            //nbObject += 0;
 
         } else {
             mRangeThreshLab->hide();
@@ -3653,9 +3654,6 @@ void ResultsView::updateOptionsWidget()
             mThresholdEdit->show();
             mThresholdEdit->setFixedHeight(20);
 
-            mCredibilityCheck->show();
-            mCredibilityCheck->setFixedHeight(20);
-
             mBandwidthLab->show();
             mBandwidthLab->setFixedHeight(20);
             mBandwidthSpin->show();
@@ -3666,7 +3664,7 @@ void ResultsView::updateOptionsWidget()
             mHActivityEdit->hide();
             mHActivityEdit->setFixedHeight(0);
 
-            nbObject += 3;
+            nbObject += 2;
         }
 
         mDensityOptsTitle->setVisible(showDensityOptions);
@@ -3676,7 +3674,7 @@ void ResultsView::updateOptionsWidget()
 
             mDensityOptsGroup->setFixedHeight( mCredibilityCheck->height() + mThresholdEdit->height() + mFFTLenCombo->height()
                                                + mBandwidthSpin->height() + mHActivityEdit->height() + mRangeThresholdEdit->height()
-                                               + (nbObject+1)* internSpan);
+                                               + (nbObject+2)* internSpan);
 
             widHeigth += mDensityOptsTitle->height() + mDensityOptsGroup->height() + 4*internSpan;
 
