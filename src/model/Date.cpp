@@ -94,7 +94,7 @@ Date::Date():
 
     mSigmaTi.setName("SigmaTi of Date : " + _name);
     mSigmaTi.mSupport = MetropolisVariable::eRp;
-    mSigmaTi.mFormat = DateUtils::eUnknown;
+    mSigmaTi.mFormat = DateUtils::eNumeric;
     mSigmaTi.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
     mWiggle.setName("Wiggle of Date : " + _name);
@@ -182,7 +182,7 @@ void Date::init()
 
     mSigmaTi.setName("SigmaTi of Date : " + _name);
     mSigmaTi.mSupport = MetropolisVariable::eRp;
-    mSigmaTi.mFormat = DateUtils::eUnknown;
+    mSigmaTi.mFormat = DateUtils::eNumeric;
     mSigmaTi.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
     mWiggle.setName("Wiggle of Date : " + _name);
@@ -443,6 +443,7 @@ void Date::fromJson(const QJsonObject& json)
     }
 
     mTi.setName("Theta of date : "+ _name);
+    mTi.mFormat = DateUtils::eUnknown;
     mTi.mSamplerProposal = (MHVariable::SamplerProposal)json.value(STATE_DATE_SAMPLER).toInt();
 
     if ((MHVariable::SamplerProposal)json.value(STATE_DATE_SAMPLER).toInt() == MHVariable::eFixe)
