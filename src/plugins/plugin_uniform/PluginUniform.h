@@ -76,7 +76,7 @@ public:
     QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale) const;
     QString getDateDesc(const Date* date) const;
     QJsonObject checkValuesCompatibility(const QJsonObject& values);
-    bool isDateValid(const QJsonObject& , const StudyPeriodSettings& );
+    bool isDateValid(const QJsonObject& data, const StudyPeriodSettings& );
 
     PluginFormAbstract* getForm();
     GraphViewRefAbstract* getGraphViewRef();

@@ -783,6 +783,8 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<
             /*
              *  Restrict the calibration and distribution vectors to the locations of the data.
              */
+            if (repartitionTemp.empty()) // if error in CSV importation
+                return;
 
             if (*repartitionTemp.crbegin() > 0.) {
                 if (truncate && repartitionTemp.size() > 10) {

@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
     
     QLocale::Language newLanguage = QLocale::system().language();
 #if QT_DEPRECATED_SINCE(6, 6)
-    QLocale::Territory newCountry= QLocale::system().territory();
+    QLocale::Territory newCountry = QLocale::system().territory();
 #else
     QLocale::Country newCountry= QLocale::system().country();
 #endif

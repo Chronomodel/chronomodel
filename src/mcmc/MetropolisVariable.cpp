@@ -71,8 +71,10 @@ TValueStack::~TValueStack()
 /** Default constructor */
 MetropolisVariable::MetropolisVariable():
     mX (0.),
-    mRawTrace(new std::vector<double>()),
-    mFormatedTrace(new std::vector<double>()),
+    //mRawTrace(new std::vector<double>()),
+    //mFormatedTrace(new std::vector<double>()),
+    mRawTrace(std::make_shared<std::vector<double>>()),
+    mFormatedTrace(std::make_shared<std::vector<double>>()),
     mSupport (eR),
     mFormat (DateUtils::eNumeric),
     mFormatedHisto(),

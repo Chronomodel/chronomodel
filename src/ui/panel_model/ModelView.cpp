@@ -43,6 +43,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "EventsScene.h"
 #include "PhasesScene.h"
 #include "PhaseItem.h"
+#include "DateItem.h"
+
 #include "CurveSettingsView.h"
 #include "Event.h"
 #include "Painting.h"
@@ -57,6 +59,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MultiCalibrationView.h"
 #include "CalibrationCurve.h"
 #include "AppSettings.h"
+#include "Generator.h"
 
 #include "HelpWidget.h"
 #include "MainWindow.h"
@@ -830,10 +833,23 @@ void ModelView::searchEvent()
 
 }
 
-// Event::setEvent recognizes pos().isnull() as a new EventItem and randomizes the position
+// EventsScene::updateSceneFromState() recognizes pos().isnull() as a new EventItem and randomizes the position
 void ModelView::createEventInPlace()
 {
-    getProject_ptr()->createEvent(0, 0);
+    QList<QGraphicsView*> gviews = mEventsScene->views();
+    double x = 0, y = 0;
+    if (gviews.size() > 0) {
+        const QGraphicsView* gview = gviews[0];
+        const QPointF pt = gview->mapToScene(gview->width()/2, gview->height()/2);
+        const int randCoef = 3;
+        const qreal shift_x = randCoef * Generator::randomUniform(-DateItem::mEltsHeight, DateItem:: mEltsHeight);
+        const qreal shift_y = randCoef * Generator::randomUniform(-DateItem::mEltsHeight, DateItem:: mEltsHeight);
+
+        x = pt.x() + shift_x;
+        y = pt.y() + shift_y;
+
+    }
+    getProject_ptr()->createEvent(x, y);
 }
 
 void ModelView::createEventKnownInPlace()
@@ -858,8 +874,21 @@ void ModelView::createEventKnownInPlace()
             json[STATE_COLOR_BLUE] = col.blue();
             json[STATE_EVENT_SAMPLER] = MHVariable::eFixe;
 
-            json[STATE_ITEM_X] = 0;
-            json[STATE_ITEM_Y] = 0;
+            QList<QGraphicsView*> gviews = mEventsScene->views();
+            double x = 0, y = 0;
+            if (gviews.size() > 0) {
+                const QGraphicsView* gview = gviews[0];
+                const QPointF pt = gview->mapToScene(gview->width()/2, gview->height()/2);
+                const int randCoef = 3;
+                const qreal shift_x = randCoef * Generator::randomUniform(-DateItem::mEltsHeight, DateItem:: mEltsHeight);
+                const qreal shift_y = randCoef * Generator::randomUniform(-DateItem::mEltsHeight, DateItem:: mEltsHeight);
+
+                x = pt.x() + shift_x;
+                y = pt.y() + shift_y;
+
+            }
+            json[STATE_ITEM_X] = x;
+            json[STATE_ITEM_Y] = y;
             json[STATE_IS_SELECTED] = false;
             json[STATE_IS_CURRENT] = false;
 
@@ -891,7 +920,7 @@ void ModelView::createPhaseInPlace()
     qDebug() << "[ModelView::createPhaseInPlace]";
 
     if (getProject_ptr()->studyPeriodIsValid()) {
-        PhaseDialog* dialog = new PhaseDialog(this);//qApp->activeWindow());
+        PhaseDialog* dialog = new PhaseDialog(this);
 
         if (dialog->exec() == QDialog::Accepted ) {
             if (dialog->isValid()) {
@@ -901,9 +930,21 @@ void ModelView::createPhaseInPlace()
 
                 phaseObj[STATE_ID] = getProject_ptr()->getUnusedPhaseId(phases);
 
-                // set Pos.isNull to do ramdom
-                phaseObj[STATE_ITEM_X] = 0;
-                phaseObj[STATE_ITEM_Y] = 0;
+                QList<QGraphicsView*> gviews = mPhasesScene->views();
+                double x = 0, y = 0;
+                if (gviews.size() > 0) {
+                    const QGraphicsView* gview = gviews[0];
+                    const QPointF pt = gview->mapToScene(gview->width()/2, gview->height()/2);
+                    const int randCoef = 3;
+                    const qreal shift_x = randCoef * Generator::randomUniform(-DateItem::mEltsHeight, DateItem:: mEltsHeight);
+                    const qreal shift_y = randCoef * Generator::randomUniform(-DateItem::mEltsHeight, DateItem:: mEltsHeight);
+
+                    x = pt.x() + shift_x;
+                    y = pt.y() + shift_y;
+
+                }
+                phaseObj[STATE_ITEM_X] = x;
+                phaseObj[STATE_ITEM_Y] = y;
 
                 phases.append(phaseObj);
                 stateNext[STATE_PHASES] = phases;

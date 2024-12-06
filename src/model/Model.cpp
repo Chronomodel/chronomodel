@@ -1221,34 +1221,34 @@ void Model::initVariablesForChain()
     for (auto&& event : mEvents) {
        //event->mTheta.clear();
        //event->mTheta.reserve(initReserve);
-       event->mTheta.mAllAccepts.resize(mChains.size());
+       event->mTheta.mNbValuesAccepted.resize(mChains.size());
        //event->mTheta.mLastAccepts.reserve(acceptBufferLen);
        event->mTheta.mLastAcceptsLength = acceptBufferLen;
 
        //event->mS02Theta.clear();
        //event->mS02Theta.reserve(initReserve);
-       event->mS02Theta.mAllAccepts.resize(mChains.size());
+       event->mS02Theta.mNbValuesAccepted.resize(mChains.size());
        //event->mS02Theta.mLastAccepts.reserve(acceptBufferLen);
        event->mS02Theta.mLastAcceptsLength = acceptBufferLen;
 
-       // event->mTheta.mAllAccepts.clear(); //don't clean, avalable for cumulate chain
+       // event->mTheta.mNbValuesAccepted.clear(); //don't clean, avalable for cumulate chain
 
        for (auto&& date : event->mDates) {
             //date.mTi.clear();
             //date.mTi.reserve(initReserve);
-            date.mTi.mAllAccepts.resize(mChains.size());
+            date.mTi.mNbValuesAccepted.resize(mChains.size());
             //date.mTi.mLastAccepts.reserve(acceptBufferLen);
             date.mTi.mLastAcceptsLength = acceptBufferLen;
 
             //date.mSigmaTi.clear();
             //date.mSigmaTi.reserve(initReserve);
-            date.mSigmaTi.mAllAccepts.resize(mChains.size());
+            date.mSigmaTi.mNbValuesAccepted.resize(mChains.size());
             //date.mSigmaTi.mLastAccepts.reserve(acceptBufferLen);
             date.mSigmaTi.mLastAcceptsLength = acceptBufferLen;
 
             //date.mWiggle.clear();
             //.mWiggle.reserve(initReserve);
-            date.mWiggle.mAllAccepts.resize(mChains.size());
+            date.mWiggle.mNbValuesAccepted.resize(mChains.size());
             //date.mWiggle.mLastAccepts.reserve(acceptBufferLen);
             date.mWiggle.mLastAcceptsLength = acceptBufferLen;
        }
@@ -1713,19 +1713,22 @@ void Model::generateTempo(const size_t gridLength)
         }
 
         phase->mRawTempo.clear();
+        phase->mRawTempoInf.clear();
+        phase->mRawTempoSup.clear();
+
         phase->mRawTempo = vector_to_map(espT, t_min_data, t_max_data, delta_t);
 
-        phase->mRawTempoInf.clear();
-        phase->mRawTempoInf = vector_to_map(infT, t_min_data, t_max_data, delta_t);
+        if (n>1) {
+            phase->mRawTempoInf = vector_to_map(infT, t_min_data, t_max_data, delta_t);
+            phase->mRawTempoSup = vector_to_map(supT, t_min_data, t_max_data, delta_t);
+        }
 
-        phase->mRawTempoSup.clear();
-        phase->mRawTempoSup = vector_to_map(supT, t_min_data, t_max_data, delta_t);
 
         // close the error curve on mean value
         const double tEnd = phase->mRawTempo.crbegin()->first;
         const double vEnd = phase->mRawTempo[tEnd];
 
-        if ( tEnd <= mSettings.mTmax) {
+        if ( tEnd <= mSettings.mTmax && n>1) {
             phase->mRawTempoInf[tEnd] = vEnd;
             phase->mRawTempoSup[tEnd ] = vEnd;
         }
@@ -1737,17 +1740,21 @@ void Model::generateTempo(const size_t gridLength)
         // We need to add a point with the value 0 for the automatique Y scaling
         if ((tBegin) >= mSettings.mTmin) {
             phase->mRawTempo[tBegin] = 0;
-            phase->mRawTempoInf[tBegin] = 0;
-            phase->mRawTempoSup[tBegin] = 0;
+            if (n>1) {
+                phase->mRawTempoInf[tBegin] = 0;
+                phase->mRawTempoSup[tBegin] = 0;
+            }
         }
         phase->mTempo.clear();
+        phase->mTempoInf.clear();
+        phase->mTempoSup.clear();
+
         phase->mTempo = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempo);
 
-        phase->mTempoInf.clear();
-        phase->mTempoInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoInf);
-
-        phase->mTempoSup.clear();
-        phase->mTempoSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoSup);
+        if (n>1) {
+            phase->mTempoInf = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoInf);
+            phase->mTempoSup = DateUtils::convertMapToAppSettingsFormat(phase->mRawTempoSup);
+        }
 
      } // Loop End on phase
 
@@ -2064,8 +2071,7 @@ void Model::saveToFile(QDataStream *out)
     // -----------------------------------------------------
     for (std::shared_ptr<Event>& event : mEvents) {
         if (event->mType == Event::eDefault ) {
-            std::vector<Date> dates (event->mDates);
-            for (auto&& d  : dates) {
+            for (auto&& d  : event->mDates) {
                 *out << d.mTi;
                 *out << d.mSigmaTi;
                 if (d.mDeltaType != Date::eDeltaNone)

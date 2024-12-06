@@ -629,7 +629,7 @@ void EventsScene::updateSceneFromState()
                         newItem = new EventKnownItem(this, event, settings);
 
                     newItem->setGreyedOut(false);
-                    // is pos() is null, it's a new Event
+                    // is pos() is null, it's a new Event , No more usefull
                     if (newItem->pos().isNull()) {
                         QList<QGraphicsView*> gviews = views();
 
@@ -765,6 +765,7 @@ void EventsScene::clean()
     //  Delete all items
     // ------------------------------------------------------
 
+    mUpdatingItems = true;
     for (auto item : mItems) {
         EventItem* eventItem = dynamic_cast<EventItem*>(item);
         if (eventItem)

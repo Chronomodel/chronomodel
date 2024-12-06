@@ -108,6 +108,8 @@ public:
 
     void memo_PosteriorG_3D(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted);
     void memo_PosteriorG(PosteriorMeanGComposante &postGCompo, const MCMCSplineComposante &splineComposante, const int realyAccepted);
+    void memo_PosteriorG_filtering(PosteriorMeanGComposante &postGCompo, const MCMCSplineComposante &splineComposante, int &realyAccepted_old, const std::pair<double, double> GPfilter);
+    bool is_accepted_gy_filter(const MCMCSplineComposante& splineComposante, const std::pair<double, double> GPfilter);
 
     PosteriorMeanGComposante buildCurveAndMap(const int nbPtsX, const int nbPtsY, const char charComp = 'X', const bool doMap = false, const double mapYMin = 0, double mapYMax = 0);
     // same as void GraphView::exportReferenceCurves()

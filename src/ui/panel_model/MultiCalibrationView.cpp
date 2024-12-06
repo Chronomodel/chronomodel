@@ -250,6 +250,20 @@ void MultiCalibrationView::setProject()
     const QJsonObject &settings = state.value(STATE_SETTINGS).toObject();
     mSettings = StudyPeriodSettings::fromJson(settings);
 
+    mTminDisplay = mSettings.getTminFormated() ;
+    mTmaxDisplay = mSettings.getTmaxFormated();
+
+    Scale scale(mTminDisplay, mTmaxDisplay);
+
+    mMajorScale = scale.mark;
+    mMinorScale = scale.tip;
+
+    mStartEdit->setText(locale().toString(mTminDisplay));
+    mEndEdit->setText(locale().toString(mTmaxDisplay));
+    mHPDEdit->setText(locale().toString(95));
+
+    mMajorScaleEdit->setText(locale().toString(mMajorScale));
+    mMinorScaleEdit->setText(locale().toString(mMinorScale));
 }
 
 void MultiCalibrationView::resizeEvent(QResizeEvent* )
@@ -295,11 +309,27 @@ void MultiCalibrationView::setVisible(bool visible)
 
 void MultiCalibrationView::applyAppSettings()
 {
-    mButtonWidth = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonWidth  = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
 
+    mTminDisplay = mSettings.getTminFormated() ;
+    mTmaxDisplay = mSettings.getTmaxFormated();
+
+    Scale scale(mTminDisplay, mTmaxDisplay);
+
+    mMajorScale = scale.mark;
+    mMinorScale = scale.tip;
+
+    mStartEdit->setText(locale().toString(mTminDisplay));
+    mEndEdit->setText(locale().toString(mTmaxDisplay));
+    mHPDEdit->setText(locale().toString(95));
+
+    mMajorScaleEdit->setText(locale().toString(mMajorScale));
+    mMinorScaleEdit->setText(locale().toString(mMinorScale));
+
     if (this->isVisible())
-        updateLayout();
+        updateGraphList();
+
 }
 
 void MultiCalibrationView::updateLayout()
@@ -359,7 +389,6 @@ void MultiCalibrationView::updateLayout()
     const qreal editWidth = labelWidth;
     const qreal marginBottomBar = (width()- 5.*labelWidth )/6.;
 
-
     qreal xShift = marginBottomBar;
     mStartLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
     mStartEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
@@ -367,11 +396,6 @@ void MultiCalibrationView::updateLayout()
     xShift = labelWidth + 2*marginBottomBar;
     mEndLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
     mEndEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
-
-    Scale scale(mTminDisplay, mTmaxDisplay);
-
-    mMajorScale = scale.mark;
-    mMinorScale = scale.tip;
 
     xShift = 2*labelWidth + 3*marginBottomBar;
     mMajorScaleLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
@@ -450,14 +474,6 @@ void MultiCalibrationView::updateGraphList()
         const QJsonObject* state = getState_ptr();
         mSettings = StudyPeriodSettings::fromJson(state->value(STATE_SETTINGS).toObject());
 
-        mTminDisplay = mSettings.getTminFormated() ;
-        mTmaxDisplay = mSettings.getTmaxFormated();
-
-        // setText doesn't emit signal textEdited, when the text is changed programmatically
-        mStartEdit->setText(locale().toString(mTminDisplay));
-        mEndEdit->setText(locale().toString(mTmaxDisplay));
-
-
         mDrawing->setVisible(true);
         mStatArea->setVisible(false);
 
@@ -496,9 +512,6 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
 {
     const QJsonObject* state = getState_ptr();
     mSettings = StudyPeriodSettings::fromJson(state->value(STATE_SETTINGS).toObject());
-
-    mTminDisplay = mSettings.getTminFormated() ;
-    mTmaxDisplay = mSettings.getTmaxFormated();
 
     const QColor &penColor = mCurveColor;
     QColor brushColor = mCurveColor;
@@ -564,7 +577,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
             calibGraph->setOverArrow(GraphView::eNone);
 
 
-            calibGraph->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
+            calibGraph->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
             calibGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
             calibGraph->setYAxisMode(GraphView::eHidden);
             calibGraph->showYAxisLine(false);
@@ -684,12 +697,6 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
     mSettings = StudyPeriodSettings::fromJson(state->value(STATE_SETTINGS).toObject());
 
-    mTminDisplay = mSettings.getTminFormated() ;
-    mTmaxDisplay = mSettings.getTmaxFormated();
-
-    // setText doesn't emit signal textEdited, when the text is changed programmatically
-    mStartEdit->setText(locale().toString(mTminDisplay));
-    mEndEdit->setText(locale().toString(mTmaxDisplay));
     mHPDEdit->setText(locale().toString(thres));
 
     QColor brushColor = mCurveColor;
@@ -737,8 +744,8 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             graph3->setTipXLab("t");
 
 
-            graph3->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
-            graph3->setYAxisSupport(AxisTool::AxisSupport::eMin_Max);
+            graph3->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
+            graph3->setYAxisSupport(AxisTool::AxisSupport::eAllTip);
 
             graph3->autoAdjustYScale(true);
 
@@ -765,8 +772,8 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             graph2->setOverArrow(GraphView::eNone);
             graph2->setTipXLab("t");
 
-            graph2->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
-            graph2->setYAxisSupport(AxisTool::AxisSupport::eMin_Max);
+            graph2->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
+            graph2->setYAxisSupport(AxisTool::AxisSupport::eAllTip);
 
             graph2->autoAdjustYScale(true);
 
@@ -795,6 +802,12 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             graph1->changeXScaleDivision(mMajorScale, mMinorScale);
             graph1->setOverArrow(GraphView::eNone);
             graph1->setTipXLab("t");
+
+
+            graph1->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
+            graph1->setYAxisSupport(AxisTool::AxisSupport::eAllTip);
+
+            graph1->autoAdjustYScale(true);
 
             //graph1->setYAxisMode( GraphView::eAllTicks); // dans ce cas, c'est fait plus bas, car besoin des données
             graph1->showYAxisSubTicks(processType != CurveSettings::eProcess_None);
@@ -993,13 +1006,15 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                 Date d (date.toObject());
 
                 if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.empty()) {
+                //if (d.mCalibration!=nullptr && !d.mCalibration->mVector.empty()) {
 
                     d.autoSetTiSampler(true); // needed if calibration is not done
 
                     const std::map<double, double> &calibMap = d.getFormatedCalibMap();
                     // hpd is calculate only on the study Period
 
-                    const std::map<double, double> &subData = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+                    //const std::map<double, double> &subData = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+                    const std::map<double, double> &subData = getMapDataInRange(calibMap, mTminDisplay, mTmaxDisplay);
 
                     if (!subData.empty()) {
 
@@ -1150,7 +1165,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
         case CurveSettings::eProcess_2D:
             graph2->set_points(curveDataPointsY);
             graph2->setTipYLab(cs.Y_short_name());
-[[fallthrough]];
+    [[fallthrough]];
         default:
             graph1->setTipYLab(cs.X_short_name());
             graph1->set_points(curveDataPointsX);
@@ -1236,15 +1251,18 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 {
     const QJsonObject* state = getState_ptr();
 
-    mSettings = StudyPeriodSettings::fromJson(state->value(STATE_SETTINGS).toObject());
+    //mSettings = StudyPeriodSettings::fromJson(state->value(STATE_SETTINGS).toObject());
 
-    mTminDisplay = mSettings.getTminFormated() ;
-    mTmaxDisplay = mSettings.getTmaxFormated();
+    //mTminDisplay = mSettings.getTminFormated() ;
+    //mTmaxDisplay = mSettings.getTmaxFormated();
 
     // setText doesn't emit signal textEdited, when the text is changed programmatically
-    mStartEdit->setText(locale().toString(mTminDisplay));
-    mEndEdit->setText(locale().toString(mTmaxDisplay));
+    //mStartEdit->setText(locale().toString(mTminDisplay));
+    //mEndEdit->setText(locale().toString(mTmaxDisplay));
     mHPDEdit->setText(locale().toString(thres));
+
+    //mMajorScaleEdit->setText(locale().toString(mMajorScale));
+    //mMinorScaleEdit->setText(locale().toString(mMinorScale));
 
     QColor brushColor = mCurveColor;
     brushColor.setAlpha(170);
@@ -1303,6 +1321,9 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             graph3->setOverArrow(GraphView::eNone);
             graph3->setTipXLab("t");
 
+            graph3->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
+            graph3->setYAxisSupport(AxisTool::AxisSupport::eAllTip);
+
             graph3->autoAdjustYScale(true);
 
             graph3->setYAxisMode(GraphView::eAllTicks);
@@ -1311,7 +1332,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 
             graph3->setMarginTop(graph3->fontMetrics().height()/2.);
 
-[[fallthrough]];
+            [[fallthrough]];
     case CurveSettings::eProcess_Spherical:
     case CurveSettings::eProcess_Unknwon_Dec:
     case CurveSettings::eProcess_2D:
@@ -1329,13 +1350,16 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             graph2->setOverArrow(GraphView::eNone);
             graph2->setTipXLab("t");
 
+            graph2->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
+            graph2->setYAxisSupport(AxisTool::AxisSupport::eAllTip);
+
             graph2->autoAdjustYScale(true);
 
             graph2->setYAxisMode(GraphView::eAllTicks);
             graph2->showYAxisSubTicks(true);
             graph2->setTipYLab(cs.Y_short_name());
             graph2->setMarginTop(graph2->fontMetrics().height()/2.);
-[[fallthrough]];
+            [[fallthrough]];
     case CurveSettings::eProcess_None:
     case CurveSettings::eProcess_Univariate:
     case CurveSettings::eProcess_Depth:
@@ -1356,6 +1380,9 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             graph1->changeXScaleDivision(mMajorScale, mMinorScale);
             graph1->setOverArrow(GraphView::eNone);
             graph1->setTipXLab("t");
+
+            graph1->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
+            graph1->setYAxisSupport(AxisTool::AxisSupport::eAllTip);
 
             graph1->autoAdjustYScale(true);
 
@@ -2210,7 +2237,7 @@ void MultiCalibrationView::updateGraphsZoom()
 
 
                     Scale yScale;
-                    yScale.findOptimal(yMin, yMax, 7);
+                    yScale.findOptimal(yMin, yMax, 10);
 
                     if (is_curve) {
                         maxYLength = std::max({fm.horizontalAdvance(stringForGraph(yScale.max)),

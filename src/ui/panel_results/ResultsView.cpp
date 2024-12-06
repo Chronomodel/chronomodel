@@ -2484,17 +2484,21 @@ void ResultsView::updateGraphsMinMax()
     auto model = getModel_ptr();
     QList<GraphViewResults*> listGraphs = currentGraphs(false);
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
+
         if (mMainVariable == GraphViewResults::eDuration ||
             mMainVariable == GraphViewResults::eS02 ||
-            mMainVariable == GraphViewResults::eVg ||
             mMainVariable == GraphViewResults::eS02Vg
             ) {
             mResultMinT = 0.;
-            mResultMaxT = getGraphsMax(listGraphs, "Post Distrib", 1.);
+            mResultMaxT = getGraphsMax(listGraphs, "Post Distrib", 0.0);
 
         } else if (mMainVariable == GraphViewResults::eSigma) {
             mResultMinT = 0;
-            mResultMaxT = getGraphsMax(listGraphs, "Post Distrib", 1.) / 3.;//10;
+            mResultMaxT = getGraphsMax(listGraphs, "Post Distrib", 0.0) / 3.;
+
+        } else if (mMainVariable == GraphViewResults::eVg) {
+            mResultMinT = 0;
+            mResultMaxT = getGraphsMax(listGraphs, "Post Distrib", 0.0) / 3.;
 
         } else if (mMainVariable == GraphViewResults::eLambda) {
             mResultMinT = getGraphsMin(listGraphs, "Lambda", -20.);
@@ -2861,9 +2865,13 @@ void ResultsView::updateScales()
         // All other cases (default behavior)
         else {
             Scale t_scale;
-            t_scale.findOptimalMark(mResultCurrentMinT, mResultCurrentMaxT, 10);
+            /*t_scale.findOptimalMark(mResultCurrentMinT, mResultCurrentMaxT, 10);
             mMajorScale = t_scale.mark;
             mMinorCountScale = 10;
+            */
+            t_scale.findOptimal(mResultCurrentMinT, mResultCurrentMaxT, 10);
+            mMajorScale = t_scale.mark;
+            mMinorCountScale = t_scale.tip;
         }
     }
 
@@ -2895,6 +2903,7 @@ void ResultsView::updateScales()
 
     } else if (mCurrentTypeGraph == GraphViewResults::ePostDistrib &&
                ( mMainVariable == GraphViewResults::eSigma ||
+                 mMainVariable == GraphViewResults::eS02 ||
                  mMainVariable == GraphViewResults::eVg ||
                  mMainVariable == GraphViewResults::eDuration ||
                  mMainVariable == GraphViewResults::eS02Vg ) ) {
@@ -4264,7 +4273,7 @@ void ResultsView::applyZoomScale()
     QString majorStr = mMajorScaleEdit->text();
     bool isMajorNumber = true;
     double majorNumber = locale().toDouble(majorStr, &isMajorNumber);
-    if (!isMajorNumber || majorNumber < 1)
+    if (!isMajorNumber)
         return;
 
     QString minorStr = mMinorScaleEdit->text();
@@ -4631,8 +4640,9 @@ void ResultsView::exportResults()
         const QString currentPath = MainWindow::getInstance()->getCurrentPath();
         const QString dirPath = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                         tr("Export to directory..."),
-                                                        currentPath,
-                                                       tr("Directory"));
+                                                       currentPath);//,
+                                                      // tr("Directory"));
+
 
         if (!dirPath.isEmpty()) {
             QDir dir(dirPath);
@@ -4642,7 +4652,7 @@ void ResultsView::exportResults()
                 }*/
                 dir.removeRecursively();
             }
-            dir.mkpath(".");
+            dir.mkpath("."); // Crée le répertoire
 
             // copy tabs ------------------------------------------
             const QString version = qApp->applicationName() + " " + qApp->applicationVersion();

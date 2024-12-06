@@ -463,7 +463,7 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     fontTitle.setBold(true);
     QFontMetrics fmTitle(fontTitle);
 
-    const QRectF title_metrics = fmTitle.boundingRect(mTitle);
+    //const QRectF title_metrics = fmTitle.boundingRect(mTitle);
     QPainter p(this);
 
     p.fillRect(rect(), mGraph->getBackgroundColor());

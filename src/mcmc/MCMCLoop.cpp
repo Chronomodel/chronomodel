@@ -333,7 +333,7 @@ QString MCMCLoop::initialize_time()
                         // 2 - Init Delta Wiggle matching and Clear mLastAccepts array
                         date.initDelta();
                         date.mWiggle.mLastAccepts.clear();
-                        //date.mWiggle.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                        //date.mWiggle.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
                         date.mWiggle.tryUpdate(date.mWiggle.mX, 2.);
 
                         // 3 - Init sigma MH adaptatif of each Data ti
@@ -341,7 +341,7 @@ QString MCMCLoop::initialize_time()
 
                         // 4 - Clear mLastAccepts array and set this init at 100%
                         date.mTi.mLastAccepts.clear();
-                        //date.mTheta.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                        //date.mTheta.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
                         date.mTi.tryUpdate(date.mTi.mX, 2.);
 
                         // 5 - Init Sigma_i and its Sigma_MH
@@ -386,7 +386,7 @@ QString MCMCLoop::initialize_time()
 
                     // 6- Clear mLastAccepts  array
                     uEvent->mTheta.mLastAccepts.clear();
-                    //unsortedEvents.at(i)->mTheta.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                    //unsortedEvents.at(i)->mTheta.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
                     uEvent->mTheta.tryUpdate(uEvent->mTheta.mX, 2.);
 
 
@@ -428,14 +428,14 @@ QString MCMCLoop::initialize_time()
                     date.mWiggle.mX = date.mTi.mX + date.mDelta;
                     date.mWiggle.memo();
                     date.mWiggle.mLastAccepts.clear();
-                    //date.mWiggle.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                    //date.mWiggle.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
 
                     // 3 - Init sigma MH adaptatif of each Data ti
                     date.mTi.mSigmaMH = 1;
 
                     // 4 - Clear mLastAccepts array and set this init at 100%
                     date.mTi.mLastAccepts.clear();
-                    //date.mTheta.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                    //date.mTheta.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
 
                     // 5 - Init Sigma_i and its Sigma_MH
                     date.mSigmaTi.mSamplerProposal = MHVariable::eFixe;
@@ -460,7 +460,7 @@ QString MCMCLoop::initialize_time()
 
                 // 6- Clear mLastAccepts  array
                 uEvent->mTheta.mLastAccepts.clear();
-                //uEvent->mTheta.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                //uEvent->mTheta.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
 
                 if (isInterruptionRequested())
                     return ABORTED_BY_USER;

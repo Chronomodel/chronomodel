@@ -887,11 +887,12 @@ void GraphView::paintToDevice(QPaintDevice* device)
         mAxisToolY.mShowSubs = mYAxisTicks;
         mAxisToolY.mShowSubSubs = mYAxisSubTicks;
 
-        if (mAutoAdjustYScale && mYAxisMode == eHidden && mShowInfos) {
+       /* No more used since v3.2.8
+        * if (mAutoAdjustYScale && mYAxisMode == eHidden && mShowInfos) {
             const QString minMaxText = QString(tr( "Min = %1  /  Max = %2")).arg(stringForLocal(mMinY), stringForLocal(mMaxY));
             mInfos.clear();
             mInfos.append(minMaxText);
-        }
+        */
 
         mAxisToolY.updateValues(int (mGraphHeight), int (mStepMinWidth), mMinY, mMaxY);
         mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), -1., mUnitFunctionY);
@@ -1006,8 +1007,8 @@ void GraphView::paintToDevice(QPaintDevice* device)
      *  Graph specific infos at the top right
      * ----------------------------------------------------*/
     // Used by Multicalibration
-   //if (mShowInfos && mYAxisMode == eHidden) {
-   if (mShowInfos) {
+
+    if (mShowInfos) {
         QFontMetrics fm (font);
         p.setFont(font);
         p.setPen(Painting::borderDark);
@@ -2065,6 +2066,21 @@ void GraphView::exportCurrentDensities(const QString &defaultPath, const QLocale
                     xMin = qMin(xMin, curve.mData.firstKey());
                     xMax = qMax(xMax, curve.mData.lastKey());
                 }
+            } else if (curve.mData.empty() &&
+                curve.isHorizontalSections() &&
+                curve.mVisible) { // if it's a bound
+
+                // 1 -Create the header
+                list << curve.mName;
+
+                if ( std::isinf(xMin) ) {// firstCurveVisible) {
+                    xMin = curve.mSections.at(0).first - step;
+                    xMax = curve.mSections.at(0).second +  step;
+                } else {
+                    xMin = qMin(xMin, curve.mSections.at(0).first - step);
+                    xMax = qMax(xMax, curve.mSections.at(0).second +  step);
+                }
+
             } else continue;
         }
         if (std::isinf(xMin) || std::isinf(xMax))
@@ -2089,6 +2105,23 @@ void GraphView::exportCurrentDensities(const QString &defaultPath, const QLocale
 
                     const type_data xi = interpolateValueInQMap(x, curve.mData);
                     list<<locale.toString(xi, 'g', 15);
+
+                } else if (curve.mData.empty() &&
+                           curve.isHorizontalSections() &&
+                           curve.mVisible) { // if it's a bound
+
+                    if (x <= curve.mSections.at(0).first && curve.mSections.at(0).second< x + step ) {
+                        list<<locale.toString(1., 'g', 15);
+
+                    } else if (curve.mSections.at(0).first<= x  && x <= curve.mSections.at(0).second ) {
+
+                        const type_data xi = 1. / (curve.mSections.at(0).second - curve.mSections.at(0).first);
+                        list<<locale.toString(xi, 'g', 15);
+
+                    } else {
+                        list<<locale.toString(0., 'g', 15);
+                    }
+
 
                 } else continue;
 
@@ -2255,7 +2288,7 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
             step = ceil(xMax - xMin)/ (nbData - 1);
 
         } else
-            nbData = ceil(xMax - xMin)/ step + 1;
+            nbData = floor((xMax - xMin)/ step);
 
         rows.reserve(nbData + 1); // the header
 
@@ -2293,7 +2326,7 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
                         if (c.mData.firstKey()<= x && x<= c.mData.lastKey())
                             list<<locale.toString(interpolateValueInQMap(x, c.mData), 'g', 15); // for example G
                         else
-                            list<< "NaN";
+                            list<< "0";
 
                     } else if (c.isFunction()) {
                         if (c.mData.firstKey()<= x && x<= c.mData.lastKey())

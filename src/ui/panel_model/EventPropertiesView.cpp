@@ -56,8 +56,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QtWidgets>
 
-
-
 EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags):
     QWidget(parent, flags),
     mEventObj(nullptr),
@@ -66,7 +64,6 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mLineEditHeight(25),
     mComboBoxHeight(25),
     mCurveEnabled(false)
-
 {
     minimumHeight = 0;
 
@@ -76,7 +73,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     palette_BW.setColor(QPalette::Text, Qt::black);
     palette_BW.setColor(QPalette::WindowText, Qt::black);
 
-    // ------------- commun with defautlt Event and Bound ----------
+    // ------------- commun with default Event and Bound ----------
     mTopView = new QWidget(this);
 
     mNameLab = new QLabel(tr("Name"), mTopView);
@@ -298,16 +295,29 @@ void EventPropertiesView::setEvent(QJsonObject *eventObj)
 {
     // if set Event come because we use Project::updateDate(), we are on the same Event
     // so we are on the EventPropertiesView not on the EventScene
-    if (eventObj == nullptr || eventObj->empty())
-        return;
+    try {
+        if (eventObj == nullptr)
+            return;
 
-    if (mEventObj != nullptr && !mEventObj->empty() && mEventObj->value(STATE_ID) != eventObj->value(STATE_ID)) {
-        mCalibBut->setChecked(false);
+        if (eventObj->empty())
+            return;
+
+        if (mEventObj != nullptr) {
+            if (!mEventObj->empty() && mEventObj->value(STATE_ID) != eventObj->value(STATE_ID)) {
+                mCalibBut->setChecked(false);
+            }
+
+        } else {
+            mCalibBut->setChecked(false);
+        }
+        // Assign the local event
+        mEventObj = eventObj;
+
+    } catch (...) {
+        qDebug()<<"[EventPropertiesView::setEvent]" << " Hummm ....";
+        return;
     }
-    
-    // Assign the local event
-    mEventObj = eventObj;
-    
+
     // Select the first date if the list is not empty
     if (mEventObj->value(STATE_EVENT_DATES).toArray().size() > 0) {
         mCurrentDateIdx = 0;
@@ -344,7 +354,6 @@ void EventPropertiesView::updateIndex(int index)
 void EventPropertiesView::updateEvent()
 {
     qDebug()<<"[EventPropertiesView::updateEvent]";
-
 
     if (mEventObj->isEmpty()) {
         mTopView->setVisible(false);
@@ -394,7 +403,10 @@ void EventPropertiesView::updateEvent()
         }
         Event::PointType tyPts = Event::PointType (mEventObj->value(STATE_EVENT_POINT_TYPE).toInt());
         mCurveNodeCB->setVisible(mCurveEnabled);
-        mCurveNodeCB->setChecked(tyPts == Event::eNode);
+
+        mCurveNodeCB->blockSignals(true);
+        mCurveNodeCB->setChecked(tyPts == Event::eNode); //emit updateCurveNode
+        mCurveNodeCB->blockSignals(true);
 
         mX_IncLab->setVisible(showXEdit);
         mX_IncEdit->setVisible(showXEdit);
@@ -500,7 +512,7 @@ void EventPropertiesView::updateEvent()
             updateKnownGraph();
         }
     }
-    
+
     updateLayout();
     update();
 }

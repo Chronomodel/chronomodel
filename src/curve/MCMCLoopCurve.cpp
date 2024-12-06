@@ -40,6 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "MCMCLoopCurve.h"
 
+#include "AxisTool.h"
 #include "CalibrationCurve.h"
 #include "ModelCurve.h"
 #include "CurveUtilities.h"
@@ -254,7 +255,7 @@ QString MCMCLoopCurve::initialize_321()
             mModel->mLambdaSpline.memo(&memoLambda);
 
         } else {
-            mModel->mLambdaSpline.mX = 1E-6; // default = 1E-6.
+            mModel->mLambdaSpline.mX = 1; // default = 1E-6. // ici
             mModel->mLambdaSpline.mLastAccepts.clear();
             mModel->mLambdaSpline.tryUpdate(mModel->mLambdaSpline.mX, 2.);
 
@@ -313,7 +314,7 @@ QString MCMCLoopCurve::initialize_321()
                 i++;
                 e->mVg.mX = Var_residual_spline;
                 e->mVg.mLastAccepts.clear();
-                // e->mVg.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                // e->mVg.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
 
 
                 if (e->mVg.mSamplerProposal == MHVariable::eFixe) {
@@ -337,7 +338,7 @@ QString MCMCLoopCurve::initialize_321()
                 e->mVg.mX = 0.;
                 e->mVg.mSamplerProposal = MHVariable::eFixe;
                 e->mVg.mLastAccepts.clear();
-                // e->mVg.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                // e->mVg.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
 
                 // check if Sy == 0
                 if (e->mSy == 0) {
@@ -382,7 +383,7 @@ QString MCMCLoopCurve::initialize_321()
                     e->mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
                 }
                 e->mVg.mLastAccepts.clear();
-                // e->mVg.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                // e->mVg.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
                 e->mVg.tryUpdate(e->mVg.mX, 2.);
                 e->updateW();
 
@@ -517,18 +518,30 @@ QString MCMCLoopCurve::initialize_321()
 
         double minY = +INFINITY;
         double maxY = -INFINITY;
-        minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double x, std::shared_ptr<Event> e) {return std::min(e->mYx, x);});
+        /*minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double x, std::shared_ptr<Event> e) {return std::min(e->mYx, x);});
         maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double x, std::shared_ptr<Event> e) {return std::max(e->mYx, x);});
 
         int i = 0;
-        for (auto g : mModel->mSpline.splineX.vecG) {
+        for (auto g : mModel->mSpline.splineX.vecG) { // use lambda init
             const auto e = 1.96*sqrt(mModel->mSpline.splineX.vecVarG.at(i));
+
             minY = std::min(minY, g - e);
             maxY = std::max(maxY, g + e);
             i++;
         }
+        */
+        minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double x, std::shared_ptr<Event> e) {return std::min(e->mYx - e->mSy, x);});
+        maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double x, std::shared_ptr<Event> e) {return std::max(e->mYx + e->mSy, x);});
 
-        clearMeanG.gx.mapG.setRangeY(minY, maxY);
+        const auto e = 0.1 *(maxY -minY);
+
+        minY = minY - e;
+        maxY = maxY + e;
+
+        Scale sc ;
+        sc.findOptimal(minY, maxY);
+
+        clearMeanG.gx.mapG.setRangeY(sc.min, sc.max);
 
         if (mModel->compute_Y) {
             clearMeanG.gy = clearCompo;
@@ -539,16 +552,23 @@ QString MCMCLoopCurve::initialize_321()
             minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double y, std::shared_ptr<Event> e) {return std::min(e->mYy, y);});
             maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double y, std::shared_ptr<Event> e) {return std::max(e->mYy, y);});
 
-            int i = 0;
+            /*int i = 0;
             for (auto g : mModel->mSpline.splineY.vecG) {
                 const auto e = 1.96*sqrt(mModel->mSpline.splineY.vecVarG.at(i));
                 minY = std::min(minY, g - e);
                 maxY = std::max(maxY, g + e);
                 i++;
             }
+            */
+            const auto e = 0.1 *(maxY -minY);
 
+            minY = minY - e;
+            maxY = maxY + e;
 
-            clearMeanG.gy.mapG.setRangeY(minY, maxY);
+            Scale sc ;
+            sc.findOptimal(minY, maxY);
+
+            clearMeanG.gy.mapG.setRangeY(sc.min, sc.max);
 
             if (mModel->compute_Z) {
                 clearMeanG.gz = clearCompo;
@@ -559,15 +579,23 @@ QString MCMCLoopCurve::initialize_321()
                 minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double z, std::shared_ptr<Event> e) {return std::min(e->mYz, z);});
                 maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double z, std::shared_ptr<Event> e) {return std::max(e->mYz, z);});
 
-                int i = 0;
+                /*int i = 0;
                 for (auto g : mModel->mSpline.splineZ.vecG) {
                     const auto e = 1.96*sqrt(mModel->mSpline.splineZ.vecVarG.at(i));
                     minY = std::min(minY, g - e);
                     maxY = std::max(maxY, g + e);
                     i++;
-                }
+                }*/
 
-                clearMeanG.gz.mapG.setRangeY(minY, maxY);
+                const auto e = 0.1 *(maxY -minY);
+
+                minY = minY - e;
+                maxY = maxY + e;
+
+                Scale sc ;
+                sc.findOptimal(minY, maxY);
+
+                clearMeanG.gz.mapG.setRangeY(sc.min, sc.max);
             }
 
         }
@@ -630,7 +658,7 @@ QString MCMCLoopCurve::initialize_400()
     mPointEvent.clear();
 
     if (mCurveSettings.mUseVarianceIndividual && mCurveSettings.mVarianceType == CurveSettings::eModeBayesian) {
-        for (std::shared_ptr<Event> ev : allEvents) {
+        for (std::shared_ptr<Event> &ev : allEvents) {
             if (mModel->is_curve && ev->mTheta.mSamplerProposal!= MHVariable::eFixe) {
                 ev->mTheta.mSamplerProposal = MHVariable::eDoubleExp;
             }
@@ -642,7 +670,7 @@ QString MCMCLoopCurve::initialize_400()
             }
         }
     } else {
-        for (std::shared_ptr<Event> ev : allEvents)
+        for (std::shared_ptr<Event> &ev : allEvents)
             mPointEvent.push_back(ev);
     }
 
@@ -744,7 +772,7 @@ QString MCMCLoopCurve::initialize_400()
                 i++;
                 e->mVg.mX = Var_residual_spline;
                 e->mVg.mLastAccepts.clear();
-                // e->mVg.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                // e->mVg.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
 
 
                 if (e->mVg.mSamplerProposal == MHVariable::eFixe) {
@@ -768,7 +796,7 @@ QString MCMCLoopCurve::initialize_400()
                 e->mVg.mX = 0.;
                 e->mVg.mSamplerProposal = MHVariable::eFixe;
                 e->mVg.mLastAccepts.clear();
-                // e->mVg.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                // e->mVg.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
 
                 // check if Sy == 0
                 if (e->mSy == 0) {
@@ -813,7 +841,7 @@ QString MCMCLoopCurve::initialize_400()
                     e->mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
                 }
                 e->mVg.mLastAccepts.clear();
-                // e->mVg.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                // e->mVg.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
                 e->mVg.tryUpdate(e->mVg.mX, 2.);
                 e->updateW();
 
@@ -1175,7 +1203,7 @@ QString MCMCLoopCurve::initialize_401()
                 i++;
                 e->mVg.mX = Var_residual_spline;
                 e->mVg.mLastAccepts.clear();
-                // e->mVg.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                // e->mVg.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
 
 
                 if (e->mVg.mSamplerProposal == MHVariable::eFixe) {
@@ -1199,7 +1227,7 @@ QString MCMCLoopCurve::initialize_401()
                 e->mVg.mX = 0.;
                 e->mVg.mSamplerProposal = MHVariable::eFixe;
                 e->mVg.mLastAccepts.clear();
-                // e->mVg.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                // e->mVg.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
 
                 // check if Sy == 0
                 if (e->mSy == 0) {
@@ -1244,7 +1272,7 @@ QString MCMCLoopCurve::initialize_401()
                     e->mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
                 }
                 e->mVg.mLastAccepts.clear();
-                // e->mVg.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                // e->mVg.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
                 e->mVg.tryUpdate(e->mVg.mX, 2.);
                 e->updateW();
 
@@ -1633,7 +1661,7 @@ QString MCMCLoopCurve::initialize_Komlan()
                 i++;
                 e->mVg.mX = Var_residual_spline;
                 e->mVg.mLastAccepts.clear();
-                // e->mVg.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                // e->mVg.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
 
 
                 if (e->mVg.mSamplerProposal == MHVariable::eFixe) {
@@ -1657,7 +1685,7 @@ QString MCMCLoopCurve::initialize_Komlan()
                 e->mVg.mX = 0.;
                 e->mVg.mSamplerProposal = MHVariable::eFixe;
                 e->mVg.mLastAccepts.clear();
-                // e->mVg.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                // e->mVg.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
 
                 // check if Sy == 0
                 if (e->mSy == 0) {
@@ -1702,7 +1730,7 @@ QString MCMCLoopCurve::initialize_Komlan()
                     e->mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
                 }
                 e->mVg.mLastAccepts.clear();
-                // e->mVg.mAllAccepts->clear(); //don't clean, avalable for cumulate chain
+                // e->mVg.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
                 e->mVg.tryUpdate(e->mVg.mX, 2.);
                 e->updateW();
 
@@ -4848,28 +4876,28 @@ void MCMCLoopCurve::memo()
         PosteriorMeanG* meanG = &mModel->mPosteriorMeanG;
         PosteriorMeanG* chainG = &mModel->mPosteriorMeanGByChain[mChainIndex];
 
-        double minY_X = 0., minY_Y = 0., minY_Z = 0.;
-        double maxY_X = 0., maxY_Y = 0., maxY_Z = 0.;
+        //double minY_X = 0., minY_Y = 0., minY_Z = 0.;
+        //double maxY_X = 0., maxY_Y = 0., maxY_Z = 0.;
 
         double minY_GP_X = 0., minY_GP_Y = 0., minY_GP_Z = 0.;
         double maxY_GP_X = 0., maxY_GP_Y = 0., maxY_GP_Z = 0.;
 
-        minY_X = meanG->gx.mapG.minY();
-        maxY_X = meanG->gx.mapG.maxY();
+        //minY_X = meanG->gx.mapG.minY();
+        //maxY_X = meanG->gx.mapG.maxY();
 
         minY_GP_X = meanG->gx.mapGP.minY();
         maxY_GP_X = meanG->gx.mapGP.maxY();
 
         if (mModel->compute_Y) {
-            minY_Y = meanG->gy.mapG.minY();
-            maxY_Y = meanG->gy.mapG.maxY();
+            //minY_Y = meanG->gy.mapG.minY();
+            //maxY_Y = meanG->gy.mapG.maxY();
 
             minY_GP_Y = meanG->gy.mapGP.minY();
             maxY_GP_Y = meanG->gy.mapGP.maxY();
 
             if (mModel->compute_Z) {
-                minY_Z = meanG->gz.mapG.minY();
-                maxY_Z = meanG->gz.mapG.maxY();
+                //minY_Z = meanG->gz.mapG.minY();
+                //maxY_Z = meanG->gz.mapG.maxY();
 
                 minY_GP_Z = meanG->gz.mapGP.minY();
                 maxY_GP_Z = meanG->gz.mapGP.maxY();
@@ -4888,7 +4916,7 @@ void MCMCLoopCurve::memo()
 
         // Convertion IDF
         if (mModel->mCurveSettings.mProcessType == CurveSettings::eProcess_Vector ||  mModel->mCurveSettings.mProcessType == CurveSettings::eProcess_Spherical) {
-            const double deg = 180. / M_PI ;
+            //const double deg = 180. / M_PI ;
 
             for (int idxT = 0; idxT < nbPtsX ; ++idxT) {
                 t = (double)idxT * stepT + mModel->mSettings.mTmin ;
@@ -4897,6 +4925,7 @@ void MCMCLoopCurve::memo()
                 valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineY, gy_the, varGy, gpy, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
                 valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineZ, gz_the, varGz, gpz, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
 
+                /*
                 const double zF = sqrt(pow(gx_the, 2.) + pow(gy_the, 2.) + pow(gz_the, 2.));
                 const double xInc = asin(gz_the/ zF) * deg ;
                 const double yDec = atan2(gy_the, gx_the) * deg;
@@ -4913,7 +4942,7 @@ void MCMCLoopCurve::memo()
                 maxY_X = std::max(xInc + 1.96 * errI, maxY_X);
                 maxY_Y = std::max(yDec + 1.96 * errD, maxY_Y);
                 maxY_Z = std::max(zF + 1.96 * errF, maxY_Z);
-
+                */
                 minY_GP_X = std::min(gpx, minY_GP_X);
                 maxY_GP_X = std::max(gpx, maxY_GP_X);
 
@@ -4928,24 +4957,24 @@ void MCMCLoopCurve::memo()
             for (int idxT = 0; idxT < nbPtsX ; ++idxT) {
                 t = (double)idxT * stepT + mModel->mSettings.mTmin ;
                 valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineX, gx_the, varGx, gpx, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
-                minY_X = std::min(gx_the - 1.96 * sqrt(varGx), minY_X);
-                maxY_X = std::max(gx_the + 1.96 * sqrt(varGx), maxY_X);
+                //minY_X = std::min(gx_the - 1.96 * sqrt(varGx), minY_X);
+                //maxY_X = std::max(gx_the + 1.96 * sqrt(varGx), maxY_X);
 
                 minY_GP_X = std::min(gpx, minY_GP_X);
                 maxY_GP_X = std::max(gpx, maxY_GP_X);
 
                 if (mModel->compute_Y) {
                     valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineY, gy_the, varGy, gpy, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
-                    minY_Y = std::min(gy_the - 1.96 * sqrt(varGy), minY_Y);
-                    maxY_Y = std::max(gy_the + 1.96 * sqrt(varGy), maxY_Y);
+                    //minY_Y = std::min(gy_the - 1.96 * sqrt(varGy), minY_Y);
+                    //maxY_Y = std::max(gy_the + 1.96 * sqrt(varGy), maxY_Y);
 
                     minY_GP_Y = std::min(gpy, minY_GP_Y);
                     maxY_GP_Y = std::max(gpy, maxY_GP_Y);
 
                     if (mModel->compute_Z) {
                         valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineZ, gz_the, varGz, gpz, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
-                        minY_Z = std::min(gz_the - 1.96 * sqrt(varGy), minY_Z);
-                        maxY_Z = std::max(gz_the + 1.96 * sqrt(varGz), maxY_Z);
+                        //minY_Z = std::min(gz_the - 1.96 * sqrt(varGy), minY_Z);
+                        //maxY_Z = std::max(gz_the + 1.96 * sqrt(varGz), maxY_Z);
 
                         minY_GP_Z = std::min(gpz, minY_GP_Z);
                         maxY_GP_Z = std::max(gpz, maxY_GP_Z);
@@ -4958,63 +4987,63 @@ void MCMCLoopCurve::memo()
 
 
         if (mChainIndex == 0 ) {// do not change the Y range between several chain
-            minY_X = std::min(minY_X, meanG->gx.mapG.minY());
-            maxY_X = std::max(maxY_X, meanG->gx.mapG.maxY());
-            meanG->gx.mapG.setRangeY(minY_X, maxY_X);
+            //minY_X = std::min(minY_X, meanG->gx.mapG.minY());
+            //maxY_X = std::max(maxY_X, meanG->gx.mapG.maxY());
+            //meanG->gx.mapG.setRangeY(minY_X, maxY_X);
 
             minY_GP_X = std::min(minY_GP_X, meanG->gx.mapGP.minY());
             maxY_GP_X = std::max(maxY_GP_X, meanG->gx.mapGP.maxY());
             meanG->gx.mapGP.setRangeY(minY_GP_X, maxY_GP_X);
 
         } else {
-            minY_X = std::min(minY_X, chainG->gx.mapG.minY());
-            maxY_X = std::max(maxY_X, chainG->gx.mapG.maxY());
+            //minY_X = std::min(minY_X, chainG->gx.mapG.minY());
+            //maxY_X = std::max(maxY_X, chainG->gx.mapG.maxY());
 
             minY_GP_X = std::min(minY_GP_X, chainG->gx.mapGP.minY());
             maxY_GP_X = std::max(maxY_GP_X, chainG->gx.mapGP.maxY());
          }
 
-        chainG->gx.mapG.setRangeY(minY_X, maxY_X);
+        //chainG->gx.mapG.setRangeY(minY_X, maxY_X);
         chainG->gx.mapGP.setRangeY(minY_GP_X, maxY_GP_X);
 
         if (mModel->compute_Y) {
             if (mChainIndex == 0 ) {// do not change the Y range between several chain
-                minY_Y = std::min(minY_Y, meanG->gy.mapG.minY());
-                maxY_Y = std::max(maxY_Y, meanG->gy.mapG.maxY());
-                meanG->gy.mapG.setRangeY(minY_Y, maxY_Y);
+                //minY_Y = std::min(minY_Y, meanG->gy.mapG.minY());
+                //maxY_Y = std::max(maxY_Y, meanG->gy.mapG.maxY());
+                //meanG->gy.mapG.setRangeY(minY_Y, maxY_Y);
 
                 minY_GP_Y = std::min(minY_GP_Y, meanG->gy.mapGP.minY());
                 maxY_GP_Y = std::max(maxY_GP_Y, meanG->gy.mapGP.maxY());
                 meanG->gy.mapGP.setRangeY(minY_GP_Y, maxY_GP_Y);
 
             } else {
-                minY_Y = std::min(minY_Y, chainG->gy.mapG.minY());
-                maxY_Y = std::max(maxY_Y, chainG->gy.mapG.maxY());
+                //minY_Y = std::min(minY_Y, chainG->gy.mapG.minY());
+                //maxY_Y = std::max(maxY_Y, chainG->gy.mapG.maxY());
 
                 minY_GP_Y = std::min(minY_GP_Y, meanG->gy.mapGP.minY());
                 maxY_GP_Y = std::max(maxY_GP_Y, meanG->gy.mapGP.maxY());
             }
-            chainG->gy.mapG.setRangeY(minY_Y, maxY_Y);
+            //chainG->gy.mapG.setRangeY(minY_Y, maxY_Y);
             chainG->gy.mapGP.setRangeY(minY_GP_Y, maxY_GP_Y);
 
             if (mModel->compute_Z) {
                 if (mChainIndex == 0 ) {// do not change the Y range between several chain
-                    minY_Z = std::min(minY_Z, meanG->gz.mapG.minY());
-                    maxY_Z = std::max(maxY_Z, meanG->gz.mapG.maxY());
-                    meanG->gz.mapG.setRangeY(minY_Z, maxY_Z);
+                    //minY_Z = std::min(minY_Z, meanG->gz.mapG.minY());
+                    //maxY_Z = std::max(maxY_Z, meanG->gz.mapG.maxY());
+                    //meanG->gz.mapG.setRangeY(minY_Z, maxY_Z);
 
                     minY_GP_Z = std::min(minY_GP_Z, meanG->gz.mapGP.minY());
                     maxY_GP_Z = std::max(maxY_GP_Z, meanG->gz.mapGP.maxY());
                     meanG->gz.mapGP.setRangeY(minY_GP_Z, maxY_GP_Z);
 
                 } else {
-                    minY_Z = std::min(minY_Z, chainG->gz.mapG.minY());
-                    maxY_Z = std::max(maxY_Z, chainG->gz.mapG.maxY());
+                    //minY_Z = std::min(minY_Z, chainG->gz.mapG.minY());
+                    //maxY_Z = std::max(maxY_Z, chainG->gz.mapG.maxY());
 
                     minY_GP_Z = std::min(minY_GP_Z, meanG->gz.mapGP.minY());
                     maxY_GP_Z = std::max(maxY_GP_Z, meanG->gz.mapGP.maxY());
                 }
-                chainG->gz.mapG.setRangeY(minY_Z, maxY_Z);
+                //chainG->gz.mapG.setRangeY(minY_Z, maxY_Z);
                 chainG->gz.mapGP.setRangeY(minY_GP_Z, maxY_GP_Z);
             }
         }
@@ -5053,16 +5082,13 @@ void MCMCLoopCurve::memo()
 
     }
     else {
-      /*  if (mTh_memoCurve.joinable())
-            mTh_memoCurve.join();
 
-        mTh_memoCurve = std::thread ([this](int iter){memo_PosteriorG_3D( mModel->mPosteriorMeanGByChain[mChainIndex], mModel->mSpline, mCurveSettings.mProcessType, iter, *mModel );}, iterAccepted);
-*/
         mModel->memo_PosteriorG_3D( mModel->mPosteriorMeanGByChain[mChainIndex], mModel->mSpline, mCurveSettings.mProcessType, iterAccepted);
 
         if (mLoopChains.size() > 1)
             mModel->memo_PosteriorG_3D( mModel->mPosteriorMeanG, mModel->mSpline, mCurveSettings.mProcessType, totalIterAccepted);
     }
+
 
 }
 
@@ -5581,44 +5607,49 @@ void MCMCLoopCurve::finalize()
             if (mModel->mLambdaSpline.mSamplerProposal != MHVariable::eFixe ) {
                 mModel->mLambdaSpline.mRawTrace->erase(mModel->mLambdaSpline.mRawTrace->cbegin() + front_position, mModel->mLambdaSpline.mRawTrace->cbegin() + back_position);
                 mModel->mLambdaSpline.mHistoryAcceptRateMH->erase(mModel->mLambdaSpline.mHistoryAcceptRateMH->cbegin() + front_position, mModel->mLambdaSpline.mHistoryAcceptRateMH->cbegin() + back_position);
-                mModel->mLambdaSpline.mAllAccepts.erase(mModel->mLambdaSpline.mAllAccepts.begin() + i);
+                mModel->mLambdaSpline.mNbValuesAccepted.erase(mModel->mLambdaSpline.mNbValuesAccepted.begin() + i);
             }
 
             if (mModel->mS02Vg.mSamplerProposal != MHVariable::eFixe ) {
                 mModel->mS02Vg.mRawTrace->erase(mModel->mS02Vg.mRawTrace->cbegin() + front_position, mModel->mS02Vg.mRawTrace->cbegin() + back_position);
                 mModel->mS02Vg.mHistoryAcceptRateMH->erase(mModel->mS02Vg.mHistoryAcceptRateMH->cbegin() + front_position, mModel->mS02Vg.mHistoryAcceptRateMH->cbegin() + back_position);
-                mModel->mS02Vg.mAllAccepts.erase(mModel->mS02Vg.mAllAccepts.begin() + i);
+                mModel->mS02Vg.mNbValuesAccepted.erase(mModel->mS02Vg.mNbValuesAccepted.begin() + i);
             }
 
             for (const auto &ev : mModel->mEvents) {
                 if (ev->mTheta.mSamplerProposal != MHVariable::eFixe) {
                     ev->mTheta.mRawTrace->erase(ev->mTheta.mRawTrace->cbegin() + front_position, ev->mTheta.mRawTrace->cbegin() + back_position);
                     ev->mTheta.mHistoryAcceptRateMH->erase(ev->mTheta.mHistoryAcceptRateMH->cbegin() + front_position, ev->mTheta.mHistoryAcceptRateMH->cbegin() + back_position);
-                    ev->mTheta.mAllAccepts.erase(ev->mTheta.mAllAccepts.begin() + i);
+                    ev->mTheta.mNbValuesAccepted.erase(ev->mTheta.mNbValuesAccepted.begin() + i);
 
                     if (!ev->mVg.mRawTrace->empty() && ev->mVg.mSamplerProposal != MHVariable::eFixe ) {
                         ev->mVg.mRawTrace->erase(ev->mVg.mRawTrace->cbegin() + front_position, ev->mVg.mRawTrace->cbegin() + back_position);
                         ev->mVg.mHistoryAcceptRateMH->erase(ev->mVg.mHistoryAcceptRateMH->cbegin() + front_position, ev->mVg.mHistoryAcceptRateMH->cbegin() + back_position);
-                        ev->mVg.mAllAccepts.erase(ev->mVg.mAllAccepts.begin() + i);
+                        ev->mVg.mNbValuesAccepted.erase(ev->mVg.mNbValuesAccepted.begin() + i);
                     }
 
                     if (!ev->mS02Theta.mRawTrace->empty() && ev->mVg.mSamplerProposal != MHVariable::eFixe) {
                         ev->mS02Theta.mRawTrace->erase(ev->mS02Theta.mRawTrace->cbegin() + front_position, ev->mS02Theta.mRawTrace->cbegin() + back_position);
                         ev->mS02Theta.mHistoryAcceptRateMH->erase(ev->mS02Theta.mHistoryAcceptRateMH->cbegin() + front_position, ev->mS02Theta.mHistoryAcceptRateMH->cbegin() + back_position);
-                        ev->mS02Theta.mAllAccepts.erase(ev->mS02Theta.mAllAccepts.begin() + i);
+                        ev->mS02Theta.mNbValuesAccepted.erase(ev->mS02Theta.mNbValuesAccepted.begin() + i);
                     }
 
                     for (auto &d : ev->mDates) {
                         d.mTi.mRawTrace->erase(d.mTi.mRawTrace->cbegin() + front_position, d.mTi.mRawTrace->cbegin() + back_position);
                         d.mTi.mHistoryAcceptRateMH->erase(d.mTi.mHistoryAcceptRateMH->cbegin() + front_position, d.mTi.mHistoryAcceptRateMH->cbegin() + back_position);
-                        d.mTi.mAllAccepts.erase(d.mTi.mAllAccepts.begin() + i);
+                        d.mTi.mNbValuesAccepted.erase(d.mTi.mNbValuesAccepted.begin() + i);
 
                         d.mSigmaTi.mRawTrace->erase(d.mSigmaTi.mRawTrace->cbegin() + front_position, d.mSigmaTi.mRawTrace->cbegin() + back_position);
                         d.mSigmaTi.mHistoryAcceptRateMH->erase(d.mSigmaTi.mHistoryAcceptRateMH->cbegin() + front_position, d.mSigmaTi.mHistoryAcceptRateMH->cbegin() + back_position);
-                        d.mSigmaTi.mAllAccepts.erase(d.mSigmaTi.mAllAccepts.begin() + i);
+#ifdef DEBUG
+                        if (d.mSigmaTi.mHistoryAcceptRateMH->empty()) {
+                            qDebug()<<"MCMCLoopCurve::finalize";
+                        }
+#endif
+                        d.mSigmaTi.mNbValuesAccepted.erase(d.mSigmaTi.mNbValuesAccepted.begin() + i);
 
                         d.mWiggle.mRawTrace->erase(d.mWiggle.mRawTrace->cbegin() + front_position, d.mWiggle.mRawTrace->cbegin() + back_position);
-                        d.mWiggle.mAllAccepts.erase(d.mWiggle.mAllAccepts.begin() + i);
+                        d.mWiggle.mNbValuesAccepted.erase(d.mWiggle.mNbValuesAccepted.begin() + i);
                     }
                 }
             }

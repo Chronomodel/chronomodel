@@ -1403,6 +1403,11 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
         date.updateDate(mTheta.mX, mS02Theta.mX, mAShrinkage);
     }
 
+    // Hack Date = Event
+    //mTheta.tryUpdate(mDates[0].mTi.mX, 1.);
+    //return;
+    // Fin Hack ------
+
     const double min = getThetaMin(tmin);
     const double max = getThetaMax(tmax);
     //qDebug() << "----------->      in Event::updateTheta(): Event update : " << this->mName << " : " << this->mTheta.mX << " between" << "[" << min << " ; " << max << "]";

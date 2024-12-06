@@ -83,19 +83,20 @@ Project::Project():
     mLoop (nullptr),
     mCalibCurves(std::map<std::string, CalibrationCurve>()),
     mState(emptyState()),
-    mDesignIsChanged (true),
-    mStructureIsChanged (true),
-    mItemsIsMoved (true),
+    mDesignIsChanged (false),
+    mStructureIsChanged (false),
+    mItemsIsMoved (false),
     mNoResults (true)
 {
     mAutoSaveTimer = new QTimer(this);
     connect(mAutoSaveTimer, &QTimer::timeout, this, &Project::save);
 
-    if (AppSettings::mAutoSave) {
+    /*if (AppSettings::mAutoSave) {
         mAutoSaveTimer->setInterval(AppSettings::mAutoSaveDelay * 1000);
         mAutoSaveTimer->start();
     } else
         mAutoSaveTimer->stop();
+*/
 
     mReasonChangeStructure << PROJECT_LOADED_REASON << PROJECT_SETTINGS_UPDATED_REASON << INSERT_PROJECT_REASON;
     mReasonChangeStructure << NEW_EVEN_BY_CSV_DRAG_REASON;
@@ -139,6 +140,7 @@ Project::~Project()
 
     mModel.reset();
     mLoop = nullptr;
+
 }
 
 void Project::initState(const QString& reason)
@@ -733,6 +735,14 @@ bool Project::load(const QString &path, bool force)
             // If a version update is to be done :
             mState[STATE_APP_VERSION] = appVersionStr;
 
+            if (AppSettings::mAutoSave) {
+                mAutoSaveTimer->setInterval(AppSettings::mAutoSaveDelay * 1000);
+                mAutoSaveTimer->start();
+            } else
+                mAutoSaveTimer->stop();
+
+
+
            // -------------------- look for the calibration file --------------------
 
             QString caliPath = path + ".cal";
@@ -897,8 +907,14 @@ bool Project::load(const QString &path, bool force)
 
 bool Project::save()
 {
-    QFileInfo info(AppSettings::mLastDir + "/" + AppSettings::mLastFile);
-    return info.exists() ? saveProjectToFile() : saveAs(tr("Save current project as..."));
+    if (this->mState == emptyState()) {
+        return true;
+
+    } else {
+
+        QFileInfo info(AppSettings::mLastDir + "/" + AppSettings::mLastFile);
+        return info.exists() ? saveProjectToFile() : saveAs(tr("Save current project as..."));
+    }
 }
 
 
@@ -1222,7 +1238,7 @@ bool Project::saveAs(const QString& dialogTitle)
         // We need to reset mLastSavedState because it corresponds
         // to the last saved state in the previous file.
         //mLastSavedState = QJsonObject();
-
+        AppSettings::mIsSaved = false;
         return saveProjectToFile();
     }
     return false;
@@ -1283,7 +1299,10 @@ bool Project::saveProjectToFile()
         if (file_chr.open(QIODevice::ReadWrite | QIODevice::Text)) {
 
             qDebug() << "[Project::saveProjectToFile] Project saved to : " << path;
-
+#if DEBUG
+            if (mState["events"].toArray().isEmpty())
+                qDebug() << "[Project::saveProjectToFile] empty Project saved ???? ";
+#endif
             // reset version number
             mState[STATE_APP_VERSION] = QApplication::applicationVersion();
 
@@ -1420,10 +1439,8 @@ bool Project::recenterProject()
     return true;
 }
 
-/* --------------------------------------------------------------------
-     Project Settings
- --------------------------------------------------------------------
-        Settings   */
+# pragma mark  Project Settings
+
 bool Project::setSettings(const StudyPeriodSettings& settings)
 {
     if (settings.mTmin >= settings.mTmax) {
@@ -1449,8 +1466,10 @@ bool Project::setSettings(const StudyPeriodSettings& settings)
 void Project::setAppSettingsAutoSave()
 {
     mAutoSaveTimer->setInterval(AppSettings::mAutoSaveDelay * 1000);
+
     if(mAutoSaveTimer->isActive() && !AppSettings::mAutoSave)
         mAutoSaveTimer->stop();
+
     else if(!mAutoSaveTimer->isActive() && AppSettings::mAutoSave)
         mAutoSaveTimer->start();
 }

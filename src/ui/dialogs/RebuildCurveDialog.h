@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
     Philippe LANOS
@@ -52,10 +52,12 @@ class RebuildCurveDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit RebuildCurveDialog (QStringList list = {"X"}, std::vector< std::pair<double, double>> *minMax = nullptr, std::vector< std::pair<double, double>> *minMaxP = nullptr, std::pair<unsigned, unsigned> mapSize = std::pair<unsigned, unsigned>{300, 300}, QWidget *parent = nullptr);
+    explicit RebuildCurveDialog (QStringList list = {"X"}, std::vector< std::pair<double, double>> *minMax = nullptr, std::vector< std::pair<double, double>> *minMaxP = nullptr, std::pair<double, double> *minMaxPFilter = nullptr, std::pair<unsigned, unsigned> mapSize = std::pair<unsigned, unsigned>{300, 300}, QWidget *parent = nullptr);
 
     std::vector< std::pair<double, double>> getYTabMinMax() const {return mYTabMinMax;}
     std::vector< std::pair<double, double>> getYpTabMinMax() const {return mYpTabMinMax;}
+    std::pair<double, double> getYpMinMaxFilter() const {return mYpMinMaxFilter;}
+
     std::pair<unsigned, unsigned> getMapSize() const;
     int getResult() const;
     int getXSpinResult() const;
@@ -82,6 +84,10 @@ protected slots:
     void Y1pMinIsValid (QString str);
     void Y1pMaxIsValid(QString str);
 
+
+    void Y1pMinFilterIsValid (QString str);
+    void Y1pMaxFilterIsValid(QString str);
+
     void Y2pMinIsValid(QString str);
     void Y2pMaxIsValid(QString str);
 
@@ -105,37 +111,45 @@ private:
     // 3 composantes possibles
     QLineEdit* Y1minEdit;
     bool Y1MinOK = true;
-    bool Y1MaxOK = true;
     QLineEdit *Y1maxEdit;
+    bool Y1MaxOK = true;
 
     QLineEdit* Y2minEdit;
     bool Y2MinOK = true;
-    bool Y2MaxOK = true;
     QLineEdit *Y2maxEdit;
+    bool Y2MaxOK = true;
 
     QLineEdit* Y3minEdit;
     bool Y3MinOK = true;
-    bool Y3MaxOK = true;
     QLineEdit *Y3maxEdit;
+    bool Y3MaxOK = true;
 
     // 3 derrivées possibles
     QLineEdit* Y1pminEdit;
     bool Y1pMinOK = true;
-    bool Y1pMaxOK = true;
     QLineEdit* Y1pmaxEdit;
+    bool Y1pMaxOK = true;
 
     QLineEdit* Y2pminEdit;
     bool Y2pMinOK = true;
-    bool Y2pMaxOK = true;
     QLineEdit* Y2pmaxEdit;
+    bool Y2pMaxOK = true;
 
     QLineEdit* Y3pminEdit;
     bool Y3pMinOK = true;
-    bool Y3pMaxOK = true;
     QLineEdit *Y3pmaxEdit;
+    bool Y3pMaxOK = true;  
 
     std::vector< std::pair<double, double>> mYTabMinMax;
     std::vector< std::pair<double, double>> mYpTabMinMax;
+
+    // 1 filter possible
+    QLineEdit* Y1pminFilterEdit;
+    bool Y1pMinFilterOK = true;
+    QLineEdit* Y1pmaxFilterEdit;
+    bool Y1pMaxFilterOK = true;
+
+    std::pair<double, double> mYpMinMaxFilter;
 
     QGridLayout* _setting_1_Grid;
     QGridLayout* _setting_2_Grid;

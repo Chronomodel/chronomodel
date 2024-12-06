@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2024
 
 Authors :
 	Philippe LANOS
@@ -43,8 +43,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Date.h"
 #include "EventItem.h"
 #include "Project.h"
-#include "PluginAbstract.h"
 #include "QtUtilities.h"
+#include "StateKeys.h"
 
 #include <QtCore>
 #include <QtGui>
@@ -131,14 +131,15 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
                 }
             }
 
-            if (d.mPlugin->getName() == "Unif" && d.mOrigin == Date::eSingleDate)
-                mCalibThumb = d.generateUnifThumb(s);
+           // if (d.mPlugin->getName() == "Unif" && d.mOrigin == Date::eSingleDate)
+            //    mCalibThumb = d.generateUnifThumb(s);
 
              /* Can happen when there is trouble with the ref curve, for example with an Undo after
               * removing a refCurve
               */
 
-            else if (d.mCalibration && !d.mCalibration->mVector.empty()) {
+            //else
+            if (d.mCalibration && !d.mCalibration->mVector.empty()) {
                 mCalibThumb = d.generateCalibThumb(s);
 
             } else

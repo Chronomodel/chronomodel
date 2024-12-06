@@ -402,7 +402,8 @@ void Scale::findOptimal(const double a, const double b, const int nOptimal)
 
     const double fract[4] = { 1. , 2. , 5. , 10. };
 
-    double diff (std::max(u, e));
+    //double diff (std::max(u, e));
+    double diff (e <1. ? std::min(u, e) : std::max(u, e));
     mark = diff;
 
    for (const double f : fract) {
@@ -450,7 +451,7 @@ void Scale::findOptimal(const double a, const double b, const int nOptimal)
         min /= coef;
         max /= coef;
         mark /= coef;
-        tip /= coef;
+       // tip = tip; // Nothing to do tip is an integer
     }
 }
 
@@ -470,7 +471,7 @@ void Scale::findOptimalMark(const double a, const double b, const int nOptimal)
 
     const double fract[4] = { 1. , 2. , 5. , 10. };
 
-    double diff (std::max(u, e));
+    double diff (e <1. ? std::min(u, e) : std::max(u, e));
     mark = diff;
 
     for (const double f : fract) {

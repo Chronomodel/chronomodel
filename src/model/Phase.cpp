@@ -993,7 +993,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     double UnifScore = 0.;
     int nbIt = 0;
 #ifdef DEBUG
-    double somActivity = 0;
+    //double somActivity = 0;
     double somKScore = 0;
 #endif
     for (const auto& ni : NiTot) {
@@ -1007,7 +1007,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
         }
 
 #ifdef DEBUG
-       somActivity += eA;
+       //somActivity += eA;
 #endif
         double QInf, QSup;
         if (n == 1) {

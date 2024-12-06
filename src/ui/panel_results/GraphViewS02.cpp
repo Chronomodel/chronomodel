@@ -94,7 +94,15 @@ void GraphViewS02::generateCurves(const graph_t typeGraph, const QList<variable_
         mGraph->setFormatFunctY(nullptr);
         mGraph->setBackgroundColor(QColor(230, 230, 230));
         mGraph->setOverArrow(GraphView::eBothOverflow);
-        
+
+        mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
+        mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+
+        mGraph->autoAdjustYScale(true);
+
+        mGraph->setXAxisMode(GraphView::eAllTicks);
+        mGraph->setYAxisMode(GraphView::eHidden);
+
         mTitle = tr("Curve Shrinkage");
 
         // ------------------------------------

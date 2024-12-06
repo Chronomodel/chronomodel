@@ -162,9 +162,12 @@ QString PluginUniform::getDateDesc(const Date* date) const
     return result;
 }
 
-bool PluginUniform::isDateValid(const QJsonObject &, const StudyPeriodSettings &)
+bool PluginUniform::isDateValid(const QJsonObject &data, const StudyPeriodSettings &)
 {
-    return true;
+    const double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
+    const double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
+    return max>min;
+    //return true;
  }
 // ------------------------------------------------------------------
 

@@ -1010,20 +1010,20 @@ void ModelCurve::initVariablesForChain()
     for (std::shared_ptr<Event>& event : mEvents) {
         //event->mVg.clear();
         //event->mVg.reserve(initReserve);
-        event->mVg.mAllAccepts.resize(mChains.size());
+        event->mVg.mNbValuesAccepted.resize(mChains.size());
         //event->mVg.mLastAccepts.reserve(acceptBufferLen);
         event->mVg.mLastAcceptsLength = acceptBufferLen;
     }
 
     //mLambdaSpline.clear();
     //mLambdaSpline.reserve(initReserve);
-    mLambdaSpline.mAllAccepts.resize(mChains.size());
+    mLambdaSpline.mNbValuesAccepted.resize(mChains.size());
     //mLambdaSpline.mLastAccepts.reserve(acceptBufferLen);
     mLambdaSpline.mLastAcceptsLength = acceptBufferLen;
 
     //mS02Vg.clear();
     //mS02Vg.reserve(initReserve);
-    mS02Vg.mAllAccepts.resize(mChains.size());
+    mS02Vg.mNbValuesAccepted.resize(mChains.size());
     //mS02Vg.mLastAccepts.reserve(acceptBufferLen);
     mS02Vg.mLastAcceptsLength = acceptBufferLen;
 
@@ -1853,3 +1853,322 @@ void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, const MCM
 
 
 }
+
+void ModelCurve::memo_PosteriorG_filtering(PosteriorMeanGComposante &postGCompo, const MCMCSplineComposante &splineComposante, int &realyAccepted, const std::pair<double, double> GPfilter)
+{
+    const bool ok_accept = is_accepted_gy_filter(splineComposante, GPfilter);
+
+    if (!ok_accept) {
+        realyAccepted = realyAccepted - 1;
+        return;
+    }
+
+
+    CurveMap& curveMap = postGCompo.mapG;
+    const int nbPtsX = curveMap.column();
+    const int nbPtsY = curveMap.row();
+
+    const double ymin = curveMap.minY();
+    const double ymax = curveMap.maxY();
+
+    const double stepT = (mSettings.mTmax - mSettings.mTmin) / (nbPtsX - 1);
+    const double stepY = (ymax - ymin) / (nbPtsY - 1);
+
+    CurveMap& curveMapGP = postGCompo.mapGP;
+    const double yminGP = curveMapGP.minY();
+    const double ymaxGP = curveMapGP.maxY();
+    const double stepYGP = (ymaxGP - yminGP) / (curveMapGP.row() - 1);
+
+    // 2 - Variables temporaires
+    // référence sur variables globales
+    std::vector<double>& vecVarG = postGCompo.vecVarG;
+    // Variables temporaires
+    // erreur inter spline
+    std::vector<double>& vecVarianceG = postGCompo.vecVarianceG;
+    // erreur intra spline
+    std::vector<double>& vecVarErrG = postGCompo.vecVarErrG;
+
+    //Pointeur sur tableau
+    std::vector<double>::iterator itVecG = postGCompo.vecG.begin();
+    std::vector<double>::iterator itVecGP = postGCompo.vecGP.begin();
+    std::vector<double>::iterator itVecGS = postGCompo.vecGS.begin();
+    //std::vector<long double>::iterator itVecVarG = posteriorMeanCompo.vecVarG.begin();
+    // Variables temporaires
+    // erreur inter spline
+    std::vector<double>::iterator itVecVarianceG = postGCompo.vecVarianceG.begin();
+    // erreur intra spline
+    std::vector<double>::iterator itVecVarErrG = postGCompo.vecVarErrG.begin();
+
+    // inter derivate variance
+    //std::vector<double>::iterator itVecVarianceGP = postGCompo.vecVarGP.begin();
+
+    double t, g, gp, gs, varG, stdG;
+    g = 0.;
+    gp = 0;
+    varG = 0;
+    gs = 0;
+
+    const double n = realyAccepted;
+    double  prevMeanG;
+
+    const double k = 3.; // Le nombre de fois sigma G, pour le calcul de la densité
+    double a, b, surfG;
+
+    int  idxYErrMin, idxYErrMax;
+
+    // 3 - calcul pour la composante
+    unsigned i0 = 0; // tIdx étant croissant, i0 permet de faire la recherche à l'indice du temps précedent
+    for (int idxT = 0; idxT < nbPtsX ; ++idxT) {
+        t = (double)idxT * stepT + mSettings.mTmin ;
+        valeurs_G_VarG_GP_GS(t, splineComposante, g, varG, gp, gs, i0, mSettings.mTmin, mSettings.mTmax);
+
+        // -- calcul Mean
+        prevMeanG = *itVecG;
+        *itVecG +=  (g - prevMeanG)/n;
+
+        *itVecGP +=  (gp - *itVecGP)/n;
+        *itVecGS +=  (gs - *itVecGS)/n;
+        // erreur inter spline
+        *itVecVarianceG +=  (g - prevMeanG)*(g - *itVecG);
+        // erreur intra spline
+        *itVecVarErrG += (varG - *itVecVarErrG) / n  ;
+
+        // inter derivate variance
+        //*itVecVarianceGP +=  (gp - prevMeanGP)*(gp - *itVecGP);
+
+        ++itVecG;
+        ++itVecGP;
+        ++itVecGS;
+        ++itVecVarianceG;
+        ++itVecVarErrG;
+
+
+        // -- calcul map
+
+        stdG = sqrt(varG);
+
+        // Ajout densité erreur sur Y
+        /* il faut utiliser un pas de grille et le coefficient dans la grille dans l'intervalle [a,b] pour N(mu, sigma) est égale à la différence 1/2*(erf((b-mu)/(sigma*sqrt(2)) - erf((a-mu)/(sigma*sqrt(2))
+         * https://en.wikipedia.org/wiki/Error_function
+         */
+        idxYErrMin = std::clamp( int((g - k*stdG - ymin) / stepY), 0, nbPtsY-1);
+        idxYErrMax = std::clamp( int((g + k*stdG - ymin) / stepY), 0, nbPtsY-1);
+
+        if (idxYErrMin == idxYErrMax && idxYErrMin > 0 && idxYErrMax < nbPtsY-1) {
+#ifdef DEBUG
+            if ((curveMap.row()*idxT + idxYErrMin) < (curveMap.row()*curveMap.column()))
+                curveMap(idxT, idxYErrMin) = curveMap.at(idxT, idxYErrMin) + 1; // correction à faire dans finalize() + 1./nbIter;
+            else
+                qDebug()<<"pb in MCMCLoopCurve::memo_PosteriorG";
+#else
+            curveMap(idxT, idxYErrMin) = curveMap.at(idxT, idxYErrMin) + 1.; // correction à faire dans finalize/nbIter ;
+#endif
+
+            curveMap.max_value = std::max(curveMap.max_value, curveMap.at(idxT, idxYErrMin));
+
+        } else if (0 <= idxYErrMin && idxYErrMax < nbPtsY) {
+            double* ptr_Ymin = curveMap.ptr_at(idxT, idxYErrMin);
+            double* ptr_Ymax = curveMap.ptr_at(idxT, idxYErrMax);
+
+            int idErr = idxYErrMin;
+            for (double* ptr_idErr = ptr_Ymin; ptr_idErr <= ptr_Ymax; ptr_idErr++) {
+                a = (idErr - 0.5)*stepY + ymin;
+                b = (idErr + 0.5)*stepY + ymin;
+                surfG = diff_erf(a, b, g, stdG );// correction à faire dans finalyze /nbIter;
+#ifdef DEBUG
+
+                *ptr_idErr = (*ptr_idErr) + surfG;
+
+#else \
+    //curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + coefG/(double)(trace.size() * 1);
+                *ptr_idErr = (*ptr_idErr) + surfG;
+#endif
+
+                curveMap.max_value = std::max(curveMap.max_value, *ptr_idErr);
+
+                idErr++;
+            }
+        }
+
+        // Memo mapGP
+
+
+        if (yminGP <= gp && gp <= ymaxGP) {
+            const int idxYGP = std::clamp( int((gp - yminGP) / stepYGP), 0, nbPtsY-1);
+            curveMapGP(idxT, idxYGP) = curveMapGP.at(idxT, idxYGP) + 1.;
+            curveMapGP.max_value = std::max(curveMapGP.max_value, curveMapGP.at(idxT, idxYGP));
+        }
+
+    }
+    int tIdx = 0;
+    for (auto& vVarG : vecVarG) {
+
+#ifdef CODE_KOMLAN
+        vVarG = vecVarianceG.at(tIdx)/ n;
+#else
+        vVarG = vecVarianceG.at(tIdx)/ n + vecVarErrG.at(tIdx);
+#endif
+        ++tIdx;
+    }
+
+
+}
+
+
+/**
+* @brief ModelCurve::is_accepted_gy_filter
+* @param splineComposante
+* @param GPfilter, min and max value in Y unit per time unit ex meter/Year
+* @return
+ */
+bool ModelCurve::is_accepted_gy_filter(const MCMCSplineComposante& splineComposante, const std::pair<double, double> GPfilter)
+{
+    const double dYmin =  GPfilter.first * (mSettings.mTmax - mSettings.mTmin); // On doit passer en temps réduit
+    const double dYmax =  GPfilter.second * (mSettings.mTmax - mSettings.mTmin);
+
+    decltype(splineComposante.vecThetaReduced)::const_iterator iVecThetaRed = splineComposante.vecThetaReduced.cbegin();
+    decltype(splineComposante.vecGamma)::const_iterator iVecGamma = splineComposante.vecGamma.cbegin();
+    decltype(splineComposante.vecG)::const_iterator iVecG = splineComposante.vecG.cbegin();
+
+    // Calcul dérivé avant les thetas
+    const t_reduceTime t0 = splineComposante.vecThetaReduced.at(0);
+    const t_reduceTime t1 = splineComposante.vecThetaReduced.at(1);
+    double gPrime = (splineComposante.vecG.at(1) - splineComposante.vecG.at(0)) / (t1 - t0);
+    gPrime -= (t1 - t0) * splineComposante.vecGamma.at(1) / 6.;
+
+    if (gPrime < dYmin || dYmax < gPrime)
+        return false;
+
+    // Calcul dérivé avant les thetas
+
+    const size_t n = splineComposante.vecThetaReduced.size();
+    const t_reduceTime tn = splineComposante.vecThetaReduced.at(n-1);
+    const t_reduceTime tn_1 = splineComposante.vecThetaReduced.at(n-2);
+    gPrime = (splineComposante.vecG.at(n-1) - splineComposante.vecG.at(n-2)) / (tn - tn_1);
+    gPrime += (tn - tn_1) * splineComposante.vecGamma.at(n-2) / 6.;
+
+    if (gPrime < dYmin || dYmax < gPrime)
+        return false;
+
+    //
+    bool sup_min_OK, inf_max_OK; // Il suffit d'une valeur fausse pour annuler la courbe
+
+    for (unsigned long i= 0; i< splineComposante.vecThetaReduced.size()-1; i++) {
+
+        const t_reduceTime t_i = *iVecThetaRed;
+        ++iVecThetaRed;
+        const t_reduceTime t_i1 = *iVecThetaRed;
+
+        const t_reduceTime hi = t_i1 - t_i;
+
+        const double gamma_i = *iVecGamma;
+        ++iVecGamma;
+        const double gamma_i1 = *iVecGamma;
+
+        const double g_i = *iVecG;
+        ++iVecG;
+        const double g_i1 = *iVecG;
+
+        const double a = (g_i1 - g_i) /hi;
+        const double b = (gamma_i1 - gamma_i) /(6*hi);
+        const double s = t_i + t_i1;
+        const double p = t_i * t_i1;
+        const double d = ( (t_i1 - 2*t_i)*gamma_i1 + (2*t_i1 - t_i)*gamma_i ) / (6*hi);
+
+        // résolution équation, la dérivée est du deuxième degré
+
+        const double aDelta = 3* b;
+        const double bDelta = 2*d - 2*s*b;
+        const double cDelta = p*b - s*d + a;
+
+
+
+        double delta_min = pow(bDelta, 2.) - 4*aDelta*(cDelta - dYmin); // on cherche les solutions ax^2 + bx + c - dmin > 0
+
+
+        if (delta_min <= 0) {
+            if (aDelta < 0) { // concave // j'inverse ici !!!
+                //sup_min_OK = false;
+                return false;
+
+            } else           // convexe
+                sup_min_OK = true; // c'est toujours true
+
+        } else {
+
+            double t1_res = (-bDelta - sqrt(delta_min)) / (2.*aDelta);
+            double t2_res = (-bDelta + sqrt(delta_min)) / (2.*aDelta);
+
+            if (t1_res > t2_res)
+                std::swap(t1_res, t2_res);
+
+            if (aDelta > 0) { //C'est un minimum entre les solutions
+                if (t_i1<t1_res || t2_res<=t_i ) {
+                        sup_min_OK = true;
+
+                    } else {
+                        //sup_min_OK = false;
+                        return false;
+                    }
+
+
+            } else { //C'est un maximum entre les solutions
+                if ( t1_res <= t_i && t_i1 <= t2_res ) {
+                    sup_min_OK = true;
+
+                } else {
+                    //sup_min_OK = false;
+                    return false;
+                }
+            }
+
+        }
+        // controle valeur max
+        double delta_max = pow(bDelta, 2.) - 4*aDelta*(cDelta - dYmax); // On cherche les solutions ax^2 + bx + c - dmax < 0
+
+
+        if (delta_max <= 0) {
+            if (aDelta < 0) {// concave
+                inf_max_OK = true;
+
+            } else {          // convexe
+                //inf_max_OK = false;
+                return false;
+            }
+
+        } else {
+
+            double t1_res = (-bDelta - sqrt(delta_max)) / (2.*aDelta);
+            double t2_res = (-bDelta + sqrt(delta_max)) / (2.*aDelta);
+
+            if (t1_res > t2_res)
+                std::swap(t1_res, t2_res);
+
+            if (aDelta > 0) { //C'est un minimum entre les solutions
+                if (t1_res<=t_i && t_i1<t2_res) {
+                    inf_max_OK = true;
+
+                } else {
+                    //inf_max_OK = false;
+                    return false;
+                }
+
+            } else { //C'est un maximum entre les solutions
+                if ( t_i1< t1_res ||  t2_res< t_i ) {
+                    inf_max_OK = true;
+
+                } else {
+                    //inf_max_OK = false;
+                    return false;
+                }
+
+            }
+        }
+
+
+
+    }
+
+    return sup_min_OK && inf_max_OK;
+}
+

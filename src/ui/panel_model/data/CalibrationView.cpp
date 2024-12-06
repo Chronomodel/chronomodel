@@ -173,7 +173,7 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):
 
     //mCalibGraph->setRendering(GraphView::eHD);
 
-    mCalibGraph->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
+    mCalibGraph->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
     mCalibGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
 
     mCalibGraph->setXAxisMode(GraphView::eAllTicks);

@@ -240,6 +240,8 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
 
         else if (mCurrentVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
             GraphViewResults::graph_density();
+            mGraph->remove_all_zones(); // delete default zones made by graph_density()
+
             mGraph->setOverArrow(GraphView::eNone);
             mGraph->mLegendX = "";
             mGraph->setBackgroundColor(QColor(230, 230, 230));
@@ -271,6 +273,8 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
 
         else if (mCurrentVariableList.contains(eVg)) {
             GraphViewResults::graph_density();
+            mGraph->remove_all_zones(); // delete default zones made by graph_density()
+
             mGraph->setOverArrow(GraphView::eNone);
             mGraph->mLegendX = "";
             mGraph->setBackgroundColor(QColor(230, 230, 230));

@@ -96,7 +96,17 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
         mGraph->setFormatFunctY(nullptr);
         mGraph->setBackgroundColor(QColor(230, 230, 230));
         mGraph->setOverArrow(GraphView::eBothOverflow);
-        
+
+        //mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
+        //mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+
+        mGraph->autoAdjustYScale(true);
+
+        mGraph->setXAxisMode(GraphView::eAllTicks);
+        mGraph->setYAxisMode(GraphView::eHidden);
+
+
+
         mTitle = tr("Smoothing");
 
         // ------------------------------------
@@ -204,10 +214,11 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
         
         mGraph->setTipXLab(tr("Log10 Smoothing"));
 
-        mGraph->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
+        /*mGraph->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
         mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
 
         mGraph->setYAxisMode(GraphView::eHidden);
+*/
         mGraph->showInfos(false);
         mGraph->clearInfos();
     }

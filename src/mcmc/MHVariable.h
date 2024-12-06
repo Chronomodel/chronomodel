@@ -81,7 +81,7 @@ public:
     bool adapt (const double coef_min = 0.42, const double coef_max = 0.46, const double delta = 0.01);
 
     inline bool accept_buffer_full() {return mLastAccepts.size() == mLastAcceptsLength;};
-    inline void memo_accept(const unsigned i_chain) {if (accept_buffer_full()) ++mAllAccepts[i_chain];} // ??
+    inline void memo_accept(const unsigned i_chain) {if (accept_buffer_full() && mLastAccepts.back()) ++mNbValuesAccepted[i_chain];}
 
     std::vector<double> acceptationForChain(const std::vector<ChainSpecs>& chains, size_t index);
     void generateGlobalRunAcceptation(const std::vector<ChainSpecs>& chains);
@@ -107,7 +107,8 @@ public:
     // sur les parties acquisition uniquement.
     // A stocker dans le fichier résultats .res !
 
-    std::vector<long long> mAllAccepts;
+    std::vector<long long> mNbValuesAccepted; //Number of values accepted // old mAllAccept
+
     // Computed at the end as numerical result :
     double mGlobalAcceptationPerCent;
 

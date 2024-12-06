@@ -494,7 +494,7 @@ void MainWindow::newProject()
     // Returns false if the user cancels.
     bool yesCreate = false;
 
-    if ((mProject == nullptr) || (mProject->askToSave(tr("Save current project as...") )))
+    if ((mProject == nullptr) || (mProject->mState == Project::emptyState()) || (mProject->askToSave(tr("Save current project as...") )))
         yesCreate= true;
 
     if (yesCreate) {
@@ -505,29 +505,24 @@ void MainWindow::newProject()
             mProject->clear_calibCurves();
         }
         mProject.reset(new Project());
-        //Project* newProject = new Project();
-         // just update mAutoSaveTimer to avoid open the save() dialog box
+
+        // just update mAutoSaveTimer to avoid open the save() dialog box
         mProject-> mAutoSaveTimer->stop();
 
         /* Ask to save the new project.
          * Returns true only if a new file is created.
          * Note : at this point, the project state is still the previous project state.*/
         if (mProject->saveAs(tr("Save new project as..."))) {
-            //mUndoStack->clear();
 
             // resetInterface Disconnect also the scene
             resetInterface();
 
-            //activateInterface(true);
 
             /* Reset the project state and the MCMC Setting to the default value
              * and then send a notification to update the views : send desabled */
 
             mProject->initState(NEW_PROJECT_REASON);// emit showStudyPeriodWarning();
 
-            //delete mProject;
-
-            //mProject = newProject;
 
             activateInterface(true); // mProject doit exister
 
@@ -553,10 +548,14 @@ void MainWindow::newProject()
 
             mUndoStack->clear();
 
-        }/* else {
-            delete newProject;
-            newProject = nullptr;
-        }*/
+            if (AppSettings::mAutoSave) {
+                mProject->mAutoSaveTimer->setInterval(AppSettings::mAutoSaveDelay * 1000);
+                mProject->mAutoSaveTimer->start();
+
+            } else
+                mProject->mAutoSaveTimer->stop();
+
+        }
     }
 }
 
@@ -625,6 +624,13 @@ void MainWindow::openProject()
             mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true);
 
             updateWindowTitle();
+
+            if (AppSettings::mAutoSave) {
+                mProject->mAutoSaveTimer->setInterval(AppSettings::mAutoSaveDelay * 1000);
+                mProject->mAutoSaveTimer->start();
+
+            } else
+                mProject->mAutoSaveTimer->stop();
          }
 
         mUndoStack->clear();
@@ -699,6 +705,7 @@ void MainWindow::closeProject()
         mUndoStack->clear();
 
         mProject->initState(CLOSE_PROJECT_REASON);
+        mProject->mAutoSaveTimer->stop();
 
         AppSettings::mLastDir = QString();
         AppSettings::mLastFile = QString();
@@ -719,6 +726,9 @@ void MainWindow::closeProject()
         mProject->clear_calibCurves();
         mProject.reset();
         updateWindowTitle();
+
+
+
    } else // if there is no project, we suppose it means to close the programm
        QApplication::exit(0);
 }
@@ -736,14 +746,19 @@ void MainWindow::saveProjectAs()
 void MainWindow::updateWindowTitle()
 {
     const QString saved_sign = AppSettings::mIsSaved ?  " ✓ " : QString(" ● ");
-#//ifdef DEBUG
- //   const QString file_name = " DEBUG Mode " + (AppSettings::mLastFile.isEmpty() ?  "" : QString(" - ") + AppSettings::mLastFile  + saved_sign);
-#//else
-    const QString file_name = (AppSettings::mLastFile.isEmpty() ?  "No Project" : AppSettings::mLastFile + saved_sign);
-#//endif
 
-//    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + file_name);// see main.cpp for the application name
+#ifdef DEBUG
+    const QString file_name = " DEBUG Mode " + (AppSettings::mLastFile.isEmpty() ?  "" : QString(" - ") + AppSettings::mLastFile  + saved_sign);
+#else
+    const QString file_name = (AppSettings::mLastFile.isEmpty() ?  "" : AppSettings::mLastFile + saved_sign);
+#endif
+
+#ifdef Q_OS_WIN
     setWindowTitle(file_name);
+
+#else
+    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + file_name);// see main.cpp for the application name
+#endif
 }
 
 /**
@@ -949,7 +964,8 @@ void MainWindow::selectEventWithString()
 
 void MainWindow::rebuildExportCurve()
 {
-    if (!mProject || !mProject->isCurve() || !mProject->mModel)
+    if (!mProject || !mProject->isCurve() || !mProject->mModel
+        || mProject->mModel->mPosteriorMeanG.gx.vecG.empty())
         return;
 
 
@@ -964,6 +980,7 @@ void MainWindow::rebuildExportCurve()
     tabMinMax.push_back(curveModel->mPosteriorMeanG.gx.mapG.rangeY);
     if (curveModel->compute_Y)
         tabMinMax.push_back(curveModel->mPosteriorMeanG.gy.mapG.rangeY);
+
     if (curveModel->compute_Z)
         tabMinMax.push_back(curveModel->mPosteriorMeanG.gz.mapG.rangeY);
 
@@ -974,8 +991,13 @@ void MainWindow::rebuildExportCurve()
     if (curveModel->compute_Z)
         tabMinMaxGP.push_back(curveModel->mPosteriorMeanG.gz.mapGP.rangeY);
 
+   // std::pair<double, double> minMaxPFilter (0., curveModel->mCurveSettings.mThreshold);
+    std::pair<double, double> minMaxPFilter (curveModel->mPosteriorMeanG.gx.mapGP.rangeY.first, curveModel->mPosteriorMeanG.gx.mapGP.rangeY.second);
+
     std::pair<unsigned, unsigned> mapSizeXY = std::pair<unsigned, unsigned> {curveModel->mPosteriorMeanG.gx.mapG._column, curveModel->mPosteriorMeanG.gx.mapG._row};
-    RebuildCurveDialog qDialog = RebuildCurveDialog(curveModel->getCurvesName(), &tabMinMax, &tabMinMaxGP, mapSizeXY);
+
+    // Display Rebuild Window
+    RebuildCurveDialog qDialog = RebuildCurveDialog(curveModel->getCurvesName(), &tabMinMax, &tabMinMaxGP, &minMaxPFilter, mapSizeXY);
 
 
     if (qDialog.exec() && (qDialog.doCurve() || qDialog.doMap())) {
@@ -985,6 +1007,7 @@ void MainWindow::rebuildExportCurve()
         const int YGrid = newMapSizeXY.second;
         tabMinMax = qDialog.getYTabMinMax();
         tabMinMaxGP = qDialog.getYpTabMinMax();
+        minMaxPFilter = qDialog.getYpMinMaxFilter();
 
         // ____
 
@@ -1030,7 +1053,10 @@ void MainWindow::rebuildExportCurve()
         int totalIterAccepted = 1;
         if (!curveModel->compute_Y) {
             for (auto &splineXYZ : runTrace) {
-                curveModel->memo_PosteriorG(meanG.gx, splineXYZ.splineX,  totalIterAccepted++ );
+                //curveModel->memo_PosteriorG(meanG.gx, splineXYZ.splineX,  totalIterAccepted++ );
+
+                curveModel->memo_PosteriorG_filtering(meanG.gx, splineXYZ.splineX, totalIterAccepted, minMaxPFilter );
+                totalIterAccepted++;
             }
 
         } else {
@@ -1075,7 +1101,12 @@ void MainWindow::rebuildExportCurve()
             int totalIterAccepted = 1;
             if (!curveModel->compute_Y) {
                 for (auto &splineXYZ : runTraceByChain) {
-                    curveModel->memo_PosteriorG(meanGByChain.gx, splineXYZ.splineX,  totalIterAccepted++ );
+                    //        const bool  ok = hasPositiveGPrimePlusConst(curveModel->mSpline.splineX, minMaxPFilter.second); // si dy > mCurveSettings.mThreshold = pas d'acceptation
+                    // faire le filtrage ici
+                    //curveModel->memo_PosteriorG(meanGByChain.gx, splineXYZ.splineX,  totalIterAccepted++ );
+
+                    curveModel->memo_PosteriorG_filtering(meanGByChain.gx, splineXYZ.splineX, totalIterAccepted, minMaxPFilter );
+                    totalIterAccepted++;
                 }
 
             } else {

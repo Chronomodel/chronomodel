@@ -249,8 +249,6 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
                                                                        "Post Distrib Unif Mean",
                                                                        Qt::darkGray, Qt::SolidLine);
 
-                if (mPhase->mValueStack.contains("Activity_Threshold") && mPhase->mValueStack.contains("Activity_Significance_Score") )
-                    mGraph->setInfo(QString("Significance Score ( %1 %) = %2").arg(stringForLocal(mPhase->mValueStack.at("Activity_Threshold")), stringForLocal(mPhase->mValueStack.at("Activity_Significance_Score"), true)) );
 
                 mGraph->add_curve(curveActivityEnv);
                 mGraph->add_curve(curveActivity);
@@ -434,11 +432,19 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 mGraph->setCurveVisible("Post Distrib All Chains", true);
                 mGraph->setCurveVisible("Post Distrib Env All Chains", showError);
 
+                // This text is displayed by ResultsView using the mInfos property of graph
+                if (showError
+                    && mPhase->mEvents.size()>1
+                    && mPhase->mValueStack.contains("Activity_Threshold") && mPhase->mValueStack.contains("Activity_Significance_Score") )
+                    mGraph->setInfo(QString("Significance Score ( %1 %) = %2").arg(stringForLocal(mPhase->mValueStack.at("Activity_Threshold")), stringForLocal(mPhase->mValueStack.at("Activity_Significance_Score"), true)) );
+                else
+                    mGraph->clearInfos();
+
                 // Activity Uniform
                 const bool showActivityUnif = mShowVariableList.contains(eActivityUnif);
                 mGraph->setCurveVisible("Post Distrib Unif Mean", showActivityUnif);
 
-/*
+                /*
                 type_data yMax = map_max(mPhase->mActivity)->second;
                 if (showError) {
                     yMax = std:: max(yMax, map_max(mPhase->mActivitySup)->second);
@@ -446,7 +452,8 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 if (showActivityUnif) {
                     yMax = std:: max(yMax, map_max(mPhase->mActivityUnifTheo)->second);
                 }
-                mGraph->setRangeY(0., yMax); */
+                mGraph->setRangeY(0., yMax);
+                 */
             }
 
         }
