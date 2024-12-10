@@ -63,15 +63,11 @@ public:
     std::pair<double, double> getYpMinMaxFilter() const {return mYpMinMaxFilter;}
 #endif
     std::pair<unsigned, unsigned> getMapSize() const;
-    //int getResult() const;
+
     int getXSpinResult() const;
     int getYSpinResult() const;
     int getYpSpinResult() const;
 
-
-    //bool doCurve() const {return curveCB->isChecked();}
-    //bool doMap() const {return mapCB->isChecked();}
-   // QString compo();
     void setCompoList (QStringList &list);
 
 protected slots:
@@ -104,8 +100,6 @@ protected slots:
 private:
     QLabel* label;
     QLineEdit* lineEdit;
-  //  QCheckBox* curveCB;
-   // QCheckBox* mapCB;
     QDialogButtonBox* buttonBox;
 
     QSpinBox* XspinBox;

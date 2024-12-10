@@ -262,7 +262,6 @@ int RebuildCurveDialog::getYSpinResult() const
     return YspinBox->value();
 }
 
-
 // Y1
 void RebuildCurveDialog::Y1MinIsValid(QString str)
 {
@@ -309,7 +308,6 @@ void RebuildCurveDialog::Y2MaxIsValid(QString str)
 
     setOkEnabled();
 }
-
 
 // Y3
 void RebuildCurveDialog::Y3MinIsValid(QString str)
@@ -407,7 +405,6 @@ void RebuildCurveDialog::Y2pMaxIsValid(QString str)
     setOkEnabled();
 }
 
-
 // Y3p
 void RebuildCurveDialog::Y3pMinIsValid(QString str)
 {
@@ -444,14 +441,12 @@ void RebuildCurveDialog::setOkEnabled()
 
                          && Y1pMinFilterOK && Y1pMaxFilterOK;
 #else
-    const bool isValid = ((mapCB->isChecked() && Y1MinOK && Y1MaxOK
+    const bool isValid = (Y1MinOK && Y1MaxOK
                            && Y2MinOK && Y2MaxOK
                            && Y3MinOK && Y3MaxOK
                            && Y1pMinOK && Y1pMaxOK
                            && Y2pMinOK && Y2pMaxOK
-                           && Y3pMinOK && Y3pMaxOK )
-
-                          || !mapCB->isChecked());
+                           && Y3pMinOK && Y3pMaxOK );
 
 #endif
     buttonBox->button(QDialogButtonBox::Ok)->setEnabled(isValid);
@@ -487,10 +482,6 @@ void RebuildCurveDialog::updateOptions()
             Y3pmaxEdit->setEnabled(show_map);
         }
     }
-
-
-
-
 
 }
 

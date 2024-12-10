@@ -1064,7 +1064,6 @@ void MainWindow::rebuildExportCurve()
                 curveModel->memo_PosteriorG(meanG.gx, splineXYZ.splineX,  totalIterAccepted++ );
 #endif
 
-                curveModel->memo_PosteriorG_filtering(meanG.gx, splineXYZ.splineX, totalIterAccepted, minMaxPFilter );
                 totalIterAccepted++;
             }
 
@@ -1110,11 +1109,12 @@ void MainWindow::rebuildExportCurve()
             int totalIterAccepted = 1;
             if (!curveModel->compute_Y) {
                 for (auto &splineXYZ : runTraceByChain) {
-                    //        const bool  ok = hasPositiveGPrimePlusConst(curveModel->mSpline.splineX, minMaxPFilter.second); // si dy > mCurveSettings.mThreshold = pas d'acceptation
-                    // faire le filtrage ici
-                    //curveModel->memo_PosteriorG(meanGByChain.gx, splineXYZ.splineX,  totalIterAccepted++ );
 
+#ifdef DEBUG
                     curveModel->memo_PosteriorG_filtering(meanGByChain.gx, splineXYZ.splineX, totalIterAccepted, minMaxPFilter );
+#else
+                    curveModel->memo_PosteriorG(meanGByChain.gx, splineXYZ.splineX, totalIterAccepted );
+#endif
                     totalIterAccepted++;
                 }
 
