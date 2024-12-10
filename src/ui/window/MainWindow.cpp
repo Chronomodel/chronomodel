@@ -754,7 +754,7 @@ void MainWindow::updateWindowTitle()
     setWindowTitle(file_name);
 
 #else
-    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + file_name);// see main.cpp for the application name
+    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + " " + file_name);// see main.cpp for the application name
 #endif
 }
 
@@ -997,11 +997,10 @@ void MainWindow::rebuildExportCurve()
     std::pair<double, double> minMaxPFilter (-INFINITY, +INFINITY);
 
     RebuildCurveDialog qDialog = RebuildCurveDialog(curveModel->getCurvesName(), &tabMinMax, &tabMinMaxGP, &minMaxPFilter, mapSizeXY);
+
 #else
     RebuildCurveDialog qDialog = RebuildCurveDialog(curveModel->getCurvesName(), &tabMinMax, &tabMinMaxGP, mapSizeXY);
 #endif
-
-
 
     if (qDialog.exec()) {
 
@@ -1052,7 +1051,6 @@ void MainWindow::rebuildExportCurve()
                 meanG.gz.mapGP.setRangeY(tabMinMaxGP[2].first, tabMinMaxGP[2].second);
             }
         }
-
 
         int totalIterAccepted = 1;
         if (!curveModel->compute_Y) {

@@ -1308,7 +1308,7 @@ void ModelCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, const MCMCSpline &spl
     CurveMap* curveMap_YDec = &postG.gy.mapG;
     CurveMap* curveMap_ZF = &postG.gz.mapG;
 
-    const int nbPtsX = curveMap_ZF->column(); // identique à toutes les maps
+    const int nbPtsX = curveMap_XInc->column(); // identique à toutes les maps
 
     const int nbPtsY_XInc = curveMap_XInc->row();
     const int nbPtsY_YDec = curveMap_YDec->row();
@@ -1416,11 +1416,13 @@ void ModelCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, const MCMCSpline &spl
         valeurs_G_VarG_GP_GS(t, spline.splineX, gx, varGx, gpx, gsx, i0, mSettings.mTmin, mSettings.mTmax);
         valeurs_G_VarG_GP_GS(t, spline.splineY, gy, varGy, gpy, gsy, i0, mSettings.mTmin, mSettings.mTmax);
 
-        //if (compute_Z)
-            valeurs_G_VarG_GP_GS(t, spline.splineZ, gz, varGz, gpz, gsz, i0, mSettings.mTmin, mSettings.mTmax);
+       // if (compute_Z)
+        //    valeurs_G_VarG_GP_GS(t, spline.splineZ, gz, varGz, gpz, gsz, i0, mSettings.mTmin, mSettings.mTmax);
 
         // Conversion IDF
         if (curveType == CurveSettings::eProcess_Vector ||  curveType == CurveSettings::eProcess_Spherical) {
+            valeurs_G_VarG_GP_GS(t, spline.splineZ, gz, varGz, gpz, gsz, i0, mSettings.mTmin, mSettings.mTmax);
+
             const double F = sqrt(pow(gx, 2.) + pow(gy, 2.) + pow(gz, 2.));
             const double Inc = asin(gz / F);
             const double Dec = atan2(gy, gx);
@@ -1437,7 +1439,9 @@ void ModelCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, const MCMCSpline &spl
             varGx = pow(ErrI * deg, 2.);
             varGy = pow(ErrD * deg, 2.);
             varGz = pow(ErrF, 2.);
-        }
+
+        } else if (compute_Z)
+            valeurs_G_VarG_GP_GS(t, spline.splineZ, gz, varGz, gpz, gsz, i0, mSettings.mTmin, mSettings.mTmax);
 
 
         // -- Calcul Mean on XInc

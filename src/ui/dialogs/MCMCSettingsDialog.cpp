@@ -57,7 +57,7 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent, const bool show_help):QD
     mButW (fontMetrics().horizontalAdvance("0000000000")),
     mButH ( int (1.2 * fontMetrics().height())),
     mMarginW ( int( 0.5 * fontMetrics().height() )),  // marge width
-    mMarginH ( (mColoredBoxHeigth - 5*mLineH)/8 ),  // marge Heigth
+    mMarginH ( (mColoredBoxHeigth - 5 * mLineH)/8 ),  // marge Heigth
     mTotalWidth (mBurnBoxWidth + mAdaptBoxWidth + mAcquireBoxWidth + 4 * mMarginW)
 {
     setWindowTitle(tr("MCMC Settings"));
@@ -80,14 +80,14 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent, const bool show_help):QD
     positiveValidator->setBottom(1);
 
     QIntValidator* chainsValidator = new QIntValidator(this);
-    chainsValidator->setRange(1, 5);
+    chainsValidator->setRange(1, 10);
 
     mNumProcLabel = new QLabel(tr("Number of chains"), this);
 
     mNumProcEdit = new LineEdit(this);
     mNumProcEdit->setFixedSize(mEditW, mButH);
     mNumProcEdit->setValidator(chainsValidator);
-    mNumProcEdit->setPlaceholderText(tr("From 1 to 5"));
+    mNumProcEdit->setPlaceholderText(tr("From 1 to 10"));
    // mNumProcEdit->setPalette(palette);
 
     // Inside colored boxes
@@ -154,13 +154,10 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent, const bool show_help):QD
 #endif
 
     mOkBut = new QPushButton(tr("OK"), this);
-   // mOkBut->setFixedSize(mButW, mButH);
 
     mCancelBut = new QPushButton(tr("Cancel"), this);
-   // mCancelBut->setFixedSize(fontMetrics().horizontalAdvance(mCancelBut->text()) + 2 * mMarginW, mButH);
 
     mTestBut = new QPushButton(tr("Quick Test"), this);
-   // mTestBut->setFixedSize(fontMetrics().horizontalAdvance(mTestBut->text()) + 2 * mMarginW, mButH);
 
 #ifdef DEBUG
    // mTestBut->setFixedSize(fontMetrics().horizontalAdvance(mTestBut->text()) + 2 * mMarginW, mButH);
@@ -183,7 +180,7 @@ setAttribute(Qt::WA_AlwaysShowToolTips);
     connect(mResetBut, &QPushButton::clicked, this, &MCMCSettingsDialog::reset);
     connect(mTestBut, &QPushButton::clicked, this, &MCMCSettingsDialog::setQuickTest);
 
-    const int fixedHeight =   mTop  + mColoredBoxHeigth + (show_help? mHelp->heightForWidth(mTotalWidth - 2 * mMarginW) : 0.)  + 5 * mMarginH + 2*mLineH + mOkBut->height() ;
+    const int fixedHeight =   mTop  + mColoredBoxHeigth + (show_help? mHelp->heightForWidth(mTotalWidth - 2 * mMarginW) : 0.)  + 5 * mMarginH + 2 * mLineH + mOkBut->height() ;
     setFixedSize(mTotalWidth, fixedHeight);
 
 }
