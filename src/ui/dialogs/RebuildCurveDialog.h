@@ -52,21 +52,25 @@ class RebuildCurveDialog : public QDialog
 {
     Q_OBJECT
 public:
+#ifdef DEBUG
     explicit RebuildCurveDialog (QStringList list = {"X"}, std::vector< std::pair<double, double>> *minMax = nullptr, std::vector< std::pair<double, double>> *minMaxP = nullptr, std::pair<double, double> *minMaxPFilter = nullptr, std::pair<unsigned, unsigned> mapSize = std::pair<unsigned, unsigned>{300, 300}, QWidget *parent = nullptr);
-
+#else
+    explicit RebuildCurveDialog (QStringList list = {"X"}, std::vector< std::pair<double, double>> *minMax = nullptr, std::vector< std::pair<double, double>> *minMaxP = nullptr, std::pair<unsigned, unsigned> mapSize = std::pair<unsigned, unsigned>{300, 300}, QWidget *parent = nullptr);
+#endif
     std::vector< std::pair<double, double>> getYTabMinMax() const {return mYTabMinMax;}
     std::vector< std::pair<double, double>> getYpTabMinMax() const {return mYpTabMinMax;}
+ #ifdef DEBUG
     std::pair<double, double> getYpMinMaxFilter() const {return mYpMinMaxFilter;}
-
+#endif
     std::pair<unsigned, unsigned> getMapSize() const;
-    int getResult() const;
+    //int getResult() const;
     int getXSpinResult() const;
     int getYSpinResult() const;
     int getYpSpinResult() const;
 
 
-    bool doCurve() const {return curveCB->isChecked();}
-    bool doMap() const {return mapCB->isChecked();}
+    //bool doCurve() const {return curveCB->isChecked();}
+    //bool doMap() const {return mapCB->isChecked();}
    // QString compo();
     void setCompoList (QStringList &list);
 
@@ -84,9 +88,10 @@ protected slots:
     void Y1pMinIsValid (QString str);
     void Y1pMaxIsValid(QString str);
 
-
+#ifdef DEBUG
     void Y1pMinFilterIsValid (QString str);
     void Y1pMaxFilterIsValid(QString str);
+#endif
 
     void Y2pMinIsValid(QString str);
     void Y2pMaxIsValid(QString str);
@@ -99,8 +104,8 @@ protected slots:
 private:
     QLabel* label;
     QLineEdit* lineEdit;
-    QCheckBox* curveCB;
-    QCheckBox* mapCB;
+  //  QCheckBox* curveCB;
+   // QCheckBox* mapCB;
     QDialogButtonBox* buttonBox;
 
     QSpinBox* XspinBox;
@@ -144,12 +149,14 @@ private:
     std::vector< std::pair<double, double>> mYpTabMinMax;
 
     // 1 filter possible
+#ifdef DEBUG
     QLineEdit* Y1pminFilterEdit;
     bool Y1pMinFilterOK = true;
     QLineEdit* Y1pmaxFilterEdit;
     bool Y1pMaxFilterOK = true;
 
     std::pair<double, double> mYpMinMaxFilter;
+#endif
 
     QGridLayout* _setting_1_Grid;
     QGridLayout* _setting_2_Grid;

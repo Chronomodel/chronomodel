@@ -735,8 +735,8 @@ void ModelView::modifyPeriod()
           ModelView::calibrateAll(newS);
 
           Scale xScale;
-          xScale.findOptimal(newS.mTmin, newS.mTmax, 7);
-          xScale.tip = 4;
+          xScale.findOptimal(newS.mTmin, newS.mTmax, 10);
+          //xScale.tip = 4;
           mMultiCalibrationView->initScale(xScale);
           mCalibrationView->initScale(xScale);
 
@@ -1602,10 +1602,10 @@ void ModelView::showCalibration(bool show)
         //mAnimationCalib->setStartValue(mLeftHiddenRect);
         //mAnimationCalib->setEndValue(mLeftRect);
 
-    } else {
+    }/* else {
        // mAnimationCalib->setStartValue(mLeftRect);
        // mAnimationCalib->setEndValue(mLeftHiddenRect);
-    }
+    }*/
     //mAnimationCalib->start();
 
 }

@@ -43,22 +43,26 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QHBoxLayout>
 #include <QPushButton>
 
+#ifdef DEBUG
 RebuildCurveDialog::RebuildCurveDialog(QStringList list, std::vector< std::pair<double, double>> *minMax, std::vector< std::pair<double, double>> *minMaxP,
                                        std::pair<double, double> *minMaxPFilter, std::pair<unsigned, unsigned> mapSize, QWidget *parent):
     QDialog{parent},
     mCompoList(list),
     mYTabMinMax(*minMax),
-    mYpTabMinMax(*minMaxP),
-    mYpMinMaxFilter(*minMaxPFilter)
+    mYpTabMinMax(*minMaxP)
+
+    , mYpMinMaxFilter(*minMaxPFilter)
+#else
+RebuildCurveDialog::RebuildCurveDialog(QStringList list, std::vector< std::pair<double, double>> *minMax, std::vector< std::pair<double, double>> *minMaxP,
+                                                  std::pair<unsigned, unsigned> mapSize, QWidget *parent):
+    QDialog{parent},
+    mCompoList(list),
+    mYTabMinMax(*minMax),
+    mYpTabMinMax(*minMaxP)
+
+#endif
 {
     setWindowTitle(tr("Rescale Density Plots"));
-
-    curveCB = new QCheckBox("curve") ;
-    curveCB->setChecked(true);
-    connect(curveCB, static_cast<void (QCheckBox::*)(bool)> (&QCheckBox::toggled), this, &RebuildCurveDialog:: updateOptions);
-
-    mapCB  = new QCheckBox("map") ;
-    connect(mapCB, static_cast<void (QCheckBox::*)(bool)> (&QCheckBox::toggled), this, &RebuildCurveDialog:: updateOptions);
 
     XspinBox = new QSpinBox();
     XspinBox->setRange(5, 10000);
@@ -84,7 +88,7 @@ RebuildCurveDialog::RebuildCurveDialog(QStringList list, std::vector< std::pair<
     connect(Y1pminEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::Y1pMinIsValid);
     Y1pmaxEdit = new QLineEdit(QLocale().toString(mYpTabMinMax[0].second));
     connect(Y1pmaxEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::Y1pMaxIsValid);
-
+#ifdef DEBUG
     if (minMaxPFilter != nullptr) {
 
         Y1pminFilterEdit = new QLineEdit(QLocale().toString(mYpMinMaxFilter.first));
@@ -92,13 +96,12 @@ RebuildCurveDialog::RebuildCurveDialog(QStringList list, std::vector< std::pair<
         Y1pmaxFilterEdit = new QLineEdit(QLocale().toString(mYpMinMaxFilter.second));
         connect(Y1pmaxFilterEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::Y1pMaxFilterIsValid);
     }
-
+#endif
     //buttonBox = new QDialogButtonBox(Qt::Horizontal);
     buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
     connect(buttonBox, &QDialogButtonBox::accepted, this, &RebuildCurveDialog::accept);
     connect(buttonBox, &QDialogButtonBox::rejected, this, &RebuildCurveDialog::reject);
-
 
     QBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->setSizeConstraint(QLayout::SetFixedSize);
@@ -107,21 +110,17 @@ RebuildCurveDialog::RebuildCurveDialog(QStringList list, std::vector< std::pair<
     QGridLayout *midLayout = new QGridLayout;
 
     midLayout->addWidget(new QLabel(tr("Grid Setting")), ligne, 0, 1, 2, Qt::AlignCenter);
-    ligne++;
-    midLayout->addWidget(curveCB, ligne, 0);
 
     ligne++;
-    midLayout->addWidget(mapCB, ligne, 0);
-    ligne++;
-
     midLayout->addWidget(new QLabel(tr("Time Step")), ligne, 0);
     midLayout->addWidget(XspinBox, ligne, 1);
-    ligne++;
 
-    midLayout->addWidget(new QLabel(tr("Value Step")), ligne, 0);
+    ligne++;
+    QString str = mCompoList.join(", ");
+    midLayout->addWidget(new QLabel(tr("%1 Step").arg(str)), ligne, 0);
     midLayout->addWidget(YspinBox, ligne, 1);
-    ligne++;
 
+    ligne++;
     _setting_1_Grid = new QGridLayout;
 
     QFrame* line1 = new QFrame();
@@ -132,17 +131,17 @@ RebuildCurveDialog::RebuildCurveDialog(QStringList list, std::vector< std::pair<
     _setting_1_Grid->addWidget(new QLabel(mCompoList[0] +tr(" Axis Setting")), ligne, 0, 1, 2, Qt::AlignCenter);
 
     ligne++;
-    QString str = mCompoList[0] + " " + tr("min");
+    str =  tr("%1 min").arg(mCompoList[0]);
     _setting_1_Grid->addWidget(new QLabel(str), ligne, 0);
-    str = mCompoList[0] + " " + tr("max");
+    str = tr("%1 max").arg(mCompoList[0]);
     _setting_1_Grid->addWidget(new QLabel(str), ligne, 1);
     ligne++;
     _setting_1_Grid->addWidget(Y1minEdit, ligne, 0);
     _setting_1_Grid->addWidget(Y1maxEdit, ligne, 1);
     ligne++;
-    str = mCompoList[0] + " Rate " + tr("min");
+    str = tr("%1 Rate min").arg(mCompoList[0]);
     _setting_1_Grid->addWidget(new QLabel(str), ligne, 0);
-    str = mCompoList[0] + " Rate " + tr("max");
+    str = tr("%1 Rate max").arg(mCompoList[0]);
     _setting_1_Grid->addWidget(new QLabel(str), ligne, 1);
     ligne++;
     _setting_1_Grid->addWidget(Y1pminEdit, ligne, 0);
@@ -171,17 +170,17 @@ RebuildCurveDialog::RebuildCurveDialog(QStringList list, std::vector< std::pair<
         _setting_2_Grid->addWidget(new QLabel(mCompoList[1] +tr(" Axis Setting")), ligne, 0, 1, 2, Qt::AlignCenter);
 
         ligne++;
-        str = mCompoList[1] + " " + tr("min");
+        str = tr("%1 min").arg(mCompoList[1]);
         _setting_2_Grid->addWidget(new QLabel(str), ligne, 0);
-        str = mCompoList[1] + " " + tr("max");
+        str = tr("%1 max").arg(mCompoList[1]);
         _setting_2_Grid->addWidget(new QLabel(str), ligne, 1);
         ligne++;
         _setting_2_Grid->addWidget(Y2minEdit, ligne, 0);
         _setting_2_Grid->addWidget(Y2maxEdit, ligne, 1);
         ligne++;
-        str = mCompoList[1] + " Rate " + tr("min");
+        str = tr("%1 Rate min").arg(mCompoList[1]);
         _setting_2_Grid->addWidget(new QLabel(str), ligne, 0);
-        str = mCompoList[1] + " Rate " + tr("max");
+        str = tr("%1 Rate max").arg(mCompoList[1]);
         _setting_2_Grid->addWidget(new QLabel(str), ligne, 1);
         ligne++;
         _setting_2_Grid->addWidget(Y2pminEdit, ligne, 0);
@@ -208,34 +207,36 @@ RebuildCurveDialog::RebuildCurveDialog(QStringList list, std::vector< std::pair<
             ligne++;
             _setting_3_Grid->addWidget(new QLabel(mCompoList[2] +tr(" Axis Setting")), ligne, 0, 1, 2, Qt::AlignCenter);
             ligne++;
-            str = mCompoList[2] + " " + tr("min");
+            str = tr("%1 min").arg(mCompoList[2]);
             _setting_3_Grid->addWidget(new QLabel(str), ligne, 0);
-            str = mCompoList[2] + " " + tr("max");
+            str = tr("%1 max").arg(mCompoList[2]);
             _setting_3_Grid->addWidget(new QLabel(str), ligne, 1);
             ligne++;
             _setting_3_Grid->addWidget(Y3minEdit, ligne, 0);
             _setting_3_Grid->addWidget(Y3maxEdit, ligne, 1);
             ligne++;
-            str = mCompoList[2] + " Rate " + tr("min");
+            str = tr("%1 Rate min").arg(mCompoList[2]);
             _setting_3_Grid->addWidget(new QLabel(str), ligne, 0);
-            str = mCompoList[2] + " Rate " + tr("max");
+            str = tr("%1 Rate max").arg(mCompoList[2]);
             _setting_3_Grid->addWidget(new QLabel(str), ligne, 1);
             ligne++;
             _setting_3_Grid->addWidget(Y3pminEdit, ligne, 0);
             _setting_3_Grid->addWidget(Y3pmaxEdit, ligne, 1);
         }
 
-    } else { // filter only with 1 componnent
+    }
+#ifdef DEBUG
+    else { // filter only with 1 componnent
         ligne++;
-        str = tr("Filter ") + mCompoList[0] + " Rate " + tr("min");
+        str = tr("Filter %1 Rate min").arg(mCompoList[0]);
         _setting_1_Grid->addWidget(new QLabel(str), ligne, 0);
-        str = tr("Filter ") + mCompoList[0] + " Rate " + tr("max");
+        str = tr("Filter %1 Rate max").arg(mCompoList[0]);
         _setting_1_Grid->addWidget(new QLabel(str), ligne, 1);
         ligne++;
         _setting_1_Grid->addWidget(Y1pminFilterEdit, ligne, 0);
         _setting_1_Grid->addWidget(Y1pmaxFilterEdit, ligne, 1);
     }
-
+#endif
     mainLayout->addLayout(midLayout);
     mainLayout->addLayout(_setting_1_Grid);
     if (mCompoList.size() > 1) {
@@ -249,14 +250,6 @@ RebuildCurveDialog::RebuildCurveDialog(QStringList list, std::vector< std::pair<
 
     updateOptions();
 
-}
-
-int RebuildCurveDialog::getResult() const
-{
-    if (curveCB->isChecked())
-        return 0;
-    else
-        return 1;
 }
 
 int RebuildCurveDialog::getXSpinResult() const
@@ -365,6 +358,7 @@ void RebuildCurveDialog::Y1pMaxIsValid(QString str)
     setOkEnabled();
 }
 
+#ifdef DEBUG
 // YP Filter
 void RebuildCurveDialog::Y1pMinFilterIsValid(QString str)
 {
@@ -388,7 +382,7 @@ void RebuildCurveDialog::Y1pMaxFilterIsValid(QString str)
 
     setOkEnabled();
 }
-
+#endif
 
 // Y2p
 void RebuildCurveDialog::Y2pMinIsValid(QString str)
@@ -440,16 +434,26 @@ void RebuildCurveDialog::Y3pMaxIsValid(QString str)
 
 void RebuildCurveDialog::setOkEnabled()
 {
-    const bool isValid = ((mapCB->isChecked() && Y1MinOK && Y1MaxOK
+#ifdef DEBUG
+    const bool isValid = (Y1MinOK && Y1MaxOK
                           && Y2MinOK && Y2MaxOK
                           && Y3MinOK && Y3MaxOK
                           && Y1pMinOK && Y1pMaxOK
                           && Y2pMinOK && Y2pMaxOK
                           && Y3pMinOK && Y3pMaxOK )
 
-                         || !mapCB->isChecked())
                          && Y1pMinFilterOK && Y1pMaxFilterOK;
+#else
+    const bool isValid = ((mapCB->isChecked() && Y1MinOK && Y1MaxOK
+                           && Y2MinOK && Y2MaxOK
+                           && Y3MinOK && Y3MaxOK
+                           && Y1pMinOK && Y1pMaxOK
+                           && Y2pMinOK && Y2pMaxOK
+                           && Y3pMinOK && Y3pMaxOK )
 
+                          || !mapCB->isChecked());
+
+#endif
     buttonBox->button(QDialogButtonBox::Ok)->setEnabled(isValid);
 
 }
@@ -457,7 +461,7 @@ void RebuildCurveDialog::setOkEnabled()
 void RebuildCurveDialog::updateOptions()
 {
 
-    const bool show_map = mapCB->isChecked();
+    const bool show_map = true;
     YspinBox->setEnabled(show_map);
 
     _setting_1_Grid->setEnabled(show_map);

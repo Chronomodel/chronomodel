@@ -80,10 +80,7 @@ MainWindow::MainWindow(QWidget* parent):
 
     QToolTip::setFont(tooltipFont);
 */
- /*   testButton = new QPushButton("test",this);
-    testButton->setToolTip("test test");
-    testButton->setGeometry(QRect(150,70, 30,20));
-*/
+
     mLastPath = QDir::homePath();
 
     /* Creation of ResultsView and ModelView */
@@ -316,7 +313,7 @@ void MainWindow::createActions()
     mSelectEventsNameAction = new QAction(tr("Select All Events with string"), this);
     connect(mSelectEventsNameAction, &QAction::triggered, this, &MainWindow::selectEventWithString);
 
-    mExportCurveAction = new QAction(tr("Rescale Curve and its Density"), this);
+    mExportCurveAction = new QAction(tr("Rescale Density Plots"), this);
     connect(mExportCurveAction, &QAction::triggered, this, &MainWindow::rebuildExportCurve);
     //-----------------------------------------------------------------
     // Help/About Menu
@@ -991,24 +988,31 @@ void MainWindow::rebuildExportCurve()
     if (curveModel->compute_Z)
         tabMinMaxGP.push_back(curveModel->mPosteriorMeanG.gz.mapGP.rangeY);
 
-   // std::pair<double, double> minMaxPFilter (0., curveModel->mCurveSettings.mThreshold);
-    std::pair<double, double> minMaxPFilter (curveModel->mPosteriorMeanG.gx.mapGP.rangeY.first, curveModel->mPosteriorMeanG.gx.mapGP.rangeY.second);
 
     std::pair<unsigned, unsigned> mapSizeXY = std::pair<unsigned, unsigned> {curveModel->mPosteriorMeanG.gx.mapG._column, curveModel->mPosteriorMeanG.gx.mapG._row};
 
     // Display Rebuild Window
+#ifdef DEBUG
+    //std::pair<double, double> minMaxPFilter (curveModel->mPosteriorMeanG.gx.mapGP.rangeY.first*10, curveModel->mPosteriorMeanG.gx.mapGP.rangeY.second*10);
+    std::pair<double, double> minMaxPFilter (-INFINITY, +INFINITY);
+
     RebuildCurveDialog qDialog = RebuildCurveDialog(curveModel->getCurvesName(), &tabMinMax, &tabMinMaxGP, &minMaxPFilter, mapSizeXY);
+#else
+    RebuildCurveDialog qDialog = RebuildCurveDialog(curveModel->getCurvesName(), &tabMinMax, &tabMinMaxGP, mapSizeXY);
+#endif
 
 
-    if (qDialog.exec() && (qDialog.doCurve() || qDialog.doMap())) {
+
+    if (qDialog.exec()) {
 
         auto newMapSizeXY = qDialog.getMapSize();
         const int XGrid = newMapSizeXY.first;
         const int YGrid = newMapSizeXY.second;
         tabMinMax = qDialog.getYTabMinMax();
         tabMinMaxGP = qDialog.getYpTabMinMax();
+#ifdef DEBUG
         minMaxPFilter = qDialog.getYpMinMaxFilter();
-
+#endif
         // ____
 
         const auto &runTrace = curveModel->fullRunSplineTrace(curveModel->mChains);
@@ -1053,7 +1057,12 @@ void MainWindow::rebuildExportCurve()
         int totalIterAccepted = 1;
         if (!curveModel->compute_Y) {
             for (auto &splineXYZ : runTrace) {
-                //curveModel->memo_PosteriorG(meanG.gx, splineXYZ.splineX,  totalIterAccepted++ );
+#ifdef DEBUG
+
+                curveModel->memo_PosteriorG_filtering(meanG.gx, splineXYZ.splineX, totalIterAccepted, minMaxPFilter );
+#else
+                curveModel->memo_PosteriorG(meanG.gx, splineXYZ.splineX,  totalIterAccepted++ );
+#endif
 
                 curveModel->memo_PosteriorG_filtering(meanG.gx, splineXYZ.splineX, totalIterAccepted, minMaxPFilter );
                 totalIterAccepted++;

@@ -23,7 +23,7 @@ echo "copie dans le BUNDLE $BUNDLE"
 QT_BIN_PATH=/Users/dufresne/Qt/6.7.2/macos/bin
 QT_LIB_PATH=/Users/dufresne/Qt/6.7.2/macos/lib
 QT_PLUGINS_PATH=/Users/dufresne/Qt/6.7.2/macos/plugins
-VERSION=3.2.8
+VERSION=3.2.9
 
 # le texte suivant est remplacé par macdeployqt
 # -------------------------------------------------------
