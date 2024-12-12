@@ -661,7 +661,7 @@ void Date::shrink_to_fit() noexcept
  * @param truncate Restrict the calib and repartition vectors to where data are
  */
 
-void Date::calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<Project> project, bool truncate)
+void Date::calibrate(const StudyPeriodSettings &period_settings, std::shared_ptr<Project> project, bool truncate)
 {
     // add the calibration
     std::map<std::string, CalibrationCurve>::iterator it = project->mCalibCurves.find (mUUID);
@@ -674,7 +674,7 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<
         const CalibrationCurve& d_mCalibration = it->second;
         if ( d_mCalibration.mDescription == getDesc().toStdString() ) {
             // Controls whether the curve has already been calculated using the description
-            calibrateWiggle(priod_settings, project);
+            calibrateWiggle(period_settings, project);
 
             return;
         }
@@ -690,6 +690,8 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<
         if (!dateRefName.isEmpty() && !refsNames.contains(dateRefName) )
             return;
         refMinStep = mPlugin->getMinStepRefsCurve(mData);
+        const auto optimal_period_step = StudyPeriodSettings::getStep(period_settings.mTmin, period_settings.mTmax);
+        refMinStep = std::min(refMinStep, optimal_period_step);
 
     } else if (mOrigin == eCombination) {
         if ( it != project->mCalibCurves.end()) {
@@ -718,8 +720,8 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<
 
     mCalibration = &project->mCalibCurves[mUUID];
     mCalibration -> mDescription = getDesc().toStdString();
-    if(priod_settings.mStepForced)
-        refMinStep = priod_settings.mStep;
+    if(period_settings.mStepForced)
+        refMinStep = period_settings.mStep;
 
     mCalibration->mStep = refMinStep;
     mCalibration->mPluginId = mPlugin->getId().toStdString();
@@ -742,7 +744,7 @@ void Date::calibrate(const StudyPeriodSettings &priod_settings, std::shared_ptr<
      *  Calibrate on the whole calibration period (= ref curve definition domain)
      * -------------------------------------------------- */
 
-    if (!priod_settings.mStepForced) {
+    if (!period_settings.mStepForced) {
         int nb_step_frac = 0;
 
         while ( mCalibration->mVector.empty() && std::count_if (mCalibration->mVector.begin(), mCalibration->mVector.end(), [](double v){return std::isnormal(v);}) < 22 && nb_step_frac < 50) {
@@ -1332,6 +1334,9 @@ const std::map<double, double> Date::getFormatedCalibToShow() const
             if (v >=threshold) break;
             minIdx++;
         }
+
+        if (minIdx == (int) mCalibration->mVector.size())
+            return std::map<double, double>();
 
         auto maxIdx = mCalibration->mVector.size()-1;
         for (auto itv = mCalibration->mVector.rbegin(); itv!= mCalibration->mVector.rend(); itv++) {
