@@ -255,7 +255,10 @@ QString MCMCLoopCurve::initialize_321()
             mModel->mLambdaSpline.memo(&memoLambda);
 
         } else {
-            mModel->mLambdaSpline.mX = 1; // default = 1E-6. // ici
+            if (mCurveSettings.mProcessType == CurveSettings::eProcess_Depth)
+                mModel->mLambdaSpline.mX = 1.;
+            else
+                mModel->mLambdaSpline.mX = 1.E-6; // default = 1E-6.
             mModel->mLambdaSpline.mLastAccepts.clear();
             mModel->mLambdaSpline.tryUpdate(mModel->mLambdaSpline.mX, 2.);
 
