@@ -253,7 +253,7 @@ void CalibrationView::setDate(const Date& d)
         mDate = d;
 
         mDrawing->setTitle(mDate.getQStringName() + " (" + mDate.mPlugin->getName() + ")");
-        qDebug() << "[CalibrationView::setDate] mUUID "<<mDate.getQStringName() << mDate.mUUID;
+        qDebug() << "[CalibrationView::setDate] mUUID " << mDate.getQStringName() << mDate.mUUID;
         const double t1 = mSettings.getTminFormated();
         const double t2 = mSettings.getTmaxFormated();
         if (mDate.mIsValid) {
@@ -350,7 +350,7 @@ void CalibrationView::updateGraphs()
             if (mDate.mDeltaType != Date::eDeltaNone) {
                 const std::map<double, double> &wiggleCalibMap =  mDate.getFormatedWiggleCalibToShow();
                 const std::map<double, double> &calibWiggle = normalize_map(wiggleCalibMap, map_max(calibCurve.mData).value());
-                calibWiggleCurve = densityCurve(calibWiggle, "Wiggle", Qt::red);
+                calibWiggleCurve = densityCurve(calibWiggle, "Wiggle", Qt::blue, Qt::DashLine, Qt::NoBrush);
                 calibWiggleCurve.mVisible = true;
                 mCalibGraph->add_curve(calibWiggleCurve);
             }

@@ -606,7 +606,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                     if (d.mDeltaType !=  Date::eDeltaNone) {
 
                         const std::map<double, double> &calibWiggle = normalize_map(d.getFormatedWiggleCalibToShow(), map_max(calibCurve.mData).value());
-                        GraphCurve curveWiggle = densityCurve(calibWiggle, "Wiggle", Qt::red);
+                        GraphCurve curveWiggle = densityCurve(calibWiggle, "Wiggle", Qt::blue, Qt::DashLine, Qt::NoBrush);
                         curveWiggle.mVisible = true;
                         calibGraph->add_curve(curveWiggle);
                     }
