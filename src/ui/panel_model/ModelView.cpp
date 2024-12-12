@@ -1090,10 +1090,9 @@ void ModelView::hideProperties()
  */
 void ModelView::showMultiCalib()
 {
-    //updateLayout();
     const bool showAnim = mEventsScene->getItemsList().size() < 21;
 
-   if (showAnim) {
+    if (showAnim) {
         mAnimationHide->setStartValue(mRightRect);
         mAnimationHide->setEndValue(mRightHiddenRect);
     }
@@ -1229,7 +1228,6 @@ void ModelView::eventsAreSelected()
 void ModelView::togglePropeties(AbstractItem* item)
 {
     qDebug()<<"[ModelView::togglePropeties]";
-    //eventsAreSelected();
 
     mButNewEventKnown->setDisabled(true);
     mButNewEvent->setDisabled(true);
@@ -1366,7 +1364,6 @@ void ModelView::applyAppSettings()
     }
 
     // ------
-   // mEventPropertiesView->applyAppSettings();
 
     for (auto&& item : mPhasesScene->getItemsList()) {
         static_cast<PhaseItem*>(item)->redrawPhase();
@@ -1595,10 +1592,10 @@ void ModelView::showCalibration(bool show)
        blockSignals(true);
        mEventPropertiesView->updateEvent(); //emit calibRequested(date);
        blockSignals(false);
-        mCalibrationView->setVisible(true);
+       mCalibrationView->setVisible(true);
         //mCalibrationView->repaint();
-        mCalibrationView->setGeometry(mLeftRect);
-        mCalibrationView->updateGraphs();
+       mCalibrationView->setGeometry(mLeftRect);
+       mCalibrationView->updateGraphs();
         //mAnimationCalib->setStartValue(mLeftHiddenRect);
         //mAnimationCalib->setEndValue(mLeftRect);
 
@@ -1615,11 +1612,8 @@ void ModelView::mousePressEvent(QMouseEvent* e)
 {
     if (mHandlerRect.contains(e->pos())) {
         mIsSplitting = true;
-       /* setCursor(Qt::ClosedHandCursor);
-    } else {
-        setCursor(Qt::ArrowCursor);*/
     }
-    qDebug()<<"[ModelView::mousePressEvent]";
+    //qDebug()<<"[ModelView::mousePressEvent]";
 }
 
 void ModelView::mouseReleaseEvent(QMouseEvent* e)
@@ -1629,13 +1623,8 @@ void ModelView::mouseReleaseEvent(QMouseEvent* e)
         setCursor(Qt::ArrowCursor);
         mIsSplitting = false;
 
-    } /*else if (mHandlerRect.contains(e->pos())) {
-        setCursor(Qt::SplitHCursor);
-
-    } else {
-        setCursor(Qt::ArrowCursor);
-    }*/
-    qDebug()<<"[ModelView::mouseReleaseEvent]";
+    }
+    //qDebug()<<"[ModelView::mouseReleaseEvent]";
 }
 
 void ModelView::mouseMoveEvent(QMouseEvent* e)
@@ -1648,13 +1637,8 @@ void ModelView::mouseMoveEvent(QMouseEvent* e)
         mHandlerRect.moveTo(int(x + mHandlerW/2), mTopRect.height());
 
         updateLayout();
-    } /*else if (mHandlerRect.contains(e->pos())) {
-            setCursor(Qt::SplitHCursor);
-
-    } else {
-            setCursor(Qt::SplitHCursor);
-    }*/
-    qDebug()<<"[ModelView::mouseMoveEvent]";
+    }
+    //qDebug()<<"[ModelView::mouseMoveEvent]";
 
 }
 
@@ -1751,8 +1735,6 @@ void ModelView::showCurveSettings(bool show)
         if (getProject_ptr()) {
             mEventsScene->updateSceneFromState();
         }
-
-   // updateLayout();
 
     } else {
 
