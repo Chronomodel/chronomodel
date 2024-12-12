@@ -1147,9 +1147,7 @@ void ResultsView::updateModel()
 void ResultsView::initModel()
 {
     auto model = getModel_ptr();
-    //disconnect(model.get(), nullptr, nullptr, nullptr);
 
-    //connect(model.get(), &Model::newCalculus, this, &ResultsView::generateCurves);
 
     mHasPhases = (model->mPhases.size() > 0);
 
@@ -1161,6 +1159,24 @@ void ResultsView::initModel()
 
     mCurrentTypeGraph = GraphViewResults::ePostDistrib;
     mCurrentVariableList.clear();
+
+    mRangeThresholdEdit->setText(stringForLocal(95.));
+    mThresholdEdit->setText(stringForLocal(model->getThreshold()));
+    mHActivityEdit->setText(stringForLocal(model->mHActivity));
+
+    mFFTLenCombo->setCurrentText(stringForLocal(model->getFFTLength()));
+    mBandwidthSpin->blockSignals(true);
+    mBandwidthSpin->setValue(model->getBandwidth());
+    mBandwidthSpin->blockSignals(false);
+
+    mZooms.clear();
+    mZoomsX.clear();
+    mZoomsY.clear();
+    mZoomsZ.clear();
+
+    updateGraphsMinMax();
+    applyStudyPeriod();
+
     if (isCurve()) {
         mMainVariable = GraphViewResults::eG;
         mCurveGRadio->setChecked(true);
@@ -1255,20 +1271,7 @@ void ResultsView::initModel()
     }
     updateMainVariable();
     mCurrentVariableList.append(mMainVariable);
-    mRangeThresholdEdit->setText(stringForLocal(95.));
-    mThresholdEdit->setText(stringForLocal(model->getThreshold()));
-    mHActivityEdit->setText(stringForLocal(model->mHActivity));
 
-    mFFTLenCombo->setCurrentText(stringForLocal(model->getFFTLength()));
-    mBandwidthSpin->setValue(model->getBandwidth());
-
-    mZooms.clear();
-    mZoomsX.clear();
-    mZoomsY.clear();
-    mZoomsZ.clear();
-
-    updateGraphsMinMax();
-    applyStudyPeriod();
     updateOptionsWidget();
     createGraphs();
     updateLayout();
