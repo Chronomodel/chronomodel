@@ -60,7 +60,7 @@ PluginMagRefView::PluginMagRefView(QWidget* parent):GraphViewRefAbstract(parent)
     mGraph = new GraphView(this);
 
     mGraph->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
-    mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+    mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllTip);
 
     mGraph->setXAxisMode(GraphView::eAllTicks);
     mGraph->setYAxisMode(GraphView::eAllTicks);

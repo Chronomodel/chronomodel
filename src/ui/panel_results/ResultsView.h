@@ -140,7 +140,7 @@ protected:
     GraphViewResults::variable_t getMainVariable() const;
     void setTimeRange();
     void setTimeSlider(const int value);
-    void setTimeSpin(const double value);
+    void setTimeEdit(const double value);
     void setTimeScale();
 
     // ------------------------------------------------
@@ -214,7 +214,7 @@ private slots:
     void applyStudyPeriod();
     void applyTimeRange();
     void applyTimeSlider(int value);
-    void applyTimeSpin(double value);
+    void applyTimeEdit();
     void applyZoomScale();
 
     // X, Y, Z options
@@ -232,7 +232,7 @@ private slots:
 
     // Graphic options
     void applyZoomSlider(int value);
-    void applyZoomSpin(int value);
+    void applyZoomEdit();
     void applyFont();
     void applyThickness(const int value);
     void applyOpacity(const int value);
@@ -389,9 +389,9 @@ private:
 
     // On the X Axis scale : choose to see the whole graph at once,
     // or zoom on it adjusting the "XScale"
-    QLabel* mXLab;
-    QSlider* mXSlider;
-    QDoubleSpinBox* mTimeSpin;
+    QLabel* mTimeLab;
+    QSlider* mTimeSlider;
+    LineEdit* mTimeEdit;
 
     // On the X Axis scale : choose the major interval between 2 displayed values
     QLabel* mMajorScaleLab;
@@ -447,7 +447,7 @@ private:
 
     QLabel* mZoomLab;
     QSlider* mZoomSlider;
-    QSpinBox* mZoomSpin;
+    LineEdit* mZoomEdit;
 
     Button* mFontBut;
     QComboBox* mThicknessCombo;
@@ -481,7 +481,7 @@ private:
     QLabel* mFFTLenLab;
     QComboBox* mFFTLenCombo;
     QLabel* mBandwidthLab;
-    QDoubleSpinBox* mBandwidthSpin;
+    LineEdit* mBandwidthEdit;
     Button* mUpdateDisplay;
 
     QLabel* mHActivityLab;
@@ -501,7 +501,7 @@ private:
 
     Button* mNextPageBut;
     Button* mPreviousPageBut;
-    QLineEdit* mPageEdit;
+    LineEdit* mPageEdit;
     QLabel* mGraphsPerPageLab;
     QSpinBox* mGraphsPerPageSpin;
 

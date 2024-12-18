@@ -739,29 +739,29 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     mValueStack.insert_or_assign("Activity_GridLength", gridLength);
     mValueStack.insert_or_assign("Activity_h", h);
     mValueStack.insert_or_assign("Activity_Threshold", threshold);
-    mValueStack.insert_or_assign("Activity_max", 0.);
-    mValueStack.insert_or_assign("Activity_mode",  0.);
+    mValueStack.insert_or_assign("Activity_max", 0.0);
+    mValueStack.insert_or_assign("Activity_mode",  0.0);
     //mValueStack.emplace("Activity_TimeRange_Level", TValueStack( 0.));
 
-    const auto s = &model->mSettings;
+    const auto& s = model->mSettings;
     if (mEvents.size() < 1) {
         mValueStack.insert_or_assign("Activity_Significance_Score",  0);
-        mValueStack.insert_or_assign("R_etendue", ( s->mTmax - s->mTmin));
-        mValueStack.insert_or_assign("t_min", s->mTmin);
-        mValueStack.insert_or_assign("t_max", s->mTmax);
+        mValueStack.insert_or_assign("R_etendue", ( s.mTmax - s.mTmin));
+        mValueStack.insert_or_assign("t_min", s.mTmin);
+        mValueStack.insert_or_assign("t_max", s.mTmax);
 
-        mValueStack.insert_or_assign("Activity_TimeRange_min", s->mTmin);
-        mValueStack.insert_or_assign("Activity_TimeRange_max", s->mTmax);
+        mValueStack.insert_or_assign("Activity_TimeRange_min", s.mTmin);
+        mValueStack.insert_or_assign("Activity_TimeRange_max", s.mTmax);
 
-        mValueStack.insert_or_assign("Activity_min95", s->mTmin);
-        mValueStack.insert_or_assign("Activity_max95", s->mTmax);
-        mValueStack.insert_or_assign("Activity_mean95",  (s->mTmax + s->mTmin)/2.);
-        mValueStack.insert_or_assign("Activity_std95", 0.);
+        mValueStack.insert_or_assign("Activity_min95", s.mTmin);
+        mValueStack.insert_or_assign("Activity_max95", s.mTmax);
+        mValueStack.insert_or_assign("Activity_mean95",  (s.mTmax + s.mTmin)/2.);
+        mValueStack.insert_or_assign("Activity_std95", 0.0);
         return;
     }
 
     // Curves for error binomial
-    const int n = (int)mEvents.size();
+    const int n = static_cast<int>(mEvents.size());
 
     // clear old results
     mRawActivityUnifTheo.clear();
@@ -854,10 +854,10 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
     // prevent h=0 and h >R_etendue;
     if (min95 == max95) {
-        h = std::max(s->mStep, h);
+        h = std::max(s.mStep, h);
 
     } else {
-        h = std::min( std::max(s->mStep, h),  R_etendue) ;
+        h = std::min( std::max(s.mStep, h),  R_etendue) ;
     }
     mValueStack.insert_or_assign("Activity_h", h);
 
@@ -931,14 +931,14 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     mRawActivityUnifTheo.emplace(b_Unif_plus_h_2,  0.);
 
 #ifdef DEBUG
-    if (max95 > s->mTmax) {
+    if (max95 > s.mTmax) {
         qWarning("[Phase::generateActivity] max95 > mSettings.mTmax force max95 = mSettings.mTmax");
     }
 
 #endif
 
-    const double t_min_grid = TimeRange_min - h_2 - s->mStep;
-    const double t_max_grid = TimeRange_max + h_2 + s->mStep;
+    const double t_min_grid = TimeRange_min - h_2 - s.mStep;
+    const double t_max_grid = TimeRange_max + h_2 + s.mStep;
 
 
     /// \f$ \delta_t_min = (max95 - min95)/(gridLength-1) \f$
@@ -987,7 +987,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     std::vector<double> esp;
     std::vector<double> esp_inf;
     std::vector<double> esp_sup;
-    double maxActivity = 0;
+    double maxActivity = 0.0;
     double modeActivity = t_min_grid;
 
     double UnifScore = 0.;
@@ -996,9 +996,14 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     //double somActivity = 0;
     double somKScore = 0;
 #endif
+    // Preallocate memory for esp, esp_inf, and esp_sup if the size is known
+    esp.reserve(gridLength);
+    esp_inf.reserve(gridLength);
+    esp_sup.reserve(gridLength);
+
     for (const auto& ni : NiTot) {
 
-        const double fA = ni / nr;
+        const double fA = static_cast<double>(ni) / nr;
         const double eA =  fA * n / h;
         esp.push_back(eA);
         if (eA > maxActivity) {
@@ -1037,7 +1042,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
         // La grille est définie entre min95-h/2-step et max95+h/2+step avec gridlength case
         const double t = nbIt * delta_t + t_min_grid ;
 
-        double dUnif;
+        double dUnif = 0.0;
         if ((a_Unif_minus_h_2 < t) && (t < a_Unif_plus_h_2)) {
             dUnif = interpolateValueInStdMap(t, mRawActivityUnifTheo);
 
@@ -1047,8 +1052,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
         } else if ((b_Unif_minus_h_2 < t) && (t < b_Unif_plus_h_2)) {
             dUnif = interpolateValueInStdMap(t, mRawActivityUnifTheo);
 
-        } else
-            dUnif = 0;
+        }
 
         if (n > 1) {
 #ifdef DEBUG

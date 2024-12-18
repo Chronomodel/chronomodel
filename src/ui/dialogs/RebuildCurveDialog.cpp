@@ -63,37 +63,57 @@ RebuildCurveDialog::RebuildCurveDialog(QStringList list, std::vector< std::pair<
 #endif
 {
     setWindowTitle(tr("Rescale Density Plots"));
+    QIntValidator* positiveValidator = new QIntValidator(this);
+    positiveValidator->setBottom(10);
+    positiveValidator->setRange(10, 5000);
 
-    XspinBox = new QSpinBox();
-    XspinBox->setRange(5, 10000);
-    XspinBox->setSingleStep(1);
-    XspinBox->setValue(mapSize.first);
-    XspinBox->setToolTip(tr("Enter value of the grid on time axe"));
+    XStepEdit = new LineEdit(this);
+    XStepEdit->setValidator(positiveValidator);
+    XStepEdit->setPlaceholderText(tr("From 10 to 5000"));
+    XStepEdit->setText(QString::number(mapSize.first));
+    connect(XStepEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::setOkEnabled);
 
-    YspinBox = new QSpinBox();
-    YspinBox->setRange(5, 10000);
-    YspinBox->setSingleStep(1);
-    YspinBox->setValue(mapSize.second);
-    YspinBox->setToolTip(tr("Enter value of the grid on G axe"));
-    YspinBox->setEnabled(false);
+    YStepEdit = new LineEdit(this);
+    YStepEdit->setValidator(positiveValidator);
+    YStepEdit->setPlaceholderText(tr("From 10 to 5000"));
+    YStepEdit->setText(QString::number(mapSize.second));
+    connect(YStepEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::setOkEnabled);
 
     Y1minEdit = new QLineEdit(QLocale().toString(mYTabMinMax[0].first));
+#ifdef Q_OS_WIN
+    Y1minEdit->QWidget::setStyleSheet("QLineEdit { border: 0px;}");
+#endif
     connect(Y1minEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::Y1MinIsValid);
     Y1maxEdit = new QLineEdit(QLocale().toString(mYTabMinMax[0].second));
+#ifdef Q_OS_WIN
+    Y1maxEdit->QWidget::setStyleSheet("QLineEdit { border: 0px;}");
+#endif
     connect(Y1maxEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::Y1MaxIsValid);
 
     // Var. Rate
 
     Y1pminEdit = new QLineEdit(QLocale().toString(mYpTabMinMax[0].first));
+#ifdef Q_OS_WIN
+    Y1pminEdit->QWidget::setStyleSheet("QLineEdit { border: 0px;}");
+#endif
     connect(Y1pminEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::Y1pMinIsValid);
     Y1pmaxEdit = new QLineEdit(QLocale().toString(mYpTabMinMax[0].second));
+#ifdef Q_OS_WIN
+    Y1pmaxEdit->QWidget::setStyleSheet("QLineEdit { border: 0px;}");
+#endif
     connect(Y1pmaxEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::Y1pMaxIsValid);
 #ifdef DEBUG
     if (minMaxPFilter != nullptr) {
 
         Y1pminFilterEdit = new QLineEdit(QLocale().toString(mYpMinMaxFilter.first));
+#ifdef Q_OS_WIN
+        Y1pminFilterEdit->QWidget::setStyleSheet("QLineEdit { border: 0px;}");
+#endif
         connect(Y1pminFilterEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::Y1pMinFilterIsValid);
         Y1pmaxFilterEdit = new QLineEdit(QLocale().toString(mYpMinMaxFilter.second));
+#ifdef Q_OS_WIN
+        Y1pmaxFilterEdit->QWidget::setStyleSheet("QLineEdit { border: 0px;}");
+#endif
         connect(Y1pmaxFilterEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::Y1pMaxFilterIsValid);
     }
 #endif
@@ -113,12 +133,12 @@ RebuildCurveDialog::RebuildCurveDialog(QStringList list, std::vector< std::pair<
 
     ligne++;
     midLayout->addWidget(new QLabel(tr("Time Step")), ligne, 0);
-    midLayout->addWidget(XspinBox, ligne, 1);
+    midLayout->addWidget(XStepEdit, ligne, 1);
 
     ligne++;
     QString str = mCompoList.join(", ");
     midLayout->addWidget(new QLabel(tr("%1 Step").arg(str)), ligne, 0);
-    midLayout->addWidget(YspinBox, ligne, 1);
+    midLayout->addWidget(YStepEdit, ligne, 1);
 
     ligne++;
     _setting_1_Grid = new QGridLayout;
@@ -150,13 +170,25 @@ RebuildCurveDialog::RebuildCurveDialog(QStringList list, std::vector< std::pair<
     if (mCompoList.size() > 1) {
 
         Y2minEdit = new QLineEdit(QLocale().toString(mYTabMinMax[1].first));
+#ifdef Q_OS_WIN
+        Y2minEdit->QWidget::setStyleSheet("QLineEdit { border: 0px;}");
+#endif
         connect(Y2minEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::Y2MinIsValid);
         Y2maxEdit = new QLineEdit(QLocale().toString(mYTabMinMax[1].second));
+#ifdef Q_OS_WIN
+        Y2maxEdit->QWidget::setStyleSheet("QLineEdit { border: 0px;}");
+#endif
         connect(Y2maxEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::Y2MaxIsValid);
 
         Y2pminEdit = new QLineEdit(QLocale().toString(mYpTabMinMax[1].first));
+#ifdef Q_OS_WIN
+        Y2pminEdit->QWidget::setStyleSheet("QLineEdit { border: 0px;}");
+#endif
         connect(Y2pminEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::Y2pMinIsValid);
         Y2pmaxEdit = new QLineEdit(QLocale().toString(mYpTabMinMax[1].second));
+#ifdef Q_OS_WIN
+        Y2pmaxEdit->QWidget::setStyleSheet("QLineEdit { border: 0px;}");
+#endif
         connect(Y2pmaxEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::Y2pMaxIsValid);
 
         _setting_2_Grid = new QGridLayout;
@@ -189,13 +221,25 @@ RebuildCurveDialog::RebuildCurveDialog(QStringList list, std::vector< std::pair<
         if (mCompoList.size() > 2) {
 
             Y3minEdit = new QLineEdit(QLocale().toString(mYTabMinMax[2].first));
+#ifdef Q_OS_WIN
+            Y3minEdit->QWidget::setStyleSheet("QLineEdit { border: 0px;}");
+#endif
             connect(Y3minEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::Y3MinIsValid);
             Y3maxEdit = new QLineEdit(QLocale().toString(mYTabMinMax[2].second));
+#ifdef Q_OS_WIN
+            Y3maxEdit->QWidget::setStyleSheet("QLineEdit { border: 0px;}");
+#endif
             connect(Y3maxEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::Y3MaxIsValid);
 
             Y3pminEdit = new QLineEdit(QLocale().toString(mYpTabMinMax[2].first));
+#ifdef Q_OS_WIN
+            Y3pminEdit->QWidget::setStyleSheet("QLineEdit { border: 0px;}");
+#endif
             connect(Y3pminEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::Y3pMinIsValid);
             Y3pmaxEdit = new QLineEdit(QLocale().toString(mYpTabMinMax[2].second));
+#ifdef Q_OS_WIN
+            Y3pmaxEdit->QWidget::setStyleSheet("QLineEdit { border: 0px;}");
+#endif
             connect(Y3pmaxEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::Y3pMaxIsValid);
 
             _setting_3_Grid = new QGridLayout;
@@ -254,12 +298,12 @@ RebuildCurveDialog::RebuildCurveDialog(QStringList list, std::vector< std::pair<
 
 int RebuildCurveDialog::getXSpinResult() const
 {
-    return XspinBox->value();
+    return XStepEdit->text().toInt();
 }
 
 int RebuildCurveDialog::getYSpinResult() const
 {
-    return YspinBox->value();
+    return YStepEdit->text().toInt();
 }
 
 // Y1
@@ -431,31 +475,29 @@ void RebuildCurveDialog::Y3pMaxIsValid(QString str)
 
 void RebuildCurveDialog::setOkEnabled()
 {
+    QIntValidator* positiveValidator = new QIntValidator(this);
+    positiveValidator->setBottom(10);
+
+    bool isValid = Y1MinOK && Y1MaxOK
+                   && Y2MinOK && Y2MaxOK
+                   && Y3MinOK && Y3MaxOK
+                   && Y1pMinOK && Y1pMaxOK
+                   && Y2pMinOK && Y2pMaxOK
+                   && Y3pMinOK && Y3pMaxOK
+                   && XStepEdit->hasAcceptableInput()
+                   && YStepEdit->hasAcceptableInput();
+
 #ifdef DEBUG
-    const bool isValid = (Y1MinOK && Y1MaxOK
-                          && Y2MinOK && Y2MaxOK
-                          && Y3MinOK && Y3MaxOK
-                          && Y1pMinOK && Y1pMaxOK
-                          && Y2pMinOK && Y2pMaxOK
-                          && Y3pMinOK && Y3pMaxOK )
-
-                         && Y1pMinFilterOK && Y1pMaxFilterOK;
-#else
-    const bool isValid = (Y1MinOK && Y1MaxOK
-                           && Y2MinOK && Y2MaxOK
-                           && Y3MinOK && Y3MaxOK
-                           && Y1pMinOK && Y1pMaxOK
-                           && Y2pMinOK && Y2pMaxOK
-                           && Y3pMinOK && Y3pMaxOK );
-
+    isValid = isValid && Y1pMinFilterOK && Y1pMaxFilterOK;
 #endif
+
     buttonBox->button(QDialogButtonBox::Ok)->setEnabled(isValid);
 
 }
 
 void RebuildCurveDialog::updateOptions()
 {
-    YspinBox->setEnabled(true);
+    YStepEdit->setEnabled(true);
 
     _setting_1_Grid->setEnabled(true);
 
@@ -490,5 +532,5 @@ void RebuildCurveDialog::setCompoList(QStringList &list)
 
 std::pair<unsigned, unsigned> RebuildCurveDialog::getMapSize() const
 {
-    return std::pair<unsigned, unsigned>{XspinBox->value(), YspinBox->value()};
+    return std::pair<unsigned, unsigned>{XStepEdit->text().toInt(), YStepEdit->text().toInt()};
 }

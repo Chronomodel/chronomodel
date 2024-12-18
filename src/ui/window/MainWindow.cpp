@@ -745,7 +745,11 @@ void MainWindow::updateWindowTitle()
     const QString saved_sign = AppSettings::mIsSaved ?  " ✓ " : QString(" ● ");
 
 #ifdef DEBUG
-    const QString file_name = " DEBUG Mode " + (AppSettings::mLastFile.isEmpty() ?  "" : QString(" - ") + AppSettings::mLastFile  + saved_sign);
+    #ifdef Q_OS_WIN
+        const QString file_name = (AppSettings::mLastFile.isEmpty() ?  "" : QString(" - ") + AppSettings::mLastFile  + saved_sign);
+    #else
+        const QString file_name = " DEBUG Mode " + (AppSettings::mLastFile.isEmpty() ?  "" : QString(" - ") + AppSettings::mLastFile  + saved_sign);
+    #endif
 #else
     const QString file_name = (AppSettings::mLastFile.isEmpty() ?  "" : AppSettings::mLastFile + saved_sign);
 #endif

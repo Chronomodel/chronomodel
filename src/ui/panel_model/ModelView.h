@@ -103,12 +103,12 @@ private:
     QShortcut* mDelShortcut;
 
     Button* mButRecycleEvent;
-    Button* mButExportEvents;
+    Button* mButImageOfEventScene;
     Button* mButEventsGlobalView;
     Button* mButEventsGrid;
     Button* mButProperties;
     Button* mButMultiCalib;
-    Button* mButImport;
+    Button* mButCsv;
 
     // ------
 

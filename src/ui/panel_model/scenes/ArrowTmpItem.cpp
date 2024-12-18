@@ -40,14 +40,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ArrowTmpItem.h"
 #include <QtWidgets>
 
-ArrowTmpItem::ArrowTmpItem(QGraphicsItem* parent):QGraphicsItem(parent),
-mBubbleHeight(30.),
-mXFrom(0),
-mYFrom(0),
-mXTo(0),
-mYTo(0),
-mState(eNormal),
-mLocked(false)
+ArrowTmpItem::ArrowTmpItem(QGraphicsItem* parent):
+    QGraphicsItem(parent),
+    mBubbleHeight(30.),
+    mXFrom(0),
+    mYFrom(0),
+    mXTo(0),
+    mYTo(0),
+    mState(eNormal),
+    mLocked(false)
 {
     // set the Arrow over all item
     setZValue(2.);

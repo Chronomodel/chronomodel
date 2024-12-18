@@ -186,10 +186,10 @@ ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):
     mButRecycleEvent->setIcon(QIcon(":restore.png"));
     mButRecycleEvent->setFlatVertical();
 
-    mButExportEvents = new Button(tr("Save Image"), mLeftWrapper);
-    mButExportEvents->setToolTip(tr("Save image of the Events scene as a file"));
-    mButExportEvents->setIcon(QIcon(":picture_save.png"));
-    mButExportEvents->setFlatVertical();
+    mButImageOfEventScene = new Button(tr("Save Image"), mLeftWrapper);
+    mButImageOfEventScene->setToolTip(tr("Save image of the Events scene as a file"));
+    mButImageOfEventScene->setIcon(QIcon(":picture_save.png"));
+    mButImageOfEventScene->setFlatVertical();
 
     mButEventsGlobalView = new Button(tr("Overview"), mLeftWrapper);
     mButEventsGlobalView->setToolTip(tr("Overview on the global Events scene"));
@@ -226,13 +226,13 @@ ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):
     mButMultiCalib->setDisabled(true);
     mButMultiCalib->setFlatVertical();
 
-    mButImport = new Button(tr("Data"), mLeftWrapper);
-    mButImport->setToolTip(tr("Show the data importation panel from file"));
-    mButImport->setCheckable(true);
-    mButImport->setIcon(QIcon(":csv_import.png"));
-    mButImport->setFlatVertical();
+    mButCsv = new Button(tr("Data"), mLeftWrapper);
+    mButCsv->setToolTip(tr("Show the data importation panel from file"));
+    mButCsv->setCheckable(true);
+    mButCsv->setIcon(QIcon(":csv_import.png"));
+    mButCsv->setFlatVertical();
 
-    connect(mButImport, static_cast<void (Button::*)(bool)>(&Button::toggled), this, &ModelView::showImport);
+    connect(mButCsv, static_cast<void (Button::*)(bool)>(&Button::toggled), this, &ModelView::showImport);
 
     // -------- Windows Data Importation --------------------
 
@@ -386,7 +386,7 @@ void ModelView::setProject()
     if (!mEventPropertiesView) {
         mEventPropertiesView = new EventPropertiesView(mRightWrapper);
     }
-    mEventPropertiesView->initEvent(nullptr);
+    mEventPropertiesView->resetEvent();
     if (!mCalibrationView) {
         mCalibrationView = new CalibrationView(mLeftWrapper);
     }
@@ -447,7 +447,7 @@ void ModelView::connectScenes()
     connect(mButEventsGlobalView, &Button::toggled, mEventsSearchEdit, &QLineEdit::setVisible);
     connect(mEventsSearchEdit, &QLineEdit::returnPressed, this, &ModelView::searchEvent);
     connect(mEventsGlobalZoom, &ScrollCompressor::valueChanged, this, &ModelView::updateEventsZoom);
-    connect(mButExportEvents, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ModelView::exportEventsScene);
+    connect(mButImageOfEventScene, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ModelView::exportEventsScene);
 
     connect(mButProperties, static_cast<void (Button::*)(bool)> (&Button::clicked), this, &ModelView::showProperties);
 
@@ -495,7 +495,7 @@ void ModelView::disconnectScenes()
     disconnect(mButEventsGlobalView, &Button::toggled, mEventsSearchEdit, &QLineEdit::setVisible);
     disconnect(mEventsSearchEdit, &QLineEdit::returnPressed, this, &ModelView::searchEvent);
     disconnect(mEventsGlobalZoom, &ScrollCompressor::valueChanged, this, &ModelView::updateEventsZoom);
-    disconnect(mButExportEvents, &Button::clicked, this, &ModelView::exportEventsScene);
+    disconnect(mButImageOfEventScene, &Button::clicked, this, &ModelView::exportEventsScene);
     disconnect(mButProperties, &Button::clicked, this, &ModelView::showProperties);
 
     disconnect(mButMultiCalib,  &Button::clicked, this, &ModelView::showMultiCalib);
@@ -543,7 +543,7 @@ void ModelView::clearInterface()
 
     mButNewEvent->setEnabled(true);
     mButNewEventKnown->setEnabled(true);
-    mButImport->setEnabled(true);
+    mButCsv->setEnabled(true);
 
     //  noEventSelected();
     disconnectScenes();
@@ -572,11 +572,10 @@ void ModelView::resetInterface()
     mPhasesScene->clean();
     mCalibrationView->setDate(QJsonObject());
 
-
     mMultiCalibrationView->setVisible(false);
     mMultiCalibrationView->setProject();
 
-    mEventPropertiesView->initEvent(nullptr);
+    mEventPropertiesView->resetEvent();
 
     noEventSelected();
 
@@ -730,19 +729,22 @@ void ModelView::modifyPeriod()
     dialog.setSettings(s);
 
     if (dialog.exec() == QDialog::Accepted) {
-        StudyPeriodSettings newS = dialog.getSettings();
+        const StudyPeriodSettings newS = dialog.getSettings();
         if (s != newS) {
-          ModelView::calibrateAll(newS);
+            ModelView::calibrateAll(newS);
 
-          Scale xScale;
-          xScale.findOptimal(newS.mTmin, newS.mTmax, 10);
-          //xScale.tip = 4;
-          mMultiCalibrationView->initScale(xScale);
-          mCalibrationView->initScale(xScale);
+            mMultiCalibrationView->mSettings = newS;
+            mMultiCalibrationView->applyAppSettings();
 
-          project -> setSettings(newS); //do pushProjectState //done in ModelView::calibrateAll(newS);??
-          MainWindow::getInstance() -> setResultsEnabled(false);
-          MainWindow::getInstance() -> setLogEnabled(false);
+            mCalibrationView->mSettings = newS;
+            Scale xScale;
+            xScale.findOptimal(newS.mTmin, newS.mTmax, 10);
+            mCalibrationView->initScale(xScale);
+            //  mCalibrationView->applyStudyPeriod();
+
+            project -> setSettings(newS); //do pushProjectState //done in ModelView::calibrateAll(newS);??
+            MainWindow::getInstance() -> setResultsEnabled(false);
+            MainWindow::getInstance() -> setLogEnabled(false);
         }
 
     }
@@ -993,12 +995,12 @@ void ModelView::showProperties()
 
            mButCurve->setChecked(false);
 
-       } else if (mButImport->isChecked()) {
+       } else if (mButCsv->isChecked()) {
 
            mAnimationHide->setTargetObject(mImportDataView);
            mAnimationHide->start();
 
-           mButImport->setChecked(false);
+           mButCsv->setChecked(false);
 
        } else {
            // hide mPhasesView
@@ -1116,14 +1118,14 @@ void ModelView::showMultiCalib()
 
             mButCurve->setChecked(false);
 
-        } else  if (mButImport->isChecked()) {
+        } else  if (mButCsv->isChecked()) {
             // hide mCurveSettingsView
             if (showAnim) {
                 mAnimationHide->setTargetObject(mImportDataView);
                 mAnimationHide->start();
             }
 
-            mButImport->setChecked(false);
+            mButCsv->setChecked(false);
 
         }
 
@@ -1173,7 +1175,7 @@ void ModelView::updateMultiCalibrationAndEventProperties()
 void ModelView::showImport()
 {
    updateLayout();
-   if (mButImport->isChecked()) {
+   if (mButCsv->isChecked()) {
        if (getProject_ptr()->studyPeriodIsValid()) {
             mButProperties  -> setChecked(false);
             mButCurve  -> setChecked(false);
@@ -1210,15 +1212,16 @@ void ModelView::eventsAreSelected()
         mButNewEventKnown->setDisabled(true);
         mButNewEvent->setDisabled(true);
 
-        mButExportEvents->setDisabled(true);
-        mButImport->setDisabled(true);
+        mButImageOfEventScene->setDisabled(true);
+        mButCsv->setDisabled(true);
 
         mButProperties->setDisabled(false);
         mButMultiCalib->setDisabled(false);
         mButDeleteEvent->setDisabled(false);
 
-     }
+    }
 
+    mButCsv->setChecked(false);
     updateLayout();
 
     if (!mButMultiCalib->isChecked() && !mButProperties->isChecked())
@@ -1232,8 +1235,8 @@ void ModelView::togglePropeties(AbstractItem* item)
     mButNewEventKnown->setDisabled(true);
     mButNewEvent->setDisabled(true);
 
-    mButExportEvents->setDisabled(true);
-    mButImport->setDisabled(true);
+    mButImageOfEventScene->setDisabled(true);
+    mButCsv->setDisabled(true);
 
     mButProperties->setDisabled(false);
     mButMultiCalib->setDisabled(false);
@@ -1249,7 +1252,6 @@ void ModelView::togglePropeties(AbstractItem* item)
         showProperties();
     }
 
-
 }
 
 void ModelView::noEventSelected()
@@ -1258,8 +1260,8 @@ void ModelView::noEventSelected()
     mButNewEventKnown->setDisabled(false);
     mButNewEvent->setDisabled(false);
 
-    mButExportEvents->setDisabled(false);
-    mButImport->setDisabled(false);
+    mButImageOfEventScene->setDisabled(false);
+    mButCsv->setDisabled(false);
 
     /* useless modify managment
     * // we disable AutoEsclusive to be able to uncheck both Properties and MultiCalib
@@ -1277,6 +1279,9 @@ void ModelView::noEventSelected()
 
     mCalibrationView->hide();
 
+    mEventPropertiesView->resetEvent();
+    mEventPropertiesView->hide();
+
     updateLayout();
 
     mPhasesScene->noHide();
@@ -1287,11 +1292,11 @@ void ModelView::showPhases()
     if (getProject_ptr()->studyPeriodIsValid()) {
         showCalibration(false);
 
-        mButImport->setChecked(false);
+        mButCsv->setChecked(false);
         slideRightPanel();
 
     } else
-        mButImport->setChecked(false);
+        mButCsv->setChecked(false);
 
 }
 
@@ -1304,7 +1309,7 @@ void ModelView::slideRightPanel()
     mAnimationHide->setEndValue(mRightHiddenRect);
 
     QWidget* target = nullptr;
-    if (mButImport->isChecked())
+    if (mButCsv->isChecked())
         target = mImportDataView;
 
     else if (mButProperties->isChecked())
@@ -1322,7 +1327,7 @@ void ModelView::slideRightPanel()
 void ModelView::prepareNextSlide()
 {
     QWidget* target = nullptr;
-    if (mButImport->isChecked())
+    if (mButCsv->isChecked())
         target = mImportDataView;
 
     else if (mButProperties->isChecked())
@@ -1436,7 +1441,7 @@ void ModelView::updateLayout()
     if (mMultiCalibrationView)
         mMultiCalibrationView->setGeometry(mButMultiCalib->isChecked() ? mRightRect : mRightHiddenRect);
 
-    mImportDataView->setGeometry(mButImport->isChecked() ? mRightRect : mRightHiddenRect);
+    mImportDataView->setGeometry(mButCsv->isChecked() ? mRightRect : mRightHiddenRect);
 
     mCurveSettingsView->setGeometry(mCurveSettingsVisible ? mRightRect : mRightHiddenRect);
 
@@ -1457,12 +1462,12 @@ void ModelView::updateLayout()
     mButNewEventKnown ->setGeometry(0, mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButDeleteEvent   ->setGeometry(0, 2*mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButRecycleEvent  ->setGeometry(0, 3*mButtonHeigth, mButtonWidth, mButtonHeigth);
-    mButExportEvents  ->setGeometry(0, 4*mButtonHeigth, mButtonWidth, mButtonHeigth);
+    mButImageOfEventScene  ->setGeometry(0, 4*mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButEventsGlobalView->setGeometry(0, 5*mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButEventsGrid    ->setGeometry(0, 6*mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButProperties    ->setGeometry(0, 7*mButtonHeigth, mButtonWidth, mButtonHeigth);
     mButMultiCalib    ->setGeometry(0, 8*mButtonHeigth, mButtonWidth, mButtonHeigth);
-    mButImport        ->setGeometry(0, 9*mButtonHeigth, mButtonWidth, mButtonHeigth);
+    mButCsv        ->setGeometry(0, 9*mButtonHeigth, mButtonWidth, mButtonHeigth);
 
     mEventsGlobalZoom ->setGeometry(0, 10*mButtonHeigth, mButtonWidth, mLeftRect.height() - 10*mButtonHeigth);
 
@@ -1656,7 +1661,7 @@ void ModelView::writeSettings()
     int panelIndex = 0;
     if (mButProperties->isChecked())
         panelIndex = 1;
-    else if (mButImport->isChecked())
+    else if (mButCsv->isChecked())
         panelIndex = 2;
 
     settings.setValue("right_panel", panelIndex);
@@ -1677,7 +1682,7 @@ void ModelView::readSettings()
         mButProperties->setChecked(true);
 
     else if (panelIndex == 2)
-        mButImport->setChecked(true);
+        mButCsv->setChecked(true);
 
     mEventsGlobalZoom->setProp(settings.value("events_zoom", 1.).toDouble(), true);
     mPhasesGlobalZoom->setProp(settings.value("phases_zoom", 1.).toDouble(), true);
@@ -1710,14 +1715,14 @@ void ModelView::showCurveSettings(bool show)
 
             mButMultiCalib->setChecked(false);
 
-        } else if (mButImport->isChecked()) {
+        } else if (mButCsv->isChecked()) {
             // hide mImportDataView
             mAnimationHide->setStartValue(mRightRect);
             mAnimationHide->setEndValue(mRightHiddenRect);
             mAnimationHide->setTargetObject(mImportDataView);
             mAnimationHide->start();
 
-            mButImport->setChecked(false);
+            mButCsv->setChecked(false);
         }
 
         mAnimationShow->setTargetObject(mCurveSettingsView);
@@ -1774,7 +1779,7 @@ void ModelView::updateRightPanelTitle()
     } else if (mButProperties->isChecked()) {
         rightTitle = tr("Event Properties");
 
-    } else if (mButImport->isChecked()) {
+    } else if (mButCsv->isChecked()) {
         rightTitle = tr("Import Data");
 
     } else if (mButMultiCalib->isChecked()) {

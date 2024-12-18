@@ -78,7 +78,7 @@ public slots:
     void updateStateSelectionFromItem();
     void updateHelp();
 
-   virtual void deleteSelectedItems();
+    virtual void deleteSelectedItems();
 
 public:
     void itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);

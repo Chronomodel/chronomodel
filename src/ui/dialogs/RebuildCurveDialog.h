@@ -39,6 +39,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef REBUILDCURVEDIALOG_H
 #define REBUILDCURVEDIALOG_H
 
+#include "LineEdit.h"
 #include <QLabel>
 #include <QLineEdit>
 #include <QCheckBox>
@@ -95,6 +96,7 @@ protected slots:
     void Y3pMinIsValid(QString str);
     void Y3pMaxIsValid(QString str);
 
+protected slots:
     void setOkEnabled();
 
 private:
@@ -102,8 +104,8 @@ private:
     QLineEdit* lineEdit;
     QDialogButtonBox* buttonBox;
 
-    QSpinBox* XspinBox;
-    QSpinBox* YspinBox;
+    LineEdit* XStepEdit;
+    LineEdit* YStepEdit;
 
     QStringList mCompoList;
 

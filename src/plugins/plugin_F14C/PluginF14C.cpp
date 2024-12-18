@@ -414,7 +414,7 @@ double PluginF14C::getMinStepRefsCurve(const QJsonObject &data) const
     const QString ref_curve = data.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
 
     if (mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
-       return mRefCurves.value(ref_curve).mMinStep;
+       return mRefCurves.value(ref_curve).mMinStep/3.0;
 
     } else {
        return INFINITY;

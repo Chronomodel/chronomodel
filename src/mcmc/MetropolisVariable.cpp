@@ -471,7 +471,7 @@ void MetropolisVariable::generateBufferForHisto(double *input, const std::vector
 
  **/
 
-std::map<double, double> MetropolisVariable::generateHisto(const std::vector<double> &dataSrc, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+std::map<double, double> MetropolisVariable::generateHisto(const std::vector<double>& dataSrc, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
     mfftLenUsed = fftLen;
     mBandwidthUsed = bandwidth;
@@ -487,9 +487,6 @@ std::map<double, double> MetropolisVariable::generateHisto(const std::vector<dou
         return result;
     }
 
-
-    const int inputSize = fftLen;
-    const int outputSize = 2 * (inputSize / 2 + 1);
 
     double sigma = std_unbiais_Knuth(dataSrc);
 
@@ -523,74 +520,80 @@ std::map<double, double> MetropolisVariable::generateHisto(const std::vector<dou
     const double a = range_min_value(dataSrc) - 4. * h;
     const double b = range_max_value(dataSrc) + 4. * h;
 
-    double* input = (double*) fftw_malloc(inputSize * sizeof(double));
-    generateBufferForHisto(input, dataSrc, inputSize, a, b);
+    // Préparation des buffers avec gestion RAII
+    std::unique_ptr<double, decltype(&fftw_free)> input(
+        static_cast<double*>(fftw_malloc(fftLen * sizeof(double))),
+        fftw_free
+        );
+    std::unique_ptr<double, decltype(&fftw_free)> output(
+        static_cast<double*>(fftw_malloc(2 * (fftLen / 2 + 1) * sizeof(double))),
+        fftw_free
+        );
 
-    double* output = (double*) fftw_malloc(outputSize * sizeof(double));
-
-    if (input != nullptr) {
-        // ----- FFT -----
-        // http://www.fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html#One_002dDimensional-DFTs-of-Real-Data
-        //https://jperalta.wordpress.com/2006/12/12/using-fftw3/
-        fftw_plan plan_forward = fftw_plan_dft_r2c_1d(inputSize, input, (fftw_complex*)output, FFTW_ESTIMATE);
-        fftw_execute(plan_forward);
-
-        for (int i=0; i<outputSize/2; ++i) {
-            const double s = 2. * M_PI * i / (b-a);
-            const double factor = exp(-0.5 * s * s * h * h);
-
-            output[2*i] *= factor;
-            output[2*i + 1] *= factor;
-        }
-
-        fftw_plan plan_backward = fftw_plan_dft_c2r_1d(inputSize, (fftw_complex*)output, input, FFTW_ESTIMATE);
-        fftw_execute(plan_backward);
-
-        // ----- FFT Buffer to result map -----
-
-        double tBegin = a;
-        double tEnd = b;
-        switch(mSupport)
-        {
-        case eR :// on R
-            // nothing to do already done by default
-            break;
-        case eRp : // on R+
-            tBegin = 0.;
-            break;
-        case eRm :// on R-
-            tEnd = 0;;
-            break;
-        case eRpStar : // on R+*
-            tBegin = 0.;
-            break;
-        case eRmStar :// on R-*
-            tEnd = 0.;
-            break;
-        case eBounded : // on [tmin;tmax]
-            tBegin = tmin;
-            tEnd = tmax;
-            break;
-        }
-        const double delta = (b - a) / (inputSize-1);
-
-        for (int i = 0; i<inputSize; ++i) {
-            const double t = a + (double)i * delta;
-            result[t] = std::max(0., input[i]); // the histogram must not have a negative value
-        }
-
-        result = getMapDataInRange(result, tBegin, tEnd);
-
-        fftw_free(input);
-        fftw_free(output);
-        input = nullptr;
-        output = nullptr;
-        fftw_destroy_plan(plan_forward);
-        fftw_destroy_plan(plan_backward);
-
-        result = equal_areas(result, 1.); // normalize the output area du to the fftw and the case (t >= tmin && t<= tmax)
+    if (!input || !output) {
+        throw std::runtime_error("Memory allocation failed");
     }
-    return result; // return a map between a and b with a step delta = (b - a) / fftLen;
+
+    // Génération du buffer
+    generateBufferForHisto(input.get(), dataSrc, fftLen, a, b);
+
+    // Plans FFTW avec gestion automatique
+    fftw_plan plan_forward = fftw_plan_dft_r2c_1d(fftLen, input.get(),
+                                                  reinterpret_cast<fftw_complex*>(output.get()), FFTW_ESTIMATE);
+
+    // Exécution FFT
+    fftw_execute(plan_forward);
+
+    // Filtrage spectral
+    const int outputSize = 2 * (fftLen / 2 + 1);
+    for (int i = 0; i < outputSize / 2; ++i) {
+        const double s = 2. * M_PI * i / (b - a);
+        const double factor = std::exp(-0.5 * s * s * h * h);
+        output.get()[2*i] *= factor;
+        output.get()[2*i + 1] *= factor;
+    }
+
+    // Transformation inverse
+    fftw_plan plan_backward = fftw_plan_dft_c2r_1d(fftLen,
+                                                   reinterpret_cast<fftw_complex*>(output.get()), input.get(), FFTW_ESTIMATE);
+
+    fftw_execute(plan_backward);
+
+    // Nettoyage des plans
+    fftw_destroy_plan(plan_forward);
+    fftw_destroy_plan(plan_backward);
+
+    // Calcul des bornes selon le support
+    double tBegin = a, tEnd = b;
+    switch(mSupport) {
+    case eRp:
+    case eRpStar: // on R+*
+        tBegin = 0.;
+        break;
+    case eRm:
+    case eRmStar: // on R-*
+        tEnd = 0.;
+        break;
+    case eBounded: // on [tmin;tmax]
+        tBegin = tmin;
+        tEnd = tmax;
+        break;
+    case eR:
+        break;
+    }
+
+    // Construction du résultat
+    const double delta = (b - a) / (fftLen - 1);
+    for (int i = 0; i < fftLen; ++i) {
+        const double t = a + static_cast<double>(i) * delta;
+        result[t] = std::max(0., input.get()[i]);
+    }
+
+    // normalisation
+    result = getMapDataInRange(result, tBegin, tEnd);
+    result = equal_areas(result, 1.);
+
+    return result;
 }
 
 

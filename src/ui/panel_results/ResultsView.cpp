@@ -104,6 +104,9 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
 {
     setMouseTracking(true);
 
+    QDoubleValidator* RplusValidator = new QDoubleValidator(this);
+    RplusValidator->setBottom(0.000001);
+
     // -----------------------------------------------------------------
     //  Left part : Tabs, Ruler, Stack
     // -----------------------------------------------------------------
@@ -157,6 +160,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     //  Right Part
     // -----------------------------------------------------------------
     mOptionsScroll = new QScrollArea(this);
+    mOptionsScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     mOptionsWidget = new QWidget(this);
     mOptionsScroll->setWidget(mOptionsWidget);
     int h = 15;
@@ -427,24 +431,29 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mCurrentTMaxEdit->setFixedHeight(h);
     mCurrentTMaxEdit->setToolTip(tr("Enter a maximal value to display the curves"));
 
-    mXLab = new QLabel(tr("Time"), mSpanGroup);
-    mXLab->setFixedHeight(h);
-    mXLab->setAlignment(Qt::AlignCenter);
+    mTimeLab = new QLabel(tr("Time"), mSpanGroup);
+    mTimeLab->setFixedHeight(h);
+    mTimeLab->setAlignment(Qt::AlignCenter);
 
-    mXSlider = new QSlider(Qt::Horizontal, mSpanGroup);
-    mXSlider->setFixedHeight(h);
-    mXSlider->setRange(-100, 100);
-    mXSlider->setTickInterval(1);
-    mXSlider->setValue(0);
+    mTimeSlider = new QSlider(Qt::Horizontal, mSpanGroup);
+    mTimeSlider->setFixedHeight(h);
+    mTimeSlider->setRange(-100, 100);
+    mTimeSlider->setTickInterval(1);
+    mTimeSlider->setValue(0);
 
-    mTimeSpin = new QDoubleSpinBox(mSpanGroup);
-    mTimeSpin->setFixedHeight(h);
-    mTimeSpin->setRange(pow(10., double (mXSlider->minimum()/100.)),pow(10., double (mXSlider->maximum()/100.)));
-    mTimeSpin->setSingleStep(.01);
-    mTimeSpin->setDecimals(3);
-    mTimeSpin->setValue(sliderToZoom(mXSlider->value()));
-    mTimeSpin->setToolTip(tr("Enter zoom value to magnify the curves on X span"));
-    mTimeSpin->setFixedWidth(mOptionsW/3); //for windows new spin box
+    mTimeEdit = new LineEdit(mSpanGroup);
+    mTimeEdit->setValidator(RplusValidator);
+    mTimeEdit->setFixedHeight(h);
+    mTimeEdit->setText(locale().toString(sliderToZoom(mTimeSlider->value())));
+    mTimeEdit->setToolTip(tr("Enter zoom value to magnify the curves on X span"));
+    mTimeEdit->setFixedWidth(mOptionsW/3); //for windows new spin box
+
+    /*QString decimalSeparator = locale().decimalPoint();
+    QString inputMask = "000" + decimalSeparator + "00%";
+
+    mTimeEdit->setInputMask(inputMask);
+    */
+
 
     mMajorScaleLab = new QLabel(tr("Major Interval"), mSpanGroup);
     mMajorScaleLab->setFixedHeight(h);
@@ -453,7 +462,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mMajorScaleEdit = new LineEdit(mSpanGroup);
     mMajorScaleEdit->setFixedHeight(h);
     mMajorScaleEdit->setText(QString::number(mMajorScale));
-    mMajorScaleEdit->setToolTip(tr("Enter a interval for the main division of the axes under the curves, upper than 1"));
+    mMajorScaleEdit->setToolTip(tr("Enter an interval for the main axis division below the curves, greater than 1"));
 
     mMinorScaleLab = new QLabel(tr("Minor Interval Count"), mSpanGroup);
     mMinorScaleLab->setFixedHeight(h);
@@ -467,8 +476,8 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     connect(mDisplayStudyBut, static_cast<void (Button::*)(bool)>(&Button::clicked), this, &ResultsView::applyStudyPeriod);
     connect(mCurrentTMinEdit, &LineEdit::editingFinished, this, &ResultsView::applyTimeRange);
     connect(mCurrentTMaxEdit, &LineEdit::editingFinished, this, &ResultsView::applyTimeRange);
-    connect(mXSlider, &QSlider::valueChanged, this, &ResultsView::applyTimeSlider);
-    connect(mTimeSpin, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &ResultsView::applyTimeSpin);
+    connect(mTimeSlider, &QSlider::valueChanged, this, &ResultsView::applyTimeSlider);
+    connect(mTimeEdit, &LineEdit::editingFinished, this, &ResultsView::applyTimeEdit);
     connect(mMajorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &ResultsView::applyZoomScale);
     connect(mMinorScaleEdit, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textEdited), this, &ResultsView::applyZoomScale);
 
@@ -484,9 +493,9 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
 
     QHBoxLayout* spanLayout2 = new QHBoxLayout();
     spanLayout2->setContentsMargins(0, 0, 0, 0);
-    spanLayout2->addWidget(mXLab);
-    spanLayout2->addWidget(mXSlider);
-    spanLayout2->addWidget(mTimeSpin);
+    spanLayout2->addWidget(mTimeLab);
+    spanLayout2->addWidget(mTimeSlider);
+    spanLayout2->addWidget(mTimeEdit);
 
     QHBoxLayout* spanLayout3 = new QHBoxLayout();
     spanLayout3->setContentsMargins(0, 0, 0, 0);
@@ -525,7 +534,6 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
 
     mXOptionLab = new QLabel(tr("X"), mXOptionGroup);
     mXOptionLab->setFixedHeight(h);
-    //mSpanLab->setAdjustText(false);
 
     mCurrentXMinEdit = new LineEdit(mXOptionGroup);
     mCurrentXMinEdit->setFixedHeight(h);
@@ -573,7 +581,6 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
 
     mYOptionLab = new QLabel(tr("Y"), mYOptionGroup);
     mYOptionLab->setFixedHeight(h);
-    //mSpanLab->setAdjustText(false);
 
     mCurrentYMinEdit = new LineEdit(mYOptionGroup);
     mCurrentYMinEdit->setFixedHeight(h);
@@ -621,7 +628,6 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
 
     mZOptionLab = new QLabel(tr("Z"), mZOptionGroup);
     mZOptionLab->setFixedHeight(h);
-    //mSpanLab->setAdjustText(false);
 
     mCurrentZMinEdit = new LineEdit(mZOptionGroup);
     mCurrentZMinEdit->setFixedHeight(h);
@@ -670,11 +676,12 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mZoomSlider->setTickInterval(1);
     mZoomSlider->setValue(100);
 
-    mZoomSpin = new QSpinBox(mGraphicGroup);
-    mZoomSpin->setRange(mZoomSlider->minimum(), mZoomSlider->maximum());
-    mZoomSpin->setValue(mZoomSlider->value());
-    mZoomSpin->setToolTip(tr("Enter zoom value to magnify the curves on Y scale"));
-    mZoomSpin->setFixedWidth(mOptionsW/3); //for windows new spin box
+    mZoomEdit = new LineEdit(mGraphicGroup);
+    mZoomEdit->setValidator(RplusValidator);
+    mZoomEdit->setToolTip(tr("Enter zoom value to increase graph height"));
+    mZoomEdit->setFixedWidth(mOptionsW/3); //for windows new spin box
+    mZoomEdit->setText(locale().toString(mZoomSlider->value()));
+
 
 
     mLabFont = new QLabel(tr("Font"), mGraphicGroup);
@@ -715,7 +722,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mOpacityCombo->setCurrentIndex(5);
 
     connect(mZoomSlider, &QSlider::valueChanged, this, &ResultsView::applyZoomSlider);
-    connect(mZoomSpin, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &ResultsView::applyZoomSpin);
+    connect(mZoomEdit, &LineEdit::editingFinished, this, &ResultsView::applyZoomEdit);
     connect(mFontBut, &QPushButton::clicked, this, &ResultsView::applyFont);
     connect(mThicknessCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::applyThickness);
     connect(mOpacityCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::applyOpacity);
@@ -724,7 +731,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     graphicLayout1->setContentsMargins(0, 0, 0, 0);
     graphicLayout1->addWidget(mZoomLab);
     graphicLayout1->addWidget(mZoomSlider);
-    graphicLayout1->addWidget(mZoomSpin);
+    graphicLayout1->addWidget(mZoomEdit);
 
     QHBoxLayout* graphicLayout2 = new QHBoxLayout();
     graphicLayout2->setContentsMargins(0, 0, 0, 0);
@@ -810,7 +817,6 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     DoubleValidator* percentValidator = new DoubleValidator();
     percentValidator->setBottom(0.0);
     percentValidator->setTop(100.0);
-    //percentValidator->setDecimals(1);
     mThresholdEdit->setValidator(percentValidator);
     mThresholdEdit->setFixedHeight(16);
 
@@ -819,10 +825,6 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mRangeThreshLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
     mRangeThresholdEdit = new LineEdit(mDensityOptsGroup);
-   // DoubleValidator* percentValidator = new DoubleValidator();
-   // percentValidator->setBottom(0.0);
-   // percentValidator->setTop(100.0);
-    //percentValidator->setDecimals(1);
     mRangeThresholdEdit->setValidator(percentValidator);
     mRangeThresholdEdit->setFixedHeight(16);
 
@@ -847,17 +849,18 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mBandwidthLab = new QLabel(tr("FFTW Bandwidth"), mDensityOptsGroup);
     mBandwidthLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
-    mBandwidthSpin = new QDoubleSpinBox(mDensityOptsGroup);
-    mBandwidthSpin->setDecimals(2);
-    mBandwidthSpin->setFixedHeight(20);
+    mBandwidthEdit = new LineEdit(mDensityOptsGroup);
+    mBandwidthEdit->setValidator(RplusValidator);
+    mBandwidthEdit->setFixedHeight(20);
 
     mHActivityLab = new QLabel(tr("Activity Bandwidth"), mDensityOptsGroup);
     mHActivityEdit = new LineEdit(mDensityOptsGroup);
+    mHActivityEdit->setValidator(RplusValidator);
     mHActivityEdit->setFixedHeight(16);
     
     connect(mCredibilityCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     connect(mFFTLenCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::applyFFTLength);
-    connect(mBandwidthSpin, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &ResultsView::applyBandwidth);
+    connect(mBandwidthEdit, &LineEdit::editingFinished, this, &ResultsView::applyBandwidth);
     connect(mThresholdEdit, &LineEdit::editingFinished, this, &ResultsView::applyThreshold);
 
     connect(mRangeThresholdEdit, &LineEdit::editingFinished, this, &ResultsView::applyHActivity);
@@ -885,7 +888,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     QHBoxLayout* densityLayout5 = new QHBoxLayout();
   //  densityLayout3->setContentsMargins(0, 0, 0, 0);
     densityLayout5->addWidget(mBandwidthLab);
-    densityLayout5->addWidget(mBandwidthSpin);
+    densityLayout5->addWidget(mBandwidthEdit);
 
    // spanLayout->setContentsMargins(10, 10, 10, 10);
    // spanLayout->setSpacing(5);
@@ -930,7 +933,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mPreviousPageBut->setToolTip(tr("Display previous data"));
     mPreviousPageBut->setIconOnly(false);
 
-    mPageEdit = new QLineEdit(mPageWidget);
+    mPageEdit = new LineEdit(mPageWidget);
     mPageEdit->setEnabled(false);
     mPageEdit->setReadOnly(true);
     mPageEdit->setAlignment(Qt::AlignCenter);
@@ -1165,9 +1168,9 @@ void ResultsView::initModel()
     mHActivityEdit->setText(stringForLocal(model->mHActivity));
 
     mFFTLenCombo->setCurrentText(stringForLocal(model->getFFTLength()));
-    mBandwidthSpin->blockSignals(true);
-    mBandwidthSpin->setValue(model->getBandwidth());
-    mBandwidthSpin->blockSignals(false);
+    mBandwidthEdit->blockSignals(true);
+    mBandwidthEdit->setText(locale().toString((model->getBandwidth())));
+    mBandwidthEdit->blockSignals(false);
 
     mZooms.clear();
     mZoomsX.clear();
@@ -1709,7 +1712,7 @@ void ResultsView::toggleDisplayDistrib()
         mDensityOptsGroup->setVisible(showDensityOptions);
         if (showDensityOptions) {
             mDensityOptsGroup->setFixedHeight( mCredibilityCheck->height() + mThresholdEdit->height() + mFFTLenCombo->height()
-                                              + mBandwidthSpin->height() + mHActivityEdit->height() + mRangeThresholdEdit->height()
+                                              + mBandwidthEdit->height() + mHActivityEdit->height() + mRangeThresholdEdit->height()
                                                + 12* internSpan);
 
             widHeigth += mDensityOptsTitle->height() + mDensityOptsGroup->height();
@@ -2890,16 +2893,16 @@ void ResultsView::updateScales()
 
     if ( xScaleRepresentsTime() ) {
         // The X zoom uses a log scale on the spin box and can be controlled by the linear slider
-         mXSlider->setRange(-100, 100);
-         mTimeSpin->setRange(sliderToZoom(-100), sliderToZoom(100));
-         mTimeSpin->setSingleStep(.01);
-         mTimeSpin->setDecimals(3);
+         mTimeSlider->setRange(-100, 100);
+         //mTimeSpin->setRange(sliderToZoom(-100), sliderToZoom(100));
+         //mTimeSpin->setSingleStep(.01);
+         //mTimeSpin->setDecimals(3);
 
          // The Ruler range is much wider based on the minimal zoom
          const double tCenter = (mResultCurrentMinT + mResultCurrentMaxT) / 2.;
          const double tSpan = mResultCurrentMaxT - mResultCurrentMinT;
-         const double tRangeMin = tCenter - ((tSpan/2.) / sliderToZoom(mXSlider->minimum()));
-         const double tRangeMax = tCenter + ((tSpan/2.) / sliderToZoom(mXSlider->minimum()));
+         const double tRangeMin = tCenter - ((tSpan/2.) / sliderToZoom(mTimeSlider->minimum()));
+         const double tRangeMax = tCenter + ((tSpan/2.) / sliderToZoom(mTimeSlider->minimum()));
 
          mRuler->setRange(tRangeMin, tRangeMax);
          mRuler->setFormatFunctX(nullptr);
@@ -2912,13 +2915,13 @@ void ResultsView::updateScales()
                  mMainVariable == GraphViewResults::eS02Vg ) ) {
 
                 // The X zoom uses a log scale on the spin box and can be controlled by the linear slider
-                mXSlider->setRange(-100, 100);
-                mTimeSpin->setRange(sliderToZoom(-100), sliderToZoom(100));
-                mTimeSpin->setSingleStep(.01);
-                mTimeSpin->setDecimals(3);
+                mTimeSlider->setRange(-100, 100);
+                //mTimeSpin->setRange(sliderToZoom(-100), sliderToZoom(100));
+                //mTimeSpin->setSingleStep(.01);
+                //mTimeSpin->setDecimals(3);
 
                 // The Ruler range is much wider based on the minimal zoom
-                const double tRangeMax = mResultMaxT / sliderToZoom(mXSlider->minimum());
+                const double tRangeMax = mResultMaxT / sliderToZoom(mTimeSlider->minimum());
 
                 mRuler->setRange(0, tRangeMax);
                 mRuler->setFormatFunctX(nullptr);
@@ -2929,16 +2932,16 @@ void ResultsView::updateScales()
                mMainVariable == GraphViewResults::eLambda ) {
 
                 // The X zoom uses a log scale on the spin box and can be controlled by the linear slider
-                mXSlider->setRange(-100, 100);
-                mTimeSpin->setRange(sliderToZoom(-100), sliderToZoom(100));
-                mTimeSpin->setSingleStep(.01);
-                mTimeSpin->setDecimals(3);
+                mTimeSlider->setRange(-100, 100);
+                //mTimeSpin->setRange(sliderToZoom(-100), sliderToZoom(100));
+                //mTimeSpin->setSingleStep(.01);
+                //mTimeSpin->setDecimals(3);
 
                 // The Ruler range is much wider based on the minimal zoom
                 const double tCenter = (mResultCurrentMinT + mResultCurrentMaxT) / 2.;
                 const double tSpan = mResultCurrentMaxT - mResultCurrentMinT;
-                const double tRangeMin = tCenter - ((tSpan/2.) / sliderToZoom(mXSlider->minimum()));
-                const double tRangeMax = tCenter + ((tSpan/2.) / sliderToZoom(mXSlider->minimum()));
+                const double tRangeMin = tCenter - ((tSpan/2.) / sliderToZoom(mTimeSlider->minimum()));
+                const double tRangeMax = tCenter + ((tSpan/2.) / sliderToZoom(mTimeSlider->minimum()));
 
                 mRuler->setRange(tRangeMin, tRangeMax);
                 mRuler->setFormatFunctX(nullptr);
@@ -2971,10 +2974,10 @@ void ResultsView::updateScales()
         // The number of zoom levels depends on the number of iterations (by a factor 100)
         // e.g. 400 iterations => 4 levels
         const int zoomLevels = (int) mResultMaxT / 100;
-        mXSlider->setRange(1, zoomLevels);
-        mTimeSpin->setRange(1, zoomLevels);
-        mTimeSpin->setSingleStep(1.);
-        mTimeSpin->setDecimals(0);
+        mTimeSlider->setRange(1, zoomLevels);
+        //mTimeSpin->setRange(1, zoomLevels);
+        //mTimeSpin->setSingleStep(1.);
+        //mTimeSpin->setDecimals(0);
 
         // find new minY and maxY
 
@@ -2986,10 +2989,10 @@ void ResultsView::updateScales()
 
         // The zoom slider and spin are linear.
         // Always 5 zoom levels
-        mXSlider->setRange(1, 5);
-        mTimeSpin->setRange(1, 5);
-        mTimeSpin->setSingleStep(1.);
-        mTimeSpin->setDecimals(0);
+        mTimeSlider->setRange(1, 5);
+        //mTimeSpin->setRange(1, 5);
+        //mTimeSpin->setSingleStep(1.);
+        //mTimeSpin->setDecimals(0);
 
         mRuler->setRange(mResultMinT, mResultMaxT);
         mRuler->setFormatFunctX(nullptr);
@@ -3018,7 +3021,7 @@ void ResultsView::updateScales()
     // -------------------------------------------------------
     setTimeRange();
     setTimeSlider(zoomToSlider(mResultZoomT));
-    setTimeSpin(mResultZoomT);
+    setTimeEdit(mResultZoomT);
     setTimeScale();
 
     // -------------------------------------------------------
@@ -3625,8 +3628,8 @@ void ResultsView::updateOptionsWidget()
 
             mBandwidthLab->hide();
             mBandwidthLab->setFixedHeight(0);
-            mBandwidthSpin->hide();
-            mBandwidthSpin->setFixedHeight(0);
+            mBandwidthEdit->hide();
+            mBandwidthEdit->setFixedHeight(0);
 
             mHActivityLab->show();
             mHActivityLab->setFixedHeight(20);
@@ -3648,8 +3651,8 @@ void ResultsView::updateOptionsWidget()
 
             mBandwidthLab->hide();
             mBandwidthLab->setFixedHeight(0);
-            mBandwidthSpin->hide();
-            mBandwidthSpin->setFixedHeight(0);
+            mBandwidthEdit->hide();
+            mBandwidthEdit->setFixedHeight(0);
 
             mHActivityLab->hide();
             mHActivityLab->setFixedHeight(0);
@@ -3671,8 +3674,8 @@ void ResultsView::updateOptionsWidget()
 
             mBandwidthLab->show();
             mBandwidthLab->setFixedHeight(20);
-            mBandwidthSpin->show();
-            mBandwidthSpin->setFixedHeight(20);
+            mBandwidthEdit->show();
+            mBandwidthEdit->setFixedHeight(20);
 
             mHActivityLab->hide();
             mHActivityLab->setFixedHeight(0);
@@ -3688,7 +3691,7 @@ void ResultsView::updateOptionsWidget()
         if (showDensityOptions) {
 
             mDensityOptsGroup->setFixedHeight( mCredibilityCheck->height() + mThresholdEdit->height() + mFFTLenCombo->height()
-                                               + mBandwidthSpin->height() + mHActivityEdit->height() + mRangeThresholdEdit->height()
+                                               + mBandwidthEdit->height() + mHActivityEdit->height() + mRangeThresholdEdit->height()
                                                + (nbObject+2)* internSpan);
 
             widHeigth += mDensityOptsTitle->height() + mDensityOptsGroup->height() + 4*internSpan;
@@ -3780,7 +3783,7 @@ void ResultsView::updateGraphsHeight()
 {
     const double min = 2 * AppSettings::heigthUnit();
     const double origin = GraphViewResults::mHeightForVisibleAxis;
-    const double prop = mZoomSpin->value() / 100.;
+    const double prop = locale().toDouble(mZoomEdit->text()) / 100.;
     mGraphHeight = min + prop * (origin - min);
     updateGraphsLayout();
 }
@@ -3788,7 +3791,7 @@ void ResultsView::updateGraphsHeight()
 void ResultsView::updateZoomT()
 {
     // Pick the value from th spin or the slider
-    const double zoom = mTimeSpin->value();
+    const double zoom = locale().toDouble(mTimeEdit->text())/100.;
 
     mResultZoomT = 1./zoom;
 
@@ -3864,18 +3867,18 @@ void ResultsView::setTimeRange()
     mCurrentTMaxEdit->blockSignals(false);
 }
 
-void ResultsView::setTimeSpin(const double value)
+void ResultsView::setTimeEdit(const double value)
 {
-    mTimeSpin->blockSignals(true);
-    mTimeSpin->setValue(value);
-    mTimeSpin->blockSignals(false);
+    mTimeEdit->blockSignals(true);
+    mTimeEdit->setText(locale().toString(value * 100.));
+    mTimeEdit->blockSignals(false);
 }
 
 void ResultsView::setTimeSlider(const int value)
 {
-    mXSlider->blockSignals(true);
-    mXSlider->setValue(value);
-    mXSlider->blockSignals(false);
+    mTimeSlider->blockSignals(true);
+    mTimeSlider->setValue(value);
+    mTimeSlider->blockSignals(false);
 }
 
 void ResultsView::setTimeScale()
@@ -3978,7 +3981,7 @@ void ResultsView::applyStudyPeriod()
 
     setTimeRange();
     setTimeSlider(zoomToSlider(mResultZoomT));
-    setTimeSpin(mResultZoomT);
+    setTimeEdit(mResultZoomT);
     setTimeScale();
 
 }
@@ -4009,23 +4012,26 @@ void ResultsView::applyTimeRange()
 
         setTimeRange();
         setTimeSlider(zoomToSlider(mResultZoomT));
-        setTimeSpin(mResultZoomT);
+        setTimeEdit(mResultZoomT);
     }
 }
 
 void ResultsView::applyTimeSlider(int value)
 {
-    setTimeSpin(sliderToZoom(value));
+    setTimeEdit(sliderToZoom(value));
     updateZoomT();
 }
 
-void ResultsView::applyTimeSpin(double value)
+void ResultsView::applyTimeEdit()
 {
-    setTimeSlider(zoomToSlider(value));
-    updateZoomT();
+    if (mTimeEdit->hasAcceptableInput()) {
+        setTimeSlider(zoomToSlider(locale().toDouble(mTimeEdit->text())/100.));
+        updateZoomT();
+    }
+
 }
 
-# pragma mark curve Zoom
+# pragma mark Curve Zoom
 void ResultsView::applyXRange()
 {
     bool minIsNumber = true;
@@ -4301,27 +4307,30 @@ void ResultsView::applyZoomScale()
 
 void ResultsView::applyZoomSlider(int value)
 {
-    mZoomSpin->blockSignals(true);
-    mZoomSpin->setValue(value);
-    mZoomSpin->blockSignals(false);
+    mZoomEdit->blockSignals(true);
+    mZoomEdit->setText(locale().toString(value));
+    mZoomEdit->blockSignals(false);
 
     updateGraphsHeight();
 }
 
-void ResultsView::applyZoomSpin(int value)
+void ResultsView::applyZoomEdit()
 {
-    mZoomSlider->blockSignals(true);
-    mZoomSlider->setValue(value);
-    mZoomSlider->blockSignals(false);
+    if (mZoomEdit->hasAcceptableInput()) {
+        mZoomSlider->blockSignals(true);
+        mZoomSlider->setValue(locale().toInt(mZoomEdit->text()));
+        mZoomSlider->blockSignals(false);
 
-    updateGraphsHeight();
+        updateGraphsHeight();
+    }
+
 }
 
 void ResultsView::applyFont()
 {
     bool ok = false;
 
-    const QFont& currentFont = mFontBut->font();// graphs.at(0)->getGraphFont();/
+    const QFont& currentFont = mFontBut->font();
 
     const QFont font(QFontDialog::getFont(&ok, currentFont, this));
 
@@ -4379,17 +4388,22 @@ void ResultsView::applyFFTLength()
 
 void ResultsView::applyHActivity()
 {
-    const double h = locale().toDouble(mHActivityEdit->text());
-    const double rangePercent = locale().toDouble(mRangeThresholdEdit->text());
-    getModel_ptr()->setHActivity(h, rangePercent);
-    generateCurves();
+    if (mRangeThresholdEdit->hasAcceptableInput()) {
+        const double h = locale().toDouble(mHActivityEdit->text());
+        const double rangePercent = locale().toDouble(mRangeThresholdEdit->text());
+        getModel_ptr()->setHActivity(h, rangePercent);
+        generateCurves();
+    }
+
 }
 
 void ResultsView::applyBandwidth()
 {
-    const double bandwidth = mBandwidthSpin->value();
-    getModel_ptr()->setBandwidth(bandwidth);
-    generateCurves();
+   if (mBandwidthEdit->hasAcceptableInput()) {
+        const double bandwidth = locale().toDouble(mBandwidthEdit->text());
+        getModel_ptr()->setBandwidth(bandwidth);
+        generateCurves();
+    }
 }
 
 void ResultsView::applyThreshold()

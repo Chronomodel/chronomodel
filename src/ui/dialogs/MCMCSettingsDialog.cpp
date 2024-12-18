@@ -174,7 +174,7 @@ setAttribute(Qt::WA_AlwaysShowToolTips);
 
     connect(mOkBut, &QPushButton::clicked, this, &MCMCSettingsDialog::inputControl);
     connect(this, &MCMCSettingsDialog::inputValided, this, &MCMCSettingsDialog::accept);
-
+    connect(this, &MCMCSettingsDialog::nothing, this, &MCMCSettingsDialog::reject);
     connect(mCancelBut, &QPushButton::clicked, this, &MCMCSettingsDialog::reject);
 
     connect(mResetBut, &QPushButton::clicked, this, &MCMCSettingsDialog::reset);
@@ -192,6 +192,7 @@ MCMCSettingsDialog::~MCMCSettingsDialog()
 
 void MCMCSettingsDialog::setSettings(const MCMCSettings& settings)
 {
+    initalSetting = settings;
     const QLocale mLoc = QLocale();
     mNumProcEdit->setText(mLoc.toString(settings.mNumChains));
     mNumIterEdit->setText(mLoc.toString(settings.mIterPerAquisition));
@@ -415,8 +416,11 @@ void MCMCSettingsDialog::inputControl()
     }
 
     if (isValided) {
-        settings.mSeeds = QStringToQListUnsigned(mSeedsEdit->text(), ";");;
-        emit inputValided();
+        settings.mSeeds = QStringToQListUnsigned(mSeedsEdit->text(), ";");
+        if (initalSetting == settings)
+            emit nothing();
+        else
+            emit inputValided();
 
    } else
         QMessageBox::warning(this, tr("Invalid input"),

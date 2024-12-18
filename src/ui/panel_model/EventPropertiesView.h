@@ -83,6 +83,7 @@ public:
     bool hasBound() const;
     bool hasEventWithDates() const;
     void initEvent(QJsonObject *eventObj);
+    void resetEvent();
 
 public slots:
     void setEvent(QJsonObject *eventObj);

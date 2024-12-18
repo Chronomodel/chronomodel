@@ -85,6 +85,7 @@ public:
     MCMCSettings& operator=(const MCMCSettings& s);
     void copyFrom(const MCMCSettings& s);
     ~MCMCSettings();
+    bool operator==(const MCMCSettings& other) const;
 
     static MCMCSettings fromJson(const QJsonObject& json);
     void restoreDefault();

@@ -91,7 +91,7 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &fun)
         result.mode = fun.firstKey();
         result.mean = fun.firstKey();
         result.std = 0.;
-        //qDebug() << "[Function::analyseFunction] WARNING : only one data !! ";
+        //qDebug() << "[Function::analyseFunction] WARNING : Only one data !! ";
         result.quartiles.Q1 = fun.firstKey();
         result.quartiles.Q2 = fun.firstKey();
         result.quartiles.Q3 = fun.firstKey();
@@ -108,25 +108,25 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &fun)
 
     type_data y_sum = 0;
     type_data mean = 0;
-    type_data mean_prev;
-    type_data x;
-    type_data y = citer.value();
+
     type_data variance = 0;
 
-    // suppression des premiers zéro qui genent le calcul de moyenne
-    for (;citer != fun.cend() && y == 0; ++citer) {
-        y = citer.value();
+    // Suppression des premiers zéro qui genent le calcul de moyenne
+
+    while (citer != fun.cend() && (citer.value()) == 0) {
+        ++citer;
     }
 
     for (;citer != fun.cend(); ++citer) {
 
-        x = citer.key();
-        y = citer.value();
+        const type_data x = citer.key();
+        const type_data y = citer.value();
         y_sum +=  y;
 
-        mean_prev = mean;
+        const type_data mean_prev = mean;
         mean +=  (y / y_sum) * (x - mean_prev);
         variance += y * (x - mean_prev) * (x - mean);
+
 
         // Find max
         if (max <= y) {
@@ -154,7 +154,7 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &fun)
     result.std = sqrt(variance);
     result.mean = std::move(mean);
 
-    const double step = (fun.lastKey() - fun.firstKey()) / (double)(fun.size() - 1);
+    const double step = (fun.lastKey() - fun.firstKey()) / static_cast<double>(fun.size() - 1);
     QList<double> subRepart = calculRepartition(fun);
     result.quartiles = quartilesForRepartition(subRepart, fun.firstKey(), step);
 
@@ -240,7 +240,7 @@ FunctionStat analyseFunction(const std::map<type_data, type_data> &fun)
     result.std = sqrt(variance);
     result.mean = std::move(mean);
 
-    const double step = (fun.crbegin()->first - fun.begin()->first) / (double)(fun.size() - 1);
+    const double step = (fun.crbegin()->first - fun.begin()->first) / static_cast<double>(fun.size() - 1);
     std::vector<double> subRepart = calculRepartition(fun);
     result.quartiles = quartilesForRepartition(subRepart, fun.begin()->first, step);
 
@@ -285,40 +285,34 @@ type_data std_Koening(const QList<type_data> &data)
 double variance_Knuth(const QList<double> &data)
 {
     unsigned n = 0;
-    long double mean = 0.;
-    long double variance = 0.;
-    long double previousMean = 0.;
-    long double previousVariance = 0.;
+    double mean = 0.0;
+    double variance = 0.0;
 
-    for (auto&& x : data) {
+    for (const auto& x : data) {
         n++;
-        previousMean = std::move(mean);
-        previousVariance = std::move(variance);
-        mean = previousMean + (x - previousMean)/n;
-        variance = previousVariance + (x - previousMean)*(x - mean);
+        double previousMean = mean;
+        mean += (x - previousMean)/n;
+        variance +=  (x - previousMean)*(x - mean);
     }
 
-    return variance/(long double)n;
+    return variance/static_cast<double>(n);
 
 }
 
 double variance_Knuth(const std::vector<double> &data)
 {
     unsigned n = 0;
-    long double mean = 0.;
-    long double variance = 0.;
-    long double previousMean;
-    long double previousVariance;
+    double mean = 0.0;
+    double variance = 0.0;
 
-    for (auto&& x : data) {
+    for (const auto& x : data) {
         n++;
-        previousMean = std::move(mean);
-        previousVariance = std::move(variance);
-        mean = previousMean + (x - previousMean)/n;
-        variance = previousVariance + (x - previousMean)*(x - mean);
+        double previousMean = mean;
+        mean += (x - previousMean)/n;
+        variance +=  (x - previousMean)*(x - mean);
     }
 
-    return variance/(long double)n;
+    return variance/static_cast<double>(n);
 
 }
 
@@ -327,35 +321,30 @@ double variance_Knuth(const std::vector<int> &data)
     int n = 0;
     double mean = 0.;
     double variance = 0.;
-    double previousMean = 0.;
-    double previousVariance = 0.;
 
-    for (auto&& x : data) {
+    for (const auto& x : data) {
         n++;
-        previousMean = std::move(mean);
-        previousVariance = std::move(variance);
-        mean = previousMean + ((double)x - previousMean) / n;
-        variance = previousVariance + ( (double)x - previousMean)*( (double)x - mean);
+        double x_double = static_cast<double>(x); // Conversion unique
+        double previousMean = mean;
+        mean +=  (x_double - previousMean) / n;
+        variance +=  ( x_double - previousMean)*( x_double - mean);
     }
 
-    return variance/n;
+    return variance/static_cast<double>(n);
 
 }
 
 void mean_variance_Knuth(const std::vector<double> &data, double &mean, double &variance)
 {
     int n = 0;
-    variance = 0.;
-    mean = 0.;
-    double previousMean = 0.;
-    double previousVariance = 0.;
+    variance = 0.0;
+    mean = 0.0;
 
-    for (auto&& x : data) {
+    for (const auto& x : data) {
         n++;
-        previousMean = std::move(mean);
-        previousVariance = std::move(variance);
-        mean = previousMean + (x - previousMean) / n;
-        variance = previousVariance + ( x - previousMean)*( x - mean);
+        double previousMean = mean;
+        mean += (x - previousMean) / n;
+        variance +=  ( x - previousMean)*( x - mean);
     }
     variance /= n;
 }
@@ -363,17 +352,14 @@ void mean_variance_Knuth(const std::vector<double> &data, double &mean, double &
 void mean_variance_Knuth(const QList<double> &data, double& mean, double& variance)
 {
     int n = 0;
-    variance = 0.;
-    mean = 0.;
-    double previousMean = 0.;
-    double previousVariance = 0.;
+    variance = 0.0;
+    mean = 0.0;
 
     for (auto&& x : data) {
         n++;
-        previousMean = std::move(mean);
-        previousVariance = std::move(variance);
-        mean = previousMean + (x - previousMean) / n;
-        variance = previousVariance + ( x - previousMean)*( x - mean);
+        double previousMean = mean;
+        mean += (x - previousMean) / n;
+        variance += ( x - previousMean)*( x - mean);
     }
     variance /= n;
 }
@@ -381,57 +367,49 @@ void mean_variance_Knuth(const QList<double> &data, double& mean, double& varian
 double std_unbiais_Knuth (const QList<double> &data)
 {
     unsigned n = 0;
-    double mean = 0.;
-    double variance = 0.;
-    double previousMean = 0.;
-    double previousVariance = 0.;
+    double mean = 0.0;
+    double variance = 0.0;
 
     for (auto&& x : data) {
         n++;
-        previousMean = std::move(mean);
-        previousVariance = std::move(variance);
-        mean = previousMean + (x - previousMean)/n;
-        variance = previousVariance + (x - previousMean)*(x - mean);
+        double previousMean = mean;
+        mean += (x - previousMean)/n;
+        variance +=  (x - previousMean)*(x - mean);
     }
 
-    return sqrt(variance/(double)(n-1)); // unbiais
+    return sqrt(variance/static_cast<double>(n-1)); // unbiais
 
 }
 
 double std_unbiais_Knuth(const std::vector<double> &data)
 {
     unsigned n = 0;
-    long double mean = 0.;
-    long double variance = 0.;
-    long double previousMean = 0.;
-    long double previousVariance = 0.;
+    double mean = 0.;
+    double variance = 0.;
 
     for (auto&& x : data) {
         n++;
-        previousMean = std::move(mean);
-        previousVariance = std::move(variance);
-        mean = previousMean + (x - previousMean)/n;
-        variance = previousVariance + (x - previousMean)*(x - mean);
+        double previousMean = mean;
+        mean += (x - previousMean)/n;
+        variance += (x - previousMean)*(x - mean);
     }
 
-    return sqrt(variance/(long double)(n-1));
+    return sqrt(variance/static_cast<long double>(n-1));
 
 }
 
 double std_unbiais_Knuth(const std::vector<int>& data)
 {
     int n = 0;
-    long double mean = 0.;
-    long double variance = 0.;
-    long double previousMean = 0.;
-    long double previousVariance = 0.;
+    double mean = 0.0;
+    double variance = 0.0;
 
-    for (auto&& x : data) {
+    for (const auto& x : data) {
         n++;
-        previousMean = std::move(mean);
-        previousVariance = std::move(variance);
-        mean = previousMean + ((double)x - previousMean) / n;
-        variance = previousVariance + ( (double)x - previousMean)*( (double)x - mean);
+        double x_double = static_cast<double>(x); // Conversion unique
+        double previousMean = mean;
+        mean += (x_double - previousMean) / n;
+        variance +=  ( x_double - previousMean)*( x_double - mean);
     }
 
     return sqrt(variance/(n-1)); // unbiais
@@ -441,28 +419,27 @@ double std_unbiais_Knuth(const std::vector<int>& data)
 void mean_std_unbiais_Knuth(const std::vector<int>& data, double& mean, double& std)
 {
     int n = 0;
-    double variance = 0.;
-    double previousMean = 0.;
-    double previousVariance = 0.;
+    mean = 0.0;
+    double variance = 0.0;
 
-    for (auto&& x : data) {
+    for (const auto& x : data) {
         n++;
-        previousMean = std::move(mean);
-        previousVariance = std::move(variance);
-        mean = previousMean + ((double)x - previousMean) / n;
-        variance = previousVariance + ( (double)x - previousMean)*( (double)x - mean);
+        double x_double = static_cast<double>(x); // Conversion unique
+        double previousMean = mean;
+        mean += (x_double - previousMean) / n;
+        variance +=  ( x_double - previousMean)*( x_double - mean);
     }
 
-    std = std::move(sqrt(variance/(n-1)));// unbiais
+    std = sqrt(variance/(n-1));// unbiais
 
 }
 
 // dataX and dataY must have the same length
 double covariance(const std::vector<double> &dataX, const std::vector<double> &dataY)
 {
-    double meanx = 0.;
-    double meany = 0.;
-    double covar = 0.;
+    double meanx = 0.0;
+    double meany = 0.0;
+    double covar = 0.0;
     double n = 0;
     double dx;
     auto ptr_dX = dataX.begin();
@@ -625,10 +602,10 @@ QList<double> autocorrelation_by_convol(const QList<double> &trace, const int hm
  */
 const std::pair<double, double> linear_regression(const std::vector<double> &dataX, const std::vector<double>& dataY)
 {
-    double mean_x = 0.;
-    double mean_y = 0.;
-    double covar = 0.;
-    double var_x = 0;
+    double mean_x = 0.0;
+    double mean_y = 0.0;
+    double covar = 0.0;
+    double var_x = 0.0;
     double previousMean_x;
     double n = 0;
     double dx;
@@ -668,7 +645,7 @@ TraceStat traceStatistic(const QList<type_data> &trace)
     TraceStat result;
     if (trace.size() == 1) {
         result.mean = trace.at(0);
-        result.std = 0.; // unbiais
+        result.std = 0.0; // unbiais
 
         result.min = trace.at(0);
         result.max = trace.at(0);
@@ -681,19 +658,16 @@ TraceStat traceStatistic(const QList<type_data> &trace)
     }
 
     int n = 0;
-    type_data mean = 0.;
-    type_data variance = 0.;
-    type_data previousMean = 0.;
-    type_data previousVariance = 0.;
+    type_data mean = 0.0;
+    type_data variance = 0.0;
 
-    for (auto&& x : trace) {
+    for (const auto& x : trace) {
         n++;
-        previousMean = std::move(mean);
-        previousVariance = std::move(variance);
-        mean = previousMean + (x - previousMean)/n;
-        variance = previousVariance + (x - previousMean)*(x - mean);
+        double previousMean = mean;
+        mean += (x - previousMean)/n;
+        variance += (x - previousMean)*(x - mean);
     }
-    result.mean = std::move(mean);
+    result.mean = mean;
     result.std = sqrt(variance/(n-1)); // unbiais
 
     auto minMax = std::minmax_element(trace.begin(), trace.end());
@@ -709,7 +683,7 @@ TraceStat traceStatistic(const std::vector<type_data> &trace)
     TraceStat result;
     if (trace.size() == 1) {
         result.mean = trace.at(0);
-        result.std = 0.; // unbiais
+        result.std = 0.0; // unbiais
 
         result.min = trace.at(0);
         result.max = trace.at(0);
@@ -722,24 +696,21 @@ TraceStat traceStatistic(const std::vector<type_data> &trace)
     }
 
     int n = 0;
-    type_data mean = 0.;
-    type_data variance = 0.;
-    type_data previousMean = 0.;
-    type_data previousVariance = 0.;
+    type_data mean = 0.0;
+    type_data variance = 0.0;
 
     for (auto&& x : trace) {
         n++;
-        previousMean = std::move(mean);
-        previousVariance = std::move(variance);
-        mean = previousMean + (x - previousMean)/n;
-        variance = previousVariance + (x - previousMean)*(x - mean);
+        type_data previousMean = mean;
+        mean +=  (x - previousMean)/n;
+        variance += (x - previousMean)*(x - mean);
     }
-    result.mean = std::move(mean);
+    result.mean = mean;
     result.std = sqrt(variance/(n-1)); // unbiais
 
     auto minMax = std::minmax_element(trace.begin(), trace.end());
-    result.min = std::move(*minMax.first);
-    result.max = std::move(*minMax.second);
+    result.min = *minMax.first;
+    result.max = *minMax.second;
 
     result.quartiles = quartilesForTrace(trace);
     return result;
@@ -902,10 +873,12 @@ QList<double> calculRepartition(const QMap<double, double>  &calib)
         repartitionTemp.append(rep);
     }
 #endif
-    // Normalize repartition
+    // Normaliser la répartition
     QList<double> repartition;
-    for (auto&& v : repartitionTemp)
-        repartition.append(v/rep);
+    repartition.reserve(repartitionTemp.size()); // Réserve de la mémoire
+
+    std::transform(repartitionTemp.cbegin(), repartitionTemp.cend(), std::back_inserter(repartition),
+                   [rep](double v) { return v / rep; });
 
     return repartition;
 }
@@ -938,10 +911,14 @@ std::vector<double> calculRepartition(const std::map<double, double>  &calib)
         repartitionTemp.append(rep);
     }
 #endif
-    // Normalize repartition
+
+    // Normaliser la répartition
     std::vector<double> repartition;
-    for (auto&& v : repartitionTemp)
-        repartition.push_back(v/rep);
+    repartition.reserve(repartitionTemp.size()); // Réserve de la mémoire
+
+    std::transform(repartitionTemp.cbegin(), repartitionTemp.cend(), std::back_inserter(repartition),
+                   [rep](double v) { return v / rep; });
+
 
     return repartition;
 }
@@ -1103,20 +1080,20 @@ std::pair<double, double> credibilityForTrace(const QList<int> &trace, double th
         std::sort(sorted.begin(),sorted.end());
 
         size_t numToRemove = (size_t)floor(n * (1. - threshold / 100.));
-        exactThresholdResult = ((double)n - (double)numToRemove) / (double)n;
+        exactThresholdResult = static_cast<double>(n - numToRemove) / static_cast<double>(n);
 
-        double lmin (0.);
+        double lmin = 0.0;
         size_t foundJ (0);
 
-        for (size_t j=0; j<=numToRemove; ++j) {
-            const double l = sorted.at((n - 1) - numToRemove + j) - sorted.at(j);
+        for (size_t j = 0; j<=numToRemove; ++j) {
+            const double l = sorted[(n - 1) - numToRemove + j] - sorted[j];
             if ((lmin == 0.) || (l < lmin)) {
                 foundJ = j;
                 lmin = l;
             }
         }
-        credibility.first = (double)sorted.at(foundJ);
-        credibility.second = (double)sorted.at((n - 1) - numToRemove + foundJ);
+        credibility.first = static_cast<double>(sorted[foundJ]);
+        credibility.second = static_cast<double>(sorted[(n - 1) - numToRemove + foundJ]);
     }
 
     if (credibility.first == credibility.second) {
@@ -1163,14 +1140,14 @@ std::pair<double, double> timeRangeFromTraces(const QList<double> &trace1, const
         // 1 - map with relation Beta to Alpha
         std::multimap<double, double> betaAlpha;
         for(int i=0; i<trace1.size(); ++i)
-            betaAlpha.insert(std::pair<double, double>(trace2.at(i),trace1.at(i)) );
+            betaAlpha.insert(std::pair<double, double>(trace2.at(i), trace1.at(i)) );
 
-        std::copy(trace2.begin(),trace2.end(),traceBeta.begin());
+        std::copy(trace2.begin(), trace2.end(), traceBeta.begin());
 
         // keep the beta trace in the same position of the Alpha, so we need to sort them with there values of alpha
-        std::sort(traceBeta.begin(),traceBeta.end(),[&betaAlpha](const double i, const double j){ return betaAlpha.find(i)->second < betaAlpha.find(j)->second  ;} );
+        std::sort(traceBeta.begin(), traceBeta.end(), [&betaAlpha](const double i, const double j){ return betaAlpha.find(i)->second < betaAlpha.find(j)->second  ;} );
 
-        std::sort(traceAlpha.begin(),traceAlpha.end());
+        std::sort(traceAlpha.begin(), traceAlpha.end());
 
         std::vector<double> betaUpper(n);
 
@@ -1269,15 +1246,15 @@ std::pair<double, double> timeRangeFromTraces(const std::vector<double> &trace1,
 
         // 1 - map with relation Beta to Alpha
         std::multimap<double, double> betaAlpha;
-        for(size_t i=0; i<trace1.size(); ++i)
-            betaAlpha.insert(std::pair<double, double>(trace2.at(i),trace1.at(i)) );
+        for(size_t i = 0; i<trace1.size(); ++i)
+            betaAlpha.insert(std::pair<double, double>(trace2.at(i), trace1.at(i)) );
 
-        std::copy(trace2.begin(),trace2.end(),traceBeta.begin());
+        std::copy(trace2.begin(), trace2.end(), traceBeta.begin());
 
         // keep the beta trace in the same position of the Alpha, so we need to sort them with there values of alpha
-        std::sort(traceBeta.begin(),traceBeta.end(),[&betaAlpha](const double i, const double j){ return betaAlpha.find(i)->second < betaAlpha.find(j)->second  ;} );
+        std::sort(traceBeta.begin(), traceBeta.end(), [&betaAlpha](const double i, const double j){ return betaAlpha.find(i)->second < betaAlpha.find(j)->second  ;} );
 
-        std::sort(traceAlpha.begin(),traceAlpha.end());
+        std::sort(traceAlpha.begin(), traceAlpha.end());
 
         std::vector<double> betaUpper(n);
 
@@ -1409,12 +1386,12 @@ std::pair<double, double> gapRangeFromTraces(const QList<double> &traceEnd, cons
         // 1 - map with relation Alpha to Beta
         std::multimap<double, double> alphaBeta;
         for (auto i=0; i<traceBegin.size(); ++i)
-            alphaBeta.insert(std::pair<double, double>(traceAlpha.at(i),traceBeta.at(i)) );
+            alphaBeta.insert(std::pair<double, double>(traceAlpha.at(i), traceBeta.at(i)) );
 
         // keep the beta trace in the same position of the Alpha, so we need to sort them with there values of alpha
-        std::sort(traceAlpha.begin(),traceAlpha.end(),[&alphaBeta](const double i, const double j){ return alphaBeta.find(i)->second < alphaBeta.find(j)->second  ;} );
+        std::sort(traceAlpha.begin(), traceAlpha.end(), [&alphaBeta](const double i, const double j){ return alphaBeta.find(i)->second < alphaBeta.find(j)->second  ;} );
 
-        std::sort(traceBeta.begin(),traceBeta.end());
+        std::sort(traceBeta.begin(), traceBeta.end());
 
         std::vector<double> alphaUnder(n);
 
@@ -1508,7 +1485,7 @@ std::pair<double, double> gapRangeFromTraces(const std::vector<double> &traceEnd
     startTime.start();
 #endif
 
-    std::pair<double, double> range = std::pair<double, double>(- INFINITY, + INFINITY);
+    std::pair<double, double> range = { -std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity() };
 
     // limit of precision, to accelerate the calculus, we set the same as RChronoModel
     const double epsilonStep = 0.1/100.;
@@ -1522,19 +1499,20 @@ std::pair<double, double> gapRangeFromTraces(const std::vector<double> &traceEnd
         double dMax(0.);
 
         // We must change the type (float to double) to increase the precision
-        std::vector<double> traceBeta (traceEnd.size());
-        std::copy(traceEnd.begin(), traceEnd.end(), traceBeta.begin());
-
-        std::vector<double> traceAlpha (traceBegin.size());
-        std::copy(traceBegin.begin(),traceBegin.end(),traceAlpha.begin());
+        std::vector<double> traceAlpha = traceBegin; // Copy only once
+        std::vector<double> traceBeta = traceEnd; // Copy only once
 
         // 1 - map with relation Alpha to Beta
         std::multimap<double, double> alphaBeta;
-        for (size_t i=0; i<traceBegin.size(); ++i)
-            alphaBeta.insert(std::pair<double, double>(traceAlpha.at(i),traceBeta.at(i)) );
+        for (size_t i = 0; i < n; ++i) {
+            alphaBeta.emplace(traceAlpha[i], traceBeta[i]);
+        }
+
+       // for (size_t i=0; i<traceBegin.size(); ++i)
+         //   alphaBeta.insert(std::pair<double, double>(traceAlpha.at(i),traceBeta.at(i)) );
 
         // keep the beta trace in the same position of the Alpha, so we need to sort them with there values of alpha
-        std::sort(traceAlpha.begin(),traceAlpha.end(),[&alphaBeta](const double i, const double j){ return alphaBeta.find(i)->second < alphaBeta.find(j)->second  ;} );
+        std::sort(traceAlpha.begin(), traceAlpha.end(), [&alphaBeta](const double i, const double j){ return alphaBeta.find(i)->second < alphaBeta.find(j)->second  ;} );
 
         std::sort(traceBeta.begin(),traceBeta.end());
 
@@ -1552,16 +1530,23 @@ std::pair<double, double> gapRangeFromTraces(const std::vector<double> &traceEnd
             // We must decrease of 1 from the original formula because the array begin at 0
             const double ha( ((double)traceBeta.size()-1.) * aEpsilon);
 
-            const long long haInf( floor(ha) );
-            const long long haSup( ceil(ha) );
 
-            if ((haSup > (int)traceBeta.size()) || (haInf > (int)traceBeta.size()))
+            const long long haInf = std::floor(ha);
+            const long long haSup = std::ceil(ha);
+
+            if (haInf < 0 || haSup >= static_cast<long long>(traceBeta.size())) {
+                return range;
+            }
+
+            const double a = traceBeta[haInf] + (ha - haInf) * (traceBeta[haSup] - traceBeta[haInf]);
+
+
+            if ((haSup > static_cast<long long>(traceBeta.size())) || (haInf > static_cast<long long>(traceBeta.size())))
                 return range;
 
             if ((haInf < 0) || (haSup < 0))
                 return range;
 
-            const double a = traceBeta.at(haInf) + ( (ha-(double)haInf)*(traceBeta.at(haSup)-traceBeta.at(haInf)) );
 
             // 3 - Copy only value of beta with alpha smaller than a(epsilon)!
             const long long alphaIdx(haSup < (double)n ? haSup : (double)(n-1) );//( ha == haInf ? haInf : haSup );//( ha == haSup ? haSup : haInf );// //
@@ -1572,7 +1557,7 @@ std::pair<double, double> gapRangeFromTraces(const std::vector<double> &traceEnd
             // traceAlpha is sorted with the value alpha join
             auto it = std::copy( traceAlpha.begin(), traceAlpha.begin() + alphaIdx, alphaUnder.begin() );
 
-            const long long alphaUnderSize = (long long) std::distance(alphaUnder.begin(), it);
+            const long long alphaUnderSize = std::distance(alphaUnder.begin(), it);
 
             alphaUnder.resize(alphaUnderSize);  // shrink container to new size
 
@@ -1584,7 +1569,7 @@ std::pair<double, double> gapRangeFromTraces(const std::vector<double> &traceEnd
 
             // Linear interpolation like in R quantile( type=7)
 
-            const size_t hb( ((double)alphaUnder.size()-1.)* bEpsilon );
+            const size_t hb( (static_cast<double>(alphaUnder.size())-1.)* bEpsilon );
             const size_t hbInf( floor(hb) );
             const size_t hbSup( ceil(hb) );
 
@@ -1594,7 +1579,7 @@ std::pair<double, double> gapRangeFromTraces(const std::vector<double> &traceEnd
             //if ((hbInf < 0) || (hbSup <0)) // impossible
             //    return range;
 
-            const double b = alphaUnder.at(hbInf) + ( ((double)hb -(double)hbInf)*(alphaUnder.at(hbSup)-alphaUnder.at(hbInf)) );
+            const double b = alphaUnder[hbInf] + ( (static_cast<double>(hb) -static_cast<double>(hbInf))*(alphaUnder[hbSup]-alphaUnder[hbInf]) );
 
             // 6 - keep the longest length
 

@@ -70,6 +70,7 @@ protected slots:
 signals:
     void inputValided();
     void inputRejected();
+    void nothing();
 
 protected:
     void paintEvent(QPaintEvent*);
@@ -78,7 +79,7 @@ protected:
 
 private:
     // Dimension
-
+   MCMCSettings initalSetting;
    int mTop;
    int mColoredBoxHeigth; // heigth of the colored box
    int mBurnBoxWidth;

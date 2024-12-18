@@ -256,7 +256,7 @@ void CalibrationView::setDate(const Date& d)
         qDebug() << "[CalibrationView::setDate] mUUID " << mDate.getQStringName() << mDate.mUUID;
         const double t1 = mSettings.getTminFormated();
         const double t2 = mSettings.getTmaxFormated();
-        if (mDate.mIsValid) {
+        if (mDate.mIsValid && !mDate.mCalibration->mMap.empty()) {
             const double t3 = mDate.getFormatedTminCalib();
             const double t4 = mDate.getFormatedTmaxCalib();
 

@@ -206,7 +206,7 @@ QPair<double,double> PluginTL::getTminTmaxRefsCurve(const QJsonObject &data) con
 
 double PluginTL::getMinStepRefsCurve(const QJsonObject &data) const
 {
-    const int frac = 101;
+    const int frac = 1001;
     const double age = data.value(DATE_TL_AGE_STR).toDouble();
     const double error = data.value(DATE_TL_ERROR_STR).toDouble();
     const double ref_year = data.value(DATE_TL_REF_YEAR_STR).toDouble();

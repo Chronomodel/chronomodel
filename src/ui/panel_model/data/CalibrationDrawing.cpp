@@ -267,7 +267,7 @@ void CalibrationDrawing::setVisible(bool visible)
     mTitle->setVisible(visible);
     mRefTitle->setVisible(visible);
     mRefComment->setVisible(visible);
-    if (mRefGraphView)
+    if (mRefGraphView && mRefGraphView->mGraph)
         mRefGraphView->setVisible(visible);
 
     mCalibTitle->setVisible(visible);

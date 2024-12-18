@@ -292,6 +292,16 @@ void AbstractScene::keyPressEvent(QKeyEvent* keyEvent)
     if (keyEvent->key() == Qt::Key_Delete)
         deleteSelectedItems();
 
+    if (selectedItems().count() == 0) {
+        qDebug() << "[AbstractScene::keyPressEvent] No item selected";
+        if (mDrawingArrow == true) {
+            mDrawingArrow = false;
+            mTempArrow->setVisible(false);
+            clearSelection();
+        }
+
+    }
+
     //key "Alt" detection
    else if (keyEvent->modifiers() == Qt::AltModifier && selectedItems().count()==1) {
         mAltIsDown = true;
@@ -310,8 +320,15 @@ void AbstractScene::keyPressEvent(QKeyEvent* keyEvent)
         }
     }
     //else if(keyEvent->modifiers() == Qt::ShiftModifier)
-    else if (keyEvent->key() == Qt::Key_Shift)
+    else if (keyEvent->key() == Qt::Key_Shift) {
         mSelectKeyIsDown = true;
+    }
+    else if (keyEvent->key() == Qt::Key_Escape && mDrawingArrow == true) {
+        mDrawingArrow = false;
+        mTempArrow->setVisible(false);
+        clearSelection();
+
+    }
   /*  else if (keyEvent->modifiers() == Qt::ControlModifier) {
         qDebug() << "[AbstractScene::keyPressEvent] You Press: "<< "Qt::ControlModifier";
     }*/

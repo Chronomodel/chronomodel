@@ -526,24 +526,24 @@ QPair<double, double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject &data)
 
 double PluginGauss::getMinStepRefsCurve(const QJsonObject &data) const
 {
-    const int frac = 101;
+    int frac = 1001;
     const QString &ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
     const QString &mode = data.value(DATE_GAUSS_MODE_STR).toString();
 
     if (mode == DATE_GAUSS_MODE_NONE) {
-        const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
-        return  2 * k_sigma * error/ frac; //  = (tmax-tmin)/frac
+        double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
+        return  2 * error/ frac;
 
     } else if (mode == DATE_GAUSS_MODE_EQ) {
-        const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
-        const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
+        double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
+        double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
 
-        const double a = data.value(DATE_GAUSS_A_STR).toDouble();
-        const double b = data.value(DATE_GAUSS_B_STR).toDouble();
-        const double c = data.value(DATE_GAUSS_C_STR).toDouble();
+        double a = data.value(DATE_GAUSS_A_STR).toDouble();
+        double b = data.value(DATE_GAUSS_B_STR).toDouble();
+        double c = data.value(DATE_GAUSS_C_STR).toDouble();
 
-        const double v1 = age - k_sigma * error;
-        const double v2 = age + k_sigma * error;
+        double v1 = age - k_sigma * error;
+        double v2 = age + k_sigma * error;
 
         const auto s1 = solve_quadratic(v1, a, b, c);
         const auto s2 = solve_quadratic(v2, a, b, c);
@@ -559,15 +559,80 @@ double PluginGauss::getMinStepRefsCurve(const QJsonObject &data) const
            return (s1.second - s1.first)/frac;
 
         } else {
-            const auto sp1 = std::abs(s2.first - s1.first);
-            const auto sp2 = std::abs(s2.second - s1.second);
+            double sp1 = std::abs(s2.first - s1.first);
+            double sp2 = std::abs(s2.second - s1.second);
 
             return std::min(sp1, sp2)/frac;
         }
 
 
     } else  if (mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
-        return mRefCurves.value(ref_curve).mMinStep;
+        int search_frac = k_sigma * 5;
+        double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
+        double error = k_sigma * data.value(DATE_GAUSS_ERROR_STR).toDouble();
+
+        std::vector<double> ordered_pts;
+        ordered_pts.reserve(2 * search_frac + 1); // Pré-allocation pour éviter les réallocations
+
+
+        const auto& refData = mRefCurves[ref_curve].mDataMean;
+
+        // parcours de toute la courbe avec chaque fraction de la mesure
+        for (int f = - search_frac; f<=search_frac; f++) {
+            double value = age + error * static_cast<double>(f) / search_frac;
+            auto prev_data = refData.cbegin();
+            for ( ; prev_data != refData.cend(); prev_data++ ) {
+                auto next_data = std::next(prev_data);
+
+                double prev_value = prev_data.value();
+                double next_value = next_data.value();
+
+                // Détection du plateau : deux points consécutifs égaux
+                if (prev_value == value && next_value == value) {
+                    // Recherche du début et de la fin du plateau
+                    auto plateau_start = prev_data;
+                    auto plateau_end = next_data;
+
+                    // Trouver le début du plateau
+                    while (plateau_start != refData.cbegin() &&
+                           std::prev(plateau_start).value() == value) {
+                        --plateau_start;
+                    }
+
+                    // Trouver la fin du plateau
+                    while (std::next(plateau_end) != refData.cend() &&
+                           std::next(plateau_end).value() == value) {
+                        ++plateau_end;
+                    }
+
+                    // Calculer la position moyenne du plateau
+                    const auto y = (plateau_start.key() + plateau_end.key()) / 2.0;
+                    ordered_pts.push_back(y);
+                    break;
+                }
+                else if ((prev_value < value && value <= next_value) ||
+                         (prev_value > value && value >= next_value)) {
+                    // Interpolation uniquement quand on traverse strictement
+                    const auto y = interpolate(value, prev_value, next_value,
+                                               prev_data.key(), next_data.key());
+                    ordered_pts.push_back(y);
+                    break;  // On sort après avoir interpolé un point
+                }
+
+            }
+        }
+        // Suppression des doublons
+        std::sort(ordered_pts.begin(), ordered_pts.end());
+        ordered_pts.erase(std::unique(ordered_pts.begin(), ordered_pts.end()), ordered_pts.end());
+
+        double min_dif = std::numeric_limits<double>::max();
+        for (auto it = std::next(ordered_pts.begin()); it != ordered_pts.end(); ++it) {
+            min_dif = std::min(min_dif, std::abs(*it - *std::prev(it)));
+            if (min_dif==0)
+                qDebug()<<"plugin gauss step=0";
+        }
+
+        return min_dif/3.;
 
     } else {
 

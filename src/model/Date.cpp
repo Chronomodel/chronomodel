@@ -356,8 +356,6 @@ void Date::fromJson(const QJsonObject& json)
                     json.value(STATE_COLOR_GREEN).toInt(),
                     json.value(STATE_COLOR_BLUE).toInt());
 
-
-
     mUUID = json.value(STATE_DATE_UUID).toString().toStdString();
 
     if (mUUID.empty())
@@ -690,14 +688,11 @@ void Date::calibrate(const StudyPeriodSettings &period_settings, std::shared_ptr
         if (!dateRefName.isEmpty() && !refsNames.contains(dateRefName) )
             return;
         refMinStep = mPlugin->getMinStepRefsCurve(mData);
-        const auto optimal_period_step = StudyPeriodSettings::getStep(period_settings.mTmin, period_settings.mTmax);
-        refMinStep = std::min(refMinStep, optimal_period_step);
 
     } else if (mOrigin == eCombination) {
         if ( it != project->mCalibCurves.end()) {
             const CalibrationCurve& d_mCalibration = it->second;
             refMinStep = std::min(refMinStep, d_mCalibration.mStep);
-
 
         } else {
             for (auto&& sd : mSubDates) {
@@ -713,7 +708,6 @@ void Date::calibrate(const StudyPeriodSettings &period_settings, std::shared_ptr
         }
 
     }
-
 
 
     // Update of the new calibration curve
@@ -750,10 +744,15 @@ void Date::calibrate(const StudyPeriodSettings &period_settings, std::shared_ptr
         while ( mCalibration->mVector.empty() && std::count_if (mCalibration->mVector.begin(), mCalibration->mVector.end(), [](double v){return std::isnormal(v);}) < 22 && nb_step_frac < 50) {
             ++nb_step_frac;
             mCalibration->mStep = refMinStep / (double)nb_step_frac;
+#ifdef DEBUG
+            auto ld = (mTmaxRefCurve - mTminRefCurve) / mCalibration->mStep;
+            if (ld < std::numeric_limits<long int>::min() || ld > std::numeric_limits<long int>::max()) {
+                qDebug()<< "La valeur est hors de portée pour un long int.";
+            }
+#endif
+            long int nbStep = std::lround((mTmaxRefCurve - mTminRefCurve) / mCalibration->mStep);
 
-            const int nbStep = floor((mTmaxRefCurve - mTminRefCurve) / mCalibration->mStep);
-
-            const long double long_step = (long double)(mTmaxRefCurve - mTminRefCurve) / nbStep; // Very usefull for loop precision
+            long double long_step = (long double)(mTmaxRefCurve - mTminRefCurve) / nbStep; // Very usefull for loop precision
 
             // Correction de mStep apres arrondi
             mCalibration->mStep = long_step;
@@ -768,9 +767,9 @@ void Date::calibrate(const StudyPeriodSettings &period_settings, std::shared_ptr
             long double lastV = 0;
             long double rep = 0.;
 
-            for (int i = 0; i <= nbStep; ++i) {
-                const long double t = mTminRefCurve + i * long_step;
-                const long double v =  getLikelihood(t);
+            for (auto i = 0; i <= nbStep; ++i) {
+                long double t = mTminRefCurve + i * long_step;
+                long double v =  getLikelihood(t);
 
                 calibrationTemp.push_back(v);
 
@@ -790,11 +789,11 @@ void Date::calibrate(const StudyPeriodSettings &period_settings, std::shared_ptr
 
             if (*repartitionTemp.crbegin() > 0.) {
                 if (truncate && repartitionTemp.size() > 10) {
-                    const long double threshold = threshold_limit;
-                    const double th_min= (threshold * rep);
-                    const double th_max = ((1. - threshold) * rep);
-                    const int minIdx = floor(vector_interpolate_idx_for_value(th_min, repartitionTemp));
-                    const int maxIdx = ceil(vector_interpolate_idx_for_value(th_max, repartitionTemp));
+                    long double threshold = threshold_limit;
+                    double th_min= (threshold * rep);
+                    double th_max = ((1. - threshold) * rep);
+                    int minIdx = floor(vector_interpolate_idx_for_value(th_min, repartitionTemp));
+                    int maxIdx = ceil(vector_interpolate_idx_for_value(th_max, repartitionTemp));
 
 
                     tminCal = mTminRefCurve + minIdx * long_step;
@@ -845,7 +844,7 @@ void Date::calibrate(const StudyPeriodSettings &period_settings, std::shared_ptr
         std::vector<double> calibrationTemp;
         std::vector<double> repartitionTemp;
 
-        const long double v0 = getLikelihood(mTminRefCurve);
+        long double v0 = getLikelihood(mTminRefCurve);
         calibrationTemp.push_back(v0);
         repartitionTemp.push_back(v0);
         long double lastRepVal = v0;
@@ -856,11 +855,11 @@ void Date::calibrate(const StudyPeriodSettings &period_settings, std::shared_ptr
 
         long double lastV = v0;
         long double rep;
-        const int nbStep = floor((long double)(mTmaxRefCurve - mTminRefCurve) / mCalibration->mStep);
+        long int nbStep = floor((long double)(mTmaxRefCurve - mTminRefCurve) / mCalibration->mStep);
 
         const long double long_step = (long double)(mTmaxRefCurve - mTminRefCurve) / nbStep; // Very usefull for loop precision
 
-        for (int i = 1; i <= nbStep; ++i) {
+        for (auto i = 1; i <= nbStep; ++i) {
             const long double t = mTminRefCurve + i * long_step;
             const long double v = getLikelihood(t);
 

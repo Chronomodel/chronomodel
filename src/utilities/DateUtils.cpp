@@ -43,7 +43,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AppSettings.h"
 
 #include <QLocale>
-#include <iostream>
 
 
 const double BASE_YEAR_BP = 1950.0;

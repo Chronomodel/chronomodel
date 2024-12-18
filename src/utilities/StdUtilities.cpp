@@ -51,36 +51,29 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 using namespace std;
 
-// http://openclassrooms.com/forum/sujet/algorithme-de-levenshtein-50070
-namespace //anonyme
-{
-    struct fillrow
-    {
-        fillrow() : mVal() {}
-        int operator()() { return mVal++; }
-    protected:
-        int mVal;
-    };
-}
-
+// unused
 int compareStrings(const string &s1, const string &s2)
 {
-    const size_t m ( s1.size());
-    const size_t n ( s2.size());
-    int*  rawPtr ( reinterpret_cast<int*>( alloca( (n+1)*2*sizeof(int))));
+    const size_t m = s1.size();
+    const size_t n = s2.size();
+    // If one of the strings is empty, return the length of the other string
+    if (m == 0) return n;
+    if (n == 0) return m;
 
-    int*  prev ( rawPtr);
-    int*  crt ( rawPtr + n+1);
+    std::vector<int> prev(n + 1);
+    std::vector<int> crt(n + 1);
 
-    std::generate( crt, crt + n+1, fillrow() );
+    for (size_t j = 0; j <= n; ++j) {
+        prev[j] = j; // Distance from empty string to s2
+    }
 
     for (size_t i = 1; i <= m; i ++) {
-        std::swap( prev, crt);
-        crt[0] = (int)i; // par construction il semble inutile de procéder au moindre reset sur les autres colonnes
+        crt[0] = i; // par construction il semble inutile de procéder au moindre reset sur les autres colonnes
         for (size_t j = 1; j <= n; j++) {
-            const int compt = (s1[i-1] == s2[i-1]) ? 0 : 1;
-            crt[j] = min(min(prev[j]+1, crt[j-1]+1),prev[j-1]+compt);
+            int cost = (s1[i-1] == s2[i-1]) ? 0 : 1;
+            crt[j] = std::min({prev[j] + 1, crt[j - 1] + 1, prev[j - 1] + cost});
         }
+        std::swap( prev, crt);
     }
    return crt[n];
 }
@@ -479,8 +472,11 @@ QMap<double, double> vector_to_map(const QList<int>& data, const double min, con
 
 std::map<double, double> vector_to_map(const std::vector<double>& data, const double min, const double max, const double step)
 {
-    Q_ASSERT(max>=min && !data.empty());
+    //Q_ASSERT(max>=min && !data.empty());
     std::map<double, double> map ;
+    if (data.empty())
+        return map;
+
     if (min == max) {
         if (data.empty()){
             return {};
@@ -908,20 +904,145 @@ const std::map<double, double> create_HPD_by_dichotomy(const QMap<double, double
 
 const std::map<double, double> create_HPD_by_dichotomy(const std::map<double, double> &density, QList<QPair<double, QPair<double, double> > > &intervals_hpd, const double threshold)
 {
-    int nb_max_loop = 20;
-    std::map<double, double> result;
-
-    if (density.size() < 2) { // in case of only one value (e.g. a bound fixed) or no value
-        if (density.size() < 1) { // in case of  no value
-            intervals_hpd = QList<QPair<double, QPair<double, double> > >();
-            return result;
+    // Gestion des cas spéciaux
+    if (density.size() < 2) {
+        intervals_hpd.clear();
+        if (density.empty()) {
+            return {};
         }
-        intervals_hpd.append({1., QPair<double, double>(density.begin()->first, density.begin()->first)});
-        result[density.begin()->first] = 1.;
-        return result;
+
+        const auto& first_point = *density.begin();
+        intervals_hpd.append({1.0, {first_point.first, first_point.first}});
+        return {{first_point.first, 1.0}};
+    }
+    //
+
+    // Initialisation de la recherche dichotomique
+    auto max_density_it = std::max_element(
+        density.begin(), density.end(),
+        [](const auto& p1, const auto& p2) { return p1.second < p2.second; }
+        );
+
+    double v_sup = max_density_it->second;
+    double v_inf = 0.0;
+
+    // Copie modifiable de la densité
+    std::map<double, double> result_density = density;
+
+
+
+//
+    // Calcul de l'aire totale et de l'aire cible
+    const double area_tot = map_area(density);
+    const double area_target = area_tot * threshold / 100.0;
+
+    // Cas limite : aire totale égale à l'aire cible
+    if (std::abs(area_tot - area_target) < std::numeric_limits<double>::epsilon()) {
+        intervals_hpd.append({1.0, {density.begin()->first, density.rbegin()->first}});
+        return density;
     }
 
-    const double area_tot = map_area(density);
+    QList<QPair<double, QPair<double, double>>> final_intervals;
+    //double final_total_area = 0.0;
+    double final_current_threshold = 0.0;
+    //double area_total_since_prev_interval = 0;
+    // Recherche dichotomique
+    const int max_iterations = 20;
+    for (int iteration = 0; iteration < max_iterations; ++iteration) {
+        double current_threshold = (v_sup + v_inf) / 2.0;
+
+        // Calcul des intervalles HPD
+        QList<QPair<double, QPair<double, double>>> current_intervals;
+        double total_area = 0.0;
+        double area_total_since_prev_interval = 0.0;
+
+        auto prev_it = density.begin();
+        bool interval_open = false;
+        QPair<double, double> current_interval;
+
+        for (auto it = std::next(density.begin()); it != density.end(); ++it) {
+            // Début d'un intervalle
+            if (prev_it->second < current_threshold && it->second >= current_threshold) {
+                double t = interpolate(current_threshold, prev_it->second, it->second,
+                                       prev_it->first, it->first);
+                current_interval.first = t;
+                interval_open = true;
+            }
+
+            // Intérieur d'un intervalle
+            if (it->second >= current_threshold) {
+                if (!interval_open) {
+                    current_interval.first = prev_it->first;
+                    interval_open = true;
+                }
+
+                // Calcul de l'aire partielle
+                double area = (prev_it->second + it->second) * (it->first - prev_it->first) / 2.0;
+                total_area += area;
+            }
+
+            // Fin d'un intervalle
+            if (prev_it->second >= current_threshold && it->second < current_threshold) {
+                double t = interpolate(current_threshold, prev_it->second, it->second,
+                                       prev_it->first, it->first);
+                current_interval.second = t;
+                current_intervals.append({total_area - area_total_since_prev_interval, current_interval});
+                area_total_since_prev_interval = total_area;
+                interval_open = false;
+            }
+
+            prev_it = it;
+        }
+
+        // Gestion du dernier intervalle potentiel
+        if (interval_open) {
+            current_interval.second = prev_it->first;
+            current_intervals.append({total_area - area_total_since_prev_interval, current_interval});
+            area_total_since_prev_interval = total_area;
+        }
+
+        // Ajustement de la recherche dichotomique
+        if (total_area > area_target) {
+            v_inf = current_threshold;
+        } else {
+            v_sup = current_threshold;
+        }
+
+        // Convergence suffisante
+        if (std::abs(total_area - area_target) < area_target * 0.001) {
+            intervals_hpd = current_intervals;
+
+            // Mise à zéro des densités inférieures au seuil
+            for (auto& point : result_density) {
+                if (point.second < current_threshold) {
+                    point.second = 0.0;
+                }
+            }
+
+            return result_density;
+        }
+        // Stocker les derniers résultats à chaque itération
+        final_intervals = current_intervals;
+        //final_total_area = total_area;
+        final_current_threshold = current_threshold;
+    }
+
+    // Fallback après max_iterations
+    intervals_hpd = final_intervals;
+
+    // Mise à zéro des densités inférieures au seuil
+    for (auto& point : result_density) {
+        if (point.second < final_current_threshold) {
+            point.second = 0.0;
+        }
+    }
+
+    return result_density;
+
+    // -old
+ /*
+    int nb_max_loop = 20;
+    std::map<double, double> result;
 
     std::map<double, double> mapStd = density;
     if (area_tot == threshold/100.) {  // ???
@@ -1009,7 +1130,7 @@ const std::map<double, double> create_HPD_by_dichotomy(const std::map<double, do
 
         return mapStd;
     }
-
+*/
 
 }
 

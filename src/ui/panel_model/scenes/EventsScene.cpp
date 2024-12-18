@@ -1163,6 +1163,12 @@ void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
 
    if (selectedItems().count() == 0) {
         qDebug() << "[EventsScene::keyPressEvent] No item selected";
+        if (mDrawingArrow == true) {
+            mDrawingArrow = false;
+            mTempArrow->setVisible(false);
+            clearSelection();
+        }
+
         emit noSelection();
 
     } else {
@@ -1195,10 +1201,17 @@ void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
             clearSelection();
         }
     }
-//#ifdef Q_OS_WIN
-    else if (keyEvent->key() == Qt::Key_Shift)
+
+    else if (keyEvent->key() == Qt::Key_Shift) {
         mSelectKeyIsDown = true;
-//#endif
+
+    } else if (keyEvent->key() == Qt::Key_Escape && mDrawingArrow == true) {
+        mDrawingArrow = false;
+        mTempArrow->setVisible(false);
+        clearSelection();
+
+    }
+
     /* REMARK
      * On macOS Qt::MetaModifier correspond to the keyboard key "Ctrl"
      * and      Qt::ControlModifier to the keyboard key "cmd"

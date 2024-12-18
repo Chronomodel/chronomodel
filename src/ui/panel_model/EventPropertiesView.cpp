@@ -346,6 +346,19 @@ void EventPropertiesView::initEvent(QJsonObject *eventObj)
 
 }
 
+void EventPropertiesView::resetEvent()
+{
+    // Assign the local event
+    mCalibBut->setChecked(false);
+
+    // Assign the local event
+
+    mEventObj = nullptr;
+     mCurrentDateIdx = 0;
+
+
+}
+
 void EventPropertiesView::updateIndex(int index)
 {
     mCurrentDateIdx = index;
@@ -907,7 +920,9 @@ QString EventPropertiesView::XerrorLabel() const
 
 void EventPropertiesView::updateLayout()
 {
-    if (mEventObj == nullptr || mEventObj->empty() || width()<1)
+    if (mEventObj == nullptr)
+        return;
+    if (mEventObj->empty() || width()<1)
         return;
 
     const QJsonObject &state = MainWindow::getInstance()->getState();

@@ -1194,49 +1194,64 @@ double sample_in_repartition (std::shared_ptr<CalibrationCurve> calibrateCurve, 
     const double unionTmax = calibrateCurve->mTmax;
     const double unionStep = (unionTmax-unionTmin)/ (calibrateCurve->mRepartition.size()-1);
 
-    if (unionTmax < min) {
-        return Generator::gaussByDoubleExp((unionTmax + unionTmin)/2., std::max(unionStep, (unionTmax - unionTmin)/2.), min, max);
+    // Early exit conditions: completely outside range
+    if (unionTmax < min || max < unionTmin) {
+        return Generator::gaussByDoubleExp(
+            (unionTmax + unionTmin) / 2.,
+            std::max(unionStep, (unionTmax - unionTmin) / 2.),
+            min, max
+            );
+    }
 
-    } else if (max < unionTmin) {
-        return Generator::gaussByDoubleExp((unionTmax + unionTmin)/2., std::max(unionStep, (unionTmax - unionTmin)/2.), min, max);
-
-    } else {
+     else {
+        // Interpolate repartition values
         double minRepartition = calibrateCurve->repartition_interpolate(std::max(unionTmin, min));
         double maxRepartition = calibrateCurve->repartition_interpolate(std::min(unionTmax, max));
+        const int rep_idx_max = static_cast<int>(calibrateCurve->mRepartition.size()) - 1;
+
+
+        // Check for zero density region. We are between two peaks, the density is zero.
         if (minRepartition >= maxRepartition) {
-            // We are between two peaks, the density is zero.
            // qDebug() <<" [sample_in_repartition] minRepartition >= maxRepartition"<<minRepartition<<maxRepartition<< std::max(unionTmin, min)<<std::min(unionTmax, max);
             return Generator::randomUniform(min, max);
         }
+        // Generate random value in repartition range
         const double value = Generator::randomUniform(minRepartition, maxRepartition);
 
+        auto clampProp = [&](double val) {
+            return std::clamp(
+                (val - unionTmin) / (unionTmax - unionTmin) * rep_idx_max,
+                0.,
+                static_cast<double>(rep_idx_max)
+                );
+        };
 
-        double prop = (min - calibrateCurve->mTmin) / (calibrateCurve->mTmax - calibrateCurve->mTmin);
-        const int rep_idx_max = (int)calibrateCurve->mRepartition.size() - 1;
+        const int idxUnder = floor(clampProp(min));
+        const int idxUpper = floor(clampProp(max));
 
-        const int idxUnder = std::clamp((int)floor(prop * rep_idx_max), 0, rep_idx_max);
+        double idx = vector_interpolate_idx_for_value(value, calibrateCurve->mRepartition, idxUnder, idxUpper);
 
-        prop = (max - calibrateCurve->mTmin) / (calibrateCurve->mTmax - calibrateCurve->mTmin);
-
-        const int idxUpper = std::clamp( (int)ceil(prop * rep_idx_max), 0, rep_idx_max);
-
-        const double idx = vector_interpolate_idx_for_value(value, calibrateCurve->mRepartition, idxUnder, idxUpper);
-
-        const double t = unionTmin + idx * unionStep;
+        double t = unionTmin + idx * unionStep;
         // Du fait de l'arrondi de idxUnder et idxUpper, la dichotomie peut donner une valeur de t en dehors de l'intervale.
         // Cela arrive souvent quant l'espace entre les deux index est faible
-        if (t > max) {
-            qDebug() <<" [sample_in_repartition] t>max"<<t<<max<<"[sample_in_repartition] Generator::randomUniform(min, max)";
-            return Generator::randomUniform(min, max);
 
-        } else if (t<min) {
-            qDebug() <<" [sample_in_repartition] t<min"<<t<<min<<"[sample_in_repartition] Generator::randomUniform(min, max)";
-            return Generator::randomUniform(min, max);
 
-        } else {
+        // Final range validation
+        if (t >= min && t <= max) {
             return t;
         }
 
+#ifdef DEBUG
+        if (t > max) {
+            qDebug() <<" [sample_in_repartition] t>max"<<t<<max<<"[sample_in_repartition] Generator::randomUniform(min, max)";
+
+        } else if (t<min) {
+            qDebug() <<" [sample_in_repartition] t<min"<<t<<min<<"[sample_in_repartition] Generator::randomUniform(min, max)";
+
+        }
+#endif
+        // Fallback to uniform sampling if interpolation fails
+        return Generator::randomUniform(min, max);
 
     }
 }
@@ -1244,25 +1259,31 @@ double sample_in_repartition (std::shared_ptr<CalibrationCurve> calibrateCurve, 
 
 void sampleInCumulatedRepartition_thetaFixe (std::shared_ptr<Event> event, const StudyPeriodSettings& settings)
 {
-
-    // Creation of the cumulative date distribution
+    // Création de la distribution cumulative des dates
     auto calib =  generate_mixingCalibration(event->mDates, "Mixing Theta Fixed");
 
-    const double maxRepartition = *calib.mRepartition.crbegin();
-    const double minRepartition = *calib.mRepartition.begin();
+    // Utilisation de références pour éviter des copies inutiles
+    const auto& repartition = calib.mRepartition;
+
+    const double maxRepartition = *repartition.crbegin();
+    const double minRepartition = *repartition.begin();
 
     const long double t_min_long = calib.mTmin;
     const long double t_max_long = calib.mTmax;
-    const long double step_long = (t_max_long - t_min_long)/(calib.mRepartition.size()-1);
 
-    if ( (minRepartition != 0. || maxRepartition != 0.) &&  (calib.mRepartition.size() > 1)) {
-        const double idx = vector_interpolate_idx_for_value(0.5*(maxRepartition - minRepartition) + minRepartition, calib.mRepartition);
+    // Vérification de la taille de la répartition
+    const size_t repartitionSize = repartition.size();
+    if (repartitionSize > 1) {
+        const long double step_long = (t_max_long - t_min_long) / (repartitionSize - 1);
+
+        // Calcul de l'indice d'interpolation
+        const double targetValue = 0.5 * (maxRepartition - minRepartition) + minRepartition;
+        const double idx = vector_interpolate_idx_for_value(targetValue, repartition);
         event->mTheta.mX = t_min_long + idx * step_long;
 
     } else {
         event->mTheta.mX = Generator::randomUniform(settings.mTmin, settings.mTmax);
     }
-
 
 }
 

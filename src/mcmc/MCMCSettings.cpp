@@ -169,6 +169,19 @@ std::vector<ChainSpecs> MCMCSettings::getChains() const
     return chains;
 }
 
+bool MCMCSettings::operator==(const MCMCSettings& other) const
+{
+    return mNumChains == other.mNumChains &&
+           mIterPerAquisition == other.mIterPerAquisition &&
+           mIterPerBurn == other.mIterPerBurn &&
+           mMaxBatches == other.mMaxBatches &&
+           mIterPerBatch == other.mIterPerBatch &&
+           mThinningInterval == other.mThinningInterval &&
+           mSeeds == other.mSeeds &&
+           mFinalBatchIndex == other.mFinalBatchIndex &&
+           mMixingLevel == other.mMixingLevel;
+}
+
 QDataStream &operator<<( QDataStream &stream, const MCMCSettings &data )
 {
     stream << quint8 (data.mNumChains);
