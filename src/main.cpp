@@ -114,6 +114,12 @@ int main(int argc, char *argv[])
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel.png"));
 
+#ifdef Q_OS_MAC
+    a.setStyle("macos");
+#else
+    a.setStyle("fusion");// "windows", "windowsvista", "fusion", or "macos"
+#endif
+
     QFontInfo F_info(a.font());
 
     //specify a new font. This happens, for instance, on macOS and iOS, where the system UI fonts are not accessible to the user

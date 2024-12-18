@@ -8,7 +8,7 @@ echo This batch file copy files and Build windows installer
 echo Project ChronoModel Team
 echo https://chronomodel.com/
 echo author email:philippe.dufresne@univ-rennes.fr 
-echo date 2024-10-02
+echo date 2024-12-18
 
 echo " 1 - Copy icon"
 copy C:\Users\Lanos\Documents\github\chronomodel\icon\Chronomodel.ico C:\Users\Lanos\Documents\github\chronomodel\QtInstaller_ChronoModel\installer-packages-winOS\chronomodel_QtIFW.composant1\data
