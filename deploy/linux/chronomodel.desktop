@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=ChronoModel
+GenericName=ChronoModel
+Version=3.2.9
+Encoding=UTF-8
+Comment=Chronological Modelling of Archaeological Data using Bayesian Statistics
+Icon=chronomodel
+Exec=/usr/bin/chronomodel
+Terminal=false
+Keywords=datation;dating
+Categories=Application;Utility;
