@@ -3,40 +3,45 @@ PROJECT
 ————————————————————————————————————————————————————————————————————————
 
 ChronoModel Project
-"http://www.chronomodel.com"
-version 3.2.2
-2023-02-17
+"https://www.chronomodel.com"
+version 3.2.9
+2024-12-19
 
 ————————————————————————————————————————————————————————————————————————
 CREDITS
 ————————————————————————————————————————————————————————————————————————
-Copyright ©2018 CNRS
+Copyright ©2024 CNRS
+
 used under the terms:
-CeCILL FREE SOFTWARE LICENSE AGREEMENT
-Version 3.2.1 dated 2023-01-20
-"http://www.cecill.info"
+CeCILL-V2.1 Free Software License Agreement
+"https://cecill.info/licences/Licence_CeCILL_V2.1-en.html"
 
 This software use C subroutine library from the FFTW project
-"http://www.fftw.org/"
-distributed under the terms of the GNU General Public License
+ http://www.fftw.org/
+ distributed under the terms of the GNU General Public License
+ https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 ————————————————————————————————————————————————————————————————————————
 AUTHORS
 ————————————————————————————————————————————————————————————————————————
-
-Project Manager:
+Management
 
 	Philippe LANOS
 
+Design, Architecture, Coding
 
-ChronoModel was originally written by:
+	Helori LANOS (2014-2017 + 2020)
+	Philippe DUFRESNE (2015-present)
 
-	Helori LANOS (2014-2017)
+Debugging, Maintenance, Support
 
+	Philippe DUFRESNE
 
-The current maintainer is:
+Documentation
 
-	Philippe DUFRESNE (2015-2018)
+	Philippe LANOS
+	Philippe DUFRESNE
+
 
 ————————————————————————————————————————————————————————————————————————
 CONTRIBUTORS
