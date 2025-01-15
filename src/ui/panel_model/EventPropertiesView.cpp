@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -419,7 +419,7 @@ void EventPropertiesView::updateEvent()
 
         mCurveNodeCB->blockSignals(true);
         mCurveNodeCB->setChecked(tyPts == Event::eNode); //emit updateCurveNode
-        mCurveNodeCB->blockSignals(true);
+        mCurveNodeCB->blockSignals(false);
 
         mX_IncLab->setVisible(showXEdit);
         mX_IncEdit->setVisible(showXEdit);
@@ -480,7 +480,6 @@ void EventPropertiesView::updateEvent()
             mS_Z_IntEdit->setText(locale().toString(mEventObj->value(STATE_EVENT_SZ_SF).toDouble()));
         }
 
-        
         mTopView->setVisible(true);
 
         mEventView->setVisible(type == Event::eDefault);
@@ -595,10 +594,9 @@ void EventPropertiesView::updateKnownFixed(const QString &text)
 // Curve
 void EventPropertiesView::updateCurveNode(bool isNode)
 {
-    QJsonObject ev (*mEventObj);
-    ev[STATE_EVENT_POINT_TYPE] = isNode ? Event::PointType::eNode : Event::PointType::ePoint;
-
-    MainWindow::getInstance()->updateEvent(ev, tr("Event Node updated"));
+    QJsonObject ev = *mEventObj;
+    ev[STATE_EVENT_POINT_TYPE] = isNode? Event::PointType::eNode : Event::PointType::ePoint;
+    MainWindow::getInstance()->updateEvent(std::move(ev), "Event Node updated");
 }
 
 void EventPropertiesView::updateEventXInc()
@@ -613,21 +611,21 @@ void EventPropertiesView::updateEventXInc()
     } else
         ev[STATE_EVENT_X_INC_DEPTH] = locale().toDouble(mX_IncEdit->text());
 
-    MainWindow::getInstance()->updateEvent(ev, tr("Event X-Inc updated"));
+    MainWindow::getInstance()->updateEvent(ev, "Event X-Inc updated");
 }
 
 void EventPropertiesView::updateEventYDec()
 {
     QJsonObject ev (*mEventObj);
     ev[STATE_EVENT_Y_DEC] = locale().toDouble(mY_DecEdit->text());
-    MainWindow::getInstance()->updateEvent(ev, tr("Event Y-Dec updated"));
+    MainWindow::getInstance()->updateEvent(ev, "Event Y-Dec updated");
 }
 
 void EventPropertiesView::updateEventZF()
 {
     QJsonObject ev (*mEventObj);
     ev[STATE_EVENT_Z_F] = locale().toDouble(mZ_IntEdit->text());
-    MainWindow::getInstance()->updateEvent(ev, tr("Event Z-F updated"));
+    MainWindow::getInstance()->updateEvent(ev, "Event Z-F updated");
 }
 
 void EventPropertiesView::updateEventSXInc()
@@ -642,21 +640,21 @@ void EventPropertiesView::updateEventSXInc()
     } else
        ev[STATE_EVENT_SX_ALPHA95_SDEPTH] = locale().toDouble(mS_X_IncEdit->text());
 
-    MainWindow::getInstance()->updateEvent(ev, tr("Event S X-Inc updated"));
+    MainWindow::getInstance()->updateEvent(ev, "Event S X-Inc updated");
 }
 
 void EventPropertiesView::updateEventSYDec()
 {
     QJsonObject ev (*mEventObj);
     ev[STATE_EVENT_SY] = locale().toDouble(mS_Y_Edit->text());
-    MainWindow::getInstance()->updateEvent(ev, tr("Event S Y updated"));
+    MainWindow::getInstance()->updateEvent(ev, "Event S Y updated");
 }
 
 void EventPropertiesView::updateEventSZF()
 {
     QJsonObject ev (*mEventObj);
     ev[STATE_EVENT_SZ_SF] = locale().toDouble(mS_Z_IntEdit->text());
-    MainWindow::getInstance()->updateEvent(ev, tr("Event S Z-F updated"));
+    MainWindow::getInstance()->updateEvent(ev, "Event S Z-F updated");
 }
 
 void EventPropertiesView::updateKnownGraph()

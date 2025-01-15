@@ -6209,7 +6209,7 @@ t_prob MCMCLoopCurve::h_lambda(const SplineMatrices &matrices, const int nb_noeu
 
     const int mu = 3;
     const t_prob c = S02_lambda_WI(matrices, nb_noeuds);
-
+qDebug()<<" c= " << c;
     // prior "shrinkage"
     return pow(c, mu) / pow(c + lambdaSpline, mu+1); //((mu/c) * pow(c/(c + lambdaSpline), mu+1));
 

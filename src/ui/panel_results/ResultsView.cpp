@@ -1368,37 +1368,26 @@ void ResultsView::updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewRes
     QWidget* widget = scrollArea->widget();
 
     // Used to magnify the graph for curve
-    int coefDisplay = 1;
+    int graphHeight = mGraphHeight;
     if (mGraphListTab->currentIndex() == 2 )
-        coefDisplay = 3;
+        graphHeight = 0.75 * height() / graphs.size();
 
-    // Rq: Le widget doit être plus petit que le scrollArea pour ne pas bouger horizontalement!,
-    //par contre le graph à l'interieur du widget peut avoir la même taille
-    if (widget) {                
-        widget->resize(scrollArea->width()-2, (int)graphs.size() * mGraphHeight * coefDisplay);
 
-        int i = 0;
-        for (auto&& g : graphs) {
-            g->setGeometry(0, (i++) * mGraphHeight*coefDisplay, scrollArea->width(), mGraphHeight * coefDisplay);
+    // Ensure the widget is smaller than the scrollArea to prevent horizontal scrolling,
+    // while allowing the graphs inside the widget to have the same size
+    if (widget) {
+        // Resize the widget to fit the scroll area width and the total height of all graphs.
+        widget->resize(scrollArea->width() - 2, static_cast<int>(graphs.size()) * graphHeight);
+
+        // Position each graph within the widget.
+        for (int i = 0; i < graphs.size(); ++i) {
+            GraphViewResults* g = graphs[i];
+            g->setGeometry(0, i * graphHeight, scrollArea->width(), graphHeight);
             g->setVisible(true);
-            //g->update();
+            // Uncomment the line below if you need to update the graph's display.
+            // g->update();
         }
 
-/*
-        std::vector<std::thread> queue;
-        std::mutex g_mutex;  // protects g, utilise la même memoire graphique
-        for (auto g : graphs) {
-            queue.push_back( std::thread ([&g_mutex] (GraphViewResults* g) {
-                                                       const std::lock_guard<std::mutex> lock(g_mutex);
-                                                        g->setVisible(true);
-                                                        g->update();}
-            ,  g) );
-        };
-
-        for (auto&& th : queue) {
-            th.join();
-        }
-*/
     }
 }
 
@@ -1430,43 +1419,54 @@ void ResultsView::applyGraphTypeTab()
  */
 void ResultsView::applyGraphListTab()
 {
-    int currentIndex = (int)mGraphListTab->currentIndex();
-    
-    // Display the scroll area corresponding to the selected tab :
+    int currentIndex = static_cast<int>(mGraphListTab->currentIndex());
+
+    // Display the scroll area corresponding to the selected tab.
     mEventsScrollArea->setVisible(currentIndex == 0);
     mPhasesScrollArea->setVisible(currentIndex == 1);
     mCurvesScrollArea->setVisible(currentIndex == 2);
-    
-    // Update the current variable to the most appropriate for this list :
-    if (currentIndex == 0) {
+
+    // Update the current variable based on the selected tab.
+    switch (currentIndex) {
+    case 0:
         mMainVariable = GraphViewResults::eThetaEvent;
         mEventThetaRadio->setChecked(true);
+        break;
 
-    } else if (currentIndex == 1) {
+    case 1:
         mMainVariable = GraphViewResults::eBeginEnd;
         mBeginEndRadio->setChecked(true);
+        break;
 
-    } else if (currentIndex == 2) {
+    case 2:
         mMainVariable = GraphViewResults::eG;
         mCurveGRadio->setChecked(true);
+        break;
+
+    default:
+        // Handle unexpected index if necessary
+        break;
     }
 
-    // Set the current graph type to Posterior distrib :
+    // Set the current graph type to Posterior distribution.
     mGraphTypeTabs->setTab(0, false);
-    mCurrentTypeGraph = (GraphViewResults::graph_t) mGraphTypeTabs->currentIndex();
-    
-    // Changing the graphs list implies to go back to page 1 :
-    mCurrentPage = 0;
-    
-    applyCurrentVariable();
+    mCurrentTypeGraph = static_cast<GraphViewResults::graph_t>(mGraphTypeTabs->currentIndex());
 
+    // Changing the graphs list implies going back to page 1.
+    mCurrentPage = 0;
+
+    applyCurrentVariable();
 }
+
 
 void ResultsView::updateMainVariable()
 {
     mCurrentVariableList.clear();
 
-    if (mGraphListTab->currentName() == tr("Events")) {
+    // Check the current tab name and update the main variable accordingly.
+    QString currentTabName = mGraphListTab->currentName();
+
+    if (currentTabName == tr("Events")) {
         if (mEventThetaRadio->isChecked()) {
             mMainVariable = GraphViewResults::eThetaEvent;
             if (mEventsDatesUnfoldCheck->isChecked()) {
@@ -1490,7 +1490,7 @@ void ResultsView::updateMainVariable()
             mMainVariable = GraphViewResults::eVg;
         }
 
-    } else if (mGraphListTab->currentName() == tr("Phases")) {
+    } else if (currentTabName == tr("Phases")) {
 
         if (mBeginEndRadio->isChecked()) {
             mMainVariable = GraphViewResults::eBeginEnd;
@@ -1535,7 +1535,7 @@ void ResultsView::updateMainVariable()
 
         }
 
-    } else if (mGraphListTab->currentName() == tr("Curves")) {
+    } else if (currentTabName == tr("Curves")) {
 
         if (mLambdaRadio->isChecked()) {
             mMainVariable = GraphViewResults::eLambda;
@@ -1557,28 +1557,23 @@ void ResultsView::updateMainVariable()
             if (mCurveDataPointsCheck->isChecked())
                 mCurrentVariableList.append(GraphViewResults::eGDatesPts);
 
-            //mCurrentTypeGraph = GraphViewResults::ePostDistrib;
-            //mGraphTypeTabs->setTab(0, false);
-
         } else if (mCurveGPRadio->isChecked()) {
             mMainVariable = GraphViewResults::eGP;
 
             if (mCurveMapCheck->isChecked())
                 mCurrentVariableList.append(GraphViewResults::eMap);
 
-            //mCurrentTypeGraph = GraphViewResults::ePostDistrib;
-            //mGraphTypeTabs->setTab(0, false);
 
         } else if (mCurveGSRadio->isChecked()) {
             mMainVariable = GraphViewResults::eGS;
-            //mCurrentTypeGraph = GraphViewResults::ePostDistrib;
-            //mGraphTypeTabs->setTab(0, false);
         }
 
     }
+    // Set the current graph type to Posterior distribution.
     mCurrentTypeGraph = GraphViewResults::ePostDistrib;
     mGraphTypeTabs->setTab(0, false);
 
+    // Append the main variable to the current variable list.
     mCurrentVariableList.append(mMainVariable);
 }
 
@@ -2416,35 +2411,35 @@ bool ResultsView::hasSelectedGraphs()
 
 QList<GraphViewResults*> ResultsView::currentGraphs(bool onlySelected)
 {
-    QList<GraphViewResults*> graphs;
-    QList<GraphViewResults*> byGraphs;
+    QList<GraphViewResults*> selectedGraphs;
 
-    switch (mGraphListTab->currentIndex()) {
-    case 0 :
-        byGraphs = mByEventsGraphs;
+    int index = mGraphListTab->currentIndex();
+    switch (index) {
+    case 0:
+        selectedGraphs = mByEventsGraphs;
         break;
-    case 1 :
-        byGraphs = mByPhasesGraphs;
+    case 1:
+        selectedGraphs = mByPhasesGraphs;
         break;
-    case 2 :
-        byGraphs = mByCurvesGraphs;
+    case 2:
+        selectedGraphs = mByCurvesGraphs;
         break;
     default:
-        byGraphs = QList<GraphViewResults*>();
-
+        selectedGraphs = QList<GraphViewResults*>();
+        break;
     }
 
-    if (onlySelected && !byGraphs.isEmpty()) {
-        for (auto&& graph : byGraphs)
-            if (graph->isSelected())
-                graphs.append(graph);
-
-        return graphs;
-
-    } else {
-        return byGraphs;
+    if (onlySelected && !selectedGraphs.isEmpty()) {
+        QList<GraphViewResults*> selectedGraphsList;
+        for (GraphViewResults* graph : selectedGraphs) {
+            if (graph->isSelected()) {
+                selectedGraphsList.append(graph);
+            }
+        }
+        return selectedGraphsList;
     }
 
+    return selectedGraphs;
 }
 
 

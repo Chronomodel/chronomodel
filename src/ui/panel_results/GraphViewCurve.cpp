@@ -72,16 +72,6 @@ void GraphViewCurve::setComposanteGChains(const QList<PosteriorMeanGComposante>&
     mComposanteGChains = composanteChains;
 }
 
-/*void GraphViewCurve::paintEvent(QPaintEvent* e)
-{
-    GraphViewResults::paintEvent(e);
-}
-
-void GraphViewCurve::resizeEvent(QResizeEvent* )
-{
-    updateLayout();
-}
-*/
 void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList)
 {
     GraphViewResults::generateCurves(typeGraph, variableList);

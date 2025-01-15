@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -751,14 +751,14 @@ void MainWindow::updateWindowTitle()
         const QString file_name = " DEBUG Mode " + (AppSettings::mLastFile.isEmpty() ?  "" : QString(" - ") + AppSettings::mLastFile  + saved_sign);
     #endif
 #else
-    const QString file_name = (AppSettings::mLastFile.isEmpty() ?  "" : AppSettings::mLastFile + saved_sign);
+    const QString file_name = (AppSettings::mLastFile.isEmpty() ?  "" : QString(" - ") + AppSettings::mLastFile + saved_sign);
 #endif
 
 #ifdef Q_OS_WIN
     setWindowTitle(file_name);
 
 #else
-    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + " " + file_name);// see main.cpp for the application name
+    setWindowTitle(qApp->applicationName() + " v" + qApp->applicationVersion() + " " + file_name);// see main.cpp for the application name
 #endif
 }
 

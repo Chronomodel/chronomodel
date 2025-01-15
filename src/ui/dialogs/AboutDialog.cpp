@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -44,7 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 AboutDialog::AboutDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, flags)
 {
 
-    const QString text = "About " + qGuiApp->applicationDisplayName()+ " Version: " + qApp->applicationVersion();
+    const QString text = "About " + qGuiApp->applicationDisplayName();//+ " Version: " + qApp->applicationVersion();
     setWindowTitle(text);
 
 #ifdef Q_OS_MAC
@@ -59,7 +59,7 @@ AboutDialog::AboutDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
     QString path  = "";
 #endif
 
-    QFile htmlFile(path+ "ABOUT.html");
+    QFile htmlFile(path + "ABOUT.html");
     htmlFile.open(QIODevice::ReadOnly);
 
     mText = new QTextEdit();

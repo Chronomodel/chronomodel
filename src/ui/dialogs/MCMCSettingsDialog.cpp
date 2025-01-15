@@ -137,7 +137,7 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent, const bool show_help):QD
     mSeedsLabel = new QLabel(tr("Seeds (separated by \";\")"),this);
     mSeedsLabel->setFixedSize(fontMetrics().horizontalAdvance(mSeedsLabel->text()), mButH);
     mSeedsEdit = new LineEdit(this);
-    mSeedsEdit->setFixedSize(mEditW, mButH);
+    mSeedsEdit->setFixedSize(3*mEditW, mButH);
 
     mLevelLabel = new QLabel(tr("Mixing level"),this);
     mLevelEdit = new LineEdit(this);
@@ -318,8 +318,9 @@ void MCMCSettingsDialog::updateLayout()
 
 
    // Bottom Info
-    const int margingLeft = (width()/2 - mSeedsLabel->width() - mSeedsEdit->width() - mMarginW)/2;
-    mSeedsLabel->move(margingLeft, height() - 5 * mMarginH - mButH - mLineH);
+    //const int margingLeft = (width()/2 - mSeedsLabel->width() - mSeedsEdit->width() - mMarginW)/2;
+    //mSeedsLabel->move(margingLeft, height() - 5 * mMarginH - mButH - mLineH);
+    mSeedsLabel->move(2 * mMarginW, height() - 5 * mMarginH - mButH - mLineH);
     mSeedsEdit->move(mSeedsLabel->x() + mSeedsLabel->width() + mMarginW, mSeedsLabel->y());
     const int margingRight = (width()/2 -mLevelLabel->width() - mLevelEdit->width() - mMarginW)/2;
     mLevelLabel->move(width()/2 + margingRight, mSeedsLabel->y());

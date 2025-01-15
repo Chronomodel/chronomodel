@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -88,41 +88,49 @@ Project::Project():
     mItemsIsMoved (false),
     mNoResults (true)
 {
+    // Create an auto-save timer
     mAutoSaveTimer = new QTimer(this);
     connect(mAutoSaveTimer, &QTimer::timeout, this, &Project::save);
 
-    /*if (AppSettings::mAutoSave) {
-        mAutoSaveTimer->setInterval(AppSettings::mAutoSaveDelay * 1000);
-        mAutoSaveTimer->start();
-    } else
-        mAutoSaveTimer->stop();
-*/
-
+    // Reasons for structure changes
+    // Project changes
     mReasonChangeStructure << PROJECT_LOADED_REASON << PROJECT_SETTINGS_UPDATED_REASON << INSERT_PROJECT_REASON;
     mReasonChangeStructure << NEW_EVEN_BY_CSV_DRAG_REASON;
 
+    // dates changes
     mReasonChangeStructure << "Date created" << DATE_MOVE_TO_EVENT_REASON << "Date updated";
     mReasonChangeStructure << "Dates splitted" << "Dates combined" << "Update selected data method";
 
+    // Event changes
     mReasonChangeStructure << "Event constraint deleted" << "Event constraint created" << "Event(s) deleted";
     mReasonChangeStructure << "Event created" << "Bound created" << "Event method updated" ;
     mReasonChangeStructure << "Event(s) restored";
     mReasonChangeStructure << "Event Node updated";
     mReasonChangeStructure << "Update selected event method";
 
+    // Phase changes
     mReasonChangeStructure << "Phase created" << "Phase(s) deleted";
     mReasonChangeStructure << "Phase updated" << "Phase constraint created" << "Phase constraint updated" << "Phase's events updated";
     mReasonChangeStructure << "Phase selected";
 
+    // Curve and MCMC Settings
     mReasonChangeStructure << "Curve Settings updated" << "MCMC Settings updated";
+
+    // Curve paramters
+    mReasonChangeStructure << "Event X-Inc updated" << "Event S X-Inc updated";
+    mReasonChangeStructure << "Event Y-Dec updated" << "Event S Y updated";
+    mReasonChangeStructure << "Event Z-F updated"  << "Event S Z-F updated";
+    mReasonChangeStructure << "Event Node updated";
     mReasonChangeStructure.squeeze();
 
+    // Reasons for design changes
     mReasonChangeDesign << "Date name updates" << "Date color updated";
     mReasonChangeDesign << "Event color updated" << "Event name updated";
     mReasonChangeDesign << "Phase color updated" << "Phase name updated";
     mReasonChangeDesign.squeeze();
 
-    mReasonChangePosition<<"item moved";
+    // Reasons for position changes
+    mReasonChangePosition << "item moved";
     mReasonChangePosition.squeeze();
 
 
@@ -229,59 +237,10 @@ bool Project::pushProjectState(const QJsonObject &state, const QString &reason, 
     /*
      * Project::projectStateChanged() is connected to MainWindows::updateProject()
      */
-   // MainWindow::getInstance()->updateWindowTitle();
+
     return true;
 
-    //--- old code
-   /* if (reason == NEW_PROJECT_REASON || reason == PROJECT_LOADED_REASON ) {
 
-        SetProjectState* command = new SetProjectState(this, QJsonObject(), state, reason, notify);
-        MainWindow::getInstance()->getUndoStack()->push(command);
-        command = nullptr;
-        // Pushes cmd on the stack or merges it with the most recently executed command.
-        //In either case, executes cmd by calling its redo() function
-
-    } else {
-        mStructureIsChanged = false;
-        mDesignIsChanged = false;
-        mItemsIsMoved = false;
-        qDebug()<<"[Project::pushProjectState] "<< reason << notify;
-
-        if (mReasonChangeStructure.contains(reason))
-            mStructureIsChanged = true;
-
-        else  if (mReasonChangeDesign.contains(reason))
-            mDesignIsChanged = true;
-
-        else if (mReasonChangePosition.contains(reason))
-            mItemsIsMoved = true;
-
-        else
-            checkStateModification(state, mState);
-
-        SetProjectState* command = new SetProjectState(this, mState, state, reason, notify);
-        MainWindow::getInstance()->getUndoStack()->push(command);
-        command = nullptr;
-
-        if (mStructureIsChanged) {// && (reason != PROJECT_LOADED_REASON) ) {
-            mLastSavedState = mState;
-            mState = state;
-            AppSettings::mIsSaved = false;
-            //MainWindow::getInstance()->updateWindowTitle();
-            emit noResult(); // connected to MainWindows::noResults
-
-        } else if (mDesignIsChanged || mItemsIsMoved ) {
-            AppSettings::mIsSaved = false;
-        }
-
-    }
-    //if (mStructureIsChanged || mDesignIsChanged || mItemsIsMoved )
-     //   AppSettings::mIsSaved = false;
-
-    updateState(state, reason, notify);
-    MainWindow::getInstance()->updateWindowTitle();
-    return true;
-    */
 }
 
 
@@ -1775,20 +1734,25 @@ void Project::recycleEvents()
     }
 }
 
-void Project::updateEvent(const QJsonObject &event, const QString &reason)
+void Project::updateEvent(const QJsonObject& event, const QString& reason)
 {
-    QJsonObject stateNext = mState;
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
+    bool found = false;
 
-    for (QJsonArray::iterator i = events.begin(); i != events.end(); ++i) {
-        if ( i->toObject().value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
-            *i = event;
+    for (QJsonValueRef eventRef : events) {
+        QJsonObject eventObj = eventRef.toObject();
+        if (eventObj.value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
+            eventRef = event;
+            found = true;
             break;
         }
     }
 
-    stateNext[STATE_EVENTS] = events;
-    pushProjectState(stateNext, reason, true);
+    if (found) {
+        QJsonObject stateNext = mState;
+        stateNext[STATE_EVENTS] = events;
+        pushProjectState(stateNext, reason, true);
+    }
 }
 
 /**
@@ -1846,7 +1810,7 @@ void Project::mergeEvents(int eventFromId, int eventToId)
 
 // Grouped actions on events
 
-void Project::selectAllEvents()
+/*void Project::selectAllEvents()
 {
     const QJsonArray events = mState.value(STATE_EVENTS).toArray();
     QJsonArray newEvents = QJsonArray();
@@ -1860,7 +1824,29 @@ void Project::selectAllEvents()
     QJsonObject stateNext = mState;
     stateNext[STATE_EVENTS] = newEvents;
     pushProjectState(stateNext, "Select All Events", true);
+}*/
+
+void Project::selectAllEvents()
+{
+    QJsonArray events = mState.value(STATE_EVENTS).toArray();
+    bool modified = false;
+
+    for (QJsonValueRef eventRef : events) {
+        QJsonObject eventObj = eventRef.toObject();
+        if (!eventObj.contains(STATE_IS_SELECTED) || !eventObj[STATE_IS_SELECTED].toBool()) {
+            eventObj[STATE_IS_SELECTED] = true;
+            eventRef = eventObj;
+            modified = true;
+        }
+    }
+
+    if (modified) {
+        QJsonObject stateNext = mState;
+        stateNext[STATE_EVENTS] = events;
+        pushProjectState(stateNext, "Select All Events", true);
+    }
 }
+
 
 bool Project::selectEventsFromSelectedPhases()
 {
@@ -1916,22 +1902,28 @@ bool Project::selectedEventsWithString(const QString str)
 void Project::updateSelectedEventsColor(const QColor& color)
 {
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
-    for (auto &&e : events) {
-        QJsonObject evt = e.toObject();
-        if (evt.value(STATE_IS_SELECTED).toBool()) {
-            evt[STATE_COLOR_RED] = color.red();
-            evt[STATE_COLOR_GREEN] = color.green();
-            evt[STATE_COLOR_BLUE] = color.blue();
-            e = evt;
+    bool modified = false;
+
+    for (QJsonValueRef eventRef : events) {
+        QJsonObject eventObj = eventRef.toObject();
+        if (eventObj.value(STATE_IS_SELECTED).toBool()) {
+            eventObj[STATE_COLOR_RED] = color.red();
+            eventObj[STATE_COLOR_GREEN] = color.green();
+            eventObj[STATE_COLOR_BLUE] = color.blue();
+            eventRef = eventObj;
+            modified = true;
         }
     }
 
-    QJsonObject stateNext = mState;
-    stateNext[STATE_EVENTS] = events;
-    pushProjectState(stateNext, "Update selected events color", true);
+    if (modified) {
+        QJsonObject stateNext = mState;
+        stateNext[STATE_EVENTS] = events;
+        pushProjectState(stateNext, "Update selected events color", true);
+    }
 }
 
-void Project::updateSelectedEventsMethod(MHVariable::SamplerProposal sp)
+
+/*void Project::updateSelectedEventsMethod(MHVariable::SamplerProposal sp)
 {
     QJsonObject stateNext = mState;
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
@@ -1944,6 +1936,30 @@ void Project::updateSelectedEventsMethod(MHVariable::SamplerProposal sp)
     }
     stateNext[STATE_EVENTS] = events;
     pushProjectState(stateNext, "Update selected events method", true);
+}*/
+void Project::updateSelectedEventsMethod(MHVariable::SamplerProposal sp)
+{
+    // Create a copy of the current state to modify.
+    QJsonObject stateNext = mState;
+
+    // Retrieve the array of events from the current state.
+    QJsonArray events = stateNext.value(STATE_EVENTS).toArray();
+
+    // Iterate through the events and update the sampler for selected events.
+    for (const QJsonValue& value : events) {
+        QJsonObject event = value.toObject();
+
+        // If the event is selected, update its sampler method.
+        if (event.value(STATE_IS_SELECTED).toBool()) {
+            event[STATE_EVENT_SAMPLER] = sp;
+        }
+    }
+
+    // Update the events array in the state object.
+    stateNext[STATE_EVENTS] = events;
+
+    // Push the updated state to the project with a description.
+    pushProjectState(stateNext, "Update selected events method", true);
 }
 
 void Project::updateSelectedEventsDataMethod(MHVariable::SamplerProposal sp, const QString& pluginId)
@@ -1952,19 +1968,31 @@ void Project::updateSelectedEventsDataMethod(MHVariable::SamplerProposal sp, con
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
     for (int i = 0; i<events.size(); ++i) {
         QJsonObject evt = events[i].toObject();
+
         if (evt.value(STATE_IS_SELECTED).toBool()) {
             QJsonArray dates = evt[STATE_EVENT_DATES].toArray();
-            for (int j = 0; j<dates.size(); ++j) {
+
+            // Iterate through the dates to update the sampler for the specified plugin.
+            for (const QJsonValue& dateValue : dates) {
+                QJsonObject date = dateValue.toObject();
+
+                // Update the sampler if the plugin ID matches.
+                if (date[STATE_DATE_PLUGIN_ID].toString() == pluginId) {
+                    date[STATE_DATE_SAMPLER] = sp;
+                }
+            }
+           /* for (int j = 0; j<dates.size(); ++j) {
                 QJsonObject date = dates[j].toObject();
                 if (date[STATE_DATE_PLUGIN_ID].toString() == pluginId) {
                     date[STATE_DATE_SAMPLER] = sp;
                     dates[j] = date;
                 }
-            }
+            }*/
             evt[STATE_EVENT_DATES] = dates;
             events[i] = evt;
         }
     }
+
     stateNext[STATE_EVENTS] = events;
     pushProjectState(stateNext, "Update selected data method", true);
 }
@@ -1974,7 +2002,7 @@ void Project::updateSelectedEventsDataMethod(MHVariable::SamplerProposal sp, con
 // --------------------------------------------------------------------
 /** @brief getUnusedDateId find a valid index in a project
  */
-int Project::getUnusedDateId(const QJsonArray& dates) const
+/*int Project::getUnusedDateId(const QJsonArray& dates) const
 {
     int id = -1;
     bool idIsFree = false;
@@ -1991,7 +2019,26 @@ int Project::getUnusedDateId(const QJsonArray& dates) const
         }
     }
     return id;
+}*/
+int Project::getUnusedDateId(const QJsonArray& dates) const
+{
+    int id = 0;
+    while (true) {
+        bool idIsFree = true;
+        for (const QJsonValue& dateValue : dates) {
+            QJsonObject dateObj = dateValue.toObject();
+            if (dateObj.value(STATE_ID).toInt() == id) {
+                idIsFree = false;
+                break;
+            }
+        }
+        if (idIsFree) {
+            return id;
+        }
+        ++id;
+    }
 }
+
 
 Date Project::createDateFromPlugin(PluginAbstract* plugin)
 {
