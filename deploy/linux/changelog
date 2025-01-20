@@ -1,0 +1,5 @@
+chronomodel (3.2.7-0~jammy) jammy; urgency=low
+
+  * add curve calculation
+
+ -- Dufresne Philippe <philippe.dufresne@univ-rennes.fr>  Mon, 27 May 2024 17:09:05 +0200
