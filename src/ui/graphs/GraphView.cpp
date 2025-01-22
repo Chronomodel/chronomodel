@@ -1895,20 +1895,18 @@ void GraphView::drawDensity(GraphCurve &curve, QPainter& painter)
     type_data valueX = iter.key();
     type_data valueY = iter.value();
     type_data last_valueY = 0.;
-    type_data last_x = getXForValue(valueX);//(0);
-    type_data last_y = getYForValue(type_data (0), true) ;//(0);
+    type_data last_x = getXForValue(valueX);
+    type_data last_y = getYForValue(type_data (0), true) ;
 
     QPainterPath path;
-    //path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
     path.moveTo(last_x, last_y);
     // Detect square signal front-end without null value at the begin of the QMap
     // e.g calibration of Unif-typo-ref
     if (iter.hasNext()) {
         if (valueY == (iter.peekNext()).value()) {
-          //  if (valueX >= mCurrentMinX && valueX <= mCurrentMaxX) {
-                path.moveTo( getXForValue(valueX), getYForValue(type_data (0), true) );
-                path.lineTo( getXForValue(valueX), getYForValue(valueY, true) );
-          //  }
+            path.moveTo( getXForValue(valueX), getYForValue(type_data (0), true) );
+            path.lineTo( getXForValue(valueX), getYForValue(valueY, true) );
+
         }
     }
 
@@ -1925,70 +1923,64 @@ void GraphView::drawDensity(GraphCurve &curve, QPainter& painter)
         valueX = iter.key();
         valueY = iter.value();
 
-       // if (valueX >= mCurrentMinX && valueX <= mCurrentMaxX) {
-            qreal x = getXForValue(valueX, true);
-            qreal y = getYForValue(valueY, false);
 
-            if (isFirst) {
-                if (curve.mIsRectFromZero) {
-                    path.moveTo(x, getYForValue(0., false));
-                    path.lineTo(x, y);
-                } else
-                    path.moveTo(x, y);
+        qreal x = getXForValue(valueX, true);
+        qreal y = getYForValue(valueY, true);
 
-                isFirst=false;
+        if (isFirst) {
+            if (curve.mIsRectFromZero) {
+                path.moveTo(x, getYForValue(0., true));
+                path.lineTo(x, y);
+            } else
+                path.moveTo(x, y);
 
-            } else {
+            isFirst=false;
 
-                if (curve.isHisto()) {
-                    // histo bars must be centered around x value :
-                    const qreal dx2 = (x - last_x)/2.;
-                    path.lineTo(x - dx2, last_y);
-                    path.lineTo(x - dx2, y);
+        } else {
 
-                } else if (curve.mIsRectFromZero) {
+            if (curve.isHisto()) {
+                // histo bars must be centered around x value :
+                const qreal dx2 = (x - last_x)/2.;
+                path.lineTo(x - dx2, last_y);
+                path.lineTo(x - dx2, y);
 
-                    if (last_valueY != 0 && valueY != 0) {
+            } else if (curve.mIsRectFromZero) {
 
-                         path.lineTo(x, y);
+                if (last_valueY != 0 && valueY != 0) {
 
-                    } else if (last_valueY == 0 && valueY != 0) {
-                        // Draw a front end of a square signal some 0 at the begin and at the end
-
-                        // e.i plot the HPD surface
-
-                        path.lineTo(x, last_y);
-                        path.lineTo(x, y);
-
-
-                    } else if (last_valueY != 0 && valueY == 0) {
-                        // Draw a back end of a square signal some 0 at the begin and at the end
-                        // e.i plot the HPD surface
-                        path.lineTo(last_x, last_y);
-                        path.lineTo(last_x, y);
-                    }
-
-                } else
                     path.lineTo(x, y);
 
+                } else if (last_valueY == 0 && valueY != 0) {
+                    // Draw a front end of a square signal some 0 at the begin and at the end
 
-            }
-            last_x = x;
-            last_y = y;
+                    // e.i plot the HPD surface
 
-            last_valueY = valueY;
-       // }
+                    path.lineTo(x, last_y);
+                    path.lineTo(x, y);
+
+                } else if (last_valueY != 0 && valueY == 0) {
+                    // Draw a back end of a square signal some 0 at the begin and at the end
+                    // e.i plot the HPD surface
+                    path.lineTo(last_x, last_y);
+                    path.lineTo(last_x, y);
+                }
+
+            } else
+                path.lineTo(x, y);
+
+        }
+        last_x = x;
+        last_y = y;
+
+        last_valueY = valueY;
+
     }
-
-
 
 
     if (path.elementCount()  == 1) { //there is only one value
         last_x = getXForValue(valueX, true);
         last_y = getYForValue(type_data (0.), false);
         path.lineTo(last_x, last_y);
-
-
     }
 
     // Detect square signal back-end without null value at the end of the QMap
@@ -2006,17 +1998,11 @@ void GraphView::drawDensity(GraphCurve &curve, QPainter& painter)
     }
 
 
-
-
-
     if (curve.mIsRectFromZero && (curve.mBrush != Qt::NoBrush) ) {
         // Close the path on the left side
         path.lineTo(last_x, getYForValue(type_data (0.), true));
-
-       // painter.setPen(curve.mPen);
-        //QBrush brush = painter.brush();
-        painter.fillPath(path, painter.brush());//, curve.mBrush);
-        painter.strokePath(path, curve.mPen);//, pen);
+        painter.fillPath(path, painter.brush());
+        painter.strokePath(path, curve.mPen);
 
     } else
         painter.drawPath(path);
@@ -2498,7 +2484,7 @@ bool GraphView::saveAsSVG(const QString& fileName, const QString& graphTitle, co
 
         QRect rGraph(0, 0, width(), height());
         /* We can not have a svg graph in eSD Rendering Mode */
-      //  setRendering(eHD);
+        //  setRendering(eHD);
         // Set SVG Generator
         QSvgGenerator svgGen;
         svgGen.setFileName(fileName);
