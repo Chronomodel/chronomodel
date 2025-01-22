@@ -121,7 +121,7 @@ GraphCurve densityCurve( const std::map<double, double> data,
         if (penStyle == Qt::CustomDashLine)
             curve.mPen.setDashPattern(QList<qreal>{5, 5});
         curve.mBrush = brush;
-        curve.mIsRectFromZero = false; // for Unif-typo. calibs. and curveActivityUnifTheo, invisible for others!
+        curve.mIsRectFromZero = true; // for Unif-typo. calibs. and curveActivityUnifTheo, invisible for others!
     }
     return curve;
 }
