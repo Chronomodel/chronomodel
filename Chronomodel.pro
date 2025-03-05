@@ -37,8 +37,8 @@
 # knowledge of the CeCILL V2.1 license and that you accept its terms.
 # --------------------------------------------------------------------- */
 
-DEFINES += VERSION_NUMBER="3,2,9"
-VERSION = 3.2.9
+DEFINES += VERSION_NUMBER="3,3,0"
+VERSION = 3.3.0
 #VERSION_NUMBER # must match value in src/main.cpp and mainControler and Chronomodel.rc (for windows)
 
 PRO_PATH=$$_PRO_FILE_PWD_

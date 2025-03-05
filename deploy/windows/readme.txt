@@ -4,8 +4,8 @@ PROJECT
 
 ChronoModel Project
 "http://www.chronomodel.com"
-version 3.2.3
-2023-06-16
+version 3.3.0
+2025-03-05
 
 ————————————————————————————————————————————————————————————————————————
 CREDITS
@@ -36,7 +36,7 @@ ChronoModel was originally written by:
 
 The current maintainer is:
 
-	Philippe DUFRESNE (2015-2023)
+	Philippe DUFRESNE (2015-2025)
 
 ————————————————————————————————————————————————————————————————————————
 CONTRIBUTORS

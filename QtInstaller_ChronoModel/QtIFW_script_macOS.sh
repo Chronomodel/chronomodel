@@ -41,7 +41,7 @@ echo " 3 - Executing binarycreator"
 
 QT_BIN_PATH=/Users/dufresne/Qt/Tools/QtInstallerFramework/4.8/bin
 
-VERSION=3.2.9
+VERSION=3.3.0
 
 DATE_FILE=$(date '+%Y%m%d')
 
