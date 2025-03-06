@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -138,10 +138,10 @@ MHVariable::~MHVariable()
 /**
  * @brief MHVariable::tryUpdate
  * @param x : Value proposed and, if applicable, accepted
- * @param rate : Force reject with rate  = -1.
+ * @param rate : Force reject with rate  = -1. or accept with rate = 2.
  * @return
  */
-bool MHVariable::tryUpdate(const double x, const double rate)
+bool MHVariable::try_update(const double x, const double rate)
 {
     if (mLastAccepts.size() >= mLastAcceptsLength)
         mLastAccepts.erase(mLastAccepts.begin());//removeAt(0);
@@ -156,7 +156,7 @@ bool MHVariable::tryUpdate(const double x, const double rate)
         accepted = (uniform <= rate);
 #ifdef DEBUG
         if (uniform == 0)
-            qDebug()<< "[MHVariable::tryUpdate] uniform == 0";
+            qDebug()<< "[MHVariable::try_update] uniform == 0";
 #endif
     }
 
@@ -169,6 +169,85 @@ bool MHVariable::tryUpdate(const double x, const double rate)
 
 }
 
+/**
+ * @brief MHVariable::test_update determines whether to accept a new value for mX based on a given acceptance rate.
+ *
+ * This function implements a Metropolis-Hastings acceptance criterion. It compares the rate
+ * (typically, the ratio of the target distribution at try_value to current_value) against
+ * a uniformly distributed random number to decide whether to accept the new value.
+ *
+ * - If the rate is 1.0 or higher, the new value (try_value) is unconditionally accepted.
+ * - If the rate is within [0.0, 1.0), a random number is generated and compared to the rate to decide acceptance.
+ * - If the rate is less than 0.0, the new value is rejected outright.
+ * - The function maintains a history of the last few acceptance/rejection outcomes in mLastAccepts.
+ *
+ * @param current_value The current value of the variable.
+ * @param try_value The proposed new value to be tested.
+ * @param rate The acceptance rate, typically the ratio pi(try_value)/pi(current_value).
+ * @return bool True if the new value is accepted, false otherwise.
+ */
+bool MHVariable::test_update(const double current_value, const double try_value, const double rate) {
+    // Ensure mLastAccepts does not exceed its capacity
+    if (mLastAccepts.size() >= mLastAcceptsLength) {
+        mLastAccepts.erase(mLastAccepts.begin());
+    }
+
+    if (rate >= 1.0) {
+        // Accept unconditionally
+        mX = try_value;
+        mLastAccepts.push_back(true);
+        return true;
+    }
+
+    if (rate < 0.0) {
+        // Reject outright
+        mX = current_value;
+        mLastAccepts.push_back(false);
+        return false;
+    }
+
+    // For rate between 0.0 and 1.0, perform a Metropolis-Hastings accept/reject step
+    const double random_number = Generator::randomUniform();
+
+    if (random_number <= rate) {
+        mX = try_value;
+        mLastAccepts.push_back(true);
+        return true;
+
+    } else {
+        mX = current_value;
+        mLastAccepts.push_back(false);
+        return false;
+    }
+}
+
+/**
+ * @brief MHVariable::accept_update force setting mX with the value of x.
+ * And append a true value to mLastAccept
+ * @param x
+ */
+void MHVariable::accept_update(const double x)
+{
+    if (mLastAccepts.size() >= mLastAcceptsLength)
+        mLastAccepts.erase(mLastAccepts.begin());//removeAt(0);
+
+    mX = x;
+
+    mLastAccepts.push_back(true);
+
+}
+
+/**
+ * @brief MHVariable::reject_update no update of mX, but append a false value to mLastAccept
+ */
+void MHVariable::reject_update()
+{
+    if (mLastAccepts.size() >= mLastAcceptsLength)
+        mLastAccepts.erase(mLastAccepts.begin());//removeAt(0);
+
+    mLastAccepts.push_back(false);
+
+}
 /**
  * @brief MHVariable::adapt
  * @param coef_min value [0; 1], default 0.42

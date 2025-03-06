@@ -77,7 +77,11 @@ public:
     double getCurrentAcceptRate() const;
     void saveCurrentAcceptRate();
 
-    bool tryUpdate(const double x, const double rate);
+    bool try_update(const double x, const double rate);
+    bool test_update(const double current_value, const double try_value, const double rate);
+    void accept_update(const double x);
+    void reject_update();
+
     bool adapt (const double coef_min = 0.42, const double coef_max = 0.46, const double delta = 0.01);
 
     inline bool accept_buffer_full() {return mLastAccepts.size() == mLastAcceptsLength;};

@@ -215,5 +215,5 @@ double Bound::formatedFixedValue() const
 
 void Bound::updateTheta(const double , const double )
 {
-    mTheta.tryUpdate(mFixed, 2.);
+    mTheta.accept_update(mFixed);
 }

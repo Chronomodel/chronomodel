@@ -745,7 +745,7 @@ void Date::calibrate(const StudyPeriodSettings &period_settings, std::shared_ptr
             ++nb_step_frac;
             mCalibration->mStep = refMinStep / (double)nb_step_frac;
 #ifdef DEBUG
-            auto ld = (mTmaxRefCurve - mTminRefCurve) / mCalibration->mStep;
+            long int ld = static_cast<long int>( (mTmaxRefCurve - mTminRefCurve) / mCalibration->mStep);
             if (ld < std::numeric_limits<long int>::min() || ld > std::numeric_limits<long int>::max()) {
                 qDebug()<< "La valeur est hors de portée pour un long int.";
             }
@@ -1751,9 +1751,9 @@ void Date::updateSigmaJeffreys(const double theta_mX)
     // ------------------------------------------------------------------------------------------
     //  Echantillonnage MH avec marcheur gaussien adaptatif sur le log de vi (vérifié)
     // ------------------------------------------------------------------------------------------
-    const double lambda = pow(mTi.mX - (theta_mX - mDelta), 2) / 2.;
+    const double lambda = pow(mTi.mX - (theta_mX - mDelta), 2) / 2.0;
 
-    const double a (.0001); //precision
+    const double a (0.0001); //precision
     const double b (pow(mSettings.mTmax - mSettings.mTmin, 2.));
 
     const double V1 = mSigmaTi.mX * mSigmaTi.mX;
@@ -1762,6 +1762,7 @@ void Date::updateSigmaJeffreys(const double theta_mX)
     do {
         const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigmaTi.mSigmaMH);
         V2 = pow(10, logV2);
+
     } while ((V2<a) || (V2>b));
     
     
@@ -1769,7 +1770,7 @@ void Date::updateSigmaJeffreys(const double theta_mX)
     const double x2 = V1/V2;
     const double rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1; // (V2 / V1) est le jacobien!
 
-    mSigmaTi.tryUpdate(sqrt(V2), rapport);
+    mSigmaTi.try_update(sqrt(V2), rapport);
 }
 
 void Date::updateSigmaShrinkage(const double theta_mX, const double S02Theta_mX, const double AShrinkage)
@@ -1777,29 +1778,29 @@ void Date::updateSigmaShrinkage(const double theta_mX, const double S02Theta_mX,
     // ------------------------------------------------------------------------------------------
     //  Echantillonnage MH avec marcheur gaussien adaptatif sur le log de vi (vérifié)
     // ------------------------------------------------------------------------------------------
-    const double mu = pow(mTi.mX - (theta_mX - mDelta), 2.) / 2.;
+    const double mu = pow(mTi.mX - (theta_mX - mDelta), 2) / 2.0;
 
-    const int logVMin = -6;
-    const int logVMax = 100;
+    constexpr int logVMin = -6;
+    constexpr int logVMax = 100;
 
     const double V1 = mSigmaTi.mX * mSigmaTi.mX;
     const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigmaTi.mSigmaMH);
-    double V2 = pow(10, logV2);
+    const double V2 = pow(10, logV2);
 
-    double rapport  = -1.;
     if (logV2 >= logVMin && logV2 <= logVMax) {
         const double x1 = exp(-mu * (V1 - V2) / (V1 * V2));
-        const double x2 = pow((S02Theta_mX + V1) / (S02Theta_mX + V2), AShrinkage + 1.);
-        rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1 ; // (V2 / V1) est le jacobien!
+        const double x2 = pow((S02Theta_mX + V1) / (S02Theta_mX + V2), AShrinkage + 1.0);
+        const double rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1 ; // (V2 / V1) est le jacobien!
 
-    }
-  #ifdef DEBUG
-    else {
+        mSigmaTi.try_update(sqrt(V2), rapport);
+
+    } else {
+       mSigmaTi.reject_update();
  //       qDebug()<<"[TDate::updateSigma] x1 x2 rapport rejet";
     }
- #endif
 
-    mSigmaTi.tryUpdate(sqrt(V2), rapport);
+
+
 
 }
 
@@ -2145,7 +2146,7 @@ void Date::Prior(const double theta_mX)
     const double tiNew = Generator::gaussByBoxMuller(theta_mX - mDelta, mSigmaTi.mX);
     const double rapport = getLikelihood(tiNew) / getLikelihood(mTi.mX);
 
-    mTi.tryUpdate(tiNew, rapport);
+    mTi.try_update(tiNew, rapport);
 }
 
 /**
@@ -2162,9 +2163,9 @@ void Date::PriorWithArg(const double theta_mX)
     argOld = getLikelihoodArg(mTi.mX);
     argNew = getLikelihoodArg(tiNew);
 
-    const long double rapport = sqrt(argOld.first/argNew.first)*exp(argNew.second-argOld.second);
+    const long double rapport = sqrt(argOld.first/argNew.first) * exp(argNew.second-argOld.second);
 
-    mTi.tryUpdate(tiNew, (double)rapport);
+    mTi.try_update(tiNew, (double)rapport);
 
 }
 
@@ -2247,7 +2248,7 @@ void Date::Inversion(const double theta_mX)
     const double rapport3 = fProposalDensity(mTi.mX, tiNew) /
                             fProposalDensity(tiNew, mTi.mX);
 
-    mTi.tryUpdate(tiNew, rapport1 * rapport2 * rapport3);
+    mTi.try_update(tiNew, rapport1 * rapport2 * rapport3);
 }
 
 void Date::InversionWithArg(const double theta_mX)
@@ -2284,7 +2285,7 @@ void Date::InversionWithArg(const double theta_mX)
 
     const long double rapportPD = fProposalDensity(mTi.mX, tiNew) / fProposalDensity(tiNew, mTi.mX);
 
-    mTi.tryUpdate(tiNew, (double)(rapport * rapportPD));
+    mTi.try_update(tiNew, (double)(rapport * rapportPD));
 
 }
 
@@ -2300,7 +2301,7 @@ void Date::MHAdaptGauss(const double theta_mX)
                                                            - pow(mTi.mX - (theta_mX - mDelta), 2)
                                                                  ));
 
-    mTi.tryUpdate(tiNew, rapport);
+    mTi.try_update(tiNew, rapport);
 }
 
 
@@ -2325,6 +2326,6 @@ void Date::MHAdaptGaussWithArg(const double theta_mX)//fMHSymGaussAdaptWithArg(E
 
     const long double rapport = sqrt(argOld.first / argNew.first) * exp(logGRapport+logHRapport);
 
-    mTi.tryUpdate(tiNew, (double) rapport);
+    mTi.try_update(tiNew, (double) rapport);
 
 }

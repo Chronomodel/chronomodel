@@ -261,16 +261,17 @@ QString MCMCLoop::initialize_time()
                     // ----------------------------------------------------------------
                     CalibrationCurve mixCal = generate_mixingCalibration(uEvent->mDates);
                     uEvent->mMixingCalibrations = std::make_shared<CalibrationCurve>(mixCal);
+                    double try_theta;
 
                     if (max == min) {
-                        uEvent->mTheta.mX = min;
+                        try_theta = min;
                         qDebug()<<QString("[MCMCLoop::initialize_time] Egality Init for event : %1 : min = %2 : max = %3-------Seed = %4").arg(uEvent->getQStringName(), QString::number(min, 'f', 30), QString::number(max, 'f', 30), QString::number(mLoopChains.at(mChainIndex).mSeed));
 
                     } else {
-                        uEvent->mTheta.mX = sample_in_repartition(uEvent->mMixingCalibrations, min, max);
+                        try_theta = sample_in_repartition(uEvent->mMixingCalibrations, min, max);
 
                     }
-                    if (uEvent->mTheta.mX > max || uEvent->mTheta.mX < min) {
+                    if (try_theta > max || try_theta < min) {
                         const int seed = mLoopChains.at(mChainIndex).mSeed;
 #ifdef DEBUG
                         qDebug()<<QString("[MCMCLoop::initialize_time] Error Init for eventuEvent->mTheta.mX > max || uEvent->mTheta.mX < min : %1 : min = %2 : max = %3-------Seed = %4").arg(uEvent->getQStringName(), QString::number(min, 'f', 30), QString::number(max, 'f', 30), QString::number(seed));
@@ -280,6 +281,12 @@ QString MCMCLoop::initialize_time()
 #endif
                         return mAbortedReason;
                     }
+                    // 6- Clear mLastAccepts  array
+                    uEvent->mTheta.mLastAccepts.clear();
+                    //unsortedEvents.at(i)->mTheta.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
+                    uEvent->mTheta.accept_update(try_theta);
+
+
                     uEvent->mThetaReduced = mModel->reduceTime(uEvent->mTheta.mX);
                     uEvent->mInitialized = true;
 
@@ -333,8 +340,9 @@ QString MCMCLoop::initialize_time()
                         // 2 - Init Delta Wiggle matching and Clear mLastAccepts array
                         date.initDelta();
                         date.mWiggle.mLastAccepts.clear();
+                        date.updateWiggle();
                         //date.mWiggle.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
-                        date.mWiggle.tryUpdate(date.mWiggle.mX, 2.);
+                        date.mWiggle.accept_update(date.mWiggle.mX);
 
                         // 3 - Init sigma MH adaptatif of each Data ti
                         date.mTi.mSigmaMH = sigma;
@@ -342,52 +350,53 @@ QString MCMCLoop::initialize_time()
                         // 4 - Clear mLastAccepts array and set this init at 100%
                         date.mTi.mLastAccepts.clear();
                         //date.mTheta.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
-                        date.mTi.tryUpdate(date.mTi.mX, 2.);
+                        date.mTi.accept_update(date.mTi.mX);
 
                         // 5 - Init Sigma_i and its Sigma_MH
                         date.mSigmaTi.mX = std::abs(date.mTi.mX - (uEvent->mTheta.mX - date.mDelta));
 
 
-                        if (date.mSigmaTi.mX <= 1E-6) {
-                            date.mSigmaTi.mX = 1E-6; // Add control the 2015/06/15 with PhL
+                        if (date.mSigmaTi.mX <= 1.0E-6) {
+                            date.mSigmaTi.mX = 1.0E-6; // Add control the 2015/06/15 with PhL
                             //log += line(date.mName + textBold("Sigma indiv. <=1E-6 set to 1E-6"));
                         }
-                        date.mSigmaTi.mSigmaMH = 1.;//1.27;  //1.;
+                        date.mSigmaTi.mSigmaMH = 1.0;//1.27;  //1.;
 
                         date.mSigmaTi.mLastAccepts.clear();
-                        date.mSigmaTi.tryUpdate(date.mSigmaTi.mX, 2.);
+                        date.mSigmaTi.accept_update(date.mSigmaTi.mX);
 
                         // intermediary calculus for the harmonic average
-                        s02_sum += 1. / (sigma * sigma);
+                        s02_sum += 1.0 / (sigma * sigma);
 
                     }
 
                     // 4 - Init S02 of each Event
+                    uEvent->mS02Theta.mSigmaMH = 1.0;
+
+                    uEvent->mS02Theta.mLastAccepts.clear();
 
                     const double sqrt_S02_harmonique = sqrt(uEvent->mDates.size() / s02_sum);
                     uEvent->mBetaS02 = 1.004680139*(1 - exp(- 0.0000847244 * pow(sqrt_S02_harmonique, 2.373548593)));
 #ifdef CODE_KOMLAN \
                     // new code
-                    uEvent->mS02Theta.mX = 1. / Generator::gammaDistribution(1., uEvent->mBetaS02);
+                    //uEvent->mS02Theta.mX = 1.0 / Generator::gammaDistribution(1., uEvent->mBetaS02);
+                    uEvent->mS02Theta.accept_update(1.0 / Generator::gammaDistribution(1., uEvent->mBetaS02));
 
 #else
-                    uEvent->mS02Theta.mX = uEvent->mDates.size() / s02_sum;
+                    //uEvent->mS02Theta.mX = uEvent->mDates.size() / s02_sum;
+                    uEvent->mS02Theta.accept_update(uEvent->mDates.size() / s02_sum);
 
 #endif
-                    uEvent->mS02Theta.mSigmaMH = 1.;
 
-                    uEvent->mS02Theta.mLastAccepts.clear();
-                    uEvent->mS02Theta.tryUpdate(uEvent->mS02Theta.mX, 2.);
+
+
 
 
                     // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
                     uEvent->mTheta.mSigmaMH = sqrt(uEvent->mS02Theta.mX);
                     uEvent->mAShrinkage = 1.;
 
-                    // 6- Clear mLastAccepts  array
-                    uEvent->mTheta.mLastAccepts.clear();
-                    //unsortedEvents.at(i)->mTheta.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
-                    uEvent->mTheta.tryUpdate(uEvent->mTheta.mX, 2.);
+
 
 
                 }
@@ -411,7 +420,7 @@ QString MCMCLoop::initialize_time()
                     uEvent->mTheta.mX = static_cast<Bound*>(uEvent.get())->mFixed;
                 // nous devons sauvegarder la valeur ici car dans loop.memo(), les variables fixes ne sont pas memorisées.
                 // Pourtant, il faut récupèrer la valeur pour les affichages et les stats
-                uEvent->mTheta.memo();
+                uEvent->mTheta.memo(); // il faut faire memo ici, c'est la seule fois. ce ne sera pas fait dans MCMCLoopChrono.memo()
 
                 uEvent->mThetaReduced = mModel->reduceTime(uEvent->mTheta.mX);
                 uEvent->mInitialized = true;
@@ -668,6 +677,31 @@ void MCMCLoop::run()
 
             try {
                 update();
+
+
+                // ---test
+                /*
+                const auto& test_spline = mModel->mSpline.splineX;
+                const auto& test_events = mModel->mEvents;
+
+
+                for (auto event : test_events) {
+
+                    auto it = std::find(test_spline.vecThetaReduced.begin(), test_spline.vecThetaReduced.end(), event->mThetaReduced);
+                    if (it != test_spline.vecThetaReduced.end()) {
+                        size_t thetaIdx = std::distance(test_spline.vecThetaReduced.begin(), it);
+                        qDebug()<<"[MCMCLoop] burn-in" <<thetaIdx<< event->name();
+
+                    }             else {
+                        qDebug()<<"[MCMCLoop] burn-in errror" << event->name() << event->mThetaReduced;
+                    }
+                }
+*/
+                // -- fin test
+
+
+
+
 #ifdef _WIN32
 //    SetThreadExecutionState( ES_AWAYMODE_REQUIRED); //https://learn.microsoft.com/fr-fr/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate?redirectedfrom=MSDN
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED);
@@ -724,6 +758,27 @@ void MCMCLoop::run()
                     mAbortedReason = error;
                     return;
                 }
+
+
+                // ---test
+/*
+                const auto& test_spline = mModel->mSpline;
+                for (auto event : mModel->mEvents) {
+
+                    auto it = std::find(test_spline.splineX.vecThetaReduced.begin(), test_spline.splineX.vecThetaReduced.end(), event->mThetaReduced);
+                    if (it != test_spline.splineX.vecThetaReduced.end()) {
+                        size_t thetaIdx = std::distance(test_spline.splineX.vecThetaReduced.begin(), it);
+                        qDebug()<<"[MCMCLoop] memo adapt" <<thetaIdx;
+
+                    }             else {
+                        qDebug()<<"[MCMCLoop] errror";
+                    }
+                }
+*/
+                // -- fin test
+
+
+
                 memo();
                 ++chain.mBatchIterIndex;
                 ++chain.mTotalIter;
@@ -760,6 +815,7 @@ void MCMCLoop::run()
         } else {
             mModel->mLogAdapt += line(textRed("Warning : Not adapted after " + QString::number(chain.mBatchIndex) + " batches"));
         }
+
 
         mModel->mLogAdapt += ModelUtilities::modelStateDescriptionHTML(mModel) ;
         mModel->mLogAdapt += "<hr>";

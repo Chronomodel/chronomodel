@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -103,12 +103,17 @@ protected:
     bool (MCMCLoopCurve::*updateLoop)();
 
     QString initialize_321();
+    QString initialize_330();
+
     QString initialize_400();
     QString initialize_401();
     QString initialize_interpolate();
     QString initialize_Komlan();
 
     bool update_321();
+
+    void test_depth(std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const SplineMatrices &matrices, const double lambda, double &rate, bool &ok);
+    bool update_330();
     bool update_400();
     bool update_401();
     bool update_interpolate();
@@ -146,11 +151,59 @@ private:
          return std::accumulate(decomp.second.cbegin(), decomp.second.cend(), 0., [](double prod, const double m){return prod + m;});
      }
 
-     static t_prob ln_detPlus(const std::pair<Matrix2D, MatrixDiag > &decomp)
+    /* static t_prob ln_detPlus(const std::pair<Matrix2D, MatrixDiag > &decomp)
      {
          return std::accumulate(decomp.second.cbegin()+1, decomp.second.cend()-1, 0., [](double sum, const double m){return sum + log(m);});
      }
+    */
+    /**
+    * @brief Calculates the natural logarithm of the determinant of a matrix's diagonal elements
+    *
+    * @details This function computes:
+    * @f[
+    * \ln(\det^+) = \sum_{i=1}^{n-2} \ln(m_i)
+    * @f]
+    * where @f$m_i@f$ are the diagonal elements of the matrix (excluding first and last elements).
+    * The "+" in @f$\det^+@f$ indicates that we're using a modified determinant calculation
+    * that skips the first and last diagonal elements.
+    *
+    * @param decomp A pair containing:
+    *        - First: A 2D matrix (Matrix2D)
+    *        - Second: A diagonal matrix (MatrixDiag) whose logarithmic determinant we calculate
+    *
+    * @return t_prob The sum of the natural logarithms of the diagonal elements
+    *
+    * @note The function skips the first and last elements of the diagonal matrix
+    * @note Uses parallel reduction for large matrices (> 1000 elements)
+    */
+     static t_prob ln_detPlus(const std::pair<Matrix2D, MatrixDiag>& decomp)
+     {
+        const auto& diag = decomp.second;
+        const size_t size = diag.size();
 
+        // Handle edge cases , yet tested before
+        // if (size <= 2) return 0.0;
+
+        t_prob sum = 0.0;
+        // Pour les petites matrices, utiliser la version séquentielle
+        if (size < 1000) {
+            for (size_t i = 1; i < size - 1; ++i) {
+                sum += std::log(diag[i]);
+            }
+            return sum;
+        }
+
+        // Pour les grandes matrices, utiliser la parallélisation
+#pragma omp parallel reduction(+:sum)
+        {
+#pragma omp for nowait
+            for (size_t i = 1; i < size - 1; ++i) {
+                sum += std::log(diag[i]);
+            }
+        }
+
+        return sum;
+     }
 
      static t_prob ln_h_YWI_1(const std::pair<Matrix2D, MatrixDiag> &decomp_QTQ)
      {
@@ -164,9 +217,11 @@ private:
 
      static t_prob ln_h_YWI_1_2(const std::pair<Matrix2D, MatrixDiag> &decomp_QTQ, const std::pair<Matrix2D, MatrixDiag > &decomp_matB)
      {
-         const MatrixDiag &matDq = decomp_QTQ.second;
-         const MatrixDiag &matD = decomp_matB.second;
-         return std::transform_reduce(PAR matDq.cbegin()+1, matDq.cend()-1, matD.begin()+1, 0., std::plus{}, [](double val1,  double val2) { return log(val1/val2); });
+        const MatrixDiag &matDq = decomp_QTQ.second;
+        const MatrixDiag &matD = decomp_matB.second;
+
+        return std::transform_reduce(PAR matDq.cbegin()+1, matDq.cend()-1, matD.begin()+1, 0., std::plus{}, [](double val1,  double val2) { return std::log(val1) - std::log(val2); });
+
      }
 
      static t_prob ln_h_YWI_3_update_ASYNC(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag> &decomp_matB, const double lambdaSpline, const bool hasY, const bool hasZ);
@@ -200,13 +255,14 @@ private:
      static double h_theta_Event (const std::shared_ptr<Event> e);
 
 
-     inline t_prob h_VG_Event(const std::shared_ptr<Event> &e, double S02_Vg) const;
+     inline t_prob h_VG_Event(const std::shared_ptr<Event> &e, const double S02_Vg) const;
+     t_prob h_VG_Event(const double Vg, const double S02_Vg) const;
 
      t_prob h_S02_Vg(const std::vector<std::shared_ptr<Event> > &events, double S02_Vg) const;
      double h_S02_Vg_K_old(const std::vector<std::shared_ptr<Event> > events, double S02_Vg, double try_Vg);
 
      t_prob rate_h_S02_Vg_test(const std::vector<std::shared_ptr<Event>> &events, double S02_Vg, double try_S02) const;
-     t_prob rate_h_S02_Vg(const std::vector<Event *> &pointEvents, double S02_Vg, double try_S02) const;
+     t_prob rate_h_S02_Vg(const std::vector<std::shared_ptr<Event> > &pointEvents, double S02_Vg, double try_S02) const;
 
      double S02_Vg_Yx(std::vector<std::shared_ptr<Event>> &events, const SplineMatrices &matricesWI, std::vector<t_reduceTime> &vecH, const double lambdaSpline);
      double S02_Vg_Yy(std::vector<std::shared_ptr<Event>> &events, const SplineMatrices &matricesWI, std::vector<t_reduceTime> &vecH, const double lambdaSpline);
@@ -264,7 +320,7 @@ private:
 
     double h_exp_fX_theta (std::shared_ptr<Event> e, const MCMCSpline &s, unsigned idx);
     std::vector<double> sampling_spline (std::vector<std::shared_ptr<Event>> &lEvents, SplineMatrices matrices);
-    t_prob h_S02_Vg_K(const std::vector<std::shared_ptr<Event>> events, const double S02_Vg, const double try_Vg);
+    t_prob h_S02_Vg_K(const std::vector<std::shared_ptr<Event>>& events, const double S02_Vg, const double try_S02) const;
 
     std::pair<Matrix2D, std::vector<double>> decompositionCholeskyKK(const Matrix2D &matrix, const int nbBandes, const int shift);
 

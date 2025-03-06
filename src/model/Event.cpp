@@ -1434,7 +1434,8 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
 
     if (min == max) {
         const double theta = min;
-        mTheta.tryUpdate(theta, 1.);
+        mTheta.accept_update(theta);
+
     } else {
         switch(mTheta.mSamplerProposal)
         {
@@ -1442,7 +1443,7 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
         {
             try {
                 const double theta = Generator::gaussByDoubleExp(theta_avg, sigma, min, max);
-                mTheta.tryUpdate(theta, 1.);
+                mTheta.accept_update(theta);
 
             }
             catch(QString error) {
@@ -1464,19 +1465,19 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
 
             } while(theta < min || theta > max);
 
-            mTheta.tryUpdate(theta, 1.);
+            mTheta.accept_update(theta);
             break;
         }
 
         case MHVariable::eMHAdaptGauss:
         {
             // MH: The only case where the acceptance rate makes sense, since we use sigma MH :
-            const double theta = Generator::gaussByBoxMuller(mTheta.mX, mTheta.mSigmaMH);
-            double rapport = 0.;
-            if (theta >= min && theta <= max)
-                rapport = exp((-0.5/(sigma*sigma)) * (pow(theta - theta_avg, 2.) - pow(mTheta.mX - theta_avg, 2.)));
+            const double try_theta = Generator::gaussByBoxMuller(mTheta.mX, mTheta.mSigmaMH);
+            double rapport = 0.0;
+            if (try_theta >= min && try_theta <= max)
+                rapport = exp((-0.5/(sigma*sigma)) * (pow(try_theta - theta_avg, 2.) - pow(mTheta.mX - theta_avg, 2.)));
 
-            mTheta.tryUpdate(theta, rapport);
+            mTheta.try_update(try_theta, rapport);
             break;
         }
 
@@ -1552,7 +1553,7 @@ void Event::updateTheta_v4(const double tmin, const double tmax, const double ra
         rapport = -1.;
     }
 
-    mTheta.tryUpdate(theta_try, rapport*rate_theta);
+    mTheta.try_update(theta_try, rapport * rate_theta);
     //qDebug() << "[Event::updateTheta_v4]-----------> Event update : " << getQStringName() << " : " << mTheta.mX << " between" << "[" << min << " ; " << max << "]";
 }
 
@@ -1626,7 +1627,7 @@ void Event::updateS02()
         }
 #endif
 
-        mS02Theta.tryUpdate(V2, rapport);
+        mS02Theta.try_update(V2, rapport);
         //qDebug()<<"SO2 ="<< mS02Theta.mX<<" rapport = "<<rapport;
     }  catch (...) {
         qWarning() <<"[Event::updateS02] mW = 0";
@@ -1666,7 +1667,7 @@ double Event::h_S02(const double S02)
     //qDebug()<<"mBetaS02="<<mName<< mBetaS02<<S02;
 
     for (auto& d : mDates) {
-        h *= pow((S02/(S02 + pow(d.mSigmaTi.mX, 2))), 2.);
+        h *= pow((S02/(S02 + pow(d.mSigmaTi.mX, 2))), 2.0);
     }
    return std::move(h / pow(S02, mDates.size()));
 
