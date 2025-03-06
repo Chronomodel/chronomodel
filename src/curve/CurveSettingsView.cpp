@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2020 - 2023
+Copyright or © or Copr. CNRS	2020 - 2025
 
 Authors :
 	Philippe LANOS
@@ -60,7 +60,7 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     palette.setColor(QPalette::WindowText, CURVE_COLOR_TEXT);
     mTitleLabel->setPalette(palette);
     
-    mDescriptionLabel = new QLabel(tr("These parameters give you controls over the way curves are built. MCMC (Bayesian) can be activated for event time, VG or global lambda spline factor, etc. "), this);
+    mDescriptionLabel = new QLabel(tr("These parameters give you controls over the way curves are built. MCMC (Bayesian) can be activated for event time, VG or global smoothing spline factor, etc. "), this);
     mDescriptionLabel->setAlignment(Qt::AlignCenter);
     mDescriptionLabel->setWordWrap(true);
 
@@ -407,7 +407,7 @@ CurveSettings CurveSettingsView::getSettings() const
 
     case 2:
         settings.mLambdaSplineType = CurveSettings::eInterpolation;
-        settings.mLambdaSpline = 0;
+        settings.mLambdaSpline = 0.0;
         break;
 
     case 1:

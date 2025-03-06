@@ -523,12 +523,13 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
             }
 
             // Recherche indice de l'event dans la liste de spline, car les events sont réordonnés
-            size_t thetaIdx;
+           /* size_t thetaIdx = 0;
             const MCMCSpline& spline =  model->mSpline;
-            for (thetaIdx = 0; thetaIdx < model->mEvents.size(); thetaIdx++) {
+            for (; thetaIdx < model->mEvents.size(); thetaIdx++) {
                 if ( spline.splineX.vecThetaReduced.at(thetaIdx) == event->mThetaReduced)
                     break;
             }
+
 
             if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Univariate) {
                 HTMLText += line(textGreen(QObject::tr(" - G : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
@@ -542,7 +543,34 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
                     HTMLText += line(textGreen(QObject::tr(" - Gy : %1").arg(stringForLocal(spline.splineY.vecG.at(thetaIdx)))));
                 if (spline.splineZ.vecG.size() != 0)
                     HTMLText += line(textGreen(QObject::tr(" - Gz : %1").arg(stringForLocal(spline.splineZ.vecG.at(thetaIdx)))));
+            }*/
+
+            const auto& sX = model->mSpline.splineX.vecThetaReduced;
+            auto it = std::find(sX.begin(), sX.end(), event->mThetaReduced);
+            if (it != sX.end()) {
+                const MCMCSpline& spline =  model->mSpline;
+                size_t thetaIdx = std::distance(sX.begin(), it);
+
+                if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Univariate) {
+                    HTMLText += line(textGreen(QObject::tr(" - G : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
+
+                } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Depth) {
+                    HTMLText += line(textGreen(QObject::tr(" - Depth : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
+
+                } else {
+                    HTMLText += line(textGreen(QObject::tr(" - Gx : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
+                    if (spline.splineY.vecG.size() != 0)
+                        HTMLText += line(textGreen(QObject::tr(" - Gy : %1").arg(stringForLocal(spline.splineY.vecG.at(thetaIdx)))));
+                    if (spline.splineZ.vecG.size() != 0)
+                        HTMLText += line(textGreen(QObject::tr(" - Gz : %1").arg(stringForLocal(spline.splineZ.vecG.at(thetaIdx)))));
+                }
             }
+#if DEBUG
+            else {
+                HTMLText += line(textGreen("errror in model Description"));
+                qDebug()<<"[modelStateDescriptionHTML] errror";
+            }
+#endif
 
         }
         int j = 0;
@@ -645,6 +673,8 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
 
             HTMLText +=  line(textGreen(QObject::tr(" - Sigma_MH on Shrinkage param. : %1").arg(stringForLocal(model->mS02Vg.mSigmaMH))));
         }
+        HTMLText += "<br>";
+        HTMLText +=  line(textGreen(QObject::tr("Curve beta parameter : %1").arg(QLocale().toString(model->mSO2_beta, 'G', 2))));
     }
 
     return HTMLText;
@@ -742,7 +772,7 @@ QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const b
 
 
         if (withDates) {
-            text += "<br>" +EventS02ResultsHTML(e); // Pour version 4
+            text += "<br>" + EventS02ResultsHTML(e); // Pour version 4
             for (auto&& date : e->mDates)
                 text += "<br><br>" + dateResultsHTML(&(date), model);
         }

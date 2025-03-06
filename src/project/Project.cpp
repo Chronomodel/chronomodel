@@ -777,9 +777,9 @@ bool Project::load(const QString &path, bool force)
 
             /* -------------------- Load results -------------------- */
             /* Changement du fichier *.res dés la version 3.2.2; disparition de la sauvegarde de mFormat dans les MetropolisVariable */
-           /* if (projectVersionList[0].toInt() <= 3 && projectVersionList[1].toInt() <= 2 && projectVersionList[2].toInt() < 2)
+            /* if (projectVersionList[0].toInt() <= 3 && projectVersionList[1].toInt() <= 2 && projectVersionList[2].toInt() < 2)
                 return true;
-           */
+            */
 
             QString dataPath = path + ".res";
 
@@ -861,6 +861,7 @@ bool Project::load(const QString &path, bool force)
         }
     }
     file.close();
+    MainWindow::getInstance()->updateWindowTitle();
     return false;
 }
 
@@ -870,7 +871,6 @@ bool Project::save()
         return true;
 
     } else {
-
         QFileInfo info(AppSettings::mLastDir + "/" + AppSettings::mLastFile);
         return info.exists() ? saveProjectToFile() : saveAs(tr("Save current project as..."));
     }
@@ -1193,7 +1193,7 @@ bool Project::saveAs(const QString& dialogTitle)
 
         AppSettings::mLastDir = info.absolutePath();
         AppSettings::mLastFile = info.fileName();
-
+        mName = AppSettings::mLastFile;
         // We need to reset mLastSavedState because it corresponds
         // to the last saved state in the previous file.
         //mLastSavedState = QJsonObject();
@@ -1207,9 +1207,7 @@ bool Project::askToSave(const QString& saveDialogTitle)
 {
     // Check if modifs have been made
     (void) saveDialogTitle;
-    /*if( mState == mLastSavedState)
-        return true;
-    */
+
     // We have some modifications : ask to save :
     int result = QMessageBox::question(QApplication::activeWindow(),
                                        QApplication::applicationName(),
@@ -1267,7 +1265,6 @@ bool Project::saveProjectToFile()
 
             QJsonDocument jsonDoc(mState);
             QByteArray textDoc = jsonDoc.toJson(QJsonDocument::Indented);
-            //file.write(jsonDoc.toJson(QJsonDocument::Indented));
             file_chr.write(textDoc);
 
             file_chr.resize(file_chr.pos());

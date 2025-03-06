@@ -112,8 +112,11 @@ StudyPeriodSettings::~StudyPeriodSettings()
 StudyPeriodSettings StudyPeriodSettings::fromJson(const QJsonObject& json)
 {
     StudyPeriodSettings settings;
-    settings.mTmin = json.contains(STATE_SETTINGS_TMIN) ? json.value(STATE_SETTINGS_TMIN).toInt() : STATE_SETTINGS_TMIN_DEF;
-    settings.mTmax = json.contains(STATE_SETTINGS_TMAX) ? json.value(STATE_SETTINGS_TMAX).toInt() : STATE_SETTINGS_TMAX_DEF;
+    //settings.mTmin = json.contains(STATE_SETTINGS_TMIN) ? json.value(STATE_SETTINGS_TMIN).toInt() : STATE_SETTINGS_TMIN_DEF;
+    //settings.mTmax = json.contains(STATE_SETTINGS_TMAX) ? json.value(STATE_SETTINGS_TMAX).toInt() : STATE_SETTINGS_TMAX_DEF;
+    settings.mTmin = json.contains(STATE_SETTINGS_TMIN) ? json.value(STATE_SETTINGS_TMIN).toDouble() : STATE_SETTINGS_TMIN_DEF;
+    settings.mTmax = json.contains(STATE_SETTINGS_TMAX) ? json.value(STATE_SETTINGS_TMAX).toDouble() : STATE_SETTINGS_TMAX_DEF;
+
     settings.mStep = json.contains(STATE_SETTINGS_STEP) ? json.value(STATE_SETTINGS_STEP).toDouble() : STATE_SETTINGS_STEP_DEF;
     settings.mStepForced = json.contains(STATE_SETTINGS_STEP_FORCED) ? json.value(STATE_SETTINGS_STEP_FORCED).toBool() : STATE_SETTINGS_STEP_FORCED_DEF;
 
@@ -123,8 +126,10 @@ StudyPeriodSettings StudyPeriodSettings::fromJson(const QJsonObject& json)
 QJsonObject StudyPeriodSettings::toJson() const
 {
     QJsonObject settings;
-    settings[STATE_SETTINGS_TMIN] = int (floor(mTmin));
-    settings[STATE_SETTINGS_TMAX] = int (ceil(mTmax));
+    //settings[STATE_SETTINGS_TMIN] = int (floor(mTmin));
+    //settings[STATE_SETTINGS_TMAX] = int (ceil(mTmax));
+    settings[STATE_SETTINGS_TMIN] = mTmin;
+    settings[STATE_SETTINGS_TMAX] = mTmax;
     settings[STATE_SETTINGS_STEP] = mStep;
     settings[STATE_SETTINGS_STEP_FORCED] = mStepForced;
 

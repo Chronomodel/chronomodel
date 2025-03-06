@@ -1093,8 +1093,8 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mPhasesScrollArea->setVisible(false);
     mCurvesScrollArea->setVisible(false);
 
-    GraphViewResults::mHeightForVisibleAxis = 4 * AppSettings::heigthUnit();
-    mGraphHeight = GraphViewResults::mHeightForVisibleAxis;
+    GraphViewResults::mHeightForVisibleAxis = 4 * AppSettings::heigthUnit(); // Only for init, it' s modify in updateGraphsLayout()
+    mGraphHeight = GraphViewResults::mHeightForVisibleAxis; // Only for init
 
     mMarker->raise();
 
@@ -1277,7 +1277,7 @@ void ResultsView::initModel()
 
     updateOptionsWidget();
     createGraphs();
-    updateLayout();
+    updateLayout(); // done in showStats() ??
 
     showStats(mStatCheck->isChecked());
 }
@@ -1339,6 +1339,12 @@ void ResultsView::updateLayout()
     mPhasesScrollArea->setGeometry(graphScrollGeometry);
     mCurvesScrollArea->setGeometry(graphScrollGeometry);
 
+    if (mGraphListTab->currentIndex() == 2 )
+        GraphViewResults::mHeightForVisibleAxis = 20 * AppSettings::heigthUnit() / mByCurvesGraphs.size();
+    else
+        GraphViewResults::mHeightForVisibleAxis = 4 * AppSettings::heigthUnit() ;
+    mGraphHeight = GraphViewResults::mHeightForVisibleAxis;
+
     updateGraphsLayout();
     updateMarkerGeometry(mMarker->pos().x());
 }
@@ -1367,23 +1373,18 @@ void ResultsView::updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewRes
 {
     QWidget* widget = scrollArea->widget();
 
-    // Used to magnify the graph for curve
-    int graphHeight = mGraphHeight;
-    if (mGraphListTab->currentIndex() == 2 )
-        graphHeight = 0.75 * height() / graphs.size();
-
-
     // Ensure the widget is smaller than the scrollArea to prevent horizontal scrolling,
     // while allowing the graphs inside the widget to have the same size
     if (widget) {
         // Resize the widget to fit the scroll area width and the total height of all graphs.
-        widget->resize(scrollArea->width() - 2, static_cast<int>(graphs.size()) * graphHeight);
+        widget->resize(scrollArea->width() - 2, static_cast<int>(graphs.size()) * mGraphHeight);
 
         // Position each graph within the widget.
-        for (int i = 0; i < graphs.size(); ++i) {
-            GraphViewResults* g = graphs[i];
-            g->setGeometry(0, i * graphHeight, scrollArea->width(), graphHeight);
+        int i = 0;
+        for (GraphViewResults* g : graphs) {
+            g->setGeometry(0, i * mGraphHeight, scrollArea->width(), mGraphHeight);
             g->setVisible(true);
+            i++;
             // Uncomment the line below if you need to update the graph's display.
             // g->update();
         }
@@ -3777,7 +3778,10 @@ int ResultsView::zoomToSlider(const double &zoom)
 void ResultsView::updateGraphsHeight()
 {
     const double min = 2 * AppSettings::heigthUnit();
-    const double origin = GraphViewResults::mHeightForVisibleAxis;
+    double origin = GraphViewResults::mHeightForVisibleAxis;
+    //if (mGraphListTab->currentIndex() == 2 )
+     //   origin = 0.75 * height() / mByCurvesGraphs.size();
+
     const double prop = locale().toDouble(mZoomEdit->text()) / 100.;
     mGraphHeight = min + prop * (origin - min);
     updateGraphsLayout();
