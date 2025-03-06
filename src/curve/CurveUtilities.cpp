@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -141,9 +141,9 @@ Matrix2D calculMatQ(const std::vector<t_reduceTime>& rVecH)
     Matrix2D matQ = initMatrix2D(n, n);
     // On parcourt n-2 valeurs :
     for (size_t i = 1; i < n-1; ++i) {
-        matQ[i-1][i] = 1. / rVecH[i-1];
-        matQ[i][i] = -((1./rVecH[i-1]) + (1./rVecH[i]));
-        matQ[i+1][i] = 1. / rVecH[i];
+        matQ[i-1][i] = 1.0L  / rVecH[i-1];
+        matQ[i][i] = -((1.0L / rVecH[i-1]) + (1.0L /rVecH[i]));
+        matQ[i+1][i] = 1.0L  / rVecH[i];
 
 #ifdef DEBUG
         if (rVecH.at(i)<=0)
@@ -171,7 +171,7 @@ Matrix2D calculMatQ(const std::vector<t_reduceTime>& rVecH)
 std::vector<double> createDiagWInv(const QList<std::shared_ptr<Event>> &events)
 {
     std::vector<double> diagWInv (events.size());
-    std::transform(events.begin(), events.end(), diagWInv.begin(), [](std::shared_ptr<Event> ev) {return 1/ev->mW;});
+    std::transform(events.begin(), events.end(), diagWInv.begin(), [](std::shared_ptr<Event> ev) {return 1.0 / ev->mW;});
 
     return diagWInv;
 }
@@ -565,7 +565,7 @@ SplineMatrices prepareCalculSpline_WI(const std::vector<t_reduceTime> &vecH)
     matrices.matR = std::move(matR);
     matrices.matQ = std::move(matQ);
     matrices.matQT = std::move(matQT);
-    matrices.matQTW_1Q = std::move(matQTW_1Q); // Seule affectée par changement de VG
+    matrices.matQTW_1Q = std::move(matQTW_1Q);
     matrices.matQTQ = std::move(matQTQ);
 
     return matrices;
@@ -595,7 +595,7 @@ SplineMatrices prepareCalculSpline(const std::vector<std::shared_ptr<Event>> &so
     const Matrix2D &rMatQT = transpose(rMatQ, 3);
 
     MatrixDiag diagWInv (sortedEvents.size());
-    std::transform(sortedEvents.begin(), sortedEvents.end(), diagWInv.begin(), [](std::shared_ptr<Event> ev) {return 1/ev->mW;});
+    std::transform(sortedEvents.begin(), sortedEvents.end(), diagWInv.begin(), [](std::shared_ptr<Event> ev) {return 1.0 /ev->mW;});
 
     // Calcul de la matrice matQTW_1Q, de dimension (n-2) x (n-2) pour calcul Mat_B
     // matQTW_1Q possèdera 3+3-1=5 bandes
@@ -620,6 +620,40 @@ SplineMatrices prepareCalculSpline(const std::vector<std::shared_ptr<Event>> &so
     return matrices;
 }
 
+
+SplineMatrices prepareCalculSpline_Sy2(const std::vector<std::shared_ptr<Event>> &sortedEvents, const std::vector<t_reduceTime> &vecH)
+{
+    const Matrix2D &rMatR = calculMatR(vecH);
+    const Matrix2D &rMatQ = calculMatQ(vecH);
+
+    // Calcul de la transposée QT de la matrice Q, de dimension (n-2) x n
+    const Matrix2D &rMatQT = transpose(rMatQ, 3);
+
+    MatrixDiag diagWInv (sortedEvents.size());
+    std::transform(sortedEvents.begin(), sortedEvents.end(), diagWInv.begin(), [](std::shared_ptr<Event> ev) {return ev->mSy * ev->mSy ;});
+
+    // Calcul de la matrice matQTW_1Q, de dimension (n-2) x (n-2) pour calcul Mat_B
+    // matQTW_1Q possèdera 3+3-1=5 bandes
+    const Matrix2D &tmp = multiMatParDiag(rMatQT, diagWInv, 3);
+
+    //Matrix2D matQTW_1Qb = multiMatParMat(tmp, matQ, 3, 3);
+    const Matrix2D &rMatQTW_1Q = multiplyMatrixBanded_Winograd(tmp, rMatQ, 1);
+
+    // Calcul de la matrice QTQ, de dimension (n-2) x (n-2) pour calcul Mat_B
+    // Mat_QTQ possèdera 3+3-1=5 bandes
+    //Matrix2D matQTQb = multiMatParMat(matQT, matQ, 3, 3);
+    const Matrix2D &rMatQTQ = multiplyMatrixBanded_Winograd(rMatQT, rMatQ, 1);
+
+    SplineMatrices matrices;
+    matrices.diagWInv = std::move(diagWInv);
+    matrices.matR = std::move(rMatR);
+    matrices.matQ = std::move(rMatQ);
+    matrices.matQT = std::move(rMatQT);
+    matrices.matQTW_1Q = std::move(rMatQTW_1Q); // Seule affectée par changement de VG
+    matrices.matQTQ = std::move(rMatQTQ);
+
+    return matrices;
+}
 
 SplineResults do_spline(const std::function <double (std::shared_ptr<Event>)> &fun, const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline)
 {
@@ -676,13 +710,19 @@ SplineResults do_spline(const std::function <double (std::shared_ptr<Event>)> &f
 
 
 SplineResults doSplineX(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline)
-{return do_spline(get_Yx, matrices, events, vecH, decomp, lambdaSpline);}
+{
+    return do_spline(get_Yx, matrices, events, vecH, decomp, lambdaSpline);
+}
 
 SplineResults doSplineY(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambdaSpline)
-{return do_spline(get_Yy, matrices, events, vecH, decomp, lambdaSpline);}
+{
+    return do_spline(get_Yy, matrices, events, vecH, decomp, lambdaSpline);
+}
 
 SplineResults doSplineZ(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline)
-{return do_spline(get_Yz, matrices, events, vecH, decomp, lambdaSpline);}
+{
+    return do_spline(get_Yz, matrices, events, vecH, decomp, lambdaSpline);
+}
 
 /**
  Cette procedure calcule la matrice inverse de B:
@@ -691,7 +731,7 @@ SplineResults doSplineZ(const SplineMatrices &matrices, const std::vector<std::s
  Bande : nombre de diagonales non nulles
  used only with MCMCLoopCurve::calcul_spline_variance()
 */
-std::vector<double> calculMatInfluence_origin(const SplineMatrices& matrices, const int nbBandes, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambda)
+std::vector<t_matrix> calculMatInfluence_origin(const SplineMatrices& matrices, const int nbBandes, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambda)
 {
     // Q_ASSERT_X(lambda!=0, "[MCMCLoopCurve::ln_h_YWI_3_update]", "lambda=0");
     /*
@@ -702,36 +742,58 @@ std::vector<double> calculMatInfluence_origin(const SplineMatrices& matrices, co
 
     const Matrix2D &matB_1 = inverseMatSym_origin(decomp, nbBandes + 4, 1);
 
-    std::vector<double> matQB_1QT;
+    std::vector<t_matrix> matQB_1QT;
 
     /*Calcul des termes diagonaux de Q (matB_1) Qt, de i=1 à nb_noeuds
              ??? vérifier le contrôle des indices i+1: débordement de matrices */
 
 
     const auto* matQi = begin(matrices.matQ[0]); // matQ est une matrice encadrée de 0
-    t_matrix term = pow(matQi[0], 2) * matB_1[0][0]; // matQ[0][0] ici vaut toujours 0
-    term += pow(matQi[1], 2) * matB_1[1][1];
-    term += 2 * matQi[0] * matQi[1] * matB_1[0][1]; // ici vaut toujours 0
+    // long double term = pow(matQi[0], 2.0) * matB_1[0][0]; // matQ[0][0] ici vaut toujours 0
+    // term += pow(matQi[1], 2.0) * matB_1[1][1];
+    // term += 2.0 * matQi[0] * matQi[1] * matB_1[0][1]; // ici vaut toujours 0
+
+
+    t_matrix term = std::pow(matQi[0], 2.0L) * matB_1[0][0];
+    term += std::pow(matQi[1], 2.0L) * matB_1[1][1];
+    term += 2.0L * matQi[0] * matQi[1] * matB_1[0][1];
+
 
     matQB_1QT.push_back(term);
 
     for (size_t i = 1; i < n-1; ++i) {
         matQi = begin(matrices.matQ[i]);
-        t_matrix term_i = pow(matQi[i-1], 2.) * matB_1[i-1][i-1];
-        term_i += pow(matQi[i], 2.) * matB_1[i][i];
-        term_i += pow(matQi[i+1], 2.) * matB_1[i+1][i+1];
+        /*long double term_i = pow(matQi[i-1], 2.0) * matB_1[i-1][i-1];
+        term_i += pow(matQi[i], 2.0) * matB_1[i][i];
+        term_i += pow(matQi[i+1], 2.0) * matB_1[i+1][i+1];
 
-        term_i += 2 * matQi[i-1] * matQi[i] * matB_1[i-1][i];
-        term_i += 2 * matQi[i-1] * matQi[i+1] * matB_1[i-1][i+1];
-        term_i += 2 * matQi[i] * matQi[i+1] * matB_1[i][i+1];
+        term_i += 2.0 * matQi[i-1] * matQi[i] * matB_1[i-1][i];
+        term_i += 2.0 * matQi[i-1] * matQi[i+1] * matB_1[i-1][i+1];
+        term_i += 2.0 * matQi[i] * matQi[i+1] * matB_1[i][i+1];
+        */
+
+        t_matrix term_i = std::pow(matQi[i-1], 2.0L) * matB_1[i-1][i-1];
+        term_i += std::pow(matQi[i], 2.0L) * matB_1[i][i];
+        term_i += std::pow(matQi[i+1], 2.0L) * matB_1[i+1][i+1];
+
+        term_i += 2.0L * matQi[i-1] * matQi[i] * matB_1[i-1][i];
+        term_i += 2.0L * matQi[i-1] * matQi[i+1] * matB_1[i-1][i+1];
+        term_i += 2.0L * matQi[i] * matQi[i+1] * matB_1[i][i+1];
+
 
         matQB_1QT.push_back(term_i);
     }
 
     matQi = begin(matrices.matQ[n-1]);
-    term = pow(matQi[n-2], 2.) * matB_1[n-2][n-2];
-    term += pow(matQi[n-1], 2.) * matB_1[n-1][n-1]; // matQ[n-1][n-1] ici vaut toujours 0
+    /*term = pow(matQi[n-2], 2.0) * matB_1[n-2][n-2];
+    term += pow(matQi[n-1], 2.0) * matB_1[n-1][n-1]; // matQ[n-1][n-1] ici vaut toujours 0
     term += 2 * matQi[n-2] * matQi[n-1] * matB_1[n-2][n-1]; // matQ[n-1][n-1] ici vaut toujours 0
+    */
+
+    term = std::pow(matQi[n-2], 2.0L) * matB_1[n-2][n-2];
+    term += std::pow(matQi[n-1], 2.0L) * matB_1[n-1][n-1];
+    term += 2.0L * matQi[n-2] * matQi[n-1] * matB_1[n-2][n-1];
+
 
     matQB_1QT.push_back(term);
 
@@ -741,25 +803,27 @@ std::vector<double> calculMatInfluence_origin(const SplineMatrices& matrices, co
     // Addit_I_et_Mat(Mat_Ac,Nb_noeudsc);
     // remplacé par:
 
-    std::vector<double> matA;
+    std::vector<t_matrix> matA;
+    long double lambda_L = static_cast<long double>(lambda);
     for (size_t i = 0; i < n; ++i) {
-        matA.push_back(std::clamp(1. - lambda * (double)matrices.diagWInv[i] * matQB_1QT[i], 0., 1.));
+        long double mat_a = 1.0L - lambda_L * static_cast<long double>(matrices.diagWInv[i]) * matQB_1QT[i];
+        matA.push_back(std::clamp(mat_a, 0.0L, 1.0L));
 
 #if DEBUG
-        const double mA = 1. - lambda * (double)matrices.diagWInv[i] * matQB_1QT[i];
-        if (mA == 0.) {
+       // const double mA = 1.0 - lambda * (double)matrices.diagWInv[i] * matQB_1QT[i];
+        if (mat_a == 0.0) {
             qWarning ("[MCMCLoopCurve::calculMatInfluence_origin] -> Oups matA.at(i) == 0 ");
         }
 
-        if (mA < 0.) {
-            qDebug ()<<"[MCMCLoopCurve::calculMatInfluence_origin] -> Oups matA.at(i) ="<< matA[i] << " < 0  change to 0; LambdaSpline="<<lambda;
-            //matA[i] = 0;//1.E-10;
+       /* if (mat_a < 0.0) {
+            qDebug ()<<"[MCMCLoopCurve::calculMatInfluence_origin] -> Oups matA.at(i) ="<< matA[i] << " < 0  ; LambdaSpline="<<lambda;
+
         }
 
-        if (mA > 1.) {
-            qWarning ("[MCMCLoopCurve::calculMatInfluence_origin] -> Oups matA.at(i) > 1  change to 1");
-            //matA[i] = 1.;
-        }
+        if (mat_a > 1.0) {
+            qWarning ("[MCMCLoopCurve::calculMatInfluence_origin] -> Oups matA.at(i) > 1  ");
+
+        }*/
 #endif
     }
 
@@ -770,7 +834,7 @@ std::vector<double> calculMatInfluence_origin(const SplineMatrices& matrices, co
 std::vector<double> calcul_spline_variance(const SplineMatrices& matrices, const std::vector<std::shared_ptr<Event>> &events, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambdaSpline)
 {
     unsigned int n = (unsigned int)events.size();
-    std::vector<double> matA = calculMatInfluence_origin(matrices, 1, decomp, lambdaSpline);
+    std::vector<t_matrix> matA = calculMatInfluence_origin(matrices, 1, decomp, lambdaSpline);
     std::vector<double> varG;
 
     for (unsigned int i = 0; i < n; ++i) {
@@ -1260,7 +1324,7 @@ SplineMatrices prepare_calcul_spline(const std::vector<t_reduceTime> &vecH, cons
 
 std::vector<double> calcul_spline_variance(const SplineMatrices& matrices, const std::pair<Matrix2D, MatrixDiag>& decomp, const double lambda)
 {
-    const std::vector<double>& matA = calculMatInfluence_origin(matrices, 1, decomp, lambda);
+    const std::vector<t_matrix>& matA = calculMatInfluence_origin(matrices, 1, decomp, lambda);
     std::vector<double> varG;
     const auto& diagW1 = matrices.diagWInv;
     size_t n = diagW1.size();
@@ -1292,11 +1356,11 @@ std::vector<QMap<double, double>> composante_to_curve(MCMCSplineComposante splin
     int nb_pts = (tmax-tmin)/step + 1;
     unsigned i0 = 0;
     for (int i= 0; i < nb_pts ; ++i) {
-        const double t = (double)i * step + tmin ;
+        const double t = static_cast<double>(i) * step + tmin ;
         valeurs_G_VarG_GP_GS(t, spline_compo, g, varG, gp, gs, i0, tmin, tmax);
         curve[t] = g;
-        curve_plus[t] = g + 1.96*sqrt(varG);
-        curve_moins[t] = g - 1.96*sqrt(varG);
+        curve_plus[t] = g + 1.96 * sqrt(varG);
+        curve_moins[t] = g - 1.96 * sqrt(varG);
     }
     return std::vector<QMap<double, double>>({curve, curve_plus, curve_moins});
 }
@@ -1304,7 +1368,7 @@ std::vector<QMap<double, double>> composante_to_curve(MCMCSplineComposante splin
 
 /**
  * @brief MCMCLoopCurve::doSpline
- * fabrication de spline avec
+ * Fabrication de spline avec
  *      spline.vecG
  *      spline.vecGamma
  *
@@ -1329,27 +1393,28 @@ SplineResults do_spline(const std::vector<double> &vec_Y, const SplineMatrices &
         const size_t n = vec_Y.size();
 
         std::vector<double> vecG;
-        std::vector<double> vecQtY;
+        std::vector<t_matrix> vecQtY;
 
         // VecQtY doit être de taille n, donc il faut mettre un zéro au début et à la fin
         vecQtY.push_back(0.);
         for (size_t i = 1; i < n-1; ++i) {
-            const double term1 = (vec_Y[i+1] - vec_Y[i]) / vecH[i];
-            const double term2 = (vec_Y[i] - vec_Y[i-1]) / vecH[i-1];
+            const t_matrix term1 = (vec_Y[i+1] - vec_Y[i]) / vecH[i];
+            const t_matrix term2 = (vec_Y[i] - vec_Y[i-1]) / vecH[i-1];
             vecQtY.push_back(term1 - term2);
         }
         vecQtY.push_back(0.);
 
         // Calcul du vecteur Gamma
-        const auto vecGamma2 = resolutionSystemeLineaireCholesky_long(decomp, vecQtY);
-        const decltype(SplineResults::vecGamma) &vecGamma = resolutionSystemeLineaireCholesky(decomp, vecQtY);
+        const std::vector<t_matrix> vecGamma_L = resolutionSystemeLineaireCholesky(decomp, vecQtY);
+        //const decltype(SplineResults::vecGamma) &vecGamma = resolutionSystemeLineaireCholesky(decomp, vecQtY);
         // Calcul du vecteur g = Y - lambda * W-1 * Q * gamma
         if (lambdaSpline != 0) {
-            const std::vector<double> &vecTmp2 = multiMatParVec(matrices.matQ, vecGamma, 3);
+            const std::vector<t_matrix> &Q_gamma = multiMatParVec(matrices.matQ, vecGamma_L, 3);
             const MatrixDiag &diagWInv = matrices.diagWInv;
-
+            const t_matrix lambda = lambdaSpline;
             for (unsigned i = 0; i < n; ++i) {
-                const double g = vec_Y[i] - lambdaSpline * diagWInv[i] * vecTmp2[i];
+                t_matrix ldt = lambda * static_cast<t_matrix>(diagWInv[i]) * Q_gamma[i];
+                const double g = vec_Y[i] - ldt;
 
                 if (std::isnan(g)) {
                    // qDebug()<< " isnan(g)";
@@ -1366,6 +1431,13 @@ SplineResults do_spline(const std::vector<double> &vec_Y, const SplineMatrices &
 
 
         spline.vecG = std::move(vecG);
+        // Préparez un vecteur de double ayant la même taille
+        std::vector<double> vecGamma(vecGamma_L.size());
+
+        // Transformation avec std::transform :
+        std::transform(vecGamma_L.begin(), vecGamma_L.end(), vecGamma.begin(),
+                       [](long double value) { return static_cast<double>(value); });
+
         spline.vecGamma = std::move(vecGamma);
 
     } catch(...) {
@@ -1488,7 +1560,7 @@ std::pair<MCMCSpline, std::pair<double, double>> do_spline_composante(const std:
         }
 
     } else {
-        W_1 = std::vector<double>(vec_tmp_x_err.size(), 1.);
+        W_1 = std::vector<double>(vec_tmp_x_err.size(), 1.0);
     }
 
     SplineMatrices spline_matrices = prepare_calcul_spline(vecH, W_1);
@@ -1509,7 +1581,7 @@ std::pair<MCMCSpline, std::pair<double, double>> do_spline_composante(const std:
 
     const SplineResults &sx = do_spline(vec_tmp_x, spline_matrices,  vecH, decomp, lambda_cv);
 
-    const std::vector<double> &matA = calculMatInfluence_origin(spline_matrices, 1, decomp, lambda_cv);
+    const std::vector<t_matrix> &matA = calculMatInfluence_origin(spline_matrices, 1, decomp, lambda_cv);
     std::vector<double> varG;
     // Affectation de Vg pour l'affichage de l'erreur global
     for (auto ai : matA)
@@ -1592,53 +1664,126 @@ double cross_validation (const std::vector< double> &vec_Y, const SplineMatrices
 
     const SplineResults &s = do_spline(vec_Y, matrices,  vecH, decomp, lambda);
 
-    const std::vector<double> &matA = calculMatInfluence_origin(matrices, 1, decomp, lambda);
+    const std::vector<t_matrix> &matA = calculMatInfluence_origin(matrices, 1, decomp, lambda);
 
     double CV = 0.;
     for (int i = 0 ; i < N; i++) {
-        CV +=  pow((s.vecG.at(i) - vec_Y[i]) / (1-matA.at(i)), 2.)/ matrices.diagWInv.at(i);
+        CV +=  pow((s.vecG.at(i) - vec_Y[i]) / (1.0 - matA.at(i)), 2.)/ matrices.diagWInv.at(i);
     }
 
     return CV/N;
 }
 
+// Algorithme de Kahan pour somme compensée (améliore la précision)
+static long double compensated_sum(const std::vector<double>& values) {
+    long double sum = 0.0L;
+    long double c = 0.0L;  // Terme de compensation
+
+    for (const double& val : values) {
+        long double y = static_cast<long double>(val) - c;
+        long double t = sum + y;
+        c = (t - sum) - y;
+        sum = t;
+    }
+
+    return sum;
+}
+static long double compensated_sum(const std::vector<long double>& values) {
+    long double sum = 0.0L;
+    long double c = 0.0L;  // Terme de compensation
+
+    for (const long double& val : values) {
+        long double y = val - c;
+        long double t = sum + y;
+        c = (t - sum) - y;
+        sum = t;
+    }
+
+    return sum;
+}
 /**
- * @brief general_cross_validation i.e. the prediction of (g_(ti)-Yij) without the point Yij. With weight in matrices
- * @param vec_Y
- * @param matrices
- * @param vecH
- * @param lambda
- * @return
+ * @brief Calculates the Generalized Cross-Validation (GCV) score for a spline model.
+ * i.e. the prediction of $(g_(ti)-Yij)$ without the point Yij. With weight in matrices
+ *
+ * This function computes the GCV score, which is used to select the optimal
+ * smoothing parameter (lambda) in spline regression. The GCV score is calculated
+ * using the observed data (vec_Y), the estimated values (s.vecG), and the influence
+ * of each data point (matA).
+ *
+ * The formula for GCV is:
+ * \f[
+ * GCV = \frac{\sum_{i=1}^{N} \frac{(Y_i - \hat{G}_i)^2}{W_{ii}}}{(N(1 - \frac{\text{trace}(A)}{N}))^2}
+ * \f]
+ * where:
+ * - \( Y_i \) is the observed value
+ * - \( \hat{G}_i \) is the predicted value
+ * - \( W_{ii} \) is the diagonal element of the weight matrix (inverse of the precision)
+ * - \( N \) is the number of observations
+ * - \( A \) is the influence matrix
+ * - \( \text{trace}(A) \) is the sum of the diagonal elements of matrix \( A \)
+ * - \( DLEc = 1 - \frac{\text{trace}(A)}{N} \) is the degrees of freedom correction
+ *
+ * @param vec_Y Vector of observed values (dependent variable)
+ * @param matrices Struct containing matrices used in spline calculations
+ * @param vecH Vector related difference of time
+ * @param lambda Smoothing parameter
+ * @return double The computed GCV score
  */
-double general_cross_validation (const std::vector<double> &vec_Y, const SplineMatrices &matrices, const std::vector<double> &vecH, const double lambda)
+double general_cross_validation (const std::vector<double>& vec_Y, const SplineMatrices& matrices, const std::vector<double>& vecH, const double lambda)
 {
     const double N = matrices.diagWInv.size();
 
-    const Matrix2D &matB = addMatEtMat(matrices.matR, multiConstParMat(matrices.matQTW_1Q, lambda, 5), 5);
+    // Create matB = R + lambda * Qt * W-1 * Q
+    const Matrix2D& matB = addMatEtMat(matrices.matR, multiConstParMat(matrices.matQTW_1Q, lambda, 5), 5);
 
-    // Decomposition_Cholesky de matB en matL et matD
-    // Si alpha global: calcul de Mat_B = R + lambda * Qt * W-1 * Q  et décomposition de Cholesky en Mat_L et Mat_D
-    //std::pair<Matrix2D, std::vector<double>> decomp = decompositionCholesky(matB, 5, 1);
-    //SplineResults s = calculSplineX (matrices, vecH, decomp, matB, lambdaSpline);
+    // Perform Cholesky decomposition of matB
+    const auto& decomp = decompositionCholesky(matB, 5, 1);
 
-    //auto matA = calculMatInfluence_origin(matrices, s , 1, lambdaSpline);
-    const auto &decomp = decompositionCholesky(matB, 5, 1);
+    // Compute spline results
+    const SplineResults& s = do_spline(vec_Y, matrices,  vecH, decomp, lambda);
 
-    const SplineResults &s = do_spline(vec_Y, matrices,  vecH, decomp, lambda);
-    const std::vector<double> &matA = calculMatInfluence_origin(matrices, 1, decomp, lambda);
+    // Calculate the influence matrix matA
+    const std::vector<t_matrix>& matA = calculMatInfluence_origin(matrices, 1, decomp, lambda);
 
-    // Nombre de degré de liberté
-    auto DLEc = 1 - std::accumulate(matA.begin(), matA.end(), 0.) /N;
+    // Compute degrees of freedom
+  /*  const double trace = std::accumulate(matA.begin(), matA.end(), 0.0L) / N;
 
-    double GCV = 0.;
-    for (int i = 0 ; i < N; i++) {
-        // utiliser mYx pour splineX
-        GCV +=  pow(s.vecG.at(i) - vec_Y[i], 2.)/ matrices.diagWInv.at(i);
+    const double DLEc = 1.0 - trace;
+
+    // Compute Generalized Cross-Validation (GCV)
+    double GCV = 0.0;
+    const size_t size = vec_Y.size();
+    for (size_t i = 0; i < size; ++i) {
+        GCV +=  pow(s.vecG[i] - vec_Y[i], 2.0)/ matrices.diagWInv[i];
     }
-    GCV /= N;
-    GCV /= pow(DLEc, 2.);
 
-    return GCV;
+
+
+    GCV /= N;
+   // GCV /= N/sum_wi; // ici ?? C'est une constante dans la recherche
+    GCV /= pow(DLEc, 2.0);
+*/
+    // return GCV;
+
+    //
+    long double long_GCV = 0.0L;
+    const long double long_trace = compensated_sum(matA) / static_cast<long double>(N);
+    const long double long_DLEc = 1.0L - long_trace;
+
+
+    for (size_t i = 0; i < vec_Y.size(); ++i) {
+        long double residual = static_cast<long double>(s.vecG[i] - vec_Y[i]);
+        long double weight_inv = static_cast<long double>(matrices.diagWInv[i]);
+
+        long_GCV += residual * residual / weight_inv;
+    }
+
+    long_GCV /= static_cast<long double>(N);
+    // GCV /= N/sum_wi; // ici ?? C'est une constante dans la recherche
+    long_GCV /= long_DLEc * long_DLEc;
+    //
+
+    return static_cast<double>(long_GCV);
 }
 
 
@@ -1658,15 +1803,15 @@ double RSS(const std::vector<double> &vec_Y, const SplineMatrices &matrices, con
     // Si alpha global: calcul de Mat_B = R + alpha * Qt * W-1 * Q  et décomposition de Cholesky en Mat_L et Mat_D
     const std::pair<Matrix2D, MatrixDiag> &decomp = decompositionCholesky(matB, 5, 1);
 
-    const SplineResults &sy = do_spline(vec_Y, matrices,  vecH, decomp, lambda);
+    const SplineResults& sy = do_spline(vec_Y, matrices,  vecH, decomp, lambda);
 
-    const std::vector< double> &vecG = sy.vecG;
+    const std::vector< double>& vecG = sy.vecG;
 
-    double res = 0.;
+    double res = 0.0;
 
     auto g = vecG.begin();
     for (auto& Y : vec_Y) {
-        res += pow(Y - *g++, 2.);
+        res += pow(Y - *g++, 2.0);
     }
 
     return std::move(res);
@@ -1854,7 +1999,6 @@ std::pair<double, double> initLambdaSplineByCV(const bool depth, const std::vect
 std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const std::vector<double> &vec_X, const std::vector<double> &vec_X_err, const std::vector<double> &vecH, const std::vector<double> &vec_Y, const std::vector<double> &vec_Y_err, const std::vector<double> &vec_Z, const std::vector<double> &vec_Z_err)
 {
     std::vector<double> GCV, CV, lambda_GCV, lambda_CV;
-
     const bool doY = !vec_Y.empty() && vec_Z.empty();
     const bool doYZ = !vec_Y.empty() && !vec_Z.empty();
 
@@ -1875,48 +2019,52 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const 
 
     if (doY) {
         auto Y_err = vec_Y_err.begin();
-        for (auto& X_err : vec_X_err) {
-            const double Sy = pow(X_err, -2.) + pow(*Y_err++, -2.) ;
-            W_1.push_back(2./Sy);
+        for (auto &X_err : vec_X_err) {
+            const double Sy = pow(X_err, -2.0) + pow(*Y_err++, -2.0);
+            W_1.push_back(2.0 / Sy);
         }
-    } else if (doYZ) {
+    }
+    else if (doYZ) {
         auto Y_err = vec_Y_err.begin();
         auto Z_err = vec_Z_err.begin();
-        for (auto& X_err : vec_X_err) {
-            const double Sy = pow(X_err, -2.) + pow(*Y_err++, -2.) + pow(*Z_err++, -2.) ;
-            W_1.push_back(3./Sy);
+        for (auto &X_err : vec_X_err) {
+            const double Sy =
+                pow(X_err, -2.) + pow(*Y_err++, -2.0) + pow(*Z_err++, -2.0);
+            W_1.push_back(3.0 / Sy);
         }
-    } else {
-        for (auto& X_err : vec_X_err) {
-            W_1.push_back(pow(X_err, 2.));
+    }
+    else {
+        for (auto &X_err : vec_X_err) {
+            W_1.push_back(pow(X_err, 2.0));
         }
     }
 
-
     const SplineMatrices &test_matrices = prepare_calcul_spline(vecH, W_1);
 
+    for (int lambda_loop_exp = -1000; lambda_loop_exp < 1001; ++lambda_loop_exp ) {
 
-    for (int lambda_loop_exp = -100; lambda_loop_exp < 101; ++lambda_loop_exp ) {
-        const double lambda_loop = pow(10., (double)lambda_loop_exp/10.);
-
+        const double lambda_loop = pow(10.0, (double)lambda_loop_exp/100.0);
         double cv = cross_validation(vec_X, test_matrices, vecH, lambda_loop);
+
         if (doY) {
             cv += cross_validation(vec_Y, test_matrices, vecH, lambda_loop);
-            cv /= 2.;
+            cv /= 2.0;
         }  else if (doYZ) {
             cv += cross_validation(vec_Y, test_matrices, vecH, lambda_loop);
             cv += cross_validation(vec_Z, test_matrices, vecH, lambda_loop);
-            cv /= 3.;
+            cv /= 3.0;
         }
 
         double gcv = general_cross_validation(vec_X, test_matrices, vecH, lambda_loop);
+
+
         if (doY) {
             gcv += general_cross_validation(vec_Y, test_matrices, vecH, lambda_loop);
-            gcv /= 2.;
+            gcv /= 2.0;
         }  else if (doYZ) {
             gcv += general_cross_validation(vec_Y, test_matrices, vecH, lambda_loop);
             gcv += general_cross_validation(vec_Z, test_matrices, vecH, lambda_loop);
-            gcv /= 3.;
+            gcv /= 3.0;
         }
         //const double rss = RSS(vec_X, test_matrices, vecH, lambda_loop);
 
@@ -1942,7 +2090,7 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const 
 
             if ( cv <= mini_cv + 1E-16) {
                 mini_cv = cv;
-                //mini_cv_idx = CV.size();
+
             }
             CV.push_back(cv);
             lambda_CV.push_back(lambda_loop);
@@ -1964,74 +2112,122 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const 
         }*/
     }
 
-    // Recherche du dernier minimum, on parcours les tablea à l'envers de lambda grand vers lambda petit
 
-    int last_min_gcv_idx = (int)GCV.size()-1;
-    qDebug()<<" ici"<<(GCV.at(last_min_gcv_idx - 1) - GCV.at(last_min_gcv_idx) <= 1E-10) << GCV.at(last_min_gcv_idx - 1) - GCV.at(last_min_gcv_idx);
-    while (last_min_gcv_idx> 0 &&   GCV.at(last_min_gcv_idx - 1) - GCV.at(last_min_gcv_idx) <= 1E-10) {
-        last_min_gcv_idx -= 1;
+    // gaussian_filter
+    GCV = gaussian_filter(GCV, 10.0);
+    CV = gaussian_filter(CV, 10.0);
+
+    int i = 0;
+    for (auto& v : sv.tab_GCV) {
+        v.second = GCV[i++];
     }
-    //double last_min_gcv_lambda = lambda_GCV.at(last_min_gcv_idx);
 
-    int last_min_cv_idx = (int)CV.size()-1;
-    while (last_min_cv_idx> 0 && CV.at(last_min_cv_idx - 1) - CV.at(last_min_cv_idx) <= 1E-10 ) {
-        last_min_cv_idx -= 1;
+    for (auto& v : sv.tab_CV) {
+        v.second = CV[i++];
     }
-    //double last_min_cv_lambda = lambda_CV.at(last_min_cv_idx);
 
-    mini_gcv_idx = last_min_gcv_idx;
-    mini_cv_idx = last_min_cv_idx;
+    // Recherche de l'indice de la plus petite valeur
+    auto min_gcv_ptr = std::min_element(GCV.begin(), GCV.end());
+    auto min_cv_ptr = std::min_element(CV.begin(), CV.end());
+
+    mini_gcv = *min_gcv_ptr;
+    mini_cv = *min_cv_ptr;
+
+    //auto min_gcv_ptr = std::find(GCV.begin(), GCV.end(), mini_gcv);
+    //auto min_cv_ptr = std::find(CV.begin(), CV.end(), mini_cv);
+    qDebug()<<"[initLambdaSplineBySilverman] min_gcv_idx"<< *min_gcv_ptr << *min_cv_ptr;
+
+    auto lambda_min_gcv_idx = std::distance(GCV.begin(), min_gcv_ptr);
+    auto lambda_min_cv_idx = std::distance(CV.begin(), min_cv_ptr);
+    qDebug()<<"[initLambdaSplineBySilverman] min_gcv_idx"<< lambda_GCV[lambda_min_gcv_idx] << lambda_CV[lambda_min_cv_idx];
 
     // If the mini is at one of the bounds, there is no solution in the interval for GCV
     // See if there is a solution in CV
-#ifdef DEBUG
-   /* QStringList list_GCV;
-    for (auto gcv : GCV) {
-        list_GCV.append(QString::number(gcv));
-    }
-    //qDebug()<<"GCV "<<list_GCV.join(", ");
-
-    QStringList list_CV;
-    for (auto cv : CV) {
-        list_CV.append(QString::number(cv));
-    }
-    //qDebug()<<"CV "<<list_CV.join(", ");
-
-   */
-#endif
-
-    int idx_vect;
     double lambda_mini;
-    if (mini_gcv_idx == 0 || mini_gcv_idx == (GCV.size()-1)) {
+
+    if (lambda_min_gcv_idx > 0 && lambda_min_gcv_idx < GCV.size()-1) { // solution évidente avec GCV
+        lambda_mini = lambda_GCV[lambda_min_gcv_idx];
+        sv.comment = "- GCV solution";
+
+    } else  if (lambda_min_cv_idx > 0 && lambda_min_cv_idx < CV.size()-1) { // solution évidente avec CV
+        lambda_mini = lambda_CV[lambda_min_cv_idx];
+        sv.comment = "- CV solution";
+
+    } else {
+
         qDebug()<<"[CurveUtilities::initLambdaSplineBySilverman] 2d chance\t Pas de solution avec GCV, mini_gcv_idx sur une borne "<<mini_gcv_idx;
 
-        if (mini_cv_idx == 0 || mini_cv_idx == (CV.size()-1)) {
-            if (first_mini_gcv_idx < mini_gcv_idx) {
-                idx_vect = first_mini_gcv_idx;
-                lambda_mini = lambda_GCV.at(idx_vect);
-                qDebug()<<"[CurveUtilities::initLambdaSplineBySilverman] No solution with CV, mini_cv_idx ="<<mini_cv_idx<< ", On prend un minimum local first_mini_gcv_idx = 10E"<<log10(lambda_GCV.at(idx_vect));
+        qDebug()<<"[CurveUtilities::initLambdaSplineBySilverman] Recherche de la valeur de lambda à mi-hauteur";
+        // doit toujours trouver une solution
+        const double mid_GCV = (GCV.front() + GCV.back())/ 2.0;
+        for (size_t i = 1; i < GCV.size(); i++) {
+            if (GCV[i-1] > mid_GCV && mid_GCV > GCV[i]) {
+                mini_gcv_idx = i;
+                sv.comment = "- No GCV solution; approx ";
+                break;
+            } else if (GCV[i-1] < mid_GCV && mid_GCV < GCV[i]) {
+                mini_gcv_idx = i;
+                sv.comment = "- No GCV solution; approx ";
+                break;
+            }
+        }
+
+
+        // Recherche du dernier minimum, on parcours les tableaux à l'envers, de lambda grand vers lambda petit
+
+       /* int last_min_gcv_idx = (int)GCV.size()-1;
+        qDebug()<<"[initLambdaSplineBySilverman] Recherche lambda décroissant"<<(GCV.at(last_min_gcv_idx - 1) - GCV.at(last_min_gcv_idx) <= 1E-10) << GCV.at(last_min_gcv_idx - 1) - GCV.at(last_min_gcv_idx);
+
+        while (last_min_gcv_idx> 0 &&   GCV.at(last_min_gcv_idx - 1) - GCV.at(last_min_gcv_idx) <= 1E-10) {
+            last_min_gcv_idx -= 1;
+        }
+
+        int last_min_cv_idx = (int)CV.size()-1;
+        while (last_min_cv_idx> 0 && CV.at(last_min_cv_idx - 1) - CV.at(last_min_cv_idx) <= 1E-10 ) {
+            last_min_cv_idx -= 1;
+        }
+
+        mini_gcv_idx = last_min_gcv_idx;
+        mini_cv_idx = last_min_cv_idx;
+*/
+
+        int idx_vect;
+
+        if (mini_gcv_idx == 0 || mini_gcv_idx == (GCV.size()-1)) {
+            qDebug()<<"[CurveUtilities::initLambdaSplineBySilverman] 3d chance\t Pas de solution avec GCV, mini_gcv_idx sur une borne " << mini_gcv_idx;
+
+
+            if (mini_cv_idx == 0 || mini_cv_idx == (CV.size()-1)) {
+                if (first_mini_gcv_idx < mini_gcv_idx) {
+                    idx_vect = first_mini_gcv_idx;
+                    lambda_mini = lambda_GCV.at(idx_vect);
+                    sv.comment = "- No solution";
+                    qDebug()<<"[CurveUtilities::initLambdaSplineBySilverman] No solution with CV, mini_cv_idx =" << mini_cv_idx << ", On prend un minimum local first_mini_gcv_idx = 10E"<<log10(lambda_GCV.at(idx_vect));
+                } else {
+                    // idx_vect = 0;
+                    lambda_mini = lambda_GCV.front();
+                    sv.comment = "- No solution";
+                    qDebug()<<"[CurveUtilities::initLambdaSplineBySilverman] No solution with first_mini_gcv_idx =" << first_mini_gcv_idx<< " On prend lambda_GCV[0] = 10E"<<log10(lambda_GCV.at(0));
+                }
+
+
             } else {
-               // idx_vect = 0;
-                lambda_mini = lambda_GCV.at(0);
-                qDebug()<<"[CurveUtilities::initLambdaSplineBySilverman] No solution with first_mini_gcv_idx ="<<first_mini_gcv_idx<< " On prend lambda_GCV[0] = 10E"<<log10(lambda_GCV.at(0));
+                qDebug()<<"[CurveUtilities::initLambdaSplineBySilverman] With CV lambda_CV.at(" << mini_cv_idx << ")= 10E" <<log10(lambda_CV.at(mini_cv_idx));
+                lambda_mini = lambda_CV.at(mini_cv_idx);
+
             }
 
+        }
+         else {
+            qDebug()<<"[CurveUtilities::initLambdaSplineBySilverman] Direct Solution With GCV, lambda_GCV.at("<<mini_gcv_idx<<") = 10E"<<log10(lambda_GCV.at(mini_gcv_idx)) << " min GCV =" <<GCV.at(mini_gcv_idx) <<  "; Pour info min CV =" <<CV.at(mini_cv_idx) << lambda_CV.at(mini_cv_idx) <<" = 10E"<<log10(lambda_CV.at(mini_cv_idx));
+            lambda_mini = lambda_GCV.at(mini_gcv_idx);
+            //sv.comment = "- Direct GCV solution";
 
-        } else {
-            qDebug()<<"[CurveUtilities::initLambdaSplineBySilverman] With CV lambda_CV.at("<<mini_cv_idx<<")= 10E"<<log10(lambda_CV.at(mini_cv_idx));
-            lambda_mini = lambda_CV.at(mini_cv_idx);
-           // idx_vect = mini_cv_idx;
 
         }
 
-    } else {
-        qDebug()<<"[CurveUtilities::initLambdaSplineBySilverman] Direct Solution With GCV, lambda_GCV.at("<<mini_gcv_idx<<") = 10E"<<log10(lambda_GCV.at(mini_gcv_idx)) << " min GCV =" <<GCV.at(mini_gcv_idx) <<  "; Pour info min CV =" <<CV.at(mini_cv_idx) << lambda_CV.at(mini_cv_idx) <<" = 10E"<<log10(lambda_CV.at(mini_cv_idx));
-        lambda_mini = lambda_GCV.at(mini_gcv_idx);
-        //idx_vect = mini_gcv_idx;
 
     }
-
-
     // test positif
 
     if (sv.force_positive_curve) {
@@ -2043,7 +2239,7 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const 
         // Recomposition de vec_theta_red
         // Attention nous avons perdu la position du premier temps, il est considèré égale à Zéro pour le test
         std::vector<double> vec_theta_red;
-        double som = 0;
+        double som = 0.0;
         vec_theta_red.push_back(som);
         for (auto& h : vecH) {
             som += h;
@@ -2051,7 +2247,7 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const 
         }
 
         do {
-            lambda_depth =  lambda_mini * pow(10, (double)idx_depth/10.);
+            lambda_depth =  lambda_mini * pow(10, (double)idx_depth/10.0);
 
 
             const SplineMatrices &spline_matrices = prepare_calcul_spline(vecH, W_1);
@@ -2109,6 +2305,9 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const 
     } else {
 
         double Vg = var_residual(vec_X, test_matrices, vecH, lambda_mini);
+        //double Vg = var_residual(vec_X, test_matrices0, vecH, std::max(lambda_mini/(norm_coef*norm_coef), 1E-10));
+        //double Vg = var_residual(vecX_tmp, test_matrices, vecH, lambda_mini);
+          //          Vg = Vg * norm_coef* norm_coef;//test
 
         if (doY) {
             Vg += var_residual(vec_Y, test_matrices, vecH, lambda_mini);
@@ -2118,6 +2317,7 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const 
             Vg += var_residual(vec_Y, test_matrices, vecH, lambda_mini) + var_residual(vec_Z, test_matrices, vecH, lambda_mini);
             Vg /= 3.;
         }
+        //return std::make_pair(std::max(lambda_mini/(norm_coef*norm_coef), 1E-10), Vg); //test
         return std::make_pair(lambda_mini, Vg);
     }
 
@@ -2362,11 +2562,11 @@ double var_residual(const std::vector<double> &vec_Y, const SplineMatrices &matr
 
     // Decomposition_Cholesky de matB en matL et matD
     // Si alpha global: calcul de Mat_B = R + alpha * Qt * W-1 * Q  et décomposition de Cholesky en Mat_L et Mat_D
-    const std::pair<Matrix2D, MatrixDiag> &decomp = decompositionCholesky(matB, 5, 1);
+    const std::pair<Matrix2D, MatrixDiag>& decomp = decompositionCholesky(matB, 5, 1);
 
-    const SplineResults &sy = do_spline(vec_Y, matrices,  vecH, decomp, lambda);
+    const SplineResults& sy = do_spline(vec_Y, matrices,  vecH, decomp, lambda);
 
-    const std::vector< double> &vecG = sy.vecG;
+    const std::vector<double>& vecG = sy.vecG;
 
     double res = 0.;
 
@@ -2379,7 +2579,7 @@ double var_residual(const std::vector<double> &vec_Y, const SplineMatrices &matr
     }
     Wmean /= (double)matrices.diagWInv.size() ;
 
-    const std::vector< double> &matA = calculMatInfluence_origin(matrices, 1, decomp, lambda);
+    const std::vector< t_matrix> &matA = calculMatInfluence_origin(matrices, 1, decomp, lambda);
     const double traceA = std::accumulate(matA.begin(), matA.end(), 0.);
 
     if (res>0)
@@ -2403,10 +2603,10 @@ std::vector<double> general_residual(const std::vector<double> &vec_Y,  const Sp
     const auto &decomp = decompositionCholesky(matB, 5, 1);
 
     const SplineResults &s = do_spline(vec_Y, matrices,  vecH, decomp, lambda);
-    const std::vector<double> &matA = calculMatInfluence_origin(matrices, 1, decomp, lambda);
+    const std::vector<t_matrix> &matA = calculMatInfluence_origin(matrices, 1, decomp, lambda);
 
     // Nombre de degré de liberté
-    const auto DLEc = 1 - std::accumulate(matA.begin(), matA.end(), 0.) /N;
+    const auto DLEc = 1 - std::accumulate(matA.begin(), matA.end(), 0.0) / static_cast<t_matrix>(N);
     // 1 - calcul de sigma2 star
     /*double sum_w = 0.;
     for (auto& w_1 : matrices.diagWInv) {
@@ -2422,7 +2622,7 @@ std::vector<double> general_residual(const std::vector<double> &vec_Y,  const Sp
 
     // 2- calcul des ri star
 
-    double sigma = 1;//sqrt(var);
+    double sigma = 1.0;//sqrt(var);
     std::vector<double> g_res;
     for (int i = 0 ; i < N; i++) {
         g_res.push_back(  ( vec_Y[i] - s.vecG.at(i))/ (sigma*sqrt(matrices.diagWInv.at(i))*sqrt(DLEc)) );

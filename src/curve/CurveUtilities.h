@@ -55,6 +55,7 @@ struct SilvermanParam
 
     std::map<double, double> tab_CV;
     std::map<double, double> tab_GCV;
+    std::string comment;
 };
 
 typedef struct SplineMatrices
@@ -244,6 +245,7 @@ MCMCSpline currentSpline (std::vector<std::shared_ptr<Event> > &events, const st
 MCMCSpline currentSpline_WI (std::vector<std::shared_ptr<Event> > &events, bool doY, bool doZ, bool use_error);
 
 SplineMatrices prepareCalculSpline(const std::vector<std::shared_ptr<Event> > &sortedEvents, const std::vector<t_reduceTime> &vecH);
+SplineMatrices prepareCalculSpline_Sy2(const std::vector<std::shared_ptr<Event>> &sortedEvents, const std::vector<t_reduceTime> &vecH);
 //SplineMatrices prepareCalculSpline_WI(const QList<Event *> & sortedEvents, const std::vector<t_reduceTime> &vecH);
 
 
@@ -254,7 +256,7 @@ SplineResults doSplineX(const SplineMatrices &matrices, const std::vector<std::s
 SplineResults doSplineY(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambdaSpline);
 SplineResults doSplineZ(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline);
 
-std::vector<double> calculMatInfluence_origin(const SplineMatrices &matrices, const int nbBandes, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambda);
+std::vector<t_matrix> calculMatInfluence_origin(const SplineMatrices &matrices, const int nbBandes, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambda);
 std::vector<double> doSplineError_origin(const SplineMatrices &matrices, const SplineResults &splines, const double lambdaSpline);
 
 std::vector<double> calcul_spline_variance(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambdaSpline);

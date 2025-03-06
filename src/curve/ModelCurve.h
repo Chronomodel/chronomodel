@@ -65,8 +65,8 @@ public:
     bool compute_Y, compute_Z, compute_X_only;
     bool is_curve;
 
-    ModelCurve();//QObject* parent = nullptr);
-    explicit ModelCurve(const QJsonObject &json);//, QObject* parent = nullptr);
+    ModelCurve();
+    explicit ModelCurve(const QJsonObject &json);
     virtual ~ModelCurve();
 
     void setProject();

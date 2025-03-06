@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
     Philippe LANOS
@@ -59,11 +59,15 @@ public:
     double min_value;
     double max_value;
 
-    CurveMap();
-    explicit CurveMap(unsigned row, unsigned col):_row(row), _column(col), data(_row*_column), min_value(0), max_value(0) {}
+    CurveMap() : _row(0), _column(0), data(), min_value(0), max_value(0) {
+        data = std::valarray<double> ();
+        rangeX = std::make_pair(0, 0);
+        rangeY = std::make_pair(0, 0);
+    }
+    explicit CurveMap(unsigned row, unsigned col):_row(row), _column(col), data(row * col), min_value(0), max_value(0) {}
 
-    void setRangeX(double minX, double maxX) {rangeX = std::pair<double, double>(minX, maxX);}
-    void setRangeY(double minY, double maxY) {rangeY = std::pair<double, double>(minY, maxY);}
+    void setRangeX(double minX, double maxX) {rangeX = std::make_pair(minX, maxX);}
+    void setRangeY(double minY, double maxY) {rangeY = std::make_pair(minY, maxY);}
 
     double& at(unsigned c, unsigned r) { // beCarefull invertion of row and column between definiton of CurveMap() and at()
         try {
@@ -98,13 +102,13 @@ typedef std::vector<t_matrix> MatrixDiag;
 
 Matrix2D initMatrix2D(size_t rows, size_t cols);
 
-QDataStream &operator<<( QDataStream &stream, const CurveMap &map );
-QDataStream &operator>>( QDataStream &stream, CurveMap &map );
+QDataStream &operator<<( QDataStream& stream, const CurveMap& map );
+QDataStream &operator>>( QDataStream& stream, CurveMap& map );
 
 #pragma mark Usefull to debug
-void showMatrix(const Matrix2D &m, const std::string &str="");
-void showMatrix(const MatrixDiag &m, const std::string &str="");
+void showMatrix(const Matrix2D& m, const std::string& str="");
+void showMatrix(const MatrixDiag& m, const std::string& str="");
 
-void showVector(const std::vector<t_matrix> &m, const std::string &str="");
+void showVector(const std::vector<t_matrix>& m, const std::string& str="");
 
 #endif // MATRIX_H

@@ -874,9 +874,8 @@ bool save_map_as_csv(const std::map<double, double> &map, const std::pair<QStrin
     QString filename;
 
     if (!prefix.isEmpty()) {
-
         const QString fiName = MainWindow::getInstance()->getNameProject();
-        const QString defaultFilename = currentPath + "/"+ fiName.mid(0, fiName.size()-4) + "_" + prefix;
+        const QString defaultFilename = currentPath + "/" + fiName.mid(0, fiName.size()-4) + "_" + prefix;
 
         filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                               title,

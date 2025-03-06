@@ -2106,6 +2106,24 @@ std::vector<double> multiMatParVec(const Matrix2D &matrix, const std::vector<dou
     return result;
 }
 
+std::vector<t_matrix> multiMatParVec(const Matrix2D& matrix, const std::vector<t_matrix> &vec, const size_t nbBandes)
+{
+    const int dim = static_cast<int>(vec.size());
+    std::vector<t_matrix> result;
+    const int  k = floor((nbBandes-1)/2); // calcul du nombre de bandes
+    t_matrix sum;
+    for (int i = 0; i < dim; ++i) {
+        sum = 0.0;
+        int  j1 = std::max(0, i - k);
+        int  j2 = std::min(dim-1, i + k);
+        const Matrix2D::value_type::value_type* matrix_i = begin(matrix[i]);
+        for (int j = j1; j <= j2; ++j) {
+            sum += matrix_i[j] * vec[j];
+        }
+        result.push_back(sum);
+    }
+    return result;
+}
 
 Matrix2D addMatEtMat0(const Matrix2D &matrix1, const Matrix2D &matrix2)
 {
@@ -2134,15 +2152,16 @@ Matrix2D addMatEtMat0(const Matrix2D &matrix1, const Matrix2D &matrix2)
  */
 Matrix2D addMatEtMat(const Matrix2D &matrix1, const Matrix2D &matrix2, const size_t nbBandes2)
 {
-    const int dim = (int)matrix1.size();
-    const int k = floor((nbBandes2-1)/2); // calcul du nombre de bandes
+    const int dim = static_cast<int>(matrix1.size());
+    const int k = static_cast<int>(floor((nbBandes2-1)/2)); // calcul du nombre de bandes
 
     Matrix2D result = matrix1;
 
     int i = 0;
 
     for (auto&& result_i : result) {
-        const Matrix2D::value_type::value_type* matrix2_i = begin(matrix2[i]);
+        //const Matrix2D::value_type::value_type* matrix2_i = begin(matrix2[i]);
+        const auto& matrix2_i = matrix2[i];
         int j1 = std::max(0, i - k);
         int j2 = std::min(dim-1, i + k);
          for (int j = j1; j <= j2; ++j) {
@@ -2159,22 +2178,23 @@ Matrix2D addIdentityToMat(const Matrix2D& matrix)
     Matrix2D result = matrix;
 
     for (size_t i = 0; i < dim; ++i)
-        result[i][i] += 1.;
+        result[i][i] += 1.0L;
 
     return result;
 }
 
 Matrix2D multiConstParMat(const Matrix2D& matrix, const double c, const size_t nbBandes)
 {
-    const int i_max = (int)matrix.size()-1;
+    const int i_max = static_cast<int>(matrix.size())-1;
     Matrix2D result = matrix;
-    const int k = floor((nbBandes-1)/2); // calcul du nombre de bandes
+    const int k = floor((nbBandes-1)/2.0); // calcul du nombre de bandes
     int i = 0;
+    t_matrix cL = static_cast<t_matrix>(c);
     for (auto&& result_i : result) {
         int j1 = std::max(0, i - k);
         int j2 = std::min(i_max, i + k);
         for (int j = j1; j <= j2; ++j) {
-            result_i[j] *= c ;
+            result_i[j] *= cL ;
         }
         i++;
     }
@@ -2442,7 +2462,7 @@ Matrix2D inverseMatSym0(const Matrix2D& matrix, const size_t shift)
     Matrix2D matInv = initMatrix2D(matrix.size(), matrix[0].size());
 
     if (n == 1) {
-        matInv[0][0] = 1/ matrix[0][0];
+        matInv[0][0] = 1.0L / matrix[0][0];
         return matInv;
     }
 
@@ -2857,113 +2877,124 @@ std::pair<Matrix2D, MatrixDiag> choleskyLDLT_Dsup0(const Matrix2D& matrix, const
     return std::pair<Matrix2D, MatrixDiag>(L, D);
 }
 
-/**
- * @brief decompositionCholesky
- * Cf algorithme donné par S.M.Kay, "Modern Spectral estimation"  1988, page 30.
- *  Cette décomposition ne peut s'appliquer qu'à des matrices symétriques
- * ISBN 13 :978-0130151599
- * @ref Kay, S. M. (dir.), 1988. Modern spectral estimation: Theory and application. Prentice-Hall signal processing series. Prentice Hall, Upper Saddle River, N.J.
- * @param matrix matrix2D to decompose
- * @param nbBandes total number of bandwidth = k1+k2+1
- * @param shift offset that eliminates the first and last rows and columns consisting of zero
- * @return pair of 1 matrix and 1 vector
-*/
 
 //  link to check  https://mxncalc.com/fr/cholesky-decomposition-calculator
+/**
+ * @brief Décomposition de Cholesky d'une matrice avec un décalage.
+ *  Cf algorithme donné par S.M.Kay, "Modern Spectral estimation"  1988, page 30.
+ * ISBN 13 :978-0130151599
+ * @ref Kay, S. M. (dir.), 1988. Modern spectral estimation: Theory and application. Prentice-Hall signal processing series. Prentice Hall, Upper Saddle River, N.J.
+ *
+ *
+ * Cette fonction décompose une matrice en une matrice triangulaire inférieure (matL)
+ * et une matrice diagonale (matD) selon la méthode de Cholesky. La décomposition est
+ * adaptée pour les matrices bandées avec un décalage donné.
+ *
+ * @param matrix Matrice d'entrée à décomposer bandwidth = k1+k2+1
+ * @param nbBandes Nombre de bandes de la matrice.
+ * @param shift Décalage utilisé pour éliminer les premières et dernières lignes et colonnes de zéros.
+ *
+ * @return std::pair<Matrix2D, MatrixDiag> Un paire contenant la matrice triangulaire inférieure (matL)
+ *         et la matrice diagonale (matD).
+ *
+ * @note Cette fonction suppose que la matrice est symétrique et définie positive.
+ *
+ * @example
+ * // Exemple d'utilisation
+ * Matrix2D A = ...;
+ * auto result = decompositionCholesky(A, 2, 1);
+ * Matrix2D L = result.first;
+ * MatrixDiag D = result.second;
+ **/
 std::pair<Matrix2D, MatrixDiag> decompositionCholesky(const Matrix2D &matrix, const size_t nbBandes, const size_t shift)
 {
-    errno = 0;
-      //if (math_errhandling & MATH_ERREXCEPT) feclearexcept(FE_ALL_EXCEPT);
+    //errno = 0;
+    //if (math_errhandling & MATH_ERREXCEPT) feclearexcept(FE_ALL_EXCEPT);
 
     const size_t dim = matrix.size();
-    const size_t dim_shift = dim>shift? dim-shift: 0;
+    const size_t dim_shift = dim > shift ? dim-shift : 0;
     Matrix2D matL = initMatrix2D(dim, dim);
     MatrixDiag matD (dim);
 
     if (dim - 2*shift == 1) { // cas des splines avec 3 points
         matD[1] = matrix[1][1];;
-        matL[1][1] = 1.;
+        matL[1][1] = 1.0L;
+        return {matL, matD};
 
-    } else {
-
-        // const int bande = floor((nbBandes-1)/2);
-
-        // shift : décalage qui permet d'éliminer les premières et dernières lignes et colonnes constituées de zéro
-        for (size_t i = shift; i < dim-shift; ++i) {
-            matL[i][i] = 1.;
-        }
-        matD[shift] = matrix[shift][shift];
-
-        try {
-            for (size_t i = shift+1; i < dim_shift; ++i) {
-                matL[i][shift] = matrix[i][shift] / matD[shift];
-                /*   avec bande */
-                for (size_t j = shift+1; j < i; ++j) {
-                    if (abs_minus(i, j) <= nbBandes) {
-                        Matrix2D::value_type::value_type _sum = 0.;
-                        for (size_t k = shift; k < j; ++k) {
-                            if (abs_minus(i, k) <= nbBandes) {
-                                _sum += matL[i][k] * matD[k] * matL[j][k];
-                            }
-                        }
-                        matL[i][j] = (matrix[i][j] - _sum) / matD[j];
-                    }
-                }
-
-                t_matrix sum = 0.;
-                for (size_t k = shift; k < i; ++k) {
-                    if (abs_minus(i, k) <= nbBandes) {
-                        sum += std::pow(matL[i][k], 2.) * matD[k];
-                    }
-                }
-
-                matD[i] = matrix[i][i] - sum; // doit être non-nul;
-
-
-/*
-                if (matD[i] <= 0) {
-                    QThread *tt = QThread::currentThread();
-                    auto mcmcLoop = static_cast<MCMCLoop*>(tt);
-                    mcmcLoop->mAbortedReason = "Error : [Function::decompositionCholesky]  matD <= 0";//.arg(QString::number((double)matD[i]));
-
-                 //   mcmc->exit();
-                 //   mcmc->quit();
-                    mcmcLoop->terminate();
-
-                }
-
-#ifdef DEBUG
-                if (matD[i] >= 1.E20) {
-                    qDebug() << "[Function::decompositionCholesky]  matD[i] ="<< (double)matD[i]<< " >= 1.E+20 ";
-                }
-#endif
-*/
-            }
-
-            // matL : Par exemple pour n = 5 et shift =0:
-            // 1 0 0 0 0
-            // X 1 0 0 0
-            // X X 1 0 0
-            // X X X 1 0
-            // X X X X 1
-
-            // matL : Par exemple pour n = 5 et shift =1:
-            // 0 0 0 0 0
-            // 0 1 0 0 0
-            // 0 X 1 0 0
-            // 0 X X 1 0
-            // 0 0 0 0 0
-
-        } catch(const char*e) {
-            qCritical() << "[Function::decompositionCholesky] " << e;
-
-        } catch(...) {
-            qCritical() << "[Function::decompositionCholesky]  Caught Exception!\n";
-
-        }
     }
 
-    return std::pair<Matrix2D, MatrixDiag>(matL, matD);
+    // shift : décalage qui permet d'éliminer les premières et dernières lignes et colonnes constituées de zéro
+    for (size_t i = shift; i < dim-shift; ++i) {
+        matL[i][i] = 1.0L;
+    }
+    matD[shift] = matrix[shift][shift];
+
+    try {
+        for (size_t i = shift+1; i < dim_shift; ++i) {
+            matL[i][shift] = matrix[i][shift] / matD[shift];
+
+            // Calcul des éléments de matL avec la bande
+            for (size_t j = shift+1; j < i; ++j) {
+                if (abs_minus(i, j) <= nbBandes) {
+                    t_matrix sum = 0.0L;
+                    // Calcul de la somme des produits
+                    for (size_t k = shift; k < j; ++k) {
+                        if (abs_minus(i, k) <= nbBandes) {
+                            sum += matL[i][k] * matD[k] * matL[j][k];
+                        }
+                    }
+                    matL[i][j] = (matrix[i][j] - sum) / matD[j];
+                }
+            }
+
+            // Calcul de la diagonale de matD
+            t_matrix sumDiag = 0.0L;
+            for (size_t k = shift; k < i; ++k) {
+                if (abs_minus(i, k) <= nbBandes) {
+                    sumDiag += matL[i][k] * matL[i][k] * matD[k];
+                }
+            }
+
+            matD[i] = matrix[i][i] - sumDiag; // doit être non-nul;
+
+
+
+
+#ifdef DEBUG
+            if (matD[i] >= 1.0E20) {
+                qWarning() << "[Function::decompositionCholesky]  matD[i] ="<< (double)matD[i]<< " >= 1.E+20 ";
+            }
+            if (matD[i] <= 0) {
+                throw std::runtime_error("[Function::decompositionCholesky] The matrix is not positive definite.");
+            }
+#endif
+
+        }
+
+        // matL : Par exemple pour n = 5 et shift =0:
+        // 1 0 0 0 0
+        // X 1 0 0 0
+        // X X 1 0 0
+        // X X X 1 0
+        // X X X X 1
+
+        // matL : Par exemple pour n = 5 et shift =1:
+        // 0 0 0 0 0
+        // 0 1 0 0 0
+        // 0 X 1 0 0
+        // 0 X X 1 0
+        // 0 0 0 0 0
+
+    } catch(const char* e) {
+        qCritical() << "[Function::decompositionCholesky] " << e;
+
+    } catch(...) {
+        qCritical() << "[Function::decompositionCholesky]  Caught Exception!\n";
+
+    }
+
+
+    return {matL, matD};
 }
 
 std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, MatrixDiag> &decomp, const std::vector<double> &vecQtY)
@@ -2971,7 +3002,7 @@ std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, 
     const Matrix2D &L = decomp.first;
     const MatrixDiag &D = decomp.second;
     const size_t n = D.size();
-    std::vector<double> vecGamma (n);
+    std::vector<long double> vecGamma (n);
     std::vector<long double> vecU (n);
     std::vector<long double> vecNu (n);
 
@@ -2989,11 +3020,58 @@ std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, 
 
         vecGamma[n-2] = vecNu.at(n-2);
         if (std::isnan(vecGamma[n-2]))
-            vecGamma[n-2] = 0.;
+            vecGamma[n-2] = 0.0;
 
         vecGamma[n-3] = vecNu.at(n-3) - L[n-2][n-3] * vecGamma[n-2];
         if (std::isnan(vecGamma[n-3]))
-            vecGamma[n-3] = 0.;
+            vecGamma[n-3] = 0.0;
+
+        for (size_t i = n-4; i > 0; --i) {
+            vecGamma[i] = vecNu[i] - L[i+1][i] * vecGamma[i+1] - L[i+2][i] * vecGamma[i+2]; // pHd : Attention utilisation des variables déjà modifiées
+        }
+
+    } else {
+        // cas n = 3
+        vecGamma[1] = vecQtY[1] / D[1];
+    }
+
+    std::vector<double> resultat(vecGamma.size());
+
+    // Transtypage avec std::transform :
+    std::transform(vecGamma.begin(), vecGamma.end(), resultat.begin(),
+                   [](long double value) { return static_cast<double>(value); });
+
+    return resultat;
+}
+
+std::vector<t_matrix> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, MatrixDiag>& decomp, const std::vector<t_matrix>& vecQtY)
+{
+    const Matrix2D &L = decomp.first;
+    const MatrixDiag &D = decomp.second;
+    const size_t n = D.size();
+    std::vector<t_matrix> vecGamma (n);
+    std::vector<t_matrix> vecU (n);
+    std::vector<t_matrix> vecNu (n);
+
+    if (n > 3 ) {
+        vecU[1] = vecQtY[1];
+        vecU[2] = vecQtY[2] - L[2][1] * vecU[1];
+
+        for (size_t i = 3; i < n-1; ++i) {
+            vecU[i] = vecQtY[i] - L[i][i-1] * vecU[i-1] - L[i][i-2] * vecU[i-2]; // pHd : Attention utilisation des variables déjà modifiées
+        }
+
+        for (size_t i = 1; i < n-1; ++i) {
+            vecNu[i] = vecU[i] / D[i];
+        }
+
+        vecGamma[n-2] = vecNu.at(n-2);
+        if (std::isnan(vecGamma[n-2]))
+            vecGamma[n-2] = 0.0;
+
+        vecGamma[n-3] = vecNu.at(n-3) - L[n-2][n-3] * vecGamma[n-2];
+        if (std::isnan(vecGamma[n-3]))
+            vecGamma[n-3] = 0.0;
 
         for (size_t i = n-4; i > 0; --i) {
             vecGamma[i] = vecNu[i] - L[i+1][i] * vecGamma[i+1] - L[i+2][i] * vecGamma[i+2]; // pHd : Attention utilisation des variables déjà modifiées
@@ -3006,6 +3084,7 @@ std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, 
 
     return vecGamma;
 }
+
 std::vector<long double> resolutionSystemeLineaireCholesky_long(const std::pair<Matrix2D, MatrixDiag> &decomp, const std::vector<double>& vecQtY)
 {
     const Matrix2D &L = decomp.first;
@@ -3632,4 +3711,94 @@ std::pair<double, double> solve_quadratic(const double y, const double a, const 
     }
 
     return std::pair<double, double>{y1, y2};
+}
+
+
+/**
+ * @brief gaussian_filter, we assume a uniform step between values.
+ * @param map
+ * @param sigma, of the gaussian
+ * @return
+ */
+std::vector<double> gaussian_filter(std::vector<double>& curve_input, const double sigma)
+{
+
+    //qDebug() <<"[gaussian_filter]";
+    //  data
+    const int inputSize = curve_input.size();
+
+    //const double step = 1.0 / static_cast<double>(inputSize - 1);
+
+    /* ----- FFT -----
+        http://www.fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html#One_002dDimensional-DFTs-of-Real-Data
+        https://jperalta.wordpress.com/2006/12/12/using-fftw3/
+    */
+
+
+    const double sigma_filter = sigma;// * step;
+
+    const int gaussSize = std::max(inputSize, int(3*sigma));
+    const int paddingSize = 2*gaussSize;
+
+    const int N = gaussSize + 2*paddingSize;
+    //const int NComplex = 2* (N/2)+1;
+
+    const int NComplex =  (N/2)+1;
+
+    // https://www.fftw.org/fftw3_doc/Real_002ddata-DFT-Array-Format.html
+
+    double *inputReal;
+    inputReal = new double [N];
+
+
+    fftw_complex *inputComplex;
+    inputComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
+
+
+    // we could use std::copy
+    for (int i  = 0; i< paddingSize; i++) {
+        inputReal[i] = curve_input[0];//0.;
+    }
+    for (int i = 0; i< inputSize; i++) {
+        inputReal[i+paddingSize] = curve_input[i];
+    }
+    for (int i ( inputSize+paddingSize); i< N; i++) {
+        inputReal[i] = curve_input[inputSize-1];
+    }
+    fftw_plan plan_input = fftw_plan_dft_r2c_1d(N, inputReal, inputComplex, FFTW_ESTIMATE);
+
+    fftw_execute(plan_input);
+
+    for (int i = 0; i < NComplex; ++i) {
+        const double s =  M_PI * (double)i / (double)NComplex;
+        const double factor = exp(-2. * pow(s * sigma_filter, 2.));
+        if (isnan(factor)) {
+            qDebug()<<"gaussian filter"<< s << " isnan";
+        }
+        inputComplex[i][0] *= factor;
+        inputComplex[i][1] *= factor;
+
+    }
+
+
+    double *outputReal;
+    outputReal = new double [2* (N/2)+1];
+
+    fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, inputComplex, outputReal, FFTW_ESTIMATE);
+    fftw_execute(plan_output);
+
+    std::vector<double> results;
+    for ( int i = 0; i < inputSize; i++) {
+        results.push_back(outputReal[i + paddingSize]/N);
+    }
+
+    fftw_destroy_plan(plan_input);
+    fftw_destroy_plan(plan_output);
+    fftw_free(inputComplex);
+
+    delete [] inputReal;
+    delete [] outputReal;
+
+    fftw_cleanup();
+    return results;
 }

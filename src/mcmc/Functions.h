@@ -182,6 +182,7 @@ Matrix2D multiMatParDiag(const Matrix2D& matrix, const MatrixDiag& diag, size_t 
 Matrix2D multiDiagParMat(const MatrixDiag& diag, const Matrix2D& matrix, const size_t nbBandes);
 
 std::vector<double> multiMatParVec(const Matrix2D& matrix, const std::vector<double> &vec, const size_t nbBandes);
+std::vector<t_matrix> multiMatParVec(const Matrix2D& matrix, const std::vector<t_matrix> &vec, const size_t nbBandes);
 
 
 Matrix2D addMatEtMat0(const Matrix2D& matrix1, const Matrix2D& matrix2);
@@ -231,8 +232,9 @@ std::pair<Matrix2D, MatrixDiag> LU_to_LD(const std::pair<Matrix2D, Matrix2D> LU)
 std::pair<Matrix2D, Matrix2D > decompositionQR(const Matrix2D& A);
 std::pair<Matrix2D, Matrix2D> householderQR(Matrix2D& A);
 
-std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, MatrixDiag>& decomp, const std::vector< double>& vecQtY);
-std::vector<long double> resolutionSystemeLineaireCholesky_long(const std::pair<Matrix2D, MatrixDiag>& decomp, const std::vector< double>& vecQtY);
+std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, MatrixDiag>& decomp, const std::vector<double>& vecQtY);
+std::vector<t_matrix> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, MatrixDiag>& decomp, const std::vector<t_matrix>& vecQtY);
+std::vector<long double> resolutionSystemeLineaireCholesky_long(const std::pair<Matrix2D, MatrixDiag>& decomp, const std::vector<double>& vecQtY);
 struct Strassen
 { //https://www.sanfoundry.com/java-program-strassen-algorithm/
 
@@ -421,5 +423,7 @@ Quartiles quantilesType(const C<T>& trace, const int quartileType, const double 
 }
 
 std::pair<double, double> solve_quadratic(const double y, const double a, const double b, const double c);
+
+std::vector<double> gaussian_filter(std::vector<double>& curve_input, const double sigma);
 
 #endif

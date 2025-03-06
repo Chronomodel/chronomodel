@@ -411,6 +411,7 @@ void MultiCalibrationView::updateLayout()
     mHPDLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
     mHPDEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
 
+//GraphViewResults::mHeightForVisibleAxis = 4 * AppSettings::heigthUnit();
     if (mStatClipBut->isChecked()) {
         mStatArea->show();
         mStatArea->setGeometry(0, 0, graphWidth, yPosBottomBar0);
@@ -462,6 +463,7 @@ void MultiCalibrationView::updateLayout()
 
 void MultiCalibrationView::updateGraphList()
 {
+
     if (mStatClipBut->isChecked()) {
 
         mDrawing->setVisible(false);
@@ -483,16 +485,19 @@ void MultiCalibrationView::updateGraphList()
         }
 
         if (mScatterClipBut->isChecked()) {
+            GraphViewResults::mHeightForVisibleAxis = 8 * AppSettings::heigthUnit();
             mDrawing = scatterPlot(mThreshold);
 
         } else if (mFitClipBut->isChecked()) {
+            GraphViewResults::mHeightForVisibleAxis = 8 * AppSettings::heigthUnit();
             mDrawing = fitPlot(mThreshold);
 
         }  else {
+            GraphViewResults::mHeightForVisibleAxis = 4 * AppSettings::heigthUnit();
             mDrawing = multiCalibrationPlot(mThreshold);
 
         }
-        const double origin = GraphViewResults::mHeightForVisibleAxis; //Same value in ResultsView::applyAppSettings()
+        const double origin = GraphViewResults::mHeightForVisibleAxis;
         const double prop = mYZoom->getProp();
 
         mGraphHeight = mScatterClipBut->isChecked() || mFitClipBut->isChecked()?  3*prop * origin * 2 : prop * origin * 2;
@@ -1604,7 +1609,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                         CurveRefPts::PointType typePts;
                         tmin = intervals.first().second.first;
                         tmax = intervals.last().second.second;
-                        const double tmid = (tmin+tmax)/2.;
+                        const double tmid = (tmin+tmax)/2.0;
                         vec_t.push_back(tmid);
                         vec_X.push_back(X);
                         vec_Y.push_back(Y);
@@ -1615,7 +1620,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                             case CurveSettings::eProcess_Unknwon_Dec:
                             case CurveSettings::eProcess_Spherical:
                             case CurveSettings::eProcess_Vector:
-                            vec_X_err.push_back(errX/1.96);
+                            vec_X_err.push_back(errX/1.96); // errX correspond à la taille de la barre d'erreur
                             vec_Y_err.push_back(errY/1.96);
                             vec_Z_err.push_back(errZ/1.96);
                                 break;
@@ -1738,24 +1743,25 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 
     const double tmin_poly = mSettings.getTminFormated();
     const double tmax_poly = mSettings .getTmaxFormated();
-    const double step_poly = (tmax_poly-tmin_poly)/1000.;
+    const double step_poly = (tmax_poly-tmin_poly)/1000.0;
 
     // transfer of information from the SilvermanDialog database via cs
 
-    //const double rad = M_PI/180.;
     if (!mSilverParam.use_error_measure) {
-        const double w_I = 1.;
-        vec_X_err = std::vector<double>(vec_X_err.size(), w_I);
-        vec_Y_err = std::vector<double>(vec_Y_err.size(), w_I);
-        vec_Z_err = std::vector<double>(vec_Z_err.size(), w_I);
+        vec_X_err = std::vector<double>(vec_X_err.size(), 1.0);
+        vec_Y_err = std::vector<double>(vec_Y_err.size(), 1.0);
+        vec_Z_err = std::vector<double>(vec_Z_err.size(), 1.0);
 
     } else {
+
+
+       // vec_X_err = std::vector<double>(vec_X_err.size(), 1.0/vec_X_err.size()); // pour test ici à enlever
         // test null error forbidden
         std::vector<double>::iterator it;
         bool nullValue = false;
         switch (processType) {
             case CurveSettings::eProcess_3D:
-                it = std::find_if (vec_Z_err.begin(), vec_Z_err.end(), [](double i){return i == 0.;} );
+                it = std::find_if (vec_Z_err.begin(), vec_Z_err.end(), [](double i){return i == 0.0;} );
                 if (it != vec_Z_err.end()) {
                     nullValue = true;
                     break;
@@ -1764,7 +1770,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             case CurveSettings::eProcess_2D:
             case CurveSettings::eProcess_Unknwon_Dec:
             case CurveSettings::eProcess_Spherical:
-                it = std::find_if (vec_Y_err.begin(), vec_Y_err.end(), [](double i){return i == 0.;} );
+                it = std::find_if (vec_Y_err.begin(), vec_Y_err.end(), [](double i){return i == 0.0;} );
                 if (it != vec_Y_err.end()) {
                     nullValue = true;
                     break;
@@ -1775,7 +1781,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             case CurveSettings::eProcess_Declination:
             case CurveSettings::eProcess_Field:
             case CurveSettings::eProcess_Depth:
-                it = std::find_if (vec_X_err.begin(), vec_X_err.end(), [](double i){return i == 0.;} );
+                it = std::find_if (vec_X_err.begin(), vec_X_err.end(), [](double i){return i == 0.0;} );
                 if (it != vec_X_err.end()) {
                     nullValue = true;
                     break;
@@ -1805,6 +1811,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
         case CurveSettings::eProcess_Declination:
         case CurveSettings::eProcess_Field:
         case CurveSettings::eProcess_Depth:
+            // recherche du smoothing
             do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam);
          break;
 
@@ -1822,17 +1829,23 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
         default:
         break;
     }
+
+    // __________________________
+    // Génération des courbes
+    // __________________________
+
     MCMCSpline spline = do_spline_res.first;
     std::pair<double, double> lambda_Vg = do_spline_res.second;
     QString spline_info;
     if (mSilverParam.lambda_fixed) {
        spline_info +=  tr(" Fixed Smoothing = 10E%1 ;").arg( QString::number(log10(lambda_Vg.first)));
+       mSilverParam.comment = "";
 
     } else {
        spline_info +=  tr(" Smoothing = 10E%1 ;").arg( QString::number(log10(lambda_Vg.first)));
     }
 
-    spline_info +=  tr(" Estimated std g = %1").arg( QString::number(sqrt(lambda_Vg.second)));
+    spline_info +=  tr(" Estimated std g = %1 ").arg( QString::number(sqrt(lambda_Vg.second))) + QString::fromStdString(mSilverParam.comment);
 
     if (processType == CurveSettings::eProcess_Univariate ||
         processType == CurveSettings::eProcess_Inclination ||
@@ -1895,6 +1908,10 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 
     }
 
+    // __________________________
+    // Génération des points des graphes
+    // __________________________
+
     switch (processType) {
         case CurveSettings::eProcess_Vector:
         case CurveSettings::eProcess_3D:
@@ -1917,7 +1934,11 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             graph1->showYAxisSubTicks(processType != CurveSettings::eProcess_None);
         break;
     }
+
+    // __________________________
     // Print graphics in the right order
+    // __________________________
+
     switch (processType) {
         case CurveSettings::eProcess_Vector:
         case CurveSettings::eProcess_3D:
