@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -66,32 +66,36 @@ void CollapsibleHeader::paintEvent(QPaintEvent* e)
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
 
-    p.fillRect(rect(), QColor(100, 100, 100));
+    // Précalculer les couleurs
+    const QColor backgroundColor(100, 100, 100);
+    const QColor foregroundColor(200, 200, 200);
 
-    QRect r1(0, 0, height(), height());
-    int dr = 7;
-    r1.adjust(dr, dr, -dr, -dr);
-    QRect r2(height(), 0, width() - height(), height());
 
-    p.setPen(QColor(200, 200, 200));
-    p.setBrush(QColor(200, 200, 200));
+    p.fillRect(rect(), backgroundColor);
+
+    // Calculer les rectangles
+    const int dr = 7;
+    const int ds = 1;
+    const QRect r1(dr, dr, height() - 2 * dr, height() - 2 * dr);
+    const QRect r2(height(), 0, width() - height(), height());
+
+    p.setPen(foregroundColor);
+    p.setBrush(foregroundColor);
     p.drawText(r2, Qt::AlignLeft | Qt::AlignVCenter, mTitle);
 
     QPainterPath path;
-    int ds = 1;
-    if(mCollapsible->opened())
-    {
+
+    if (mCollapsible->opened()) {
         path.moveTo(r1.x() + ds, r1.y());
         path.lineTo(r1.x() + r1.width() - ds, r1.y());
         path.lineTo(r1.x() + r1.width()/2, r1.y() + r1.height());
-    }
-    else
-    {
+
+    } else {
         path.moveTo(r1.x(), r1.y() + ds);
         path.lineTo(r1.x(), r1.y() + r1.height() - ds);
         path.lineTo(r1.x() + r1.width(), r1.y() + r1.height()/2);
     }
-    p.fillPath(path, QColor(200, 200, 200));
+    p.fillPath(path, foregroundColor);
 }
 
 void CollapsibleHeader::mousePressEvent(QMouseEvent* e)
@@ -103,10 +107,10 @@ void CollapsibleHeader::mousePressEvent(QMouseEvent* e)
 
 
 Collapsible::Collapsible(const QString& title, QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
-mWidget(nullptr),
-mHeaderHeight(30),
-mWidgetHeight(0),
-mOpened(false)
+    mWidget(nullptr),
+    mHeaderHeight(30),
+    mWidgetHeight(0),
+    mOpened(false)
 {
     mHeader = new CollapsibleHeader(this);
     setTitle(title);
@@ -148,8 +152,7 @@ void Collapsible::setTitle(const QString& title)
 
 void Collapsible::open(bool open)
 {
-    if(mWidget && mOpened != open)
-    {
+    if (mWidget && mOpened != open) {
         mOpened = open;
 
         QRect startRect(x(), y(), width(), mHeaderHeight);
@@ -160,9 +163,8 @@ void Collapsible::open(bool open)
 
         mAnimation->setDirection(mOpened ? QAbstractAnimation::Forward : QAbstractAnimation::Backward);
         mAnimation->start();
-    }
-    else
-    {
+
+    } else {
         setFixedHeight(mHeaderHeight);
     }
 }

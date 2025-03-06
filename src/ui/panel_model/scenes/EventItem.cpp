@@ -211,6 +211,10 @@ void EventItem::setEvent(const QJsonObject &event, const QJsonObject &StudyPerio
 
     mData = event;
     mStudyPeriodSettings = StudyPeriodSettings;
+    // ----------------------------------------------
+    //  is Node type
+    // ----------------------------------------------
+    mIsNode = isCurveNode();
 
     resizeEventItem();
     repositionDateItems();
@@ -359,9 +363,9 @@ void EventItem::resizeEventItem()
 
     eventHeight += mCurveTextHeight + mPhasesHeight + (nbLines>0 ? 3*AbstractItem::mEltsMargin : 2*AbstractItem::mEltsMargin);
     
-    eventHeight += (isCurveNode()? 2*mNodeSkin + 4.: 0.);
+    eventHeight += (mIsNode ? 2*mNodeSkin + 4.0: 0.0);
 
-    mSize = QSize(AbstractItem::mItemWidth + (isCurveNode()? 2*mNodeSkin + 4.: 0.), eventHeight);
+    mSize = QSize(AbstractItem::mItemWidth + (mIsNode ? 2*mNodeSkin + 4.0: 0.0), eventHeight);
  }
 
 void EventItem::repositionDateItems()
@@ -369,8 +373,8 @@ void EventItem::repositionDateItems()
     const QList<QGraphicsItem*> datesItemsList = childItems();
     
     int i = 0;
-    const QRectF rectTotal = rectF();//QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
-    const QRectF rect = isCurveNode() ? rectTotal.adjusted(mNodeSkin + 1., mNodeSkin + 1., -mNodeSkin -1., -mNodeSkin - 1.) : rectTotal;
+    const QRectF rectTotal = rectF();
+    const QRectF rect = mIsNode ? rectTotal.adjusted(mNodeSkin + 1.0, mNodeSkin + 1.0, -mNodeSkin -1.0, -mNodeSkin - 1.0) : rectTotal;
 
     qreal y = rect.y() + mTitleHeight + AbstractItem::mEltsMargin;
     qreal h = mEltsHeight + AbstractItem::mEltsMargin;
@@ -395,7 +399,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->setRenderHint(QPainter::Antialiasing);
 
     const QRectF rectTotal = QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
-    const QRectF rect = isCurveNode() ? rectTotal.adjusted(mNodeSkin + 1., mNodeSkin + 1., -mNodeSkin - 1., -mNodeSkin - 1.) : rectTotal;
+    const QRectF rect = mIsNode ? rectTotal.adjusted(mNodeSkin + 1., mNodeSkin + 1., -mNodeSkin - 1., -mNodeSkin - 1.) : rectTotal;
 
     QColor eventColor = QColor(mData.value(STATE_COLOR_RED).toInt(),
        mData.value(STATE_COLOR_GREEN).toInt(),

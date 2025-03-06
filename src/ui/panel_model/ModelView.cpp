@@ -978,7 +978,12 @@ void ModelView::showProperties()
 {
     mAnimationHide->setStartValue(mRightRect);
     mAnimationHide->setEndValue(mRightHiddenRect);
-
+    if (mAnimationHide->state() == QAbstractAnimation::Running) {
+        mAnimationHide->stop();
+    }
+    if (mAnimationShow->state() == QAbstractAnimation::Running) {
+        mAnimationShow->stop();
+    }
     if (mButProperties->isChecked() && mButProperties->isEnabled()) {
         if (mButMultiCalib->isChecked()) {
             // hide mMultiCalibrationView
@@ -1021,7 +1026,7 @@ void ModelView::showProperties()
 
 
         // show Properties View
-       for (auto item : mEventsScene->selectedItems()) {
+       for (auto& item : mEventsScene->selectedItems()) {
            const auto& itm = dynamic_cast<EventItem*>(item);
            if (itm != nullptr ) {
                  mEventPropertiesView->setEvent(&itm->mData);
@@ -1036,6 +1041,7 @@ void ModelView::showProperties()
         mCalibrationView->repaint();
 
         //mAnimationCalib->setTargetObject(mCalibrationView);
+
 
         mAnimationShow->setStartValue(mRightHiddenRect);
         mAnimationShow->setEndValue(mRightRect);
@@ -1097,6 +1103,12 @@ void ModelView::showMultiCalib()
     if (showAnim) {
         mAnimationHide->setStartValue(mRightRect);
         mAnimationHide->setEndValue(mRightHiddenRect);
+        if (mAnimationHide->state() == QAbstractAnimation::Running) {
+            mAnimationHide->stop();
+        }
+        if (mAnimationShow->state() == QAbstractAnimation::Running) {
+            mAnimationShow->stop();
+        }
     }
     if (mButMultiCalib->isChecked() && mButMultiCalib->isEnabled()) {
         mPhasesGlobalZoom->hide();
@@ -1318,6 +1330,9 @@ void ModelView::slideRightPanel()
     if ( target && mCurrentRightWidget && (target != mCurrentRightWidget) ) {
         mCurrentRightWidget = target;
         target->raise();
+        if (mAnimationShow->state() == QAbstractAnimation::Running) {
+            mAnimationShow->stop();
+        }
         mAnimationShow->setTargetObject(target);
         mAnimationHide->start();
     }
@@ -1333,8 +1348,13 @@ void ModelView::prepareNextSlide()
     else if (mButProperties->isChecked())
         target = mEventPropertiesView;
 
-    if (target)
+    if (target){
+        if (mAnimationHide->state() == QAbstractAnimation::Running) {
+            mAnimationHide->stop();
+        }
+
         mAnimationHide->setTargetObject(target);
+    }
 
     target = nullptr;
 }
@@ -1695,8 +1715,14 @@ void ModelView::readSettings()
 void ModelView::showCurveSettings(bool show)
 {
     mCurveSettingsVisible = show;
-
+    if (mAnimationShow->state() == QAbstractAnimation::Running) {
+        mAnimationShow->stop();
+    }
+    if (mAnimationHide->state() == QAbstractAnimation::Running) {
+        mAnimationHide->stop();
+    }
     if (show) {
+
         if (mButProperties->isChecked()) {
             // hide mEventPropertiesView
             mAnimationHide->setStartValue(mRightRect);
@@ -1724,6 +1750,7 @@ void ModelView::showCurveSettings(bool show)
 
             mButCsv->setChecked(false);
         }
+
 
         mAnimationShow->setTargetObject(mCurveSettingsView);
 

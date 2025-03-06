@@ -54,6 +54,8 @@ protected:
     bool mWithSelectedPhase;
     bool mThumbVisible;
 
+    bool mIsNode;
+
     const qreal mNodeSkin;
 
     qreal mPhasesHeight;
