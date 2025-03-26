@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -55,7 +55,7 @@ class TValueStack
 {
 public :
     TValueStack();
-    explicit TValueStack(double value = 0., std::string comment = "");
+    explicit TValueStack(double value = 0.0, std::string comment = "");
 
     virtual ~TValueStack();
 
@@ -79,13 +79,15 @@ public:
         eRmStar = 4, // on R-*
         eBounded = 5 // on bounded support
     };
+
+    std::string _name;
+
     double mX;
     std::shared_ptr<std::vector<double>> mRawTrace;
     std::shared_ptr<std::vector<double>> mFormatedTrace;
 
-
-    // if we use std::vector we can not use QDataStream to save,
-    //because QDataStream provides support for multi system and takes account of endians
+    // If we use std::vector we can not use QDataStream to save,
+    // because QDataStream provides support for multi system and takes account of endians
     Support mSupport;
     DateUtils::FormatDate mFormat;
 
@@ -95,15 +97,14 @@ public:
     // This needs to be re-calculated each time we change fftLength or bandwidth.
     // See generateHistos() for more.
     std::map<double, double> mFormatedHisto;
-    std::vector<std::map<double, double> > mChainsHistos;
+    std::vector<std::map<double, double>> mChainsHistos;
 
     // List of correlations for each chain.
     // They are calculated once, when the MCMC is ready, from the run part of the trace.
-    //QList<QList<double> > mCorrelations;
     std::vector<std::vector<double>> mCorrelations;
 
     std::map<double, double> mFormatedHPD;
-    QList<QPair<double, QPair<double, double> > > mRawHPDintervals;
+    QList<QPair<double, QPair<double, double>>> mRawHPDintervals;
 
     std::pair<double, double> mRawCredibility;
     std::pair<double, double> mFormatedCredibility;
@@ -207,40 +208,7 @@ public:
         }
         return result;
     }
-/*
-    template <typename T>
-    QList<T> full_run_trace(std::vector<T>* trace, const std::vector<ChainSpecs>& chains)
-    {
-        if (trace == nullptr || trace->size() == 0)
-            return QList<T>(0);
 
-        else if (trace->size() == chains.size()) // Cas des variables fixes
-            return QList<T>(trace->begin(), trace->end());
-
-        // Calcul reserve space
-        int reserveSize = 0;
-
-        for (const ChainSpecs& chain : chains)
-            reserveSize += chain.mRealyAccepted;
-
-        QList<T> result(reserveSize);
-
-        int shift = 0;
-        int shiftTrace = 0;
-
-        for (const ChainSpecs& chain : chains) {
-            // we add 1 for the init
-            const int burnAdaptSize = 1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch);
-            const int runTraceSize = chain.mRealyAccepted;
-            const int firstRunPosition = shift + burnAdaptSize;
-            std::copy(trace->begin() + firstRunPosition , trace->begin() + firstRunPosition + runTraceSize , result.begin() + shiftTrace);
-
-            shiftTrace += runTraceSize;
-            shift = firstRunPosition +runTraceSize;
-        }
-        return result;
-    }
-*/
 
     template <typename T>
     std::vector<T> full_run_trace(std::shared_ptr<std::vector<T>> trace, const std::vector<ChainSpecs>& chains)
@@ -359,16 +327,15 @@ public:
 
     void updateFormatedTrace(const DateUtils::FormatDate fm);
 
-    inline void load_stream(QDataStream& stream) {load_stream_v328(stream);}
+    inline void load_stream(QDataStream& stream) {load_stream_v330(stream);}
 
 private:
-
-    std::string _name;
 
     void generateBufferForHisto(double* input, const std::vector<double> &dataSrc, const int numPts, const double a, const double b);
     QMap<double, double> bufferToMap(const double* buffer);
 
     void load_stream_v328(QDataStream& stream);
+    void load_stream_v330(QDataStream& stream);
     //void load_stream_v327(QDataStream& stream);
 
 

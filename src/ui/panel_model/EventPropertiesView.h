@@ -45,7 +45,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QWidget>
 #include <QJsonObject>
 
-#include "AbstractItem.h"
 #include "Button.h"
 
 class Label;
@@ -182,19 +181,19 @@ private:
     QCheckBox* mCurveNodeCB;
 
     QLabel* mX_IncLab;
-    QLineEdit* mX_IncEdit;
+    LineEdit* mX_IncEdit;
 
     QLabel* mS_X_IncLab;
     QLineEdit* mS_X_IncEdit;
 
     QLabel* mY_DecLab;
-    QLineEdit* mY_DecEdit;
+    LineEdit* mY_DecEdit;
 
     QLabel* mS_Y_Lab;
     QLineEdit* mS_Y_Edit;
 
     QLabel* mZ_IntLab;
-    QLineEdit* mZ_IntEdit;
+    LineEdit* mZ_IntEdit;
 
     QLabel* mS_Z_IntLab;
     QLineEdit* mS_Z_IntEdit;

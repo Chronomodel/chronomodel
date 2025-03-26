@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -1674,9 +1674,3 @@ double Event::h_S02(const double S02)
 
 }
 
-std::vector<double> get_vector(const std::function<double (std::shared_ptr<Event>)> &fun, const std::vector<std::shared_ptr<Event>> &events)
-{
-    std::vector<double> vec (events.size());
-    std::transform(events.begin(), events.end(), vec.begin(), fun);
-    return vec;
-}

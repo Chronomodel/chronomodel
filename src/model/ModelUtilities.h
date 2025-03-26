@@ -102,6 +102,7 @@ QString html_to_plain_text(const QString &html);
 double sample_in_repartition(std::shared_ptr<CalibrationCurve> calibrateCurve, const double min, const double max);
 
 void sampleInCumulatedRepartition_thetaFixe (std::shared_ptr<Event> event, const StudyPeriodSettings &settings);
+double sample_in_Repartition_date_fixe(const Date &d, const StudyPeriodSettings& settings);
 
 // These 2 global functions are used to sort events and phases lists in result view
 

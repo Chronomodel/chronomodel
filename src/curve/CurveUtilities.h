@@ -222,9 +222,6 @@ std::vector<t_reduceTime> calculVecH(const std::vector<std::shared_ptr<Event>> &
 Matrix2D calculMatR(const std::vector<t_reduceTime>& rVecH);
 Matrix2D calculMatQ(const std::vector<t_reduceTime> &rVecH);
 
-std::vector<double> createDiagWInv(const QList<std::shared_ptr<Event> > &events);
-
-
 void conversionIDF(PosteriorMeanG& G);
 PosteriorMeanG conversionIDF(const std::vector<double> &vecGx, const std::vector<double> &vecGy, const std::vector<double> &vecGz, const std::vector<double> &vecGxErr, const std::vector<double> &vecGyErr, const std::vector<double> &vecGzErr);
 
@@ -244,13 +241,19 @@ MCMCSpline currentSpline (std::vector<std::shared_ptr<Event> > &events, const st
 //MCMCSpline currentSpline_WI (QList<Event *> &events, bool doSortAndSpreadTheta = false, const std::vector<t_reduceTime> &vecH = std::vector<t_reduceTime>(), const SplineMatrices &matrices = SplineMatrices(), bool doY, bool doZ, bool use_error);
 MCMCSpline currentSpline_WI (std::vector<std::shared_ptr<Event> > &events, bool doY, bool doZ, bool use_error);
 
-SplineMatrices prepareCalculSpline(const std::vector<std::shared_ptr<Event> > &sortedEvents, const std::vector<t_reduceTime> &vecH);
+SplineMatrices prepare_calcul_spline(const std::vector<std::shared_ptr<Event> >& sortedEvents, const std::vector<t_reduceTime> &vecH);
+SplineMatrices prepare_calcul_spline(const std::vector<t_reduceTime>& vecH, const std::vector<long double> W_1);
+SplineMatrices prepare_calcul_spline_WI(const std::vector<t_reduceTime>& vecH);
+
+SplineMatrices update_splineMatrice_with_vecH(SplineMatrices spline_matrices, const std::vector<t_reduceTime>& vecH);
+SplineMatrices update_splineMatrice_with_mW(SplineMatrices spline_matrices, const std::vector<std::shared_ptr<Event> >& sortedEvents);
+
 SplineMatrices prepareCalculSpline_Sy2(const std::vector<std::shared_ptr<Event>> &sortedEvents, const std::vector<t_reduceTime> &vecH);
 //SplineMatrices prepareCalculSpline_WI(const QList<Event *> & sortedEvents, const std::vector<t_reduceTime> &vecH);
 
 
 
-SplineResults do_spline(const std::function<double (std::shared_ptr<Event>)> &fun, const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline);
+SplineResults do_spline(const std::function<t_matrix (std::shared_ptr<Event>)> &fun, const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline);
 
 SplineResults doSplineX(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline);
 SplineResults doSplineY(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambdaSpline);
@@ -271,33 +274,37 @@ void valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante &spline, do
 
 #pragma mark Calcul Spline on vector Y
 
-SplineMatrices prepareCalculSpline_WI(const std::vector<t_reduceTime> &vecH);
-SplineMatrices prepare_calcul_spline(const std::vector<t_reduceTime> &vecH, const std::vector<double> W_1);
+std::vector<t_matrix> do_vec_gamma(const std::vector<t_matrix>& vec_Y, const std::vector<t_reduceTime>& vec_H, const std::pair<Matrix2D, MatrixDiag>& decomp);
+std::vector<t_matrix> do_vec_G(const SplineMatrices& matrices, const std::vector<t_matrix> &vec_Gamma, const std::vector<double> &vec_Y, const double lambdaSpline);
 
 std::vector<double> calcul_spline_variance(const SplineMatrices &matrices, const std::vector<double> &vec_W, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambda);
 std::vector<QMap<double, double>> composante_to_curve(MCMCSplineComposante spline_compo, double tmin, double tmax, double step);
 
-SplineResults do_spline(const std::vector<double> &vec_Y, const SplineMatrices &matrices,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline);
+SplineResults do_spline(const std::vector<t_matrix> &vec_Y, const SplineMatrices &matrices,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline);
 
 std::pair<MCMCSpline, std::pair<double, double> > do_spline_composante(const std::vector<double> &vec_t, const std::vector<double> &vec_X, const std::vector<double> &vec_X_err, double tmin, double tmax, SilvermanParam &sv, const std::vector<double> &vec_Y = std::vector<double>(), const std::vector<double> &vec_Y_err = std::vector<double>(), const std::vector<double> &vec_Z = std::vector<double>(), const std::vector<double> &vec_Z_err = std::vector<double>()) ;
 
-double cross_validation (const std::vector< double>& vec_Y, const SplineMatrices& matrices, const std::vector< double>& vecH, const double lambda);
-double general_cross_validation (const std::vector< double>& vec_Y,  const SplineMatrices& matrices, const std::vector<double>& vecH, const double lambda);
-double RSS(const std::vector<double> &vec_Y, const SplineMatrices &matrices, const std::vector<t_reduceTime> &vecH, const double lambda);
-
-std::pair<double, double> initLambdaSplineByCV(const bool depth, const std::vector< double> &vec_X, const std::vector< double> &vec_X_err, const SplineMatrices &matrices, const std::vector< double> &vecH, const std::vector<double> &vec_Y = std::vector< double>(), const std::vector<double> &vec_Y_err = std::vector< double>(), const std::vector<double> &vec_Z = std::vector< double>(), const std::vector<double> &vec_Z_err = std::vector< double>());
-std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const std::vector< double> &vec_X, const std::vector< double> &vec_X_err, const std::vector< double> &vecH, const std::vector<double> &vec_Y = std::vector< double>(), const std::vector<double> &vec_Y_err = std::vector< double>(), const std::vector<double> &vec_Z = std::vector< double>(), const std::vector<double> &vec_Z_err = std::vector< double>());
+long double compensated_sum(const std::vector<long double>& values);
+long double cross_validation (const std::vector<t_matrix> &vec_Y, const SplineMatrices& matrices, const std::vector<t_reduceTime> &vecH, const double lambda);
+long double general_cross_validation (const std::vector<t_matrix>& vec_Y,  const SplineMatrices& matrices, const std::vector<t_reduceTime>& vecH, const double lambda);
 
 
-double initLambdaSplineByCV_VgFixed_old(const std::vector< double> &vec_Y, const std::vector< double> &vec_Y_err, const std::vector< double> &vecH, const double Vg);
-double initLambdaSplineByCV_VgFixed(const double Vg, const bool depth, const std::vector< double> &vec_X, const std::vector< double> &vec_X_err, const SplineMatrices &matrices, const std::vector< double> &vecH, const std::vector<double> &vec_Y = std::vector< double>(), const std::vector<double> &vec_Y_err = std::vector< double>(), const std::vector<double> &vec_Z = std::vector< double>(), const std::vector<double> &vec_Z_err = std::vector< double>());
+double RSS(const std::vector<t_matrix> &vec_Y, const SplineMatrices &matrices, const std::vector<t_reduceTime> &vecH, const double lambda);
 
-double general_cross_validation (const std::vector< double>& vec_Y,  const SplineMatrices& matrices, const std::vector<double>& vecH, const double lambdaSpline);
-double var_residual(const std::vector<double> &vec_Y,const SplineMatrices &matrices,const std::vector<t_reduceTime> &vecH, const double lambda);
-std::vector<double> general_residual (const std::vector<double>& vec_Y,  const SplineMatrices& matrices, const std::vector<double>& vecH, const double lambda);
+std::pair<double, double> initLambdaSplineByCV(const bool depth, const std::vector<t_matrix> &vec_X, const std::vector<t_matrix> &vec_X_err, const SplineMatrices &matrices, const std::vector<t_reduceTime> &vecH, const std::vector<t_matrix> &vec_Y = std::vector<t_matrix>(), const std::vector<t_matrix> &vec_Z = std::vector<t_matrix>(), const std::vector<t_matrix> &vec_Y_err = std::vector<t_matrix>(), const std::vector<t_matrix> &vec_Z_err = std::vector<t_matrix>());
+std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam &sv, const std::vector<t_matrix> &vec_X, const std::vector<t_matrix> &vec_X_err, const std::vector<t_reduceTime> &vecH, const std::vector<t_matrix> &vec_Y = std::vector<t_matrix>(), const std::vector<t_matrix> &vec_Y_err = std::vector<t_matrix>(), const std::vector<t_matrix> &vec_Z = std::vector<t_matrix>(), const std::vector<t_matrix> &vec_Z_err = std::vector<t_matrix>());
+
+double var_residual(const std::vector<t_matrix> &vec_Y, const SplineMatrices &matrices, const std::vector<t_reduceTime> &vecH, const double lambda);
+std::vector<double> general_residual (const std::vector<t_matrix> &vec_Y,  const SplineMatrices& matrices, const std::vector<t_reduceTime> &vecH, const double lambda);
+
+double var_Gasser(const std::vector<double>& vec_t, const std::vector<double>& vec_Y);
+long double var_Gasser(const std::vector<long double>& vec_t, const std::vector<long double>& vec_Y);
 
 bool  hasPositiveGPrimeByDet (const MCMCSplineComposante &splineComposante);
-void spread_theta_reduced(std::vector<double> &sorted_t_red, double spread_span = 0.);
-std::vector<int> get_order(const std::vector<double> &vec);
+void spread_theta_reduced(std::vector<t_reduceTime> &sorted_t_red, t_reduceTime spread_span = 0.0);
+std::vector<int> get_order(const std::vector<t_reduceTime>& vec);
+
+std::pair<Matrix2D, MatrixDiag> decomp_matB (const SplineMatrices& matrices, const double lambdaSpline);
+
 
 #endif

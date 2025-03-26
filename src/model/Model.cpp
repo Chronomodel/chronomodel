@@ -808,8 +808,9 @@ QList<QStringList> Model::getEventsTraces(QLocale locale,const bool withDateForm
 
             for (const auto& event : mEvents) {
                 double value;
-                if (event->mType == Event::eBound) {
+                if (event->mType == Event::eBound || event->mTheta.mSamplerProposal == MHVariable::eFixe) {
                     value = event->mTheta.mRawTrace->at(0);
+
                 } else {
                    value = event->mTheta.mRawTrace->at(shift + j);
                 }
@@ -2023,7 +2024,7 @@ void Model::clearTraces()
  * */
 void Model::saveToFile(QDataStream *out)
 {
-    out->setVersion(QDataStream::Qt_6_4);
+    out->setVersion(QDataStream::Qt_6_7); // since v3.3.0 -> Qt_6_7
 
     *out << quint32 (out->version());// we could add software version here << quint16(out.version());
     *out << qApp->applicationVersion();
@@ -2111,23 +2112,15 @@ void Model::saveToFile(QDataStream *out)
  * */
 void Model::restoreFromFile_v323(QDataStream *in)
 {
-    int QDataStreamVersion;
+    /*int QDataStreamVersion;
     *in >> QDataStreamVersion;
     in->setVersion(QDataStreamVersion);
-
-    if (in->version()!= QDataStream::Qt_6_4)
-            return;
-
     QString appliVersion;
     *in >> appliVersion;
-    // prepare the future
-    //QStringList projectVersionList = appliVersion.split(".");
-#ifdef DEBUG
-    if (appliVersion != qApp->applicationVersion())
-        qDebug()<<" Different Model version ="<<appliVersion<<" actual ="<<qApp->applicationVersion();
+    */
+    if (in->version()!= QDataStream::Qt_6_4)
+        return;
 
-
-#endif
     // -----------------------------------------------------
     //  Read info
     // -----------------------------------------------------
@@ -2136,7 +2129,7 @@ void Model::restoreFromFile_v323(QDataStream *in)
     *in >> tmp32;
 
     mChains.clear();
-    //mChains.reserve(int (tmp32));
+
     for (quint32 i=0 ; i<tmp32; ++i) {
         ChainSpecs ch;
         *in >> ch.burnElapsedTime;
@@ -2249,23 +2242,25 @@ void Model::restoreFromFile_v324(QDataStream *in)
 {
     QList<QString> compatible_version;
     compatible_version<<"3.2.4"<<"3.2.6";
-    int QDataStreamVersion;
+    /*int QDataStreamVersion;
     *in >> QDataStreamVersion;
     in->setVersion(QDataStreamVersion);
 
-    if (in->version()!= QDataStream::Qt_6_4)
-        return;
+
 
     //QString appliVersion;
     //res_file_version
     *in >> res_file_version;
+    **/
+    if (in->version()!= QDataStream::Qt_6_4)
+        return;
     // prepare the future
     //QStringList projectVersionList = appliVersion.split(".");
 #ifdef DEBUG
     if (res_file_version != qApp->applicationVersion())
         qDebug()<<" Different Model version ="<<res_file_version<<" actual ="<<qApp->applicationVersion();
     if (compatible_version.contains(res_file_version))
-        qDebug()<<" Version compatible ";
+        qDebug()<<" Version compatible 3.2.4";
 #endif
     // -----------------------------------------------------
     //  Read info
@@ -2389,24 +2384,24 @@ void Model::restoreFromFile_v324(QDataStream *in)
 void Model::restoreFromFile_v328(QDataStream *in)
 {
     QList<QString> compatible_version;
-    compatible_version<<"3.2.4"<<"3.2.6";
-    int QDataStreamVersion;
+    compatible_version<<"3.2.4"<<"3.2.6"<<"3.2.9";
+    /*int QDataStreamVersion;
     *in >> QDataStreamVersion;
     in->setVersion(QDataStreamVersion);
-
+    */
     if (in->version()!= QDataStream::Qt_6_4)
         return;
 
     //QString appliVersion;
     //res_file_version
-    *in >> res_file_version;
+    //*in >> res_file_version;
     // prepare the future
     //QStringList projectVersionList = appliVersion.split(".");
 #ifdef DEBUG
     if (res_file_version != qApp->applicationVersion())
         qDebug()<<" Different Model version ="<<res_file_version<<" actual ="<<qApp->applicationVersion();
     if (compatible_version.contains(res_file_version))
-        qDebug()<<" Version compatible ";
+        qDebug()<<" Version compatible 3.2.8";
 #endif
     // -----------------------------------------------------
     //  Read info
@@ -2527,6 +2522,133 @@ void Model::restoreFromFile_v328(QDataStream *in)
     *in >> mLogResults;
 
 }
+
+void Model::restoreFromFile_v330(QDataStream *in)
+{
+    QList<QString> compatible_version;
+    compatible_version<<"3.3.0";
+    /*int QDataStreamVersion;
+    *in >> QDataStreamVersion;
+    in->setVersion(QDataStreamVersion);
+*/
+    if (in->version()!= QDataStream::Qt_6_7)
+        return;
+
+    //*in >> res_file_version;
+    // prepare the future
+
+#ifdef DEBUG
+    if (res_file_version != qApp->applicationVersion())
+        qDebug()<<" Different Model version ="<<res_file_version<<" actual ="<<qApp->applicationVersion();
+    if (compatible_version.contains(res_file_version))
+        qDebug()<<" Version compatible ";
+#endif
+    // -----------------------------------------------------
+    //  Read info
+    // -----------------------------------------------------
+
+    quint32 tmp32;
+    *in >> tmp32;
+
+    mChains.clear();
+    //mChains.reserve(int (tmp32));
+    for (quint32 i=0 ; i<tmp32; ++i) {
+        ChainSpecs ch;
+        *in >> ch.burnElapsedTime;
+        *in >> ch.mAdaptElapsedTime;
+        *in >> ch.mAcquisitionElapsedTime;
+
+        *in >> ch.mBatchIndex;
+        *in >> ch.mBatchIterIndex;
+        *in >> ch.mBurnIterIndex;
+        *in >> ch.mMaxBatchs;
+        *in >> ch.mMixingLevel;
+        *in >> ch.mIterPerBatch;
+        *in >> ch.mIterPerBurn;
+        *in >> ch.mIterPerAquisition;
+        *in >> ch.mAquisitionIterIndex;
+        *in >> ch.mSeed;
+        *in >> ch.mThinningInterval;
+        *in >> ch.mRealyAccepted;
+        *in >> ch.mTotalIter;
+        mChains.push_back(ch);
+    }
+
+    // -----------------------------------------------------
+    //  Read phases data
+    // -----------------------------------------------------
+
+    for (std::shared_ptr<Phase> &p : mPhases) {
+        p->mAlpha.load_stream(*in);
+        p->mBeta.load_stream(*in);
+        p->mTau.load_stream(*in);
+        p->mDuration.load_stream(*in);
+
+    }
+    // -----------------------------------------------------
+    //  Read events data
+    // -----------------------------------------------------
+
+    for (std::shared_ptr<Event> &e : mEvents) {
+        e->mTheta.load_stream(*in);
+        e->mS02Theta.load_stream(*in); // since 2023-06-01 v3.2.3
+    }
+    // -----------------------------------------------------
+    //  Read dates data
+    // -----------------------------------------------------
+
+    for (std::shared_ptr<Event> &event : mEvents) {
+        if (event->mType == Event::eDefault )
+            for (auto&& d : event->mDates) {
+
+                d.mTi.load_stream(*in);
+                d.mSigmaTi.load_stream(*in);
+                if (d.mDeltaType != Date::eDeltaNone)
+                    d.mWiggle.load_stream(*in);
+
+                *in >> d.mDeltaFixed;
+                *in >> d.mDeltaMin;
+                *in >> d.mDeltaMax;
+                *in >> d.mDeltaAverage;
+                *in >> d.mDeltaError;
+
+                double tmp;
+                *in >> tmp;
+                d.setTminRefCurve(tmp);
+                *in >> tmp;
+                d.setTmaxRefCurve(tmp);
+
+                d.mCalibration = & (getProject_ptr()->mCalibCurves[d.mUUID]);
+
+                quint32 tmpUint32;
+                *in >> tmpUint32;
+                double tmpKey;
+                double tmpValue;
+                for (quint32 i= 0; i<tmpUint32; i++) {
+                    *in >> tmpKey;
+                    *in >> tmpValue;
+                    d.mCalibHPD[tmpKey]= tmpValue;
+                }
+                //#ifdef DEBUG
+
+                const std::string toFind ("WID::"+ d.mUUID);
+
+                if (d.mWiggleCalibration == nullptr || d.mWiggleCalibration->mVector.empty()) {
+                    qDebug()<<"[Model::restoreFromFile] mWiggleCalibration vide";
+
+                } else {
+                    d.mWiggleCalibration = & (getProject_ptr()->mCalibCurves[toFind]);
+                }
+                //#endif
+            }
+    }
+    *in >> mLogModel;
+    *in >> mLogInit;
+    *in >> mLogAdapt;
+    *in >> mLogResults;
+
+}
+
 
 bool Model::hasSelectedEvents()
 {

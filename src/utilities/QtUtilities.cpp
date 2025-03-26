@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 202(
 
 Authors :
 	Philippe LANOS
@@ -44,11 +44,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "GraphView.h"
 #include "AppSettings.h"
 
-#include <QtWidgets>
 #include <QFontMetricsF>
-#include <QtSvg>
 #include <QDataStream>
 
+#include <QSvgGenerator>
 #include <algorithm>
 #include <iterator>
 
@@ -343,6 +342,14 @@ QString QListUnsignedToQString(const QList<unsigned> &intList, const QString &se
 {
     QStringList list = QListUnsignedToQStringList(intList);
     return list.join(separator);
+}
+
+QString double_to_str(const double value)
+{
+    std::stringstream stream;
+    stream << std::fixed << std::setprecision(std::numeric_limits<long double>::max_digits10 + 1) << value;
+
+    return QString::fromStdString(stream.str());
 }
 
 QString long_double_to_str(const long double value)
@@ -1006,11 +1013,24 @@ void reload_shared_ptr(const std::shared_ptr<std::vector<double>> data, QDataStr
 {
     quint32 size;
     stream >> size;
-
+    //size_t tmp = size;
+    // Gérer l'erreur de lecture ici
+    if (stream.status() != QDataStream::Ok) {
+        qDebug()<<"[QtUtilities::reload_shared_ptr]  erreur 1 de flux";
+        throw std::runtime_error("Error reading from stream");
+        return;
+    }
     if (size > 0) {
         double v;
         for (quint32 i = 0; i < size; ++i) {
             stream >> v;
+
+            // Gérer l'erreur de lecture ici
+            if (stream.status() != QDataStream::Ok) {
+                qDebug()<<"[QtUtilities::reload_shared_ptr]  erreur 2 de flux";
+                throw std::runtime_error("Error reading from stream");
+                return;
+            }
             data->push_back(v);//test
         }
     }

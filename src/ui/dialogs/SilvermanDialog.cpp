@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
     Philippe LANOS
@@ -39,7 +39,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "SilvermanDialog.h"
 
 #include <QBoxLayout>
-#include <QtWidgets>
+#include <QDialogButtonBox>
+#include <QPushButton>
 
 
 SilvermanDialog::SilvermanDialog(SilvermanParam *param, QWidget* parent, Qt::WindowFlags flags): QDialog(parent, flags),
@@ -66,20 +67,33 @@ SilvermanDialog::SilvermanDialog(SilvermanParam *param, QWidget* parent, Qt::Win
     else
         mLambdaTypeInput->setCurrentIndex(0);
     connect(mLambdaTypeInput, &QComboBox::currentIndexChanged, this, &SilvermanDialog::updateLayout);
+    connect(mLambdaTypeInput, &QComboBox::currentIndexChanged,[this](int) { this->validateInputs(); });
 
     mLambdaLabel = new QLabel(tr("Smoothing Value 10E"), this);
     mLambdaInput = new QLineEdit(this);
-    mLambdaInput->setText(QString::number(param->log_lambda_value));
+    mLambdaInput->setText(locale().toString(param->log_lambda_value));
 
-    QDialogButtonBox* buttonBox = new QDialogButtonBox(this);
+    connect(mLambdaInput, &QLineEdit::textChanged, [this](const QString&) { this->validateInputs(); });
+
+   /* QDialogButtonBox* buttonBox = new QDialogButtonBox(this);
     buttonBox->addButton(tr("OK"), QDialogButtonBox::AcceptRole);
     buttonBox->addButton(tr("Cancel"), QDialogButtonBox::RejectRole);
+    */
 
-    connect(buttonBox, &QDialogButtonBox::accepted, this, &SilvermanDialog::memo);
+    mButtonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+
+
+    connect(mButtonBox, &QDialogButtonBox::accepted, this, &SilvermanDialog::accept);
+    connect(mButtonBox, &QDialogButtonBox::accepted, this, &SilvermanDialog::memo);
+
+    connect(mButtonBox, &QDialogButtonBox::rejected, this, &SilvermanDialog::reject);
+
+    /*connect(buttonBox, &QDialogButtonBox::accepted, this, &SilvermanDialog::memo);
     connect(buttonBox, &QDialogButtonBox::accepted, this, &SilvermanDialog::accept);
 
     connect(buttonBox, &QDialogButtonBox::rejected, this, &SilvermanDialog::reject);
     connect(buttonBox, &QDialogButtonBox::rejected, this, &SilvermanDialog::close);
+*/
 
     QGridLayout* grid = new QGridLayout();
     grid->setContentsMargins(0, 0, 0, 0);
@@ -102,7 +116,7 @@ SilvermanDialog::SilvermanDialog(SilvermanParam *param, QWidget* parent, Qt::Win
     vlayout->addWidget(mDescriptionLabel);
     vlayout->addSpacing(30);
     vlayout->addLayout(grid);
-    vlayout->addWidget(buttonBox);
+    vlayout->addWidget(mButtonBox);
     vlayout->addStretch();
 
     QWidget* vlayoutWidget = new QWidget();
@@ -136,4 +150,16 @@ void SilvermanDialog::updateLayout()
 {
     mLambdaInput->setVisible(mLambdaTypeInput->currentIndex() == 1);
     mLambdaLabel->setVisible(mLambdaTypeInput->currentIndex() == 1);
+}
+
+
+void SilvermanDialog::validateInputs()
+{
+    bool enable = true;
+    if (mLambdaTypeInput->currentIndex() == 1) {
+        bool ok = false;
+        locale().toDouble(mLambdaInput->text(), &ok);
+        enable = ok;
+    }
+    mButtonBox->button(QDialogButtonBox::Ok)->setEnabled(enable);
 }

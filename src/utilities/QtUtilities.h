@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -75,8 +75,11 @@ QString QListUnsignedToQString(const QList<unsigned>& intList, const QString& se
 
 
 
-
+QString double_to_str(const long double value);
 QString long_double_to_str(const long double value);
+
+
+
 
 #ifdef DEBUG
 template <typename U>
@@ -305,19 +308,6 @@ std::vector<bool> load_std_vector_bool(QDataStream& stream);
 std::shared_ptr<std::vector<double> > load_std_vector_ptr(QDataStream& stream);
 void reload_shared_ptr(const std::shared_ptr<std::vector<double> > data, QDataStream& stream);
 
-
-/*template <template<typename...> class Container, class T >
-void save_container(QDataStream& stream, const Container<T>& data)
-{
-   // qDebug()<<"[QtUtilities::save_container] "<< data.size();
-    quint32 size = (quint32) data.size();
-    stream << size;
-    if (size > 0) {
-        for (const auto& v : data)
-            stream << v;
-    }
-
-}*/
 template <template<typename...> class Container, class T>
 void save_container(QDataStream& stream, const Container<T>& data)
 {
@@ -326,6 +316,8 @@ void save_container(QDataStream& stream, const Container<T>& data)
 
     if (stream.status() != QDataStream::Ok) {
         // Gérer l'erreur de flux ici
+        qDebug()<<"[QtUtilities::save_container]  erreur 1 de flux";
+        throw std::runtime_error("Error saving from stream");
         return;
     }
 
@@ -334,24 +326,13 @@ void save_container(QDataStream& stream, const Container<T>& data)
             stream << v;
             if (stream.status() != QDataStream::Ok) {
                 // Gérer l'erreur de flux ici
+                qDebug()<<"[QtUtilities::save_container]  erreur 2 de flux";
+                throw std::runtime_error("Error saving from stream");
                 return;
             }
         }
     }
 }
-
-/*template <template<typename...> class Container, class T >
-void load_container(QDataStream& stream, Container<T>& data)
-{
-    quint32 siz;
-    T v;
-
-    stream >> siz;
-    Container<T> tmp (siz);
-    std::generate_n(tmp.begin(), siz, [&stream, &v]{stream >> v; return v;});
-
-    std::swap(data, tmp);
-}*/
 
 template <template<typename...> class Container, class T>
 void load_container(QDataStream& stream, Container<T>& data)
@@ -361,6 +342,8 @@ void load_container(QDataStream& stream, Container<T>& data)
 
     if (stream.status() != QDataStream::Ok) {
         // Gérer l'erreur de lecture ici
+        qDebug()<<"[QtUtilities::load_container]  erreur 1 de flux";
+        throw std::runtime_error("Error reading from stream");
         return;
     }
 
@@ -372,7 +355,9 @@ void load_container(QDataStream& stream, Container<T>& data)
         stream >> v;
         if (stream.status() != QDataStream::Ok) {
             // Gérer l'erreur de lecture ici
+            qDebug()<<"[QtUtilities::load_container]  erreur 2 de flux";
             throw std::runtime_error("Error reading from stream");
+
         }
         return v;
     });

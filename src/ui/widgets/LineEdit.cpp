@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -40,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "LineEdit.h"
 
 #include <QFont>
-#include <QtWidgets>
+#include <QGuiApplication>
 
 LineEdit::LineEdit(QWidget* parent):
     QLineEdit(parent),

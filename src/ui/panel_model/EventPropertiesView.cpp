@@ -54,7 +54,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "CurveSettings.h"
 #include "CurveWidget.h"
 
-#include <QtWidgets>
 
 EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags):
     QWidget(parent, flags),
@@ -123,12 +122,13 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mZ_IntLab->setPalette(palette_lab);
     
     mX_IncEdit = new LineEdit(mCurveWidget);
+    mX_IncEdit->setMaxLength(25);
     mY_DecEdit = new LineEdit(mCurveWidget);
     mZ_IntEdit = new LineEdit(mCurveWidget);
 
-    connect(mX_IncEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventXInc);
-    connect(mY_DecEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventYDec);
-    connect(mZ_IntEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventZF);
+    connect(mX_IncEdit, &LineEdit::editingFinished, this, &EventPropertiesView::updateEventXInc);
+    connect(mY_DecEdit, &LineEdit::editingFinished, this, &EventPropertiesView::updateEventYDec);
+    connect(mZ_IntEdit, &LineEdit::editingFinished, this, &EventPropertiesView::updateEventZF);
     
     QDoubleValidator* positiveValidator = new QDoubleValidator(this);
     positiveValidator->setBottom(0.);
@@ -428,22 +428,43 @@ void EventPropertiesView::updateEvent()
         mS_X_IncLab->setText(XerrorLabel());
 
         mS_X_IncEdit->setVisible(showXEdit);
+
+        auto updateLineEdit = [=, this](QLineEdit *lineEdit, double value) {
+            lineEdit->blockSignals(true);
+            QString text = locale().toString(value, 'g', std::numeric_limits<double>::digits10 + 1);
+            lineEdit->setText(text);
+            lineEdit->blockSignals(false);
+        };
+
         if (showXEdit) {
 
             if (settings.mProcessType == CurveSettings::eProcess_Declination) {
                 mX_IncLab->setText(tr("Inclination"));
-                mX_IncEdit->setText(locale().toString(mEventObj->value(STATE_EVENT_X_INC_DEPTH).toDouble()));
+                updateLineEdit(mX_IncEdit, mEventObj->value(STATE_EVENT_X_INC_DEPTH).toDouble());
+                updateLineEdit(mS_X_IncEdit, mEventObj->value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble());
+                /*mX_IncEdit->setText(locale().toString(mEventObj->value(STATE_EVENT_X_INC_DEPTH).toDouble()));
                 mS_X_IncEdit->setText(locale().toString(mEventObj->value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble()));
+                */
 
             } else if (settings.mProcessType == CurveSettings::eProcess_Field) {
                 mX_IncLab->setText(settings.XLabel());
-                mX_IncEdit->setText(locale().toString(mEventObj->value(STATE_EVENT_Z_F).toDouble()));
-                mS_X_IncEdit->setText(locale().toString(mEventObj->value(STATE_EVENT_SZ_SF).toDouble()));
+                updateLineEdit(mX_IncEdit, mEventObj->value(STATE_EVENT_X_INC_DEPTH).toDouble());
+                updateLineEdit(mS_X_IncEdit, mEventObj->value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble());
+
+                /*mX_IncEdit->setText(locale().toString(mEventObj->value(STATE_EVENT_Z_F).toDouble()));
+                mS_X_IncEdit->setText(locale().toString(mEventObj->value(STATE_EVENT_SZ_SF).toDouble()));*/
 
             } else {
                 mX_IncLab->setText(settings.XLabel());
-                mX_IncEdit->setText(locale().toString(mEventObj->value(STATE_EVENT_X_INC_DEPTH).toDouble()));
+                updateLineEdit(mX_IncEdit, mEventObj->value(STATE_EVENT_X_INC_DEPTH).toDouble());
+                updateLineEdit(mS_X_IncEdit, mEventObj->value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble());
+
+               /* mX_IncEdit->blockSignals(true);
+                mX_IncEdit->setText(locale().toString(mEventObj->value(STATE_EVENT_X_INC_DEPTH).toDouble(), 'g', std::numeric_limits<double>::digits10 + 1));
+                mX_IncEdit->blockSignals(false);
+                mS_X_IncEdit->blockSignals(true);
                 mS_X_IncEdit->setText(locale().toString(mEventObj->value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble()));
+                mS_X_IncEdit->blockSignals(false);*/
             }
         }
         

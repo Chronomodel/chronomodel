@@ -47,15 +47,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QComboBox>
 #include <QCheckBox>
 #include <QDialog>
+#include <QDialogButtonBox>
 
 class SilvermanDialog:public QDialog
 {
     Q_OBJECT
-public:
-    SilvermanDialog(SilvermanParam *param, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
-    virtual ~SilvermanDialog();
-    void memo();
-    void updateLayout();
+private:
+    QDialogButtonBox* mButtonBox;
 
     QLabel* mDescriptionLabel;
 
@@ -67,7 +65,19 @@ public:
 
     QCheckBox* mUseErrMesureInput;
 
+public:
     SilvermanParam *mParam;
+
+public:
+    SilvermanDialog(SilvermanParam* param, QWidget* parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
+    virtual ~SilvermanDialog();
+    void memo();
+    void updateLayout();
+
+protected slots:
+    void validateInputs();
+
+
 };
 
 #endif // SILVERMANDIALOG_H

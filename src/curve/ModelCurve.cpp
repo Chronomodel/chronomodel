@@ -406,6 +406,9 @@ void ModelCurve::restoreFromFile_v328(QDataStream* in)
 {
     Model::restoreFromFile_v328(in);
 
+    if (!is_curve)
+        return;
+
     for (auto&& e : mEvents)
         e->mVg.load_stream(*in);
 
@@ -429,7 +432,36 @@ void ModelCurve::restoreFromFile_v328(QDataStream* in)
         *in >> pMByChain;
 
 }
+void ModelCurve::restoreFromFile_v330(QDataStream* in)
+{
+    Model::restoreFromFile_v330(in);
 
+    if (!is_curve)
+        return;
+
+    for (auto&& e : mEvents)
+        e->mVg.load_stream(*in);
+
+
+    quint32 tmp32;
+    mLambdaSpline.load_stream(*in);
+
+    //*in >> mS02Vg;
+    mS02Vg.load_stream(*in);
+
+    *in >> tmp32;
+    mSplinesTrace.resize(tmp32);
+    for (auto& splin : mSplinesTrace)
+        *in >> splin;
+
+    *in >> mPosteriorMeanG;
+
+    *in >> tmp32;
+    mPosteriorMeanGByChain.resize(tmp32);
+    for (auto& pMByChain : mPosteriorMeanGByChain)
+        *in >> pMByChain;
+
+}
 /* C'était le même algorithme que MCMCCurve::memo_PosteriorG()
  */
 /** @obsolete
@@ -1983,7 +2015,7 @@ void ModelCurve::memo_PosteriorG_filtering(PosteriorMeanGComposante &postGCompo,
 
                 *ptr_idErr = (*ptr_idErr) + surfG;
 
-#else \
+#else
     //curveMap(idxT, idxY) = curveMap.at(idxT, idxY) + coefG/(double)(trace.size() * 1);
                 *ptr_idErr = (*ptr_idErr) + surfG;
 #endif

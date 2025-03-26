@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -39,7 +39,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "MultiCalibrationDrawing.h"
 #include "GraphView.h"
-#include "GraphViewResults.h"
 
 #include <QMouseEvent>
 
@@ -65,7 +64,8 @@ void ColoredBar::paintEvent(QPaintEvent *)
 MultiCalibrationDrawing::MultiCalibrationDrawing(QWidget* parent):
     QWidget(parent),
     mVerticalSpacer (5),
-    mGraphHeight (GraphViewResults::mHeightForVisibleAxis),
+    mGraphHeight (100),
+    mHeightForVisibleAxis (100),
     mGraphFont (font()),
     mMouseOverCurve (true)
 {
@@ -168,7 +168,7 @@ void MultiCalibrationDrawing::updateLayout()
     const decltype(ColoredBar::mWidth) barWidth = withBar ? ColoredBar::mWidth : 0;
 
     QFontMetrics fm (font());
-    const bool axisVisible = (mGraphHeight >= GraphViewResults::mHeightForVisibleAxis);
+    const bool axisVisible = (mGraphHeight >= mHeightForVisibleAxis);
 
     int y = 0;
     int graphNo = 0;
@@ -283,7 +283,7 @@ void MultiCalibrationDrawing::setGraphHeight(int height)
 
 void MultiCalibrationDrawing::forceRefresh()
 {
-    const bool axisVisible = (mGraphHeight >= GraphViewResults::mHeightForVisibleAxis);
+    const bool axisVisible = (mGraphHeight >= mHeightForVisibleAxis);
     const int marginBottom = (axisVisible ? int (fontMetrics().ascent() * 2.2) : int (fontMetrics().ascent() * 0.5));
 
     int y = 0;

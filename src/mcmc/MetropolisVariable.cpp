@@ -70,9 +70,8 @@ TValueStack::~TValueStack()
 
 /** Default constructor */
 MetropolisVariable::MetropolisVariable():
+    _name("Empty MetropolisVariable"),
     mX (0.),
-    //mRawTrace(new std::vector<double>()),
-    //mFormatedTrace(new std::vector<double>()),
     mRawTrace(std::make_shared<std::vector<double>>()),
     mFormatedTrace(std::make_shared<std::vector<double>>()),
     mSupport (eR),
@@ -82,15 +81,14 @@ MetropolisVariable::MetropolisVariable():
     mCorrelations(),
     mFormatedHPD(),
     mRawHPDintervals(),
-    mExactCredibilityThreshold (0.),
+    mExactCredibilityThreshold (0.0),
     mResults(),
     mChainsResults(),
     mfftLenUsed (-1),
-    mBandwidthUsed (-1.),
-    mThresholdUsed (-1.),
-    mtminUsed (0.),
-    mtmaxUsed (0.),
-    _name("Empty MetropolisVariable")
+    mBandwidthUsed (-1.0),
+    mThresholdUsed (-1.0),
+    mtminUsed (0.0),
+    mtmaxUsed (0.0)
 {
    mRawCredibility = std::pair<double, double>(1, -1);
    mFormatedCredibility = std::pair<double, double>(1, -1);
@@ -104,8 +102,6 @@ MetropolisVariable::MetropolisVariable(const MetropolisVariable& origin):
     mX = origin.mX;
     _name = origin._name;
 
-    //mRawTrace = std::shared_ptr<std::vector<double>>(origin.mRawTrace);
-    //mFormatedTrace = std::shared_ptr<std::vector<double>>(origin.mFormatedTrace);
     mRawTrace = std::make_shared<std::vector<double>>(*origin.mRawTrace);
     mFormatedTrace = std::make_shared<std::vector<double>>(*origin.mFormatedTrace);
 
@@ -817,7 +813,7 @@ QString MetropolisVariable::resultsString(const QString &noResultMessage, const 
                                                                                                  stringForLocal(mFormatedCredibility.second),
                                                                                                  unit) + "<br>";
     if (!mRawHPDintervals.isEmpty()) {
-        const QList<QPair<double, QPair<double, double> > > &intervals = mRawHPDintervals;
+        const QList<QPair<double, QPair<double, double>>>& intervals = mRawHPDintervals;
 
         const double total_thresh = std::accumulate(intervals.begin(), intervals.end(), 0., [](double sum, auto i) {return sum + i.first;});
 
@@ -880,7 +876,7 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
         list << locale.toString(mFormatedCredibility.first, 'f', precision);
         list << locale.toString(mFormatedCredibility.second, 'f', precision);
 
-        const QList<QPair<double, QPair<double, double> > > &intervals = mRawHPDintervals;
+        const QList<QPair<double, QPair<double, double>>>& intervals = mRawHPDintervals;
         double min_inter = DateUtils::convertToAppSettingsFormat(intervals.at(0).second.first);
         double max_inter = DateUtils::convertToAppSettingsFormat(intervals.at(0).second.second);
 
@@ -902,9 +898,6 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
         }
 
 
-
-
-
     } else {
           // Statistic Results on Trace
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.traceAnalysis.mean), 'f', precision);
@@ -914,7 +907,7 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.traceAnalysis.quartiles.Q1), 'f', precision);
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.traceAnalysis.quartiles.Q2), 'f', precision);
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.traceAnalysis.quartiles.Q3), 'f', precision);
-        list << locale.toString(mExactCredibilityThreshold * 100., 'f', 2);
+        list << locale.toString(mExactCredibilityThreshold * 100.0, 'f', 2);
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mFormatedCredibility.first), 'f', precision);
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mFormatedCredibility.second), 'f', precision);
         // Statistic Results on Density
@@ -922,18 +915,18 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.funcAnalysis.mean), 'f', precision);
         list << locale.toString(mResults.funcAnalysis.std, 'f', precision);
 
-        const QList<QPair<double, QPair<double, double> > > &intervals = mRawHPDintervals;
+        const QList<QPair<double, QPair<double, double>>>& intervals = mRawHPDintervals;
 
         if (DateUtils::is_date(mFormat)) {
             for (auto&& interval : intervals) {
-                list << locale.toString(interval.first * 100., 'f', 2);
+                list << locale.toString(interval.first * 100.0, 'f', 2);
                 list << locale.toString(DateUtils::convertToAppSettingsFormat(interval.second.first), 'f', precision);
                 list << locale.toString(DateUtils::convertToAppSettingsFormat(interval.second.second), 'f', precision);
             }
 
         } else {
             for (auto interval = intervals.crbegin(); interval != intervals.crend(); interval++) {
-                list << locale.toString(interval->first * 100., 'f', 2);
+                list << locale.toString(interval->first * 100.0, 'f', 2);
                 const double min_inter = DateUtils::convertToAppSettingsFormat(interval->second.second);
                 const double max_inter = DateUtils::convertToAppSettingsFormat(interval->second.first);
                 list << locale.toString(min_inter, 'f', precision);
@@ -947,50 +940,54 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
 
 /** Write Data
  */
-QDataStream &operator<<( QDataStream &stream, const MetropolisVariable &data )
+QDataStream &operator<<( QDataStream &stream, const MetropolisVariable& data )
 {
     stream << data.getQStringName(); // since 2024_08_23
+    if (stream.status() != QDataStream::Ok) {
+        // Gérer l'erreur de flux ici
+        qDebug()<<"[MetropolisVariable::operator<<]  erreur de flux";
+        throw std::runtime_error("Error saving from stream");
+        return stream;
+    }
     switch (data.mSupport) {
-       case MetropolisVariable::eR : stream << quint8(0); // on R
-        break;
-       case MetropolisVariable::eRp: stream << quint8(1); // on R+
-          break;
-       case MetropolisVariable::eRm : stream << quint8(2); // on R-
-          break;
-       case MetropolisVariable::eRpStar : stream << quint8(3); // on R+*
-          break;
-       case MetropolisVariable::eRmStar : stream << quint8(4); // on R-*
-          break;
-       case  MetropolisVariable::eBounded : stream << quint8(5); // on bounded support
-          break;
+        case MetropolisVariable::eR : stream << quint8(0); // on R
+            break;
+        case MetropolisVariable::eRp: stream << quint8(1); // on R+
+            break;
+        case MetropolisVariable::eRm : stream << quint8(2); // on R-
+            break;
+        case MetropolisVariable::eRpStar : stream << quint8(3); // on R+*
+            break;
+        case MetropolisVariable::eRmStar : stream << quint8(4); // on R-*
+            break;
+        case  MetropolisVariable::eBounded : stream << quint8(5); // on bounded support
+            break;
     }
 
-   switch (data.mFormat) { // useless, only for compatibility
-       case DateUtils::eUnknown : stream << qint16(-2);
-        break;
-       case DateUtils::eNumeric : stream << qint16(-1);
-          break;
-       case DateUtils::eBCAD : stream << qint16(0);
-          break;
-       case DateUtils::eCalBP : stream << qint16(1);
-          break;
-       case DateUtils::eCalB2K : stream << qint16(2);
-          break;
-       case  DateUtils::eDatBP : stream << qint16(3);
-          break;
-       case DateUtils::eDatB2K : stream << qint16(4);
-          break;
-       case DateUtils::eBCECE : stream << qint16(5);
-          break;
-       case  DateUtils::eKa : stream << qint16(6);
-          break;
-       case DateUtils::eMa : stream << qint16(7);
-          break;
+    switch (data.mFormat) { // useless, only for compatibility
+        case DateUtils::eUnknown : stream << qint16(-2);
+            break;
+        case DateUtils::eNumeric : stream << qint16(-1);
+            break;
+        case DateUtils::eBCAD : stream << qint16(0);
+            break;
+        case DateUtils::eCalBP : stream << qint16(1);
+            break;
+        case DateUtils::eCalB2K : stream << qint16(2);
+            break;
+        case  DateUtils::eDatBP : stream << qint16(3);
+            break;
+        case DateUtils::eDatB2K : stream << qint16(4);
+            break;
+        case DateUtils::eBCECE : stream << qint16(5);
+            break;
+        case  DateUtils::eKa : stream << qint16(6);
+            break;
+        case DateUtils::eMa : stream << qint16(7);
+            break;
     }
 
     save_container(stream, *data.mRawTrace);
-
-    // *out << this->mFormatedTrace; // useless
 
     return stream;
 }
@@ -1001,23 +998,23 @@ void MetropolisVariable::load_stream_v328(QDataStream& stream)
 {
     QString str;
     stream >> str; // since 2024_08_23
-    setName(str);
+    _name = str.toStdString();
 
     quint8 support;
     stream >> support;
     switch (int (support)) {
-    case 0 : mSupport = MetropolisVariable::eR; // on R
-        break;
-    case 1 : mSupport = MetropolisVariable::eRp; // on R+
-        break;
-    case 2 : mSupport = MetropolisVariable::eRm; // on R-
-        break;
-    case 3 : mSupport = MetropolisVariable::eRpStar; // on R+*
-        break;
-    case 4 : mSupport = MetropolisVariable::eRmStar; // on R-*
-        break;
-    case 5 : mSupport = MetropolisVariable::eBounded; // on bounded support
-        break;
+        case 0 : mSupport = MetropolisVariable::eR; // on R
+            break;
+        case 1 : mSupport = MetropolisVariable::eRp; // on R+
+            break;
+        case 2 : mSupport = MetropolisVariable::eRm; // on R-
+            break;
+        case 3 : mSupport = MetropolisVariable::eRpStar; // on R+*
+            break;
+        case 4 : mSupport = MetropolisVariable::eRmStar; // on R-*
+            break;
+        case 5 : mSupport = MetropolisVariable::eBounded; // on bounded support
+            break;
     }
 
     qint16 formatDate;
@@ -1027,6 +1024,39 @@ void MetropolisVariable::load_stream_v328(QDataStream& stream)
 
     reload_shared_ptr(mRawTrace, stream);
 }
+
+void MetropolisVariable::load_stream_v330(QDataStream& stream)
+{
+    QString str;
+    stream >> str; // since 2024_08_23
+    //setName(str);
+    _name = str.toStdString();
+
+    quint8 support;
+    stream >> support;
+    switch (int (support)) {
+        case 0 : mSupport = MetropolisVariable::eR; // on R
+            break;
+        case 1 : mSupport = MetropolisVariable::eRp; // on R+
+            break;
+        case 2 : mSupport = MetropolisVariable::eRm; // on R-
+            break;
+        case 3 : mSupport = MetropolisVariable::eRpStar; // on R+*
+            break;
+        case 4 : mSupport = MetropolisVariable::eRmStar; // on R-*
+            break;
+        case 5 : mSupport = MetropolisVariable::eBounded; // on bounded support
+            break;
+    }
+
+    qint16 formatDate;
+    stream >> formatDate; // to keep compatibility
+
+    mFormat = DateUtils::eUnknown; // to keep compatibility and force updateFormat
+
+    reload_shared_ptr(mRawTrace, stream);
+}
+
 
 QDataStream &operator>>( QDataStream& stream, MetropolisVariable& data )
 {
@@ -1052,31 +1082,7 @@ QDataStream &operator>>( QDataStream& stream, MetropolisVariable& data )
    }
 
     qint16 formatDate;
-    stream >> formatDate; // to keep compatibility
- /*   switch (formatDate) {
-      case -2 : data.mFormat = DateUtils::eUnknown;
-       break;
-      case -1 : data.mFormat = DateUtils::eNumeric;
-         break;
-      case 0 :  data.mFormat = DateUtils::eBCAD;
-         break;
-      case 1 : data.mFormat = DateUtils::eCalBP;
-        break;
-      case 2 : data.mFormat = DateUtils::eCalB2K;
-        break;
-      case 3 : data.mFormat = DateUtils::eDatBP;
-         break;
-      case 4 : data.mFormat = DateUtils::eDatB2K;
-         break;
-      case 5 : data.mFormat = DateUtils::eBCECE;
-       break;
-
-      case 6 : data.mFormat = DateUtils::eKa;
-         break;
-      case 7 : data.mFormat = DateUtils::eMa;
-        break;
-   }
-*/
+    stream >> formatDate;
     data.mFormat = DateUtils::eUnknown; // to keep compatibility and force updateFormat
 
     reload_shared_ptr(data.mRawTrace, stream);

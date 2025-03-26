@@ -57,9 +57,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Date.h"
 #include "PluginAbstract.h"
 #include "PluginFormAbstract.h"
+#include "QtUtilities.h"
 #include "TrashDialog.h"
 
-#include "QtUtilities.h"
 #include "Generator.h"
 
 #include "MCMCLoopChrono.h"
@@ -70,10 +70,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "StateEvent.h"
 #include "AppSettings.h"
 
-#include <QtWidgets>
 #include <QJsonObject>
 #include <QFile>
 #include <QTimer>
+#include <QGuiApplication>
+#include <QApplication>
+#include <QMessageBox>
+#include <QJsonDocument>
+#include <QJsonParseError>
+#include <QFileDialog>
 
 QString res_file_version; // used when loading
 
@@ -588,6 +593,7 @@ bool Project::load(const QString &path, bool force)
                                 qApp->activeWindow());
             message.exec();
             return false;
+
         } else {
             if (mModel->mNumberOfEvents >0)
                 mModel->clear_and_shrink();
@@ -636,7 +642,7 @@ bool Project::load(const QString &path, bool force)
                             else if (projectVersionList[1].toInt() < appVersionList[1].toInt())
                                 olderProject = true;
                         // Test on build number
-                      /*  else if (projectVersionList[1].toInt() == appVersionList[1].toInt()) {
+                        /*  else if (projectVersionList[1].toInt() == appVersionList[1].toInt()) {
                                 if (projectVersionList[2].toInt() > appVersionList[2].toInt())
                                     newerProject = true;
                         }*/
@@ -697,10 +703,10 @@ bool Project::load(const QString &path, bool force)
             if (AppSettings::mAutoSave) {
                 mAutoSaveTimer->setInterval(AppSettings::mAutoSaveDelay * 1000);
                 mAutoSaveTimer->start();
-            } else
+
+            } else {
                 mAutoSaveTimer->stop();
-
-
+            }
 
            // -------------------- look for the calibration file --------------------
 
@@ -717,10 +723,12 @@ bool Project::load(const QString &path, bool force)
                     int QDataStreamVersion;
                     in >> QDataStreamVersion;
                     in.setVersion(QDataStreamVersion);
-                    if (in.version()!= QDataStream::Qt_6_4) {
-                            //setNoResults(true);
-                            clear_and_shrink_model();
-                            return true;
+                    if (in.version()!= QDataStream::Qt_6_7) { // since v3.3.0 before Qt_6_4
+                        clear_and_shrink_model();
+
+                        file.close();
+                        MainWindow::getInstance()->updateWindowTitle();
+                        return true;
                     }
 
                     QString caliVersion;
@@ -735,9 +743,12 @@ bool Project::load(const QString &path, bool force)
                         QString strTitle = tr("Compatibility risk");
                         QMessageBox message(QMessageBox::Question, strTitle, strMessage, QMessageBox::Yes | QMessageBox::No, qApp->activeWindow());
                         if (message.exec() == QMessageBox::No) {
-                                setNoResults(true);
-                                clear_and_shrink_model();
-                                return true;
+                            setNoResults(true);
+                            clear_and_shrink_model();
+
+                            file.close();
+                            MainWindow::getInstance()->updateWindowTitle();
+                            return true;
                         }
 
                     }
@@ -770,6 +781,9 @@ bool Project::load(const QString &path, bool force)
             } else {
                 setNoResults(true);
                 clear_and_shrink_model();
+
+                file.close();
+                MainWindow::getInstance()->updateWindowTitle();
                 return true;
             }
 
@@ -857,6 +871,8 @@ bool Project::load(const QString &path, bool force)
             }
             // --------------------
 
+            file.close();
+            MainWindow::getInstance()->updateWindowTitle();
             return true;
         }
     }
@@ -1038,135 +1054,135 @@ bool Project::insert(const QString &path, QJsonObject &return_state)
                maxIDEventConstraint += 1;
             }
 
-           // 2- Find min X and  min -max Y in the imported project
-           double minXEventNew (HUGE_VAL);
-           double minYEventNew (HUGE_VAL), maxYEventNew (-HUGE_VAL);
-           const QJsonArray &eventsNew = loadedState.value(STATE_EVENTS).toArray();
-           if (eventsNew.isEmpty()) {
-               minXEventNew = 0;
+            // 2- Find min X and  min -max Y in the imported project
+            double minXEventNew (HUGE_VAL);
+            double minYEventNew (HUGE_VAL), maxYEventNew (-HUGE_VAL);
+            const QJsonArray &eventsNew = loadedState.value(STATE_EVENTS).toArray();
+            if (eventsNew.isEmpty()) {
+                minXEventNew = 0;
 
-               minYEventNew = 0;
-               maxYEventNew = 0;
+                minYEventNew = 0;
+                maxYEventNew = 0;
 
-           } else {
-               for (auto&& eventJSON : eventsNew) {
-                   const QJsonObject &event = eventJSON.toObject();
-                   minXEventNew = std::min(minXEventNew, event.value(STATE_ITEM_X).toDouble());
+            } else {
+                for (auto&& eventJSON : eventsNew) {
+                    const QJsonObject &event = eventJSON.toObject();
+                    minXEventNew = std::min(minXEventNew, event.value(STATE_ITEM_X).toDouble());
 
-                   minYEventNew = std::min(minYEventNew, event.value(STATE_ITEM_Y).toDouble());
-                   maxYEventNew = std::max(maxYEventNew, event.value(STATE_ITEM_Y).toDouble());
-               }
-          }
-
-           double minXPhaseNew (HUGE_VAL);
-           double minYPhaseNew (HUGE_VAL), maxYPhaseNew (-HUGE_VAL);
-           const QJsonArray phasesNew = loadedState.value(STATE_PHASES).toArray();
-           if (phasesNew.isEmpty()) {
-               minXPhaseNew = 0;
-
-               minYPhaseNew = 0;
-               maxYPhaseNew = 0;
-
-           } else {
-               for (auto&& phaseJSON : phasesNew) {
-                   const QJsonObject &phase = phaseJSON.toObject();
-                   minXPhaseNew = std::min(minXPhaseNew, phase.value(STATE_ITEM_X).toDouble());
-
-                   minYPhaseNew = std::min(minYPhaseNew, phase.value(STATE_ITEM_Y).toDouble());
-                   maxYPhaseNew = std::max(maxYPhaseNew, phase.value(STATE_ITEM_Y).toDouble());
-
-               }
+                    minYEventNew = std::min(minYEventNew, event.value(STATE_ITEM_Y).toDouble());
+                    maxYEventNew = std::max(maxYEventNew, event.value(STATE_ITEM_Y).toDouble());
+                }
             }
-          // 3 - Shift the new loadedState
 
-           QJsonObject new_state = loadedState;
+            double minXPhaseNew (HUGE_VAL);
+            double minYPhaseNew (HUGE_VAL), maxYPhaseNew (-HUGE_VAL);
+            const QJsonArray phasesNew = loadedState.value(STATE_PHASES).toArray();
+            if (phasesNew.isEmpty()) {
+                minXPhaseNew = 0;
 
-           QJsonArray newPhases = new_state.value(STATE_PHASES).toArray();
-           for (auto&& phaseJSON : newPhases) {
-               QJsonObject phase = phaseJSON.toObject();
-               // set on the right+ + mItemWidth(150.) in AbstractItem.h
-               phase[STATE_ITEM_X] =  phase.value(STATE_ITEM_X).toDouble() + maxXPhase - minXPhaseNew + 200;
-               // center on Y
-               phase[STATE_ITEM_Y] = phase.value(STATE_ITEM_Y).toDouble() - (maxYPhaseNew + minYPhaseNew)/2.;
-               phase[STATE_ID] = phase.value(STATE_ID).toInt() + maxIDPhase;
+                minYPhaseNew = 0;
+                maxYPhaseNew = 0;
 
-               phaseJSON = phase;
-           }
-           new_state[STATE_PHASES] = newPhases;
+            } else {
+                for (auto&& phaseJSON : phasesNew) {
+                    const QJsonObject &phase = phaseJSON.toObject();
+                    minXPhaseNew = std::min(minXPhaseNew, phase.value(STATE_ITEM_X).toDouble());
 
-           QJsonArray newPhaseConstraints = new_state.value(STATE_PHASES_CONSTRAINTS).toArray();
-           for (auto&& phaseConsJSON : newPhaseConstraints) {
-               QJsonObject phaseCons = phaseConsJSON.toObject();
-               phaseCons[STATE_ID] = phaseCons[STATE_ID].toInt() + maxIDPhaseConstraint;
-               phaseCons[STATE_CONSTRAINT_FWD_ID] = phaseCons.value(STATE_CONSTRAINT_FWD_ID).toInt() + maxIDPhase;
-               phaseCons[STATE_CONSTRAINT_BWD_ID] = phaseCons.value(STATE_CONSTRAINT_BWD_ID).toInt() + maxIDPhase;
+                    minYPhaseNew = std::min(minYPhaseNew, phase.value(STATE_ITEM_Y).toDouble());
+                    maxYPhaseNew = std::max(maxYPhaseNew, phase.value(STATE_ITEM_Y).toDouble());
 
-               phaseConsJSON = phaseCons;
-           }
-           new_state[STATE_PHASES_CONSTRAINTS] = newPhaseConstraints;
+                }
+            }
+            // 3 - Shift the new loadedState
 
-           QJsonArray newEvents = new_state.value(STATE_EVENTS).toArray();
-           for (auto&& eventJSON : newEvents) {
-              QJsonObject event = eventJSON.toObject();
-              // set on the right + mItemWidth(150.) in AbstractItem.h
-              event[STATE_ITEM_X] = event.value(STATE_ITEM_X).toDouble() + maxXEvent - minXEventNew + 200;
-              // center on Y
-              event[STATE_ITEM_Y] = event.value(STATE_ITEM_Y).toDouble() - (maxYEventNew + minYEventNew)/2. ;
-              event[STATE_ID] = event.value(STATE_ID).toInt() + maxIDEvent;
+            QJsonObject new_state = loadedState;
 
-              std::vector<int> mPhasesIds  = QStringToStdVectorInt(event.value(STATE_EVENT_PHASE_IDS).toString(), ",");
-              for (size_t i = 0; i<mPhasesIds.size(); ++i)
-                  mPhasesIds[i] += maxIDPhase;
+            QJsonArray newPhases = new_state.value(STATE_PHASES).toArray();
+            for (auto&& phaseJSON : newPhases) {
+                QJsonObject phase = phaseJSON.toObject();
+                // set on the right+ + mItemWidth(150.) in AbstractItem.h
+                phase[STATE_ITEM_X] =  phase.value(STATE_ITEM_X).toDouble() + maxXPhase - minXPhaseNew + 200;
+                // center on Y
+                phase[STATE_ITEM_Y] = phase.value(STATE_ITEM_Y).toDouble() - (maxYPhaseNew + minYPhaseNew)/2.;
+                phase[STATE_ID] = phase.value(STATE_ID).toInt() + maxIDPhase;
 
-              event[STATE_EVENT_PHASE_IDS] = StdVectorIntToQString( mPhasesIds, ",");
+                phaseJSON = phase;
+            }
+            new_state[STATE_PHASES] = newPhases;
 
-              eventJSON = event;
-           }
-           new_state[STATE_EVENTS] = newEvents;
+            QJsonArray newPhaseConstraints = new_state.value(STATE_PHASES_CONSTRAINTS).toArray();
+            for (auto&& phaseConsJSON : newPhaseConstraints) {
+                QJsonObject phaseCons = phaseConsJSON.toObject();
+                phaseCons[STATE_ID] = phaseCons[STATE_ID].toInt() + maxIDPhaseConstraint;
+                phaseCons[STATE_CONSTRAINT_FWD_ID] = phaseCons.value(STATE_CONSTRAINT_FWD_ID).toInt() + maxIDPhase;
+                phaseCons[STATE_CONSTRAINT_BWD_ID] = phaseCons.value(STATE_CONSTRAINT_BWD_ID).toInt() + maxIDPhase;
 
-           QJsonArray newEventConstraints = new_state.value(STATE_EVENTS_CONSTRAINTS).toArray();
-           for (auto&& eventConsJSON : newEventConstraints) {
-               QJsonObject eventCons = eventConsJSON.toObject();
-               eventCons[STATE_ID] = eventCons.value(STATE_ID).toInt() + maxIDEventConstraint;
+                phaseConsJSON = phaseCons;
+            }
+            new_state[STATE_PHASES_CONSTRAINTS] = newPhaseConstraints;
 
-               eventCons[STATE_CONSTRAINT_FWD_ID] = eventCons.value(STATE_CONSTRAINT_FWD_ID).toInt() + maxIDEvent;
-               eventCons[STATE_CONSTRAINT_BWD_ID] = eventCons.value(STATE_CONSTRAINT_BWD_ID).toInt() + maxIDEvent;
+            QJsonArray newEvents = new_state.value(STATE_EVENTS).toArray();
+            for (auto&& eventJSON : newEvents) {
+                QJsonObject event = eventJSON.toObject();
+                // set on the right + mItemWidth(150.) in AbstractItem.h
+                event[STATE_ITEM_X] = event.value(STATE_ITEM_X).toDouble() + maxXEvent - minXEventNew + 200;
+                // center on Y
+                event[STATE_ITEM_Y] = event.value(STATE_ITEM_Y).toDouble() - (maxYEventNew + minYEventNew)/2. ;
+                event[STATE_ID] = event.value(STATE_ID).toInt() + maxIDEvent;
 
-              eventConsJSON = eventCons;
-           }
+                std::vector<int> mPhasesIds  = QStringToStdVectorInt(event.value(STATE_EVENT_PHASE_IDS).toString(), ",");
+                for (size_t i = 0; i<mPhasesIds.size(); ++i)
+                    mPhasesIds[i] += maxIDPhase;
 
-           new_state[STATE_EVENTS_CONSTRAINTS] = newEventConstraints;
+                event[STATE_EVENT_PHASE_IDS] = StdVectorIntToQString( mPhasesIds, ",");
 
-           // 4 - Adding the new loadedState after mState
-           return_state = mState;
+                eventJSON = event;
+            }
+            new_state[STATE_EVENTS] = newEvents;
 
-           QJsonArray nextPhases = mState.value(STATE_PHASES).toArray();
-           for (auto&& phaseJSON : newPhases)
-               nextPhases.append(phaseJSON.toObject());
-           return_state[STATE_PHASES] = nextPhases;
+            QJsonArray newEventConstraints = new_state.value(STATE_EVENTS_CONSTRAINTS).toArray();
+            for (auto&& eventConsJSON : newEventConstraints) {
+                QJsonObject eventCons = eventConsJSON.toObject();
+                eventCons[STATE_ID] = eventCons.value(STATE_ID).toInt() + maxIDEventConstraint;
 
-           QJsonArray nextPhaseConstraints = mState.value(STATE_PHASES_CONSTRAINTS).toArray();
-           for (auto&& phaseConsJSON : newPhaseConstraints)
-               nextPhaseConstraints.append(phaseConsJSON.toObject());
-           return_state[STATE_PHASES_CONSTRAINTS] = nextPhaseConstraints;
+                eventCons[STATE_CONSTRAINT_FWD_ID] = eventCons.value(STATE_CONSTRAINT_FWD_ID).toInt() + maxIDEvent;
+                eventCons[STATE_CONSTRAINT_BWD_ID] = eventCons.value(STATE_CONSTRAINT_BWD_ID).toInt() + maxIDEvent;
 
-           QJsonArray nextEvents = mState.value(STATE_EVENTS).toArray();
-           for (auto&& eventJSON : newEvents)
-               nextEvents.append(eventJSON.toObject());
+                eventConsJSON = eventCons;
+            }
 
-           return_state[STATE_EVENTS] = nextEvents;
+            new_state[STATE_EVENTS_CONSTRAINTS] = newEventConstraints;
 
-           QJsonArray nextEventConstraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
-           for (auto&& eventConsJSON : newEventConstraints)
-               nextEventConstraints.append(eventConsJSON.toObject());
-           return_state[STATE_EVENTS_CONSTRAINTS] = nextEventConstraints;
+            // 4 - Adding the new loadedState after mState
+            return_state = mState;
 
-           unselectedAllInState(return_state); // modify mState
+            QJsonArray nextPhases = mState.value(STATE_PHASES).toArray();
+            for (auto&& phaseJSON : newPhases)
+                nextPhases.append(phaseJSON.toObject());
+            return_state[STATE_PHASES] = nextPhases;
 
-           clear_model();
+            QJsonArray nextPhaseConstraints = mState.value(STATE_PHASES_CONSTRAINTS).toArray();
+            for (auto&& phaseConsJSON : newPhaseConstraints)
+                nextPhaseConstraints.append(phaseConsJSON.toObject());
+            return_state[STATE_PHASES_CONSTRAINTS] = nextPhaseConstraints;
 
-           qDebug() << "[Project::insert]  unselectedAllInState";
-           return true;
+            QJsonArray nextEvents = mState.value(STATE_EVENTS).toArray();
+            for (auto&& eventJSON : newEvents)
+                nextEvents.append(eventJSON.toObject());
+
+            return_state[STATE_EVENTS] = nextEvents;
+
+            QJsonArray nextEventConstraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
+            for (auto&& eventConsJSON : newEventConstraints)
+                nextEventConstraints.append(eventConsJSON.toObject());
+            return_state[STATE_EVENTS_CONSTRAINTS] = nextEventConstraints;
+
+            unselectedAllInState(return_state); // modify mState
+
+            clear_model();
+
+            qDebug() << "[Project::insert]  unselectedAllInState";
+            return true;
         }
     }
     return false;
@@ -1185,7 +1201,6 @@ bool Project::saveAs(const QString& dialogTitle)
                                            dialogTitle,
                                            MainWindow::getInstance()->getCurrentPath(),
                                            tr("Chronomodel Project (*.chr)"));
-
 
     if (!path.isEmpty()) {
         QFileInfo info(path);
@@ -1254,9 +1269,9 @@ bool Project::saveProjectToFile()
         */
 
         if (file_chr.open(QIODevice::ReadWrite | QIODevice::Text)) {
-
-            qDebug() << "[Project::saveProjectToFile] Project saved to : " << path;
 #if DEBUG
+            qDebug() << "[Project::saveProjectToFile] Project saved to : " << path;
+
             if (mState["events"].toArray().isEmpty())
                 qDebug() << "[Project::saveProjectToFile] empty Project saved ???? ";
 #endif
@@ -1287,7 +1302,7 @@ bool Project::saveProjectToFile()
     if (file_cal.open(QIODevice::WriteOnly)) {
 
         QDataStream out(&file_cal);
-        out.setVersion(QDataStream::Qt_6_4);
+        out.setVersion(QDataStream::Qt_6_7); // since v3.3.0 before Qt_6_4
         out << out.version();
 
         out << QApplication::applicationVersion();
@@ -1335,7 +1350,7 @@ bool Project::saveProjectToFile()
 bool Project::recenterProject()
 {
     double minXEvent (HUGE_VAL), maxXEvent(- HUGE_VAL), minYEvent(HUGE_VAL), maxYEvent(- HUGE_VAL);
-    double minXPhase(HUGE_VAL), maxXPhase(- HUGE_VAL), minYPhase(HUGE_VAL), maxYPhase(- HUGE_VAL);
+    double minXPhase (HUGE_VAL), maxXPhase(- HUGE_VAL), minYPhase(HUGE_VAL), maxYPhase(- HUGE_VAL);
 
     const QJsonArray phases = mState.value(STATE_PHASES).toArray();
     for (const auto phaseJSON : phases) {
@@ -1361,8 +1376,8 @@ bool Project::recenterProject()
     QJsonObject newState = mState;
     QJsonArray newPhases = newState.value(STATE_PHASES).toArray();
 
-    double shift_X_phase = (maxXPhase + minXPhase)/2.;
-    double shift_Y_phase = (maxYPhase + minYPhase)/2.;
+    double shift_X_phase = (maxXPhase + minXPhase)/2.0;
+    double shift_Y_phase = (maxYPhase + minYPhase)/2.0;
 
     const qreal delta (180); //= AbstractItem::mItemWidth
     shift_X_phase = ceil(shift_X_phase/delta) * delta;
@@ -1376,8 +1391,8 @@ bool Project::recenterProject()
     }
     newState[STATE_PHASES] = newPhases;
 
-    double shift_X_event = (maxXEvent + minXEvent)/2.;
-    double shift_Y_event = (maxYEvent + minYEvent)/2.;
+    double shift_X_event = (maxXEvent + minXEvent)/2.0;
+    double shift_Y_event = (maxYEvent + minYEvent)/2.0;
 
     shift_X_event = ceil(shift_X_event/delta) * delta;
     shift_Y_event = ceil(shift_Y_event/delta) * delta;
@@ -1423,10 +1438,10 @@ void Project::setAppSettingsAutoSave()
 {
     mAutoSaveTimer->setInterval(AppSettings::mAutoSaveDelay * 1000);
 
-    if(mAutoSaveTimer->isActive() && !AppSettings::mAutoSave)
+    if (mAutoSaveTimer->isActive() && !AppSettings::mAutoSave)
         mAutoSaveTimer->stop();
 
-    else if(!mAutoSaveTimer->isActive() && AppSettings::mAutoSave)
+    else if (!mAutoSaveTimer->isActive() && AppSettings::mAutoSave)
         mAutoSaveTimer->start();
 }
 
@@ -1807,28 +1822,13 @@ void Project::mergeEvents(int eventFromId, int eventToId)
 
 // Grouped actions on events
 
-/*void Project::selectAllEvents()
-{
-    const QJsonArray events = mState.value(STATE_EVENTS).toArray();
-    QJsonArray newEvents = QJsonArray();
-    for (int i = 0; i < events.size(); ++i) {
-         QJsonObject evt = events.at(i).toObject();
-         evt[STATE_IS_SELECTED] = true;
-         newEvents.append(evt);
-
-     }
-    // create new state to push
-    QJsonObject stateNext = mState;
-    stateNext[STATE_EVENTS] = newEvents;
-    pushProjectState(stateNext, "Select All Events", true);
-}*/
-
 void Project::selectAllEvents()
 {
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
     bool modified = false;
 
-    for (QJsonValueRef eventRef : events) {
+    for (int i = 0; i < events.size(); ++i) {
+        QJsonValueRef eventRef = events[i];
         QJsonObject eventObj = eventRef.toObject();
         if (!eventObj.contains(STATE_IS_SELECTED) || !eventObj[STATE_IS_SELECTED].toBool()) {
             eventObj[STATE_IS_SELECTED] = true;
@@ -1883,12 +1883,13 @@ bool Project::selectedEventsWithString(const QString str)
     const QJsonArray events = mState.value(STATE_EVENTS).toArray();
     QJsonArray newEvents = QJsonArray();
     for (auto e : events) {
-        QJsonObject evt = e.toObject();
-        evt[STATE_IS_SELECTED] = e.toObject().value(STATE_NAME).toString().contains(str);
+        QJsonObject eventObj = e.toObject();
+        eventObj[STATE_IS_SELECTED] = e.toObject().value(STATE_NAME).toString().contains(str);
         if (e.toObject().value(STATE_NAME).toString().contains(str))
             res = true;
-        newEvents.append(evt);
-     }
+        newEvents.append(eventObj);
+    }
+
     // create new state to push
     QJsonObject stateNext = mState;
     stateNext[STATE_EVENTS] = newEvents;
@@ -1901,13 +1902,13 @@ void Project::updateSelectedEventsColor(const QColor& color)
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
     bool modified = false;
 
-    for (QJsonValueRef eventRef : events) {
-        QJsonObject eventObj = eventRef.toObject();
+    for (int i=0; i< events.size(); i++) {
+        QJsonObject eventObj = events[i].toObject();
         if (eventObj.value(STATE_IS_SELECTED).toBool()) {
             eventObj[STATE_COLOR_RED] = color.red();
             eventObj[STATE_COLOR_GREEN] = color.green();
             eventObj[STATE_COLOR_BLUE] = color.blue();
-            eventRef = eventObj;
+            events[i] = eventObj;
             modified = true;
         }
     }
@@ -1919,21 +1920,6 @@ void Project::updateSelectedEventsColor(const QColor& color)
     }
 }
 
-
-/*void Project::updateSelectedEventsMethod(MHVariable::SamplerProposal sp)
-{
-    QJsonObject stateNext = mState;
-    QJsonArray events = mState.value(STATE_EVENTS).toArray();
-    for (int i = 0; i<events.size(); ++i) {
-        QJsonObject evt = events.at(i).toObject();
-        if (evt.value(STATE_IS_SELECTED).toBool()) {
-            evt[STATE_EVENT_SAMPLER] = sp;
-            events[i] = evt;
-        }
-    }
-    stateNext[STATE_EVENTS] = events;
-    pushProjectState(stateNext, "Update selected events method", true);
-}*/
 void Project::updateSelectedEventsMethod(MHVariable::SamplerProposal sp)
 {
     // Create a copy of the current state to modify.
@@ -1941,57 +1927,58 @@ void Project::updateSelectedEventsMethod(MHVariable::SamplerProposal sp)
 
     // Retrieve the array of events from the current state.
     QJsonArray events = stateNext.value(STATE_EVENTS).toArray();
-
+    bool modified = false;
     // Iterate through the events and update the sampler for selected events.
-    for (const QJsonValue& value : events) {
-        QJsonObject event = value.toObject();
+    for (int i=0; i< events.size(); i++) {
+        QJsonObject eventObj = events[i].toObject();
 
         // If the event is selected, update its sampler method.
-        if (event.value(STATE_IS_SELECTED).toBool()) {
-            event[STATE_EVENT_SAMPLER] = sp;
+        if (eventObj.value(STATE_IS_SELECTED).toBool()) {
+            eventObj[STATE_EVENT_SAMPLER] = sp;
+            events[i] = eventObj;
+            modified = true;
         }
     }
 
-    // Update the events array in the state object.
-    stateNext[STATE_EVENTS] = events;
-
-    // Push the updated state to the project with a description.
-    pushProjectState(stateNext, "Update selected events method", true);
+    if (modified) {
+        QJsonObject stateNext = mState;
+        stateNext[STATE_EVENTS] = events;
+        // Push the updated state to the project with a description.
+        pushProjectState(stateNext, "Update selected events method", true);
+    }
 }
 
 void Project::updateSelectedEventsDataMethod(MHVariable::SamplerProposal sp, const QString& pluginId)
 {
-    QJsonObject stateNext = mState;
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
+    bool modified = false;
     for (int i = 0; i<events.size(); ++i) {
-        QJsonObject evt = events[i].toObject();
+        QJsonObject eventObj = events[i].toObject();
 
-        if (evt.value(STATE_IS_SELECTED).toBool()) {
-            QJsonArray dates = evt[STATE_EVENT_DATES].toArray();
+        if (eventObj.value(STATE_IS_SELECTED).toBool()) {
+            QJsonArray dates = eventObj[STATE_EVENT_DATES].toArray();
 
             // Iterate through the dates to update the sampler for the specified plugin.
-            for (const QJsonValue& dateValue : dates) {
-                QJsonObject date = dateValue.toObject();
+            for (int j=0; j< dates.size(); j++) {
+                QJsonObject date = dates[j].toObject();
 
                 // Update the sampler if the plugin ID matches.
                 if (date[STATE_DATE_PLUGIN_ID].toString() == pluginId) {
                     date[STATE_DATE_SAMPLER] = sp;
+                    dates[j] = date;
+                    modified = true;
                 }
             }
-           /* for (int j = 0; j<dates.size(); ++j) {
-                QJsonObject date = dates[j].toObject();
-                if (date[STATE_DATE_PLUGIN_ID].toString() == pluginId) {
-                    date[STATE_DATE_SAMPLER] = sp;
-                    dates[j] = date;
-                }
-            }*/
-            evt[STATE_EVENT_DATES] = dates;
-            events[i] = evt;
+
+            eventObj[STATE_EVENT_DATES] = dates;
+            events[i] = eventObj;
         }
     }
-
-    stateNext[STATE_EVENTS] = events;
-    pushProjectState(stateNext, "Update selected data method", true);
+    if (modified) {
+        QJsonObject stateNext = mState;
+        stateNext[STATE_EVENTS] = events;
+        pushProjectState(stateNext, "Update selected data method", true);
+    }
 }
 
 // --------------------------------------------------------------------
@@ -1999,24 +1986,7 @@ void Project::updateSelectedEventsDataMethod(MHVariable::SamplerProposal sp, con
 // --------------------------------------------------------------------
 /** @brief getUnusedDateId find a valid index in a project
  */
-/*int Project::getUnusedDateId(const QJsonArray& dates) const
-{
-    int id = -1;
-    bool idIsFree = false;
-    while (!idIsFree) {
-        ++id;
-        idIsFree = true;
-        //for (int i = 0; i < dates.size(); ++i) {
-        //    QJsonObject date = dates.at(i).toObject();
-        for (const auto date : dates) {
-            if (date.toObject().value(STATE_ID).toInt() == id) {
-                idIsFree = false;
-                break;
-            }
-        }
-    }
-    return id;
-}*/
+
 int Project::getUnusedDateId(const QJsonArray& dates) const
 {
     int id = 0;
@@ -2088,14 +2058,14 @@ void Project::addDate(int eventId, QJsonObject date)
     // Add the date
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
     for (int i = 0; i < events.size(); ++i) {
-        QJsonObject evt = events[i].toObject();
-        if (evt.value(STATE_ID).toInt() == eventId) {
-            date[STATE_ID] = getUnusedDateId(evt[STATE_EVENT_DATES].toArray());
-            QJsonArray dates = evt[STATE_EVENT_DATES].toArray();
+        QJsonObject eventObj = events[i].toObject();
+        if (eventObj.value(STATE_ID).toInt() == eventId) {
+            date[STATE_ID] = getUnusedDateId(eventObj[STATE_EVENT_DATES].toArray());
+            QJsonArray dates = eventObj[STATE_EVENT_DATES].toArray();
             dates.append(date);
 
-            evt[STATE_EVENT_DATES] = dates;
-            events[i] = evt;
+            eventObj[STATE_EVENT_DATES] = dates;
+            events[i] = eventObj;
             stateNext[STATE_EVENTS] = events;
             pushProjectState(stateNext, "Date created", true);
             break;
@@ -2457,6 +2427,7 @@ void Project::recycleDates(int eventId)
 
         for (int i = 0; i < events.size(); ++i) {
             QJsonObject event = events.at(i).toObject();
+
             if (event.value(STATE_ID).toInt() == eventId){
                 QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
                 for (auto i = indexes.size()-1; i >= 0; --i) {
@@ -2495,6 +2466,7 @@ QJsonObject Project::checkValidDates(const QJsonObject& stateToCheck)
     QJsonArray events = state.value(STATE_EVENTS).toArray();
     for (int i = 0; i < events.size(); ++i) {
         QJsonObject event = events.at(i).toObject();
+
         QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
         for (int j=0; j<dates.size(); ++j) {
             QJsonObject date = dates.at(j).toObject();
@@ -2610,11 +2582,12 @@ void Project::splitDate(const int eventId, const int dateId)
     StudyPeriodSettings settings = StudyPeriodSettings::fromJson(settingsJson);
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
 
-    for (int i=0; i<events.size(); ++i) {
+    for (qsizetype i=0; i<events.size(); ++i) {
         QJsonObject event = events.at(i).toObject();
+
         if (event.value(STATE_ID).toInt() == eventId) {
             QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
-            for (int j=0; j<dates.size(); ++j) {
+            for (qsizetype j=0; j<dates.size(); ++j) {
                 QJsonObject date = dates.at(j).toObject();
                 if (date.value(STATE_ID).toInt() == dateId) {
                     
@@ -2622,7 +2595,7 @@ void Project::splitDate(const int eventId, const int dateId)
                     QJsonArray subdates = date.value(STATE_DATE_SUB_DATES).toArray();
                     PluginAbstract* plugin = PluginManager::getPluginFromId(date.value(STATE_DATE_PLUGIN_ID).toString());
 
-                    for (int k = 0; k<subdates.size(); ++k) {
+                    for (qsizetype k = 0; k<subdates.size(); ++k) {
                         QJsonObject sd = subdates.at(k).toObject();
                         bool valid = plugin->isDateValid(sd[STATE_DATE_DATA].toObject(), settings);
                         sd[STATE_DATE_VALID] = valid;
@@ -2648,14 +2621,15 @@ void Project::updateAllDataInSelectedEvents(const QHash<QString, QVariant>& grou
     QJsonObject stateNext = mState;
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
 
-    for (int i = 0; i < events.size(); ++i) {
+    for (qsizetype i = 0; i < events.size(); ++i) {
         QJsonObject event = events.at(i).toObject();
         if ((event.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) &&  // Not a bound
            (event.value(STATE_IS_SELECTED).toBool())) // Event is selected
         {
             QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
-            for (int j = 0; j<dates.size(); ++j) {
+            for (qsizetype j = 0; j<dates.size(); ++j) {
                 QJsonObject date = dates.at(j).toObject();
+
                 if (date.value(STATE_DATE_PLUGIN_ID).toString() == groupedAction.value("pluginId").toString()) {
                     QJsonObject data = date.value(STATE_DATE_DATA).toObject();
                     data[groupedAction["valueKey"].toString()] = groupedAction.value("value").toString();
@@ -2675,7 +2649,7 @@ void Project::updateAllDataInSelectedEvents(const QHash<QString, QVariant>& grou
 void Project::createPhase(qreal x, qreal y, QWidget* parent)
 {
     if (studyPeriodIsValid()) {
-        PhaseDialog* dialog = new PhaseDialog(parent);//qApp->activeWindow());
+        PhaseDialog* dialog = new PhaseDialog(parent);
         const Phase& p = Phase();
         dialog->setPhase(p.toJson());
 
@@ -2733,8 +2707,9 @@ void Project::updatePhase(const QJsonObject& phaseIn)
             QJsonObject stateNext = mState;
             QJsonArray phases = stateNext.value(STATE_PHASES).toArray();
             QString reason;
-            for (int i=0; i<phases.size(); ++i) {
+            for (qsizetype i=0; i<phases.size(); ++i) {
                 QJsonObject p = phases.at(i).toObject();
+
                 if (p.value(STATE_ID).toInt() == phase.value(STATE_ID).toInt()) {
                     // check modification type to set mReasonChangeStructure or mReasonChangeDesign in pushProjectState
                     // if only mReasonChangeDesign we don't need to redo calcul to see the result
@@ -2789,6 +2764,7 @@ void Project::deleteSelectedPhases()
         const QJsonObject phase = phases.at(i).toObject();
         if (phase.value(STATE_IS_SELECTED).toBool()) {
             const int phase_id = phase.value(STATE_ID).toInt();
+
             for (qsizetype j=phases_constraints.size()-1; j>=0; --j) {
                 QJsonObject constraint = phases_constraints.at(j).toObject();
                 const int bwd_id = constraint.value(STATE_CONSTRAINT_BWD_ID).toInt();
@@ -2916,7 +2892,7 @@ void Project::mergePhases(int phaseFromId, int phaseToId)
 QJsonObject Project::getPhasesWithId(const int id)
 {
     const QJsonArray& phases = mState.value(STATE_PHASES).toArray();
-    for (const QJsonValue pha : phases) {
+    for (const QJsonValue &pha : std::as_const(phases)) {
         if (pha.toObject().value(STATE_ID) == id)
             return pha.toObject();
     }
@@ -3313,7 +3289,6 @@ void Project::clear_model()
 {
     if (mModel && mModel->mNumberOfEvents > 0) {
         mModel->clear();
-
     }
 
     emit noResult();
@@ -3322,7 +3297,6 @@ void Project::clear_model()
 bool Project::isCurve() const {
     const QJsonObject &CurveSettings = mState.value(STATE_CURVE).toObject();
     return (!CurveSettings.isEmpty() && CurveSettings.value(STATE_CURVE_PROCESS_TYPE).toInt() != CurveSettings::eProcess_None);
-
 }
 
 void Project::runCurve()

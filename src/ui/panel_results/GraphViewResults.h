@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -194,11 +194,9 @@ public:
     };
 
 
-
-    static int mHeightForVisibleAxis ;
     // member
 protected:
-
+    int mHeightForVisibleAxis;
     Overlay* mOverLaySelect;
 
     GraphView* mGraph;
@@ -225,9 +223,6 @@ protected:
 
     QColor mMainColor;
 
-   /* QTextEdit* mStatArea;
-    QString mStatText;*/
-
     qreal mMargin;
     qreal mLineH;
     int mTopShift;
@@ -246,7 +241,7 @@ public:
     void setMCMCSettings(const MCMCSettings &mcmc, const std::vector<ChainSpecs> &chains);
 
     void setMainColor(const QColor &color);
-   // void toggle(const QRect& geometry); //useless
+
     void setTitle(const QString &title);
     inline void setTipYLab (const QString &label) {mGraph->setTipYLab(label);};
     inline QString title() const {return mTitle;};
@@ -254,12 +249,16 @@ public:
     void setMarginLeft (qreal &m);
     void setMarginRight (qreal &m);
 
-   // void setRendering(GraphView::Rendering render);
     virtual void setGraphsFont(const QFont &font);
     void setGraphsThickness(int value);
     void setGraphsOpacity(int value);
 
     void setItemColor(const QColor &itemColor);
+
+    void setHeightForVisibleAxis( const int height)
+    {
+        mHeightForVisibleAxis = height;
+    }
 
     inline bool isSelected() const  {return mIsSelected;}
 
@@ -314,6 +313,8 @@ public:
     void updateLayout();
     void showNumericalResults(const bool show);
     inline void setNumericalResults(const QString &resultsHTML){mStatHTMLText = resultsHTML; mStatArea->setText(mStatHTMLText);};
+
+    void setView(type_data range_Xmin, type_data range_Xmax,  type_data resultCurrentMinT, type_data resultCurrentMaxT, const double scale_major, const int scale_minor);
 
 public slots:
     void setRange(type_data min, type_data max);

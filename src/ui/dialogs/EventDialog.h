@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2025
 Authors :
 	Philippe LANOS
 	Helori LANOS
@@ -40,11 +40,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define EVENTDIALOG_H
 
 #include <QDialog>
-//#include "Event.h"
+#include <QLabel>
+#include <QComboBox>
 
-class QLabel;
 class LineEdit;
-class QComboBox;
 class ColorPicker;
 
 

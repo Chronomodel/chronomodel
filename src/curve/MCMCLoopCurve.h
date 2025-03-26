@@ -231,28 +231,11 @@ private:
      static t_prob ln_h_YWI_3_Y(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp_matB, const double lambdaSpline);
      static t_prob ln_h_YWI_3_Z(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp_matB, const double lambdaSpline);
 
-     static std::pair<Matrix2D, MatrixDiag> decomp_matB (const SplineMatrices &matrices, const double lambdaSpline)
-     {
-         Q_ASSERT(lambdaSpline != 0);
-         /*
-          * if lambdaSpline == 0, it is interpolatation
-          * return decompositionCholesky(matrices.matR, 5, 1);
-          */
 
-         // Decomposition_Cholesky de matB en matL et matD
-         // Si lambda global: calcul de Mat_B = R + lambda * Qt * W-1 * Q  et décomposition de Cholesky en Mat_L et Mat_D
-         const Matrix2D &tmp = multiConstParMat(matrices.matQTW_1Q, lambdaSpline, 5);
-
-         const Matrix2D &rMatR = matrices.matR;
-         const Matrix2D &rMatB = addMatEtMat(rMatR, tmp, 5);
-         return decompositionCholesky(rMatB, 5, 1);
-
-     }
-
-
-     static t_prob h_lambda(const SplineMatrices &matrices, const int nb_noeuds, const  double lambdaSpline) ;
-     t_prob h_theta (const QList<std::shared_ptr<Event>> &events) const;
-     static double h_theta_Event (const std::shared_ptr<Event> e);
+    t_prob h_lambda_321(const SplineMatrices &matrices, const int nb_noeuds, const  double lambdaSpline) ;
+    t_prob h_lambda_330(const double lambdaSpline);
+    t_prob h_theta (const QList<std::shared_ptr<Event>> &events) const;
+    static double h_theta_Event (const std::shared_ptr<Event> e);
 
 
      inline t_prob h_VG_Event(const std::shared_ptr<Event> &e, const double S02_Vg) const;
@@ -303,8 +286,6 @@ private:
     double S02_lambda_WIK (const Matrix2D &K, const int nb_noeuds);
     double h_lambda_Komlan(const Matrix2D &K, const Matrix2D &K_new, const int nb_noeuds, const double &lambdaSpline);
     double rapport_Theta(const std::function<double (std::shared_ptr<Event>)> &fun, const std::vector<std::shared_ptr<Event>> &lEvents, const Matrix2D &K, const Matrix2D &K_new, const double lambdaSpline);
-
-    MatrixDiag createDiagWInv_Vg0(const std::vector<std::shared_ptr<Event> > &lEvents);
 
     SplineMatrices prepareCalculSpline_W_Vg0(const std::vector<std::shared_ptr<Event> > &sortedEvents, std::vector<double> &vecH);
     MCMCSpline samplingSpline_multi(std::vector<std::shared_ptr<Event>> &lEvents, std::vector<std::shared_ptr<Event>> &lEventsinit, std::vector<double> vecYx, std::vector<double> vecYstd, const Matrix2D &RR, const Matrix2D &R_1QT, const Matrix2D &Q, const Matrix2D &QT, const Matrix2D &matK);

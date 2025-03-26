@@ -110,5 +110,6 @@ void showMatrix(const Matrix2D& m, const std::string& str="");
 void showMatrix(const MatrixDiag& m, const std::string& str="");
 
 void showVector(const std::vector<t_matrix>& m, const std::string& str="");
+void showVector(const std::vector<double>& m, const std::string& str="");
 
 #endif // MATRIX_H

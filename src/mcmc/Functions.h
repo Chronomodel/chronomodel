@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -96,6 +96,7 @@ QString densityAnalysisToString(const DensityAnalysis& analysis);
 
 double variance_Knuth(const QList<double> &data);
 double variance_Knuth(const std::vector<double> &data);
+double variance_Knuth(const std::vector<t_matrix> &data);
 double variance_Knuth(const std::vector<int> &data);
 
 type_data std_Koening(const QList<type_data> &data);
@@ -160,7 +161,7 @@ const QString get_HPD_text(const QList<QPair<double, QPair<double, double> >> &i
 QList<QPair<double, QPair<double, double> > > intervals_hpd_from_mapping(const std::map<double, double> &area_mapping, double &real_thresh);
 QList<QPair<double, QPair<double, double> > > intervals_hpd_from_mapping(const std::map<double, double> &area_mapping);
 //-------- Matrix
-std::vector<double> initVector(size_t n);
+std::vector<t_matrix> initVector(size_t n);
 
 std::vector<std::vector<int>> initIntMatrix(size_t rows, size_t cols);
 std::vector<std::vector<double>> initMatrix(size_t rows, size_t cols);
@@ -387,8 +388,8 @@ Quartiles quantilesType(const C<T>& trace, const int quartileType, const double 
     C<T> traceSorted (trace);
 
     decltype(gammaQuartile(trace, quartileType, p)) parQ1 = gammaQuartile(trace, quartileType, p); // first is j and second is gamma
-    decltype(gammaQuartile(trace, quartileType, p))  parQ2 = gammaQuartile(trace, quartileType, 0.5);
-    decltype(gammaQuartile(trace, quartileType, p))  parQ3 = gammaQuartile(trace, quartileType, 1-p);
+    decltype(gammaQuartile(trace, quartileType, p)) parQ2 = gammaQuartile(trace, quartileType, 0.5);
+    decltype(gammaQuartile(trace, quartileType, p)) parQ3 = gammaQuartile(trace, quartileType, 1-p);
 
     std::sort(traceSorted.begin(), traceSorted.end());
 
@@ -424,6 +425,9 @@ Quartiles quantilesType(const C<T>& trace, const int quartileType, const double 
 
 std::pair<double, double> solve_quadratic(const double y, const double a, const double b, const double c);
 
-std::vector<double> gaussian_filter(std::vector<double>& curve_input, const double sigma);
+std::vector<double> gaussian_filter(std::vector<double>& curve_input, const double sigma, const short padding_type=1);
+std::vector<long double> gaussian_filter(std::vector<long double>& curve_input, const double sigma, const short padding_type=1);
+
+std::vector<double> low_pass_filter(std::vector<double>& curve_input, const double Tc, const short padding_type = 0);
 
 #endif

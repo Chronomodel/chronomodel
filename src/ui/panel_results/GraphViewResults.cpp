@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -44,8 +44,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MHVariable.h"
 #include "AppSettings.h"
 
-#include <QtWidgets>
-#include <QtSvg>
 #include <QMessageBox>
 #include <QPointer>
 #include <QTextEdit>
@@ -53,7 +51,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 //  Constructor / Destructor
 
-int GraphViewResults::mHeightForVisibleAxis = int (4 * AppSettings::heigthUnit()); //look ResultsView::applyAppSettings()
+//int GraphViewResults::mHeightForVisibleAxis = int (4 * AppSettings::heigthUnit()); //look ResultsView::applyAppSettings()
 
 GraphViewResults::GraphViewResults(QWidget* parent):
     QWidget(parent),
@@ -77,6 +75,7 @@ GraphViewResults::GraphViewResults(QWidget* parent):
     mTopShift(0),
     mGraphFont()
 {
+    mHeightForVisibleAxis = int (4 * AppSettings::heigthUnit());
     setMouseTracking(true);
 
     mGraph = new GraphView(this);
@@ -162,6 +161,18 @@ void GraphViewResults::setMCMCSettings(const MCMCSettings& mcmc, const std::vect
     mChains = chains;
 }
 
+
+void GraphViewResults::setView(type_data range_Xmin, type_data range_Xmax,  type_data resultCurrentMinT, type_data resultCurrentMaxT, const double scale_major, const int scale_minor)
+{
+    mGraph->blockSignals(true);
+    mGraph->setRangeX(range_Xmin, range_Xmax);
+    mGraph->setCurrentX(resultCurrentMinT, resultCurrentMaxT);
+    mGraph->changeXScaleDivision(scale_major, scale_minor);
+    mGraph->blockSignals(false);
+    mGraph->zoomX(resultCurrentMinT, resultCurrentMaxT);
+    // we must update the size of the Graph if the font has changed between two toogle
+    updateLayout();
+}
 /**
  @brief set date range on all the study
  */
@@ -179,13 +190,7 @@ void GraphViewResults::setCurrentX(type_data min, type_data max)
 void GraphViewResults::zoom(type_data min, type_data max)
 {
     mGraph->zoomX(min, max);
-  //  const auto graphInfo = mGraph->getInfo();
-    // Force le rafraichissement de l'indication Min = ... / Max = ...
-  //  if (!graphInfo.isEmpty())
-   //     qApp->processEvents();
-
     updateLayout();
-
 }
 
 void GraphViewResults::setMainColor(const QColor& color)

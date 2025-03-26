@@ -59,55 +59,6 @@ class MultiCalibrationView: public QWidget
 {
     Q_OBJECT
 public:
-    MultiCalibrationView(QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
-
-    ~MultiCalibrationView();
-
-    void setProject();
-
-    void updateGraphList();
-    void initScale (const double majorScale, const int minorScale) { mMajorScale = majorScale; mMinorScale = minorScale;}
-    void initScale (const Scale &s) { mMajorScale = s.mark; mMinorScale = s.tip;}
-
-
-protected:
-    void paintEvent(QPaintEvent *e);
-    void resizeEvent(QResizeEvent*);
-    void updateLayout();
-    MultiCalibrationDrawing* scatterPlot(const double thres);
-    MultiCalibrationDrawing* fitPlot(const double thres);
-    MultiCalibrationDrawing* multiCalibrationPlot(const double thres);
-
-
-public slots:
-    virtual void setVisible(bool visible);
-    void updateMultiCalib(); // come from ModelView
-    void updateScaleX();
-    void applyAppSettings();
-
-private slots:
-    void updateHPDGraphs(const QString &thres);
-
-    void updateGraphsSize(const QString &sizeStr);
-    void updateYZoom(const double prop = 100);
-
-    void updateGraphsZoom();
-    void updateScroll();
-    void exportImage();
-    void exportFullImage();
-    void copyImage();
-    void copyText();
-    void exportResults();
-
-    void changeCurveColor();
-    void showStat();
-    void showScatter();
-    void showFit();
-
-signals:
-    void closed();
-
-public:
     StudyPeriodSettings mSettings;
 
 private:
@@ -156,12 +107,64 @@ private:
     double mTminDisplay;
     double mTmaxDisplay;
     double mThreshold;
-    int mGraphHeight;
+    qreal mGraphHeight;
+    qreal mHeightForVisibleAxis;
     QColor mCurveColor;
 
     QString mResultText;
 
     SilvermanParam mSilverParam;
+
+public:
+    MultiCalibrationView(QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::Widget);
+
+    ~MultiCalibrationView();
+
+    void setProject();
+
+    void updateGraphList();
+    void initScale (const double majorScale, const int minorScale) { mMajorScale = majorScale; mMinorScale = minorScale;}
+    void initScale (const Scale &s) { mMajorScale = s.mark; mMinorScale = s.tip;}
+
+
+protected:
+    void paintEvent(QPaintEvent *e);
+    void resizeEvent(QResizeEvent*);
+    void updateLayout();
+    MultiCalibrationDrawing* scatterPlot(const double thres);
+    MultiCalibrationDrawing* fitPlot(const double thres);
+    MultiCalibrationDrawing* multiCalibrationPlot(const double thres);
+
+
+public slots:
+    virtual void setVisible(bool visible);
+    void updateMultiCalib(); // come from ModelView
+    void updateScaleX();
+    void applyAppSettings();
+
+private slots:
+    void updateHPDGraphs(const QString &thres);
+
+    void updateGraphsSize(const QString &sizeStr);
+    void updateYZoom(const double prop = 100);
+
+    void updateGraphsZoom();
+    void updateScroll();
+    void exportImage();
+    void exportFullImage();
+    void copyImage();
+    void copyText();
+    void exportResults();
+
+    void changeCurveColor();
+    void showStat();
+    void showScatter();
+    void showFit();
+
+signals:
+    void closed();
+
+
 };
 
 #endif // MULTICALIBRATIONVIEW_H

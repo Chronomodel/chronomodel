@@ -485,19 +485,19 @@ void MultiCalibrationView::updateGraphList()
         }
 
         if (mScatterClipBut->isChecked()) {
-            GraphViewResults::mHeightForVisibleAxis = 8 * AppSettings::heigthUnit();
+            mHeightForVisibleAxis = 8 * AppSettings::heigthUnit();
             mDrawing = scatterPlot(mThreshold);
 
         } else if (mFitClipBut->isChecked()) {
-            GraphViewResults::mHeightForVisibleAxis = 8 * AppSettings::heigthUnit();
+            mHeightForVisibleAxis = 8 * AppSettings::heigthUnit();
             mDrawing = fitPlot(mThreshold);
 
         }  else {
-            GraphViewResults::mHeightForVisibleAxis = 4 * AppSettings::heigthUnit();
+            mHeightForVisibleAxis = 4 * AppSettings::heigthUnit();
             mDrawing = multiCalibrationPlot(mThreshold);
 
         }
-        const double origin = GraphViewResults::mHeightForVisibleAxis;
+        const double origin = mHeightForVisibleAxis;
         const double prop = mYZoom->getProp();
 
         mGraphHeight = mScatterClipBut->isChecked() || mFitClipBut->isChecked()?  3*prop * origin * 2 : prop * origin * 2;
@@ -1404,7 +1404,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
     std::vector<double> vec_X, vec_Y, vec_Z;
     std::vector<double> vec_X_err, vec_Y_err, vec_Z_err;
 
-    double X, errX, Y, errY, Z, errZ, tmin, tmax;
+    double X, errX, Y, errY, Z, errZ; //, tmin, tmax;
     for (const auto& sEvent : selectedEvents) {
             const double xIncDepth = sEvent.value(STATE_EVENT_X_INC_DEPTH).toDouble();
             const double s_XA95Depth = sEvent.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble();
@@ -1601,15 +1601,17 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                     const std::map<double, double> &subData = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
                     if (!subData.empty()) {
-
+                        CurveRefPts::PointType typePts;
                         // hpd results
+                        /*
                         QList<QPair<double, QPair<double, double> > > intervals ;
                         create_HPD_by_dichotomy(subData, intervals, thres);
-
-                        CurveRefPts::PointType typePts;
                         tmin = intervals.first().second.first;
                         tmax = intervals.last().second.second;
                         const double tmid = (tmin+tmax)/2.0;
+                        */
+
+                        const double tmid = DateUtils::convertToAppSettingsFormat( sample_in_Repartition_date_fixe (d, mSettings));
                         vec_t.push_back(tmid);
                         vec_X.push_back(X);
                         vec_Y.push_back(Y);
@@ -1830,6 +1832,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
         break;
     }
 
+
     // __________________________
     // Génération des courbes
     // __________________________
@@ -1837,15 +1840,34 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
     MCMCSpline spline = do_spline_res.first;
     std::pair<double, double> lambda_Vg = do_spline_res.second;
     QString spline_info;
+    auto lambda = lambda_Vg.first;
+    // On peut rentrer "inf" comme valeur de lambda dans la boite ce qui force l'ajustement spline
     if (mSilverParam.lambda_fixed) {
-       spline_info +=  tr(" Fixed Smoothing = 10E%1 ;").arg( QString::number(log10(lambda_Vg.first)));
-       mSilverParam.comment = "";
+        if (lambda == 0.0) {
+            spline_info =  tr("Forced Spline Fitting ;");
+
+        } else {
+            spline_info =  tr("Fixed Smoothing = 10E%1 ;").arg(locale().toString(log10(lambda)));
+        }
+        mSilverParam.comment = "";
 
     } else {
-       spline_info +=  tr(" Smoothing = 10E%1 ;").arg( QString::number(log10(lambda_Vg.first)));
-    }
 
-    spline_info +=  tr(" Estimated std g = %1 ").arg( QString::number(sqrt(lambda_Vg.second))) + QString::fromStdString(mSilverParam.comment);
+        if (lambda == 0.0) {
+            spline_info = QString::fromStdString(mSilverParam.comment);//   tr(" Spline Fitting ;");
+
+        } else if (lambda == 10.0E20) {
+            spline_info = QString::fromStdString(mSilverParam.comment);//   tr(" Linear regression ;");
+
+        } else {
+            spline_info += QString::fromStdString(mSilverParam.comment) + tr(" Smoothing = 10E%1 ;").arg(locale().toString(log10(lambda)));
+        }
+
+    }
+    mSilverParam.comment = "";
+    if (lambda != 0.0) {
+        spline_info +=  tr(" Estimated std g = %1 ").arg(locale().toString(sqrt(lambda_Vg.second)));// + QString::fromStdString(mSilverParam.comment);
+    }
 
     if (processType == CurveSettings::eProcess_Univariate ||
         processType == CurveSettings::eProcess_Inclination ||
@@ -2054,11 +2076,11 @@ void MultiCalibrationView::updateGraphsSize(const QString &sizeStr)
     bool ok;
     const double val = locale().toDouble(sizeStr, &ok);
     if (ok) {
-        const double origin = GraphViewResults::mHeightForVisibleAxis; //Same value in ResultsView::applyAppSettings()
+        const double origin = mHeightForVisibleAxis;
         const double prop =  val / 100.;
 
-        mGraphHeight = int ( prop * origin );
-        mYZoom->setProp(prop /2., false);
+        mGraphHeight = prop * origin;
+        mYZoom->setProp(prop /2.0, false);
 
     } else
         return;
@@ -2076,7 +2098,7 @@ void MultiCalibrationView::updateGraphsSize(const QString &sizeStr)
 
 void MultiCalibrationView::updateYZoom(const double prop)
 {
-    const double origin = GraphViewResults::mHeightForVisibleAxis; //Same value in ResultsView::applyAppSettings()
+    const double origin = mHeightForVisibleAxis;
 
     mGraphHeight = int ( prop * origin * 2);
 
@@ -2343,7 +2365,7 @@ void MultiCalibrationView::exportImage()
 
 void MultiCalibrationView::exportFullImage()
 {
-    bool printAxis = (mGraphHeight < GraphViewResults::mHeightForVisibleAxis);
+    bool printAxis = (mGraphHeight < mHeightForVisibleAxis);
     QFontMetricsF fmAxe (mDrawing->font());
 
     QWidget* widgetExport = mDrawing->getGraphWidget();

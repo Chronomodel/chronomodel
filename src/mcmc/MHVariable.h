@@ -57,6 +57,32 @@ public:
         //eMHSymGaussAdapt = 5
     };
 
+    double mSigmaMH;
+
+    // Buffer glissant de la taille d'un batch pour calculer la courbe d'évolution
+    // du taux d'acceptation chaine par chaine
+
+    std::vector<bool> mLastAccepts;
+
+    decltype(mLastAccepts.size()) mLastAcceptsLength;
+
+    // Buffer contenant toutes les acceptations cumulées pour toutes les chaines
+    // sur les parties acquisition uniquement.
+    // A stocker dans le fichier résultats .res !
+
+    std::vector<long long> mNbValuesAccepted; //Number of values accepted // old mAllAccept
+
+    // Computed at the end as numerical result :
+    double mGlobalAcceptationPerCent;
+
+    // Buffer contenant tous les taux d'acceptation calculés (1 par batch)
+    // On en affiche des sous-parties (correspondant aux chaines) dans la vue des résultats
+    // A stocker dans les résultats!
+
+    std::shared_ptr<std::vector<double>> mHistoryAcceptRateMH;
+
+    SamplerProposal mSamplerProposal;
+
     MHVariable();
     explicit MHVariable(const MHVariable& origin);
     /** move constructor */
@@ -97,37 +123,13 @@ public:
     static QString getSamplerProposalText(const MHVariable::SamplerProposal sp);
     static MHVariable::SamplerProposal getSamplerProposalFromText(const QString &text);
 
-public:
-    double mSigmaMH;
 
-    // Buffer glissant de la taille d'un batch pour calculer la courbe d'évolution
-    // du taux d'acceptation chaine par chaine
-
-    std::vector<bool> mLastAccepts;
-
-    decltype(mLastAccepts.size()) mLastAcceptsLength;
-
-    // Buffer contenant toutes les acceptations cumulées pour toutes les chaines
-    // sur les parties acquisition uniquement.
-    // A stocker dans le fichier résultats .res !
-
-    std::vector<long long> mNbValuesAccepted; //Number of values accepted // old mAllAccept
-
-    // Computed at the end as numerical result :
-    double mGlobalAcceptationPerCent;
-
-    // Buffer contenant tous les taux d'acceptation calculés (1 par batch)
-    // On en affiche des sous-parties (correspondant aux chaines) dans la vue des résultats
-    // A stocker dans les résultats!
-
-    std::shared_ptr<std::vector<double>> mHistoryAcceptRateMH;
-
-    SamplerProposal mSamplerProposal;
-    inline void load_stream(QDataStream& stream) {load_stream_v328(stream);};
+    inline void load_stream(QDataStream& stream) {load_stream_v330(stream);};
 
 private:
     void load_stream_v328(QDataStream& stream);
     void load_stream_v327(QDataStream& stream);
+    void load_stream_v330(QDataStream& stream);
 
 };
 

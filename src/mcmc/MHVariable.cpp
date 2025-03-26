@@ -495,7 +495,9 @@ QDataStream &operator<<( QDataStream& stream, const MHVariable& data )
     stream << dynamic_cast<const MetropolisVariable&>(data);
 
     /* owned by MHVariable*/
-    //stream << data.mNbValuesAccepted;
+
+    stream << static_cast<qint64>(data.mLastAcceptsLength); // since v3.3.0
+
     save_container(stream, data.mNbValuesAccepted);
     save_container(stream, *data.mHistoryAcceptRateMH);
     
@@ -511,28 +513,6 @@ QDataStream &operator<<( QDataStream& stream, const MHVariable& data )
 /**
  read stream
  */
-void MHVariable::load_stream_v328(QDataStream& stream)
-{
-    /* herited from MetropolisVariable*/
-    MetropolisVariable::load_stream_v328(stream);
-
-    mNbValuesAccepted.clear();
-    //stream >> data.mNbValuesAccepted;
-    load_container(stream, mNbValuesAccepted);
-
-    //data.mHistoryAcceptRateMH = load_std_vector_ptr(stream);
-    reload_shared_ptr(mHistoryAcceptRateMH, stream);
-
-    if (!mLastAccepts.empty())
-        mLastAccepts.clear();
-
-    //stream >> data.mLastAccepts;
-    load_container(stream, mLastAccepts);
-
-    stream >> mSigmaMH;
-    stream >> mSamplerProposal;
-
-}
 
 void MHVariable::load_stream_v327(QDataStream& stream)
 {
@@ -561,6 +541,56 @@ void MHVariable::load_stream_v327(QDataStream& stream)
     stream >> mSamplerProposal;
 
 }
+
+void MHVariable::load_stream_v328(QDataStream& stream)
+{
+    /* herited from MetropolisVariable*/
+    MetropolisVariable::load_stream_v328(stream);
+
+    mNbValuesAccepted.clear();
+    //stream >> data.mNbValuesAccepted;
+    load_container(stream, mNbValuesAccepted);
+
+    //data.mHistoryAcceptRateMH = load_std_vector_ptr(stream);
+    reload_shared_ptr(mHistoryAcceptRateMH, stream);
+
+    if (!mLastAccepts.empty())
+        mLastAccepts.clear();
+
+    //stream >> data.mLastAccepts;
+    load_container(stream, mLastAccepts);
+
+    stream >> mSigmaMH;
+    stream >> mSamplerProposal;
+
+}
+void MHVariable::load_stream_v330(QDataStream& stream)
+{
+    /* herited from MetropolisVariable*/
+    MetropolisVariable::load_stream_v330(stream);
+
+    qint64 l;
+    stream >> l;
+    mLastAcceptsLength = l;
+
+    mNbValuesAccepted.clear();
+    //stream >> data.mNbValuesAccepted;
+    load_container(stream, mNbValuesAccepted);
+
+    //data.mHistoryAcceptRateMH = load_std_vector_ptr(stream);
+    reload_shared_ptr(mHistoryAcceptRateMH, stream);
+
+    if (!mLastAccepts.empty())
+        mLastAccepts.clear();
+
+    //stream >> data.mLastAccepts;
+    load_container(stream, mLastAccepts);
+
+    stream >> mSigmaMH;
+    stream >> mSamplerProposal;
+
+}
+
 
 QDataStream &operator>>(QDataStream& stream, MHVariable& data )
 {

@@ -1300,7 +1300,7 @@ std::valarray<double> polynom_regression_coef(QMap<double, double> &data,  int d
 }
 
 /**
- * @brief MSE mean squared error
+ * @brief MSE Mean Squared Error
  * @param data
  * @param polynom_coef
  * @return

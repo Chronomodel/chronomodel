@@ -56,7 +56,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QElapsedTimer>
 //#include <experimental/algorithm>
 
-
+#include <cmath>  // pour expl, powl, std::isnan
 #include <errno.h>      /* errno, EDOM */
 
 // -----------------------------------------------------------------
@@ -308,6 +308,23 @@ double variance_Knuth(const std::vector<double> &data)
     for (const auto& x : data) {
         n++;
         double previousMean = mean;
+        mean += (x - previousMean)/n;
+        variance +=  (x - previousMean)*(x - mean);
+    }
+
+    return variance/static_cast<double>(n);
+
+}
+
+double variance_Knuth(const std::vector<t_matrix> &data)
+{
+    unsigned n = 0;
+    t_matrix mean = 0.0;
+    t_matrix variance = 0.0;
+
+    for (const auto& x : data) {
+        n++;
+        t_matrix previousMean = mean;
         mean += (x - previousMean)/n;
         variance +=  (x - previousMean)*(x - mean);
     }
@@ -1774,9 +1791,9 @@ QList<QPair<double, QPair<double, double> > > intervals_hpd_from_mapping(const s
 #pragma mark Calcul Matriciel
 
 // useless function
-std::vector<double> initVector(size_t n)
+std::vector<t_matrix> initVector(size_t n)
 {
-     return std::vector<double>(n, 0.);
+    return std::vector<t_matrix>(n, 0.);
 }
 
 std::vector<long double> initLongVector(size_t n)
@@ -2938,11 +2955,25 @@ std::pair<Matrix2D, MatrixDiag> decompositionCholesky(const Matrix2D &matrix, co
                 if (abs_minus(i, j) <= nbBandes) {
                     t_matrix sum = 0.0L;
                     // Calcul de la somme des produits
-                    for (size_t k = shift; k < j; ++k) {
+                    /* for (size_t k = shift; k < j; ++k) {
                         if (abs_minus(i, k) <= nbBandes) {
                             sum += matL[i][k] * matD[k] * matL[j][k];
                         }
+                    } */
+                    //
+                    //t_matrix sum = 0.0L;
+                    t_matrix compensation = 0.0L;  // terme de compensation
+                    for (size_t k = shift; k < j; ++k) {
+                        if (abs_minus(i, k) <= nbBandes){
+                            t_matrix product = matL[i][k] * matD[k] * matL[j][k];
+                            // Algorithme Kahan pour la sommation
+                            t_matrix y = product - compensation;
+                            t_matrix t = sum + y;
+                            compensation = (t - sum) - y;
+                            sum = t;
+                        }
                     }
+                    ///
                     matL[i][j] = (matrix[i][j] - sum) / matD[j];
                 }
             }
@@ -2997,10 +3028,14 @@ std::pair<Matrix2D, MatrixDiag> decompositionCholesky(const Matrix2D &matrix, co
     return {matL, matD};
 }
 
+
+
+
+
 std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, MatrixDiag> &decomp, const std::vector<double> &vecQtY)
 {
-    const Matrix2D &L = decomp.first;
-    const MatrixDiag &D = decomp.second;
+    const Matrix2D& L = decomp.first;
+    const MatrixDiag& D = decomp.second;
     const size_t n = D.size();
     std::vector<long double> vecGamma (n);
     std::vector<long double> vecU (n);
@@ -3044,10 +3079,16 @@ std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, 
     return resultat;
 }
 
+/**
+ * @brief resolutionSystemeLineaireCholesky, calcul vecGamma
+ * @param decomp
+ * @param vecQtY
+ * @return
+ */
 std::vector<t_matrix> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, MatrixDiag>& decomp, const std::vector<t_matrix>& vecQtY)
 {
-    const Matrix2D &L = decomp.first;
-    const MatrixDiag &D = decomp.second;
+    const Matrix2D& L = decomp.first;
+    const MatrixDiag& D = decomp.second;
     const size_t n = D.size();
     std::vector<t_matrix> vecGamma (n);
     std::vector<t_matrix> vecU (n);
@@ -3720,7 +3761,7 @@ std::pair<double, double> solve_quadratic(const double y, const double a, const 
  * @param sigma, of the gaussian
  * @return
  */
-std::vector<double> gaussian_filter(std::vector<double>& curve_input, const double sigma)
+std::vector<double> gaussian_filter(std::vector<double>& curve_input, const double sigma, const short padding_type)
 {
 
     //qDebug() <<"[gaussian_filter]";
@@ -3754,23 +3795,34 @@ std::vector<double> gaussian_filter(std::vector<double>& curve_input, const doub
     fftw_complex *inputComplex;
     inputComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
 
+    if (padding_type == 0) {
+        for (int i  = 0; i< paddingSize; i++) {
+            inputReal[i] = 0;
+        }
+        for (int i = inputSize+paddingSize; i< N; i++) {
+            inputReal[i] = 0;
+        }
 
-    // we could use std::copy
-    for (int i  = 0; i< paddingSize; i++) {
-        inputReal[i] = curve_input[0];//0.;
+    } else if (padding_type == 1) {
+        for (int i  = 0; i< paddingSize; i++) {
+            inputReal[i] = curve_input[0];
+        }
+        for (int i = inputSize+paddingSize; i< N; i++) {
+            inputReal[i] = curve_input[inputSize-1];
+        }
     }
+    // we could use std::copy
+
     for (int i = 0; i< inputSize; i++) {
         inputReal[i+paddingSize] = curve_input[i];
     }
-    for (int i ( inputSize+paddingSize); i< N; i++) {
-        inputReal[i] = curve_input[inputSize-1];
-    }
+
     fftw_plan plan_input = fftw_plan_dft_r2c_1d(N, inputReal, inputComplex, FFTW_ESTIMATE);
 
     fftw_execute(plan_input);
 
     for (int i = 0; i < NComplex; ++i) {
-        const double s =  M_PI * (double)i / (double)NComplex;
+        const double s =  M_PI * (double)i / (double)N;
         const double factor = exp(-2. * pow(s * sigma_filter, 2.));
         if (isnan(factor)) {
             qDebug()<<"gaussian filter"<< s << " isnan";
@@ -3782,7 +3834,7 @@ std::vector<double> gaussian_filter(std::vector<double>& curve_input, const doub
 
 
     double *outputReal;
-    outputReal = new double [2* (N/2)+1];
+    outputReal = new double [N];// [2* (N/2)+1];
 
     fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, inputComplex, outputReal, FFTW_ESTIMATE);
     fftw_execute(plan_output);
@@ -3800,5 +3852,226 @@ std::vector<double> gaussian_filter(std::vector<double>& curve_input, const doub
     delete [] outputReal;
 
     fftw_cleanup();
+    return results;
+}
+
+
+std::vector<long double> gaussian_filter(std::vector<long double>& curve_input, const double sigma, const short padding_type)
+{
+
+    std::vector<double> c_input (curve_input.begin(), curve_input.end());
+    const auto& c_output = gaussian_filter(c_input, sigma, padding_type);
+    return std::vector<long double> (c_output.begin(), c_output.end());
+
+
+
+    //qDebug() <<"[gaussian_filter]";
+    //  data
+ /*   const int inputSize = curve_input.size();
+
+    //const double step = 1.0 / static_cast<double>(inputSize - 1);
+
+
+    const long double sigma_filter = sigma;
+
+    const int gaussSize = std::max(inputSize, int(3*sigma));
+    const int paddingSize = 2*gaussSize;
+
+    const int N = gaussSize + 2*paddingSize;
+    //const int NComplex = 2* (N/2)+1;
+
+    const int NComplex =  (N/2)+1;
+
+
+
+
+
+
+
+    // https://www.fftw.org/fftw3_doc/Real_002ddata-DFT-Array-Format.html
+
+
+    long double *inputReal;
+    inputReal = new long double [N];
+
+
+    fftwl_complex *inputComplex;
+    inputComplex = (fftwl_complex*) fftwl_malloc(sizeof(fftwl_complex) * NComplex);
+
+    if (padding_type == 0) {
+        for (int i  = 0; i< paddingSize; i++) {
+            inputReal[i] = 0;
+        }
+        for (int i = inputSize+paddingSize; i< N; i++) {
+            inputReal[i] = 0;
+        }
+
+    } else if (padding_type == 1) {
+        for (int i  = 0; i< paddingSize; i++) {
+            inputReal[i] = curve_input[0];
+        }
+        for (int i = inputSize+paddingSize; i< N; i++) {
+            inputReal[i] = curve_input[inputSize-1];
+        }
+    }
+    // we could use std::copy
+
+    for (int i = 0; i< inputSize; i++) {
+        inputReal[i+paddingSize] = curve_input[i];
+    }
+
+    fftwl_plan plan_input = fftwl_plan_dft_r2c_1d(N, inputReal, inputComplex, FFTW_ESTIMATE);
+
+    fftwl_execute(plan_input);
+
+    for (int i = 0; i < NComplex; ++i) {
+        const long double s = M_PI * (long double)i / (long double)N;
+        const long double factor = expl(-2.0L * powl(s * sigma_filter, 2.0L));
+        if (std::isnan(factor)) {
+            qDebug() << "gaussian filter" << (double)s << " isnan";
+        }
+        inputComplex[i][0] *= factor;
+        inputComplex[i][1] *= factor;
+    }
+
+
+    long double *outputReal;
+    outputReal = new long double [N];
+
+    fftwl_plan plan_output = fftwl_plan_dft_c2r_1d(N, inputComplex, outputReal, FFTW_ESTIMATE);
+    fftwl_execute(plan_output);
+
+    std::vector<long double> results;
+    for ( int i = 0; i < inputSize; i++) {
+        results.push_back(outputReal[i + paddingSize]/N);
+    }
+
+    fftwl_destroy_plan(plan_input);
+    fftwl_destroy_plan(plan_output);
+    fftwl_free(inputComplex);
+
+    delete [] inputReal;
+    delete [] outputReal;
+
+    fftwl_cleanup();
+    return results;
+    */
+}
+
+/**
+ * @brief low_pass_filter, Since the signal exhibits a discontinuity,
+ * the filtered signal exhibits a significant disturbance at the extremities.
+ * (see Hanning filter)
+ * @param map
+ * @param Tc, Cut-off period, equal to 1/(cut-off frequency)
+ * @param padding_type, 0 for zero value in padding, 1 for extremum value in padding
+ * @return
+ */
+
+std::vector<double> low_pass_filter(std::vector<double>& curve_input, const double Tc, const short padding_type)
+{
+    const int inputSize = (int)curve_input.size();
+    const int paddingSize = 2*inputSize;
+
+    const int N = inputSize + 2*paddingSize;
+
+    const int NComplex = 2* (N/2)+1;
+
+    double *inputReal;
+    inputReal = new double [N];
+
+    fftw_complex *inputComplex;
+    inputComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
+
+    if (padding_type == 0) {
+        for (int i  = 0; i< paddingSize; i++) {
+            inputReal[i] = 0;
+        }
+        for (int i = inputSize+paddingSize; i< N; i++) {
+            inputReal[i] = 0;
+        }
+
+    } else if (padding_type == 1) {
+        for (int i  = 0; i< paddingSize; i++) {
+            inputReal[i] = curve_input.front();
+        }
+        for (int i = inputSize+paddingSize; i< N; i++) {
+            inputReal[i] = curve_input.front();
+        }
+    }
+
+    auto begin_map = curve_input.begin();
+    for (int i = 0; i< inputSize; i++) {
+        inputReal[i+paddingSize] = *begin_map++;
+    }
+
+
+    fftw_plan plan_input = fftw_plan_dft_r2c_1d(N, inputReal, inputComplex, FFTW_ESTIMATE);
+    fftw_execute(plan_input);
+
+    //
+
+    // Ici, Fs est défini comme 1 (par point)
+    double Fs = 1.0;
+    double delta_f = Fs / static_cast<double>(N);  // delta_f = 1/N
+    // Conversion de Tc en fréquence de coupure : f_c = 1 / (2π * Tc)
+    double f_c = 1.0 / (2.0 * M_PI * Tc);
+    // Indice de coupure dans le domaine fréquentiel
+    int n_cut = static_cast<int>(f_c / delta_f);  // n_cut = N/(2π * Tc)
+
+    // Pour éviter de dépasser le tableau FFT
+    if(n_cut >= NComplex) {
+        n_cut = NComplex - 1;
+    }
+
+    // Filtrage passe-bas : on conserve les basses fréquences pour i <= n_cut
+    for (int i = 0; i < NComplex; ++i) {
+        if (i > n_cut) {
+            inputComplex[i][0] = 0;
+            inputComplex[i][1] = 0;
+        }
+    }
+
+
+    //
+
+
+
+  /*  const int n_cut = 3*inputSize/Tc; //3 = 2*padding +inputSize = 2*(1*inputSize) + inputsizeNComplex
+
+    for (int i = 0; i < NComplex; ++i) {
+
+        if (i <= n_cut) {
+            // Conserver les basses fréquences
+            // (On peut laisser le coefficient tel quel, ou appliquer un gain de 1 explicitement.)
+            inputComplex[i][0] *= 1;
+            inputComplex[i][1] *= 1;
+        } else {
+            // Annuler les hautes fréquences (filtrage passe-bas)
+            inputComplex[i][0] = 0;
+            inputComplex[i][1] = 0;
+        }
+    }
+*/
+    double *outputReal;
+    outputReal = new double [N];
+
+    fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, inputComplex, outputReal, FFTW_ESTIMATE);
+    fftw_execute(plan_output);
+
+    std::vector<double> results;
+    results.reserve(inputSize);
+
+    for(int i = 0; i < inputSize; i++) {
+        results.push_back(outputReal[i + paddingSize]/N);
+    }
+
+    fftw_destroy_plan(plan_input);
+    fftw_destroy_plan(plan_output);
+    fftw_free(inputComplex);
+    delete [] inputReal;
+    delete [] outputReal;
+    fftw_cleanup();
+
     return results;
 }

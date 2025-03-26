@@ -93,8 +93,12 @@ public:
     void updateLayout();
     void forceRefresh();
 
-    inline int graphHeight() const {return mGraphHeight;}
+    inline qreal graphHeight() const {return mGraphHeight;}
     void setGraphHeight(int height);
+    inline void setGraphHeightForVisibleAxis (qreal height)
+    {
+        mHeightForVisibleAxis = height;
+    };
     void hideMarker();
     void showMarker();
 
@@ -118,7 +122,8 @@ private:
 
     int mVerticalSpacer;
 
-    int mGraphHeight;
+    qreal mGraphHeight;
+    qreal mHeightForVisibleAxis;
 
     QFont mGraphFont;
 

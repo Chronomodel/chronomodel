@@ -42,8 +42,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ColorPicker.h"
 #include "LineEdit.h"
 #include "QtUtilities.h"
+#include <QGridLayout>
+#include <QDialogButtonBox>
 
-#include <QtWidgets>
 
 EventDialog::EventDialog(QWidget* parent, const QString &title, Qt::WindowFlags flags):QDialog(parent, flags)
 {

@@ -190,6 +190,18 @@ private slots:
 
 
     void updateCurvesToShow();
+    /**
+     *  @brief
+     *  This method does the following :
+     *  - Defines [mResultMinT, mResultMaxT]
+     *  - Defines [mResultCurrentMinT, mResultCurrentMaxT] (based on saved zoom if any)
+     *  - Computes mResultZoomT
+     *  - Set Ruler Areas
+     *  - Set Ruler and graphs range with mZoomsT
+     *  - Update mXMinEdit, mXMaxEdit, mXSlider, mTimeSpin, mMajorScaleEdit, mMinorScaleEdit
+     *  - Set slider and  zoomEdit with mZoomsH
+     */
+    //void extracted(int &idSelect);
     void updateScales();
     void updateOptionsWidget();
     void updateTotalGraphs();
@@ -287,7 +299,8 @@ private:
     int mOptionsW;
     qreal mMarginLeft;
     qreal mMarginRight;
-    int mGraphHeight;
+    qreal mGraphHeight;
+    qreal mHeightForVisibleAxis;
     // The scroll bar extent (width or height depending on the orientation)
     // depends on the native platform, and must be taken into account.
     const int mSbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);
@@ -562,8 +575,10 @@ private:
     int mMaximunNumberOfVisibleGraph;
 
     // ------------------------------------
-    QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, QPair<double, double>> mZooms;
-    QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, QPair<double, int>> mScales;
+    QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, int> mZoomsH; // Zoom in Graphic Option
+
+    QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, QPair<double, double>> mZoomsT;
+    QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, QPair<double, int>> mScalesT;
 
     QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, QPair<double, double>> mZoomsX;
     QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, QPair<double, double>> mZoomsY;

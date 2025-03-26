@@ -201,7 +201,7 @@ public:
     void updateTheta_v41(const double tmin, const double tmax, const double rate_theta = 1.);
     void updateTheta_v42(const double tmin, const double tmax, const double rate_theta = 1.);
     */
-    //void generate_mixingCalibration();
+
 
     void updateS02();
     double h_S02(const double S02);
@@ -211,22 +211,31 @@ public:
     void updateW();
 
 private:
-    std::string _name; //must be public, to be defined by dialogbox
+    std::string _name;
 
 };
 
-inline double get_Yx(std::shared_ptr<Event> e) {return e->mYx;};
-inline double get_Yy(std::shared_ptr<Event> e) {return e->mYy;};
-inline double get_Yz(std::shared_ptr<Event> e) {return e->mYz;};
-inline double get_Sy(std::shared_ptr<Event> e) {return e->mSy;};
+inline t_matrix get_Yx(std::shared_ptr<Event> e) {return e->mYx;};
+inline t_matrix get_Yy(std::shared_ptr<Event> e) {return e->mYy;};
+inline t_matrix get_Yz(std::shared_ptr<Event> e) {return e->mYz;};
+inline t_matrix get_Sy(std::shared_ptr<Event> e) {return e->mSy;};
 
 inline double get_Gx(std::shared_ptr<Event> e) {return e->mGx;};
 inline double get_Gy(std::shared_ptr<Event> e) {return e->mGy;};
 inline double get_Gz(std::shared_ptr<Event> e) {return e->mGz;};
 
-inline double get_Theta(std::shared_ptr<Event> e) {return e->mTheta.mX;};
-inline double get_ThetaReduced(std::shared_ptr<Event> e) {return e->mThetaReduced;};
+inline decltype(MetropolisVariable::mX) get_Theta(std::shared_ptr<Event> e) {return e->mTheta.mX;};
+inline t_reduceTime get_ThetaReduced(std::shared_ptr<Event> e) {return e->mThetaReduced;};
 
-std::vector<double> get_vector(const std::function <double (std::shared_ptr<Event>)> &fun, const std::vector<std::shared_ptr<Event>> &events);
+template <typename T, typename Func>
+std::vector<T> get_vector(Func fun, const std::vector<std::shared_ptr<Event>> &events)
+{
+    std::vector<T> result;
+    result.reserve(events.size());
+    for (const auto& event : events) {
+        result.push_back(fun(event));
+    }
+    return result;
+};
 
 #endif

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -44,8 +44,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "CurveUtilities.h"
 #include "CurveSettings.h"
 #include "Matrix.h"
+//#include "Project.h"
 
 #include <QFile>
+
+extern QString res_file_version;// used when loading
 
 class ModelCurve: public std::enable_shared_from_this<ModelCurve>, public Model
 {
@@ -53,8 +56,11 @@ public:
     CurveSettings mCurveSettings;
 
     MHVariable mLambdaSpline;
+    double mC_lambda;
+
     MHVariable mS02Vg;
     double mSO2_beta; // used for updated
+
     MCMCSpline mSpline; // valeurs courrantes de la spline
 
     std::vector<MCMCSpline> mSplinesTrace; // memo des valeurs aux noeuds
@@ -73,10 +79,33 @@ public:
     void updateDesignFromJson();
 
     virtual void saveToFile(QDataStream *out);
-    virtual void restoreFromFile(QDataStream *in) {return restoreFromFile_v328(in);};
+
+    virtual void restoreFromFile(QDataStream *in) {
+        QList<QString> compatible_version_330;
+        compatible_version_330<<"3.3.0";
+
+        QList<QString> compatible_version_328;
+        compatible_version_328<<"3.2.4"<<"3.2.6"<<"3.2.9";
+
+        int QDataStreamVersion;
+        *in >> QDataStreamVersion;
+        in->setVersion(QDataStreamVersion);
+
+        *in >> res_file_version;
+
+        if (compatible_version_330.contains(res_file_version))
+            return restoreFromFile_v330(in);
+
+        else if (compatible_version_328.contains(res_file_version))
+            return restoreFromFile_v328(in);
+
+        else return;
+    };
+
     void restoreFromFile_v323(QDataStream *in);
     void restoreFromFile_v324(QDataStream *in);
     void restoreFromFile_v328(QDataStream *in);
+    void restoreFromFile_v330(QDataStream *in);
 
     virtual QJsonObject toJson() const;
     virtual void fromJson( const QJsonObject &json);

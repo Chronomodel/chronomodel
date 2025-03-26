@@ -42,7 +42,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "EventConstraint.h"
 #include "PhaseConstraint.h"
 #include "ModelCurve.h"
-#include "Project.h"
 #include "Bound.h"
 #include "PluginAbstract.h"
 #include "QtUtilities.h"
@@ -662,7 +661,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
             }
         }
         HTMLText += "<br>";
-        HTMLText +=  line(textGreen(QObject::tr("sqrt Curve Shrinkage : %1").arg(QLocale().toString(sqrt(model->mS02Vg.mX), 'G', 2))));
+        HTMLText +=  line(textGreen(QObject::tr("sqrt Variance Param. : %1").arg(QLocale().toString(sqrt(model->mS02Vg.mX), 'G', 2))));
         if (model->mS02Vg.mLastAccepts.size() > 2) {
             const auto acceptRate = model->mS02Vg.getCurrentAcceptRate();
             const auto samplerType = model->mS02Vg.mSamplerProposal;
@@ -770,7 +769,6 @@ QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const b
         text += line(textBold(textBlue(QObject::tr("Posterior Event Date"))));
         text += line(textBlue(e->mTheta.resultsString("", DateUtils::getAppSettingsFormatStr())));
 
-
         if (withDates) {
             text += "<br>" + EventS02ResultsHTML(e); // Pour version 4
             for (auto&& date : e->mDates)
@@ -781,7 +779,7 @@ QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const b
 
     if (model && model->is_curve) {
         if (e->mVg.mSamplerProposal == MHVariable::eFixe) {
-            text = "<br>" + line(textBold(textGreen(QObject::tr("Curve : Std gi"))));
+            text += "<br>" + line(textBold(textGreen(QObject::tr("Curve : Std gi"))));
             text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mRawTrace->at(0)))));
 
         } else {
@@ -818,7 +816,7 @@ QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const b
 
     if (with_curve) {
         if (e->mVg.mSamplerProposal == MHVariable::eFixe) {
-            text = "<br>" + line(textBold(textGreen(QObject::tr("Curve : Std gi"))));
+            text += "<br>" + line(textBold(textGreen(QObject::tr("Curve : Std gi"))));
             text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mRawTrace->at(0)))));
 
         } else {
@@ -857,7 +855,7 @@ QString ModelUtilities::VgResultsHTML(const std::shared_ptr<Event> e)
     }
 
     if (e->mVg.mSamplerProposal == MHVariable::eFixe) {
-        text = line(textBold(textGreen(QObject::tr("Curve : Std gi"))));
+        text += line(textBold(textGreen(QObject::tr("Curve : Std gi"))));
         text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mRawTrace->at(0)))));
 
     } else {
@@ -1039,10 +1037,10 @@ QString ModelUtilities::curveResultsHTML(const std::shared_ptr<ModelCurve> model
     }
 
     if (model->mS02Vg.mSamplerProposal == MHVariable::eFixe) {
-        text += line(textGreen(QObject::tr("- Curve Shrinkage ; Fixed value = %1").arg(QString::number(pow( model->mS02Vg.mRawTrace->at(0), 2.)))));
+        text += line(textGreen(QObject::tr("- Variance Param. ; Fixed value = %1").arg(QString::number(pow( model->mS02Vg.mRawTrace->at(0), 2.)))));
 
     } else {
-        //text += line(textGreen(QObject::tr("- Mean of the sqrt of Curve Shrinkage = %1").arg(stringForLocal(model->mS02Vg.mResults.funcAnalysis.mean))));
+        //text += line(textGreen(QObject::tr("- Mean of the sqrt of Variance Param. = %1").arg(stringForLocal(model->mS02Vg.mResults.funcAnalysis.mean))));
         text += "<br>";
         text += S02ResultsHTML(model);
     }
@@ -1096,14 +1094,14 @@ QString ModelUtilities::lambdaResultsHTML(const std::shared_ptr<ModelCurve> mode
 QString ModelUtilities::S02ResultsHTML(const std::shared_ptr<ModelCurve> model)
 {
     QString text;
-    if (model->mS02Vg.mSamplerProposal == MHVariable::eFixe) {
+    /*if (model->mS02Vg.mSamplerProposal == MHVariable::eFixe) {
         text = line(textBold(textGreen(QObject::tr("S02 Vg"))));
         text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(pow( model->mS02Vg.mRawTrace->at(0), 2.)))));
 
-    } else {
-        text = line(textBold(textGreen(QObject::tr("Stat. on the sqrt(S02 Vg)"))));
-        text += line(textGreen(model->mS02Vg.resultsString("", nullptr)));
-    }
+    } else {*/
+        text = line(textBold(textGreen(QObject::tr("Stat. on the sqrt(Variance Parameter)"))));
+        text += line(textGreen(model->mS02Vg.MetropolisVariable::resultsString("", nullptr)));
+   // }
     return text;
 }
 /**
@@ -1251,7 +1249,7 @@ double sample_in_repartition (std::shared_ptr<CalibrationCurve> calibrateCurve, 
         auto clampProp = [&](double val) {
             return std::clamp(
                 (val - unionTmin) / (unionTmax - unionTmin) * rep_idx_max,
-                0.,
+                0.0,
                 static_cast<double>(rep_idx_max)
                 );
         };
@@ -1304,7 +1302,7 @@ void sampleInCumulatedRepartition_thetaFixe (std::shared_ptr<Event> event, const
     // Vérification de la taille de la répartition
     const size_t repartitionSize = repartition.size();
     if (repartitionSize > 1) {
-        const long double step_long = (t_max_long - t_min_long) / (repartitionSize - 1);
+        const long double step_long = (t_max_long - t_min_long) / (repartitionSize - 1.0);
 
         // Calcul de l'indice d'interpolation
         const double targetValue = 0.5 * (maxRepartition - minRepartition) + minRepartition;
@@ -1313,6 +1311,33 @@ void sampleInCumulatedRepartition_thetaFixe (std::shared_ptr<Event> event, const
 
     } else {
         event->mTheta.mX = Generator::randomUniform(settings.mTmin, settings.mTmax);
+    }
+
+}
+
+double sample_in_Repartition_date_fixe (const Date& d, const StudyPeriodSettings& settings)
+{
+    // Utilisation de références pour éviter des copies inutiles
+    const auto& repartition = d.mCalibration->mRepartition;
+
+    const double maxRepartition = *repartition.crbegin();
+    const double minRepartition = *repartition.begin();
+
+    const long double t_min_long = d.mCalibration->mTmin;
+    const long double t_max_long = d.mCalibration->mTmax;
+
+    // Vérification de la taille de la répartition
+    const size_t repartitionSize = repartition.size();
+    if (repartitionSize > 1) {
+        const long double step_long = (t_max_long - t_min_long) / (repartitionSize - 1.0);
+
+        // Calcul de l'indice d'interpolation
+        const double targetValue = 0.5 * (maxRepartition - minRepartition) + minRepartition;
+        const double idx = vector_interpolate_idx_for_value(targetValue, repartition);
+        return std::clamp(settings.mTmin, static_cast<double>(t_min_long + idx * step_long), settings.mTmax);
+
+    } else {
+        return Generator::randomUniform(settings.mTmin, settings.mTmax);
     }
 
 }

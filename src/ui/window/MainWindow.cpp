@@ -51,7 +51,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "RebuildCurveDialog.h"
 #include "AppSettings.h"
 
-#include <QtWidgets>
+//#include <QtWidgets>
 #include <QLocale>
 #include <QFont>
 
@@ -313,8 +313,8 @@ void MainWindow::createActions()
     mSelectEventsNameAction = new QAction(tr("Select All Events with string"), this);
     connect(mSelectEventsNameAction, &QAction::triggered, this, &MainWindow::selectEventWithString);
 
-    mExportCurveAction = new QAction(tr("Rescale Density Plots"), this);
-    connect(mExportCurveAction, &QAction::triggered, this, &MainWindow::rebuildExportCurve);
+    mRescaleCurveAction = new QAction(tr("Rescale Density Plots"), this);
+    connect(mRescaleCurveAction, &QAction::triggered, this, &MainWindow::rebuildExportCurve);
     //-----------------------------------------------------------------
     // Help/About Menu
     //-----------------------------------------------------------------
@@ -418,7 +418,7 @@ void MainWindow::createMenus()
         mActionsMenu->addAction(mDatesActions[i]);
 
     mActionsMenu->addSeparator();
-    mActionsMenu->addAction(mExportCurveAction);
+    mActionsMenu->addAction(mRescaleCurveAction);
 
     //-----------------------------------------------------------------
     // Help/About Menu this menu depend of the system. On MacOs it's in Chronomodel menu
@@ -1162,9 +1162,10 @@ void MainWindow::changeEventsColor()
         mProject->updateSelectedEventsColor(color);
 
 }
+
 void MainWindow::changeEventsMethod()
 {
-    if (!mProject)
+    if (!mProject || mProject->isCurve())
         return;
 
     QStringList opts;
@@ -1216,6 +1217,7 @@ void MainWindow::changeDatesMethod()
         }
     }
 }
+
 void MainWindow::doGroupedAction()
 {
     if (!mProject)
@@ -1386,7 +1388,7 @@ void MainWindow::clearInterface()
     for (auto&& act : mDatesActions)
         act->setEnabled(false);
 
-    mExportCurveAction->setEnabled(false);
+    mRescaleCurveAction->setEnabled(false);
     mRunAction->setEnabled(false);
 
     mViewResultsAction->setEnabled(false);
@@ -1413,17 +1415,16 @@ void MainWindow::activateInterface(bool activate)
 
     mSelectEventsAction->setEnabled(activate);
     mEventsColorAction->setEnabled(activate);
-    mEventsMethodAction->setEnabled(activate);
+    mEventsMethodAction->setEnabled(activate && mProject->isCurve());
     mDatesMethodAction->setEnabled(activate);
     for (auto&& act : mDatesActions)
         act->setEnabled(activate);
 
-    mExportCurveAction->setEnabled(activate && mProject->isCurve() && mProject->withResults());
+    mRescaleCurveAction->setEnabled(activate && mProject->isCurve() && mProject->withResults());
     // Les actions suivantes doivent être désactivées si on ferme le projet.
     // Par contre, elles ne doivent pas être ré-activée dès l'ouverture d'un projet
     mRunAction->setEnabled(activate);
 
-    //if (!activate) {
     if (activate && mProject->withResults()) {
         mViewResultsAction->setEnabled(activate);
         mViewLogAction->setEnabled(activate);
@@ -1458,23 +1459,25 @@ void MainWindow::mcmcFinished()
 
     // Should be elsewhere ?
     mProject->setNoResults(false); // set to be able to save the file *.res
-  //  model->updateFormatSettings();
 
     // Just check the Result Button (the view will be shown by ProjectView::initResults below)
     mViewResultsAction->setChecked(true);
 
-    mExportCurveAction->setEnabled(mProject->isCurve());
+    mRescaleCurveAction->setEnabled(mProject->isCurve());
 
     // Tell the views to update
     mProjectView->initResults();
-    //AppSettings::mIsSaved = false;
-    updateWindowTitle();
+
+    //updateWindowTitle();
 
 
 }
 
 void MainWindow::noResult()
 {
+    mEventsMethodAction->setEnabled(!mProject->isCurve());
+    mRescaleCurveAction->setEnabled(false);
+
     mViewLogAction -> setEnabled(false);
     mViewResultsAction -> setEnabled(false);
     mViewResultsAction -> setChecked(false);
@@ -1485,7 +1488,6 @@ void MainWindow::noResult()
     mProject->setNoResults(true); // set to disable the saving the file *.res
     if (mProject->mModel != nullptr && !mProject->mModel->mEvents.empty()) {
         mProject->mModel->clear();
-
     }
 
 }

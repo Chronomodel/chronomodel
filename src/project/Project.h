@@ -75,6 +75,8 @@ class PhaseConstraint;
 class PluginAbstract;
 
 
+//QString res_file_version;
+
 class Project: public QObject, std::enable_shared_from_this<Project>
 {
     Q_OBJECT

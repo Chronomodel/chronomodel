@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -197,7 +197,7 @@ private:
 
     QAction* mSelectEventsAction;
     QAction* mSelectEventsNameAction;
-    QAction* mExportCurveAction;
+    QAction* mRescaleCurveAction;
 
     QAction* mEventsColorAction;
     QAction* mEventsMethodAction;
@@ -212,5 +212,7 @@ private:
 private:
     Q_DISABLE_COPY(MainWindow)
 };
+
+
 
 #endif

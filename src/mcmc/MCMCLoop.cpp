@@ -538,7 +538,7 @@ QString MCMCLoop::initialize_time()
                 const double min = ev->getThetaMin(tminPeriod); // need alpha and beta Phase
                 const double max = ev->getThetaMax(tmaxPeriod);
 
-                qDebug() << QString("[MCMCLoop::initialize_time] Init for event theta fixed : %1 : min = %2 : max = %3  ->theta = %4 thetaRed = %5-------").arg(ev->getQStringName(), QString::number(min, 'f', 3), QString::number(max, 'f', 3), QString::number(ev->mTheta.mX, 'f', 3), QString::number(ev->mThetaReduced, 'f', 3));
+                qDebug() << QString("[MCMCLoop::initialize_time] Init for event theta fixed : %1 : min = %2 : max = %3  ->theta = %4 thetaRed = %5-------").arg(ev->getQStringName(), QString::number(min, 'f', 3), QString::number(max, 'f', 3), QString::number(ev->mTheta.mX, 'f', 5), QString::number(ev->mThetaReduced, 'f', 5));
 
                 if (ev->mTheta.mX < min || ev->mTheta.mX > max) {
                     throw QObject::tr("Error for event theta fixed : %1 : min = %2 : max = %3 but Theta = %4" ).arg(ev->getQStringName(), QString::number(min), QString::number(max), QString::number(ev->mTheta.mX, 'f', 3));
