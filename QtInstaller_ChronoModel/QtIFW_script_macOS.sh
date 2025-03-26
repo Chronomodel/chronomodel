@@ -18,7 +18,7 @@ echo " 2 - Copy the ChronoModel BUNDLE "
 
 # make -j12 in /Users/dufresne/ChronoModel-SoftWare/build-Chronomodel-Qt_6_7_2_for_macOS-Release
 
-RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_7_2_for_macOS-Release/build/release/
+RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_7_3_for_macOS-Release/build/release/
 
 BUNDLE="$RELEASE_PATH"chronomodel.app
 
@@ -31,7 +31,7 @@ echo " 2 - Copy the ChronoModel_bash BUNDLE "
 
 #BASH_RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/build-Chronomodel_bash-Qt_6_5_3_for_macOS-Release/build/release/
 #BASH_RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/bash/Qt_6_7_2_for_macOS-Release/build/release/
-BASH_RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_7_2_for_macOS-Release/build/release/
+BASH_RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_7_3_for_macOS-Release/build/release/
 BASH_BUNDLE="$BASH_RELEASE_PATH"chronomodel_bash.app
 #/Users/dufresne/ChronoModel-SoftWare/chronomodel/QtIFW_src/installer-packages/chronomodel_QtIFW.composant2/data
 cp -R $BASH_BUNDLE installer-packages-macOS/chronomodel_QtIFW.composant2/data
@@ -45,7 +45,7 @@ VERSION=3.3.0
 
 DATE_FILE=$(date '+%Y%m%d')
 
-INSTALLER=ChronoModel_v${VERSION}_Qt6.7.2_macOS12_${DATE_FILE}_Installer
+INSTALLER=ChronoModel_v${VERSION}_Qt6.7.3_macOS12_${DATE_FILE}_Installer
 
 echo " 4 - Created file : " $INSTALLER
 ${QT_BIN_PATH}/binarycreator --offline-only -c installer-config/config.xml -p installer-packages-macOS $INSTALLER

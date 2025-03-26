@@ -17,10 +17,10 @@ echo "$ 0.0 Création des fichiers linguistiques "
 ROOT_PATH=$(dirname $0)
 
 
-QT_BIN_PATH=/Users/dufresne/Qt/6.7.2/macos/bin
-QT_LIB_PATH=/Users/dufresne/Qt/6.7.2/macos/lib
-QT_PLUGINS_PATH=/Users/dufresne/Qt/6.7.2/macos/plugins
-VERSION=3.2.8
+QT_BIN_PATH=/Users/dufresne/Qt/6.7.3/macos/bin
+QT_LIB_PATH=/Users/dufresne/Qt/6.7.3/macos/lib
+QT_PLUGINS_PATH=/Users/dufresne/Qt/6.7.3/macos/plugins
+VERSION=3.3.0
 
 ${QT_BIN_PATH}/lupdate /Users/dufresne/ChronoModel-SoftWare/chronomodel/Chronomodel_bash.pro
 ${QT_BIN_PATH}/lrelease /Users/dufresne/ChronoModel-SoftWare/chronomodel/Chronomodel_bash.pro
@@ -29,7 +29,7 @@ ${QT_BIN_PATH}/lrelease /Users/dufresne/ChronoModel-SoftWare/chronomodel/Chronom
 echo "$  1 Script copie qt librairie "
 
 
-RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_7_2_for_macOS-Release/build/release/
+RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_7_3_for_macOS-Release/build/release/
 
 BUNDLE="$RELEASE_PATH"chronomodel_bash.app
 echo "copie dans le BUNDLE $BUNDLE"
