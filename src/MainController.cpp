@@ -42,6 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginManager.h"
 #include "MainWindow.h"
 #include "Painting.h"
+#include <iostream>
 
 MainController::MainController(const QString& filePath)
 {
@@ -54,8 +55,11 @@ MainController::MainController(const QString& filePath)
     QCoreApplication::setOrganizationName("CNRS");
 
     mMainWindow = MainWindow::getInstance();
+
+    //std::cout<<"Inside [MainController::MainController]" <<std::endl;
+
     try {
-        // AppSettings();
+
         AppSettings::readSettings();
 
         QString path;
@@ -76,7 +80,7 @@ MainController::MainController(const QString& filePath)
         mMainWindow->resize(AppSettings::mLastSize);
 
     }  catch(...) {
-        qDebug() << "[MainController] Caught Exception!\n";
+        std::cout<<"[MainController] Caught Exception!" <<std::endl;
     }
 
     mMainWindow->show();

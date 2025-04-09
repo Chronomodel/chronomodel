@@ -37,8 +37,8 @@
 # knowledge of the CeCILL V2.1 license and that you accept its terms.
 # --------------------------------------------------------------------- */
 
-DEFINES += VERSION_NUMBER="3,3,0"
-VERSION = 3.3.0
+DEFINES += VERSION_NUMBER="3,3,5"
+VERSION = 3.3.5
 #VERSION_NUMBER # must match value in src/main.cpp and mainControler and Chronomodel.rc (for windows)
 
 PRO_PATH=$$_PRO_FILE_PWD_
@@ -96,6 +96,21 @@ QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas -Wno-unused-parameter # invalid o
 #########################################
 CONFIG += c++2a
 QMAKE_CXXFLAGS += -std=c++2a
+
+#########################################
+# Active OpenMP (compatible GCC/Clang/MSVC)
+!msvc:contains(QMAKE_CXX, clang++) {
+    message("using OpenMP")
+    QMAKE_CXXFLAGS += -fopenmp
+    QMAKE_LFLAGS += -fopenmp -lomp
+}
+
+
+# Active OpenMP Windows  MSVC
+#QMAKE_CXXFLAGS += -openmp
+#QMAKE_LFLAGS += -openmp
+
+#########################################
 
 #########################################
 # MacOS specific settings
