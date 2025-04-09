@@ -947,8 +947,10 @@ void EventPropertiesView::updateLayout()
     const QJsonObject &state = MainWindow::getInstance()->getState();
     const CurveSettings curveSettings (state.value(STATE_CURVE).toObject());
     const bool withCurve = curveSettings.mProcessType != CurveSettings::eProcess_None;
-    const bool withNode = (curveSettings.mLambdaSplineType != CurveSettings::eInterpolation) && (curveSettings.mVarianceType != CurveSettings::eModeFixed)
-                          && (curveSettings.mUseVarianceIndividual == true);
+    const bool withNode = (curveSettings.mLambdaSplineType != CurveSettings::eInterpolation)
+                          && (curveSettings.mVarianceType == CurveSettings::eModeBayesian);
+                         // && (curveSettings.mVarianceType != CurveSettings::eModeFixed)
+                          //&& (curveSettings.mUseVarianceIndividual == true);
 
 
     QFontMetrics fm (font());

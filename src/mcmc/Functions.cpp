@@ -49,12 +49,17 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QApplication>
 #include <QThread>
 
+#include <cfenv>
 #include <iostream>
 #include <set>
 #include <map>
 #include <QTime>
 #include <QElapsedTimer>
 //#include <experimental/algorithm>
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #include <cmath>  // pour expl, powl, std::isnan
 #include <errno.h>      /* errno, EDOM */
@@ -1909,10 +1914,12 @@ Matrix2D::value_type::value_type determinant(const Matrix2D &matrix, size_t shif
         }
 
     }
- /*   if (det == 0) {
-           throw std::runtime_error("Function::determinant det ==0");
+#ifdef DEBUG
+    if (det == 0) {
+           throw std::runtime_error("[Function::determinant] det ==0");
        }
- */
+#endif
+
     return(det);
 }
 
@@ -2023,12 +2030,21 @@ Matrix2D transpose0(const Matrix2D &A)
    size_t m = A[0].size();
    Matrix2D TA  = initMatrix2D(m, n);
 
-   auto Ai = begin(A);
-   const Matrix2D::value_type::value_type* Aij;
-   size_t i, j;
-   for ( i = 0 ; Ai != end(A); Ai++, i++)
-       for (j= 0, Aij = begin(*Ai) ; Aij != end(*Ai); Aij++, j++)
-           TA[j][i] = *Aij ;
+#ifdef _OPENMP
+#pragma omp parallel for
+    for (size_t j = 0; j < m; ++j) {
+        for (size_t i = 0; i < n; ++i) {
+            TA[j][i] = A[i][j];
+        }
+    }
+#else
+    for (size_t i = 0; i < n; ++i) {
+        for (size_t j = 0; j < m; ++j) {
+            TA[j][i] = A[i][j];
+        }
+    }
+#endif
+
 
    return TA;
 
@@ -2055,6 +2071,20 @@ Matrix2D transpose(const Matrix2D& matrix, const size_t nbBandes)
     return result;
 }
 
+// Multiplication d'une matrice pleine A par une matrice diagonale D (A×D)
+Matrix2D multiMatParDiag0(const Matrix2D &matrix, const MatrixDiag &diag)
+{
+    const size_t dim = (int)matrix.size();
+    Matrix2D result = initMatrix2D(dim, dim);
+
+    for (size_t i = 0; i < dim; ++i) {
+        for (size_t j = 0; j < dim; ++j) {
+            result[i][j] = matrix[i][j] * diag[j];
+        }
+    }
+
+    return result;
+}
 
 Matrix2D multiMatParDiag(const Matrix2D &matrix, const MatrixDiag &diag, size_t nbBandes)
 {
@@ -2076,6 +2106,23 @@ Matrix2D multiMatParDiag(const Matrix2D &matrix, const MatrixDiag &diag, size_t 
     return result;
 }
 
+// Multiplication d'une matrice diagonale par une matrice pleine
+Matrix2D multiDiagParMat0(const MatrixDiag &diag, const Matrix2D &matrix)
+{
+    const size_t dim = matrix.size();
+    Matrix2D result = initMatrix2D(dim, dim);
+
+    for (size_t i = 0; i < dim; ++i) {
+        auto diag_i = diag[i];
+        for (size_t j = 0; j < dim; ++j) {
+            result[i][j] = diag_i * matrix[i][j];
+        }
+    }
+
+    return result;
+}
+
+// Multiplication d'une matrice diagonale par une matrice pleine avec bande
 Matrix2D multiDiagParMat(const MatrixDiag &diag, const Matrix2D &matrix, const size_t nbBandes)
 {
     const int dim = (int)matrix.size();
@@ -2096,6 +2143,7 @@ Matrix2D multiDiagParMat(const MatrixDiag &diag, const Matrix2D &matrix, const s
     }
     return result;
 }
+
 
 /**
  * @brief multiMatParVec - calcul différent du produit matrice par Diagonal
@@ -2123,7 +2171,7 @@ std::vector<double> multiMatParVec(const Matrix2D &matrix, const std::vector<dou
     return result;
 }
 
-std::vector<t_matrix> multiMatParVec(const Matrix2D& matrix, const std::vector<t_matrix> &vec, const size_t nbBandes)
+std::vector<t_matrix> multiMatParVec(const Matrix2D& matrix, const MatrixDiag &vec, const size_t nbBandes)
 {
     const int dim = static_cast<int>(vec.size());
     std::vector<t_matrix> result;
@@ -2252,8 +2300,8 @@ Matrix2D multiMatParMat0(const Matrix2D& matrix1, const Matrix2D& matrix2)
     const int nc2 = (int)matrix2[0].size();
     // nc1 doit etre égal à nl2
     Matrix2D result = initMatrix2D(nl1, nc2);
-    const long double* itMat1;// = begin(matrix1[0]);
-    long double sum;
+    const t_matrix* itMat1;// = begin(matrix1[0]);
+    t_matrix sum;
 
     for (int i = 0; i < nl1; ++i) {
         itMat1 = begin(matrix1[i]);
@@ -2473,7 +2521,7 @@ Matrix2D inverseMatSym0(const Matrix2D& matrix, const size_t shift)
         throw std::runtime_error("Matrix is not quadratic");
 
 
-    Matrix2D matrix2 = seedMatrix(matrix, shift);
+    const Matrix2D& matrix2 = seedMatrix(matrix, shift);
 
     const size_t n = matrix.size();
     Matrix2D matInv = initMatrix2D(matrix.size(), matrix[0].size());
@@ -2484,11 +2532,12 @@ Matrix2D inverseMatSym0(const Matrix2D& matrix, const size_t shift)
     }
 
 
-    Matrix2D matInv2 = comatrice0(matrix2);
+    const Matrix2D& matInv2 = comatrice0(matrix2);
 
     const auto det = determinant(matrix2);
     if (det == 0) {
-           throw std::runtime_error("inverseMatSym0 det == 0");
+        std::cout << "[Function::inverseMatSym0] det == 0" << std::endl;
+        throw std::runtime_error("[Function::inverseMatSym0] det == 0");
     }
     for (size_t i = shift; i < n-shift; i++)
         for (size_t j = shift; j< n-shift; j++)
@@ -2498,30 +2547,91 @@ Matrix2D inverseMatSym0(const Matrix2D& matrix, const size_t shift)
     return matInv;
 }
 
+/**
+ * Inversion d'une matrice symétrique définie positive
+ * à partir de sa décomposition de Cholesky (L, D)
+ * selon l'algorithme de Hutchison et De Hoog (1985)
+ *
+ * La matrice d'origine A peut être reconstruite comme: A = L * D * L^T
+ * où L est une matrice triangulaire inférieure avec des 1 sur la diagonale
+ * et D est une matrice diagonale avec des valeurs positives
+ *
+ * @param decomp Une paire contenant la matrice L et le vecteur diagonal D
+ * @return La matrice inverse de A
+ */
+Matrix2D choleskyInvert(const std::pair<Matrix2D, MatrixDiag>& decomp)
+{
+    const Matrix2D &L = decomp.first;    // Matrice triangulaire inférieure
+    const MatrixDiag &D = decomp.second; // Vecteur diagonal
+    size_t n = D.size();                 // Dimension de la matrice
+
+    // Initialiser la matrice inverse avec des zéros
+    Matrix2D inv = initMatrix2D(n, n);
+
+    // Étape 1: Calculer Z = L^(-1)
+    Matrix2D Z = initMatrix2D(n, n);
+    for (size_t i = 0; i < n; i++) {
+        Z[i][i] = 1.0; // Diagonale = 1
+
+        // Calculer les éléments sous la diagonale
+        for (size_t j = i + 1; j < n; j++) {
+            t_matrix sum = 0.0;
+            for (size_t k = i; k < j; k++) {
+                sum -= L[j][k] * Z[k][i];
+            }
+            Z[j][i] = sum;
+        }
+    }
+
+    // Étape 2: Calculer W = D^(-1) * Z^T
+    Matrix2D W = initMatrix2D(n, n);
+    for (size_t i = 0; i < n; i++) {
+        for (size_t j = 0; j <= i; j++) {
+            W[j][i] = Z[i][j] / D[i];
+        }
+    }
+
+    // Étape 3: Calculer inv = Z * W = Z * D^(-1) * Z^T
+    for (size_t i = 0; i < n; i++) {
+        for (size_t j = 0; j <= i; j++) {
+            t_matrix sum = 0.0;
+            for (size_t k = i; k < n; k++) {
+                sum += Z[k][i] * W[j][k];
+            }
+            inv[i][j] = sum;
+            inv[j][i] = sum; // Symétrie
+        }
+    }
+
+    return inv;
+}
+
 
 /**
-**** Cette procédure effectue l'inversion d'une matrice symétrique  ****
-**** définie positive : toutes les valeurs propres doivent être     ****
-**** positives (Cf. Angot, page 177)                                ****
-**** à partir d'une décomposition de Cholesky en Mat_L et mat_D     ****
-**** Cf algorithme Hutchison et De Hoog (1985)                      ****
-**** donné par Green et Silverman, 1994, p.34                       ****
-**** Attention : il y a une faute dans le bouquin de Green...!      ****
-**/
+ **** Cette procédure effectue l'inversion d'une matrice symétrique  ****
+ **** définie positive : toutes les valeurs propres doivent être     ****
+ **** positives (Cf. Angot, page 177)                                ****
+ **** à partir d'une décomposition de Cholesky en Mat_L et mat_D     ****
+ **** Cf algorithme Hutchison et De Hoog (1985)                      ****
+ **** donné par Green et Silverman, 1994, p.34                       ****
+ **** Attention : il y a une faute dans le bouquin de Green...!      ****
+ **/
+
+
 // inverse_Mat_sym dans RenCurve
 Matrix2D inverseMatSym_origin(const std::pair<Matrix2D, MatrixDiag> &decomp, const size_t nbBandes, const size_t shift)
 {
-    auto &L = decomp.first;
-    auto &matrixDE = decomp.second;
+    const Matrix2D &L = decomp.first;
+    const MatrixDiag &D = decomp.second;
     size_t dim = L.size();
     Matrix2D matInv = initMatrix2D(dim, dim);
     size_t bande = floor((nbBandes-1)/2);
 
-    matInv[dim-1-shift][dim-1-shift] = 1. / matrixDE[dim-1-shift];
+    matInv[dim-1-shift][dim-1-shift] = 1. / D[dim-1-shift];
 
     if (dim >= 4) {
         matInv[dim-2-shift][dim-1-shift] = -L[dim-1-shift][dim-2-shift] * matInv[dim-1-shift][dim-1-shift];
-        matInv[dim-2-shift][dim-2-shift] = (1. / matrixDE[dim-2-shift]) - L[dim-1-shift][dim-2-shift] * matInv[dim-2-shift][dim-1-shift];
+        matInv[dim-2-shift][dim-2-shift] = (1. / D[dim-2-shift]) - L[dim-1-shift][dim-2-shift] * matInv[dim-2-shift][dim-1-shift];
     }
 
     // shift : décalage qui permet d'éliminer les premières et dernières lignes et colonnes
@@ -2530,7 +2640,7 @@ Matrix2D inverseMatSym_origin(const std::pair<Matrix2D, MatrixDiag> &decomp, con
         for (size_t i = dim-3-shift; i>=shift; --i) {
             matInv[i][i+2] = -L[i+1][i] * matInv[i+1][i+2] - L[i+2][i] * matInv[i+2][i+2];
             matInv[i][i+1] = -L[i+1][i] * matInv[i+1][i+1] - L[i+2][i] * matInv[i+1][i+2];
-            matInv[i][i] = (1. / matrixDE[i]) - L[i+1][i] * matInv[i][i+1] - L[i+2][i] * matInv[i][i+2];
+            matInv[i][i] = (1. / D[i]) - L[i+1][i] * matInv[i][i+1] - L[i+2][i] * matInv[i][i+2];
             
             if (bande >= 3)  {
                 for (size_t k=3; k<=bande; ++k) {
@@ -2727,8 +2837,8 @@ Matrix2D comatrice0(const Matrix2D& matrix)
 }
 
 /**
- * @brief cholesky0
- * @param matrix
+ * @brief choleskyLL0 décompose une matrice en triange inférieur et supérieur tel que L Lt
+ * @param matrix, la matrice doit être strictement positive. Sinon utiliser la version MoreSorensen
  * @return matrix triangulaire supérieur
  */
 
@@ -2737,24 +2847,220 @@ Matrix2D choleskyLL0(const Matrix2D &matrix)
     const size_t n = matrix.size();
 
     Matrix2D L = initMatrix2D(n, n);
-    Matrix2D::value_type::value_type sum;
+    t_matrix sum;
 
-    for (size_t i=0; i<n; i++) {
+    for (size_t i = 0; i < n; i++) {
         sum = matrix[i][i];
-        for (size_t k=0; k<i; k++)
+        for (size_t k = 0; k < i; k++)
             sum -= pow(L[i][k], 2.);
 
         L[i][i] = sqrt(sum);
 
-        for (size_t j=i+1; j<n; j++) {
-            sum = matrix[i][j];
-
-            for (size_t k=0; k<j-1; k++)
-                sum -=  L[j][k] * L[i][k];
+        for (size_t j = i+1; j < n; j++) {
+            sum = matrix[j][i];
+            for (size_t k = 0; k < i; k++)
+                sum -= L[i][k] * L[j][k];
 
             L[j][i] = sum / L[i][i];
         }
     }
+
+    return L;
+}
+
+// code qui fonctionne mais pourquoi ???
+Matrix2D cholesky_LLt_MoreSorensen(const Matrix2D &matrix)
+{
+    const size_t n = matrix.size();
+    Matrix2D L = initMatrix2D(n, n);
+    bool MS = false;
+    // Paramètre pour la correction
+    const t_matrix delta = 1e-10;
+
+    for (size_t j = 0; j < n; ++j) {
+        // Calcul de l'élément diagonal L[j][j]
+        t_matrix sum = matrix[j][j];
+        for (size_t k = 0; k < j; ++k) {
+            sum -= L[j][k] * L[j][k]; // Utilisation de la multiplication au lieu de pow pour plus d'efficacité
+        }
+
+        // Correction de Moré et Sorensen
+
+        if (sum <= delta) {
+            MS = true;
+            sum = std::max(delta, std::abs(sum)); // Assurer une valeur positive pour la racine carrée, en utlisant abs(sum) on reste dans les grandeurs d'ordres
+        }
+
+        L[j][j] = sqrt(sum);
+
+        // Calcul des éléments hors diagonale
+        for (size_t i = j + 1; i < n; ++i) {
+            t_matrix sumOffDiag = matrix[i][j];
+            for (size_t k = 0; k < j; ++k) {
+                sumOffDiag -= L[i][k] * L[j][k];
+            }
+            L[i][j] = sumOffDiag / L[j][j];
+        }
+    }
+
+#ifdef DEBUG
+    if (MS) {
+        Matrix2D Lt = transpose0(L);
+        Matrix2D prod = multiMatParMat0(L, Lt);
+        // test différence entree sortie
+        t_matrix som_prod = 0;
+        for (size_t j=0; j<n; j++)
+            for (size_t l=0; l<n; l++)
+                som_prod += prod[j][l];
+        //showMatrix(prod);
+
+        //showMatrix(matrix);
+
+        t_matrix som_matrix = 0;
+        for (size_t j=0; j<n; j++)
+            for (size_t l=0; l<n; l++)
+                som_matrix += matrix[j][l];
+
+        std::cout << "[Function::cholesky_LLt_MoreSorensen] diff MS = " <<static_cast<double>(som_prod - som_matrix ) << std::endl;
+        std::cout << "[Function::cholesky_LLt_MoreSorensen] The matrix is not positive definite. " << static_cast<double>(som_prod) << " " << static_cast<double>(som_matrix) << std::endl;
+        t_matrix som_dif = 0;
+        for (size_t j=0; j<n; j++)
+            for (size_t l=0; l<n; l++)
+                som_dif += pow(matrix[j][l] - prod[j][l], 2);
+        std::cout << "[Function::cholesky_LLt_MoreSorensen] diff^2 MS = " <<static_cast<double>(som_dif ) << std::endl;
+    }
+#endif
+
+    return L;
+}
+
+
+/** Ne marche pas toujours
+ * @brief Delta adaptatif : Plutôt qu'un delta fixe, implémentation d'une méthode adaptative qui :
+ * - Calcule une valeur initiale basée sur la norme de la matrice
+ * - Augmente progressivement delta par un facteur beta jusqu'à ce que la correction soit suffisante.
+ *
+ * @param matrix
+ * @return
+ */
+Matrix2D cholesky_LLt_MoreSorensen_adapt(const Matrix2D &matrix)
+{
+    const size_t n = matrix.size();
+#ifdef DEBUG
+    // Vérification que la matrice est carrée
+    for (size_t i = 0; i < n; ++i) {
+        if (matrix[i].size() != n) {
+            throw std::invalid_argument("La matrice doit être carrée pour la décomposition de Cholesky");
+        }
+    }
+    bool MS = false;
+#endif
+
+    // Faire une copie de la matrice originale pour ne pas la modifier
+    Matrix2D A = matrix;
+    Matrix2D L = initMatrix2D(n, n);
+
+    // Paramètres pour la correction
+    const t_matrix delta_min = 1e-20;  // Delta minimum
+    t_matrix delta = 0.0;             // Delta adaptatif
+    const t_matrix beta = 2;        // Facteur multiplicatif
+
+
+    for (size_t j = 0; j < n; ++j) {
+        // Calcul de l'élément diagonal L[j][j]
+        t_matrix sum = A[j][j];
+        for (size_t k = 0; k < j; ++k) {
+            sum -= L[j][k] * L[j][k];
+        }
+
+        // Application de la correction de Moré et Sorensen si nécessaire
+        if (sum <= delta_min) {
+
+            // Calcul de la norme maximale pour estimation initiale de delta
+            t_matrix max_diag = 0.0;
+            t_matrix max_offdiag = 0.0;
+            for (size_t i = 0; i < n; ++i) {
+                max_diag = std::max(max_diag, std::abs(A[i][i]));
+                for (size_t j = 0; j < i; ++j) {
+                    max_offdiag = std::max(max_offdiag, std::abs(A[i][j]));
+                }
+            }
+
+            // Valeur initiale pour delta basée sur la norme de la matrice
+            t_matrix initial_delta = std::max(delta_min, delta_min * std::max(max_diag, max_offdiag));
+
+
+
+#ifdef DEBUG
+            MS = true;
+#endif
+            // Calcul du delta adaptatif
+            if (delta < initial_delta) {
+                delta = initial_delta;
+            }
+
+            // Augmenter delta jusqu'à ce que sum + delta soit positif
+            while (sum + delta <= delta_min) {
+                delta *= beta;
+            }
+
+            // Appliquer delta à tous les éléments diagonaux restants
+            for (size_t k = j; k < n; ++k) {
+                A[k][k] += delta;
+            }
+
+            // Recalculer sum avec le delta ajouté
+            sum = A[j][j];
+            for (size_t k = 0; k < j; ++k) {
+                sum -= L[j][k] * L[j][k];
+            }
+        }
+
+        L[j][j] = sqrt(sum);
+
+        // Calcul des éléments sous-diagonaux (L[i][j] pour i > j)
+        for (size_t i = j + 1; i < n; ++i) {
+            t_matrix sumOffDiag = A[i][j];
+            for (size_t k = 0; k < j; ++k) {
+                sumOffDiag -= L[i][k] * L[j][k];
+            }
+            L[i][j] = sumOffDiag / L[j][j];
+        }
+    }
+
+    // Mise à zéro des éléments au-dessus de la diagonale
+    for (size_t i = 0; i < n; ++i) {
+        for (size_t j = i + 1; j < n; ++j) {
+            L[i][j] = 0.0;
+        }
+    }
+
+#ifdef DEBUG
+    if (MS) {
+        Matrix2D Lt = transpose0(L);
+        Matrix2D prod = multiMatParMat0(L, Lt);
+        // test la différence entrée sortie
+        t_matrix som_prod = 0;
+        for (size_t i = 0; i < n; i++)
+            for (size_t j = 0; j < n; j++)
+                som_prod += prod[i][j];
+
+        t_matrix som_matrix = 0;
+        for (size_t i = 0; i < n; i++)
+            for (size_t j = 0; j < n; j++)
+                som_matrix += matrix[i][j];
+
+        std::cout << "[Function::cholesky_LLt_MoreSorensen] diff MS = "
+                  << static_cast<double>(som_prod - som_matrix) << std::endl;
+        std::cout << "[Function::cholesky_LLt_MoreSorensen] La matrice n'est pas définie positive. "
+                  << "Somme produit: " << static_cast<double>(som_prod)
+                  << " Somme matrice originale: " << static_cast<double>(som_matrix)
+                  << " Delta final: " << static_cast<double>(delta) << std::endl;
+        //showMatrix(prod);
+        //showMatrix(matrix);
+
+    }
+#endif
 
     return L;
 }
@@ -2973,19 +3279,31 @@ std::pair<Matrix2D, MatrixDiag> decompositionCholesky(const Matrix2D &matrix, co
                             sum = t;
                         }
                     }
-                    ///
+
                     matL[i][j] = (matrix[i][j] - sum) / matD[j];
                 }
             }
 
             // Calcul de la diagonale de matD
-            t_matrix sumDiag = 0.0L;
+            /*t_matrix sumDiag = 0.0L;
             for (size_t k = shift; k < i; ++k) {
                 if (abs_minus(i, k) <= nbBandes) {
                     sumDiag += matL[i][k] * matL[i][k] * matD[k];
                 }
+            }*/
+            t_matrix sumDiag = 0.0;
+            t_matrix compensation = 0.0; // Compensation de Kahan
+
+            for (size_t k = shift; k < i; ++k) {
+                if (abs_minus(i, k) <= nbBandes) {
+                    t_matrix y = matL[i][k] * matL[i][k] * matD[k] - compensation;
+                    t_matrix t = sumDiag + y;
+                    compensation = (t - sumDiag) - y;
+                    sumDiag = t;
+                }
             }
 
+            matD[i] = matrix[i][i] - sumDiag;
             matD[i] = matrix[i][i] - sumDiag; // doit être non-nul;
 
 
@@ -2993,10 +3311,12 @@ std::pair<Matrix2D, MatrixDiag> decompositionCholesky(const Matrix2D &matrix, co
 
 #ifdef DEBUG
             if (matD[i] >= 1.0E20) {
-                qWarning() << "[Function::decompositionCholesky]  matD[i] ="<< (double)matD[i]<< " >= 1.E+20 ";
+                qWarning() << "[Function::decompositionCholesky]  matD[i] ="<< static_cast<double>(matD[i]) << " >= 1.E+20 ";
             }
             if (matD[i] <= 0) {
+                std::cout << "[Function::decompositionCholesky] The matrix is not positive definite." << static_cast<double>(matD[i]) << std::endl;
                 throw std::runtime_error("[Function::decompositionCholesky] The matrix is not positive definite.");
+                //matD[i] = 0;
             }
 #endif
 
@@ -3027,8 +3347,286 @@ std::pair<Matrix2D, MatrixDiag> decompositionCholesky(const Matrix2D &matrix, co
 
     return {matL, matD};
 }
+// https://hatefdastour.github.io/notes/Numerical_Analysis/chapter_07/LDL_decomposition.html
+/**
+ * @brief modifiedCholeskyDecomposition Décomposition de Cholesky alternative ou décomposition de Crout
+ * @param matrix
+ * @param epsilon
+ * @return
+ * https://en.wikipedia.org/wiki/Cholesky_decomposition
+ */
+std::pair<Matrix2D, MatrixDiag> modifiedCholeskyDecomposition(const Matrix2D& matrix, double epsilon = 1e-10)
+{
+    const size_t n = matrix.size();
+    Matrix2D L = initMatrix2D(n, n);
+    MatrixDiag D = MatrixDiag(n, 0.0);
+
+    for (size_t i = 0; i < n; ++i)
+    {
+        double sum = 0.0;
+        for (size_t j = 0; j < i; ++j) {
+            sum += L[i][j] * L[i][j] * D[j];
+        }
+        D[i] = matrix[i][i] - sum;
+
+        // Modification pour rendre la matrice définie positive
+        if (D[i] <= epsilon) {
+            D[i] = epsilon;
+        }
+
+        L[i][i] = 1.0;
+        for (size_t j = i + 1; j < n; ++j)
+        {
+            double sum2 = 0.0;
+            for (size_t k = 0; k < i; ++k)
+            {
+                sum2 += L[j][k] * L[i][k] * D[k];
+            }
+            L[j][i] = (matrix[j][i] - sum2) / D[i];
+        }
+    }
+
+    return make_pair(L, D);
+}
 
 
+/**
+ * @brief MoreSorensenCholesky
+ * Moré-Sorensen (MS): Conçu spécifiquement pour gérer les matrices non définies positives en les modifiant pour obtenir une approximation définie positive
+ * Calcul la décomposition en LDL^t
+ * @param A
+ * @param regularization
+ * @return
+ * @ref https://mcsweeney90.github.io/files/modified-cholesky-decomposition-and-applications.pdf
+ */
+std::pair<Matrix2D, MatrixDiag> cholesky_LDLt_MoreSorensen(const Matrix2D& A, t_matrix regularization)
+{
+    size_t n = A.size();
+    t_matrix delta = regularization;
+
+#ifdef DEBUG
+    // Vérifier que la matrice est carrée
+    for (size_t i = 0; i < n; i++) {
+        if (A[i].size() != n) {
+            throw std::invalid_argument("[cholesky_LDLt_MoreSorensen] Input matrix must be square");
+        }
+    }
+#endif
+    // Initialiser L comme une matrice identité
+    Matrix2D L = initMatrix2D(n, n);
+    for (size_t i = 0; i < n; i++) {
+        L[i][i] = 1.0;
+    }
+
+    // Initialiser D
+    MatrixDiag D = MatrixDiag(n, 0.0);
+
+    // Algorithme SE99 pour la décomposition LDL^T avec amélioration MS
+    for (size_t j = 0; j < n; j++) {
+        // Calculer D[j]
+        D[j] = A[j][j];
+        for (size_t k = 0; k < j; k++) {
+            D[j] -= L[j][k] * L[j][k] * D[k];
+        }
+
+        // Appliquer la modification de Moré-Sorensen
+        // Si D[j] est trop petit (matrice non définie positive)
+        if (D[j] <= delta) {
+            D[j] = std::max(delta, 0.01 * std::abs(D[j]));
+        }
+
+        // Calculer les éléments de L sous la diagonale
+        for (size_t i = j + 1; i < n; i++) {
+            L[i][j] = A[i][j];
+            for (size_t k = 0; k < j; k++) {
+                L[i][j] -= L[i][k] * L[j][k] * D[k];
+            }
+
+            L[i][j] /= D[j];
+        }
+    }
+    return make_pair(L, D);
+}
+
+// Constructeur pour la décomposition LDLt avec amélioration MS d'une matrice de bande symétrique
+std::pair<Matrix2D, MatrixDiag> banded_Cholesky_LDLt_MoreSorensen(const Matrix2D &A, int bandwidth, t_matrix regularization)
+{
+    int n = A.size();
+    int k = bandwidth;
+    t_matrix delta = regularization;
+
+#ifdef DEBUG
+    // Vérifier que la matrice est carrée
+    for (int i = 0; i < n; i++) {
+        if (A[i].size() != (size_t) n) {
+            throw std::invalid_argument("[banded_Cholesky_LLt_MoreSorensen] Input matrix must be square");
+        }
+    }
+#endif
+
+    Matrix2D L = initMatrix2D(n, n);
+    for (int i = 0; i < n; i++) {
+        L[i][i] = 1.0;
+    }
+
+    MatrixDiag D = MatrixDiag(n, 0.0);
+
+    // Algorithme MS adapté pour matrices de bande
+    for (int j = 0; j < n; j++) {
+        // Calculer D[j]
+        D[j] = A[j][j];
+
+        // Limiter les calculs à la bande
+        int start_row = std::max(0, j - k);
+        for (int s = start_row; s < j; s++) {
+            // Utiliser uniquement les éléments dans la bande
+            if (j - s <= k) {
+                D[j] -= L[j][s] * L[j][s] * D[s];
+            }
+        }
+
+        // Appliquer la modification de Moré-Sorensen
+        if (D[j] <= delta) {
+            D[j] = std::max(delta, 0.01 * std::abs(D[j]));
+        }
+
+        // Calculer les éléments de L sous la diagonale dans la bande
+
+        int end_row = std::min(n, j + k + 1);
+        for (int i = j + 1; i < end_row; i++) {
+            // Vérifier que l'élément est dans la bande
+            if (i - j <= k) {
+                L[i][j] = A[i][j];
+
+                // Limiter les calculs aux éléments dans la bande
+                int start_col = std::max(0, std::max(i - k, j - k));
+
+                for (int s = start_col; s < j; s++) {
+                    // Utiliser uniquement les éléments dans la bande
+                    if (i - s <= k && j - s <= k) {
+                        L[i][j] -= L[i][s] * L[j][s] * D[s];
+                    }
+                }
+
+                L[i][j] /= D[j];
+            }
+        }
+    }
+    return make_pair(L, D);
+}
+
+
+std::pair<Matrix2D, MatrixDiag> decompositionCholeskyKK(const Matrix2D &matrix, const size_t nbBandes, const size_t shift)
+{
+    //return BandedMoreSorensenCholesky(matrix, nbBandes, 0.0);
+
+    errno = 0;
+    if (math_errhandling & MATH_ERREXCEPT) feclearexcept(FE_ALL_EXCEPT);
+
+
+    const size_t dim = matrix.size();
+    Matrix2D matL = initMatrix2D(dim, dim);
+    MatrixDiag matD (dim);
+
+    if (dim - 2*shift == 1) { // cas des splines avec 3 points
+        matD[1] = matrix[1][1];;
+        matL[1][1] = 1.;
+
+    } else {
+
+        // const int bande = floor((nbBandes-1)/2);
+
+        // shift : décalage qui permet d'éliminer les premières et dernières lignes et colonnes constituées de zéro
+        for (size_t i = shift; i < dim-shift; ++i) {
+            matL[i][i] = 1.;
+        }
+        matD[shift] = matrix[shift][shift];
+
+        try {
+            for (size_t i = shift+1; i < dim-shift; ++i) {
+                matL[i][shift] = matrix[i][shift] / matD[shift];
+                /*   avec bande */
+                for (size_t j = shift+1; j < i; ++j) {
+                    if (abs_minus(i, j) <= nbBandes) {
+                        t_matrix sum = 0.0;
+                        /* for (size_t k = shift; k < j; ++k) {
+                            if (abs_minus(i, k) <= nbBandes) {
+                                sum += matL[i][k] * matD.at(k) * matL[j][k];
+                            }
+                        } */
+
+                        t_matrix compensation = 0.0;  // terme de compensation
+                        for (size_t k = shift; k < j; ++k) {
+                            if (abs_minus(i, k) <= nbBandes){
+                                t_matrix product = matL[i][k] * matD[k] * matL[j][k];
+                                // Algorithme Kahan pour la sommation
+                                t_matrix y = product - compensation;
+                                t_matrix t = sum + y;
+                                compensation = (t - sum) - y;
+                                sum = t;
+                            }
+                        }
+
+
+                        matL[i][j] = (matrix[i][j] - sum) / matD[j];
+                    }
+                }
+
+                t_matrix sumDiag = 0.0;
+                for (size_t k = shift; k < i; ++k) {
+                    if (abs_minus(i, k) <= nbBandes) {
+                        sumDiag += matL[i][k] * matL[i][k] * matD[k];
+                    }
+                }
+
+                matD[i] = matrix[i][i] - sumDiag;
+
+
+            }
+//auto corrected_matrix = MoreSorensenCholesky(matrix);
+//auto corrected_matrix1 = BandedMoreSorensenCholesky(matrix, nbBandes, 0.0);
+
+            for (auto d : matD) {
+                if (d <= 0) {
+                    std::cout << "[Function::decompositionCholeskyKK] The matrix is not positive definite. " << static_cast<double>(d) << std::endl;
+                    // throw std::runtime_error("[Function::decompositionCholeskyKK] The matrix is not positive definite.");
+
+                    //return std::make_pair(Matrix2D(), MatrixDiag());
+                    //auto corrected_matrix = modifiedCholeskyDecomposition(matrix);
+                    auto corrected_matrix1 = banded_Cholesky_LDLt_MoreSorensen(matrix, nbBandes, 0.0);
+                    //auto corrected_matrix = MoreSorensenCholesky(matrix);
+
+                    return corrected_matrix1;
+                    d = 0;
+                }
+            }
+
+            // matL : Par exemple pour n = 5 et shift = 0:
+            // 1 0 0 0 0
+            // X 1 0 0 0
+            // X X 1 0 0
+            // X X X 1 0
+            // X X X X 1
+
+            // matL : Par exemple pour n = 5 et shift = 1:
+            // 0 0 0 0 0
+            // 0 1 0 0 0
+            // 0 X 1 0 0
+            // 0 X X 1 0
+            // 0 0 0 0 0
+
+        } catch(const char* e) {
+            std::cout << "[Function::decompositionCholesky] " << e << std::endl;
+            return std::make_pair(Matrix2D(), MatrixDiag());
+
+        } catch(...) {
+            std::cout << "[Function::decompositionCholeskyKK] : Caught Exception!" << std::endl;
+            return std::make_pair(Matrix2D(), MatrixDiag());
+        }
+    }
+
+    return std::pair<Matrix2D, MatrixDiag>(matL, matD);
+}
 
 
 
@@ -3110,7 +3708,7 @@ std::vector<t_matrix> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D
         if (std::isnan(vecGamma[n-2]))
             vecGamma[n-2] = 0.0;
 
-        vecGamma[n-3] = vecNu.at(n-3) - L[n-2][n-3] * vecGamma[n-2];
+        vecGamma[n-3] = vecNu[n-3] - L[n-2][n-3] * vecGamma[n-2];
         if (std::isnan(vecGamma[n-3]))
             vecGamma[n-3] = 0.0;
 

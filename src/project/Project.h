@@ -81,6 +81,27 @@ class Project: public QObject, std::enable_shared_from_this<Project>
 {
     Q_OBJECT
 public:
+    QString mName;
+
+    std::shared_ptr<ModelCurve> mModel;
+    MCMCLoop* mLoop; //public QThread
+
+    std::map<std::string, CalibrationCurve> mCalibCurves;
+    QTimer* mAutoSaveTimer;
+    QJsonObject mState;
+
+private :
+    // used to define scene modification
+    bool mDesignIsChanged;
+    bool mStructureIsChanged;
+    bool mItemsIsMoved;
+    QSet<QString> mReasonChangeStructure;
+    QSet<QString> mReasonChangeDesign;
+    QSet<QString> mReasonChangePosition;
+
+    bool mNoResults;
+
+public:
     Project();
     virtual ~Project();
 
@@ -129,8 +150,11 @@ public:
      * @brief setNoResults : set to disable the saving the file *.res
      * @param noResults
      */
-    void setNoResults(const bool noResults) { mNoResults = noResults;}
-    bool withResults() const {return (!mNoResults && mModel != nullptr);}
+    inline void setNoResults(const bool noResults = true) { mNoResults = noResults;}
+    inline bool noResults() const {return mNoResults;}
+
+    inline void setWithResults(const bool withResults = true) { mNoResults = !withResults;}
+    inline bool withResults() const {return !mNoResults;}; // && mModel != nullptr);}
 
     bool setSettings(const StudyPeriodSettings& settings);
 
@@ -231,28 +255,7 @@ signals:
 
     void projectItemsIsMoved(bool itemsIsMoved);
 
-public:
 
-    QString mName;
-
-    std::shared_ptr<ModelCurve> mModel;
-    MCMCLoop* mLoop; //public QThread
-
-    std::map<std::string, CalibrationCurve> mCalibCurves;
-    QTimer* mAutoSaveTimer;
-    QJsonObject mState;
-
-private :
-    // used to define scene modification
-    bool mDesignIsChanged;
-    bool mStructureIsChanged;
-    bool mItemsIsMoved;
-    QSet<QString> mReasonChangeStructure;
-    QSet<QString> mReasonChangeDesign;
-    QSet<QString> mReasonChangePosition;
-
-
-    bool mNoResults;
 };
 
 #endif

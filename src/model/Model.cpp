@@ -2662,20 +2662,34 @@ bool Model::hasSelectedPhases()
 
 t_reduceTime Model::reduceTime(double t) const
 {
-    const double tmin = mSettings.mTmin;
-    const double tmax = mSettings.mTmax;
-    return (t - tmin) / (tmax - tmin);
+    const long double tmin = static_cast<long double>(mSettings.mTmin);
+    const long double tmax = static_cast<long double>(mSettings.mTmax);
+    const long double tL = static_cast<long double>(t);
+    const long double denominator = tmax - tmin;
+
+    // Vérification de la stabilité numérique
+    if (std::abs(denominator) < std::numeric_limits<long double>::epsilon()) {
+        throw std::runtime_error("Erreur : Division par une valeur trop petite !");
+    }
+
+    return static_cast<double>((tL - tmin) / denominator);
 }
+
+
+
 
 std::vector<t_reduceTime> Model::reduceTime(const std::vector<double> &vec_t) const
 {
-    const double tmin = mSettings.mTmin;
-    const double tmax = mSettings.mTmax;
+    const long double tmin = static_cast<long double>(mSettings.mTmin);
+    const long double tmax = static_cast<long double>(mSettings.mTmax);
+
+    const long double denominator = 1.0L / (tmax - tmin);
 
     std::vector<t_reduceTime> res;
-    for (auto& t : vec_t)
-        res.push_back((t - tmin) / (tmax - tmin));
-
+    for (auto& t : vec_t) {
+        const long double tL = static_cast<long double>(t);
+        res.push_back(static_cast<double>((tL - tmin) * denominator));
+    }
     return res;
 }
 

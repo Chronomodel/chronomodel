@@ -179,11 +179,14 @@ Matrix2D remove_bands_Matrix(const Matrix2D& matrix, size_t shift = 0);
 Matrix2D transpose0(const Matrix2D& matrix);
 Matrix2D transpose(const Matrix2D& matrix, const size_t nbDiag);
 
+Matrix2D multiMatParDiag0(const Matrix2D& matrix, const MatrixDiag& diag);
 Matrix2D multiMatParDiag(const Matrix2D& matrix, const MatrixDiag& diag, size_t nbBandes);
+
+Matrix2D multiDiagParMat0(const MatrixDiag& diag, const Matrix2D& matrix);
 Matrix2D multiDiagParMat(const MatrixDiag& diag, const Matrix2D& matrix, const size_t nbBandes);
 
 std::vector<double> multiMatParVec(const Matrix2D& matrix, const std::vector<double> &vec, const size_t nbBandes);
-std::vector<t_matrix> multiMatParVec(const Matrix2D& matrix, const std::vector<t_matrix> &vec, const size_t nbBandes);
+std::vector<t_matrix> multiMatParVec(const Matrix2D& matrix, const MatrixDiag &vec, const size_t nbBandes);
 
 
 Matrix2D addMatEtMat0(const Matrix2D& matrix1, const Matrix2D& matrix2);
@@ -206,6 +209,7 @@ Matrix2D multiplyMatrixBanded_Winograd(const Matrix2D& a, const Matrix2D& b,  co
 Matrix2D inverseMatSym0(const Matrix2D& matrix, const size_t shift = 0);
 Matrix2D inverseMatSym(const Matrix2D& matrix1, const MatrixDiag& matrix2, const size_t nbBandes, const size_t shift);
 
+Matrix2D choleskyInvert(const std::pair<Matrix2D, MatrixDiag>& decomp);
 Matrix2D inverseMatSym_origin(const std::pair<Matrix2D, MatrixDiag>& decomp, const size_t nbBandes, const size_t shift);
 
 
@@ -220,11 +224,20 @@ Matrix2D comatrice0(const Matrix2D& matrix);
 
 
 Matrix2D choleskyLL0(const Matrix2D& matrix);
+Matrix2D cholesky_LLt_MoreSorensen(const Matrix2D &matrix);
+Matrix2D cholesky_LLt_MoreSorensen_adapt(const Matrix2D &matrix);
+
+
 std::pair<Matrix2D, MatrixDiag > choleskyLDLT(const Matrix2D& matrix);
 std::pair<Matrix2D, MatrixDiag > choleskyLDLT(const Matrix2D& matrix, const size_t shift);
 std::pair<Matrix2D, MatrixDiag > choleskyLDLT(const Matrix2D& matrix, const size_t nbBandes, const size_t shift);
 std::pair<Matrix2D, MatrixDiag > choleskyLDLT_Dsup0(const Matrix2D& matrix, const size_t nbBandes, const size_t shift);
 std::pair<Matrix2D, MatrixDiag> decompositionCholesky(const Matrix2D& matrix, const size_t nbBandes, const size_t shift);
+std::pair<Matrix2D, MatrixDiag> decompositionCholeskyKK(const Matrix2D& matrix, const size_t nbBandes, const size_t shift);
+// algoithm with More and Sorensen adaptation
+std::pair<Matrix2D, MatrixDiag> cholesky_LDLt_MoreSorensen(const Matrix2D& A, t_matrix regularization = 0.0);
+std::pair<Matrix2D, MatrixDiag> banded_Cholesky_LDLt_MoreSorensen(const Matrix2D& A, int bandwidth, t_matrix regularization = 1e-10);
+
 
 std::pair<Matrix2D, Matrix2D > decompositionLU0(const Matrix2D& A);
 std::pair<Matrix2D, Matrix2D> Doolittle_LU(const Matrix2D A);

@@ -566,8 +566,8 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
             }
 #if DEBUG
             else {
-                HTMLText += line(textGreen("errror in model Description"));
-                qDebug()<<"[modelStateDescriptionHTML] errror";
+                HTMLText += line(textGreen("error in model Description"));
+                std::cout << "[ModelUtilities::modelStateDescriptionHTML] error" << std::endl;
             }
 #endif
 

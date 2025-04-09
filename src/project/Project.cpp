@@ -79,6 +79,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QJsonDocument>
 #include <QJsonParseError>
 #include <QFileDialog>
+#include <iostream>
 
 QString res_file_version; // used when loading
 
@@ -571,7 +572,7 @@ bool Project::load(const QString &path, bool force)
     QFile file(path);
 
     qDebug() << "[Project::load] Loading project file : " << path;
-
+    std::cout << "[Project::load] Loading project file : " << file.fileName().toStdString() << std::endl;
 
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QFileInfo info(path);
@@ -710,14 +711,18 @@ bool Project::load(const QString &path, bool force)
 
            // -------------------- look for the calibration file --------------------
 
+
             QString caliPath = path + ".cal";
             QFileInfo calfi(caliPath);
 
             if (calfi.isFile() && !isCorrected && force == false) {
+
+                std::cout << "[Project::load] Loading model file.cal : " << calfi.fileName().toStdString() << std::endl;
                 // Load Calibration Curve
                 QFile calFile(caliPath);
                 if (calFile.open(QIODevice::ReadOnly) && calFile.exists()) {
-                    qDebug() << "[Project::load] Loading model file.cal : " << calFile.fileName() << " size =" << calFile.size();
+                    std::cout << "[Project::load] calfile.cal is open : " << calFile.fileName().toStdString()  << std::endl;
+
                     QDataStream in(&calFile);
 
                     int QDataStreamVersion;
@@ -743,10 +748,10 @@ bool Project::load(const QString &path, bool force)
                         QString strTitle = tr("Compatibility risk");
                         QMessageBox message(QMessageBox::Question, strTitle, strMessage, QMessageBox::Yes | QMessageBox::No, qApp->activeWindow());
                         if (message.exec() == QMessageBox::No) {
-                            setNoResults(true);
+                            setNoResults();
                             clear_and_shrink_model();
 
-                            file.close();
+                            calFile.close();
                             MainWindow::getInstance()->updateWindowTitle();
                             return true;
                         }
@@ -764,7 +769,15 @@ bool Project::load(const QString &path, bool force)
                             in >> cal;
                             mCalibCurves.insert_or_assign(descript.toStdString(), cal);
                         }
+                        if (in.status() != QDataStream::Ok) {
+                            // Gestion de l'erreur de lecture du fichier
+                            std::cout << "[Project::load] calFile DataStream Error" << std::endl;
+                            setNoResults();
+                            clear_and_shrink_model();
+                            calFile.close();
+                            return true;
 
+                        }
                      }
                     catch (const std::exception & e) {
                         QMessageBox message(QMessageBox::Warning,
@@ -774,15 +787,30 @@ bool Project::load(const QString &path, bool force)
                                             QMessageBox::Ok,
                                             qApp->activeWindow());
                         message.exec();
+                        calFile.close();
+                        MainWindow::getInstance()->updateWindowTitle();
+                        return true;
                     }
 
                 }
-                calFile.close();
+                else {
+                    setNoResults();
+                    clear_and_shrink_model();
+                    std::cout << "[Project::load] Could not open file.cal : " << calfi.fileName().toStdString() << std::endl;
+                    return true;
+                }
+
+               // calFile.close();
+                MainWindow::getInstance()->updateWindowTitle();
+               // return true;
+
             } else {
-                setNoResults(true);
+
+                std::cout << "[Project::load] No file.cal : " << calfi.fileName().toStdString() << std::endl;
+                setNoResults();
                 clear_and_shrink_model();
 
-                file.close();
+                //file.close();
                 MainWindow::getInstance()->updateWindowTitle();
                 return true;
             }
@@ -797,22 +825,25 @@ bool Project::load(const QString &path, bool force)
 
             QString dataPath = path + ".res";
 
-            QFile dataFile;
+            QFile dataFile(dataPath);
 
-            dataFile.setFileName(dataPath);
+            //dataFile.setFileName(dataPath);
 
             QFileInfo fi(dataFile);
-            dataFile.open(QIODevice::ReadOnly);
-            if (fi.isFile()) { // if there is only bounds mCalibCurves.empty()) {
-                if (dataFile.exists()) {
 
+            if (fi.isFile()) { // if there is only bounds mCalibCurves.empty()) {
+                std::cout << "[Project::load] file.res exits ?: " << dataFile.exists() << std::endl;
+                if (dataFile.exists() && dataFile.open(QIODevice::ReadOnly)) {
+
+                    ;
                     qDebug() << "[Project::load] Loading model file.res : " << dataPath << " size=" << dataFile.size();
+                    std::cout << "[Project::load] Loading model file.res : " << fi.fileName().toStdString() << std::endl;
 
                     try {
                         mModel.reset();
                         mModel = std::make_shared<ModelCurve>(mState);
 
-                        qDebug() << "[Project::load] Create a ModelCurve";
+                        std::cout << "[Project::load] Create a ModelCurve" << std::endl;
 
                     }
                     catch (const std::exception & e) {
@@ -823,52 +854,65 @@ bool Project::load(const QString &path, bool force)
                                             QMessageBox::Ok,
                                             qApp->activeWindow());
                         message.exec();
-
+                        setNoResults();
                         clear_and_shrink_model();
+                        dataFile.close();
                         return false;
                     }
 
 
-                    try {
-                        mModel->setProject();
 
-                        QFile file(dataPath);
-                        if (file.exists() && file.open(QIODevice::ReadOnly)){
+                    mModel->setProject();
 
-                        QDataStream in(&file);
+                    //QFile file(dataPath);
+                   // if (dataFile.exists() && file.open(QIODevice::ReadOnly)){
+                    QDataStream in(&dataFile);
 
-                        mModel->restoreFromFile(&in);
+                    mModel->restoreFromFile(&in);
 
-                        mModel->generateCorrelations(mModel->mChains);
-                        setNoResults(false);
+                    mModel->generateCorrelations(mModel->mChains);
 
-                     } else {
-                         setNoResults(true);
-                         clear_and_shrink_model();
+                    setWithResults();
+
+                    if (in.status() != QDataStream::Ok) {
+                        // Gestion de l'erreur de lecture du fichier
+                        std::cout << "[Project::load]  DataStream Error" << std::endl;
+                        setNoResults();
+                        clear_and_shrink_model();
+                        QMessageBox message(QMessageBox::Critical,
+                                             tr("Error setProject"),
+                                             tr("The project could not be loaded.") + "\r",
+                                             QMessageBox::Ok,
+                                             qApp->activeWindow());
+                        message.exec();
+
+                        dataFile.close();
+                        return true;
+
                      }
 
-                    } catch (const std::exception & e) {
-                        QMessageBox message(QMessageBox::Critical,
-                                            tr("Error loading project MCMC results"),
-                                            tr("The project MCMC results could not be loaded.") + "\r" +
-                                            tr("Error : %1").arg(e.what()),
-                                            QMessageBox::Ok,
-                                            qApp->activeWindow());
-                        setNoResults(true);
-                        clear_and_shrink_model();
-                        message.exec();
-                    }
-                } else {
-                    qDebug() << "[Project::load] no file.res : "<< dataPath;
 
-                    setNoResults(true);
+
+                } else {
+                    QMessageBox message(QMessageBox::Critical,
+                                        tr("Error loading project"),
+                                        tr("ChronoModel cannot open the file.res") + "\r",
+                                        QMessageBox::Ok,
+                                        qApp->activeWindow());
+                    message.exec();
+                    qDebug() << "[Project::load] file.res not exits : "<< dataPath;
+                    std::cout << "[Project::load] file.res not exits : " << QString(dataPath).toStdString() << std::endl;
+                    setNoResults();
                     clear_and_shrink_model();
                 }
+
             } else {
-                qDebug() << "[Project::load] no file.res : "<< dataPath;
-                setNoResults(true);
+
+                std::cout << "[Project::load] No file.res : " << QString(dataPath).toStdString() << std::endl;
+                setNoResults();
                 clear_and_shrink_model();
             }
+
             // --------------------
 
             file.close();
@@ -878,6 +922,7 @@ bool Project::load(const QString &path, bool force)
     }
     file.close();
     MainWindow::getInstance()->updateWindowTitle();
+
     return false;
 }
 

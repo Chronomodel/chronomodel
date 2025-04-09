@@ -1882,7 +1882,12 @@ void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, const MCM
 #ifdef CODE_KOMLAN
             vVarG = vecVarianceG.at(tIdx)/ n;
 #else
+        if (vVarG == 0.0) {
+            vVarG = vecVarianceG.at(tIdx)/ n;
+
+        } else {
             vVarG = vecVarianceG.at(tIdx)/ n + vecVarErrG.at(tIdx);
+        }
 #endif
             ++tIdx;
     }

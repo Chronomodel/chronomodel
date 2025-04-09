@@ -54,6 +54,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 //#include <QtWidgets>
 #include <QLocale>
 #include <QFont>
+#include <iostream>
 
 
 // Constructor / Destructor
@@ -607,7 +608,6 @@ void MainWindow::openProject()
             activateInterface(true);
 
             // Create mEventsScene and mPhasesScenes
-            //if ( mProject->mModel->parent() != nullptr && !mProject->mModel->mChains.empty()) {
             AppSettings::mIsSaved = true;
             if ( !mProject->mModel->mChains.empty()) {
                 mcmcFinished(); //do initDensities()
@@ -1334,15 +1334,25 @@ void MainWindow::readSettings(const QString& defaultFilePath)
                 mProject->mModel->clear();
                 mProjectView->resetInterface();
             }
+            std::cout << "[MainWindow::readSettings]" << std::endl;
+
             if (mProject->load(defaultFilePath)) {
-                activateInterface(true);
-                // updateWindowTitle(); done by pushProjectState
+                activateInterface(true);               
                 connectProject();
+                std::cout << "[MainWindow::readSettings] mProject->load = true" << std::endl;
+                std::cout << "[MainWindow::readSettings] mProject->noResult = " << mProject->noResults() << std::endl;
+                std::cout << "[MainWindow::readSettings] (mProject->mModel == nullptr) = " << (mProject->mModel == nullptr) << std::endl;
 
                 AppSettings::mIsSaved = true;
+
                 if (mProject->withResults()) {
+                    std::cout << "[MainWindow::readSettings] mProject->withResults = true" << std::endl;
                     mcmcFinished(); //do initDensities()
+
+                } else {
+                    std::cout << "[MainWindow::readSettings] mProject->withResults = false" << std::endl;
                 }
+
                 mProject->setAppSettingsAutoSave();
 
                 mProjectView->setProject();
@@ -1454,11 +1464,12 @@ void MainWindow::setLogEnabled(bool enabled)
 void MainWindow::mcmcFinished()
 {
     // Set Results and Log tabs enabled
+    std::cout << "[MainWindow::mcmcFinished]" << std::endl;
     mViewLogAction->setEnabled(true);
     mViewResultsAction->setEnabled(true);
 
     // Should be elsewhere ?
-    mProject->setNoResults(false); // set to be able to save the file *.res
+    mProject->setWithResults(); // set to be able to save the file *.res
 
     // Just check the Result Button (the view will be shown by ProjectView::initResults below)
     mViewResultsAction->setChecked(true);
@@ -1468,7 +1479,6 @@ void MainWindow::mcmcFinished()
     // Tell the views to update
     mProjectView->initResults();
 
-    //updateWindowTitle();
 
 
 }

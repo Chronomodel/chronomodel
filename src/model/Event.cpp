@@ -1584,7 +1584,7 @@ void Event::updateW()
             qDebug()<< "[Event::updateW] mVg.mX + mSy * mSy < 1e-20";
         }
 #endif
-        mW = 1. / (mVg.mX + mSy * mSy);
+        mW = 1.0 / (mVg.mX + mSy * mSy);
 
 #ifdef DEBUG
         if (mW < 1e-20) {

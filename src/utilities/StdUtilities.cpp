@@ -957,9 +957,13 @@ const std::map<double, double> create_HPD_by_dichotomy(const std::map<double, do
         double area_total_since_prev_interval = 0.0;
 
         auto prev_it = density.begin();
-        bool interval_open = false;
+        bool interval_open = (prev_it->second < current_threshold);//false;
         QPair<double, double> current_interval;
 
+        if (interval_open){
+            double t = density.begin()->first;
+            current_interval.first = t;
+        }
         for (auto it = std::next(density.begin()); it != density.end(); ++it) {
             // Début d'un intervalle
             if (prev_it->second < current_threshold && it->second >= current_threshold) {
@@ -981,8 +985,8 @@ const std::map<double, double> create_HPD_by_dichotomy(const std::map<double, do
                 total_area += area;
             }
 
-            // Fin d'un intervalle
-            if (prev_it->second >= current_threshold && it->second < current_threshold) {
+            // Fin d'un intervalle, dans le cas d'une valeur unique supérieur au seuil au debut de l'intervalle, il n'y a pas
+            if (interval_open && prev_it->second >= current_threshold && it->second < current_threshold) {
                 double t = interpolate(current_threshold, prev_it->second, it->second,
                                        prev_it->first, it->first);
                 current_interval.second = t;

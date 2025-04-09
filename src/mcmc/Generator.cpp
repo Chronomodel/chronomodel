@@ -230,6 +230,11 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
         qDebug() <<" min="<< min<<" max=" <<(double)(x_max);
 
     }
+    if ((x==x_min) || (x==x_max)) {
+        double value = mean + (x * sigma);
+        qDebug() << "[Generator::gaussByDoubleExp] : value = limit : "<< value <<" min="<< min<<" max=" << max;
+
+    }
 #endif
     return (double)(mean + (x * sigma));
 }
@@ -297,7 +302,7 @@ double Generator::gammaDistribution(const double alpha, const double beta)
 
 double Generator::exponentialeDistribution(const double meanexp)
 {
-    std::exponential_distribution<double>  exponential(meanexp);
+    std::exponential_distribution<double> exponential(meanexp);
     return exponential(sEngine);
 }
 

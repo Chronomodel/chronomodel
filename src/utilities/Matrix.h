@@ -40,6 +40,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef MATRIX_H
 #define MATRIX_H
 
+#ifdef DEBUG
+#include <iomanip>
+#include <iostream>
+#endif
+
 #include <vector>
 #include <valarray>
 
@@ -111,5 +116,137 @@ void showMatrix(const MatrixDiag& m, const std::string& str="");
 
 void showVector(const std::vector<t_matrix>& m, const std::string& str="");
 void showVector(const std::vector<double>& m, const std::string& str="");
+
+/**
+ * @class BandedMatrix
+ * @brief Implementation of a banded matrix with optimized storage
+ *
+ * This class represents an n×n square banded matrix where only elements
+ * within a specified bandwidth around the main diagonal are stored.
+ * Storage is optimized by keeping only potentially non-zero elements.
+ *
+ * The internal storage structure uses a 1D array that stores the matrix bands
+ * in a compact format. For each row i, the stored elements range from j=i-bandWidth
+ * to j=i+bandWidth (within matrix bounds).
+ */
+class BandedMatrix {
+public:
+    /**
+     * @brief Constructor for the banded matrix
+     *
+     * @param n Dimension of the matrix (n×n)
+     * @param bandWidth Number of bands on each side of the main diagonal
+     * @param defaultValue Default value to initialize all elements
+     */
+    BandedMatrix(size_t n, size_t bandWidth, long double defaultValue = 0.0)
+        : m_n(n), m_bandWidth(bandWidth), m_data(n * (2 * bandWidth + 1), defaultValue) {}
+
+    /**
+     * @brief Returns the dimension of the matrix
+     *
+     * @return size_t Dimension n of the square matrix (n×n)
+     */
+    size_t getDimension() const {
+        return m_n;
+    }
+
+    /**
+     * @brief Returns the number of bands on each side of the main diagonal
+     *
+     * @return size_t Band width
+     */
+    size_t getBandWidth() const {
+        return m_bandWidth;
+    }
+
+    /**
+     * @brief Read/write access to an element via the at method
+     *
+     * @param i Row index
+     * @param j Column index
+     * @return long double& Reference to the element at position (i,j)
+     * @note Indices outside the band are not checked and may cause invalid access
+     */
+    long double& at(size_t i, size_t j) {
+        size_t offset = m_bandWidth + static_cast<int>(j - i);
+        return m_data[i * (2 * m_bandWidth + 1) + offset];
+    }
+
+    /**
+     * @brief Read-only access to an element via the at method
+     *
+     * @param i Row index
+     * @param j Column index
+     * @return const long double& Constant reference to the element at position (i,j)
+     * @note Indices outside the band are not checked and may cause invalid access
+     */
+    const long double& at(size_t i, size_t j) const {
+        size_t offset = m_bandWidth + static_cast<int>(j - i);
+        return m_data[i * (2 * m_bandWidth + 1) + offset];
+    }
+
+    /**
+     * @brief Overloaded () operator for read/write access
+     *
+     * @param i Row index
+     * @param j Column index
+     * @return long double& Reference to the element at position (i,j)
+     */
+    long double& operator() (size_t i, size_t j) {
+        size_t offset = m_bandWidth + static_cast<int>(j - i);
+        return m_data[i * (2 * m_bandWidth + 1) + offset];
+    }
+
+    /**
+     * @brief Overloaded () operator for read-only access
+     *
+     * @param i Row index
+     * @param j Column index
+     * @return const long double& Constant reference to the element at position (i,j)
+     */
+    const long double& operator()(size_t i, size_t j) const {
+        size_t offset = m_bandWidth + static_cast<int>(j - i);
+        return m_data[i * (2 * m_bandWidth + 1) + offset];
+    }
+
+    /**
+     * @brief Static method to create a new banded matrix
+     *
+     * @param n Dimension of the matrix (n×n)
+     * @param bandWidth Number of bands on each side of the main diagonal
+     * @param defaultValue Default value to initialize all elements
+     * @return BandedMatrix New initialized banded matrix instance
+     */
+    static BandedMatrix initMatrix(size_t n, size_t bandWidth, long double defaultValue = 0.0) {
+        return BandedMatrix(n, bandWidth, defaultValue);
+    }
+
+    /**
+     * @brief Displays the matrix to standard output (available only in DEBUG mode)
+     *
+     * This method displays the complete matrix with zeros for elements
+     * outside the band. It is conditioned by the DEBUG macro.
+     */
+    void showMatrix() const {
+#ifdef DEBUG
+        for (size_t i = 0; i < m_n; ++i) {
+            for (size_t j = 0; j < m_n; ++j) {
+                if (abs(static_cast<int>(j) - static_cast<int>(i)) <= static_cast<int>(m_bandWidth)) {
+                    std::cout << std::setw(10) << std::fixed << std::setprecision(2) << at(i, j);
+                } else {
+                    std::cout << std::setw(10) << "0.00";
+                }
+            }
+            std::cout << std::endl;
+        }
+#endif
+    }
+
+private:
+    size_t m_n;        ///< Dimension of the matrix (n×n)
+    size_t m_bandWidth; ///< Number of bands on each side of the main diagonal
+    std::vector<long double> m_data; ///< Compact storage of matrix elements
+};
+
 
 #endif // MATRIX_H

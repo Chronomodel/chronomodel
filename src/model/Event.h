@@ -219,6 +219,7 @@ inline t_matrix get_Yx(std::shared_ptr<Event> e) {return e->mYx;};
 inline t_matrix get_Yy(std::shared_ptr<Event> e) {return e->mYy;};
 inline t_matrix get_Yz(std::shared_ptr<Event> e) {return e->mYz;};
 inline t_matrix get_Sy(std::shared_ptr<Event> e) {return e->mSy;};
+inline t_matrix get_W(std::shared_ptr<Event> e) {return e->mW;};
 
 inline double get_Gx(std::shared_ptr<Event> e) {return e->mGx;};
 inline double get_Gy(std::shared_ptr<Event> e) {return e->mGy;};
