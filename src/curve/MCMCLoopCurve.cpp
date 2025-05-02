@@ -192,8 +192,8 @@ QString MCMCLoopCurve::initialize()
         //return initialize_Komlan();
 #else
         //return initialize_321();
-        return initialize_330();
-       //return initialize_335();
+        //return initialize_330();
+       return initialize_335();
 #endif
 
 
