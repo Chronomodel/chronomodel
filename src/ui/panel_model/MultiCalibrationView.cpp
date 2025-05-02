@@ -1311,18 +1311,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 {
     const QJsonObject* state = getState_ptr();
 
-    //mSettings = StudyPeriodSettings::fromJson(state->value(STATE_SETTINGS).toObject());
-
-    //mTminDisplay = mSettings.getTminFormated() ;
-    //mTmaxDisplay = mSettings.getTmaxFormated();
-
-    // setText doesn't emit signal textEdited, when the text is changed programmatically
-    //mStartEdit->setText(locale().toString(mTminDisplay));
-    //mEndEdit->setText(locale().toString(mTmaxDisplay));
     mHPDEdit->setText(locale().toString(thres));
-
-    //mMajorScaleEdit->setText(locale().toString(mMajorScale));
-    //mMinorScaleEdit->setText(locale().toString(mMinorScale));
 
     QColor brushColor = mCurveCustomColor;
     brushColor.setAlpha(170);
@@ -1722,7 +1711,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 
                         QColor penColor;
                         if (mUsePluginColor) {
-                            penColor = Qt::red;
+                            penColor = d.mPlugin->getColor();
 
                         } else if (mUseEventColor) {
                             penColor = event_color;
@@ -1839,12 +1828,10 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 
     } else {
 
-
-       // vec_X_err = std::vector<double>(vec_X_err.size(), 1.0/vec_X_err.size()); // pour test ici à enlever
-        // test null error forbidden
-        std::vector<double>::iterator it;
-        bool nullValue = false;
-        switch (processType) {
+            // test null error forbidden
+            std::vector<double>::iterator it;
+            bool nullValue = false;
+            switch (processType) {
             case CurveSettings::eProcess_3D:
                 it = std::find_if (vec_Z_err.begin(), vec_Z_err.end(), [](double i){return i == 0.0;} );
                 if (it != vec_Z_err.end()) {
@@ -1871,21 +1858,21 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                     nullValue = true;
                     break;
                 }
-            break;
+                break;
 
             default:
-            break;
-        }
-        if (nullValue) {
-            QMessageBox message(QMessageBox::Warning,
-                                tr("Some errors are zero"),
-                                tr("The calculation cannot be performed with zero-measurement errors, weights cannot be zero !"),
-                                QMessageBox::Ok);
+                break;
+            }
+            if (nullValue) {
+                QMessageBox message(QMessageBox::Warning,
+                                    tr("Some errors are zero"),
+                                    tr("The calculation cannot be performed with zero-measurement errors, weights cannot be zero !"),
+                                    QMessageBox::Ok);
 
-            message.setWindowModality(Qt::WindowModal);
-            message.exec();
-            return fitPlot;
-        }
+                message.setWindowModality(Qt::WindowModal);
+                message.exec();
+                return fitPlot;
+            }
 
     }
 
