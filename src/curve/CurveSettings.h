@@ -130,8 +130,8 @@ public:
     
     ProcessMode mTimeType; // bool_temps_fixes true ou false
 
-    ProcessMode mVarianceType; // bool_Var_G_fixe
-    bool mUseVarianceIndividual; // bool_VG_individuelle -> mVarianceType== eModeBayesian ??
+    ProcessMode mVarianceType; // bool_Var_G_fixe -> eFixed; eModeBayesian; eModeGlobal
+   // bool mUseVarianceIndividual; // bool_VG_individuelle -> mVarianceType== eModeBayesian ??
     double mVarianceFixed; // Var_G
 
     ProcessMode mLambdaSplineType;

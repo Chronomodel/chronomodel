@@ -219,8 +219,12 @@ QDataStream &operator>>( QDataStream &stream, PosteriorMeanG& pMeanG );
 
 std::vector<t_reduceTime> calculVecH(const std::vector<std::shared_ptr<Event>> &event);
 
-Matrix2D calculMatR(const std::vector<t_reduceTime>& rVecH);
-Matrix2D calculMatQ(const std::vector<t_reduceTime> &rVecH);
+Matrix2D calculMatR0(const std::vector<t_reduceTime>& vec_h);
+Matrix2D calculMatR(const std::vector<t_reduceTime>& vec_h);
+
+Matrix2D calculMatQ00(const std::vector<t_reduceTime>& vec_h);
+Matrix2D calculMatQ0(const std::vector<t_reduceTime>& vec_h);
+Matrix2D calculMatQ(const std::vector<t_reduceTime>& vec_h);
 
 void conversionIDF(PosteriorMeanG& G);
 PosteriorMeanG conversionIDF(const std::vector<double> &vecGx, const std::vector<double> &vecGy, const std::vector<double> &vecGz, const std::vector<double> &vecGxErr, const std::vector<double> &vecGyErr, const std::vector<double> &vecGzErr);
@@ -298,7 +302,10 @@ double var_residual(const std::vector<t_matrix> &vec_Y, const SplineMatrices &ma
 std::vector<double> general_residual (const std::vector<t_matrix> &vec_Y,  const SplineMatrices& matrices, const std::vector<t_reduceTime> &vecH, const double lambda);
 
 double var_Gasser(const std::vector<double>& vec_t, const std::vector<double>& vec_Y);
-long double var_Gasser(const std::vector<long double>& vec_t, const std::vector<long double>& vec_Y);
+t_matrix var_Gasser_2D(const std::vector<t_matrix>& vec_t, const std::vector<t_matrix>& vec_X, const std::vector<t_matrix>& vec_Y);
+t_matrix var_Gasser_3D(const std::vector<t_matrix> &vec_t, const std::vector<t_matrix>& vec_X, const std::vector<t_matrix> &vec_Y, const std::vector<t_matrix> &vec_Z);
+
+t_matrix var_Gasser(const std::vector<t_matrix>& vec_t, const std::vector<long double>& vec_Y);
 
 bool  hasPositiveGPrimeByDet (const MCMCSplineComposante &splineComposante);
 void spread_theta_reduced(std::vector<t_reduceTime> &sorted_t_red, t_reduceTime spread_span = 0.0);

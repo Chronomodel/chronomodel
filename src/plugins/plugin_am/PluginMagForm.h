@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -42,16 +42,16 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define PLUGINMAGFORM_H
 
 #if USE_PLUGIN_AM
-
-#include <QValidator>
-
 #include "PluginFormAbstract.h"
 
+#include <QValidator>
+#include <QRadioButton>
+#include <QLineEdit>
+#include <QComboBox>
+#include <QLabel>
+
 class PluginMag;
-class QLineEdit;
-class QComboBox;
-class QLabel;
-class QRadioButton;
+
 
 
 class PluginMagForm: public PluginFormAbstract

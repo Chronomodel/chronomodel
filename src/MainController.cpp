@@ -74,7 +74,7 @@ MainController::MainController(const QString& filePath)
 
         }
 
-        mMainWindow->readSettings(path); // le problème est ici pour macOS
+        mMainWindow->readSettings(path);
 
         mMainWindow->move(AppSettings::mLastPosition);
         mMainWindow->resize(AppSettings::mLastSize);

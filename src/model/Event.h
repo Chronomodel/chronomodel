@@ -165,6 +165,7 @@ public:
     void setName(const QString name) {_name = name.toStdString();}
 
     inline Type type() const { return mType;}
+    inline PointType pointType() const { return mPointType;}
 
     void clear();
     void shrink_to_fit() noexcept;
@@ -214,6 +215,10 @@ private:
     std::string _name;
 
 };
+
+inline t_matrix get_XIncDepth(std::shared_ptr<Event> e) {return e->mXIncDepth;};
+inline t_matrix get_YDec(std::shared_ptr<Event> e) {return e->mYDec;};
+inline t_matrix get_ZField(std::shared_ptr<Event> e) {return e->mZField;};
 
 inline t_matrix get_Yx(std::shared_ptr<Event> e) {return e->mYx;};
 inline t_matrix get_Yy(std::shared_ptr<Event> e) {return e->mYy;};

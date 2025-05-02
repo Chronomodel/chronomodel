@@ -97,10 +97,6 @@ protected:
     void spreadEventsThetaReduced0(std::vector<std::shared_ptr<Event>> &sortedEvents, t_reduceTime spreadSpan = 0.0);
     std::vector<double> spreadEventsTheta0(std::vector<std::shared_ptr<Event>>& Events, t_reduceTime spreadSpan = 0.0);
     std::vector<double> unclumpTheta(const std::vector<std::shared_ptr<Event>>& events, double spreadSpan = 1e-8);
-    //std::thread::id mTh_id_memoCurve;
-    //std::thread mTh_memoCurve;
-
-    static void memo_PosteriorG_3D(PosteriorMeanG &postG, MCMCSpline spline, CurveSettings::ProcessType &curveType, const int realyAccepted, ModelCurve &model);
 
     bool (MCMCLoopCurve::*updateLoop)();
 
@@ -286,11 +282,16 @@ private:
 #pragma mark import_Komlan
 
     double rate_h_lambda_K(const double current_lambda, const double try_lambda, const double tr_K, const int n);
-    double rate_h_lambda_335(const double current_lambda, const double try_lambda, const int n);
+    t_prob rate_h_lambda_X_335(const double current_lambda, const double try_lambda, const t_prob n);
+    t_prob rate_h_lambda_XY_335(const double current_lambda, const double try_lambda, const t_prob n);
+    t_prob rate_h_lambda_XYZ_335(const double current_lambda, const double try_lambda, const t_prob n);
 
     double S02_lambda_WIK (const Matrix2D &K, const int nb_noeuds);
     double h_lambda_Komlan(const Matrix2D &K, const Matrix2D &K_new, const int nb_noeuds, const double &lambdaSpline);
     t_prob rapport_Theta(const std::function<double (std::shared_ptr<Event>)> &fun, const std::vector<std::shared_ptr<Event>> &lEvents, const Matrix2D &K, const Matrix2D &K_new, const double lambdaSpline);
+    t_prob rate_Theta_X(const std::vector<std::shared_ptr<Event>> &Events, const Matrix2D &K, const Matrix2D &K_try, const double lambdaSpline);
+    t_prob rate_Theta_XY(const std::vector<std::shared_ptr<Event>> &Events, const Matrix2D &K, const Matrix2D &K_try, const double lambdaSpline);
+    t_prob rate_Theta_XYZ(const std::vector<std::shared_ptr<Event>> &Events, const Matrix2D &K, const Matrix2D &K_try, const double lambdaSpline);
 
     SplineMatrices prepareCalculSpline_W_Vg0(const std::vector<std::shared_ptr<Event> > &sortedEvents, std::vector<double> &vecH);
 
@@ -309,6 +310,10 @@ private:
 
 
     t_prob h_exp_fX_theta (std::shared_ptr<Event> e, const MCMCSpline &s, unsigned idx);
+    t_prob h_exp_fY_theta (std::shared_ptr<Event> e, const MCMCSpline &s, unsigned idx);
+    t_prob h_exp_fZ_theta (std::shared_ptr<Event> e, const MCMCSpline &s, unsigned idx);
+
+
     std::vector<double> sampling_spline (std::vector<std::shared_ptr<Event>> &lEvents, SplineMatrices matrices);
     t_prob h_S02_Vg_K(const std::vector<std::shared_ptr<Event>>& events, const double S02_Vg, const double try_S02) const;
 

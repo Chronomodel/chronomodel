@@ -131,12 +131,12 @@ public:
 
     virtual void saveToFile(QDataStream* out);
 
-    virtual void restoreFromFile(QDataStream* in) {return restoreFromFile_v330(in);};
+    virtual bool restoreFromFile(QDataStream* in) {return restoreFromFile_v330(in);};
 
-    void restoreFromFile_v323(QDataStream* in);
-    void restoreFromFile_v324(QDataStream* in);
-    void restoreFromFile_v328(QDataStream* in);
-    void restoreFromFile_v330(QDataStream* in);
+    bool restoreFromFile_v323(QDataStream* in);
+    bool restoreFromFile_v324(QDataStream* in);
+    bool restoreFromFile_v328(QDataStream* in);
+    bool restoreFromFile_v330(QDataStream* in);
 
     // Only trace needed for this :
     virtual void generateCorrelations(const std::vector<ChainSpecs>& chains);

@@ -75,6 +75,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define APP_SETTINGS_STR_DPM "dpm"
 #define APP_SETTINGS_STR_IMAGE_QUALITY "image_quality"
 #define APP_SETTINGS_STR_FORMATDATE "format_date"
+
 #define APP_SETTINGS_STR_PRECISION "precision"
 #define APP_SETTINGS_STR_SHEET "sheet"
 

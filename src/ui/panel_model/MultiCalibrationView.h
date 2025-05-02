@@ -50,6 +50,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "LineEdit.h"
 #include "MultiCalibrationDrawing.h"
 #include "ColorPicker.h"
+#include "MultiplotColorDialog.h"
 #include "ScrollCompressor.h"
 #include "CurveUtilities.h"
 
@@ -80,7 +81,7 @@ private:
     Button* mColorClipBut;
     Button* mScatterClipBut;
     Button* mFitClipBut;
-    ColorPicker* mColorPicker;
+    Button* mColorPicker;
 
     Label* mGraphHeightLab;
     LineEdit* mGraphHeightEdit;
@@ -109,7 +110,11 @@ private:
     double mThreshold;
     qreal mGraphHeight;
     qreal mHeightForVisibleAxis;
-    QColor mCurveColor;
+
+    bool mUsePluginColor;
+    bool mUseEventColor;
+    bool mUseCustomColor;
+    QColor mCurveCustomColor;
 
     QString mResultText;
 

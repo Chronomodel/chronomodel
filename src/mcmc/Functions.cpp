@@ -2107,22 +2107,31 @@ Matrix2D multiMatParDiag(const Matrix2D &matrix, const MatrixDiag &diag, size_t 
 }
 
 // Multiplication d'une matrice diagonale par une matrice pleine
+// La matrice diagonale doit avoir autant de ligne que la matrice pleine
 Matrix2D multiDiagParMat0(const MatrixDiag &diag, const Matrix2D &matrix)
 {
-    const size_t dim = matrix.size();
-    Matrix2D result = initMatrix2D(dim, dim);
+    const size_t rows = matrix.size();
+    const size_t cols = matrix[0].size();
+#ifdef DEBUG
+    if (rows != diag.size()) {
+        std::cout << "[Function::multiDiagParMat0] matricx.row != diag.size" << std::endl;
+        throw std::runtime_error("[Function::multiDiagParMat0] matricx.row != diag.size");
+    }
+#endif
 
-    for (size_t i = 0; i < dim; ++i) {
+    Matrix2D result = initMatrix2D(rows, cols);
+
+    //  diag est un vecteur avec un nombre d'éléments égal au nombre de lignes
+    for (size_t i = 0; i < rows; ++i) {
         auto diag_i = diag[i];
-        for (size_t j = 0; j < dim; ++j) {
-            result[i][j] = diag_i * matrix[i][j];
+        for (size_t j = 0; j < cols; ++j) {
+            result[i][j] = diag_i * matrix[i][j]; // Appliquer l'élément diagonal à la ligne
         }
     }
-
     return result;
 }
 
-// Multiplication d'une matrice diagonale par une matrice pleine avec bande
+// Multiplication d'une matrice diagonale par une matrice de bande
 Matrix2D multiDiagParMat(const MatrixDiag &diag, const Matrix2D &matrix, const size_t nbBandes)
 {
     const int dim = (int)matrix.size();
@@ -2245,6 +2254,22 @@ Matrix2D addIdentityToMat(const Matrix2D& matrix)
     for (size_t i = 0; i < dim; ++i)
         result[i][i] += 1.0L;
 
+    return result;
+}
+
+
+// Fonction pour calculer la forme quadratique d'une matrice
+t_matrix quadratic_form(const Matrix2D& A, const std::vector<t_matrix>& X)
+{
+    size_t n = A.size();
+    t_matrix result = 0.0;
+    for (size_t i = 0; i < n; i++) {
+        t_matrix sum = 0.0;
+        for (size_t j = 0; j < n; j++) {
+            sum += A[i][j] * X[j];
+        }
+        result += sum * X[i];
+    }
     return result;
 }
 
@@ -3448,7 +3473,7 @@ std::pair<Matrix2D, MatrixDiag> cholesky_LDLt_MoreSorensen(const Matrix2D& A, t_
     return make_pair(L, D);
 }
 
-// Constructeur pour la décomposition LDLt avec amélioration MS d'une matrice de bande symétrique
+// Constructeur pour la décomposition LDLt avec amélioration Moré-Sorensen d'une matrice de bande symétrique
 std::pair<Matrix2D, MatrixDiag> banded_Cholesky_LDLt_MoreSorensen(const Matrix2D &A, int bandwidth, t_matrix regularization)
 {
     int n = A.size();
@@ -4671,5 +4696,108 @@ std::vector<double> low_pass_filter(std::vector<double>& curve_input, const doub
     delete [] outputReal;
     fftw_cleanup();
 
+    return results;
+}
+
+
+void P2Estimator::add(double x) {
+    if (count < 5) {
+        buffer[count++] = x;
+        if (count == 5) {
+            std::sort(buffer.begin(), buffer.end());
+            for (int i = 0; i < 5; ++i) {
+                heights[i] = buffer[i];
+                positions[i] = i;
+                desired[i] = i;
+            }
+            desired[1] = q / 2 * (count - 1);
+            desired[2] = q * (count - 1);
+            desired[3] = (1 + q) / 2 * (count - 1);
+        }
+        return;
+    }
+
+    int k;
+    if (x < heights[0]) {
+        heights[0] = x;
+        k = 0;
+    } else if (x >= heights[4]) {
+        heights[4] = x;
+        k = 3;
+    } else {
+        for (k = 0; k < 4; ++k) {
+            if (x < heights[k + 1]) break;
+        }
+    }
+
+    for (int i = k + 1; i < 5; ++i)
+        positions[i] += 1;
+    for (int i = 0; i < 5; ++i)
+        desired[i] += increments[i];
+
+    for (int i = 1; i < 4; ++i) {
+        double d = desired[i] - positions[i];
+        if ((d >= 1 && positions[i + 1] - positions[i] > 1) ||
+            (d <= -1 && positions[i - 1] - positions[i] < -1)) {
+
+            int ds = (d >= 0) ? 1 : -1;
+            double hp = parabolic(i, ds);
+            if (heights[i - 1] < hp && hp < heights[i + 1])
+                heights[i] = hp;
+            else
+                heights[i] = linear(i, ds);
+            positions[i] += ds;
+        }
+    }
+
+    count++;
+}
+
+double P2Estimator::get() const {
+    if (count < 5) {
+        std::vector<double> temp(buffer.begin(), buffer.begin() + count);
+        std::sort(temp.begin(), temp.end());
+        size_t index = static_cast<size_t>(q * (count - 1));
+        return temp[index];
+    }
+    return heights[2];
+}
+
+double P2Estimator::parabolic(int i, int d) const {
+    double p1 = positions[i] - positions[i - 1];
+    double p2 = positions[i + 1] - positions[i];
+    if (p1 == 0 || p2 == 0) return heights[i];
+
+    double delta = d / (p2 + p1);
+    return heights[i] + delta * ((p2 + d) * (heights[i - 1] - heights[i]) / p1 +
+                                 (p1 - d) * (heights[i + 1] - heights[i]) / p2);
+}
+
+double P2Estimator::linear(int i, int d) const {
+    return heights[i] + d * (heights[i + d] - heights[i]) / (positions[i + d] - positions[i]);
+}
+
+
+
+MultiQuantileEstimator::MultiQuantileEstimator(const std::vector<double>& quantiles) {
+    for (double q : quantiles)
+        estimators.emplace_back(q);
+}
+
+void MultiQuantileEstimator::add(double value) {
+    for (auto& est : estimators)
+        est.add(value);
+}
+
+void MultiQuantileEstimator::print_estimates() const {
+    for (const auto& est : estimators) {
+        std::cout << "q = " << est.get_quantile() << " → estimate = " << est.get() << "\n";
+    }
+}
+
+std::vector<double> MultiQuantileEstimator::get_estimates() const {
+    std::vector<double> results;
+    for (const auto& est : estimators)
+        results.push_back(est.get());
     return results;
 }

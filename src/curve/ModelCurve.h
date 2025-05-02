@@ -80,12 +80,14 @@ public:
 
     virtual void saveToFile(QDataStream *out);
 
-    virtual void restoreFromFile(QDataStream *in) {
+    virtual bool restoreFromFile(QDataStream *in) {
+        std::cout << "[ModelCurve::restoreFromFile] entering";
+
         QList<QString> compatible_version_330;
-        compatible_version_330<<"3.3.0";
+        compatible_version_330 << "3.3.0" << "3.3.5";
 
         QList<QString> compatible_version_328;
-        compatible_version_328<<"3.2.4"<<"3.2.6"<<"3.2.9";
+        compatible_version_328 << "3.2.4" << "3.2.6" << "3.2.9";
 
         int QDataStreamVersion;
         *in >> QDataStreamVersion;
@@ -99,13 +101,13 @@ public:
         else if (compatible_version_328.contains(res_file_version))
             return restoreFromFile_v328(in);
 
-        else return;
+        else return false;
     };
 
-    void restoreFromFile_v323(QDataStream *in);
-    void restoreFromFile_v324(QDataStream *in);
-    void restoreFromFile_v328(QDataStream *in);
-    void restoreFromFile_v330(QDataStream *in);
+    bool restoreFromFile_v323(QDataStream *in);
+    bool restoreFromFile_v324(QDataStream *in);
+    bool restoreFromFile_v328(QDataStream *in);
+    bool restoreFromFile_v330(QDataStream *in);
 
     virtual QJsonObject toJson() const;
     virtual void fromJson( const QJsonObject &json);
@@ -136,6 +138,9 @@ public:
     QList<PosteriorMeanGComposante> getChainsMeanGComposanteZ();
 
     void memo_PosteriorG_3D(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted);
+    void memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted);
+
+
     void memo_PosteriorG(PosteriorMeanGComposante &postGCompo, const MCMCSplineComposante &splineComposante, const int realyAccepted);
     void memo_PosteriorG_filtering(PosteriorMeanGComposante &postGCompo, const MCMCSplineComposante &splineComposante, int &realyAccepted_old, const std::pair<double, double> GPfilter);
     bool is_accepted_gy_filter(const MCMCSplineComposante& splineComposante, const std::pair<double, double> GPfilter);

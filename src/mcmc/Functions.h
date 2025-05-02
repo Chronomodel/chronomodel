@@ -185,6 +185,8 @@ Matrix2D multiMatParDiag(const Matrix2D& matrix, const MatrixDiag& diag, size_t 
 Matrix2D multiDiagParMat0(const MatrixDiag& diag, const Matrix2D& matrix);
 Matrix2D multiDiagParMat(const MatrixDiag& diag, const Matrix2D& matrix, const size_t nbBandes);
 
+t_matrix quadratic_form(const Matrix2D& A, const std::vector<t_matrix>& X);
+
 std::vector<double> multiMatParVec(const Matrix2D& matrix, const std::vector<double> &vec, const size_t nbBandes);
 std::vector<t_matrix> multiMatParVec(const Matrix2D& matrix, const MatrixDiag &vec, const size_t nbBandes);
 
@@ -442,5 +444,100 @@ std::vector<double> gaussian_filter(std::vector<double>& curve_input, const doub
 std::vector<long double> gaussian_filter(std::vector<long double>& curve_input, const double sigma, const short padding_type=1);
 
 std::vector<double> low_pass_filter(std::vector<double>& curve_input, const double Tc, const short padding_type = 0);
+
+/**
+ * @brief Implémente l'algorithme P² (Jain & Chlamtac) pour l'estimation en ligne d'un quantile donné.
+ * doi: 10.1145/4372.4378
+ *
+ * Cette classe suit dynamiquement la valeur estimée d’un quantile (ex: médiane) sans stocker toutes les données.
+ * Elle fonctionne en mettant à jour cinq marqueurs (minimum, Q1 approx, quantile cible, Q3 approx, maximum)
+ * à chaque nouvelle valeur observée.
+ *
+ * - Complexité mémoire : O(1)
+ * - Complexité temps par insertion : O(1)
+ * - Fonctionne sans tri complet
+ *
+ * @see MultiQuantileEstimator pour le suivi simultané de plusieurs quantiles.
+ */
+class P2Estimator {
+public:
+    /**
+     * @param quantile Le quantile à estimer (entre 0 et 1, exclu).
+     */
+    explicit P2Estimator(double quantile)
+        : q(quantile), count(0) {
+        if (q <= 0.0 || q >= 1.0)
+            throw std::invalid_argument("Quantile must be in (0,1)");
+    }
+
+    /**
+     * @brief Ajoute une nouvelle valeur au flux de données.
+     *
+     * @param x La nouvelle valeur observée.
+     */
+    void add(double x);
+
+    /**
+     * @brief Récupère l’estimation actuelle du quantile.
+     *
+     * @return La valeur estimée du quantile.
+     */
+    double get() const;
+
+    /**
+     * @brief Récupère la valeur du quantile suivi.
+     *
+     * @return La valeur q du quantile (ex: 0.5 pour la médiane).
+     */
+    double get_quantile() const { return q; }
+
+private:
+    double parabolic(int i, int d) const;
+    double linear(int i, int d) const;
+
+    double q;
+    int count;
+    std::array<double, 5> buffer{};
+    std::array<double, 5> heights{};
+    std::array<int, 5> positions{0, 1, 2, 3, 4};
+    std::array<double, 5> desired{0, 0, 0, 0, 4};
+    const std::array<double, 5> increments{0.0, 0.5, 1.0, 0.5, 0.0};
+};
+
+/**
+ * @brief Classe utilitaire pour estimer plusieurs quantiles simultanément à l’aide de P².
+ *
+ * Cette classe gère plusieurs instances de `P2Estimator` en parallèle,
+ * permettant de suivre en temps réel plusieurs quantiles (par exemple : Q1, médiane, Q3).
+ */
+class MultiQuantileEstimator {
+public:
+    /**
+     * @param quantiles Vecteur des quantiles à suivre (ex: {0.25, 0.5, 0.75}).
+     */
+    MultiQuantileEstimator(const std::vector<double>& quantiles);
+
+    /**
+     * @brief Ajoute une nouvelle valeur à tous les estimateurs.
+     *
+     * @param value Nouvelle valeur observée.
+     */
+    void add(double value);
+
+    /**
+     * @brief Affiche les estimations actuelles de tous les quantiles suivis.
+     */
+    void print_estimates() const;
+
+    /**
+     * @brief Récupère toutes les valeurs estimées.
+     *
+     * @return Vecteur contenant les estimations dans l’ordre d’origine des quantiles.
+     */
+    std::vector<double> get_estimates() const;
+
+private:
+    std::vector<P2Estimator> estimators;
+};
 
 #endif

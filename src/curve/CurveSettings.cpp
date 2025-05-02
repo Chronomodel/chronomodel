@@ -50,7 +50,7 @@ CurveSettings::CurveSettings():
     mUseErrMesure(CURVE_USE_ERR_MESURE_DEFAULT),
     mTimeType(CURVE_TIME_TYPE_DEFAULT),
     mVarianceType(CURVE_VARIANCE_TYPE_DEFAULT),
-    mUseVarianceIndividual(CURVE_USE_VARIANCE_INDIVIDUAL_DEFAULT),
+   // mUseVarianceIndividual(CURVE_USE_VARIANCE_INDIVIDUAL_DEFAULT),
     mVarianceFixed(CURVE_VARIANCE_FIXED_DEFAULT),
     mLambdaSplineType(CURVE_COEFF_LISSAGE_TYPE_DEFAULT),
     mLambdaSpline(CURVE_ALPHA_LISSAGE_DEFAULT)
@@ -70,7 +70,7 @@ CurveSettings::CurveSettings(const QJsonObject& json)
 
     mVarianceType = json.contains(STATE_CURVE_VARIANCE_TYPE) ? CurveSettings::ProcessMode (json.value(STATE_CURVE_VARIANCE_TYPE).toInt()) : CURVE_VARIANCE_TYPE_DEFAULT;
 
-    mUseVarianceIndividual = json.contains(STATE_CURVE_USE_VARIANCE_INDIVIDUAL) ? json.value(STATE_CURVE_USE_VARIANCE_INDIVIDUAL).toBool() : CURVE_USE_VARIANCE_INDIVIDUAL_DEFAULT;
+   // mUseVarianceIndividual = json.contains(STATE_CURVE_USE_VARIANCE_INDIVIDUAL) ? json.value(STATE_CURVE_USE_VARIANCE_INDIVIDUAL).toBool() : CURVE_USE_VARIANCE_INDIVIDUAL_DEFAULT;
 
     mVarianceFixed = json.contains(STATE_CURVE_VARIANCE_FIXED) ? json.value(STATE_CURVE_VARIANCE_FIXED).toDouble() : CURVE_VARIANCE_FIXED_DEFAULT;
 
@@ -107,7 +107,7 @@ bool CurveSettings::isEqual(const CurveSettings& s) const
         s.mUseErrMesure != mUseErrMesure ||
         s.mTimeType != mTimeType ||
         s.mVarianceType != mVarianceType ||
-        s.mUseVarianceIndividual != mUseVarianceIndividual ||
+       // s.mUseVarianceIndividual != mUseVarianceIndividual ||
         s.mVarianceFixed != mVarianceFixed ||
         s.mLambdaSplineType != mLambdaSplineType ||
         s.mLambdaSpline != mLambdaSpline) {
@@ -124,7 +124,7 @@ void CurveSettings::copyFrom(const CurveSettings& s)
     mUseErrMesure = s.mUseErrMesure;
     mTimeType = s.mTimeType;
     mVarianceType = s.mVarianceType;
-    mUseVarianceIndividual = s.mUseVarianceIndividual;
+  //  mUseVarianceIndividual = s.mUseVarianceIndividual;
     mVarianceFixed = s.mVarianceFixed;
     mLambdaSplineType = s.mLambdaSplineType;
     mLambdaSpline = s.mLambdaSpline;
@@ -144,7 +144,7 @@ CurveSettings CurveSettings::getDefault()
     settings.mUseErrMesure = CURVE_USE_ERR_MESURE_DEFAULT;
     settings.mTimeType = CURVE_TIME_TYPE_DEFAULT;
     settings.mVarianceType = CURVE_VARIANCE_TYPE_DEFAULT;
-    settings.mUseVarianceIndividual = CURVE_USE_VARIANCE_INDIVIDUAL_DEFAULT;
+   // settings.mUseVarianceIndividual = CURVE_USE_VARIANCE_INDIVIDUAL_DEFAULT;
     settings.mVarianceFixed = CURVE_VARIANCE_FIXED_DEFAULT;
     settings.mLambdaSplineType = CURVE_COEFF_LISSAGE_TYPE_DEFAULT;
     settings.mLambdaSpline = CURVE_ALPHA_LISSAGE_DEFAULT;
@@ -160,7 +160,7 @@ void CurveSettings::restoreDefault()
     mUseErrMesure = CURVE_USE_ERR_MESURE_DEFAULT;
     mTimeType = CURVE_TIME_TYPE_DEFAULT;
     mVarianceType = CURVE_VARIANCE_TYPE_DEFAULT;
-    mUseVarianceIndividual = CURVE_USE_VARIANCE_INDIVIDUAL_DEFAULT;
+    //mUseVarianceIndividual = CURVE_USE_VARIANCE_INDIVIDUAL_DEFAULT;
     mVarianceFixed = CURVE_VARIANCE_FIXED_DEFAULT;
     mLambdaSplineType = CURVE_COEFF_LISSAGE_TYPE_DEFAULT;
     mLambdaSpline = CURVE_ALPHA_LISSAGE_DEFAULT;
@@ -180,7 +180,7 @@ CurveSettings CurveSettings::fromJson(const QJsonObject& json)
 
     settings.mVarianceType = json.contains(STATE_CURVE_VARIANCE_TYPE) ? CurveSettings::ProcessMode (json.value(STATE_CURVE_VARIANCE_TYPE).toInt()) : CURVE_VARIANCE_TYPE_DEFAULT;
 
-    settings.mUseVarianceIndividual = json.contains(STATE_CURVE_USE_VARIANCE_INDIVIDUAL) ? json.value(STATE_CURVE_USE_VARIANCE_INDIVIDUAL).toBool() : CURVE_USE_VARIANCE_INDIVIDUAL_DEFAULT;
+   // settings.mUseVarianceIndividual = json.contains(STATE_CURVE_USE_VARIANCE_INDIVIDUAL) ? json.value(STATE_CURVE_USE_VARIANCE_INDIVIDUAL).toBool() : CURVE_USE_VARIANCE_INDIVIDUAL_DEFAULT;
 
     settings.mVarianceFixed = json.contains(STATE_CURVE_VARIANCE_FIXED) ? json.value(STATE_CURVE_VARIANCE_FIXED).toDouble() : CURVE_VARIANCE_FIXED_DEFAULT;
 
@@ -206,7 +206,7 @@ QJsonObject CurveSettings::toJson() const
     cs[STATE_CURVE_USE_ERR_MESURE] = QJsonValue::fromVariant(mUseErrMesure);
     cs[STATE_CURVE_TIME_TYPE] = QJsonValue::fromVariant((int)mTimeType);
     cs[STATE_CURVE_VARIANCE_TYPE] = QJsonValue::fromVariant((int)mVarianceType);
-    cs[STATE_CURVE_USE_VARIANCE_INDIVIDUAL] = QJsonValue::fromVariant(mUseVarianceIndividual);
+   // cs[STATE_CURVE_USE_VARIANCE_INDIVIDUAL] = QJsonValue::fromVariant(mUseVarianceIndividual);
     cs[STATE_CURVE_VARIANCE_FIXED] = QJsonValue::fromVariant(mVarianceFixed);
     cs[STATE_CURVE_COEFF_LISSAGE_TYPE] = QJsonValue::fromVariant((int)mLambdaSplineType);
     cs[STATE_CURVE_ALPHA_LISSAGE] = QJsonValue::fromVariant(mLambdaSpline);

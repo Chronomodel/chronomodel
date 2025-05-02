@@ -1063,6 +1063,7 @@ void MainWindow::rebuildExportCurve()
 
                 curveModel->memo_PosteriorG_filtering(meanG.gx, splineXYZ.splineX, totalIterAccepted, minMaxPFilter );
 #else
+                //curveModel->memo_PosteriorG(meanG.gx, splineXYZ.splineX,  totalIterAccepted++ );
                 curveModel->memo_PosteriorG(meanG.gx, splineXYZ.splineX,  totalIterAccepted++ );
 #endif
 
@@ -1071,7 +1072,8 @@ void MainWindow::rebuildExportCurve()
 
         } else {
             for (auto &splineXYZ : runTrace) {
-                curveModel->memo_PosteriorG_3D(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted++ );
+                //curveModel->memo_PosteriorG_3D(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted++ );
+                curveModel->memo_PosteriorG_3D_335(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted++ );
             }
         }
 
@@ -1340,7 +1342,6 @@ void MainWindow::readSettings(const QString& defaultFilePath)
                 activateInterface(true);               
                 connectProject();
                 std::cout << "[MainWindow::readSettings] mProject->load = true" << std::endl;
-                std::cout << "[MainWindow::readSettings] mProject->noResult = " << mProject->noResults() << std::endl;
                 std::cout << "[MainWindow::readSettings] (mProject->mModel == nullptr) = " << (mProject->mModel == nullptr) << std::endl;
 
                 AppSettings::mIsSaved = true;

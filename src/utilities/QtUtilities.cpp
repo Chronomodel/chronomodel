@@ -56,73 +56,106 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
  * @param elapsedTime in msec
  * @return
  */
-QString DHMS( quint64 elapsedTime)
+QString DHMS(quint64 elapsedTime)
 {
-    if (elapsedTime == 0)
-        return "";
+    // Cas spécial pour 0 ms
+    if (elapsedTime == 0) {
+        return "0 msec";
+    }
 
-    QString str;
-    quint64 day = 0;
-    quint64 hour = 0;
-    quint64 minute = 0;
-    quint64 second =0;
+    // Constantes pour améliorer la lisibilité
+    const quint64 MS_PER_SECOND = 1000;
+    const quint64 MS_PER_MINUTE = 60 * MS_PER_SECOND;
+    const quint64 MS_PER_HOUR = 60 * MS_PER_MINUTE;
+    const quint64 MS_PER_DAY = 24 * MS_PER_HOUR;
 
-    if (elapsedTime >= (24*3600*1000))
-        day = elapsedTime / (24*3600*1000);
+    // Extraction des différentes unités de temps
+    quint64 days = elapsedTime / MS_PER_DAY;
+    quint64 remainder = elapsedTime % MS_PER_DAY;
 
+    // Si plus d'une semaine, on affiche seulement les jours
+    if (days > 6) {
+        return QString("%1 days").arg(days);
+    }
 
-    if (day > 6)
-        return QString("%1 days ").arg(QString::number(day));
+    // Construction de la chaîne de résultat
+    QString result;
 
-    else if (day > 1)
-        str = QString("%1 days ").arg(QString::number(day));
-    else if (day == 1)
-        str = QString("1 day ");
+    // Ajout des jours si présents
+    if (days > 1) {
+        result = QString("%1 days ").arg(days);
+    } else if (days == 1) {
+        result = "1 day ";
+    }
 
-    elapsedTime -= day * 24*3600*1000;
-    hour = elapsedTime / (3600*1000);
+    // Si on a au moins un jour, on n'affiche pas en dessous de l'heure
+    quint64 hours = remainder / MS_PER_HOUR;
+    if (days >= 1) {
+        if (hours > 1) {
+            result += QString("%1 hours").arg(hours);
+        } else if (hours == 1) {
+            result += "1 hour";
+        }
+        return result.trimmed();
+    }
 
-    if (hour > 1)
-        str += QString("%1 hours ").arg(QString::number(hour));
-    else if (hour == 1)
-        str += QString("1 hour ");
+    // Ajout des heures si présentes
+    if (hours > 1) {
+        result += QString("%1 hours ").arg(hours);
+    } else if (hours == 1) {
+        result += "1 hour ";
+    }
 
-    // If we have more than one day, we do not display below the hour
-    if (day >= 1)
-        return str;
+    remainder %= MS_PER_HOUR;
 
-    elapsedTime -= hour*3600*1000;
-    minute = elapsedTime / (60*1000);
+    // Si on a au moins une heure, on n'affiche pas en dessous de la minute
+    quint64 minutes = remainder / MS_PER_MINUTE;
+    if (hours >= 1) {
+        if (minutes > 1) {
+            result += QString("%1 minutes").arg(minutes);
+        } else if (minutes == 1) {
+            result += "1 minute";
+        }
+        return result.trimmed();
+    }
 
-    if (minute > 1)
-        str += QString("%1 minutes ").arg(QString::number(minute));
-    else if (minute == 1)
-        str += QString("1 minute ");
+    // Ajout des minutes si présentes
+    if (minutes > 1) {
+        result += QString("%1 minutes ").arg(minutes);
+    } else if (minutes == 1) {
+        result += "1 minute ";
+    }
 
-    // If we have more than one hour, we do not display below the second
-    if (hour >= 1)
-        return str;
+    remainder %= MS_PER_MINUTE;
 
-    elapsedTime -= minute*60*1000;
-    second = elapsedTime / 1000;
+    // Si on a au moins une minute, on n'affiche pas en dessous de la seconde
+    quint64 seconds = remainder / MS_PER_SECOND;
+    if (minutes >= 1) {
+        if (seconds > 1) {
+            result += QString("%1 seconds").arg(seconds);
+        } else if (seconds == 1) {
+            result += "1 second";
+        }
+        return result.trimmed();
+    }
 
-    if (second > 1)
-        str += QString("%1 seconds ").arg(QString::number(second));
-    else if (second == 1)
-        str += QString("1 second ");
+    // Ajout des secondes si présentes
+    if (seconds > 1) {
+        result += QString("%1 seconds ").arg(seconds);
+    } else if (seconds == 1) {
+        result += "1 second ";
+    }
 
-    // If we have more than one minute, we do not display below the second
-    if (minute >= 1)
-        return str;
+    // Si on a au moins une seconde, on ne montre pas les millisecondes
+    if (seconds >= 1) {
+        return result.trimmed();
+    }
 
-    if (second >= 1)
-        return str;
+    // Affichage des millisecondes si nécessaire
+    quint64 milliseconds = remainder % MS_PER_SECOND;
+    result += QString("%1 msec").arg(milliseconds);
 
-    elapsedTime -= second*1000;
-
-    str += QString("%3 msec").arg(QString::number(elapsedTime));
-
-    return str;
+    return result.trimmed();
 }
 
 bool colorIsDark(const QColor& color)

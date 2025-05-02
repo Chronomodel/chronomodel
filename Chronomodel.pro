@@ -297,6 +297,7 @@ HEADERS += src/MainController.h \
     src/ui/dialogs/SilvermanDialog.h \
     src/ui/panel_model/MultiCalibrationView.h \
     src/ui/panel_model/MultiCalibrationDrawing.h \
+    src/ui/panel_model/MultiplotColorDialog.h \
     src/utilities/Matrix.h
 HEADERS += src/AppSettings.h
 HEADERS += src/StateKeys.h
@@ -471,6 +472,7 @@ SOURCES += src/AppSettings.cpp \
     src/ui/dialogs/SilvermanDialog.cpp \
     src/ui/panel_model/MultiCalibrationView.cpp \
     src/ui/panel_model/MultiCalibrationDrawing.cpp \
+    src/ui/panel_model/MultiplotColorDialog.cpp \
     src/utilities/Matrix.cpp
 SOURCES += src/ChronoApp.cpp
 SOURCES += src/main.cpp

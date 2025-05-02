@@ -45,72 +45,249 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 extern QString res_file_version;
 
-
-std::vector<t_reduceTime> calculVecH(const std::vector<std::shared_ptr<Event> > &event)
+/**
+ * @brief Calculates the vector of differences between consecutive events' reduced theta values.
+ *
+ * This function computes the difference between each pair of consecutive events in the input vector,
+ * specifically subtracting the mThetaReduced value of each event from that of the next event.
+ *
+ * @param events Vector of shared pointers to Event objects
+ * @return std::vector<t_reduceTime> Vector containing the differences between consecutive events'
+ *                                  mThetaReduced values
+ *
+ * @note The returned vector size is one less than the input vector size.
+ * @note When compiled with DEBUG defined, the function will output debug information for differences
+ *       that are less than or equal to 1.0E-10.
+ * @throw std::invalid_argument If the input vector contains fewer than 2 events
+ */
+std::vector<t_reduceTime> calculVecH(const std::vector<std::shared_ptr<Event>>& events)
 {
-    std::vector<double> result (event.size()-1);
-    // Définition d'une lambda pour la différence
+    // Verification for empty or single-element vector
+#ifdef DEBUG
+    const size_t size = events.size();
+    if (size < 2) {
+        throw std::invalid_argument("calculVecH requires at least 2 events");
+    }
+#endif
+
+    // Reserve memory for result vector (more efficient than default constructor)
+    std::vector<t_reduceTime> result;
+    result.reserve(events.size() - 1);
+
+    // Define lambda for the difference calculation
     auto diffX = [](const std::shared_ptr<Event>& e0, const std::shared_ptr<Event>& e1) -> t_reduceTime {
         return e1->mThetaReduced - e0->mThetaReduced;
     };
 
-    std::transform(event.begin(), event.end()-1, event.begin()+1 , result.begin(), diffX);
+    // Transform adjacent elements using the difference lambda
+    std::transform(events.begin(), events.end() - 1, events.begin() + 1, std::back_inserter(result), diffX);
 
 #ifdef DEBUG
-    int i =0;
-    for (auto &&r :result) {
-        if (r <= 1.E-10) {
-            qDebug()<< "[CurveUtilities::calculVecH] diff Theta r <= 1.E-10 "<< (double)event.at(i)->mThetaReduced<< (double)event.at(i+1)->mThetaReduced;
-
+    // Debug output for very small differences
+    for (size_t i = 0; i < result.size(); ++i) {
+        const t_reduceTime diff = result[i];
+        if (diff <= 1.0E-10) {
+            qDebug() << "[CurveUtilities::calculVecH] diff Theta r <= 1.0E-10 "
+                     << static_cast<double>(events[i]->mThetaReduced) << " "
+                     << static_cast<double>(events[i + 1]->mThetaReduced);
         }
-        ++i;
     }
 #endif
+
     return result;
 }
 
 
 // --------------- Function with list of double value
-
-Matrix2D calculMatR(const std::vector<t_reduceTime> &rVecH)
+/**
+ * @brief Calculates the R0 matrix for cubic spline interpolation without zero padding.
+ *
+ * This function computes the full R0 matrix used in cubic spline calculations.
+ * Unlike calculMatR, this returns the dense matrix without zero padding.
+ * The matrix is symmetric with values based on the differences in the vec_h input.
+ *
+ * @param vec_h Vector of time differences between consecutive points (size n+1)
+ * @return Matrix2D Dense n×n matrix R0 for cubic spline calculations
+ *
+ * @note Matrix entries are calculated as follows:
+ *       - Diagonal: (h_i + h_{i+1})/3
+ *       - Off-diagonal (i,i+1) and (i+1,i): h_{i+1}/6
+ * @throw std::invalid_argument If vec_h has fewer than 2 elements
+ */
+Matrix2D calculMatR0(const std::vector<t_reduceTime>& vec_h)
 {
-    // Calcul de la matrice R, de dimension (n-2) x (n-2) contenue dans une matrice n x n
-    // Par exemple pour n = 5 :
-    // 0 0 0 0 0
-    // 0 X X X 0
-    // 0 X X X 0
-    // 0 X X X 0
-    // 0 0 0 0 0
-
-    // vecH est de dimension n-1
-    const unsigned long n = rVecH.size() + 1;
-
-    // matR est de dimension n-2 x n-2, mais contenue dans une matrice nxn
-    Matrix2D matR = initMatrix2D(n, n);
-    // On parcourt n-2 valeurs :
-    /* pHd : code simplified
-    for (int i = 1; i < n-1; ++i) {
-        matR[i][i] = (vecH[i-1] + vecH[i]) / 3.;
-        // Si on est en n-2 (dernière itération), on ne calcule pas les valeurs de part et d'autre de la diagonale (termes symétriques)
-        if (i < n-2) {
-            matR[i][i+1] = vecH[i] / 6.;
-            matR[i+1][i] = vecH[i] / 6.;
-        }
+    // Check input size
+#ifdef DEBUG
+    if (vec_h.size() < 2) {
+        throw std::invalid_argument("calculMatR0 requires at least 2 elements in vec_h");
     }
-    */
+#endif
+
+    // Matrix size is one less than vec_h size
+    const size_t n = vec_h.size() - 1;
+
+    // Initialize matrix with zeros
+    Matrix2D matR0 = initMatrix2D(n, n);
+
+    // Pre-compute constants to avoid repeated divisions
+    constexpr t_matrix ONE_THIRD = 1.0L/3.0L;
+    constexpr t_matrix ONE_SIXTH = 1.0L/6.0L;
+
+    // Fill the matrix
+    for (size_t i = 0; i < n - 1; ++i) {
+        // Diagonal elements
+        matR0[i][i] = (vec_h[i] + vec_h[i+1]) * ONE_THIRD;
+
+        // Symmetric off-diagonal elements (calculate once, assign twice)
+        t_matrix offDiagonal = vec_h[i+1] * ONE_SIXTH;
+        matR0[i][i+1] = offDiagonal;
+        matR0[i+1][i] = offDiagonal;  // Symmetric element
+    }
+
+    // Last diagonal element (special case)
+    matR0[n-1][n-1] = (vec_h[n-1] + vec_h[n]) * ONE_THIRD;
+
+    return matR0;
+}
+
+/**
+ * @brief Calculates the R matrix contained within an n x n matrix.
+ *
+ * This function computes the R matrix of size (n-2) x (n-2), placed in the center of an n x n matrix.
+ * The R matrix is constructed using values from the input vector vec_h.
+ * For example, when n=5:
+ *   0 0 0 0 0
+ *   0 X X X 0
+ *   0 X X X 0
+ *   0 X X X 0
+ *   0 0 0 0 0
+ *
+ * @param vec_h The input vector of size n-1, where n is the size of the containing matrix.
+ * @return Matrix2D The computed R matrix within an n x n matrix.
+ */
+Matrix2D calculMatR(const std::vector<t_reduceTime> &vec_h)
+{
+    // vecH est de dimension n-1
+    const unsigned long n = vec_h.size() + 1;
+
+    Matrix2D matR = initMatrix2D(n, n);
+
+    // Pre-compute constants to avoid repeated divisions
+    constexpr t_matrix ONE_THIRD = 1.0L/3.0L;
+    constexpr t_matrix ONE_SIXTH = 1.0L/6.0L;
+
     for ( unsigned long i = 1; i < n-2; ++i) {
-        matR[i][i] = (rVecH[i-1] + rVecH[i]) / 3.0L;
-        matR[i][i+1] = rVecH[i] / 6.0L;
-        matR[i+1][i] = rVecH[i] / 6.0L;
+        matR[i][i] = (vec_h[i-1] + vec_h[i]) * ONE_THIRD;
+        t_matrix offDiagonal = vec_h[i] * ONE_SIXTH;
+        matR[i][i+1] = offDiagonal;
+        matR[i+1][i] = offDiagonal;
     }
     // Si on est en n-2 (dernière itération), on ne calcule pas les valeurs de part et d'autre de la diagonale (termes symétriques)
-   matR[n-2][n-2] = (rVecH[n-2-1] + rVecH[n-2]) / 3.0;
+    matR[n-2][n-2] = (vec_h[n-2-1] + vec_h[n-2]) * ONE_THIRD;
 
     return matR;
 }
 
+/**
+ * @brief Computes the Q matrix of size n x (n-2) based on the provided vector vec_h.
+ *
+ * The Q0 matrix has a banded structure with non-zero elements on the main diagonal and the first off-diagonal.
+ * The matrix is constructed such that:
+ * - The main diagonal elements are the negative sum of consecutive reciprocals of vec_h.
+ * - The first off-diagonal elements are the reciprocals of vec_h.
+ *
+ * For example, when n=5:
+ * +X   0   0
+ * -X  +a   0
+ * +a  -X  +b
+ * +0  +b  -X
+ *  0   0  +X
+ * @param vec_h The input vector of size n-1 containing positive values.
+ * @return Matrix2D The resulting Q0 matrix of dimensions n x (n-2).
+ * Plus rapide que calculMat0(), car pré-calcul des inverses
+ */
+Matrix2D calculMatQ00(const std::vector<t_reduceTime>& vec_h)
+{
+    const size_t n = vec_h.size() + 1;
+#ifdef DEBUG
+    // Vérification de la taille minimale de vec_h
+    if (vec_h.size() < 2) {
+        throw std::invalid_argument("vec_h doit avoir au moins deux éléments.");
+    }
+#endif
+    // matQ0 est de dimension n x (n-2)
+    Matrix2D matQ0 = initMatrix2D(n, n - 2);
+
+    // Pré-calcul des inverses pour éviter les divisions répétées
+    std::vector<t_matrix> inv_h(n - 1);
+    for (size_t i = 0; i < n - 1; ++i) {
+#ifdef DEBUG
+        if (vec_h[i] <= 0) {
+            throw std::runtime_error("[CurveUtilities::calculMatQ00] vec_h <= 0");
+        }
+#endif
+        inv_h[i] = 1.0L / vec_h[i];
+
+    }
+
+    // Remplissage de la matrice
+    for (size_t i = 1; i < n - 1; ++i) {
+        matQ0[i - 1][i - 1] = inv_h[i - 1];
+        matQ0[i][i - 1] = -(inv_h[i - 1] + inv_h[i]);
+        matQ0[i + 1][i - 1] = inv_h[i];
+    }
+
+    return matQ0;
+
+}
+
+//la matrice Q est une matrice de bande 3, de dimension n x (n-2)
+Matrix2D calculMatQ0(const std::vector<t_reduceTime>& vec_h)
+{
+    // Calcul de la matrice Q, de dimension n x (n-2)
+    // Par exemple pour n = 5 :
+    // X 0 0
+    // X X X
+    // X X X
+    // X X X
+    // 0 0 X
+
+    // vec_h est de dimension n-1
+    const size_t n = vec_h.size() + 1;
+
+    // matQ0 est de dimension n x (n-2)
+    Matrix2D matQ = initMatrix2D(n, n - 2);
+
+    // On parcourt n-2 valeurs :
+    for (size_t i = 1; i < n - 1; ++i) {
+#ifdef DEBUG
+        if (vec_h.at(i - 1) <= 0) {
+            throw std::runtime_error("[CurveUtilities::calculMatQ0] vec_h <= 0");
+        }
+#endif
+        matQ[i - 1][i - 1] = 1.0L / vec_h[i - 1];
+        matQ[i][i - 1] = -((1.0L / vec_h[i - 1]) + (1.0L / vec_h[i]));
+        if (i < n - 1) {
+            matQ[i + 1][i - 1] = 1.0L / vec_h[i];
+        }
+
+
+    }
+
+
+    // Par exemple pour n = 5 :
+    // +X  0  0
+    // -X +a  0
+    // +a -X +b
+    //  0 +b -X
+    //  0  0 +X
+
+    return matQ;
+}
+
+
 // Dans RenCurve procedure Calcul_Mat_Q_Qt_R ligne 55
-Matrix2D calculMatQ(const std::vector<t_reduceTime>& rVecH)
+Matrix2D calculMatQ(const std::vector<t_reduceTime>& vec_h)
 {
     // Calcul de la matrice Q, de dimension n x (n-2) contenue dans une matrice n x n
     // Les 1ère et dernière colonnes sont nulles
@@ -122,19 +299,19 @@ Matrix2D calculMatQ(const std::vector<t_reduceTime>& rVecH)
     // 0 0 0 X 0
 
     // vecH est de dimension n-1
-    const size_t n = rVecH.size() + 1;
+    const size_t n = vec_h.size() + 1;
 
     // matQ est de dimension n x n-2, mais contenue dans une matrice nxn
     Matrix2D matQ = initMatrix2D(n, n);
     // On parcourt n-2 valeurs :
     for (size_t i = 1; i < n-1; ++i) {
-        matQ[i-1][i] = 1.0L  / rVecH[i-1];
-        matQ[i][i] = -((1.0L / rVecH[i-1]) + (1.0L /rVecH[i]));
-        matQ[i+1][i] = 1.0L  / rVecH[i];
+        matQ[i-1][i] = 1.0L  / vec_h[i-1];
+        matQ[i][i] = -((1.0L / vec_h[i-1]) + (1.0L /vec_h[i]));
+        matQ[i+1][i] = 1.0L  / vec_h[i];
 
 #ifdef DEBUG
-        if (rVecH.at(i)<=0)
-            throw "calculMatQ vecH <=0 ";
+        if (vec_h.at(i)<=0)
+            throw std::runtime_error("[CurveUtilities::calculMatQ] vec_h <= 0");
 #endif
     }
     // pHd : ici la vrai forme est une matrice de dimension n x (n-2), de bande k=1; les termes diagonaux sont négatifs
@@ -145,8 +322,6 @@ Matrix2D calculMatQ(const std::vector<t_reduceTime>& rVecH)
     // 0 +a -X +b 0
     // 0  0 +b -X 0
     // 0  0  0 +X 0
-
-
 
     return matQ;
 }
@@ -568,36 +743,7 @@ SplineMatrices prepare_calcul_spline(const std::vector<std::shared_ptr<Event>>& 
 
     return prepare_calcul_spline(vecH, W_Inv);
 
-   /* const Matrix2D &rMatR = calculMatR(vecH);
-    const Matrix2D &rMatQ = calculMatQ(vecH);
 
-    // Calcul de la transposée QT de la matrice Q, de dimension (n-2) x n
-    const Matrix2D &rMatQT = transpose(rMatQ, 3);
-
-    MatrixDiag diagWInv (sortedEvents.size());
-    std::transform(sortedEvents.begin(), sortedEvents.end(), diagWInv.begin(), [](std::shared_ptr<Event> ev) {return 1.0L /ev->mW;});
-
-    // Calcul de la matrice matQTW_1Q, de dimension (n-2) x (n-2) pour calcul Mat_B
-    // matQTW_1Q possèdera 3+3-1=5 bandes
-    const Matrix2D &tmp = multiMatParDiag(rMatQT, diagWInv, 3);
-
-    //Matrix2D matQTW_1Qb = multiMatParMat(tmp, matQ, 3, 3);
-    const Matrix2D &rMatQTW_1Q = multiplyMatrixBanded_Winograd(tmp, rMatQ, 1);
-
-    // Calcul de la matrice QTQ, de dimension (n-2) x (n-2) pour calcul Mat_B
-    // Mat_QTQ possèdera 3+3-1=5 bandes
-    //Matrix2D matQTQb = multiMatParMat(matQT, matQ, 3, 3);
-    const Matrix2D &rMatQTQ = multiplyMatrixBanded_Winograd(rMatQT, rMatQ, 1);
-
-    SplineMatrices matrices;
-    matrices.diagWInv = std::move(diagWInv);
-    matrices.matR = std::move(rMatR);
-    matrices.matQ = std::move(rMatQ);
-    matrices.matQT = std::move(rMatQT);
-    matrices.matQTW_1Q = std::move(rMatQTW_1Q); // Seule affectée par changement de VG
-    matrices.matQTQ = std::move(rMatQTQ);
-
-    return matrices;*/
 }
 
 SplineMatrices prepare_calcul_spline(const std::vector<t_reduceTime>& vecH, const std::vector<long double> W_1)
@@ -1273,7 +1419,8 @@ void valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante &spline, do
         // ValeurGPrime
         GP = (spline.vecG.at(1) - spline.vecG.at(0)) / (t2 - t1);
         GP -= (t2 - t1) * spline.vecGamma.at(1) / 6.;
-
+       // if (spline.vecGamma.at(1) == 0)
+         //   qDebug()<< "[CurveUtilities::valeurs_G_VarG_GP_GS] spline.vecGamma.at(1) == 0?? t=" << t;
         // ValeurG
         G = spline.vecG.at(0) - (t1 - tReduce) * GP;
 
@@ -1326,7 +1473,7 @@ void valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante &spline, do
                 varG = pow(err1 + ((tReduce-ti1) / (ti2-ti1)) * (err2 - err1) , 2.l);
 #ifdef DEBUG
                 if (std::isnan(varG))
-                    qDebug()<< "[CurveUtilities] varG is nan ??"<<ti1<<ti2;
+                    qDebug()<< "[CurveUtilities::valeurs_G_VarG_GP_GS] varG is nan ??"<<ti1<<ti2;
 #endif
                 GP = ((gi2-gi1)/h) - (1./6.) * (tReduce-ti1) * (ti2-tReduce) * ((gamma2-gamma1)/h);
                 GP += (1./6.) * ((tReduce-ti1) - (ti2-tReduce)) * ( (1.+(tReduce-ti1)/h) * gamma2 + (1+(ti2-tReduce)/h) * gamma1 );
@@ -1344,6 +1491,21 @@ void valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante &spline, do
     // Value slope correction
     GP /= (tmax - tmin);
     GS /= pow(tmax - tmin, 2.);
+
+#ifdef DEBUG
+    if (std::isnan(varG))
+        qDebug()<< "[CurveUtilities::valeurs_G_VarG_GP_GS] varG is nan ?? t=" << t;
+
+    if (std::isnan(G))
+        qDebug()<< "[CurveUtilities::valeurs_G_VarG_GP_GS] G is nan ?? t=" << t;
+
+    if (std::isnan(GP))
+        qDebug()<< "[CurveUtilities::valeurs_G_VarG_GP_GS] GP is nan ?? t=" << t;
+
+    if (std::isnan(GS))
+        qDebug()<< "[CurveUtilities::valeurs_G_VarG_GP_GS] GS is nan ?? t=" << t;
+#endif
+
 }
 
 
@@ -1909,30 +2071,148 @@ double var_Gasser(const std::vector<double>& vec_t, const std::vector<double>& v
     return sum / (N - 2.0);
 }
 
-long double var_Gasser(const std::vector<long double>& vec_t, const std::vector<long double>& vec_Y)
+t_matrix var_Gasser_2D(const std::vector<t_matrix>& vec_t, const std::vector<t_matrix>& vec_X, const std::vector<t_matrix>& vec_Y)
+{
+    t_matrix N = vec_t.size();
+    t_matrix sum = 0.0;
+    t_matrix c = 0.0; // Compensation
+
+    for (auto i=1; i< N-1; i++) {
+        // Pour chaque point i
+        t_matrix di = vec_t[i+1] - vec_t[i-1];
+        t_matrix ai = di > 0 ? (vec_t[i+1] - vec_t[i]) / di : 0.5;
+        t_matrix bi = 1.0 - ai;
+
+        // Calcul de l'erreur pour chaque dimension
+        t_matrix ei_X = ai * vec_X[i-1] + bi * vec_X[i+1] - vec_X[i];
+        t_matrix ei_Y = ai * vec_Y[i-1] + bi * vec_Y[i+1] - vec_Y[i];
+
+        // Normalisation
+        t_matrix ci2 = 1.0 / (1.0 + ai*ai + bi*bi);
+
+        // Calcul de l'erreur quadratique (somme des carrés des erreurs dans les 2 dimensions)
+        t_matrix term = ci2 * (ei_X * ei_X + ei_Y * ei_Y);
+
+        // Sommation de Kahan pour une précision accrue
+        const t_matrix y = term - c;
+        const t_matrix t = sum + y;
+        c = (t - sum) - y;
+        sum = t;
+
+    }
+
+    return sum / (N - 2.0);
+}
+
+
+/**
+ * @brief Computes a nonparametric local variance estimate for 3D trajectories
+ *        using a Gasser–Müller-type estimator with numerical compensation (Kahan summation).
+ *
+ * This function evaluates how much each point deviates from a linear interpolation
+ * between its neighbors, across the three spatial dimensions.
+ *
+ * Given time points \f$ t_0, \dots, t_{N-1} \f$ and associated 3D coordinates
+ * \f$ \vec{Y}_i = (X_i, Y_i, Z_i) \in \mathbb{R}^3 \f$, the estimator computes:
+ *
+ * - Local interval:
+ * \f[
+ * d_i = t_{i+1} - t_{i-1}
+ * \f]
+ *
+ * - Weights:
+ * \f[
+ * a_i = \frac{t_{i+1} - t_i}{d_i}, \quad b_i = 1 - a_i
+ * \f]
+ *
+ * - Linear interpolation error in each dimension:
+ * \f[
+ * e_{i}^{(X)} = a_i X_{i-1} + b_i X_{i+1} - X_i \\
+ * e_{i}^{(Y)} = a_i Y_{i-1} + b_i Y_{i+1} - Y_i \\
+ * e_{i}^{(Z)} = a_i Z_{i-1} + b_i Z_{i+1} - Z_i
+ * \f]
+ *
+ * - Normalization factor:
+ * \f[
+ * c_i^2 = \frac{1}{1 + a_i^2 + b_i^2}
+ * \f]
+ *
+ * - Local variance contribution:
+ * \f[
+ * c_i^2 \cdot \left( (e_{i}^{(X)})^2 + (e_{i}^{(Y)})^2 + (e_{i}^{(Z)})^2 \right)
+ * \f]
+ *
+ * Final result:
+ * \f[
+ * \text{Var}_\text{Gasser}^{(3D)} = \frac{1}{N - 2} \sum_{i=1}^{N-2} c_i^2 \cdot \left( (e_{i}^{(X)})^2 + (e_{i}^{(Y)})^2 + (e_{i}^{(Z)})^2 \right)
+ * \f]
+ *
+ * @param vec_t A vector of time points (size N, strictly increasing).
+ * @param vec_X A vector of X coordinates (same size as vec_t).
+ * @param vec_Y A vector of Y coordinates (same size as vec_t).
+ * @param vec_Z A vector of Z coordinates (same size as vec_t).
+ *
+ * @return The average locally-normalized squared deviation across the 3D trajectory.
+ *
+ * @note The computation excludes the first and last points (i = 1 to N-2).
+ * @note Assumes all vectors are of equal size and N >= 3.
+ */
+t_matrix var_Gasser_3D(const std::vector<t_matrix>& vec_t, const std::vector<t_matrix>& vec_X, const std::vector<t_matrix>& vec_Y, const std::vector<t_matrix>& vec_Z )
+{
+    t_matrix N = vec_t.size();
+    t_matrix sum = 0.0;
+    t_matrix c = 0.0; // Compensation
+
+    for (auto i = 1; i < N - 1; i++) {
+        t_matrix di = vec_t[i + 1] - vec_t[i - 1];
+        t_matrix ai = di > 0 ? (vec_t[i + 1] - vec_t[i]) / di : 0.5;
+        t_matrix bi = 1.0 - ai;
+
+        // Errors in each dimension
+        t_matrix ei_X = ai * vec_X[i - 1] + bi * vec_X[i + 1] - vec_X[i];
+        t_matrix ei_Y = ai * vec_Y[i - 1] + bi * vec_Y[i + 1] - vec_Y[i];
+        t_matrix ei_Z = ai * vec_Z[i - 1] + bi * vec_Z[i + 1] - vec_Z[i];
+
+        t_matrix ci2 = 1.0 / (1.0 + ai * ai + bi * bi);
+
+        // Squared norm of the interpolation error
+        t_matrix term = ci2 * (ei_X * ei_X + ei_Y * ei_Y + ei_Z * ei_Z);
+
+        // Kahan summation
+        const t_matrix y = term - c;
+        const t_matrix t = sum + y;
+        c = (t - sum) - y;
+        sum = t;
+    }
+
+    return sum / (N - 2.0);
+}
+
+
+t_matrix var_Gasser(const std::vector<t_matrix>& vec_t, const std::vector<t_matrix>& vec_Y)
 {
     const size_t N = vec_t.size();
     if (N <= 2) return 0.0L; // Protection contre les cas limites
 
     // Utilisation de la sommation de Kahan pour améliorer la précision
-    long double sum = 0.0L;
-    long double c = 0.0L; // Variable de compensation
+    t_matrix sum = 0.0L;
+    t_matrix c = 0.0L; // Variable de compensation
 
 #pragma omp parallel for reduction(+:sum) // Parallélisation si OpenMP est disponible
     for (size_t i = 1; i < N - 1; ++i) {
-        const long double di = vec_t[i+1] - vec_t[i-1];
-        const long double ai = di > 0.0L ? (vec_t[i+1] - vec_t[i]) / di : 0.5L;
-        const long double bi = 1.0L - ai;
+        const t_matrix di = vec_t[i+1] - vec_t[i-1];
+        const t_matrix ai = di > 0.0L ? (vec_t[i+1] - vec_t[i]) / di : 0.5L;
+        const t_matrix bi = 1.0L - ai;
 
-        const long double ei = ai * vec_Y[i-1] + bi * vec_Y[i+1] - vec_Y[i];
+        const t_matrix ei = ai * vec_Y[i-1] + bi * vec_Y[i+1] - vec_Y[i];
 
-        const long double ci2 = 1.0L / (1.0L + ai*ai + bi*bi);
-        const long double term = ci2 * ei * ei;
+        const t_matrix ci2 = 1.0L / (1.0L + ai*ai + bi*bi);
+        const t_matrix term = ci2 * ei * ei;
 
 // Sommation de Kahan (si non parallélisé)
 #ifndef _OPENMP
-        const long double y = term - c;
-        const long double t = sum + y;
+        const t_matrix y = term - c;
+        const t_matrix t = sum + y;
         c = (t - sum) - y;
         sum = t;
 #else

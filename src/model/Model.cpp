@@ -1539,7 +1539,7 @@ void Model::generateCredibility(const double thresh)
         phaseConstraint->mGapRange = gapRangeFromTraces(phaseConstraint->mPhaseFrom->mBeta.fullRunRawTrace(mChains),
                                                         phaseConstraint->mPhaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Gap Range : "+ str);
 
-        qDebug()<<"[Model::generateCredibility] Gap Range "<<str;
+        qDebug() << "[Model::generateCredibility] Gap Range " << str;
 
         phaseConstraint->mTransitionRange = transitionRangeFromTraces(phaseConstraint->mPhaseFrom->mBeta.fullRunRawTrace(mChains),
                                                                       phaseConstraint->mPhaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Transition Range : " + str);
@@ -2110,16 +2110,12 @@ void Model::saveToFile(QDataStream *out)
 /** @Brief Read the .res file, it's the result of the saved computation
  *
  * */
-void Model::restoreFromFile_v323(QDataStream *in)
+bool Model::restoreFromFile_v323(QDataStream *in)
 {
-    /*int QDataStreamVersion;
-    *in >> QDataStreamVersion;
-    in->setVersion(QDataStreamVersion);
-    QString appliVersion;
-    *in >> appliVersion;
-    */
+    std::cout << "[Model::restoreFromFile_v323] Entering" << std::endl;
+
     if (in->version()!= QDataStream::Qt_6_4)
-        return;
+        return false;
 
     // -----------------------------------------------------
     //  Read info
@@ -2236,31 +2232,24 @@ void Model::restoreFromFile_v323(QDataStream *in)
     *in >> mLogAdapt;
     *in >> mLogResults;
 
+    return true;
 }
 
-void Model::restoreFromFile_v324(QDataStream *in)
+bool Model::restoreFromFile_v324(QDataStream *in)
 {
-    QList<QString> compatible_version;
-    compatible_version<<"3.2.4"<<"3.2.6";
-    /*int QDataStreamVersion;
-    *in >> QDataStreamVersion;
-    in->setVersion(QDataStreamVersion);
+    std::cout << "[Model::restoreFromFile_v324] Entering"  << std::endl;
 
+    const QList<QString> compatible_version {"3.2.4", "3.2.6"};
 
-
-    //QString appliVersion;
-    //res_file_version
-    *in >> res_file_version;
-    **/
     if (in->version()!= QDataStream::Qt_6_4)
-        return;
-    // prepare the future
-    //QStringList projectVersionList = appliVersion.split(".");
+        return false;
+
 #ifdef DEBUG
     if (res_file_version != qApp->applicationVersion())
-        qDebug()<<" Different Model version ="<<res_file_version<<" actual ="<<qApp->applicationVersion();
+        qDebug() << "[Model::restoreFromFile_v324] Different Model version =" << res_file_version<<" actual =" << qApp->applicationVersion();
+
     if (compatible_version.contains(res_file_version))
-        qDebug()<<" Version compatible 3.2.4";
+        qDebug() << "[Model::restoreFromFile_v324] Version compatible 3.2.4";
 #endif
     // -----------------------------------------------------
     //  Read info
@@ -2379,29 +2368,24 @@ void Model::restoreFromFile_v324(QDataStream *in)
     *in >> mLogAdapt;
     *in >> mLogResults;
 
+    return true;
 }
 
-void Model::restoreFromFile_v328(QDataStream *in)
+bool Model::restoreFromFile_v328(QDataStream *in)
 {
-    QList<QString> compatible_version;
-    compatible_version<<"3.2.4"<<"3.2.6"<<"3.2.9";
-    /*int QDataStreamVersion;
-    *in >> QDataStreamVersion;
-    in->setVersion(QDataStreamVersion);
-    */
-    if (in->version()!= QDataStream::Qt_6_4)
-        return;
+    std::cout << "[Model::restoreFromFile_v328] Entering"  << std::endl;
 
-    //QString appliVersion;
-    //res_file_version
-    //*in >> res_file_version;
-    // prepare the future
-    //QStringList projectVersionList = appliVersion.split(".");
+    const QList<QString> compatible_version { "3.2.4", "3.2.6","3.2.9"};
+
+    if (in->version()!= QDataStream::Qt_6_4)
+        return false;
+
 #ifdef DEBUG
     if (res_file_version != qApp->applicationVersion())
-        qDebug()<<" Different Model version ="<<res_file_version<<" actual ="<<qApp->applicationVersion();
+        qDebug() << "[Model::restoreFromFile_v328] Different Model version = " << res_file_version << " actual =" << qApp->applicationVersion();
+
     if (compatible_version.contains(res_file_version))
-        qDebug()<<" Version compatible 3.2.8";
+        qDebug()<<" [Model::restoreFromFile_v328] Version compatible 3.2.8";
 #endif
     // -----------------------------------------------------
     //  Read info
@@ -2508,7 +2492,7 @@ void Model::restoreFromFile_v328(QDataStream *in)
                 const std::string toFind ("WID::"+ d.mUUID);
 
                 if (d.mWiggleCalibration == nullptr || d.mWiggleCalibration->mVector.empty()) {
-                    qDebug()<<"[Model::restoreFromFile] mWiggleCalibration vide";
+                    qDebug()<<"[Model::restoreFromFile_v328] mWiggleCalibration Empty";
 
                 } else {
                     d.mWiggleCalibration = & (getProject_ptr()->mCalibCurves[toFind]);
@@ -2521,132 +2505,141 @@ void Model::restoreFromFile_v328(QDataStream *in)
     *in >> mLogAdapt;
     *in >> mLogResults;
 
+    return true;
 }
 
-void Model::restoreFromFile_v330(QDataStream *in)
+bool Model::restoreFromFile_v330(QDataStream *in)
 {
-    QList<QString> compatible_version;
-    compatible_version<<"3.3.0";
-    /*int QDataStreamVersion;
-    *in >> QDataStreamVersion;
-    in->setVersion(QDataStreamVersion);
-*/
-    if (in->version()!= QDataStream::Qt_6_7)
-        return;
+    std::cout << "[Model::restoreFromFile_v330] Entering" << std::endl;
 
-    //*in >> res_file_version;
-    // prepare the future
+    const QList<QString> compatible_version {"3.3.0", "3.3.5"};
+
+    if (in->version()!= QDataStream::Qt_6_7)
+        return false;
+
 
 #ifdef DEBUG
     if (res_file_version != qApp->applicationVersion())
-        qDebug()<<" Different Model version ="<<res_file_version<<" actual ="<<qApp->applicationVersion();
+        qDebug()<<"[Model::restoreFromFile_v330] Different Model version =" << res_file_version << " actual =" << qApp->applicationVersion();
+
     if (compatible_version.contains(res_file_version))
-        qDebug()<<" Version compatible ";
+        qDebug() << "[Model::restoreFromFile_v330] Version compatible";
 #endif
-    // -----------------------------------------------------
-    //  Read info
-    // -----------------------------------------------------
 
-    quint32 tmp32;
-    *in >> tmp32;
+    try {
 
-    mChains.clear();
-    //mChains.reserve(int (tmp32));
-    for (quint32 i=0 ; i<tmp32; ++i) {
-        ChainSpecs ch;
-        *in >> ch.burnElapsedTime;
-        *in >> ch.mAdaptElapsedTime;
-        *in >> ch.mAcquisitionElapsedTime;
 
-        *in >> ch.mBatchIndex;
-        *in >> ch.mBatchIterIndex;
-        *in >> ch.mBurnIterIndex;
-        *in >> ch.mMaxBatchs;
-        *in >> ch.mMixingLevel;
-        *in >> ch.mIterPerBatch;
-        *in >> ch.mIterPerBurn;
-        *in >> ch.mIterPerAquisition;
-        *in >> ch.mAquisitionIterIndex;
-        *in >> ch.mSeed;
-        *in >> ch.mThinningInterval;
-        *in >> ch.mRealyAccepted;
-        *in >> ch.mTotalIter;
-        mChains.push_back(ch);
-    }
 
-    // -----------------------------------------------------
-    //  Read phases data
-    // -----------------------------------------------------
+        // -----------------------------------------------------
+        //  Read info
+        // -----------------------------------------------------
 
-    for (std::shared_ptr<Phase> &p : mPhases) {
-        p->mAlpha.load_stream(*in);
-        p->mBeta.load_stream(*in);
-        p->mTau.load_stream(*in);
-        p->mDuration.load_stream(*in);
+        quint32 tmp32;
+        *in >> tmp32;
 
-    }
-    // -----------------------------------------------------
-    //  Read events data
-    // -----------------------------------------------------
+        mChains.clear();
+        //mChains.reserve(int (tmp32));
+        for (quint32 i=0 ; i<tmp32; ++i) {
+            ChainSpecs ch;
+            *in >> ch.burnElapsedTime;
+            *in >> ch.mAdaptElapsedTime;
+            *in >> ch.mAcquisitionElapsedTime;
 
-    for (std::shared_ptr<Event> &e : mEvents) {
-        e->mTheta.load_stream(*in);
-        e->mS02Theta.load_stream(*in); // since 2023-06-01 v3.2.3
-    }
-    // -----------------------------------------------------
-    //  Read dates data
-    // -----------------------------------------------------
+            *in >> ch.mBatchIndex;
+            *in >> ch.mBatchIterIndex;
+            *in >> ch.mBurnIterIndex;
+            *in >> ch.mMaxBatchs;
+            *in >> ch.mMixingLevel;
+            *in >> ch.mIterPerBatch;
+            *in >> ch.mIterPerBurn;
+            *in >> ch.mIterPerAquisition;
+            *in >> ch.mAquisitionIterIndex;
+            *in >> ch.mSeed;
+            *in >> ch.mThinningInterval;
+            *in >> ch.mRealyAccepted;
+            *in >> ch.mTotalIter;
+            mChains.push_back(ch);
+        }
 
-    for (std::shared_ptr<Event> &event : mEvents) {
-        if (event->mType == Event::eDefault )
-            for (auto&& d : event->mDates) {
+        // -----------------------------------------------------
+        //  Read phases data
+        // -----------------------------------------------------
 
-                d.mTi.load_stream(*in);
-                d.mSigmaTi.load_stream(*in);
-                if (d.mDeltaType != Date::eDeltaNone)
-                    d.mWiggle.load_stream(*in);
+        for (std::shared_ptr<Phase> &p : mPhases) {
+            p->mAlpha.load_stream(*in);
+            p->mBeta.load_stream(*in);
+            p->mTau.load_stream(*in);
+            p->mDuration.load_stream(*in);
 
-                *in >> d.mDeltaFixed;
-                *in >> d.mDeltaMin;
-                *in >> d.mDeltaMax;
-                *in >> d.mDeltaAverage;
-                *in >> d.mDeltaError;
+        }
+        // -----------------------------------------------------
+        //  Read events data
+        // -----------------------------------------------------
 
-                double tmp;
-                *in >> tmp;
-                d.setTminRefCurve(tmp);
-                *in >> tmp;
-                d.setTmaxRefCurve(tmp);
+        for (std::shared_ptr<Event> &e : mEvents) {
+            e->mTheta.load_stream(*in);
+            e->mS02Theta.load_stream(*in); // since 2023-06-01 v3.2.3
+        }
+        // -----------------------------------------------------
+        //  Read dates data
+        // -----------------------------------------------------
 
-                d.mCalibration = & (getProject_ptr()->mCalibCurves[d.mUUID]);
+        for (std::shared_ptr<Event> &event : mEvents) {
+            if (event->mType == Event::eDefault )
+                for (auto&& d : event->mDates) {
 
-                quint32 tmpUint32;
-                *in >> tmpUint32;
-                double tmpKey;
-                double tmpValue;
-                for (quint32 i= 0; i<tmpUint32; i++) {
-                    *in >> tmpKey;
-                    *in >> tmpValue;
-                    d.mCalibHPD[tmpKey]= tmpValue;
+                    d.mTi.load_stream(*in);
+                    d.mSigmaTi.load_stream(*in);
+                    if (d.mDeltaType != Date::eDeltaNone)
+                        d.mWiggle.load_stream(*in);
+
+                    *in >> d.mDeltaFixed;
+                    *in >> d.mDeltaMin;
+                    *in >> d.mDeltaMax;
+                    *in >> d.mDeltaAverage;
+                    *in >> d.mDeltaError;
+
+                    double tmp;
+                    *in >> tmp;
+                    d.setTminRefCurve(tmp);
+                    *in >> tmp;
+                    d.setTmaxRefCurve(tmp);
+
+                    d.mCalibration = & (getProject_ptr()->mCalibCurves[d.mUUID]);
+
+                    quint32 tmpUint32;
+                    *in >> tmpUint32;
+                    double tmpKey;
+                    double tmpValue;
+                    for (quint32 i= 0; i<tmpUint32; i++) {
+                        *in >> tmpKey;
+                        *in >> tmpValue;
+                        d.mCalibHPD[tmpKey]= tmpValue;
+                    }
+                    //#ifdef DEBUG
+
+                    const std::string toFind ("WID::"+ d.mUUID);
+
+                    if (d.mWiggleCalibration == nullptr || d.mWiggleCalibration->mVector.empty()) {
+                        qDebug()<<"[Model::restoreFromFile_v330] mWiggleCalibration vide";
+
+                    } else {
+                        d.mWiggleCalibration = & (getProject_ptr()->mCalibCurves[toFind]);
+                    }
+                    //#endif
                 }
-                //#ifdef DEBUG
+        }
+        *in >> mLogModel;
+        *in >> mLogInit;
+        *in >> mLogAdapt;
+        *in >> mLogResults;
 
-                const std::string toFind ("WID::"+ d.mUUID);
+        return true;
 
-                if (d.mWiggleCalibration == nullptr || d.mWiggleCalibration->mVector.empty()) {
-                    qDebug()<<"[Model::restoreFromFile] mWiggleCalibration vide";
-
-                } else {
-                    d.mWiggleCalibration = & (getProject_ptr()->mCalibCurves[toFind]);
-                }
-                //#endif
-            }
+    } catch (...) {
+        std::cout << "[Model::restoreFromFile_v330] Error" << std::endl;
+        return false;
     }
-    *in >> mLogModel;
-    *in >> mLogInit;
-    *in >> mLogAdapt;
-    *in >> mLogResults;
-
 }
 
 
@@ -2667,10 +2660,12 @@ t_reduceTime Model::reduceTime(double t) const
     const long double tL = static_cast<long double>(t);
     const long double denominator = tmax - tmin;
 
+#ifdef DEBUG
     // Vérification de la stabilité numérique
     if (std::abs(denominator) < std::numeric_limits<long double>::epsilon()) {
         throw std::runtime_error("Erreur : Division par une valeur trop petite !");
     }
+#endif
 
     return static_cast<double>((tL - tmin) / denominator);
 }

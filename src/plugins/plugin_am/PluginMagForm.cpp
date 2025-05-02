@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -42,8 +42,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #if USE_PLUGIN_AM
 
 #include "PluginMag.h"
+
 #include <QJsonObject>
-#include <QtWidgets>
+#include <QGridLayout>
+
 
 
 PluginMagForm::PluginMagForm(PluginMag* plugin, QWidget* parent, Qt::WindowFlags flags):PluginFormAbstract(plugin, tr("AM Measurements"), parent, flags)

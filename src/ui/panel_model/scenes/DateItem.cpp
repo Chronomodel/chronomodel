@@ -109,7 +109,6 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
                 mCalibThumb = QPixmap();
                 QString mes = tr("Insufficient resolution for the Event %1 ").arg(d.getQStringName());
 
-                //throw mes;
                 QMessageBox message(QMessageBox::Critical,
                                     qApp->applicationName() + " " + qApp->applicationVersion(),
                                     mes,

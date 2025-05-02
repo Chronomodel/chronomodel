@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -61,11 +61,14 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mDrawing (nullptr),
     mMajorScale (100),
     mMinorScale (4),
-    mTminDisplay(-HUGE_VAL),
-    mTmaxDisplay(HUGE_VAL),
-    mThreshold(95),
-    mGraphHeight(120),
-    mCurveColor(Painting::mainColorDark)
+    mTminDisplay (-HUGE_VAL),
+    mTmaxDisplay (HUGE_VAL),
+    mThreshold (95),
+    mGraphHeight (120),
+    mUsePluginColor (false),
+    mUseEventColor (false),
+    mUseCustomColor (true),
+    mCurveCustomColor(Painting::mainColorDark)
 {
     QPalette palette_BW;
     palette_BW.setColor(QPalette::Base, Qt::white);
@@ -430,7 +433,7 @@ void MultiCalibrationView::updateLayout()
         mDrawing->updateLayout();
         mDrawing->show();
 
-        mColorClipBut->setEnabled(false);
+        mColorClipBut->setEnabled(true);
         mStatClipBut->setEnabled(false);
         mScatterClipBut->setEnabled(true);
 
@@ -441,7 +444,7 @@ void MultiCalibrationView::updateLayout()
         mDrawing->updateLayout();
         mDrawing->show();
 
-        mColorClipBut->setEnabled(false);
+        mColorClipBut->setEnabled(true);
         mStatClipBut->setEnabled(false);
         mFitClipBut->setEnabled(true);
 
@@ -518,8 +521,8 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
     const QJsonObject* state = getState_ptr();
     mSettings = StudyPeriodSettings::fromJson(state->value(STATE_SETTINGS).toObject());
 
-    const QColor &penColor = mCurveColor;
-    QColor brushColor = mCurveColor;
+    QColor penColor = mCurveCustomColor;
+    QColor brushColor = mCurveCustomColor;
     brushColor.setAlpha(170);
 
     QList<GraphViewAbstract*> graphList;
@@ -546,7 +549,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
 
     for (QJsonObject &ev : selectedEvents) {
 
-        const QColor color = QColor(ev.value(STATE_COLOR_RED).toInt(),
+        const QColor event_color = QColor(ev.value(STATE_COLOR_RED).toInt(),
                               ev.value(STATE_COLOR_GREEN).toInt(),
                               ev.value(STATE_COLOR_BLUE).toInt());
         const QString curveDescription = curveModel ? Event::curveDescriptionFromJsonEvent(ev, processType): "";
@@ -559,10 +562,23 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
             const QString boundName = ev.value(STATE_NAME).toString();
             const QString valueStr = locale().toString(tFixedFormated) + " " + DateUtils::getAppSettingsFormatStr();
             graphList.append(new GraphTitle(tr("Bound : %1").arg(boundName),  curveDescription, QString("Fixed value : %1 ").arg(valueStr), this));
-            colorList.append(color);
+            colorList.append(event_color);
 
             GraphView* calibGraph = new GraphView(this);
             calibGraph->setRangeY(0., 1.);
+
+            if (mUsePluginColor) {
+                penColor = Qt::red;
+
+            } else if (mUseEventColor) {
+                penColor = event_color;
+
+            } else {
+                penColor = mCurveCustomColor;
+
+            }
+            brushColor = penColor;
+            brushColor.setAlpha(170);
 
             GraphCurve calibCurve = horizontalSection( qMakePair(tFixedFormated, tFixedFormated), "Bound", penColor, QBrush(brushColor));
             calibCurve.mVisible = true;
@@ -590,7 +606,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
             graphList.append(calibGraph);
             listAxisVisible.append(true);
 
-            colorList.append(color);
+            colorList.append(event_color);
 
 
         } else {
@@ -598,11 +614,26 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
 
             for (auto&& date : dates) {
                 Date d (date.toObject());
+                const QColor plugin_color = d.mPlugin->getColor();
+
+                if (mUsePluginColor) {
+                    penColor = plugin_color;
+
+                } else if (mUseEventColor) {
+                    penColor = event_color;
+
+                } else {
+                    penColor = mCurveCustomColor;
+
+                }
+                brushColor = penColor;
+                brushColor.setAlpha(170);
 
                 GraphCurve calibCurve;
                 GraphView* calibGraph = new GraphView(this);
 
                  if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.empty()) {
+
                     calibCurve = densityCurve(d.getFormatedCalibToShow(), "Calibration", penColor);
                     calibCurve.mVisible = true;
                     calibGraph->add_curve(calibCurve);
@@ -624,11 +655,11 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                 listAxisVisible.append(true);
                 if (&ev != preEvent) {
                     graphList.append(new GraphTitle(tr("Event : %1 ").arg(eventName), curveDescription, d.getQStringName(), this));
-                    colorList.append(color);
+                    colorList.append(event_color);
 
                 } else {
                     graphList.append(new GraphTitle("", d.getQStringName(), this));
-                    colorList.append(color);
+                    colorList.append(event_color);
 
                     listAxisVisible[listAxisVisible.size()-2] = false;
                 }
@@ -673,7 +704,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
 
                 graphList.append(calibGraph);
                 calibGraph = nullptr;
-                colorList.append(color);
+                colorList.append(event_color);
 
             }
 
@@ -704,7 +735,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
     mHPDEdit->setText(locale().toString(thres));
 
-    QColor brushColor = mCurveColor;
+    QColor brushColor = mCurveCustomColor;
     brushColor.setAlpha(170);
 
     QList<GraphViewAbstract*> graphList;
@@ -841,7 +872,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
         const double zField = sEvent.value(STATE_EVENT_Z_F).toDouble();
         const double s_ZField = sEvent.value(STATE_EVENT_SZ_SF).toDouble();
 
-        const QColor color (sEvent.value(STATE_COLOR_RED).toInt(),
+        const QColor event_color (sEvent.value(STATE_COLOR_RED).toInt(),
                        sEvent.value(STATE_COLOR_GREEN).toInt(),
                        sEvent.value(STATE_COLOR_BLUE).toInt());
         // Same calcul within ResultsView::createByCurveGraph()
@@ -947,7 +978,21 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
             ptsX.Ymin = X - errX;
             ptsX.Ymax = X + errX;
-            ptsX.color = color;
+            QColor penColor;
+            if (mUsePluginColor) {
+                penColor = Qt::red;
+
+            } else if (mUseEventColor) {
+                penColor = event_color;
+
+            } else {
+                penColor = mCurveCustomColor;
+
+            }
+            //brushColor = penColor;
+            //brushColor.setAlpha(170);
+
+            ptsX.color = penColor;
             ptsX.type = processType == CurveSettings::eProcess_None ?  CurveRefPts::ePoint : CurveRefPts::eRoundLine;
 
             ptsX.pen = QPen(Qt::black, 2, Qt::SolidLine);
@@ -1006,19 +1051,29 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
         } else {
 
             const QJsonArray &dates = sEvent.value(STATE_EVENT_DATES).toArray();
-
+            QColor penColor;
             for (const auto&& date : dates) {
                 Date d (date.toObject());
+                if (mUsePluginColor) {
+                    penColor = d.mPlugin->getColor();
+
+                } else if (mUseEventColor) {
+                    penColor = event_color;
+
+                } else {
+                    penColor = mCurveCustomColor;
+
+                }
+                brushColor = penColor;
+                brushColor.setAlpha(170);
 
                 if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.empty()) {
-                //if (d.mCalibration!=nullptr && !d.mCalibration->mVector.empty()) {
 
                     d.autoSetTiSampler(true); // needed if calibration is not done
 
                     const std::map<double, double> &calibMap = d.getFormatedCalibMap();
                     // hpd is calculate only on the study Period
 
-                    //const std::map<double, double> &subData = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
                     const std::map<double, double> &subData = getMapDataInRange(calibMap, mTminDisplay, mTmaxDisplay);
 
                     if (!subData.empty()) {
@@ -1076,7 +1131,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
                             ptsX.Ymin = X - errX;
                             ptsX.Ymax = X + errX;
-                            ptsX.color = color;
+                            ptsX.color = penColor;
                             ptsX.type = typePts;
                             ptsX.pen = QPen(Qt::black, 2, Qt::SolidLine);
                             ptsX.brush = Qt::black;
@@ -1120,7 +1175,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
                             ptsX.Ymin = X - errX;
                             ptsX.Ymax = X + errX;
-                            ptsX.color = color;
+                            ptsX.color = penColor;
                             ptsX.type = typePts;
                             ptsX.pen = QPen(Qt::black, 2, Qt::SolidLine);
                             ptsX.brush = Qt::black;
@@ -1269,7 +1324,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
     //mMajorScaleEdit->setText(locale().toString(mMajorScale));
     //mMinorScaleEdit->setText(locale().toString(mMinorScale));
 
-    QColor brushColor = mCurveColor;
+    QColor brushColor = mCurveCustomColor;
     brushColor.setAlpha(170);
 
     QList<GraphViewAbstract*> graphList;
@@ -1413,7 +1468,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             const double zField = sEvent.value(STATE_EVENT_Z_F).toDouble();
             const double s_ZField = sEvent.value(STATE_EVENT_SZ_SF).toDouble();
 
-            const QColor color (sEvent.value(STATE_COLOR_RED).toInt(),
+            const QColor event_color (sEvent.value(STATE_COLOR_RED).toInt(),
                                sEvent.value(STATE_COLOR_GREEN).toInt(),
                                sEvent.value(STATE_COLOR_BLUE).toInt());
             // Same calcul within ResultsView::createByCurveGraph()
@@ -1517,7 +1572,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                 errZ = 0.;
                 break;
             }
-
+            QColor penColor;
             if ( Event::Type (sEvent.value(STATE_EVENT_TYPE).toInt()) == Event::eBound) {
                 const double bound = sEvent.value(STATE_EVENT_KNOWN_FIXED).toDouble();
 
@@ -1526,7 +1581,20 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 
                 ptsX.Ymin = X - errX;
                 ptsX.Ymax = X + errX;
-                ptsX.color = color;
+                if (mUsePluginColor) {
+                    penColor = Qt::red;
+
+                } else if (mUseEventColor) {
+                    penColor = event_color;
+
+                } else {
+                    penColor = mCurveCustomColor;
+
+                }
+                brushColor = penColor;
+                brushColor.setAlpha(170);
+
+                ptsX.color = penColor;
                 ptsX.type = CurveRefPts::eRoundLine;
 
                 ptsX.pen = QPen(Qt::black, 1, Qt::SolidLine);
@@ -1651,7 +1719,22 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                             ptsX.Ymin = X;
                             ptsX.Ymax = X;
                         }
-                        ptsX.color = color;
+
+                        QColor penColor;
+                        if (mUsePluginColor) {
+                            penColor = Qt::red;
+
+                        } else if (mUseEventColor) {
+                            penColor = event_color;
+
+                        } else {
+                            penColor = mCurveCustomColor;
+
+                        }
+                        brushColor = penColor;
+                        brushColor.setAlpha(170);
+
+                        ptsX.color = penColor;
                         ptsX.type = typePts;
                         ptsX.pen = QPen(Qt::black, 1, Qt::SolidLine);
                         ptsX.brush = Qt::black;
@@ -2465,35 +2548,19 @@ void MultiCalibrationView::copyImage()
 
 void MultiCalibrationView::changeCurveColor()
 {
-    const QColor color = QColorDialog::getColor(mCurveColor, qApp->activeWindow(), tr("Select Colour"));
-    if (color.isValid()) {
-        mCurveColor = color;
-        QList<GraphView*> graphList = mDrawing->getGraphViewList();
-        GraphCurve* calibCurve (nullptr);
-        for (GraphView* gr : graphList) {
-            if (gr->has_curves()) {
-                calibCurve = gr->getCurve("Calibration");
+    MultiplotColorDialog dialog (mUsePluginColor, mUseEventColor, mCurveCustomColor);
 
-                if (!calibCurve)
-                    calibCurve = gr->getCurve("Bound");
+    if (dialog.exec() == QDialog::Accepted) {
 
-                if (calibCurve) {
-                    calibCurve->mPen.setColor(mCurveColor);
-                    GraphCurve* hpdCurve (gr->getCurve("Calibration HPD"));
+        mUsePluginColor = dialog.usePluginColor();
+        mUseEventColor = dialog.useEventColor();
+        mUseCustomColor = !mUsePluginColor & !mUseEventColor;
+        mCurveCustomColor = dialog.getColor();
 
-                    if (hpdCurve) {
-                        hpdCurve->mPen.setColor(mCurveColor);
-                        const QColor brushColor (mCurveColor.red(),mCurveColor.green(), mCurveColor.blue(), 100);
-                        hpdCurve->mBrush = QBrush(brushColor);
-                    }
-                    hpdCurve = nullptr;
-                    gr->forceRefresh();
-                }
-
-            }
-        }
-        calibCurve = nullptr;
     }
+
+    updateGraphList();
+
 }
 
 void MultiCalibrationView::copyText()
