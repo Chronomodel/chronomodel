@@ -7736,7 +7736,7 @@ void MCMCLoopCurve::memo()
 /* C'est le même algorithme que ModelCurve::buildCurveAndMap()
  */
 // obsolete
-void MCMCLoopCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSplineComposante& splineComposante, const int realyAccepted)
+/* void MCMCLoopCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSplineComposante& splineComposante, const int realyAccepted)
 {
     CurveMap& curveMap = postGCompo.mapG;
     const int nbPtsX = curveMap.column();
@@ -7806,10 +7806,7 @@ void MCMCLoopCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSp
 
         const double stdG = sqrt(varGx);
 
-        // Ajout densité erreur sur Y
-        /* il faut utiliser un pas de grille et le coefficient dans la grille dans l'intervalle [a,b] pour N(mu, sigma) est égale à la différence 1/2*(erf((b-mu)/(sigma*sqrt(2)) - erf((a-mu)/(sigma*sqrt(2))
-         * https://en.wikipedia.org/wiki/Error_function
-         */
+
         //const double k = 3.; // Le nombre de fois sigma G, pour le calcul de la densité (gx - k*stdG - ymin)
 
         const int idxYErrMin = std::clamp( int((gx - 3.*stdG - ymin) / stepY), 0, nbPtsY-1);
@@ -7818,11 +7815,7 @@ void MCMCLoopCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSp
         if (idxYErrMin == idxYErrMax && idxYErrMin > 0 && idxYErrMax < nbPtsY-1) {
 #ifdef DEBUG
             curveMap(idxT, idxYErrMin) = curveMap.at(idxT, idxYErrMin) + 1.;
-          /*  if ((curveMap.row()*idxT + idxYErrMin) < (curveMap.row()*curveMap.column()))
-                curveMap(idxT, idxYErrMin) = curveMap.at(idxYErrMin, idxYErrMin) + 1; // correction à faire dans finalize() + 1./nbIter;
-            else
-                qDebug()<<"pb in MCMCLoopCurve::memo_PosteriorG";
-*/
+
 #else
             curveMap(idxT, idxYErrMin) = curveMap.at(idxT, idxYErrMin) + 1.; // correction à faire dans finalize/nbIter ;
 #endif
@@ -7884,7 +7877,7 @@ void MCMCLoopCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, MCMCSp
 
 
 }
-
+*/
 
 void MCMCLoopCurve::finalize()
 {

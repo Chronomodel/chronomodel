@@ -345,6 +345,190 @@ void display(const std::vector<double>& v)
 }
 
 
+/**
+ * @brief Convertit un vecteur 3D (x, y, z) en Inclinaison, Déclinaison et Intensité.
+ *
+ * Données d'entrée : un vecteur \f$ \vec{g} = (x, y, z) \f$ dans un repère géocentrique.
+ *
+ * Formules :
+ * - \f$ F = \sqrt{x^2 + y^2 + z^2} \f$
+ * - \f$ \text{Inc} = \arcsin \left( \frac{z}{F} \right) \f$
+ * - \f$ \text{Dec} = \arctan2(y, x) \f$
+ *
+ * Inclinaison (Inc) et déclinaison (Dec) sont retournées en **degrés**.
+ *
+ * @param x composante x du vecteur
+ * @param y composante y du vecteur
+ * @param z composante z du vecteur
+ * @param[out] F intensité totale (norme du vecteur)
+ * @param[out] Inc inclinaison en degrés (angle entre F et l'horizontale)
+ * @param[out] Dec déclinaison en degrés (angle entre le nord géographique et la projection horizontale)
+ */
+void convertToIDF(double x, double y, double z, double &Inc, double& Dec, double& F)
+{
+    F = std::sqrt(x * x + y * y + z * z);
+
+    if (F == 0.0) {
+        Inc = 0.0;
+        Dec = 0.0;
+        return;
+    }
+
+    Inc = std::asin(z / F) * 180.0 / M_PI;        // en degrés
+    Dec = std::atan2(y, x) * 180.0 / M_PI;        // en degrés
+}
+
+/**
+ * @brief Calcule les dérivées premières de F, Inclinaison (Inc) et Déclinaison (Dec).
+ *
+ * Données :
+ * - \f$ \vec{g} = (gx, gy, gz) \f$ : composantes du champ magnétique
+ * - \f$ \vec{g}' = (gpx, gpy, gpz) \f$ : dérivées premières
+ *
+ * Formules :
+ * - \f$ F = \sqrt{gx^2 + gy^2 + gz^2} \f$
+ * - \f$ \frac{dF}{dt} = \frac{gx \cdot gpx + gy \cdot gpy + gz \cdot gpz}{F} \f$
+ *
+ * - \f$ \text{Inc} = \arcsin \left( \frac{gz}{F} \right) \Rightarrow u = \frac{gz}{F} \f$
+ * - \f$ \frac{d \text{Inc}}{dt} = \frac{1}{\sqrt{1 - u^2}} \cdot \frac{gpz \cdot F - gz \cdot \frac{dF}{dt}}{F^2} \f$
+ *
+ * - \f$ \text{Dec} = \arctan2(gy, gx) \f$
+ * - \f$ \frac{d \text{Dec}}{dt} = \frac{gx \cdot gpy - gy \cdot gpx}{gx^2 + gy^2} \f$
+ *
+ * @param gx composante x du champ
+ * @param gy composante y du champ
+ * @param gz composante z du champ
+ * @param gpx dérivée de gx
+ * @param gpy dérivée de gy
+ * @param gpz dérivée de gz
+ * @param[out] dFdt dérivée de F (en nT/s)
+ * @param[out] dIncdt dérivée de l'inclinaison (en degrés/s)
+ * @param[out] dDecdt dérivée de la déclinaison (en degrés/s)
+ */
+void computeDerivatives(double gx, double gy, double gz,
+                        double gpx, double gpy, double gpz,
+                        double& dIncdt, double& dDecdt, double& dFdt)
+{
+    // Calcul de F
+    double F = std::sqrt(gx * gx + gy * gy + gz * gz);
+
+    // Sécurité contre division par zéro
+    if (F == 0.0) {
+        dFdt = dIncdt = dDecdt = 0.0;
+        return;
+    }
+
+    // dF/dt
+    dFdt = (gx * gpx + gy * gpy + gz * gpz) / F;
+
+    // dInc/dt
+    double denomInc = std::sqrt(F * F - gz * gz);
+    if (denomInc == 0.0) {
+        dIncdt = 0.0; // Peut être ajusté selon le cas limite
+
+    } else {
+        dIncdt = (gpz - (gz / F) * dFdt) / denomInc;
+    }
+
+    // dDec/dt
+    double denomDec = gx * gx + gy * gy;
+    if (denomDec == 0.0) {
+        dDecdt = 0.0; // Peut être ajusté selon le cas limite
+
+    } else {
+        dDecdt = (gx * gpy - gy * gpx) / denomDec;
+    }
+
+    // Conversion en degrés
+    dIncdt *= 180.0 / M_PI;
+    dDecdt *= 180.0 / M_PI;
+}
+
+/**
+ * @brief Calcule les dérivées secondes de F, Inclinaison (Inc) et Déclinaison (Dec).
+ *
+ * Données :
+ * - \f$ \vec{g} = (gx, gy, gz) \f$
+ * - \f$ \vec{g}' = (gpx, gpy, gpz) \f$ : dérivées premières
+ * - \f$ \vec{\gamma} = (\gamma_x, \gamma_y, \gamma_z) \f$ : dérivées secondes
+ *
+ * Formules :
+ * - \f$ F = \sqrt{gx^2 + gy^2 + gz^2} \f$
+ * - \f$ \frac{dF}{dt} = \frac{gx \cdot gpx + gy \cdot gpy + gz \cdot gpz}{F} \f$
+ * - \f$ \frac{d^2F}{dt^2} = \frac{gpx^2 + gpy^2 + gpz^2 + gx \cdot \gamma_x + gy \cdot \gamma_y + gz \cdot \gamma_z}{F} - \left( \frac{dF}{dt} \right)^2 \cdot \frac{1}{F} \f$
+ *
+ * - \f$ \text{Inc} = \arcsin \left( \frac{gz}{F} \right) \Rightarrow u = \frac{gz}{F} \f$
+ * - \f$ \frac{d^2 \text{Inc}}{dt^2} = \frac{d^2u}{dt^2} \cdot \frac{1}{\sqrt{1 - u^2}} + \frac{u \left( \frac{du}{dt} \right)^2}{(1 - u^2)^{3/2}} \f$
+ *
+ * - \f$ \text{Dec} = \arctan2(gy, gx) \f$
+ * - \f$ \frac{d^2 \text{Dec}}{dt^2} = \frac{(gx \cdot \gamma_y - gy \cdot \gamma_x)(gx^2 + gy^2) - (gx \cdot gpy - gy \cdot gpx)(2gx \cdot gpx + 2gy \cdot gpy)}{(gx^2 + gy^2)^2} \f$
+ *
+ * @param gx composante x du champ magnétique
+ * @param gy composante y du champ magnétique
+ * @param gz composante z du champ magnétique
+ * @param gpx dérivée de gx
+ * @param gpy dérivée de gy
+ * @param gpz dérivée de gz
+ * @param gamma_x dérivée seconde de gx
+ * @param gamma_y dérivée seconde de gy
+ * @param gamma_z dérivée seconde de gz
+ * @param[out] d2Fdt2 dérivée seconde de F (en nT/s²)
+ * @param[out] d2Incdt2 dérivée seconde de l'inclinaison (en degrés/s²)
+ * @param[out] d2Decdt2 dérivée seconde de la déclinaison (en degrés/s²)
+ */
+void computeSecondDerivatives(
+    double gx, double gy, double gz,
+    double gpx, double gpy, double gpz,
+    double gamma_x, double gamma_y, double gamma_z,
+    double& d2Incdt2, double& d2Decdt2, double& d2Fdt2
+    )
+{
+    double F = std::sqrt(gx * gx + gy * gy + gz * gz);
+
+    if (F == 0.0) {
+        d2Fdt2 = d2Incdt2 = d2Decdt2 = 0.0;
+        return;
+    }
+
+    // 1. dF/dt
+    double dFdt = (gx * gpx + gy * gpy + gz * gpz) / F;
+
+    // 2. d²F/dt²
+    double num1 = gpx * gpx + gpy * gpy + gpz * gpz;
+    double num2 = gx * gamma_x + gy * gamma_y + gz * gamma_z;
+    double dFdt_squared = dFdt * dFdt;
+    d2Fdt2 = (num1 + num2) / F - dFdt_squared / F;
+
+    // 3. d²Inc/dt²
+    double u = gz / F;
+    double du_dt = (gpz * F - gz * dFdt) / (F * F);
+    double denomInc = std::sqrt(1 - u * u);
+    double d2u_dt2 = (gamma_z * F - 2 * gpz * dFdt - gz * d2Fdt2) / (F * F)
+                     + 2 * gz * dFdt * dFdt / (F * F * F);
+
+    if (denomInc == 0.0) {
+        d2Incdt2 = 0.0;  // gére cas limite
+    } else {
+        d2Incdt2 = d2u_dt2 / denomInc + u * du_dt * du_dt / std::pow(1 - u * u, 1.5);
+    }
+
+    // 4. d²Dec/dt²
+    double N = gx * gpy - gy * gpx;
+    double D = gx * gx + gy * gy;
+    double dNdt = gx * gamma_y - gy * gamma_x;
+    double dDdt = 2 * (gx * gpx + gy * gpy);
+
+    if (D == 0.0) {
+        d2Decdt2 = 0.0;
+    } else {
+        d2Decdt2 = (dNdt * D - N * dDdt) / (D * D);
+    }
+
+    // Convertir Inc et Dec en degrés/s²
+    d2Incdt2 *= 180.0 / M_PI;
+    d2Decdt2 *= 180.0 / M_PI;
+}
+
 PosteriorMeanG conversionIDF(const std::vector<double>& vecGx, const std::vector<double>& vecGy, const std::vector<double>& vecGz, const std::vector<double>& vecGxErr, const std::vector<double> &vecGyErr, const std::vector<double> &vecGzErr)
 {
     const double deg = 180. / M_PI ;
@@ -363,9 +547,12 @@ PosteriorMeanG conversionIDF(const std::vector<double>& vecGx, const std::vector
         const double& Gy = vecGy.at(j);
         const double& Gz = vecGz.at(j);
 
-        const double F = sqrt(pow(Gx, 2.) + pow(Gy, 2.) + pow(Gz, 2.));
-        const double Inc = asin(Gz / F);
-        const double Dec = atan2(Gy, Gx); // angleD(Gx, Gy);
+        //const double F = sqrt(pow(Gx, 2.) + pow(Gy, 2.) + pow(Gz, 2.));
+        //const double Inc = asin(Gz / F);
+        //const double Dec = atan2(Gy, Gx); // angleD(Gx, Gy);
+        double Inc, Dec, F;
+        convertToIDF(Gx, Gy, Gz, Inc, Dec, F); // return deg
+
         // U_cmt_change_repere , ligne 470
         // sauvegarde des erreurs sur chaque paramètre  - on convertit en degrès pour I et D
         // Calcul de la boule d'erreur moyenne par moyenne quadratique ligne 464
@@ -379,18 +566,18 @@ PosteriorMeanG conversionIDF(const std::vector<double>& vecGx, const std::vector
         const double ErrIDF = sqrt((pow(vecGxErr.at(j), 2.) +pow(vecGyErr.at(j), 2.) +pow(vecGzErr.at(j), 2.))/3.);
 
         const double ErrI = ErrIDF / F ;
-        const double ErrD = ErrIDF / (F * cos(Inc)) ;
+        const double ErrD = ErrIDF / (F * cos(Inc/deg)) ;
 
        /* long double ErrI = Gz+ErrIDF ; // dans l'espace 3D, l'enveloppe supérieure
         ErrI = abs(asin(ErrIDF/F) - Inc); // pour retrouver la différence
 
        // long double ErrD = Gz+ErrIDF/F / (F * cos(Inc))
        */
-        res.gx.vecG[j] = std::move(Inc * deg);
+        res.gx.vecG[j] = std::move(Inc);// * deg);
         res.gx.vecVarG[j] = std::move(ErrI* deg);
 
 
-        res.gy.vecG[j] = std::move(Dec * deg);
+        res.gy.vecG[j] = std::move(Dec);// * deg);
         res.gy.vecVarG[j] = std::move(ErrD* deg);
 
         res.gz.vecG[j] = std::move(F);
@@ -452,7 +639,7 @@ void conversionIDF (PosteriorMeanG& G)
        const double Dec = atan2(Gy, Gx); // angleD(Gx, Gy);
        // U_cmt_change_repere , ligne 470
        // sauvegarde des erreurs sur chaque paramètre  - on convertit en degrès pour I et D
-       // Calcul de la boule d'erreur moyenne par moyenne quadratique loigne 464
+       // Calcul de la boule d'erreur moyenne par moyenne quadratique ligne 464
       /*   ErrGx:=Tab_parametrique[iJ].ErrGx;
          ErrGy:=Tab_parametrique[iJ].ErrGy;
          ErrGz:=Tab_parametrique[iJ].ErrGz;
@@ -654,7 +841,7 @@ QDataStream &operator>>( QDataStream& stream, PosteriorMeanGComposante& pMGCompo
     std::generate_n(pMGComposante.vecVarG.begin(), siz, [&stream, &v]{stream >> v; return v;});
 
     stream >> pMGComposante.mapG;
-    if (res_file_version>"3.2.6")
+    if (res_file_version > "3.2.6")
         stream >> pMGComposante.mapGP;
     return stream;
 }

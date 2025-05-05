@@ -226,6 +226,13 @@ Matrix2D calculMatQ00(const std::vector<t_reduceTime>& vec_h);
 Matrix2D calculMatQ0(const std::vector<t_reduceTime>& vec_h);
 Matrix2D calculMatQ(const std::vector<t_reduceTime>& vec_h);
 
+void convertToIDF(double x, double y, double z, double& Inc, double& Dec, double& F);
+void computeDerivatives(double gx, double gy, double gz, double gpx, double gpy, double gpz,
+                        double& dIncdt, double& dDecdt, double& dFdt);
+void computeSecondDerivatives(double gx, double gy, double gz, double gpx, double gpy, double gpz,
+    double gamma_x, double gamma_y, double gamma_z,
+    double& d2Inct2, double& d2Decdt2, double& d2Fdt2);
+
 void conversionIDF(PosteriorMeanG& G);
 PosteriorMeanG conversionIDF(const std::vector<double> &vecGx, const std::vector<double> &vecGy, const std::vector<double> &vecGz, const std::vector<double> &vecGxErr, const std::vector<double> &vecGyErr, const std::vector<double> &vecGzErr);
 

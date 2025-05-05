@@ -277,7 +277,7 @@ private:
     bool hasPositiveGPrimeByDerivate (const MCMCSplineComposante &splineComposante, const double k = 0.);
     bool hasPositiveGPrimePlusConst (const MCMCSplineComposante &splineComposante, const double dy_threshold = 0.);
 
-    void memo_PosteriorG(PosteriorMeanGComposante &postGCompo, MCMCSplineComposante &splineComposante, const int realyAccepted);
+    //void memo_PosteriorG(PosteriorMeanGComposante &postGCompo, MCMCSplineComposante &splineComposante, const int realyAccepted);
 
 #pragma mark import_Komlan
 
