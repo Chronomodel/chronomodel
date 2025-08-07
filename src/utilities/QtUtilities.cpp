@@ -855,23 +855,23 @@ QString stringForCSV(const double valueToFormat, const bool forcePrecision)
 
 
 // CSV File
-bool saveCsvTo(const QList<QStringList> &data, const QString &filePath, const QString &csvSep, const bool withDateFormat)
+bool saveCsvTo(const QList<QStringList>& data, const QString& filePath, const QString& csvSep, const bool withDateFormat)
 {
     QFile file(filePath);
     if (file.open(QFile::WriteOnly | QFile::Truncate))  {
         QTextStream output(&file);
         const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
-        output<<"# " +version+"\r";
+        output << "# " + version + "\r";
         const QString projectName = MainWindow::getInstance()->getNameProject();
 
-        output<<"# " +projectName+ "\r";
+        output << "# " + projectName + "\r";
         if (withDateFormat)
             output<<"# Date Format : "+ DateUtils::getAppSettingsFormatStr() +"\r";
 
         else
-            output<<"# Date Format : BC/AD\r";
+            output << "# Date Format : BC/AD\r";
 
-        for (int i=0; i<data.size(); ++i)  {
+        for (int i = 0; i < data.size(); ++i)  {
             output << data.at(i).join(csvSep);
             output << "\r";
         }
@@ -894,7 +894,7 @@ bool saveAsCsv(const QList<QStringList>& data, const QString& title)
     QFile file(filename);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
         QTextStream output(&file);
-        for (int i=0; i<data.size(); ++i)  {
+        for (int i = 0; i<data.size(); ++i)  {
             output << data.at(i).join(csvSep);
             output << "\r";
         }
@@ -904,7 +904,7 @@ bool saveAsCsv(const QList<QStringList>& data, const QString& title)
     return false;
 }
 
-bool save_map_as_csv(const std::map<double, double> &map, const std::pair<QString, QString> &header, const QString title, const QString prefix)
+bool save_map_as_csv(const std::map<double, double>& map, const std::pair<QString, QString>& header, const QString title, const QString prefix)
 {
     const QString csvSep = AppSettings::mCSVCellSeparator;
     QLocale csvLocal = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
@@ -1049,9 +1049,9 @@ void reload_shared_ptr(const std::shared_ptr<std::vector<double>> data, QDataStr
     //size_t tmp = size;
     // Gérer l'erreur de lecture ici
     if (stream.status() != QDataStream::Ok) {
-        qDebug()<<"[QtUtilities::reload_shared_ptr]  erreur 1 de flux";
-        throw std::runtime_error("Error reading from stream");
-        return;
+        qDebug() << "[QtUtilities::reload_shared_ptr]  erreur 1 de flux ; stream.status()=" << stream.status();
+       // throw std::runtime_error("Error reading from stream");
+       // return;
     }
     if (size > 0) {
         double v;
@@ -1060,7 +1060,7 @@ void reload_shared_ptr(const std::shared_ptr<std::vector<double>> data, QDataStr
 
             // Gérer l'erreur de lecture ici
             if (stream.status() != QDataStream::Ok) {
-                qDebug()<<"[QtUtilities::reload_shared_ptr]  erreur 2 de flux";
+                qDebug() << "[QtUtilities::reload_shared_ptr]  erreur 2 de flux";
                 throw std::runtime_error("Error reading from stream");
                 return;
             }

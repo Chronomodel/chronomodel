@@ -586,7 +586,7 @@ void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
         /* Addapt mButModifyPeriod size and position */
     // same variable in updateLayout()
     //const int topButtonHeight =  int ( 1.3 * fontMetrics().height());//  1 * AppSettings::heigthUnit());
-    const QString studyStr = tr("STUDY PERIOD") + QString(" [ %1 ; %2 ] BC/AD").arg(locale().toString(min), locale().toString(max));;
+    const QString studyStr = tr("STUDY PERIOD") + QString(" [ %1 ; %2 ] BC/AD").arg(QLocale().toString(min), QLocale().toString(max));;
     mButModifyPeriod->setText(studyStr);
     //mButModifyPeriod->setIconOnly(false);
     //mButModifyPeriod ->setGeometry((mTopWrapper->width() - fontMetrics().boundingRect(mButModifyPeriod->text()).width()) /2 - 2*mMargin, (mTopWrapper->height() - topButtonHeight)/2, fontMetrics().boundingRect(mButModifyPeriod->text()).width() + 4*mMargin, topButtonHeight );

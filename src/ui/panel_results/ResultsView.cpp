@@ -443,16 +443,9 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mTimeEdit = new LineEdit(mSpanGroup);
     mTimeEdit->setValidator(RplusValidator);
     mTimeEdit->setFixedHeight(h);
-    mTimeEdit->setText(locale().toString(sliderToZoom(mTimeSlider->value())));
+    mTimeEdit->setText(QLocale().toString(sliderToZoom(mTimeSlider->value())));
     mTimeEdit->setToolTip(tr("Enter zoom value to magnify the curves on X span"));
     mTimeEdit->setFixedWidth(mOptionsW/3); //for windows new spin box
-
-    /*QString decimalSeparator = locale().decimalPoint();
-    QString inputMask = "000" + decimalSeparator + "00%";
-
-    mTimeEdit->setInputMask(inputMask);
-    */
-
 
     mMajorScaleLab = new QLabel(tr("Major Interval"), mSpanGroup);
     mMajorScaleLab->setFixedHeight(h);
@@ -679,7 +672,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mZoomEdit->setValidator(RplusValidator);
     mZoomEdit->setToolTip(tr("Enter zoom value to increase graph height"));
     mZoomEdit->setFixedWidth(mOptionsW/3); //for windows new spin box
-    mZoomEdit->setText(locale().toString(mZoomSlider->value()));
+    mZoomEdit->setText(QLocale().toString(mZoomSlider->value()));
 
 
 
@@ -1161,14 +1154,19 @@ void ResultsView::initModel()
     mCurrentTypeGraph = GraphViewResults::ePostDistrib;
     mCurrentVariableList.clear();
 
-    mRangeThresholdEdit->setText(stringForLocal(95.));
+    mRangeThresholdEdit->resetText(95.0);
+    mThresholdEdit->resetText(model->getThreshold());
+    mHActivityEdit->resetText(model->mHActivity);
+
+    /*mRangeThresholdEdit->setText(stringForLocal(95.));
     mThresholdEdit->setText(stringForLocal(model->getThreshold()));
-    mHActivityEdit->setText(stringForLocal(model->mHActivity));
+    mHActivityEdit->setText(stringForLocal(model->mHActivity));*/
 
     mFFTLenCombo->setCurrentText(stringForLocal(model->getFFTLength()));
-    mBandwidthEdit->blockSignals(true);
-    mBandwidthEdit->setText(locale().toString((model->getBandwidth())));
-    mBandwidthEdit->blockSignals(false);
+    mBandwidthEdit->resetText(model->getBandwidth());
+    /*mBandwidthEdit->blockSignals(true);
+    mBandwidthEdit->setText(QLocale().toString((model->getBandwidth())));
+    mBandwidthEdit->blockSignals(false);*/
 
     mZoomsT.clear();
     mZoomsX.clear();
@@ -1279,6 +1277,25 @@ void ResultsView::initModel()
     updateLayout(); // done in showStats() ??
 
     showStats(mStatCheck->isChecked());
+}
+
+void ResultsView::applyAppSettings()
+{
+    auto model = getModel_ptr();
+
+    mRangeThresholdEdit->setText(stringForLocal(95.0));
+    mThresholdEdit->setText(stringForLocal(model->getThreshold()));
+    mHActivityEdit->setText(stringForLocal(model->mHActivity));
+
+    mFFTLenCombo->setCurrentText(stringForLocal(model->getFFTLength()));
+    //mBandwidthEdit->blockSignals(true);
+    mBandwidthEdit->resetText(model->getBandwidth());
+    //mBandwidthEdit->blockSignals(false);
+
+    setTimeRange();
+
+    generateCurves();
+
 }
 
 #pragma mark Layout
@@ -2946,8 +2963,9 @@ void ResultsView::updateScales()
 
     } else if ( mCurrentTypeGraph == GraphViewResults::eTrace ||
                 mCurrentTypeGraph == GraphViewResults::eAccept) {
+
         int idSelect = 0;
-        for (auto chRadio : mChainRadios) {
+        for (const auto& chRadio : std::as_const(mChainRadios)) {
             if (chRadio->isChecked())
                 break;
             ++idSelect;
@@ -2960,9 +2978,9 @@ void ResultsView::updateScales()
         // The min is always 0
         mResultMinT = 0.;
 
-        mRuler->addArea(0., 1+ chain.mIterPerBurn, QColor(235, 115, 100));
-        mRuler->addArea(1+ chain.mIterPerBurn, 1+chain.mIterPerBurn + adaptSize, QColor(250, 180, 90));
-        mRuler->addArea(1+ chain.mIterPerBurn + adaptSize, mResultMaxT, QColor(130, 205, 110));
+        mRuler->addArea(0.0, 1+ chain.mIterPerBurn, QColor(235, 115, 100));
+        mRuler->addArea(1 + chain.mIterPerBurn, 1 + chain.mIterPerBurn + adaptSize, QColor(250, 180, 90));
+        mRuler->addArea(1 + chain.mIterPerBurn + adaptSize, mResultMaxT, QColor(130, 205, 110));
         // The Ruler range is set exactly to the min and max (impossible to scroll outside)
         mRuler->setRange(mResultMinT, mResultMaxT);
         mRuler->setFormatFunctX(nullptr);
@@ -3027,7 +3045,7 @@ void ResultsView::updateScales()
         zoom = mZoomsH.value(key);
     }
     mZoomEdit->blockSignals(true);
-    mZoomEdit->setText(locale().toString(zoom));
+    mZoomEdit->setText(QLocale().toString(zoom));
     mZoomEdit->blockSignals(false);
 
     mZoomSlider->blockSignals(true);
@@ -3255,7 +3273,7 @@ void ResultsView::createOptionsWidget()
             mCurrentPage = 0;
         }
 
-        mPageEdit->setText(locale().toString(mCurrentPage + 1) + "/" + locale().toString(numPages));
+        mPageEdit->setText(QLocale().toString(mCurrentPage + 1) + "/" + QLocale().toString(numPages));
 
         mPageWidget->setVisible(true);
         mSaveSelectWidget->hide();
@@ -3751,7 +3769,7 @@ void ResultsView::updateOptionsWidget()
             mCurrentPage = 0;
         }
 
-        mPageEdit->setText(locale().toString(mCurrentPage + 1) + "/" + locale().toString(numPages));
+        mPageEdit->setText(QLocale().toString(mCurrentPage + 1) + "/" + QLocale().toString(numPages));
 
         mPageWidget->setVisible(true);
         mSaveSelectWidget->hide();
@@ -3808,7 +3826,7 @@ void ResultsView::updateGraphsHeight()
     const double min = 2 * AppSettings::heigthUnit();
     double origin = mHeightForVisibleAxis;
 
-    const double prop = locale().toDouble(mZoomEdit->text()) / 100.0;
+    const double prop = QLocale().toDouble(mZoomEdit->text()) / 100.0;
     mGraphHeight = min + prop * (origin - min);
     updateGraphsLayout();
 }
@@ -3816,7 +3834,7 @@ void ResultsView::updateGraphsHeight()
 void ResultsView::updateZoomT()
 {
     // Pick the value from th spin or the slider
-    const double zoom = locale().toDouble(mTimeEdit->text())/100.0;
+    const double zoom = QLocale().toDouble(mTimeEdit->text())/100.0;
 
     mResultZoomT = 1./zoom;
 
@@ -3880,7 +3898,10 @@ void ResultsView::updateGraphsZoomT()
 
 void ResultsView::setTimeRange()
 {
-    QLocale locale = QLocale();
+    mCurrentTMinEdit->resetText(mResultCurrentMinT);
+    mCurrentTMaxEdit->resetText(mResultCurrentMaxT);
+
+    /*QLocale locale = QLocale();
 
     mCurrentTMinEdit->blockSignals(true);
     mCurrentTMaxEdit->blockSignals(true);
@@ -3889,14 +3910,16 @@ void ResultsView::setTimeRange()
     mCurrentTMaxEdit->setText(locale.toString(mResultCurrentMaxT));
 
     mCurrentTMinEdit->blockSignals(false);
-    mCurrentTMaxEdit->blockSignals(false);
+    mCurrentTMaxEdit->blockSignals(false);*/
 }
 
 void ResultsView::setTimeEdit(const double value)
 {
-    mTimeEdit->blockSignals(true);
-    mTimeEdit->setText(locale().toString(value * 100.));
-    mTimeEdit->blockSignals(false);
+    mTimeEdit->resetText(value * 100.0);
+
+    /*mTimeEdit->blockSignals(true);
+    mTimeEdit->setText(QLocale().toString(value * 100.));
+    mTimeEdit->blockSignals(false);*/
 }
 
 void ResultsView::setTimeSlider(const int value)
@@ -3908,6 +3931,7 @@ void ResultsView::setTimeSlider(const int value)
 
 void ResultsView::setTimeScale()
 {
+
     //mMinorScaleEdit->blockSignals(true);
     //mMajorScaleEdit->blockSignals(true);
 
@@ -4019,11 +4043,11 @@ void ResultsView::applyTimeRange()
     // --------------------------------------------------
     QString minStr = mCurrentTMinEdit->text();
     bool minIsNumber = true;
-    double min = locale().toDouble(minStr, &minIsNumber);
+    double min = QLocale().toDouble(minStr, &minIsNumber);
 
     QString maxStr = mCurrentTMaxEdit->text();
     bool maxIsNumber = true;
-    double max = locale().toDouble(maxStr, &maxIsNumber);
+    double max = QLocale().toDouble(maxStr, &maxIsNumber);
 
     if (minIsNumber && maxIsNumber && ((min != mResultCurrentMinT) || (max != mResultCurrentMaxT))) {
         mResultCurrentMinT = std::max(min, mRuler->mMin);
@@ -4050,7 +4074,7 @@ void ResultsView::applyTimeSlider(int value)
 void ResultsView::applyTimeEdit()
 {
     if (mTimeEdit->hasAcceptableInput()) {
-        setTimeSlider(zoomToSlider(locale().toDouble(mTimeEdit->text())/100.));
+        setTimeSlider(zoomToSlider(QLocale().toDouble(mTimeEdit->text()) / 100.0));
         updateZoomT();
     }
 
@@ -4060,10 +4084,10 @@ void ResultsView::applyTimeEdit()
 void ResultsView::applyXRange()
 {
     bool minIsNumber = true;
-    const double minX = locale().toDouble(mCurrentXMinEdit->text(), &minIsNumber);
+    const double minX = QLocale().toDouble(mCurrentXMinEdit->text(), &minIsNumber);
 
     bool maxIsNumber = true;
-    const double maxX = locale().toDouble(mCurrentXMaxEdit->text(), &maxIsNumber);
+    const double maxX = QLocale().toDouble(mCurrentXMaxEdit->text(), &maxIsNumber);
     if (minIsNumber && maxIsNumber && minX< maxX) {
         mResultCurrentMinX = minX;
         mResultCurrentMaxX = maxX;
@@ -4077,10 +4101,10 @@ void ResultsView::applyXRange()
 void ResultsView::applyYRange()
 {
     bool minIsNumber = true;
-    const double minY = locale().toDouble(mCurrentYMinEdit->text(), &minIsNumber);
+    const double minY = QLocale().toDouble(mCurrentYMinEdit->text(), &minIsNumber);
 
     bool maxIsNumber = true;
-    const double maxY = locale().toDouble(mCurrentYMaxEdit->text(), &maxIsNumber);
+    const double maxY = QLocale().toDouble(mCurrentYMaxEdit->text(), &maxIsNumber);
     if (minIsNumber && maxIsNumber && minY< maxY) {
         mResultCurrentMinY = minY;
         mResultCurrentMaxY = maxY;
@@ -4094,10 +4118,10 @@ void ResultsView::applyYRange()
 void ResultsView::applyZRange()
 {
     bool minIsNumber = true;
-    const double minZ = locale().toDouble(mCurrentZMinEdit->text(), &minIsNumber);
+    const double minZ = QLocale().toDouble(mCurrentZMinEdit->text(), &minIsNumber);
 
     bool maxIsNumber = true;
-    const double maxZ = locale().toDouble(mCurrentZMaxEdit->text(), &maxIsNumber);
+    const double maxZ = QLocale().toDouble(mCurrentZMaxEdit->text(), &maxIsNumber);
     if (minIsNumber && maxIsNumber && minZ< maxZ) {
         mResultCurrentMinZ = minZ;
         mResultCurrentMaxZ = maxZ;
@@ -4253,7 +4277,10 @@ void ResultsView::findOptimalZ()
 
 void ResultsView::setXRange()
 {
-    QLocale locale = QLocale();
+    mCurrentXMinEdit->resetText(mResultCurrentMinX);
+    mCurrentXMaxEdit->resetText(mResultCurrentMaxX);
+
+    /*QLocale locale = QLocale();
 
     mCurrentXMinEdit->blockSignals(true);
     mCurrentXMaxEdit->blockSignals(true);
@@ -4262,7 +4289,7 @@ void ResultsView::setXRange()
     mCurrentXMaxEdit->setText(locale.toString(mResultCurrentMaxX));
 
     mCurrentXMinEdit->blockSignals(false);
-    mCurrentXMaxEdit->blockSignals(false);
+    mCurrentXMaxEdit->blockSignals(false);*/
 
     QPair<GraphViewResults::variable_t, GraphViewResults::graph_t> key(mMainVariable, mCurrentTypeGraph);
     mZoomsX[key] = QPair<double, double>(mResultCurrentMinX, mResultCurrentMaxX);
@@ -4270,7 +4297,10 @@ void ResultsView::setXRange()
 
 void ResultsView::setYRange()
 {
-    QLocale locale = QLocale();
+    mCurrentYMinEdit->resetText(mResultCurrentMinY);
+    mCurrentYMaxEdit->resetText(mResultCurrentMaxY);
+
+    /*QLocale locale = QLocale();
 
     mCurrentYMinEdit->blockSignals(true);
     mCurrentYMaxEdit->blockSignals(true);
@@ -4279,7 +4309,7 @@ void ResultsView::setYRange()
     mCurrentYMaxEdit->setText(locale.toString(mResultCurrentMaxY));
 
     mCurrentYMinEdit->blockSignals(false);
-    mCurrentYMaxEdit->blockSignals(false);
+    mCurrentYMaxEdit->blockSignals(false);*/
 
     QPair<GraphViewResults::variable_t, GraphViewResults::graph_t> key(mMainVariable, mCurrentTypeGraph);
     mZoomsY[key] = QPair<double, double>(mResultCurrentMinY, mResultCurrentMaxY);
@@ -4287,7 +4317,11 @@ void ResultsView::setYRange()
 
 void ResultsView::setZRange()
 {
-    QLocale locale = QLocale();
+
+    mCurrentZMinEdit->resetText(mResultCurrentMinZ);
+    mCurrentZMaxEdit->resetText(mResultCurrentMaxZ);
+
+    /*QLocale locale = QLocale();
 
     mCurrentZMinEdit->blockSignals(true);
     mCurrentZMaxEdit->blockSignals(true);
@@ -4296,7 +4330,7 @@ void ResultsView::setZRange()
     mCurrentZMaxEdit->setText(locale.toString(mResultCurrentMaxZ));
 
     mCurrentZMinEdit->blockSignals(false);
-    mCurrentZMaxEdit->blockSignals(false);
+    mCurrentZMaxEdit->blockSignals(false);*/
 
     QPair<GraphViewResults::variable_t, GraphViewResults::graph_t> key(mMainVariable, mCurrentTypeGraph);
     mZoomsZ[key] = QPair<double, double>(mResultCurrentMinZ, mResultCurrentMaxZ);
@@ -4306,13 +4340,13 @@ void ResultsView::applyZoomScale()
 {
     QString majorStr = mMajorScaleEdit->text();
     bool isMajorNumber = true;
-    double majorNumber = locale().toDouble(majorStr, &isMajorNumber);
+    double majorNumber = QLocale().toDouble(majorStr, &isMajorNumber);
     if (!isMajorNumber)
         return;
 
     QString minorStr = mMinorScaleEdit->text();
     bool isMinorNumber = true;
-    double minorNumber = locale().toDouble(minorStr, &isMinorNumber);
+    double minorNumber = QLocale().toDouble(minorStr, &isMinorNumber);
     if (!isMinorNumber || minorNumber <= 1)
         return;
 
@@ -4333,9 +4367,11 @@ void ResultsView::applyZoomScale()
 #pragma mark Graphics Option Zoom
 void ResultsView::applyZoomSlider(int value)
 {
-    mZoomEdit->blockSignals(true);
-    mZoomEdit->setText(locale().toString(value));
-    mZoomEdit->blockSignals(false);
+    mZoomEdit->resetText(value);
+
+    /*mZoomEdit->blockSignals(true);
+    mZoomEdit->setText(QLocale().toString(value));
+    mZoomEdit->blockSignals(false);*/
 
     QPair<GraphViewResults::variable_t, GraphViewResults::graph_t> key(mMainVariable, mCurrentTypeGraph);
     mZoomsH[key] = value;
@@ -4348,7 +4384,7 @@ void ResultsView::applyZoomEdit()
     if (mZoomEdit->hasAcceptableInput()) {
 
         mZoomSlider->blockSignals(true);
-        mZoomSlider->setValue(locale().toInt(mZoomEdit->text()));
+        mZoomSlider->setValue(QLocale().toInt(mZoomEdit->text()));
         mZoomSlider->blockSignals(false);
 
         QPair<GraphViewResults::variable_t, GraphViewResults::graph_t> key(mMainVariable, mCurrentTypeGraph);
@@ -4421,8 +4457,8 @@ void ResultsView::applyFFTLength()
 void ResultsView::applyHActivity()
 {
     if (mRangeThresholdEdit->hasAcceptableInput()) {
-        const double h = locale().toDouble(mHActivityEdit->text());
-        const double rangePercent = locale().toDouble(mRangeThresholdEdit->text());
+        const double h = QLocale().toDouble(mHActivityEdit->text());
+        const double rangePercent = QLocale().toDouble(mRangeThresholdEdit->text());
         getModel_ptr()->setHActivity(h, rangePercent);
         generateCurves();
     }
@@ -4432,7 +4468,7 @@ void ResultsView::applyHActivity()
 void ResultsView::applyBandwidth()
 {
    if (mBandwidthEdit->hasAcceptableInput()) {
-        const double bandwidth = locale().toDouble(mBandwidthEdit->text());
+        const double bandwidth = QLocale().toDouble(mBandwidthEdit->text());
         getModel_ptr()->setBandwidth(bandwidth);
         generateCurves();
     }
@@ -4440,7 +4476,7 @@ void ResultsView::applyBandwidth()
 
 void ResultsView::applyThreshold()
 {
-    const double hpd = locale().toDouble(mThresholdEdit->text());
+    const double hpd = QLocale().toDouble(mThresholdEdit->text());
     getModel_ptr()->setThreshold(hpd);
     generateCurves();
 }

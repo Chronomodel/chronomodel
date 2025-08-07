@@ -138,7 +138,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
 
         GraphCurve curveMap;
         curveMap.mName = "Map";
-        curveMap.mPen = QPen(Qt::black, 1, Qt::SolidLine);
+        curveMap.mPen = QPen(QColor(107, 174, 214), 1, Qt::SolidLine);//QPen(Qt::black, 1, Qt::SolidLine); //107, 174, 214
         curveMap.mBrush = Qt::NoBrush;
         curveMap.mIsRectFromZero = false;
 
@@ -206,6 +206,44 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
             curveMapChains.append(curveMapChain);
         }
 
+
+        // Create HPD map
+        /*
+        GraphCurve hpdMap = curveMap;
+        hpdMap.mName = "Hpd_Map";
+
+
+        double nb_iter = 0;
+        for (auto c : mChains) {
+            nb_iter += c.mRealyAccepted;
+        }
+
+        hpdMap.mMap = densityMap_2_hpdMap(curveMap.mMap, nb_iter);
+
+
+        {
+
+            hpdMap.mMap.setRangeX(tmaxFormated, tminFormated);
+            // we must reflect the map
+
+            CurveMap displayMap (hpdMap.mMap._row, hpdMap.mMap._column);
+
+            int c  = hpdMap.mMap._column-1;
+
+            unsigned i = 0 ;
+            while ( c >= 0) {
+                for (unsigned r = 0; r < hpdMap.mMap._row ; r++) {
+                    displayMap.data[i++] = hpdMap.mMap.at(c, r);
+
+                }
+                c--;
+            }
+
+            hpdMap.mMap.data = std::move(displayMap.data);
+        }
+        */
+
+        // create G curve
         QMap<type_data, type_data> G_Data ;
         QMap<type_data, type_data> curveGSup_Data ;
         QMap<type_data, type_data> curveGInf_Data ;
@@ -234,13 +272,14 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
             }
         }
 
-        const GraphCurve &curveG = FunctionCurve(G_Data, "G", QColor(119, 95, 49) ); // This is the name of the columns when exporting the graphs
+        const GraphCurve curveG = FunctionCurve(G_Data, "G", QColor(119, 95, 49) ); // This is the name of the columns when exporting the graphs
         const QColor envColor (119, 95, 49 , 60);
 
         const GraphCurve &curveGEnv = shapeCurve(curveGInf_Data, curveGSup_Data, "G Env",
                                          QColor(119, 95, 49), Qt::CustomDashLine, envColor);
 
         mGraph->add_curve(curveMap); // to be draw in first
+        //mGraph->add_curve(hpdMap); //
 
         mGraph->add_curve(curveG); // This is the order of the columns when exporting the graphs
         mGraph->add_curve(curveGEnv);
@@ -429,6 +468,7 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
     }
 
     mGraph->setCurveVisible("Map", mShowAllChains && (showG||showGP) && showMap);
+   // mGraph->setCurveVisible("Hpd_Map", mShowAllChains && (showG||showGP) && showMap);
 
     mGraph->setCurveVisible("G", mShowAllChains && showG);
     mGraph->setCurveVisible("G Env", mShowAllChains && showGError && showG);
@@ -452,4 +492,91 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
         mGraph->setCurveVisible(QString("G Second Chain ") + QString::number(i), mShowChainList.at(i) && showGS);
     }
 
+}
+
+CurveMap GraphViewCurve::densityMap_2_hpdMap (const CurveMap& densityMap, int nb_iter)
+{
+    CurveMap hpdMap (densityMap);
+    hpdMap.max_value = nb_iter;
+    hpdMap.min_value = 0;
+
+    const size_t numRows = densityMap.row();
+    // transforme la mapCurve en hpd
+
+    for (unsigned c = 1 ; c < densityMap.column(); c++) {
+
+        std::vector<double> prob(numRows);
+        for (unsigned r = 0; r < prob.size(); ++r)
+            prob[r] = densityMap(c, r);
+
+        //prob = smooth_histogram(prob, 100);
+        // Trier les indices par probabilité décroissante
+        std::vector<size_t> indices(prob.size());
+        std::iota(indices.begin(), indices.end(), 0);
+
+        std::sort(indices.begin(), indices.end(), [&](size_t i, size_t j) {
+            return prob[i] > prob[j];
+        });
+
+        // Création vecteur cumul_prob avec les mêmes indices que densityMap
+
+        std::vector<double> cumul_prob(prob.size(), 0.0);
+        double sum = 0.0;
+
+        size_t i = 0;
+        double val = prob[indices[0]]; //to init while loop
+        //si la valeur=0, c'est qu'il n'y a pas de courbe, donc par convention pour l'affichage
+        // La probabilité reste à 0
+
+        while (i < indices.size() && val > 0) { // comme les indices trient les valeurs, lorsqu'on atteint un 0, il n'y a plus de valeur ensuite
+            size_t j = i + 1;
+            val = prob[indices[i]];
+            double group_sum = val;
+
+            // On regroupe les valeurs identiques
+            if ( val > 0) {
+                while (j < indices.size() && prob[indices[j]] == val) {
+                    group_sum += prob[indices[j]];
+                    ++j;
+                }
+                // On ajoute la somme à tous les indices de cette valeur
+                sum += group_sum;
+                for (size_t k = i; k < j; ++k) {
+                    cumul_prob[indices[k]] = sum;
+                }
+
+                i = j;
+
+            } else {
+                break;
+
+            }
+
+        }
+
+        // Si le total est différent de nb_iter. Nous n'avons pas toutes les iterations. Donc il faut corriger le résultat
+        /*size_t indice_max = indices[0];
+        if (sum < nb_iter) {
+             for (size_t j = 0; j < indices.size(); ++j) {
+                val = cumul_prob[j];
+                if (val >0)
+                    cumul_prob[j] = nb_iter - 2 * sum + 2* val;
+
+            }
+
+        }*/
+
+        // inversion pour affichage standard, la valeur maximum correspondant au pic
+        // pour que le pic ait la plus petite valeur
+        // normalisation par nb_iter
+        for (unsigned r = 0; r < prob.size(); ++r) {
+            if (cumul_prob[r] == 0)
+                hpdMap(c, r) = 0; // convention pour l'affichage
+            else
+                hpdMap(c, r) =  cumul_prob[r];
+                //hpdMap(c, r) = static_cast<double>(nb_iter) - cumul_prob[r];
+        }
+    } // fin boucle c
+
+    return hpdMap;
 }

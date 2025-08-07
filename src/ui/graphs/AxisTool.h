@@ -78,16 +78,16 @@ public:
         eAllways_Negative = '-'
     };
     AxisTool();
-    void updateValues(const int &totalPix, const int &minDeltaPix, const qreal &minVal, const qreal &maxVal);
-    qreal getXForValue(const qreal &value);
-    qreal getYForValue(const qreal &value);
-    QList<qreal> paint(QPainter &p, const QRectF &r, qreal graduationSize = -1, DateConversion valueFormatFunc = nullptr);
+    void updateValues(const int totalPix, const int minDeltaPix, const qreal minVal, const qreal maxVal);
+    qreal getXForValue(const qreal value);
+    qreal getYForValue(const qreal value);
+    QList<qreal> paint(QPainter& p, const QRectF& r, qreal graduationSize = -1, DateConversion valueFormatFunc = nullptr);
 
     double getMajorScale() const {return mMajorScale;}
     int getMinorScaleCount() const {return mMinorScaleCount;} // Tip
-    void setMajorScale( const double &major) { mMajorScale= major;} //Mark
-    void setMinorScaleCount(const int &minorCount) { mMinorScaleCount = minorCount;}
-    void setScaleDivision (const double &major, const int &minorCount);
+    void setMajorScale( const double major) { mMajorScale= major;} //Mark
+    void setMinorScaleCount(const int minorCount) { mMinorScaleCount = minorCount;}
+    void setScaleDivision (const double major, const int minorCount);
     void setScaleDivision (const Scale & sc);
 
 public:

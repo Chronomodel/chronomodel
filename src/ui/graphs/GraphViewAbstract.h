@@ -139,7 +139,7 @@ protected:
 template <typename T>
 inline T valueForProportion(const T value, const T valMin, const T valMax, const T Pmin, const T Pmax, const bool resultInBounds)
 {
-    const T v2 = Pmin + (value - valMin) * (Pmax - Pmin) / (valMax - valMin);
+    T v2 = std::lerp(Pmin, Pmax, (value - valMin) / (valMax - valMin));
 
     if (resultInBounds)
         return std::clamp(v2, Pmin, Pmax);

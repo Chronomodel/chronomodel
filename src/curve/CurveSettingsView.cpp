@@ -390,19 +390,19 @@ CurveSettings CurveSettingsView::getSettings() const
         settings.mVarianceType = CurveSettings::eModeBayesian;
         break;
     }
-    settings.mThreshold = locale().toDouble(mThresholdInput->text());
+    settings.mThreshold = QLocale().toDouble(mThresholdInput->text());
 
     //settings.mUseVarianceIndividual = mUseVarianceIndividualCB->isChecked() && (mVarianceTypeInput->currentIndex() == 1) ;
-    settings.mVarianceFixed = pow(locale().toDouble(mVarianceValueInput->text()), 2.);
+    settings.mVarianceFixed = pow(QLocale().toDouble(mVarianceValueInput->text()), 2.);
 
 
     switch (mLambdaSplineTypeInput->currentIndex()) {
     case 0:
         settings.mLambdaSplineType = CurveSettings::eModeFixed;
-        if (locale().toDouble(mLambdaSplineInput->text())>10)
+        if (QLocale().toDouble(mLambdaSplineInput->text())>10)
             settings.mLambdaSpline = pow(10., 10.);
         else
-            settings.mLambdaSpline = pow(10., locale().toDouble(mLambdaSplineInput->text()));
+            settings.mLambdaSpline = pow(10., QLocale().toDouble(mLambdaSplineInput->text()));
         break;
 
     case 2:

@@ -317,7 +317,7 @@ void AppSettingsDialog::getSettings()
 {
     AppSettings::mLanguage = QLocale::Language (mLanguageCombo->currentData().toInt());
 #if QT_DEPRECATED_SINCE(6, 6)
-    AppSettings::mCountry = locale().territory();
+    AppSettings::mCountry = QLocale().territory();
 #else
     AppSettings::mCountry = locale().country();
 #endif
@@ -373,7 +373,7 @@ void AppSettingsDialog::restore()
     mLanguageCombo->setCurrentText(QLocale::languageToString(QLocale::system().language()));
 
     mAutoSaveCheck->setChecked(APP_SETTINGS_DEFAULT_AUTO_SAVE);
-    mAutoSaveDelayEdit->setText(locale().toString(APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC / 60));
+    mAutoSaveDelayEdit->setText(QLocale().toString(APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC / 60));
     mAutoSaveDelayEdit->setEnabled(true);
 
     if (QLocale::system().decimalPoint()==',') {

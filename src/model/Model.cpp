@@ -55,6 +55,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QJsonArray>
 #include <QtWidgets>
 #include <QtCore/QStringList>
+#include <iostream>
 
 #define NO_USE_THREAD
 #ifdef USE_THREAD
@@ -2385,7 +2386,7 @@ bool Model::restoreFromFile_v328(QDataStream *in)
         qDebug() << "[Model::restoreFromFile_v328] Different Model version = " << res_file_version << " actual =" << qApp->applicationVersion();
 
     if (compatible_version.contains(res_file_version))
-        qDebug()<<" [Model::restoreFromFile_v328] Version compatible 3.2.8";
+        qDebug() << " [Model::restoreFromFile_v328] Version compatible 3.2.8";
 #endif
     // -----------------------------------------------------
     //  Read info
@@ -2395,7 +2396,7 @@ bool Model::restoreFromFile_v328(QDataStream *in)
     *in >> tmp32;
 
     mChains.clear();
-    //mChains.reserve(int (tmp32));
+
     for (quint32 i=0 ; i<tmp32; ++i) {
         ChainSpecs ch;
         *in >> ch.burnElapsedTime;

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -58,8 +58,8 @@ class GraphView: public GraphViewAbstract
 {
     Q_OBJECT
 
-    Q_PROPERTY(int thickness MEMBER mThickness READ getGraphsThickness WRITE setGraphsThickness NOTIFY signalCurvesThickness)
-    Q_PROPERTY(QColor backgroundColor MEMBER mBackgroundColor READ getBackgroundColor WRITE setBackgroundColor)
+    Q_PROPERTY(int thickness MEMBER mThickness READ getGraphsThickness WRITE setGraphsThickness NOTIFY signalCurvesThickness);
+    Q_PROPERTY(QColor backgroundColor MEMBER mBackgroundColor READ getBackgroundColor WRITE setBackgroundColor);
 public:
 
     enum AxisMode
@@ -162,11 +162,11 @@ public:
     void setFormatFunctX(DateConversion f);
     void setFormatFunctY(DateConversion f);
 
-    void setXScaleDivision(const Scale &sc) { mAxisToolX.setScaleDivision(sc);}
-    void setXScaleDivision(const double &major, const int &minorCount) { mAxisToolX.setScaleDivision(major, minorCount);}
+    void setXScaleDivision(const Scale& sc) { mAxisToolX.setScaleDivision(sc);}
+    void setXScaleDivision(const double& major, const int& minorCount) { mAxisToolX.setScaleDivision(major, minorCount);}
 
-    void setYScaleDivision(const Scale &sc) { mAxisToolY.setScaleDivision(sc);}
-    void setYScaleDivision(const double &major, const int &minorCount) { mAxisToolY.setScaleDivision(major, minorCount);}
+    void setYScaleDivision(const Scale& sc) { mAxisToolY.setScaleDivision(sc);}
+    void setYScaleDivision(const double& major, const int& minorCount) { mAxisToolY.setScaleDivision(major, minorCount);}
 
     // Paint
 
@@ -188,11 +188,11 @@ public slots:
     void updateCurvesThickness(int value);
     void zoomX(const type_data min, const type_data max);
 
-    void exportCurrentDensities(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step = 1.) const;
-    void exportCurrentVectorCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, bool writeInRows, int offset = 0) const;
+    void exportCurrentDensities(const QString& defaultPath, const QLocale& locale, const QString& csvSep, double step = 1.) const;
+    void exportCurrentVectorCurves(const QString& defaultPath, const QLocale& locale, const QString& csvSep, bool writeInRows, int offset = 0) const;
 
     void exportCurrentCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step = 1., QString graph_title = "") const;
-    void exportReferenceCurves(const QString& defaultPath, const QLocale locale = QLocale::English, const QString& csvSep = ",", double step = 1., QString filename = "") const;
+    void exportReferenceCurves(const QString& defaultPath, const QLocale locale = QLocale::English, const QString& csvSep = ",", double step = 1.0, QString filename = "") const;
 
     void changeXScaleDivision (const Scale& sc);
     void changeXScaleDivision (const double& major, const int& minor);
@@ -202,13 +202,13 @@ protected:
 
     void updateGraphSize(qreal w, qreal h);
 
-    QPainterPath makePath (const QMap<double, double> &map, const bool showBorder) const;
+    QPainterPath makePath (const QMap<double, double>& map, const bool showBorder) const;
 
     void drawCurves(QPainter& painter);
-    void drawMap(GraphCurve &curve, QPainter& painter);
-    QPainterPath makeSubShape(QMap<double, double> mapInf, QMap<double, double> mapSup) const;
-    void drawShape(GraphCurve &curve, QPainter& painter);
-    void drawDensity(GraphCurve &curve, QPainter& painter);
+    void drawMap(const GraphCurve& curve, QPainter& painter);
+    QPainterPath makeSubShape(const QMap<double, double>& mapInf, const QMap<double, double>& mapSup) const;
+    void drawShape(const GraphCurve& curve, QPainter& painter);
+    void drawDensity(const GraphCurve& curve, QPainter& painter);
 
     void resizeEvent(QResizeEvent*);
 
@@ -336,6 +336,32 @@ public:
 
     bool isTitle() const {return !mTitle.text().isEmpty();};
     bool withTitle() const {return !mSubTitle.text().isEmpty();};
+};
+
+struct ColorStop {
+    double pos;
+    QColor color;
+};
+
+enum class ColorPalette {
+    BlackWhite,
+    WhiteBlack,
+    Pressure,
+    Elevation,
+    Blues,
+    Inferno,
+    Inferno2,
+    Temperature,
+    TemperatureSoft,
+    TemperatureScience,
+    DataProbability
+
+};
+
+class ColorStops {
+public:
+    static const std::vector<ColorStop>& getStops(ColorPalette palette);
+    static QColor getColorFromStops(double normVal, ColorPalette palette);
 };
 
 #endif

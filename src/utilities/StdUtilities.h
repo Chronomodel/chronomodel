@@ -224,6 +224,9 @@ T vector_interpolate_idx_for_value(const T value, const Container<T> &vector, de
             //auto idx2 = interpolate(value, valueInf, valueSup, T(idxInf), T (idxSup));
         }
         return idx;
+
+    } else if (idxSup == idxInf) {
+        return T (idxInf);
     }
 
     return T (0);
@@ -613,6 +616,17 @@ public:
     std::chrono::microseconds eval();
 };
 
+// Argsort : retourne les indices qui trieraient le vecteur `v` dans l'ordre croissant
+template <typename T>
+std::vector<size_t> argsort(const std::vector<T>& v) {
+    std::vector<size_t> indices(v.size());
+    for (size_t i = 0; i < v.size(); ++i)
+        indices[i] = i;
 
+    std::sort(indices.begin(), indices.end(),
+              [&v](size_t i1, size_t i2) { return v[i1] < v[i2]; });
+
+    return indices;
+}
 
 #endif

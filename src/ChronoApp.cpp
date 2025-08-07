@@ -41,7 +41,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MainWindow.h"
 
 #include <QtWidgets>
-#include <iostream>
 
 ChronoApp::ChronoApp(int& argc, char** argv):QApplication(argc, argv)
 {

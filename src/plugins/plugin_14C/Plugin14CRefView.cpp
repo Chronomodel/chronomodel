@@ -230,7 +230,7 @@ void Plugin14CRefView::setDate(const Date &date, const StudyPeriodSettings& sett
              mGraph->add_curve(curveMeasure);
 
              // Infos to write :
-             //QString info = tr("Age BP : %1  ± %2").arg(locale().toString(age), locale().toString(error));
+             //QString info = tr("Age BP : %1  ± %2").arg(QLocale().toString(age), QLocale().toString(error));
 
              /* ----------------------------------------------
               *  Delta R curve
@@ -273,7 +273,7 @@ void Plugin14CRefView::setDate(const Date &date, const StudyPeriodSettings& sett
                  curveDeltaR.mData = deltaRCurve;
                  mGraph->add_curve(curveDeltaR);
 
-                // info += tr(", ΔR : %1  ± %2").arg(locale().toString(delta_r), locale().toString(delta_r_error));
+                // info += tr(", ΔR : %1  ± %2").arg(QLocale().toString(delta_r), QLocale().toString(delta_r_error));
              }
 
              /* ----------------------------------------------

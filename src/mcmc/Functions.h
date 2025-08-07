@@ -160,35 +160,37 @@ const QString get_HPD_text(const QList<QPair<double, QPair<double, double> >> &i
 
 QList<QPair<double, QPair<double, double> > > intervals_hpd_from_mapping(const std::map<double, double> &area_mapping, double &real_thresh);
 QList<QPair<double, QPair<double, double> > > intervals_hpd_from_mapping(const std::map<double, double> &area_mapping);
+
 //-------- Matrix
 std::vector<t_matrix> initVector(size_t n);
 
-std::vector<std::vector<int>> initIntMatrix(size_t rows, size_t cols);
-std::vector<std::vector<double>> initMatrix(size_t rows, size_t cols);
+//std::vector<std::vector<int>> initIntMatrix(size_t rows, size_t cols);
+//std::vector<std::vector<double>> initMatrix(size_t rows, size_t cols);
 void resizeMatrix(std::vector<double> &matrix,  size_t rows, size_t cols);
 
 std::vector<long double> initLongVector(size_t n);
 
+t_matrix trace_kahan(const Matrix2D& mat);
 
-Matrix2D::value_type::value_type determinant(const Matrix2D& matrix, size_t shift = 0); // à contrôler
-Matrix2D::value_type::value_type determinant_gauss(const Matrix2D &matrix, size_t shift = 0);
+t_matrix determinant(const Matrix2D& matrix, size_t shift = 0); // à contrôler
+t_matrix determinant_gauss(const Matrix2D &matrix, size_t shift = 0);
 
-Matrix2D seedMatrix(const Matrix2D matrix, size_t shift = 0);
+Matrix2D seedMatrix(const Matrix2D& matrix, size_t shift = 0);
 Matrix2D remove_bands_Matrix(const Matrix2D& matrix, size_t shift = 0);
 
 Matrix2D transpose0(const Matrix2D& matrix);
 Matrix2D transpose(const Matrix2D& matrix, const size_t nbDiag);
 
-Matrix2D multiMatParDiag0(const Matrix2D& matrix, const MatrixDiag& diag);
-Matrix2D multiMatParDiag(const Matrix2D& matrix, const MatrixDiag& diag, size_t nbBandes);
+Matrix2D multiMatParDiag0(const Matrix2D& matrix, const DiagonalMatrixLD &diag);
+Matrix2D multiMatParDiag(const Matrix2D& matrix, const DiagonalMatrixLD &diag, size_t nbBandes);
 
-Matrix2D multiDiagParMat0(const MatrixDiag& diag, const Matrix2D& matrix);
-Matrix2D multiDiagParMat(const MatrixDiag& diag, const Matrix2D& matrix, const size_t nbBandes);
+Matrix2D multiDiagParMat0(const DiagonalMatrixLD &diag, const Matrix2D& matrix);
+Matrix2D multiDiagParMat(const DiagonalMatrixLD &diag, const Matrix2D& matrix, const size_t nbBandes);
 
 t_matrix quadratic_form(const Matrix2D& A, const std::vector<t_matrix>& X);
 
-std::vector<double> multiMatParVec(const Matrix2D& matrix, const std::vector<double> &vec, const size_t nbBandes);
-std::vector<t_matrix> multiMatParVec(const Matrix2D& matrix, const MatrixDiag &vec, const size_t nbBandes);
+std::vector<t_matrix> multiMatParVec(const Matrix2D& matrix, const std::vector<t_matrix>& vec, const size_t nbBandes);
+//std::vector<t_matrix> multiMatParVec(const Matrix2D& matrix, const MatrixDiag &vec, const size_t nbBandes);
 
 
 Matrix2D addMatEtMat0(const Matrix2D& matrix1, const Matrix2D& matrix2);
@@ -200,7 +202,7 @@ Matrix2D multiConstParMat0(const Matrix2D& matrix, const double c);
 Matrix2D multiMatParMat0(const Matrix2D& matrix1, const Matrix2D& matrix2);
 Matrix2D multiMatParMat(const Matrix2D& matrix1, const Matrix2D& matrix2, const size_t nbBandes1, const size_t nbBandes2);
 
-Matrix2D addDiagToMat(const MatrixDiag& diag, Matrix2D matrix);
+Matrix2D addDiagToMat(const DiagonalMatrixLD& diag, Matrix2D matrix);
 
 Matrix2D soustractMatToIdentity(const Matrix2D& matrix);
 
@@ -209,10 +211,19 @@ Matrix2D multiplyMatrix_Winograd(const Matrix2D& a, const Matrix2D& b);
 Matrix2D multiplyMatrixBanded_Winograd(const Matrix2D& a, const Matrix2D& b,  const int bandwidth = 0);
 
 Matrix2D inverseMatSym0(const Matrix2D& matrix, const size_t shift = 0);
-Matrix2D inverseMatSym(const Matrix2D& matrix1, const MatrixDiag& matrix2, const size_t nbBandes, const size_t shift);
+Matrix2D inverse_padded_matrix(const Matrix2D& paddedMatrix, const long shift = 1);
+t_matrix determinant_padded_matrix(const Matrix2D& paddedMatrix, const long shift = 1);
 
-Matrix2D choleskyInvert(const std::pair<Matrix2D, MatrixDiag>& decomp);
-Matrix2D inverseMatSym_origin(const std::pair<Matrix2D, MatrixDiag>& decomp, const size_t nbBandes, const size_t shift);
+Eigen::MatrixXd geninv(const Eigen::MatrixXd& G);
+Matrix2D geninv(const Matrix2D& G);
+Eigen::MatrixXd pseudoInverseSVD(const Eigen::MatrixXd& G, double tol = 1e-9);
+Matrix2D pseudoInverseSVD(const Matrix2D& G, t_matrix tol = 1e-20);
+Matrix2D inverse_banded_padded_matrix(const Matrix2D& bandedPaddedMatrix, const long shift = 1);
+
+Matrix2D inverseMatSym(const Matrix2D& matrix1, const DiagonalMatrixLD& matrix2, const size_t nbBandes, const size_t shift);
+
+Matrix2D choleskyInvert(const std::pair<Matrix2D, DiagonalMatrixLD> &decomp);
+Matrix2D inverseMatSym_origin(const std::pair<Matrix2D, DiagonalMatrixLD>& decomp, const size_t nbBandes, const size_t shift);
 
 
 double sumAllMatrix(const std::vector<std::vector<double>>& matrix);
@@ -228,29 +239,30 @@ Matrix2D comatrice0(const Matrix2D& matrix);
 Matrix2D choleskyLL0(const Matrix2D& matrix);
 Matrix2D cholesky_LLt_MoreSorensen(const Matrix2D &matrix);
 Matrix2D cholesky_LLt_MoreSorensen_adapt(const Matrix2D &matrix);
+Matrix2D robust_LLt(const Matrix2D& matrix);
 
 
-std::pair<Matrix2D, MatrixDiag > choleskyLDLT(const Matrix2D& matrix);
-std::pair<Matrix2D, MatrixDiag > choleskyLDLT(const Matrix2D& matrix, const size_t shift);
-std::pair<Matrix2D, MatrixDiag > choleskyLDLT(const Matrix2D& matrix, const size_t nbBandes, const size_t shift);
-std::pair<Matrix2D, MatrixDiag > choleskyLDLT_Dsup0(const Matrix2D& matrix, const size_t nbBandes, const size_t shift);
-std::pair<Matrix2D, MatrixDiag> decompositionCholesky(const Matrix2D& matrix, const size_t nbBandes, const size_t shift);
-std::pair<Matrix2D, MatrixDiag> decompositionCholeskyKK(const Matrix2D& matrix, const size_t nbBandes, const size_t shift);
+std::pair<Matrix2D, DiagonalMatrixLD > choleskyLDLT(const Matrix2D& matrix);
+std::pair<Matrix2D, DiagonalMatrixLD > choleskyLDLT(const Matrix2D& matrix, const size_t shift);
+std::pair<Matrix2D, DiagonalMatrixLD > choleskyLDLT(const Matrix2D& matrix, const size_t nbBandes, const size_t shift);
+std::pair<Matrix2D, DiagonalMatrixLD > choleskyLDLT_Dsup0(const Matrix2D& matrix, const size_t nbBandes, const size_t shift);
+std::pair<Matrix2D, DiagonalMatrixLD> decompositionCholesky(const Matrix2D& matrix, const size_t nbBandes, const size_t shift);
+std::pair<Matrix2D, DiagonalMatrixLD> decompositionCholeskyKK(const Matrix2D& matrix, const size_t nbBandes, const size_t shift);
 // algoithm with More and Sorensen adaptation
-std::pair<Matrix2D, MatrixDiag> cholesky_LDLt_MoreSorensen(const Matrix2D& A, t_matrix regularization = 0.0);
-std::pair<Matrix2D, MatrixDiag> banded_Cholesky_LDLt_MoreSorensen(const Matrix2D& A, int bandwidth, t_matrix regularization = 1e-10);
+std::pair<Matrix2D, DiagonalMatrixLD> cholesky_LDLt_MoreSorensen(const Matrix2D& A, t_matrix regularization = 0.0);
+std::pair<Matrix2D, DiagonalMatrixLD> banded_Cholesky_LDLt_MoreSorensen(const Matrix2D& A, int bandwidth, t_matrix regularization = 1e-10);
 
 
 std::pair<Matrix2D, Matrix2D > decompositionLU0(const Matrix2D& A);
 std::pair<Matrix2D, Matrix2D> Doolittle_LU(const Matrix2D A);
-std::pair<Matrix2D, MatrixDiag> LU_to_LD(const std::pair<Matrix2D, Matrix2D> LU);
+std::pair<Matrix2D, DiagonalMatrixLD> LU_to_LD(const std::pair<Matrix2D, Matrix2D> LU);
 
 std::pair<Matrix2D, Matrix2D > decompositionQR(const Matrix2D& A);
 std::pair<Matrix2D, Matrix2D> householderQR(Matrix2D& A);
 
-std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, MatrixDiag>& decomp, const std::vector<double>& vecQtY);
-std::vector<t_matrix> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, MatrixDiag>& decomp, const std::vector<t_matrix>& vecQtY);
-std::vector<long double> resolutionSystemeLineaireCholesky_long(const std::pair<Matrix2D, MatrixDiag>& decomp, const std::vector<double>& vecQtY);
+std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, DiagonalMatrixLD> &decomp, const std::vector<double>& vecQtY);
+std::vector<t_matrix> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, DiagonalMatrixLD> &decomp, const std::vector<t_matrix>& vecQtY);
+std::vector<long double> resolutionSystemeLineaireCholesky_long(const std::pair<Matrix2D, DiagonalMatrixLD>& decomp, const std::vector<double>& vecQtY);
 struct Strassen
 { //https://www.sanfoundry.com/java-program-strassen-algorithm/
 
@@ -259,10 +271,10 @@ struct Strassen
     Matrix2D add(const Matrix2D& A, const Matrix2D& B);
 /** Funtion to split parent matrix into child matrices **/
 
-void split(const Matrix2D& P, Matrix2D& C, int iB, int jB) ;
+    void split(const Matrix2D& P, Matrix2D& C, size_t iB, size_t jB) ;
 /** Funtion to join child matrices intp parent matrix **/
 
- void join(const Matrix2D &C, Matrix2D &P, int iB, int jB) ;
+ void join(const Matrix2D &C, Matrix2D &P, size_t iB, size_t jB) ;
 
 };
 

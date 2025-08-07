@@ -118,9 +118,9 @@ QJsonObject PluginTLForm::getData()
 {
     QJsonObject data;
 
-    const double a = locale().toDouble(mAverageEdit->text());
-    const double e = locale().toDouble(mErrorEdit->text());
-    const double y = locale().toDouble(mYearEdit->text());
+    const double a = QLocale().toDouble(mAverageEdit->text());
+    const double e = QLocale().toDouble(mErrorEdit->text());
+    const double y = QLocale().toDouble(mYearEdit->text());
 
     data.insert(DATE_TL_AGE_STR, a);
     data.insert(DATE_TL_ERROR_STR, e);

@@ -138,7 +138,7 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mGraphHeightLab->setBackground(Painting::borderDark);
 
     mGraphHeightEdit = new LineEdit(this);
-    mGraphHeightEdit->setText(locale().toString(100));
+    mGraphHeightEdit->setText(QLocale().toString(100));
 
     QIntValidator* heightValidator = new QIntValidator(this);
     heightValidator->setRange(50, 500);
@@ -184,7 +184,7 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mMajorScaleEdit = new LineEdit(this);
     mMajorScaleEdit->setAdjustText();
     mMajorScaleEdit->setToolTip(tr("Enter a interval for the main division of the axes under the curves"));
-    mMajorScaleEdit->setText(locale().toString(mMajorScale));
+    mMajorScaleEdit->setText(QLocale().toString(mMajorScale));
 
     mMinorScaleLab = new Label(tr("Min. Cnt"), this);
     mMinorScaleLab->setAdjustText();
@@ -195,7 +195,7 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     mMinorScaleEdit = new LineEdit(this);
     mMinorScaleEdit->setAdjustText();
     mMinorScaleEdit->setToolTip(tr("Enter a interval for the subdivision of the Major Interval for the scale under the curves"));
-    mMinorScaleEdit->setText(locale().toString(mMinorScale));
+    mMinorScaleEdit->setText(QLocale().toString(mMinorScale));
 
     mHPDLab = new Label(tr("HPD (%)"), this);
     mHPDLab->setAdjustText();
@@ -249,8 +249,8 @@ MultiCalibrationView::~MultiCalibrationView()
 
 void MultiCalibrationView::setProject()
 {
-    auto state = MainWindow::getInstance()->getState();
-    const QJsonObject &settings = state.value(STATE_SETTINGS).toObject();
+    const auto& state = MainWindow::getInstance()->getState();
+    const QJsonObject& settings = state.value(STATE_SETTINGS).toObject();
     mSettings = StudyPeriodSettings::fromJson(settings);
 
     mTminDisplay = mSettings.getTminFormated() ;
@@ -261,12 +261,12 @@ void MultiCalibrationView::setProject()
     mMajorScale = scale.mark;
     mMinorScale = scale.tip;
 
-    mStartEdit->setText(locale().toString(mTminDisplay));
-    mEndEdit->setText(locale().toString(mTmaxDisplay));
-    mHPDEdit->setText(locale().toString(95));
+    mStartEdit->setText(QLocale().toString(mTminDisplay));
+    mEndEdit->setText(QLocale().toString(mTmaxDisplay));
+    mHPDEdit->setText(QLocale().toString(95));
 
-    mMajorScaleEdit->setText(locale().toString(mMajorScale));
-    mMinorScaleEdit->setText(locale().toString(mMinorScale));
+    mMajorScaleEdit->setText(QLocale().toString(mMajorScale));
+    mMinorScaleEdit->setText(QLocale().toString(mMinorScale));
 }
 
 void MultiCalibrationView::resizeEvent(QResizeEvent* )
@@ -312,8 +312,8 @@ void MultiCalibrationView::setVisible(bool visible)
 
 void MultiCalibrationView::applyAppSettings()
 {
-    mButtonWidth  = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
-    mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mButtonWidth  = 1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE;
+    mButtonHeigth = 1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE;
 
     mTminDisplay = mSettings.getTminFormated() ;
     mTmaxDisplay = mSettings.getTmaxFormated();
@@ -323,12 +323,12 @@ void MultiCalibrationView::applyAppSettings()
     mMajorScale = scale.mark;
     mMinorScale = scale.tip;
 
-    mStartEdit->setText(locale().toString(mTminDisplay));
-    mEndEdit->setText(locale().toString(mTmaxDisplay));
-    mHPDEdit->setText(locale().toString(95));
+    mStartEdit->setText(QLocale().toString(mTminDisplay));
+    mEndEdit->setText(QLocale().toString(mTmaxDisplay));
+    mHPDEdit->setText(QLocale().toString(95));
 
-    mMajorScaleEdit->setText(locale().toString(mMajorScale));
-    mMinorScaleEdit->setText(locale().toString(mMinorScale));
+    mMajorScaleEdit->setText(QLocale().toString(mMajorScale));
+    mMinorScaleEdit->setText(QLocale().toString(mMinorScale));
 
     if (this->isVisible())
         updateGraphList();
@@ -403,12 +403,12 @@ void MultiCalibrationView::updateLayout()
     xShift = 2*labelWidth + 3*marginBottomBar;
     mMajorScaleLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
     mMajorScaleEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
-    mMajorScaleEdit->setText(locale().toString(mMajorScale));
+    mMajorScaleEdit->setText(QLocale().toString(mMajorScale));
 
     xShift = 3*labelWidth + 4*marginBottomBar;
     mMinorScaleLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
     mMinorScaleEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
-    mMinorScaleEdit->setText(locale().toString(mMinorScale));
+    mMinorScaleEdit->setText(QLocale().toString(mMinorScale));
 
     xShift = 4*labelWidth + 5*marginBottomBar;
     mHPDLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
@@ -560,7 +560,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
             const double tFixedFormated = DateUtils::convertToAppSettingsFormat( fixedValue);
 
             const QString boundName = ev.value(STATE_NAME).toString();
-            const QString valueStr = locale().toString(tFixedFormated) + " " + DateUtils::getAppSettingsFormatStr();
+            const QString valueStr = QLocale().toString(tFixedFormated) + " " + DateUtils::getAppSettingsFormatStr();
             graphList.append(new GraphTitle(tr("Bound : %1").arg(boundName),  curveDescription, QString("Fixed value : %1 ").arg(valueStr), this));
             colorList.append(event_color);
 
@@ -630,11 +630,23 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                 brushColor.setAlpha(170);
 
                 GraphCurve calibCurve;
+                QMap<type_data, type_data> subData; // used with phd
                 GraphView* calibGraph = new GraphView(this);
 
-                 if (d.mIsValid && d.mCalibration!=nullptr && !d.mCalibration->mVector.empty()) {
 
-                    calibCurve = densityCurve(d.getFormatedCalibToShow(), "Calibration", penColor);
+                if (d.mIsValid && d.mCalibration != nullptr && !d.mCalibration->mVector.empty()) {
+                    std::map<double, double> formatedCalib = d.getFormatedCalibToShow();
+                    // Parfois, la partie à voir dans la study period, posséde un niveau trés faible
+                    // qui est supprimé par getFormatedCalibToShow()
+                    // hpd is calculate only on the study Period
+                    subData = QMap(getMapDataInRange(formatedCalib, mSettings.getTminFormated(), mSettings.getTmaxFormated()));
+
+                    if (subData.empty()) {
+                        formatedCalib = DateUtils::convertMapToAppSettingsFormat(d.getRawCalibMap());
+                        subData = QMap(getMapDataInRange(formatedCalib, mSettings.getTminFormated(), mSettings.getTmaxFormated()));
+
+                    }
+                    calibCurve = densityCurve(formatedCalib, "Calibration", penColor);
                     calibCurve.mVisible = true;
                     calibGraph->add_curve(calibCurve);
 
@@ -669,7 +681,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
 
                 if (d.mIsValid && d.mCalibration != nullptr && !d.mCalibration->mVector.empty()) {
                     // hpd is calculate only on the study Period
-                    const QMap<type_data, type_data> &subData = getMapDataInRange(calibCurve.mData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
+                    //const QMap<type_data, type_data> &subData = getMapDataInRange(calibCurve.mData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
                     QList<QPair<double, QPair<double, double> > > intervals;
                     QMap<type_data, type_data> hpd (create_HPD_by_dichotomy(subData, intervals, thres));
@@ -733,7 +745,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
     mSettings = StudyPeriodSettings::fromJson(state->value(STATE_SETTINGS).toObject());
 
-    mHPDEdit->setText(locale().toString(thres));
+    mHPDEdit->setText(QLocale().toString(thres));
 
     QColor brushColor = mCurveCustomColor;
     brushColor.setAlpha(170);
@@ -1072,6 +1084,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                     d.autoSetTiSampler(true); // needed if calibration is not done
 
                     const std::map<double, double> &calibMap = d.getFormatedCalibMap();
+
                     // hpd is calculate only on the study Period
 
                     const std::map<double, double> &subData = getMapDataInRange(calibMap, mTminDisplay, mTmaxDisplay);
@@ -1311,7 +1324,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 {
     const QJsonObject* state = getState_ptr();
 
-    mHPDEdit->setText(locale().toString(thres));
+    mHPDEdit->setText(QLocale().toString(thres));
 
     QColor brushColor = mCurveCustomColor;
     brushColor.setAlpha(170);
@@ -1885,6 +1898,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
         case CurveSettings::eProcess_Depth:
             // recherche du smoothing
             do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam);
+            //do_spline_res = do_spline_kernel_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam); // test
          break;
 
         case CurveSettings::eProcess_Unknwon_Dec:
@@ -1917,7 +1931,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             spline_info =  tr("Forced Spline Fitting ;");
 
         } else {
-            spline_info =  tr("Fixed Smoothing = 10E%1 ;").arg(locale().toString(log10(lambda)));
+            spline_info =  tr("Fixed Smoothing = 10E%1 ;").arg(QLocale().toString(log10(lambda)));
         }
         mSilverParam.comment = "";
 
@@ -1930,13 +1944,13 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             spline_info = QString::fromStdString(mSilverParam.comment);//   tr(" Linear regression ;");
 
         } else {
-            spline_info += QString::fromStdString(mSilverParam.comment) + tr(" Smoothing = 10E%1 ;").arg(locale().toString(log10(lambda)));
+            spline_info += QString::fromStdString(mSilverParam.comment) + tr(" Smoothing = 10E%1 ;").arg(QLocale().toString(log10(lambda)));
         }
 
     }
     mSilverParam.comment = "";
     if (lambda != 0.0) {
-        spline_info +=  tr(" Estimated std g = %1 ").arg(locale().toString(sqrt(lambda_Vg.second)));// + QString::fromStdString(mSilverParam.comment);
+        spline_info +=  tr(" Estimated std g = %1 ").arg(QLocale().toString(sqrt(lambda_Vg.second)));// + QString::fromStdString(mSilverParam.comment);
     }
 
     if (processType == CurveSettings::eProcess_Univariate ||
@@ -2092,7 +2106,7 @@ void MultiCalibrationView::updateMultiCalib()
 void MultiCalibrationView::updateHPDGraphs(const QString &thres)
 {
     bool ok;
-    double val = locale().toDouble(thres, &ok);
+    double val = QLocale().toDouble(thres, &ok);
     if (ok)
         mThreshold = val;
     else
@@ -2144,7 +2158,7 @@ void MultiCalibrationView::updateHPDGraphs(const QString &thres)
 void MultiCalibrationView::updateGraphsSize(const QString &sizeStr)
 {
     bool ok;
-    const double val = locale().toDouble(sizeStr, &ok);
+    const double val = QLocale().toDouble(sizeStr, &ok);
     if (ok) {
         const double origin = mHeightForVisibleAxis;
         const double prop =  val / 100.;
@@ -2191,14 +2205,14 @@ void MultiCalibrationView::updateYZoom(const double prop)
 void MultiCalibrationView::updateScroll()
 {
     bool ok;
-    double val = locale().toDouble(mStartEdit->text(),&ok);
+    double val = QLocale().toDouble(mStartEdit->text(),&ok);
     if (ok)
         mTminDisplay = val;
     else
         mTminDisplay = mSettings.getTminFormated();
 
 
-    val = locale().toDouble(mEndEdit->text(),&ok);
+    val = QLocale().toDouble(mEndEdit->text(),&ok);
     if (ok)
         mTmaxDisplay = val;
     else
@@ -2242,7 +2256,7 @@ void MultiCalibrationView::updateScaleX()
 {
     QString str = mMajorScaleEdit->text();
     bool isNumber(true);
-    double aNumber = locale().toDouble(str, &isNumber);
+    double aNumber = QLocale().toDouble(str, &isNumber);
 
     QFont adaptedFont (font());
 
@@ -2277,7 +2291,7 @@ void MultiCalibrationView::updateScaleX()
     } else
         mMinorScaleEdit->setFont(font());
 
-    aNumber = locale().toDouble(str, &isNumber);
+    aNumber = QLocale().toDouble(str, &isNumber);
 
     if (isNumber && aNumber>=1) {
         mMinorScale =  int (aNumber);
@@ -2675,7 +2689,7 @@ void MultiCalibrationView::exportResults()
             if (isCurve) {
                 curveParam = Event::curveParametersFromJsonEvent(ev, processType);
                 for (auto param : curveParam) {
-                    curveParamList.append(locale().toString(param));
+                    curveParamList.append(QLocale().toString(param));
                 }
             }
 
@@ -2687,7 +2701,7 @@ void MultiCalibrationView::exportResults()
                 if (isCurve) {
                     statLine.append(curveParamList);
                 }
-                //statLine<<"Bound"<< locale().toString(bound) + " BC/AD";
+                //statLine<<"Bound"<< QLocale().toString(bound) + " BC/AD";
                 statLine<<"Bound"<< DateUtils::convertToAppSettingsFormatStr(bound, true);// + " " + DateUtils::getAppSettingsFormatStr();
                 stats.append(statLine);
 
@@ -2800,7 +2814,7 @@ void MultiCalibrationView::showStat()
 
             if ( Event::Type (ev.value(STATE_EVENT_TYPE).toInt()) == Event::eBound) {
                 const double bound = ev.value(STATE_EVENT_KNOWN_FIXED).toDouble();
-                //resultsStr += " <br><strong>"+ tr("Bound : %1").arg(locale().toString(bound)) +" BC/AD </strong><br>";
+                //resultsStr += " <br><strong>"+ tr("Bound : %1").arg(QLocale().toString(bound)) +" BC/AD </strong><br>";
                 resultsStr += " <br><strong>"+ tr("Bound : %1").arg(DateUtils::convertToAppSettingsFormatStr(bound)) +" " + DateUtils::getAppSettingsFormatStr() + "</strong><br>";
 
             } else {
@@ -2845,7 +2859,7 @@ void MultiCalibrationView::showStat()
 
                                 const double real_thresh = std::accumulate(formated_intervals.begin(), formated_intervals.end(), 0., [](double sum, QPair<double, QPair<double, double> > p) {return sum + p.first;});
 
-                                resultsStr += + "<br> HPD (" + locale().toString(100. * real_thresh, 'f', 1) + "%) : " + get_HPD_text(formated_intervals, DateUtils::getAppSettingsFormatStr(), nullptr) + "<br>";
+                                resultsStr += + "<br> HPD (" + QLocale().toString(100. * real_thresh, 'f', 1) + "%) : " + get_HPD_text(formated_intervals, DateUtils::getAppSettingsFormatStr(), nullptr) + "<br>";
 
                             } else
                                 resultsStr += "<br>" + textBold(textRed(QObject::tr("Solutions exist outside study period") ))  + "<br>";

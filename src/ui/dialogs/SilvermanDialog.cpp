@@ -71,7 +71,7 @@ SilvermanDialog::SilvermanDialog(SilvermanParam *param, QWidget* parent, Qt::Win
 
     mLambdaLabel = new QLabel(tr("Smoothing Value 10E"), this);
     mLambdaInput = new QLineEdit(this);
-    mLambdaInput->setText(locale().toString(param->log_lambda_value));
+    mLambdaInput->setText(QLocale().toString(param->log_lambda_value));
 
     connect(mLambdaInput, &QLineEdit::textChanged, [this](const QString&) { this->validateInputs(); });
 
@@ -140,7 +140,7 @@ SilvermanDialog::~SilvermanDialog()
 void SilvermanDialog::memo()
 {
     mParam->lambda_fixed = mLambdaTypeInput->currentIndex() == 1;
-    mParam->log_lambda_value = locale().toDouble(mLambdaInput->text());
+    mParam->log_lambda_value = QLocale().toDouble(mLambdaInput->text());
     mParam->use_error_measure = mUseErrMesureInput->isChecked();
     mParam->force_positive_curve = false;
     close();
@@ -158,7 +158,7 @@ void SilvermanDialog::validateInputs()
     bool enable = true;
     if (mLambdaTypeInput->currentIndex() == 1) {
         bool ok = false;
-        locale().toDouble(mLambdaInput->text(), &ok);
+        QLocale().toDouble(mLambdaInput->text(), &ok);
         enable = ok;
     }
     mButtonBox->button(QDialogButtonBox::Ok)->setEnabled(enable);

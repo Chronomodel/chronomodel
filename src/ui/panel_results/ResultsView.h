@@ -90,6 +90,7 @@ public:
     void setProject();
     void initModel();
     void updateModel();
+    void applyAppSettings();
 
 protected:
     // ------------------------------------------------

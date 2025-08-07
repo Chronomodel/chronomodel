@@ -42,11 +42,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define MCMCLOOPCURVE_H
 
 #include "MCMCLoop.h"
-#include "CurveSettings.h"
 #include "CurveUtilities.h"
 #include "Matrix.h"
 #include "ModelCurve.h"
 #include "Event.h"
+#include "version.h"
 
 #include <vector>
 
@@ -69,8 +69,8 @@ protected:
     SplineMatrices current_splineMatrices, current_matriceWI;
     SplineResults current_spline;
     std::vector<t_reduceTime> current_vecH;
-    std::pair<Matrix2D, MatrixDiag> current_decomp_QTQ;
-    std::pair<Matrix2D, MatrixDiag> current_decomp_matB;
+    std::pair<Matrix2D, DiagonalMatrixLD> current_decomp_QTQ;
+    std::pair<Matrix2D, DiagonalMatrixLD> current_decomp_matB;
 
     t_prob try_h_theta, try_h_lambda, try_h_VG;
     t_prob try_ln_h_YWI_2, try_ln_h_YWI_3, try_ln_h_YWI_1_2;
@@ -78,8 +78,8 @@ protected:
     std::vector<t_reduceTime> try_vecH;
     SplineMatrices try_splineMatrices;
 
-    std::pair<Matrix2D, MatrixDiag> try_decomp_QTQ;
-    std::pair<Matrix2D, MatrixDiag> try_decomp_matB;
+    std::pair<Matrix2D, DiagonalMatrixLD> try_decomp_QTQ;
+    std::pair<Matrix2D, DiagonalMatrixLD> try_decomp_matB;
 
     std::vector<std::shared_ptr<Event>> initListEvents;
 
@@ -98,26 +98,40 @@ protected:
     std::vector<double> spreadEventsTheta0(std::vector<std::shared_ptr<Event>>& Events, t_reduceTime spreadSpan = 0.0);
     std::vector<double> unclumpTheta(const std::vector<std::shared_ptr<Event>>& events, double spreadSpan = 1e-8);
 
-    bool (MCMCLoopCurve::*updateLoop)();
+    bool (MCMCLoopCurve::*updateLoop)();;
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 2 && VERSION_PATCH == 1
+#pragma mark Version 3.2.1
 
     QString initialize_321();
-    QString initialize_330();
-    QString initialize_335();
-
-    QString initialize_400();
-    QString initialize_401();
-    QString initialize_interpolate();
-    QString initialize_Komlan();
-
     bool update_321();
 
-    void test_depth(std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const SplineMatrices &matrices, const double lambda, double &rate, bool &ok);
+#elif VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH == 0
+#pragma mark Version 3.3.0
+    QString initialize_330();
     bool update_330();
+
+#elif VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5
+#pragma mark Version 3.3.5
+
+    QString initialize_335();
     bool update_335(); // estimation de G as Komlan
+
+#elif VERSION_MAJOR == 4 && VERSION_MINOR >= 0 && VERSION_PATCH >= 0
+#pragma mark Version 4
+    QString initialize_400();
+    QString initialize_401();
     bool update_400();
     bool update_401();
+
+
+#endif
+#pragma mark Interpolate
+    QString initialize_interpolate();
     bool update_interpolate();
 
+    void test_depth(std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const SplineMatrices &matrices, const double lambda, double &rate, bool &ok);
+
+    QString initialize_Komlan();
     bool update_Komlan();
 
 
@@ -137,18 +151,18 @@ private:
 
     static t_prob h_YWI_AY(const SplineMatrices& matrices, const std::vector<std::shared_ptr<Event>> &events, const  double lambdaSpline, const std::vector< t_reduceTime> &vecH, const bool hasY = false, const bool hasZ = false);
 
-    static t_prob h_YWI_AY_composanteX(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp_matB, const std::pair<Matrix2D, MatrixDiag > &decomp_QTQ, const double lambdaSpline);
-    static t_prob h_YWI_AY_composanteY(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp_matB, const std::pair<Matrix2D, MatrixDiag > &decomp_QTQ, const double lambdaSpline);
-    static t_prob h_YWI_AY_composanteZ(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp_matB, const std::pair<Matrix2D, MatrixDiag > &decomp_QTQ, const double lambdaSpline);
+    static t_prob h_YWI_AY_composanteX(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_matB, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_QTQ, const double lambdaSpline);
+    static t_prob h_YWI_AY_composanteY(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_matB, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_QTQ, const double lambdaSpline);
+    static t_prob h_YWI_AY_composanteZ(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_matB, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_QTQ, const double lambdaSpline);
 
     t_prob h_YWI_AY_composanteZ_decomp(const SplineMatrices& matrices, const QList<Event *> &events, const double lambdaSpline, const std::vector< t_reduceTime> &vecH);
 
 
 #pragma mark Optimization
 
-     static t_prob detPlus(const std::pair<Matrix2D, MatrixDiag > &decomp)
+     static t_prob detPlus(const std::pair<Matrix2D, DiagonalMatrixLD > &decomp)
      {
-         return std::accumulate(decomp.second.cbegin(), decomp.second.cend(), 0., [](double prod, const double m){return prod + m;});
+         return std::accumulate(decomp.second.diagonal().cbegin(), decomp.second.diagonal().cend(), 0., [](double prod, const double m){return prod + m;});
      }
 
     /* static t_prob ln_detPlus(const std::pair<Matrix2D, MatrixDiag > &decomp)
@@ -176,10 +190,10 @@ private:
     * @note The function skips the first and last elements of the diagonal matrix
     * @note Uses parallel reduction for large matrices (> 1000 elements)
     */
-     static t_prob ln_detPlus(const std::pair<Matrix2D, MatrixDiag>& decomp)
+     static t_prob ln_detPlus(const std::pair<Matrix2D, DiagonalMatrixLD>& decomp)
      {
-        const auto& diag = decomp.second;
-        const size_t size = diag.size();
+        const auto& diag = decomp.second.diagonal();
+        const size_t size = diag.rows();
 
         // Handle edge cases , yet tested before
         // if (size <= 2) return 0.0;
@@ -205,31 +219,31 @@ private:
         return sum;
      }
 
-     static t_prob ln_h_YWI_1(const std::pair<Matrix2D, MatrixDiag> &decomp_QTQ)
+     static t_prob ln_h_YWI_1(const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_QTQ)
      {
          return ln_detPlus(decomp_QTQ);
      }
 
-     static t_prob ln_h_YWI_2(const std::pair<Matrix2D, MatrixDiag> &decomp_matB)
+     static t_prob ln_h_YWI_2(const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_matB)
      {
          return -ln_detPlus(decomp_matB);
      }
 
-     static t_prob ln_h_YWI_1_2(const std::pair<Matrix2D, MatrixDiag> &decomp_QTQ, const std::pair<Matrix2D, MatrixDiag > &decomp_matB)
+     static t_prob ln_h_YWI_1_2(const std::pair<Matrix2D, DiagonalMatrixLD>& decomp_QTQ, const std::pair<Matrix2D, DiagonalMatrixLD >& decomp_matB)
      {
-        const MatrixDiag &matDq = decomp_QTQ.second;
-        const MatrixDiag &matD = decomp_matB.second;
+        const auto& diagDq = decomp_QTQ.second.diagonal();  // Eigen::Matrix<t_matrix, Dynamic, 1>
+        const auto& diagD  = decomp_matB.second.diagonal();   // même type
 
-        return std::transform_reduce(PAR matDq.cbegin()+1, matDq.cend()-1, matD.begin()+1, 0., std::plus{}, [](double val1,  double val2) { return std::log(val1) - std::log(val2); });
+        return std::transform_reduce(PAR diagDq.cbegin()+1, diagDq.cend()-1, diagD.cbegin()+1, 0., std::plus{}, [](double val1,  double val2) { return std::log(val1) - std::log(val2); });
 
      }
 
-     static t_prob ln_h_YWI_3_update_ASYNC(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag> &decomp_matB, const double lambdaSpline, const bool hasY, const bool hasZ);
-     static t_prob ln_h_YWI_3_update(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag> &decomp_matB, const double lambdaSpline, const bool hasY, const bool hasZ);
+     static t_prob ln_h_YWI_3_update_ASYNC(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_matB, const double lambdaSpline, const bool hasY, const bool hasZ);
+     static t_prob ln_h_YWI_3_update(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_matB, const double lambdaSpline, const bool hasY, const bool hasZ);
 
-     static t_prob ln_h_YWI_3_X(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp_matB, const double lambdaSpline);
-     static t_prob ln_h_YWI_3_Y(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp_matB, const double lambdaSpline);
-     static t_prob ln_h_YWI_3_Z(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp_matB, const double lambdaSpline);
+     static t_prob ln_h_YWI_3_X(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_matB, const double lambdaSpline);
+     static t_prob ln_h_YWI_3_Y(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_matB, const double lambdaSpline);
+     static t_prob ln_h_YWI_3_Z(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_matB, const double lambdaSpline);
 
 
     t_prob h_lambda_321(const SplineMatrices &matrices, const int nb_noeuds, const  double lambdaSpline) ;
@@ -295,10 +309,16 @@ private:
 
     SplineMatrices prepareCalculSpline_W_Vg0(const std::vector<std::shared_ptr<Event> > &sortedEvents, std::vector<double> &vecH);
 
-    MCMCSpline samplingSpline_multi(std::vector<std::shared_ptr<Event>> &lEvents, std::vector<std::shared_ptr<Event>> &lEventsinit, std::vector<t_matrix> vecYx, std::vector<double> vecYstd, const Matrix2D &RR, const Matrix2D &R_1QT, const Matrix2D &Q, const Matrix2D &QT, const Matrix2D &matK);
-    MCMCSpline samplingSpline_multi2(std::vector<std::shared_ptr<Event> > &lEvents, const Matrix2D &RR, const Matrix2D &R_1QT, const Matrix2D &Q, const Matrix2D &QT, const Matrix2D &matK);
+    MCMCSpline samplingSpline_multi(std::vector<std::shared_ptr<Event>> &lEvents, std::vector<std::shared_ptr<Event>> &lEventsinit, std::vector<t_matrix> vecYx, std::vector<double> vecYstd, const Matrix2D &R, const Matrix2D &R_1QT, const Matrix2D &Q, const Matrix2D &QT);
+    MCMCSpline samplingSpline_multi2(std::vector<std::shared_ptr<Event> > &lEvents, const Matrix2D &R, const Matrix2D &R_1Qt, const Matrix2D& Q);
+    MCMCSpline samplingSpline_multi_depth(std::vector<std::shared_ptr<Event> > &lEvents, const Matrix2D &R, const Matrix2D &R_1QT, const Matrix2D& Q);
 
     std::vector<double> multinormal_sampling (const std::vector<t_matrix>& mu, const Matrix2D& a);
+    ColumnVectorLD multinormal_sampling (const ColumnVectorLD& mu, const Matrix2D& a);
+
+    ColumnVectorLD multinormal_sampling2 (const ColumnVectorLD& Y, const Matrix2D& A_1, const DiagonalMatrixLD& w_1);
+
+    ColumnVectorLD multinormal_sampling_depth (const ColumnVectorLD& mu, const Matrix2D& a);
 
     std::vector<double> splines_prior(const Matrix2D &KK, std::vector<double> &g, std::vector<double> &g_new);
     inline double Signe_Number(const double &a);
@@ -327,6 +347,6 @@ inline double log_p(const double x, const double n) {
     return log(x) / log(n) ;
 }
 
-Matrix2D inverseMatSym_originKK(const Matrix2D &matrixLE,  const MatrixDiag &matrixDE, const int nbBandes, const int shift);
+Matrix2D inverseMatSym_originKK(const Matrix2D& matrixLE,  const DiagonalMatrixLD& matrixDE, const int nbBandes, const int shift);
 
 #endif

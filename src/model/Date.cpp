@@ -1326,7 +1326,7 @@ const std::map<double, double> Date::getFormatedCalibToShow() const
     if (*mCalibration->mRepartition.crbegin() > 0.) {
         double tminCal, tmaxCal;
         std::vector<double> curve;
-        const double threshold  = 0.01 * (*std::max_element(mCalibration->mVector.begin(), mCalibration->mVector.end()));
+        const double threshold  = 0.01 * (*std::max_element(mCalibration->mVector.begin(), mCalibration->mVector.end())); // ici
 
         int minIdx = 0;
         for (auto& v : mCalibration->mVector) {

@@ -185,7 +185,7 @@ void PluginGaussForm::setData(const QJsonObject& data, bool isCombined)
         emit PluginFormAbstract::OkEnabled(true );
         
     } else {
-        const QLocale locale=QLocale();
+        const QLocale locale = QLocale();
         const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
         const double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
         const double a = data.value(DATE_GAUSS_A_STR).toDouble();
@@ -222,7 +222,7 @@ void PluginGaussForm::updateVisibleElements()
 QJsonObject PluginGaussForm::getData()
 {
     QJsonObject data;
-    const QLocale locale=QLocale();
+    const QLocale locale = QLocale();
 
     const double age = locale.toDouble(mAverageEdit->text());
     const double error = locale.toDouble(mErrorEdit->text());

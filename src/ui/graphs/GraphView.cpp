@@ -43,11 +43,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "DateUtils.h"
 #include "Painting.h"
 #include "MainWindow.h"
+#include <algorithm>
 
 #include <QtWidgets>
 #include <algorithm>
 #include <QtSvg>
 #include <QLocale>
+#include <QColor>
+#include <QWidget>
 
 class StudyPeriodSettings;
 
@@ -243,7 +246,7 @@ void GraphView::adjustYScale()
         qreal yMax = -HUGE_VAL;
         qreal yMin =  HUGE_VAL;
 
-        for (const auto &curve : mCurves) {
+        for (const GraphCurve& curve : std::as_const(mCurves)) {
             if (curve.mVisible) {
                 if (curve.isVertical()) { // used for the measurement in the calibration process
                     yMin = std::min(yMin, curve.mData.firstKey());
@@ -259,13 +262,13 @@ void GraphView::adjustYScale()
                         }
 
                     } else if (curve.isShape()) {
-                        const auto &curveInf = curve.mShape.first;
-                        const auto &curveSup = curve.mShape.second;
-                        const QMap<qreal, qreal> &subDataInf = getMapDataInRange(curveInf, mCurrentMinX, mCurrentMaxX);
+                        const auto& curveInf = curve.mShape.first;
+                        const auto& curveSup = curve.mShape.second;
+                        const QMap<qreal, qreal>& subDataInf = getMapDataInRange(curveInf, mCurrentMinX, mCurrentMaxX);
                         if (!subDataInf.empty())
                             yMin = std::min(yMin, map_min(subDataInf).value());
 
-                        const QMap<qreal, qreal> &subDataSup = getMapDataInRange(curveSup, mCurrentMinX, mCurrentMaxX);
+                        const QMap<qreal, qreal>& subDataSup = getMapDataInRange(curveSup, mCurrentMinX, mCurrentMaxX);
                         if (!subDataSup.empty())
                             yMax = std::max(yMax, map_max(subDataSup).value());
 
@@ -340,13 +343,13 @@ void GraphView::zoomX(const type_data min, const type_data max)
 
 }
 
-void GraphView::changeXScaleDivision (const Scale &sc)
+void GraphView::changeXScaleDivision (const Scale& sc)
 {
     setXScaleDivision(sc);
     repaintGraph(true);
 }
 
-void GraphView::changeXScaleDivision (const double &major, const int & minor)
+void GraphView::changeXScaleDivision (const double& major, const int& minor)
 {
     setXScaleDivision(major, minor);
     repaintGraph(true);
@@ -356,7 +359,7 @@ void GraphView::changeXScaleDivision (const double &major, const int & minor)
  *  Options
  * ------------------------------------------------------*/
 
-void GraphView::setBackgroundColor(const QColor &color)
+void GraphView::setBackgroundColor(const QColor& color)
 {
     mBackgroundColor = color;
 }
@@ -459,7 +462,7 @@ void GraphView::autoAdjustYScale(bool active)
     mAutoAdjustYScale = active;
 }
 
-void GraphView::setGraphFont(const QFont &font)
+void GraphView::setGraphFont(const QFont& font)
 {
     setFont(font);
     repaintGraph(true);
@@ -508,12 +511,12 @@ void GraphView::setFormatFunctY(DateConversion f)
  Curves & Zones
  ------------------------------------------------------ */
 
-void GraphView::add_curve(const GraphCurve &curve)
+void GraphView::add_curve(const GraphCurve& curve)
 {
     mCurves.append(curve);
 }
 
-void GraphView::removeCurve(const QString &name)
+void GraphView::removeCurve(const QString& name)
 {
     for (int i=0; i<mCurves.size(); ++i) {
         if (mCurves.at(i).mName == name) {
@@ -535,7 +538,7 @@ void GraphView::reserveCurves(const int size)
     mCurves.reserve(size);
 }
 
-void GraphView::setCurveVisible(const QString &name, const bool visible)
+void GraphView::setCurveVisible(const QString& name, const bool visible)
 {
     std::ranges::for_each(mCurves, [name, visible](auto& c) {
         if (c.mName == name && c.mVisible != visible) {
@@ -544,7 +547,7 @@ void GraphView::setCurveVisible(const QString &name, const bool visible)
 
 }
 
-GraphCurve* GraphView::getCurve(const QString &name)
+GraphCurve* GraphView::getCurve(const QString& name)
 {
     QList<GraphCurve>::Iterator result = std::ranges::find_if(mCurves.begin(), mCurves.end(), [name](auto c) {return c.mName == name;});
     return (result!= mCurves.end()) ? &(*result) : nullptr;
@@ -560,7 +563,7 @@ int GraphView::numCurves() const
     return (int)mCurves.size();
 }
 
-void GraphView::add_zone(const GraphZone &zone)
+void GraphView::add_zone(const GraphZone& zone)
 {
     mZones.append(zone);
 }
@@ -571,7 +574,7 @@ void GraphView::remove_all_zones()
 }
 
 
-void GraphView::set_points_visible(const QString &name, const bool visible)
+void GraphView::set_points_visible(const QString& name, const bool visible)
 {
     for (auto&& ref : refPoints) {
         if (ref.name == name) {
@@ -582,7 +585,7 @@ void GraphView::set_points_visible(const QString &name, const bool visible)
 }
 
 //  Mouse events & Tool Tip
-void GraphView::enterEvent(QEnterEvent *e)
+void GraphView::enterEvent(QEnterEvent* e)
 {
     Q_UNUSED(e);
     mTipVisible = mUseTip;
@@ -663,12 +666,12 @@ void GraphView::mouseMoveEvent(QMouseEvent* e)
     e->ignore();
 }
 
-void GraphView::setTipXLab(const QString &lab)
+void GraphView::setTipXLab(const QString& lab)
 {
     mTipXLab = lab =="" ? "":  lab + " = ";
 }
 
-void GraphView::setTipYLab(const QString &lab)
+void GraphView::setTipYLab(const QString& lab)
 {
     mTipYLab = lab =="" ? "":  lab + " = ";
 }
@@ -895,7 +898,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
 
      if (mOverflowArrowMode != eNone) {
          qreal arrowSize (7.);
-         const qreal yo (mGraphHeight/2.) ;
+         const qreal yo (mGraphHeight / 2.0) ;
          const QColor gradColDark(150, 150, 150);
          const QColor gradColLigth(190, 190, 190);
 
@@ -932,7 +935,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
              type_data minData = type_data (INFINITY);
 
              for (auto& curve : mCurves) {
-                 if (curve.mVisible && curve.mData.size()>0)
+                 if (curve.mVisible && curve.mData.size() > 0)
                     minData = std::min(minData, curve.mData.firstKey());
 
                  else if (curve.mVisible && curve.isVerticalLine())
@@ -944,7 +947,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
              }
 
              if (mCurrentMaxX < minData) {
-                 const qreal xr = mGraphWidth + mMarginLeft - 2*arrowSize;
+                 const qreal xr = mGraphWidth + mMarginLeft - 2.0 * arrowSize;
                  const QPolygonF RigthTriangle (std::initializer_list<QPointF>({ QPointF(xr + arrowSize*1.5, yo),
                                                                       QPointF(xr, yo - arrowSize),
                                                                       QPointF(xr , yo + arrowSize) }));
@@ -981,7 +984,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
         p.setPen(Painting::borderDark);
         int y = 0;
         int lineH (fm.height());
-        for (const auto& info : mInfos) {
+        for (const QString& info : std::as_const(mInfos)) {
             p.drawText(int (1.2 * mMarginLeft), int (mMarginTop  + y), int (mGraphWidth - 1.2*mMarginLeft -mMarginRight), lineH, Qt::AlignLeft | Qt::AlignBottom, info);
             y += lineH;
         }
@@ -990,7 +993,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
     p.end();
 }
 
-QPainterPath GraphView::makePath (const QMap<double, double> &map, const bool showBorder) const
+QPainterPath GraphView::makePath (const QMap<double, double>& map, const bool showBorder) const
 {
     QPainterPath path;
     if (map.isEmpty())
@@ -1075,11 +1078,12 @@ QPainterPath GraphView::makePath (const QMap<double, double> &map, const bool sh
 
     if (showBorder) {
         while (iFirst != map.end()) {
-            if ( mCurrentMinX<=iFirst.key() && iFirst.key()<= mCurrentMaxX ) {
+            if ( mCurrentMinX <= iFirst.key() && iFirst.key() <= mCurrentMaxX ) {
 
                         if (mMinY <= iFirst.value()  && iFirst.value()<= mMaxY  ) {
                             path.lineTo(getXForValue(iFirst.key(), true), getYForValue(iFirst.value(), true));
                             lastGoodIter = iFirst;
+
                         } else {
                             path.moveTo(getXForValue(iFirst.key(), true), getYForValue(iFirst.value(), true));
                         }
@@ -1093,7 +1097,7 @@ QPainterPath GraphView::makePath (const QMap<double, double> &map, const bool sh
     } else {
         while (iFirst != map.end()) {
             if ( mCurrentMinX <= iFirst.key() && iFirst.key() <= mCurrentMaxX ) {
-                if (mMinY <= iFirst.value()  && iFirst.value()<= mMaxY) {
+                if (mMinY <= iFirst.value()  && iFirst.value() <= mMaxY) {
                     if (movePoint) {
 
                         if (iFirst != map.begin()) {
@@ -1140,11 +1144,11 @@ QPainterPath GraphView::makePath (const QMap<double, double> &map, const bool sh
 
             if (iNext.key() < mCurrentMaxX) {
                 if (iNext.value() > mMaxY) { // 1 - =2.a
-                    xNext = interpolate(mMaxY,  lastGoodIter.value(), iNext.value(), lastGoodIter.key(), iNext.key());
+                    xNext = interpolate(mMaxY, lastGoodIter.value(), iNext.value(), lastGoodIter.key(), iNext.key());
                     yNext = mMaxY;
 
                 } else if (iNext.value() < mMinY) { // 5 - =4.a
-                    xNext = interpolate(mMinY,  lastGoodIter.value(), iNext.value(), lastGoodIter.key(), iNext.key());
+                    xNext = interpolate(mMinY, lastGoodIter.value(), iNext.value(), lastGoodIter.key(), iNext.key());
                     yNext = mMinY;
 
                 } else {
@@ -1153,7 +1157,7 @@ QPainterPath GraphView::makePath (const QMap<double, double> &map, const bool sh
                 }
             } else {
                 if (iNext.value() > mMaxY) { // 2-
-                    xNext = interpolate(mMaxY,  lastGoodIter.value(), iNext.value(), lastGoodIter.key(), iNext.key());
+                    xNext = interpolate(mMaxY, lastGoodIter.value(), iNext.value(), lastGoodIter.key(), iNext.key());
                     if (xNext < mCurrentMaxX) { // 2.a - = 1
                         yNext = mMaxY;
 
@@ -1163,7 +1167,7 @@ QPainterPath GraphView::makePath (const QMap<double, double> &map, const bool sh
                     }
 
                 } else if (iNext.value() < mMinY) { // 4 -
-                    xNext = interpolate(mMinY,  lastGoodIter.value(), iNext.value(), lastGoodIter.key(), iNext.key());
+                    xNext = interpolate(mMinY, lastGoodIter.value(), iNext.value(), lastGoodIter.key(), iNext.key());
                     if (xNext < mCurrentMaxX) { // 4.a - = 5
                         yNext = mMinY;
 
@@ -1171,6 +1175,7 @@ QPainterPath GraphView::makePath (const QMap<double, double> &map, const bool sh
                         xNext = mCurrentMaxX;
                         yNext = interpolateValueInQMap(mCurrentMaxX, map);
                     }
+
                 } else { // 3
                     xNext = mCurrentMaxX;
                     yNext = interpolateValueInQMap(mCurrentMaxX, map);
@@ -1197,7 +1202,7 @@ void GraphView::drawCurves(QPainter& painter)
     // Draw curves inside axis only (not in margins!)
     //painter.setClipRect(int (mMarginLeft), int (mMarginTop), int(mGraphWidth), int (mGraphHeight));
 
-    for (auto& curve : mCurves) {
+    for (const GraphCurve& curve : std::as_const(mCurves)) {
         if (curve.mVisible) {
             QPainterPath path;
 
@@ -1373,7 +1378,7 @@ void GraphView::drawCurves(QPainter& painter)
         }
     }
 
-    for (auto& refPoint : refPoints) {
+    for (const auto& refPoint : refPoints) {
         if (refPoint.isVisible()) {
             QPen pen = refPoint.pen;
             pen.setWidth(pen.width() * mThickness);
@@ -1384,8 +1389,8 @@ void GraphView::drawCurves(QPainter& painter)
             type_data ymin = refPoint.Ymin;
             type_data ymax = refPoint.Ymax;
             if (xmax >= mCurrentMinX && xmin <= mCurrentMaxX && ymax >= mMinY && ymin <= mMaxY) {
-                const type_data xmoy = (xmax + xmin) / 2.;
-                const type_data ymoy = (ymax + ymin) / 2.;
+                const type_data xmoy = (xmax + xmin) / 2.0;
+                const type_data ymoy = (ymax + ymin) / 2.0;
 
                 QPen refPointsPen = pen;
                 refPointsPen.setColor(refPoint.color);
@@ -1393,7 +1398,7 @@ void GraphView::drawCurves(QPainter& painter)
                 refPointsPen.setWidthF(pen.widthF());
                 QPainterPath pathPoint;
                 // ----
-                const qreal penWidth = std::max(2., pen.widthF());
+                const qreal penWidth = std::max(2.0, pen.widthF());
 
                 const qreal yPlot = getYForValue(ymoy, true);
                 const qreal xPlot = getXForValue(xmoy);
@@ -1401,7 +1406,7 @@ void GraphView::drawCurves(QPainter& painter)
                 qreal xMinPlot = getXForValue(xmin);
                 qreal xMaxPlot = getXForValue(xmax);
                 if (xMaxPlot - xMinPlot < 2*penWidth) {
-                    const qreal xMean = (xMaxPlot+xMinPlot)/2.;
+                    const qreal xMean = (xMaxPlot+xMinPlot) / 2.0;
                     xMinPlot = xMean - penWidth;
                     xMaxPlot = xMean + penWidth;
                 }
@@ -1410,19 +1415,12 @@ void GraphView::drawCurves(QPainter& painter)
 
                 QColor bg (getBackgroundColor());
                 bg.setAlpha(100);
-                const QRectF border_h (xMinPlot - 1, yPlot - (penWidth + 1)/2., xMaxPlot - xMinPlot + 1, penWidth + 1 );
-                const QRectF border_v (xPlot -(penWidth + 1)/2., getYForValue(ymin, true) - (1+penWidth)/2., penWidth + 1, (getYForValue(ymax, true) - getYForValue(ymin, true)) + penWidth +2 );
+                const QRectF border_h (xMinPlot - 1.0, yPlot - (penWidth + 1.0) / 2.0, xMaxPlot - xMinPlot + 1.0, penWidth + 1.0 );
+                const QRectF border_v (xPlot -(penWidth + 1.0) / 2.0, getYForValue(ymin, true) - (1+penWidth)/2., penWidth + 1.0, (getYForValue(ymax, true) - getYForValue(ymin, true)) + penWidth + 2.0 );
 
                 switch (refPoint.type) {
                 case CurveRefPts::eCross:
                     refPointsPen.setWidthF(penWidth);
-
-                    /*pathPoint.moveTo( xMinPlot, yPlot );
-                    pathPoint.lineTo( xMaxPlot, yPlot );
-
-                    pathPoint.moveTo( xPlot, getYForValue(ymin, true) );
-                    pathPoint.lineTo( xPlot, getYForValue(ymax, true) );
-                    painter.strokePath(pathPoint, refPointsPen);*/
 
                     painter.setBrush(refPointsPen.brush());
                     painter.setPen(QPen(bg, 1));
@@ -1450,8 +1448,6 @@ void GraphView::drawCurves(QPainter& painter)
 
                     refPointsPen.setWidthF(penWidth);
                     refPointsPen.setStyle(Qt::DotLine);
-                    //refPointsPen.setStyle(Qt::CustomDashLine);
-                    //refPointsPen.setDashPattern(QList<qreal>{1, 1});
                     painter.setBrush(refPointsPen.brush());
                     painter.setPen(refPointsPen);
                     painter.strokePath(pathPoint, refPointsPen);
@@ -1464,7 +1460,6 @@ void GraphView::drawCurves(QPainter& painter)
                     pathPoint.lineTo( xMaxPlot, yPlot);
 
                     refPointsPen.setWidthF(penWidth - 1.);
-                    //refPointsPen.setStyle(Qt::DotLine);
                     refPointsPen.setStyle(Qt::CustomDashLine);
                     refPointsPen.setDashPattern(QList<qreal>{1, 5});
 
@@ -1472,16 +1467,11 @@ void GraphView::drawCurves(QPainter& painter)
                     painter.setPen(refPointsPen);
                     painter.strokePath(pathPoint, refPointsPen);
 
-                    //pathPoint.clear();
                     refPointsPen.setStyle(Qt::SolidLine);
                     refPointsPen.setWidthF(penWidth);
-                    //pathPoint.moveTo( xPlot, getYForValue(ymin, true));
-                    //pathPoint.lineTo( xPlot, getYForValue(ymax, true));
-                    //painter.strokePath(pathPoint, refPointsPen);
 
                     painter.setPen(QPen(bg, 1));
                     painter.drawRect(border_v);
-                    //painter.drawRect(border_h);
 
                     break;
 
@@ -1502,10 +1492,6 @@ void GraphView::drawCurves(QPainter& painter)
                     pathPoint.moveTo( xPlot, getYForValue(ymin, true));
                     pathPoint.lineTo( xPlot, getYForValue(ymax, true));
                     painter.strokePath(pathPoint, refPointsPen);
-
-                    //painter.setPen(QPen(bg, 1));
-                    //painter.drawRect(border_v);
-                    //painter.drawRect(border_h);
                     break;
 
                 case CurveRefPts::eRoundLine:
@@ -1530,6 +1516,7 @@ void GraphView::drawCurves(QPainter& painter)
                     painter.setPen(refPointsPen);
                     painter.strokePath(pathPoint, refPointsPen);
                     break;
+
                 default:
                     break;
                 }
@@ -1543,8 +1530,100 @@ void GraphView::drawCurves(QPainter& painter)
 
 }
 
-void GraphView::drawMap(GraphCurve& curve, QPainter& painter)
+
+// Lissage simple : moyenne glissante sur une fenêtre de taille 2 * demi
+std::vector<double> smooth_histogram(const std::vector<double>& histo, int demi)
 {
+    std::vector<double> smooth(histo.size(), 0.0);
+    for (size_t i = 0; i < histo.size(); ++i) {
+        double sum = 0.0;
+        int count = 0;
+        for (int j = -demi; j <= demi; ++j) {
+            int idx = static_cast<int>(i) + j;
+            if (idx >= 0 && idx < static_cast<int>(histo.size())) {
+                sum += histo[idx];
+                count++;
+            }
+        }
+        smooth[i] = sum / count;
+    }
+    return smooth;
+}
+
+
+// Fonction pour assombrir/éclaircir une couleur
+QColor adjustColor(const QColor& base, double factor) {
+    factor = std::clamp(factor, 0.0, 1.0);
+    /* return QColor(
+        static_cast<int>(base.red()   * factor + 255 * (1 - factor)),
+        static_cast<int>(base.green() * factor + 255 * (1 - factor)),
+        static_cast<int>(base.blue()  * factor + 255 * (1 - factor))
+        ); */
+
+    int r = std::clamp(293.92 * pow(factor,3) - 476.17 * pow(factor,2) + 318.25 * factor + base.red(), 0.0, 247.0);
+    int g = std::clamp(-83.48 * pow(factor,3) + 138.88 * pow(factor,2) + 14.75 * factor + base.green(), 0.0, 247.0);
+    int b = std::clamp(-1.26 * pow(factor,3) + 3.31 * pow(factor,2) - 11.22 * factor + base.blue(), 0.0, 247.0);
+    return QColor(r, g, b);
+
+}
+
+// Génère 5 ColorStops depuis une couleur principale
+std::vector<ColorStop> generateStopsFromBaseColor(const QColor& baseColor) {
+    return {
+        {0.0, adjustColor(baseColor, 0.2)},  // très foncé
+        {0.25, adjustColor(baseColor, 0.45)},// foncé
+        {0.5, baseColor},                    // normal
+        {0.75, adjustColor(baseColor, 0.75)},// clair
+        {1.0, QColor(247, 247, 247)}         // presque blanc
+    };
+}
+
+// Génère une fonction de couleur à partir de la couleur de base
+std::function<QColor(double)> makeColorGradientFromBase(const QColor& baseColor, int resolution = 256) {
+    auto stops = generateStopsFromBaseColor(baseColor);
+    std::vector<QColor> cache(resolution);
+
+    for (int i = 0; i < resolution; ++i) {
+        double t = static_cast<double>(i) / (resolution - 1);
+        for (size_t j = 0; j < stops.size() - 1; ++j) {
+            if (t <= stops[j + 1].pos) {
+                double ratio = (t - stops[j].pos) / (stops[j + 1].pos - stops[j].pos);
+                const QColor& c1 = stops[j].color;
+                const QColor& c2 = stops[j + 1].color;
+
+                /* int r = static_cast<int>(c1.red()   * (1 - ratio) + c2.red()   * ratio);
+                int g = static_cast<int>(c1.green() * (1 - ratio) + c2.green() * ratio);
+                int b = static_cast<int>(c1.blue()  * (1 - ratio) + c2.blue()  * ratio);
+                */
+
+                int r = static_cast<int>(c1.red()   * (1 - ratio) + c2.red()   * ratio);
+                int g = static_cast<int>(c1.green() * (1 - ratio) + c2.green() * ratio);
+                int b = static_cast<int>(c1.blue()  * (1 - ratio) + c2.blue()  * ratio);
+
+
+                cache[i] = QColor(r, g, b);
+                break;
+            }
+        }
+    }
+
+    return [cache, resolution](double normVal) -> QColor {
+        normVal = std::clamp(normVal, 0.0, 1.0);
+        int index = static_cast<int>(normVal * (resolution - 1));
+        return cache[index];
+    };
+}
+
+
+void GraphView::drawMap(const GraphCurve& curve, QPainter& painter)
+{
+    // Récupérer les paramètres de rendu actuels
+    QPainter::RenderHints originalRenderHints = painter.renderHints();
+    painter.setRenderHint(QPainter::Antialiasing, false); // supprime le crénelage entre les rectangles contigues
+
+    QColor mainColor(curve.mPen.color());  // bleu moyen
+    auto getDynamicColor = makeColorGradientFromBase(mainColor);
+
     const double minY = curve.mMap.minY();
     const double maxY = curve.mMap.maxY();
     const double minX = curve.mMap.minX();
@@ -1552,85 +1631,233 @@ void GraphView::drawMap(GraphCurve& curve, QPainter& painter)
     const double maxVal = curve.mMap.max_value;
     const double minVal = curve.mMap.min_value;
 
-    const qreal rectXSize = (getXForValue(maxX, false) - getXForValue(minX, false) ) / (curve.mMap.column()-1);
-    const qreal rectYSize = (getYForValue(minY, false) - getYForValue(maxY, false) ) / (curve.mMap.row()-1)  ;
+    const size_t numCols = curve.mMap.column();
+    const size_t numRows = curve.mMap.row();
+
+    const double dX = (maxX - minX) / (numCols - 1);
+
+    const qreal rectXSize = (getXForValue(maxX, false) - getXForValue(minX, false)) / (numCols - 1);
+    const qreal rectYSize = (getYForValue(minY, false) - getYForValue(maxY, false)) / (numRows - 1);
+
     QPen rectPen;
     rectPen.setStyle(Qt::NoPen);
 
     QColor col;
 
-    painter.setRenderHint(QPainter::Antialiasing);
-    qreal xtop = getXForValue(minX, true);
+    qreal x_left = getXForValue(minX, true);
 
 
     for (unsigned c1 = 1 ; c1 < curve.mMap.column(); c1++) {
-        const double tReal = c1*(maxX-minX)/(curve.mMap.column()-1) + minX;
-        qreal xbottom;
-        if (tReal <= mCurrentMinX || c1 == (curve.mMap.column()-1) )
-            xbottom = getXForValue(tReal, true);
+        const double tReal = c1 * dX + minX;
+        qreal x_rigth;
+        if (tReal <= mCurrentMinX || c1 == numCols - 1)
+            x_rigth = getXForValue(tReal, true);
+
+        else if (tReal >= mCurrentMaxX)
+            x_rigth = getXForValue(tReal, true);
+
         else
-            xbottom = getXForValue(tReal, true) + rectXSize/2.;
+            x_rigth = getXForValue(tReal, true) + rectXSize / 2.0;
 
         if (tReal< mCurrentMinX || mCurrentMaxX< tReal) {
-            xtop = xbottom;
+            x_left = x_rigth;
             continue;
         }
 
+        bool hpd = true;
+        //const int theme = 2;//4; 5
 
-        double ytop = getYForValue(minY, true) + rectYSize/2.;
+        const double minMax_99 = (maxVal - minVal) * 0.99;
+        const double minMax_95 = (maxVal - minVal) * 0.95;
+        const double minMax_50 = (maxVal - minVal) * 0.50;
+        const double minMax_25 = (maxVal - minVal) * 0.25;
 
+//#endif
+        double y_bottom = getYForValue(minY, true);// + rectYSize / 2.0; // le bas de l'écran
+// nous allons du bas de l'ecran vers le haut, pour t constant
         for (unsigned r = 1 ; r < curve.mMap.row(); r++) {
-            const double val = curve.mMap.at(c1, r);
+            const double val = curve.mMap(c1, r);
             const qreal yReal = r*(maxY-minY)/(curve.mMap.row()-1) + minY;
-            qreal ybottom = getYForValue(yReal, true) - rectYSize/2.;
+            qreal y_top = getYForValue(yReal, true) - rectYSize / 2.0;
 
             if ( val > minVal) {
-#ifdef DEBUG
-                if (false) {
-                   /* col = QColor(Qt::yellow);
+//#ifdef DEBUG
+                if (hpd) {
+                    //en hpd 95% de la surface correspond à 5% du max
 
-                    if (val > val99)
-                        col = QColor(Qt::black);
-                    else if (val > val95)
-                        col = QColor(Qt::gray);
-                    else if (val > val50)
-                        col = QColor(Qt::blue);
-                    else if ( val > val25)
-                        col = QColor(Qt::red);
+                    //
+                    auto cumul_val = val;
 
-                    col.setAlphaF(0.5);
+                    /*
+                    switch (theme) {
+                    case 1: // couleurs grand contraste
+                        if (cumul_val > minMax_99)        // interval 95 -> 99
+
+                            col = QColor(Qt::black);
+                        else if (cumul_val > minMax_95)   // interval 50 -> 95
+                            col = QColor(Qt::gray);
+
+
+                        else if (cumul_val > minMax_25)   //interval 50 -> 95
+                            col = QColor(Qt::red);
+
+
+                        else if ( cumul_val > minMax_25)  // interval 25 -> 50
+                            col = QColor(Qt::blue);
+
+
+                        else col = QColor(Qt::yellow);    // interval 0 -> 25
+
+                        col.setAlphaF(0.5);
+                        break;
+
+                    case 2: // "Inferno" (Matplotlib / Scientific colormaps)
+                          if (cumul_val > minMax_99)
+                            col = QColor(252, 255, 164); // jaune pâle, très clair (haute densité)
+
+                          else if (cumul_val > minMax_95)
+                              col = QColor(254, 204, 92);  // doré clair
+
+                          else if (cumul_val > minMax_50)      //interval 50 -> 95
+                              col = QColor(240, 96, 60);   // orange profond
+
+                          else if (cumul_val > minMax_25)
+                              col = QColor(153, 28, 59);   // bordeaux
+
+                          else                              // interval 0 -> 25
+                              col = QColor(0, 0, 4);       // presque noir
+                          col = getColorFromStops(cumul_val/(maxVal - minVal), infernoStops);
+                          col.setAlphaF(0.7);
+                          //col.setAlphaF( std::clamp((cumul_val / sum), 0.3, 1.0) );
+                        break;
+
+                    case 3:  // couleurs harmonieuses "Blues" de ColorBrewer //https://colorbrewer2.org/
+                        if (cumul_val > minMax_99)
+                        col = QColor(247, 247, 247); // #f7f7f7 // très clair
+
+                        else if (cumul_val > minMax_95)
+                            col = QColor(189, 215, 231); // #bdd7e7 // bleu très clair
+
+                        else if (cumul_val > minMax_50)
+                            col = QColor(107, 174, 214); // #6baed6 // bleu moyen
+
+                        else if (cumul_val > minMax_25)
+                            col = QColor(33, 113, 181); // #2171b5 // bleu foncé
+
+                        else
+                            col = QColor(8, 48, 107);   // #08306b // presque noir
+                        col = getColorFromStops(cumul_val/(maxVal - minVal), BluesStops);
+                        col.setAlphaF(0.5);
+                        break;
+
+                    case 4:
+                        //col = getBluesColor(cumul_val/(maxVal - minVal));
+                        col = getDynamicColor(cumul_val/(maxVal - minVal));
+                        //col.setAlphaF( std::clamp(cumul_val / sum, 0.3, 1.0) );
+                        col.setAlphaF(0.5);
+                        break;
+
+                    case 5:
+                        col = getColorFromStops(cumul_val/(maxVal - minVal), inferno2Stops);
+                        col.setAlphaF(0.5);
+                        break;
+
+                    case 6:
+                        col = getColorFromStops(cumul_val/(maxVal - minVal), temperatureStops);
+                        col.setAlphaF(0.5);
+                        break;
+
+                    case 7:
+                        col = getColorFromStops(cumul_val/(maxVal - minVal), temperatureNuanceStops);
+                        col.setAlphaF(0.5);
+                        break;
+
+                    case 8:
+                        col = getColorFromStops(cumul_val/(maxVal - minVal), temperatureScienceStops);
+                        col.setAlphaF(0.5);
+                        break;
+
+                    default:
+                        break;
+                    }
                     */
+
+#pragma mark Theme Map
+
+                    const auto colorPalette = ColorPalette::DataProbability;//
+
+                    col = ColorStops::getColorFromStops(cumul_val/(maxVal - minVal), colorPalette);
+                    //col.setAlphaF(0.5);
+
+                    // conditions inversées
+                    /*if (cumul_val > val75)
+                        col = QColor(189, 215, 231); // #bdd7e7 // bleu très clair
+
+                    else if (cumul_val > val50)
+
+                    col = QColor(107, 174, 214); // #6baed6 // bleu moyen
+
+                    else if (cumul_val > val05)
+
+                    col = QColor(Qt::red);// QColor(33, 113, 181); // #2171b5 // bleu foncé
+
+                    else if (cumul_val > val01)
+                        col = QColor(8, 48, 107);   // #08306b // presque noir
+
+
+
+                    else
+
+                    col = QColor(247, 247, 247); // #f7f7f7 // très clair
+                    */
+
+
+
                 } else {
-#endif
-                    const double alp = (val - minVal)/ (maxVal - minVal);
-#ifdef DEBUG
-                    if (alp > 1)
-                        qDebug()<<"[GraphView::drawMap] alpha> 1 ??";
-                    if (sqrt(alp) > 1)
-                        qDebug()<<"[GraphView::drawMap] sqrt(alpha)> 1 ??";
-#endif
-                    col = QColor(curve.mPen.color());
-                    col.setAlphaF(sqrt(alp));
-#ifdef DEBUG
+//#endif
+                    //double alpha = (val - minVal)/ (maxVal - minVal);
+                    //alpha = std::clamp(alpha, 0.0, 1.0); // sécurité
+
+                    //col = QColor(curve.mPen.color());
+                    //col.setAlphaF(sqrt(alp));
+
+
+
+                    if (val > minMax_99)
+                        col = QColor(247, 247, 247); // #f7f7f7 // très clair
+
+                    else if (val > minMax_95)
+                        col = QColor(Qt::red);//QColor(189, 215, 231); // #bdd7e7 // bleu très clair
+
+                    else if (val > minMax_50)
+                        col = QColor(107, 174, 214); // #6baed6 // bleu moyen
+
+                    else if (val > minMax_25)
+                        col = QColor(33, 113, 181); // #2171b5 // bleu foncé
+
+                    else
+                        col = QColor(8, 48, 107);   // #08306b // presque noir
+
+
                 }
-#endif
 
                 painter.setPen(Qt::NoPen);
+
                 painter.setBrush(col);
 
-                QRectF rectMap;
-                rectMap.setCoords(xtop, ytop, xbottom, ybottom);
+                QRectF rectMap(x_left, y_top, x_rigth - x_left, y_bottom - y_top);
                 painter.drawRect(rectMap);
 
             }
-            ytop = ybottom;
+            y_bottom = y_top; // Nous remonttons d'une ligne. Rappel: La valeur de ybottom est supérieure à ytop
         }
-        xtop = xbottom;
+        x_left = x_rigth;
     }
-
+    // Restaurer les paramètres de rendu d'origine
+    painter.setRenderHints(originalRenderHints);
 }
 
-QPainterPath GraphView::makeSubShape(QMap<double, double> mapInf, QMap<double, double> mapSup) const
+QPainterPath GraphView::makeSubShape(const QMap<double, double>& mapInf, const QMap<double, double>& mapSup) const
 {
     QPainterPath fillPath;
     if (mapInf.isEmpty() && mapSup.isEmpty())
@@ -1651,7 +1878,6 @@ QPainterPath GraphView::makeSubShape(QMap<double, double> mapInf, QMap<double, d
 
     if (pathSup.elementCount() > 0)
         pFirstSup = QPointF(pathSup.elementAt(0).x, pathSup.elementAt(0).y);
-
 
 
     // traitement des coins
@@ -1731,7 +1957,7 @@ QPainterPath GraphView::makeSubShape(QMap<double, double> mapInf, QMap<double, d
 
 }
 
-void GraphView::drawShape(GraphCurve &curve, QPainter& painter)
+void GraphView::drawShape(const GraphCurve& curve, QPainter& painter)
 {
     if (curve.mShape.first.isEmpty() && curve.mShape.second.isEmpty())
             return;
@@ -1782,7 +2008,6 @@ void GraphView::drawShape(GraphCurve &curve, QPainter& painter)
                  mapSup[iSecond.key()] = iSecond.value() ;
             }
 
-
             // tracer des subPath
            const auto subPath = makeSubShape(mapInf, mapSup);
            painter.fillPath(subPath, brush);
@@ -1822,7 +2047,7 @@ void GraphView::drawShape(GraphCurve &curve, QPainter& painter)
 
 }
 
-void GraphView::drawDensity(GraphCurve &curve, QPainter& painter)
+void GraphView::drawDensity(const GraphCurve& curve, QPainter& painter)
 {
     // Down sample curve for better performances
     if (curve.mData.isEmpty())
@@ -1863,7 +2088,7 @@ void GraphView::drawDensity(GraphCurve &curve, QPainter& painter)
     type_data valueY = iter.value();
     type_data last_valueY = 0.;
     type_data last_x = getXForValue(valueX);
-    type_data last_y = getYForValue(type_data (0), true) ;
+    type_data last_y = getYForValue(0.0, true) ;
 
     QPainterPath path;
     path.moveTo(last_x, last_y);
@@ -1871,7 +2096,7 @@ void GraphView::drawDensity(GraphCurve &curve, QPainter& painter)
     // e.g calibration of Unif-typo-ref
     if (iter.hasNext()) {
         if (valueY == (iter.peekNext()).value()) {
-            path.moveTo( getXForValue(valueX), getYForValue(type_data (0), true) );
+            path.moveTo( getXForValue(valueX), getYForValue(0.0, true) );
             path.lineTo( getXForValue(valueX), getYForValue(valueY, true) );
 
         }
@@ -1883,7 +2108,7 @@ void GraphView::drawDensity(GraphCurve &curve, QPainter& painter)
     if (curve.mBrush != Qt::NoBrush) {
         isFirst = false;
         last_x = getXForValue(valueX, true);
-        last_y = getYForValue(type_data (0.), false);
+        last_y = getYForValue(0.0, false);
     }
     while (iter.hasNext()) {
         iter.next();
@@ -1896,7 +2121,7 @@ void GraphView::drawDensity(GraphCurve &curve, QPainter& painter)
 
         if (isFirst) {
             if (curve.mIsRectFromZero) {
-                path.moveTo(x, getYForValue(0., true));
+                path.moveTo(x, getYForValue(0.0, true));
                 path.lineTo(x, y);
             } else
                 path.moveTo(x, y);
@@ -1907,7 +2132,7 @@ void GraphView::drawDensity(GraphCurve &curve, QPainter& painter)
 
             if (curve.isHisto()) {
                 // histo bars must be centered around x value :
-                const qreal dx2 = (x - last_x)/2.;
+                const qreal dx2 = (x - last_x) / 2.0;
                 path.lineTo(x - dx2, last_y);
                 path.lineTo(x - dx2, y);
 
@@ -1946,14 +2171,14 @@ void GraphView::drawDensity(GraphCurve &curve, QPainter& painter)
 
     if (path.elementCount()  == 1) { //there is only one value
         last_x = getXForValue(valueX, true);
-        last_y = getYForValue(type_data (0.), false);
+        last_y = getYForValue(0.0, false);
         path.lineTo(last_x, last_y);
     }
 
     // Detect square signal back-end without null value at the end of the QMap
     // e.i calibration of Unif-typo-ref
 
-    if (curve.mIsRectFromZero && lightMap.size()>1) {
+    if (curve.mIsRectFromZero && lightMap.size() > 1) {
         QMapIterator<type_data, type_data> lastIter(lightMap);
         lastIter.toBack();
         lastIter.previous();
@@ -1967,7 +2192,7 @@ void GraphView::drawDensity(GraphCurve &curve, QPainter& painter)
 
     if (curve.mIsRectFromZero && (curve.mBrush != Qt::NoBrush) ) {
         // Close the path on the left side
-        path.lineTo(last_x, getYForValue(type_data (0.), true));
+        path.lineTo(last_x, getYForValue(0.0, true));
         painter.fillPath(path, painter.brush());
         painter.strokePath(path, curve.mPen);
 
@@ -1984,7 +2209,7 @@ void GraphView::drawDensity(GraphCurve &curve, QPainter& painter)
  * @brief Export a density with locale setting and separator and specific step
  * @todo Maybe we can use QString QLocale::createSeparatedList(const QStringList & list) const
  */
-void GraphView::exportCurrentDensities(const QString &defaultPath, const QLocale locale, const QString &csvSep, double step) const
+void GraphView::exportCurrentDensities(const QString& defaultPath, const QLocale& locale, const QString& csvSep, double step) const
 {
     if (step <= 0)
         step = 1;
@@ -2004,7 +2229,7 @@ void GraphView::exportCurrentDensities(const QString &defaultPath, const QLocale
         type_data xMin = INFINITY;
         type_data xMax = INFINITY;
 
-        for (auto& curve : mCurves) {
+        for (const GraphCurve& curve : std::as_const(mCurves)) {
             if (!curve.mData.empty() &&
                 curve.isDensityCurve() &&
                 curve.mVisible) {
@@ -2047,7 +2272,7 @@ void GraphView::exportCurrentDensities(const QString &defaultPath, const QLocale
         double x;
         int nbData = (xMax - xMin)/ step;
         for (int i = 0; i <= nbData; ++i) {
-            x = (double)(i)*step + xMin;
+            x = static_cast<double>(i)*step + xMin;
             list.clear();
 
             list << locale.toString(x);
@@ -2063,10 +2288,10 @@ void GraphView::exportCurrentDensities(const QString &defaultPath, const QLocale
                            curve.isHorizontalSections() &&
                            curve.mVisible) { // if it's a bound
 
-                    if (x <= curve.mSections.at(0).first && curve.mSections.at(0).second< x + step ) {
+                    if (x <= curve.mSections.at(0).first && curve.mSections.at(0).second < x + step ) {
                         list<<locale.toString(1., 'g', 15);
 
-                    } else if (curve.mSections.at(0).first<= x  && x <= curve.mSections.at(0).second ) {
+                    } else if (curve.mSections.at(0).first <= x  && x <= curve.mSections.at(0).second ) {
 
                         const type_data xi = 1. / (curve.mSections.at(0).second - curve.mSections.at(0).first);
                         list<<locale.toString(xi, 'g', 15);
@@ -2101,7 +2326,7 @@ void GraphView::exportCurrentDensities(const QString &defaultPath, const QLocale
 }
 
 
-void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, bool writeInRows, int offset) const
+void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLocale& locale, const QString& csvSep, bool writeInRows, int offset) const
 {
     Q_UNUSED(writeInRows);
     qDebug()<<"GraphView::exportCurrentVectorCurves";
@@ -2121,7 +2346,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
         qsizetype rowsCount = rows.count();
         QStringList emptyColumn;
 
-        qDebug()<<"[GraphView::exportCurrentVectorCurves] "<<" nbCurve to export"<<mCurves.size();
+        qDebug() << "[GraphView::exportCurrentVectorCurves] " << " nbCurve to export" << mCurves.size();
 
         for (auto&& c : mCurves ) {
             if ( !c.mVisible || c.mDataVector.empty() )
@@ -2135,21 +2360,21 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
             }
 
             if (!abscissesWritten) {
-                for (size_t i = offset+rowsCount; i<data.size()+1; ++i) {
+                for (size_t i = offset+rowsCount; i < data.size() + 1; ++i) {
                     // we add 1 to the line number, because the index of vector start to 0-> false now 0 is the init
-                    rows.append(QStringList(locale.toString(i-rowsCount+1))+emptyColumn);
+                    rows.append(QStringList(locale.toString(i - rowsCount + 1)) + emptyColumn);
 
                 }
                 abscissesWritten = true;
 
             }
             //prepare adding row
-            emptyColumn<<"";
+            emptyColumn << "";
 
             if (abscissesWritten) {
                     rows[0] << c.mName;
                 for (int i = offset; i<(int)data.size(); ++i)
-                        rows[i-offset+1]<< locale.toString(data[i],'g', 15);
+                        rows[i-offset+1] << locale.toString(data[i],'g', 15);
 
             }
 
@@ -2169,7 +2394,7 @@ void GraphView::exportCurrentVectorCurves(const QString& defaultPath, const QLoc
         }
 
         QTextStream output(&file);
-        for (const auto& r : rows) {
+        for (const auto& r : std::as_const(rows)) {
             output << r.join(csvSep);
             output << "\n";
         }
@@ -2206,12 +2431,13 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
         double xMin = INFINITY;
         double xMax = -INFINITY;
 
-        for (auto& curve : mCurves) {
+        for (const GraphCurve& curve : std::as_const(mCurves)) {
             if ((curve.isDensityCurve()||curve.isFunction()) && curve.mVisible) {
                 // 2 - Find x Min and x Max period, on all curve, we suppose Qmap is order
                 if ( std::isinf(xMin) ) {// firstCurveVisible) {
                     xMin = curve.mData.firstKey();
                     xMax = curve.mData.lastKey();
+
                 } else {
                     xMin = qMin(xMin, curve.mData.firstKey());
                     xMax = qMax(xMax, curve.mData.lastKey());
@@ -2222,6 +2448,7 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
                 if ( std::isinf(xMin) ) {// firstCurveVisible) {
                     xMin = curve.mShape.first.firstKey();
                     xMax = curve.mShape.first.lastKey();
+
                 } else {
                     xMin = qMin(xMin, curve.mShape.first.firstKey());
                     xMax = qMax(xMax, curve.mShape.first.lastKey());
@@ -2234,7 +2461,7 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
 
         int nbData = 0 ;
         if (step <= 0.) {
-            for (auto& c : mCurves)
+            for (const GraphCurve& c : std::as_const(mCurves))
                 if (c.mVisible)
                     nbData = std::max(nbData, (int) c.mData.count());
 
@@ -2256,8 +2483,8 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
                     list << c.mName; // for example G
 
                 else if (c.isShape()) {
-                    list<<c.mName + " Inf";
-                    list<<c.mName + " Sup"; // for example env G
+                    list << c.mName + " Inf";
+                    list << c.mName + " Sup"; // for example env G
                 }
             }
         }
@@ -2268,7 +2495,7 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
         double x;
 
         for (int i = 0; i < nbData; ++i) {
-            x = (double)(i)*step + xMin;
+            x = static_cast<double>(i)*step + xMin;
             list.clear();
 
             list << locale.toString(x);
@@ -2276,13 +2503,13 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
             for (auto& c : mCurves) {
                 if (c.mVisible) {
                     if (c.isDensityCurve()) {
-                        if (c.mData.firstKey()<= x && x<= c.mData.lastKey())
+                        if (c.mData.firstKey() <= x && x <= c.mData.lastKey())
                             list<<locale.toString(interpolateValueInQMap(x, c.mData), 'g', 15); // for example G
                         else
                             list<< "0";
 
                     } else if (c.isFunction()) {
-                        if (c.mData.firstKey()<= x && x<= c.mData.lastKey())
+                        if (c.mData.firstKey() <= x && x <= c.mData.lastKey())
                             list<<locale.toString(interpolateValueInQMap(x, c.mData), 'g', 15); // for example G
                         else
                             list<< "NaN";
@@ -2327,7 +2554,7 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
  * @param csvSep
  * @param step
  */
-void GraphView::exportReferenceCurves(const QString &defaultPath, const QLocale locale, const QString &csvSep, double step, QString filename) const
+void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step, QString filename) const
 {
     if (step <= 0)
         step = 1;
@@ -2359,7 +2586,7 @@ void GraphView::exportReferenceCurves(const QString &defaultPath, const QLocale 
         type_data xMax = INFINITY;
 
         QMap <type_data, type_data> G, G_Sup;
-        for (auto& curve : mCurves) {
+        for (const GraphCurve& curve : std::as_const(mCurves)) {
             if (curve.mName == "G") {
                 G = curve.mData;
                 xMin = G.firstKey();
@@ -2373,7 +2600,7 @@ void GraphView::exportReferenceCurves(const QString &defaultPath, const QLocale 
         if (std::isinf(xMin) || std::isinf(xMax))
             return;
 
-        rows<<list;
+        rows << list;
         rows.reserve(ceil( (xMax - xMin)/step) );
 
         // 3 - Create Row, with each curve
@@ -2385,9 +2612,9 @@ void GraphView::exportReferenceCurves(const QString &defaultPath, const QLocale 
         auto xMax_BCAD = DateUtils::convertFromAppSettingsFormat(xMax);
         auto xMin_BCAD = DateUtils::convertFromAppSettingsFormat(xMin);
 
-        if (xMin_BCAD<xMax_BCAD) {
+        if (xMin_BCAD < xMax_BCAD) {
             for (int i = 0; i <= nbData; ++i) {
-                const auto x = (type_data)(i)*step + xMin;
+                const auto x = static_cast<type_data>(i)*step + xMin;
                 const auto t = DateUtils::convertFromAppSettingsFormat(x);
                 list.clear();
 
@@ -2395,11 +2622,11 @@ void GraphView::exportReferenceCurves(const QString &defaultPath, const QLocale 
                 // Il doit y avoir au moins trois courbes G, GSup, Ginf et nous exportons G et ErrG
                 const type_data xi = interpolateValueInQMap(x, G); // G
                 const type_data err_xi = interpolateValueInQMap(x, G_Sup); // GSup
-                list<<csvLocal.toString(xi, 'g', 15);
-                list<<csvLocal.toString((err_xi-xi)/1.96, 'g', 15);
+                list << csvLocal.toString(xi, 'g', 15);
+                list << csvLocal.toString((err_xi-xi)/1.96, 'g', 15);
 
                 //      }
-                rows<<list;
+                rows << list;
             }
         } else {
             for (int i = nbData; i >= 0; --i) {
@@ -2411,8 +2638,8 @@ void GraphView::exportReferenceCurves(const QString &defaultPath, const QLocale 
                 // Il doit y avoir au moins trois courbes G, GSup, Ginf et nous exportons G et ErrG
                 const type_data xi = interpolateValueInQMap(x, G); // G
                 const type_data err_xi = interpolateValueInQMap(x, G_Sup); // GSup
-                list<<csvLocal.toString(xi, 'g', 15);
-                list<<csvLocal.toString((err_xi-xi)/1.96, 'g', 15);
+                list << csvLocal.toString(xi, 'g', 15);
+                list << csvLocal.toString((err_xi-xi)/1.96, 'g', 15);
 
                 //      }
                 rows<<list;
@@ -2513,9 +2740,9 @@ GraphTitle::GraphTitle(QWidget *parent):
     mAutoAdjustSubTitleHeight(true)
 {
     GraphViewAbstract::setParent(parent);
-    mMarginTop = 0;
-    mMarginBottom = 0;
-    mMarginLeft = 0;
+    mMarginTop = 0.0;
+    mMarginBottom = 0.0;
+    mMarginLeft = 0.0;
 
     QFont boldFont (font());
     boldFont.setBold(true);
@@ -2547,9 +2774,9 @@ GraphTitle:: GraphTitle(QString title, QWidget* parent):
     boldFont.setBold(true);
     mTitleHeight = QFontMetrics(boldFont).height();
 
-    mMarginTop = mTitleHeight/2.;
-    mMarginBottom = mTitleHeight/2.;
-    mMarginLeft = mTitleHeight/2.;
+    mMarginTop = mTitleHeight / 2.0;
+    mMarginBottom = mTitleHeight / 2.0;
+    mMarginLeft = mTitleHeight / 2.0;
 
     QFont itaFont (font());
     itaFont.setItalic(true);
@@ -2571,9 +2798,9 @@ GraphTitle::GraphTitle(QString title, QColor titleBarColor, QWidget* parent):
     boldFont.setBold(true);
     mTitleHeight = QFontMetrics(boldFont).height();
 
-    mMarginTop = mTitleHeight/2.;
-    mMarginBottom = 0;
-    mMarginLeft = 20;
+    mMarginTop = mTitleHeight / 2.0;
+    mMarginBottom = 0.0;
+    mMarginLeft = 20.0;
 
     QFont itaFont (font());
     itaFont.setItalic(true);
@@ -2595,9 +2822,9 @@ GraphTitle::GraphTitle(QString title, QString subTitle, QWidget* parent):
     boldFont.setBold(true);
     mTitleHeight = QFontMetrics(boldFont).height();
 
-    mMarginTop =  mTitleHeight/2.;
-    mMarginBottom = 0;
-    mMarginLeft = 20;
+    mMarginTop =  mTitleHeight / 2.0;
+    mMarginBottom = 0.0;
+    mMarginLeft = 20.0;
 
     QFont itaFont (font());
     itaFont.setItalic(true);
@@ -2617,9 +2844,9 @@ GraphTitle::GraphTitle(QString title, QString subTitle, QColor backGround, QWidg
     boldFont.setBold(true);
     mTitleHeight = QFontMetrics(boldFont).height();
 
-    mMarginTop =  mTitleHeight/2. ;
-    mMarginBottom = 0;
-    mMarginLeft = 20;
+    mMarginTop =  mTitleHeight / 2.0 ;
+    mMarginBottom = 0.0;
+    mMarginLeft = 20.0;
 
     QFont itaFont (font());
     itaFont.setItalic(true);
@@ -2639,9 +2866,9 @@ GraphTitle::GraphTitle(QString title, QString commentTitle, QString subTitle, QW
     boldFont.setBold(true);
     mTitleHeight = QFontMetrics(boldFont).height();
 
-    mMarginTop =  mTitleHeight/2. ;
-    mMarginBottom = 0;
-    mMarginLeft = 20;
+    mMarginTop =  mTitleHeight / 2.0 ;
+    mMarginBottom = 0.0;
+    mMarginLeft = 20.0;
 
     QFont itaFont (font());
     itaFont.setItalic(true);
@@ -2687,18 +2914,18 @@ void GraphTitle::paintEvent(QPaintEvent*)
             itaFont.setItalic(true);
 
             p.setFont(boldFont);
-            qreal fontShift = QFontMetrics(boldFont).height()/2.;
-            p.drawStaticText(mMarginLeft, mTitleHeight/2. - fontShift + mMarginTop, mTitle);
+            qreal fontShift = QFontMetrics(boldFont).height() / 2.0;
+            p.drawStaticText(mMarginLeft, mTitleHeight / 2.0 - fontShift + mMarginTop, mTitle);
             const int shift = QFontMetrics(boldFont).horizontalAdvance(mTitle.text());
 
             if (!mCommentTitle.text().isEmpty()) {
                 p.setFont(itaFont);
-                p.drawStaticText(mMarginLeft + shift, mTitleHeight/2. - fontShift + mMarginTop, mCommentTitle);
+                p.drawStaticText(mMarginLeft + shift, mTitleHeight / 2.0 - fontShift + mMarginTop, mCommentTitle);
 
             }
 
             p.setFont(itaFont);
-            fontShift = QFontMetrics(itaFont).height()/2.;
+            fontShift = QFontMetrics(itaFont).height() / 2.0;
             p.drawStaticText(mMarginLeft, mTitleHeight + mSubTitleHeight/2. - fontShift + mMarginTop, mSubTitle);
 
             p.setPen(mTitleBarColor);
@@ -2712,7 +2939,7 @@ void GraphTitle::paintEvent(QPaintEvent*)
             boldFont.setBold(true);
             p.setFont(boldFont);
             const qreal fontShift = QFontMetrics(boldFont).height()/2.;
-            p.drawStaticText(mMarginLeft, mTitleHeight/2. - fontShift + mMarginTop, mTitle);
+            p.drawStaticText(mMarginLeft, mTitleHeight / 2.0 - fontShift + mMarginTop, mTitle);
 
             p.setPen(mTitleBarColor);
             p.drawRect(0, 0, w , height());
@@ -2727,7 +2954,7 @@ void GraphTitle::paintEvent(QPaintEvent*)
         itaFont.setItalic(true);
         p.setFont(itaFont);
         const qreal fontShift = QFontMetrics(itaFont).height()/2.;
-        p.drawStaticText(mMarginLeft, mSubTitleHeight/2. - fontShift + mMarginTop, mSubTitle);
+        p.drawStaticText(mMarginLeft, mSubTitleHeight / 2.0 - fontShift + mMarginTop, mSubTitle);
 
     }
 
@@ -2737,4 +2964,119 @@ void GraphTitle::repaintGraph(const bool aAlsoPaintBackground)
 {
     (void) aAlsoPaintBackground;
     update();
+}
+
+const std::vector<ColorStop>& ColorStops::getStops(ColorPalette palette) {
+
+    static const std::vector<ColorStop> BWStops = {
+        {0.0, QColor(0, 0, 0)},       // Noir
+        {1.0, QColor(255, 255, 255)}  // Blanc
+    };
+    static const std::vector<ColorStop> WBStops = {
+        {0.0, QColor(255, 255, 255)},  // Blanc
+        {1.0, QColor(0, 0, 0)}       // Noir
+    };
+    static const std::vector<ColorStop> pressureStops = {
+        {0.0, QColor(0, 0, 139)},
+        {0.5, QColor(173, 216, 230)},
+        {1.0, QColor(255, 0, 0)}
+    };
+
+    static const std::vector<ColorStop> elevationStops = {
+        {0.0, QColor(0, 100, 0)},     // Vert foncé (basses altitudes)
+        {0.5, QColor(255, 255, 0)},   // Jaune (altitudes moyennes)
+        {1.0, QColor(255, 255, 255)}  // Blanc (hautes altitudes)
+    };
+
+    // couleurs harmonieuses "Blues" de ColorBrewer //https://colorbrewer2.org/
+    static const std::vector<ColorStop> BluesStops = {
+        {0.0, QColor(8, 48, 107)},     // dark blue
+        {0.25, QColor(33, 113, 181)}, // medium dark blue
+        {0.5, QColor(189, 215, 231)},// light blue
+        {0.75, QColor(189, 215, 231)},// light blue
+        {1.0, QColor(247, 247, 247)}  // almost white
+    };
+
+    // "Inferno" (Matplotlib / Scientific colormaps)
+    static const std::vector<ColorStop> infernoStops = {
+        {0.0, QColor(0, 0, 4)},          // almost black
+        {0.25, QColor(153, 28, 59)},     // deep burgundy
+        {0.5, QColor(240, 96, 60)},      // deep orange
+        {0.75, QColor(254, 204, 92)},    // golden yellow
+        {1.0, QColor(252, 255, 164)}     // pale yellow
+    };
+
+    static const std::vector<ColorStop> inferno2Stops = {
+        {0.0, QColor(161, 203, 148)}, // light green
+        {0.25, QColor(189, 215, 231)}, // light blue
+        {0.5, QColor(252, 255, 164)},     // pale yellow
+        {0.75, QColor(254, 204, 92)},    // golden yellow
+        {1.0, QColor(240, 96, 60)}      // deep orange
+    };
+
+    static const std::vector<ColorStop> temperatureStops = {
+        {0.0, QColor(0, 0, 255)},     // Bleu froid (très basse température)
+        {0.25, QColor(100, 149, 237)}, // Bleu clair
+        {0.5, QColor(255, 255, 255)},  // Blanc (température neutre)
+        {0.75, QColor(255, 165, 0)},   // Orange
+        {1.0, QColor(255, 0, 0)}       // Rouge chaud (très haute température)
+    };
+
+    static const std::vector<ColorStop> temperatureSoftStops = {
+        {0.0, QColor(0, 0, 255)},     // Bleu foncé
+        {0.2, QColor(100, 149, 237)}, // Bleu clair
+        {0.4, QColor(173, 216, 230)}, // Bleu très clair
+        {0.5, QColor(255, 255, 255)}, // Blanc
+        {0.6, QColor(255, 165, 0)},   // Orange
+        {0.8, QColor(255, 69, 0)},    // Orange foncé
+        {1.0, QColor(255, 0, 0)}      // Rouge vif
+    };
+
+    static const std::vector<ColorStop> temperatureScienceStops = {
+        {0.0, QColor(0, 0, 139)},     // Bleu marine (très froid)
+        {0.25, QColor(65, 105, 225)}, // Bleu royal
+        {0.5, QColor(135, 206, 235)}, // Bleu ciel
+        {0.75, QColor(255, 140, 0)},  // Orange foncé
+        {1.0, QColor(139, 0, 0)}      // Rouge bordeaux (extrêmement chaud)
+    };
+    static const std::vector<ColorStop> probabilityDensityStops = {
+        {0.0, QColor(240, 248, 255, 0)},     // Blanc bleuté très transparent
+        {0.2, QColor(176, 224, 230, 50)},    // Bleu pastel très transparent
+        {0.5, QColor(135, 206, 235, 120)},   // Bleu ciel semi-transparent
+        {0.75, QColor(70, 130, 180, 200)},   // Bleu acier plus opaque
+        {1.0, QColor(25, 25, 112, 255)}      // Bleu nuit complètement opaque
+    };
+    switch (palette) {
+
+    case ColorPalette::BlackWhite: return BWStops;
+    case ColorPalette::WhiteBlack: return WBStops;
+    case ColorPalette::Pressure: return pressureStops;
+    case ColorPalette::Elevation: return elevationStops;
+    case ColorPalette::Blues: return BluesStops;
+    case ColorPalette::Inferno: return infernoStops;
+    case ColorPalette::Inferno2: return inferno2Stops;
+    case ColorPalette::Temperature: return temperatureStops;
+    case ColorPalette::TemperatureSoft: return temperatureSoftStops;
+    case ColorPalette::TemperatureScience: return temperatureScienceStops;
+    case ColorPalette::DataProbability: return probabilityDensityStops;
+
+    default: return BWStops;
+    }
+}
+
+QColor ColorStops::getColorFromStops(double normVal, ColorPalette palette) {
+    const auto& stops = getStops(palette);
+    normVal = std::clamp(normVal, 0.0, 1.0);
+
+    for (size_t i = 0; i < stops.size() - 1; ++i) {
+        if (normVal <= stops[i + 1].pos) {
+            double ratio = (normVal - stops[i].pos) / (stops[i + 1].pos - stops[i].pos);
+            int r = static_cast<int>(stops[i].color.red()   * (1 - ratio) + stops[i + 1].color.red()   * ratio);
+            int g = static_cast<int>(stops[i].color.green() * (1 - ratio) + stops[i + 1].color.green() * ratio);
+            int b = static_cast<int>(stops[i].color.blue()  * (1 - ratio) + stops[i + 1].color.blue()  * ratio);
+            return QColor(r, g, b);
+        }
+    }
+
+    return stops.back().color;
 }

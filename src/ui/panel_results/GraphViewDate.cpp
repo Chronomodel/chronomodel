@@ -213,6 +213,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
          */
         else if (variableList.contains(eSigma)) {
             graph_density();
+            mGraph->mLegendX = "";
             mGraph->remove_all_zones(); // delete default zones made by graph_density()
             //mGraph->setOverArrow(GraphView::eNone);
             mTitle = tr("Individual Std : %1").arg(mDate->getQStringName());

@@ -50,6 +50,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "SwitchAction.h"
 #include "RebuildCurveDialog.h"
 #include "AppSettings.h"
+#include "version.h"
 
 //#include <QtWidgets>
 #include <QLocale>
@@ -63,24 +64,9 @@ MainWindow::MainWindow(QWidget* parent):
     undo_action(false),
     redo_action(false),
     mProject(new Project())
-    //mProject(std::make_shared<Project>())
 {
-/*#ifdef DEBUG
-    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() + " DEBUG Mode ");
-#else
-    setWindowTitle(qApp->applicationName() + " " + qApp->applicationVersion() );
-#endif
-*/
-    setMouseTracking(true);
-  /*  QPalette tooltipPalette;
-    tooltipPalette.setColor(QPalette::ToolTipBase, Qt::white);
-    tooltipPalette.setColor(QPalette::ToolTipText, Qt::black);
-    QToolTip::setPalette(tooltipPalette);
-    QFont tooltipFont(font());
-    tooltipFont.setItalic(true);
 
-    QToolTip::setFont(tooltipFont);
-*/
+    setMouseTracking(true);
 
     mLastPath = QDir::homePath();
 
@@ -758,7 +744,8 @@ void MainWindow::updateWindowTitle()
     setWindowTitle(file_name);
 
 #else
-    setWindowTitle(qApp->applicationName() + " v" + qApp->applicationVersion() + " " + file_name);// see main.cpp for the application name
+    std::cout << "MainWindow::updateWindowTitle] version " << VERSION_STRING << std::endl;
+    setWindowTitle(qApp->applicationName() + " v" + VERSION_STRING + " " + file_name);// see main.cpp for the application name
 #endif
 }
 
@@ -1072,8 +1059,11 @@ void MainWindow::rebuildExportCurve()
 
         } else {
             for (auto &splineXYZ : runTrace) {
-                //curveModel->memo_PosteriorG_3D(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted++ );
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5
                 curveModel->memo_PosteriorG_3D_335(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted++ );
+#else
+                curveModel->memo_PosteriorG_3D(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted++ );
+#endif
             }
         }
 
@@ -1124,7 +1114,12 @@ void MainWindow::rebuildExportCurve()
 
             } else {
                 for (auto &splineXYZ : runTraceByChain) {
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5
+                    curveModel->memo_PosteriorG_3D_335(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted++ );
+#else
                     curveModel->memo_PosteriorG_3D(meanGByChain, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted++ );
+#endif
+
                 }
             }
 

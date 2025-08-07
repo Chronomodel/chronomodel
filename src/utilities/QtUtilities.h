@@ -349,18 +349,20 @@ void load_container(QDataStream& stream, Container<T>& data)
 
     data.resize(siz);
 
-    // Utilisation de std::generate pour remplir le conteneur
-    std::generate(data.begin(), data.end(), [&stream]() {
-        T v;
-        stream >> v;
-        if (stream.status() != QDataStream::Ok) {
-            // Gérer l'erreur de lecture ici
-            qDebug()<<"[QtUtilities::load_container]  erreur 2 de flux";
-            throw std::runtime_error("Error reading from stream");
+    if (siz > 0) {
+        // Utilisation de std::generate pour remplir le conteneur
+        std::generate(data.begin(), data.end(), [&stream]() {
+            T v;
+            stream >> v;
+            if (stream.status() != QDataStream::Ok) {
+                // Gérer l'erreur de lecture ici
+                qDebug()<<"[QtUtilities::load_container]  erreur 2 de flux";
+                throw std::runtime_error("Error reading from stream");
 
-        }
-        return v;
-    });
+            }
+            return v;
+        });
+    }
 }
 
 std::shared_ptr<Project> getProject_ptr();

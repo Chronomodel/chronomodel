@@ -42,11 +42,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginManager.h"
 #include "MainWindow.h"
 #include "Painting.h"
+#include "version.h"
+
 #include <iostream>
 
 MainController::MainController(const QString& filePath)
 {
-    QVersionNumber version (VERSION_NUMBER);
+    QVersionNumber version = QVersionNumber(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+    std::cout << "[MainController] version " << version.toString().toStdString() << std::endl;
+
     Painting::init();
     PluginManager::loadPlugins();
     QCoreApplication::setApplicationName("ChronoModel"); // correspond à qApp->applicationName()
@@ -80,7 +84,7 @@ MainController::MainController(const QString& filePath)
         mMainWindow->resize(AppSettings::mLastSize);
 
     }  catch(...) {
-        std::cout<<"[MainController] Caught Exception!" <<std::endl;
+        std::cout << "[MainController] Caught Exception!" << std::endl;
     }
 
     mMainWindow->show();

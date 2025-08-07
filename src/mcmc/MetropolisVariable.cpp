@@ -942,7 +942,8 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
  */
 QDataStream &operator<<( QDataStream &stream, const MetropolisVariable& data )
 {
-    stream << data.getQStringName(); // since 2024_08_23
+    QString qstr (data.getQStringName());
+    stream << qstr; // since 2024_08_23
     if (stream.status() != QDataStream::Ok) {
         // Gérer l'erreur de flux ici
         qDebug()<<"[MetropolisVariable::operator<<]  erreur de flux";
@@ -996,9 +997,9 @@ QDataStream &operator<<( QDataStream &stream, const MetropolisVariable& data )
  */
 void MetropolisVariable::load_stream_v328(QDataStream& stream)
 {
-    QString str;
-    stream >> str; // since 2024_08_23
-    _name = str.toStdString();
+    QString qstr;
+    stream >> qstr; // since 2024_08_23
+    _name = qstr.toStdString();
 
     quint8 support;
     stream >> support;
@@ -1027,8 +1028,18 @@ void MetropolisVariable::load_stream_v328(QDataStream& stream)
 
 void MetropolisVariable::load_stream_v330(QDataStream& stream)
 {
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[MetropolisVariable::load_stream_v330]  erreur str de flux ; stream.status()=" << stream.status();
+        // throw std::runtime_error("Error reading from stream");
+        // return;
+    }
     QString str;
-    stream >> str; // since 2024_08_23
+    stream >> str; // since 2024_08_23 // ici bug avec Qt 6.9.1
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[MetropolisVariable::load_stream_v330]  erreur 1 de flux ; stream.status()=" << stream.status();
+        // throw std::runtime_error("Error reading from stream");
+        // return;
+    }
     //setName(str);
     _name = str.toStdString();
 
@@ -1050,11 +1061,43 @@ void MetropolisVariable::load_stream_v330(QDataStream& stream)
     }
 
     qint16 formatDate;
-    stream >> formatDate; // to keep compatibility
+    stream >> formatDate;
 
-    mFormat = DateUtils::eUnknown; // to keep compatibility and force updateFormat
+    switch (formatDate) { // useless, only for compatibility
+    case -2 : mFormat = DateUtils::eUnknown;
+        break;
+    case -1 : mFormat = DateUtils::eNumeric;
+        break;
+    case 0 : mFormat = DateUtils::eBCAD ;
+        break;
+    case 1 : mFormat = DateUtils::eCalBP;
+        break;
+    case 2 : mFormat = DateUtils::eCalB2K;
+        break;
+    case 3 : mFormat = DateUtils::eDatBP;
+        break;
+    case 4 : mFormat = DateUtils::eDatB2K;
+        break;
+    case 5 : mFormat = DateUtils::eBCECE;
+        break;
+    case 6 : mFormat = DateUtils::eKa;
+        break;
+    case 7 : mFormat = DateUtils::eMa;
+        break;
+    }
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[MetropolisVariable::load_stream_v330]  erreur 1 de flux ; stream.status()=" << stream.status();
+        // throw std::runtime_error("Error reading from stream");
+        // return;
+    }
 
     reload_shared_ptr(mRawTrace, stream);
+    // Gérer l'erreur de lecture ici
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[MetropolisVariable::load_stream_v330]  erreur 1 de flux ; stream.status()=" << stream.status();
+        // throw std::runtime_error("Error reading from stream");
+        // return;
+    }
 }
 
 

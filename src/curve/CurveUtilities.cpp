@@ -39,6 +39,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "CurveUtilities.h"
 #include "Model.h"
+#include "StdUtilities.h"
+#include "eigen_3.4.0/Eigen/src/Core/DiagonalMatrix.h"
+#include <eigen_3.4.0/Eigen/Dense>
+#include <eigen_3.4.0/Eigen/OrderingMethods>
 
 #include <algorithm>
 #include <iostream>
@@ -114,6 +118,7 @@ std::vector<t_reduceTime> calculVecH(const std::vector<std::shared_ptr<Event>>& 
  *       - Off-diagonal (i,i+1) and (i+1,i): h_{i+1}/6
  * @throw std::invalid_argument If vec_h has fewer than 2 elements
  */
+ // to be used only with Komlan
 Matrix2D calculMatR0(const std::vector<t_reduceTime>& vec_h)
 {
     // Check input size
@@ -127,7 +132,7 @@ Matrix2D calculMatR0(const std::vector<t_reduceTime>& vec_h)
     const size_t n = vec_h.size() - 1;
 
     // Initialize matrix with zeros
-    Matrix2D matR0 = initMatrix2D(n, n);
+    Matrix2D matR0 (n, n);
 
     // Pre-compute constants to avoid repeated divisions
     constexpr t_matrix ONE_THIRD = 1.0L/3.0L;
@@ -136,16 +141,16 @@ Matrix2D calculMatR0(const std::vector<t_reduceTime>& vec_h)
     // Fill the matrix
     for (size_t i = 0; i < n - 1; ++i) {
         // Diagonal elements
-        matR0[i][i] = (vec_h[i] + vec_h[i+1]) * ONE_THIRD;
+        matR0(i, i) = (vec_h[i] + vec_h[i+1]) * ONE_THIRD;
 
         // Symmetric off-diagonal elements (calculate once, assign twice)
         t_matrix offDiagonal = vec_h[i+1] * ONE_SIXTH;
-        matR0[i][i+1] = offDiagonal;
-        matR0[i+1][i] = offDiagonal;  // Symmetric element
+        matR0(i, i+1) = offDiagonal;
+        matR0(i+1, i) = offDiagonal;  // Symmetric element
     }
 
     // Last diagonal element (special case)
-    matR0[n-1][n-1] = (vec_h[n-1] + vec_h[n]) * ONE_THIRD;
+    matR0(n-1, n-1) = (vec_h[n-1] + vec_h[n]) * ONE_THIRD;
 
     return matR0;
 }
@@ -170,20 +175,20 @@ Matrix2D calculMatR(const std::vector<t_reduceTime> &vec_h)
     // vecH est de dimension n-1
     const unsigned long n = vec_h.size() + 1;
 
-    Matrix2D matR = initMatrix2D(n, n);
+    Matrix2D matR = Matrix2D::Zero(n, n);
 
     // Pre-compute constants to avoid repeated divisions
     constexpr t_matrix ONE_THIRD = 1.0L/3.0L;
     constexpr t_matrix ONE_SIXTH = 1.0L/6.0L;
 
     for ( unsigned long i = 1; i < n-2; ++i) {
-        matR[i][i] = (vec_h[i-1] + vec_h[i]) * ONE_THIRD;
+        matR(i, i) = (vec_h[i-1] + vec_h[i]) * ONE_THIRD;
         t_matrix offDiagonal = vec_h[i] * ONE_SIXTH;
-        matR[i][i+1] = offDiagonal;
-        matR[i+1][i] = offDiagonal;
+        matR(i, i+1) = offDiagonal;
+        matR(i+1, i) = offDiagonal;
     }
     // Si on est en n-2 (dernière itération), on ne calcule pas les valeurs de part et d'autre de la diagonale (termes symétriques)
-    matR[n-2][n-2] = (vec_h[n-2-1] + vec_h[n-2]) * ONE_THIRD;
+    matR(n-2, n-2) = (vec_h[n-2-1] + vec_h[n-2]) * ONE_THIRD;
 
     return matR;
 }
@@ -216,7 +221,7 @@ Matrix2D calculMatQ00(const std::vector<t_reduceTime>& vec_h)
     }
 #endif
     // matQ0 est de dimension n x (n-2)
-    Matrix2D matQ0 = initMatrix2D(n, n - 2);
+    Matrix2D matQ0 = Matrix2D::Zero (n, n - 2);
 
     // Pré-calcul des inverses pour éviter les divisions répétées
     std::vector<t_matrix> inv_h(n - 1);
@@ -232,9 +237,9 @@ Matrix2D calculMatQ00(const std::vector<t_reduceTime>& vec_h)
 
     // Remplissage de la matrice
     for (size_t i = 1; i < n - 1; ++i) {
-        matQ0[i - 1][i - 1] = inv_h[i - 1];
-        matQ0[i][i - 1] = -(inv_h[i - 1] + inv_h[i]);
-        matQ0[i + 1][i - 1] = inv_h[i];
+        matQ0(i - 1, i - 1) = inv_h[i - 1];
+        matQ0(i, i - 1) = -(inv_h[i - 1] + inv_h[i]);
+        matQ0(i + 1, i - 1) = inv_h[i];
     }
 
     return matQ0;
@@ -242,6 +247,7 @@ Matrix2D calculMatQ00(const std::vector<t_reduceTime>& vec_h)
 }
 
 //la matrice Q est une matrice de bande 3, de dimension n x (n-2)
+// to be used only with Komlan
 Matrix2D calculMatQ0(const std::vector<t_reduceTime>& vec_h)
 {
     // Calcul de la matrice Q, de dimension n x (n-2)
@@ -256,7 +262,7 @@ Matrix2D calculMatQ0(const std::vector<t_reduceTime>& vec_h)
     const size_t n = vec_h.size() + 1;
 
     // matQ0 est de dimension n x (n-2)
-    Matrix2D matQ = initMatrix2D(n, n - 2);
+    Matrix2D matQ = Matrix2D::Zero (n, n - 2);
 
     // On parcourt n-2 valeurs :
     for (size_t i = 1; i < n - 1; ++i) {
@@ -265,10 +271,10 @@ Matrix2D calculMatQ0(const std::vector<t_reduceTime>& vec_h)
             throw std::runtime_error("[CurveUtilities::calculMatQ0] vec_h <= 0");
         }
 #endif
-        matQ[i - 1][i - 1] = 1.0L / vec_h[i - 1];
-        matQ[i][i - 1] = -((1.0L / vec_h[i - 1]) + (1.0L / vec_h[i]));
+        matQ(i - 1, i - 1) = 1.0L / vec_h[i - 1];
+        matQ(i, i - 1) = -((1.0L / vec_h[i - 1]) + (1.0L / vec_h[i]));
         if (i < n - 1) {
-            matQ[i + 1][i - 1] = 1.0L / vec_h[i];
+            matQ(i + 1, i - 1) = 1.0L / vec_h[i];
         }
 
 
@@ -302,12 +308,12 @@ Matrix2D calculMatQ(const std::vector<t_reduceTime>& vec_h)
     const size_t n = vec_h.size() + 1;
 
     // matQ est de dimension n x n-2, mais contenue dans une matrice nxn
-    Matrix2D matQ = initMatrix2D(n, n);
+    Matrix2D matQ = Matrix2D::Zero (n, n);
     // On parcourt n-2 valeurs :
     for (size_t i = 1; i < n-1; ++i) {
-        matQ[i-1][i] = 1.0L  / vec_h[i-1];
-        matQ[i][i] = -((1.0L / vec_h[i-1]) + (1.0L /vec_h[i]));
-        matQ[i+1][i] = 1.0L  / vec_h[i];
+        matQ(i-1, i) = 1.0L  / vec_h[i-1];
+        matQ(i, i) = -((1.0L / vec_h[i-1]) + (1.0L /vec_h[i]));
+        matQ(i+1, i) = 1.0L  / vec_h[i];
 
 #ifdef DEBUG
         if (vec_h.at(i)<=0)
@@ -326,12 +332,243 @@ Matrix2D calculMatQ(const std::vector<t_reduceTime>& vec_h)
     return matQ;
 }
 
+
+/**
+ * @brief Calcule A = I + (-lambda) * W_1 * Q * B_1 * Q^T
+ *
+ * Toutes les opérations sont déroulées manuellement avec des boucles.
+ *
+ * @param Q Matrice Q (n x k)
+ * @param B1 Matrice B1 (k x k)
+ * @param W1 Matrice diagonale W1 (n x n), représentée ici comme vecteur diagonal
+ * @param lambda Le scalaire lambda
+ * @return Matrix2D La matrice A (n x n)
+ */
+Matrix2D computeMatA_direct(const Matrix2D& Q, const Matrix2D& B1, const DiagonalMatrixLD& W1_diag, double lambda)
+{
+    size_t n = Q.rows();        // lignes de Q
+    size_t k = Q.cols();    // colonnes de Q = taille de B1
+
+    // Initialiser A à la matrice identité
+    Matrix2D A = Matrix2D::Zero (n, k);
+   // for (size_t i = 0; i < n; ++i)
+     //   A[i] (0.0, n);
+
+    // Étapes :
+    // A = I + (-lambda) * W1_diag[i] * (Q * B1 * Q^T)[i][j]
+    for (size_t i = 0; i < n; ++i) {
+        for (size_t j = 0; j < n; ++j) {
+            t_matrix sum = 0.0;
+            for (size_t u = 0; u < k; ++u) {
+                for (size_t v = 0; v < k; ++v) {
+                    sum += Q(i, u) * B1(u, v) * Q(j, v);
+                }
+            }
+            t_matrix val = -lambda * W1_diag.diagonal()[i] * sum;
+            A(i, j) = (i == j ? 1.0 : 0.0) + val;
+        }
+    }
+
+    return A;
+}
+
+/**
+ * @brief Calcule A = I + (-lambda) * diag(W_1) * Q * B_1 * Q^T
+ *
+ * Optimisé avec :
+ * - Remaniement d’ordre des calculs
+ * - Sommation de Kahan pour précision
+ *
+ * @param Q Matrice (n x k)
+ * @param B_1 Matrice  (k x k)
+ * @param W_1 Diagonale de W_1 (vecteur de taille n)
+ * @param lambda Scalaire
+ * @return Matrix2D Matrice A (n x n)
+ *
+ * Raisons pour ne pas utiliser Cholesky dans le code actuel :
+
+    Tu ne cherches pas à résoudre un système linéaire :
+
+        Cholesky est surtout utile pour résoudre Ax =b.
+
+        Ici tu construis explicitement la matrice A, tu ne cherches pas à résoudre un système.
+
+    A n’est pas toujours SPD :
+
+        La matrice A peut ne pas être définie positive, car elle dépend de λ, B_1​, et W_1​.
+
+        Même si B_1​ est SPD, le produit peut introduire des zéros, ou rendre A semi-définie.
+
+    Tu n’as pas besoin de factoriser A, juste de l’évaluer explicitement.
+ */
+Matrix2D computeMatA_optimized_kahan(const Matrix2D& Q,
+                                     const Matrix2D& B_1,
+                                     const DiagonalMatrixLD &W_1,
+                                     double lambda)
+{
+    /*
+       const Matrix2D& QB_1QT = multiMatParMat0(Q, multiMatParMat0(B_1, QT));
+
+        const Matrix2D& W_1QB_1QT = multiDiagParMat0(W_1, QB_1QT);
+
+        const Matrix2D& lambdaW_1QB_1QT = multiConstParMat0(W_1QB_1QT, - mModel->mLambdaSpline.mX);
+
+        const Matrix2D& A = addIdentityToMat(lambdaW_1QB_1QT);
+    */
+
+    size_t n = Q.rows();        // nombre de lignes
+    size_t k = Q.cols();     // nombre de colonnes
+
+    // Étape 1 : M = Q * B1 (taille n x k)
+    Matrix2D M = Matrix2D::Zero (n, k);
+    for (size_t i = 0; i < n; ++i) {
+        for (size_t j = 0; j < k; ++j) {
+            t_matrix sum = 0.0, c = 0.0;
+            for (size_t l = 0; l < k; ++l) {
+                t_matrix prod = Q(i, l) * B_1(l, j);
+                t_matrix y = prod - c;
+                t_matrix t = sum + y;
+                c = (t - sum) - y;
+                sum = t;
+            }
+            M(i, j) = sum;
+        }
+    }
+
+    // Étape 2 : T = M * Q^T → taille n x n
+    Matrix2D T = Matrix2D::Zero (n, n);
+    for (size_t i = 0; i < n; ++i) {
+        for (size_t j = 0; j < k; ++j) {
+            t_matrix sum = 0.0, c = 0.0;
+            for (size_t l = 0; l < k; ++l) {
+                t_matrix prod = M(i, l) * Q(j, l);  // Q^T[j][l] == Q[j][l]
+                t_matrix y = prod - c;
+                t_matrix t = sum + y;
+                c = (t - sum) - y;
+                sum = t;
+            }
+            T(i, j) = sum;
+        }
+    }
+
+    // Étape 3 : A = I + (-lambda) * diag(W1) * T
+    Matrix2D A = Matrix2D::Zero (n, n);
+    for (size_t i = 0; i < n; ++i) {
+        for (size_t j = 0; j < n; ++j) {
+            t_matrix scaled = -lambda * W_1.diagonal()[i] * T(i, j);
+            A (i, j) = (i == j ? 1.0 : 0.0) + scaled;
+        }
+    }
+
+    return A;
+}
+
+
+/**
+ * @brief Calcule B_1 = (R + lambda * Q^T * W1 * Q)^(-1) en une seule fonction
+ *
+ * Cette version :
+ * - Calcule directement Q^T * (W1 * Q) sans passer par des fonctions intermédiaires
+ * - Évite les allocations inutiles
+ * - Utilise l'inversion directe ou via Cholesky selon la taille
+ *
+ * @param Q         Matrice Q (n x k)
+ * @param QT        Transposée de Q (k x n)
+ * @param W_1       Diagonale de W_1 (valarray de taille n)
+ * @param R         Matrice R (k x k)
+ * @param lambda    Scalaire lambda
+ * @return Matrix2D B_1 (k x k)
+ */
+
+// Problème R est une matrice padded donc l'inversion est possible seulement au centre
+Matrix2D computeB_1_from_Q_W1_R_direct(const Matrix2D& Q, const DiagonalMatrixLD &W_1, const Matrix2D& R, double lambda)
+{
+    /*auto QT = transpose0(Q);
+    const Matrix2D& QTW_1Q_test = multiMatParMat0(QT, multiDiagParMat0(W_1, Q));
+
+    const Matrix2D& lambdaQTW_1Q = multiConstParMat0(QTW_1Q_test, lambda);
+    //showMatrix(lambdaQTW_1Q, "lambdaQTW_1Q");
+    const Matrix2D& B_test = addMatEtMat0(R, lambdaQTW_1Q); // Correspond à notre matB
+    showMatrix(B_test, "B_test computeB_1_from_Q_W1_R_direct") ;
+    const auto& decomp_test = cholesky_LDLt_MoreSorensen(B_test);
+
+    auto B_1_test = choleskyInvert(decomp_test);
+
+    showMatrix(B_1_test, "[computeB_1_from_Q_W1_R_direct] B_1_test ") ;
+    */
+
+    const size_t n = Q.rows();        // Nombre de lignes
+    const size_t k = Q.cols();     // Nombre de colonnes
+
+    // Calcul de Q^T * (W_1 * Q)
+    Matrix2D QTW_1Q = Matrix2D::Zero (k, k);
+
+    for (size_t l = 0; l < n; ++l) {
+        t_matrix w = W_1.diagonal()[l]; // coefficient de la diagonale
+        for (size_t i = 0; i < k; ++i) {
+            for (size_t j = 0; j < k; ++j) {
+                QTW_1Q (i, j) += Q(l, i) * w * Q(l, j) ; // Q^T * diag(W_1) * Q où Q^T[i][l] = Q[l][i]
+            }
+        }
+    }
+
+    // B = R + lambda * QTW_1Q
+    Matrix2D B = Matrix2D::Zero (k, k);
+    for (size_t i = 0; i < k; ++i) {
+        for (size_t j = 0; j < k; ++j) {
+            B(i, j) = R(i, j) + lambda * QTW_1Q(i, j);
+        }
+    }
+
+    // Décomposition LU, plus stable et plus rapide
+    Eigen::PartialPivLU<Matrix2D> lu(B);
+
+    // Inverser la matrice
+    Matrix2D inverseMatrix = lu.inverse();
+
+
+    // Inversion de B
+    /*Matrix2D B_1 = Matrix2D::Zero  (k, k);
+    if (k <= 3) {
+        B_1 = inverseMatSym0(B, 0);  // Inversion explicite pour petites matrices
+
+    } else {
+        const auto& decomp = cholesky_LDLt_MoreSorensen(B);
+        B_1 = choleskyInvert(decomp);
+    }
+    showMatrix(B_1, " B_1");
+
+    Matrix2D B_try2 = (R +  lambda * Q.transpose() *  W_1 * Q);
+    Matrix2D B_1_try2 = B_try2.inverse();
+    showMatrix(B_1_try2, " B_1_try2");
+
+    return B_1;*/
+
+    return inverseMatrix;
+}
+
+
+Matrix2D compute_AxBxAT(const Matrix2D& A, const Matrix2D& B)
+{
+    Matrix2D M = multiMatParMat0(A, B);             // A * B  => (m x k)
+    Matrix2D AT = transpose0(A);            // A^T    => (k x m)
+    Matrix2D C = multiMatParMat0(M, AT);            // M * A^T => (m x m)
+    return C;
+
+}
+
+
 #pragma mark Init vectors et matrix
 
 
 // can be replace with #include <functional>   // std::greater
 // unused
 bool sortItems(const double& a, const double& b)
+{
+    return (a < b);
+}
+
+bool sortItems(const t_matrix& a, const t_matrix& b)
 {
     return (a < b);
 }
@@ -876,21 +1113,23 @@ QDataStream &operator>>( QDataStream &stream, PosteriorMeanG& pMeanG )
  */
 
 
-SplineMatrices prepare_calcul_spline_WI(const std::vector<t_reduceTime> &vecH)
+SplineMatrices prepare_calcul_spline_WI(const std::vector<t_reduceTime>& vecH)
 {
-    const Matrix2D& matR = calculMatR(vecH);
-    const Matrix2D& matQ = calculMatQ(vecH);
+    const Matrix2D matR = calculMatR(vecH);
+    const Matrix2D matQ = calculMatQ(vecH);
 
     // Calcul de la transposée QT de la matrice Q, de dimension (n-2) x n
 
-    const Matrix2D& matQT = transpose(matQ, 3);
+    const Matrix2D matQT = transpose(matQ, 3);
 
     // Calcul de la matrice matQTW_1Q, de dimension (n-2) x (n-2) pour calcul Mat_B
     // matQTW_1Q possèdera 3+3-1=5 bandes
-    MatrixDiag diagWInv (vecH.size()+1, 1.0L);
+    DiagonalMatrixLD diagWInv;
+    diagWInv.setIdentity(vecH.size()+1);
+
 
     // Matrix2D matQTW_1Qb = multiMatParMat(matQT, matQ, 3, 3);
-    const Matrix2D& matQTW_1Q = multiplyMatrixBanded_Winograd(matQT, matQ, 1);
+    const Matrix2D matQTW_1Q = multiplyMatrixBanded_Winograd(matQT, matQ, 1);
 
     // Calcul de la matrice QTQ, de dimension (n-2) x (n-2) pour calcul Mat_B
     // Mat_QTQ possèdera 3+3-1=5 bandes
@@ -898,12 +1137,12 @@ SplineMatrices prepare_calcul_spline_WI(const std::vector<t_reduceTime> &vecH)
     Matrix2D matQTQ = matQTW_1Q;// multiplyMatrixBanded_Winograd(matQT, matQ, 1); // pHd :: ?? on fait deux fois le même calcul !!
 
     SplineMatrices matrices;
-    matrices.diagWInv = std::move(diagWInv);
-    matrices.matR = std::move(matR);
-    matrices.matQ = std::move(matQ);
-    matrices.matQT = std::move(matQT);
-    matrices.matQTW_1Q = std::move(matQTW_1Q);
-    matrices.matQTQ = std::move(matQTQ);
+    matrices.diagWInv = diagWInv;
+    matrices.matR = matR;
+    matrices.matQ = matQ;
+    matrices.matQT = matQT;
+    matrices.matQTW_1Q = matQTW_1Q;
+    matrices.matQTQ = matQTQ;
 
     return matrices;
 }
@@ -925,46 +1164,57 @@ SplineMatrices prepare_calcul_spline_WI(const std::vector<t_reduceTime> &vecH)
  */
 SplineMatrices prepare_calcul_spline(const std::vector<std::shared_ptr<Event>>& sortedEvents, const std::vector<t_reduceTime>& vecH)
 {
-    MatrixDiag W_Inv (sortedEvents.size());
-    std::transform(sortedEvents.begin(), sortedEvents.end(), W_Inv.begin(), [](std::shared_ptr<Event> ev) {return 1.0L /ev->mW;});
+    DiagonalMatrixLD W_1 (sortedEvents.size());
+    std::transform(sortedEvents.begin(), sortedEvents.end(), W_1.diagonal().begin(), [](std::shared_ptr<Event> ev) {return 1.0L /ev->mW;});
 
-    return prepare_calcul_spline(vecH, W_Inv);
+    return prepare_calcul_spline(vecH, W_1);
 
 
 }
 
-SplineMatrices prepare_calcul_spline(const std::vector<t_reduceTime>& vecH, const std::vector<long double> W_1)
+SplineMatrices prepare_calcul_spline(const std::vector<t_reduceTime>& vecH, const DiagonalMatrixLD& W_1)
 {
-    const Matrix2D& matR = calculMatR(vecH);
-    const Matrix2D& matQ = calculMatQ(vecH);
+    const Matrix2D R = calculMatR(vecH);
+    //showVector(vecH, "current_vecH in prepare_calcul_spline ");
+    //showMatrix(matR, "matR in prepare_calcul_spline");
+
+    const Matrix2D Q = calculMatQ(vecH);
+    //showMatrix(matQ, "matQ in prepare_calcul_spline");
 
     // Calcul de la transposée QT de la matrice Q, de dimension (n-2) x n
-    const Matrix2D& matQT = transpose(matQ, 3);
+    const Matrix2D QT =  Q.transpose();//  transpose(matQ, 3);
 
-    MatrixDiag diagWInv  (W_1);
+    //DiagonalMatrix diagWInv (W_1);
     // std::transform(W_1.begin(), W_1.end(), diagWInv.begin(), [](double v) {return v;});
 
     // Calcul de la matrice matQTW_1Q, de dimension (n-2) x (n-2) pour calcul Mat_B
     // matQTW_1Q possèdera 3+3-1=5 bandes
-    const Matrix2D& tmp = multiMatParDiag(matQT, diagWInv, 3);
+    const Matrix2D tmp = multiMatParDiag(QT, W_1, 3);
+    //showMatrix(tmp, "tmp Qt*W");
+    //showMatrix(matQT * diagWInv, "direct qt*winv"); //identique
 
     //Matrix2D matQTW_1Qb = multiMatParMat(tmp, matQ, 3, 3);
-    const Matrix2D& matQTW_1Q = multiplyMatrixBanded_Winograd(tmp, matQ, 1);
+    const Matrix2D QTW_1Q = multiplyMatrixBanded_Winograd(tmp, Q, 1);
+    //showMatrix(matQTW_1Q, "matQTW_1Q=");
+    //showMatrix(tmp * matQ, "direct qtw1*q"); // identique
 
     // Calcul de la matrice QTQ, de dimension (n-2) x (n-2) pour calcul Mat_B
     // Mat_QTQ possèdera 3+3-1=5 bandes
-    const Matrix2D& matQTQ = multiplyMatrixBanded_Winograd(matQT, matQ, 1);
+    const Matrix2D QTQ = multiplyMatrixBanded_Winograd(QT, Q, 1);
+    //showMatrix(matQTQ, "matQTQ=");
+    //showMatrix(matQT * matQ, "direct Qt*Q"); // identique
 
     SplineMatrices matrices;
-    matrices.diagWInv = std::move(diagWInv);
-    matrices.matR = std::move(matR);
-    matrices.matQ = std::move(matQ);
-    matrices.matQT = std::move(matQT);
-    matrices.matQTW_1Q = std::move(matQTW_1Q); // Seule affectée par changement de VG
-    matrices.matQTQ = std::move(matQTQ);
+    matrices.diagWInv = std::move(W_1);
+    matrices.matR = std::move(R);
+    matrices.matQ = std::move(Q);
+    matrices.matQT = std::move(QT);
+    matrices.matQTW_1Q = std::move(QTW_1Q); // Seule affectée par changement de VG
+    matrices.matQTQ = std::move(QTQ);
 
     return matrices;
 }
+
 // On utilise la copie au passage du parametre spline_matrices
 SplineMatrices update_splineMatrice_with_vecH(SplineMatrices spline_matrices, const std::vector<t_reduceTime>& vecH)
 {
@@ -979,7 +1229,7 @@ SplineMatrices update_splineMatrice_with_vecH(SplineMatrices spline_matrices, co
 
     // Calcul de la matrice matQTW_1Q, de dimension (n-2) x (n-2) pour calcul Mat_B
     // matQTW_1Q possèdera 3+3-1=5 bandes
-    const Matrix2D &tmp = multiMatParDiag(spline_matrices.matQT, spline_matrices.diagWInv, 3);
+    const Matrix2D tmp = multiMatParDiag(spline_matrices.matQT, spline_matrices.diagWInv, 3);
 
     spline_matrices.matQTW_1Q = multiplyMatrixBanded_Winograd(tmp, spline_matrices.matQ, 1); // Seule affectée par changement de VG
 
@@ -989,6 +1239,7 @@ SplineMatrices update_splineMatrice_with_vecH(SplineMatrices spline_matrices, co
 
     return spline_matrices;
 }
+
 SplineMatrices update_splineMatrice_with_mW(SplineMatrices spline_matrices, const std::vector<std::shared_ptr<Event> >& sortedEvents)
 {
     //const Matrix2D &rMatR = calculMatR(vecH);
@@ -997,13 +1248,13 @@ SplineMatrices update_splineMatrice_with_mW(SplineMatrices spline_matrices, cons
     // Calcul de la transposée QT de la matrice Q, de dimension (n-2) x n
     //const Matrix2D &rMatQT = transpose(rMatQ, 3);
 
-    MatrixDiag diagWInv (sortedEvents.size());
-    std::transform(sortedEvents.begin(), sortedEvents.end(), diagWInv.begin(), [](std::shared_ptr<Event> ev) {return 1.0L /ev->mW;});
+    DiagonalMatrixLD W_1 (sortedEvents.size());
+    std::transform(sortedEvents.begin(), sortedEvents.end(), W_1.diagonal().begin(), [](std::shared_ptr<Event> ev) {return 1.0L /ev->mW;});
 
-    spline_matrices.diagWInv = diagWInv;
+    spline_matrices.diagWInv = W_1;
     // Calcul de la matrice matQTW_1Q, de dimension (n-2) x (n-2) pour calcul Mat_B
     // matQTW_1Q possèdera 3+3-1=5 bandes
-    const Matrix2D &tmp = multiMatParDiag(spline_matrices.matQT, diagWInv, 3);
+    const Matrix2D tmp = multiMatParDiag(spline_matrices.matQT, W_1, 3);
 
     //Matrix2D matQTW_1Qb = multiMatParMat(tmp, matQ, 3, 3);
     spline_matrices.matQTW_1Q = multiplyMatrixBanded_Winograd(tmp, spline_matrices.matQ, 1);
@@ -1018,39 +1269,39 @@ SplineMatrices update_splineMatrice_with_mW(SplineMatrices spline_matrices, cons
 
 SplineMatrices prepareCalculSpline_Sy2(const std::vector<std::shared_ptr<Event>> &sortedEvents, const std::vector<t_reduceTime> &vecH)
 {
-    const Matrix2D &rMatR = calculMatR(vecH);
-    const Matrix2D &rMatQ = calculMatQ(vecH);
+    const Matrix2D R = calculMatR(vecH);
+    const Matrix2D Q = calculMatQ(vecH);
 
     // Calcul de la transposée QT de la matrice Q, de dimension (n-2) x n
-    const Matrix2D &rMatQT = transpose(rMatQ, 3);
+    const Matrix2D QT = transpose(Q, 3);
 
-    MatrixDiag diagWInv (sortedEvents.size());
-    std::transform(sortedEvents.begin(), sortedEvents.end(), diagWInv.begin(), [](std::shared_ptr<Event> ev) {return ev->mSy * ev->mSy ;});
+    DiagonalMatrixLD W_1 (sortedEvents.size());
+    std::transform(sortedEvents.begin(), sortedEvents.end(), W_1.diagonal().begin(), [](std::shared_ptr<Event> ev) {return ev->mSy * ev->mSy ;});
 
     // Calcul de la matrice matQTW_1Q, de dimension (n-2) x (n-2) pour calcul Mat_B
     // matQTW_1Q possèdera 3+3-1=5 bandes
-    const Matrix2D &tmp = multiMatParDiag(rMatQT, diagWInv, 3);
+    const Matrix2D tmp = multiMatParDiag(QT, W_1, 3);
 
     //Matrix2D matQTW_1Qb = multiMatParMat(tmp, matQ, 3, 3);
-    const Matrix2D &rMatQTW_1Q = multiplyMatrixBanded_Winograd(tmp, rMatQ, 1);
+    const Matrix2D QTW_1Q = multiplyMatrixBanded_Winograd(tmp, Q, 1);
 
     // Calcul de la matrice QTQ, de dimension (n-2) x (n-2) pour calcul Mat_B
     // Mat_QTQ possèdera 3+3-1=5 bandes
     //Matrix2D matQTQb = multiMatParMat(matQT, matQ, 3, 3);
-    const Matrix2D &rMatQTQ = multiplyMatrixBanded_Winograd(rMatQT, rMatQ, 1);
+    const Matrix2D QTQ = multiplyMatrixBanded_Winograd(QT, Q, 1);
 
     SplineMatrices matrices;
-    matrices.diagWInv = std::move(diagWInv);
-    matrices.matR = std::move(rMatR);
-    matrices.matQ = std::move(rMatQ);
-    matrices.matQT = std::move(rMatQT);
-    matrices.matQTW_1Q = std::move(rMatQTW_1Q); // Seule affectée par changement de VG
-    matrices.matQTQ = std::move(rMatQTQ);
+    matrices.diagWInv = std::move(W_1);
+    matrices.matR = std::move(R);
+    matrices.matQ = std::move(Q);
+    matrices.matQT = std::move(QT);
+    matrices.matQTW_1Q = std::move(QTW_1Q); // Seule affectée par changement de VG
+    matrices.matQTQ = std::move(QTQ);
 
     return matrices;
 }
 
-SplineResults do_spline(const std::function <t_matrix (std::shared_ptr<Event>)> &fun, const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline)
+SplineResults do_spline(const std::function <t_matrix (std::shared_ptr<Event>)> &fun, const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp, const double lambdaSpline)
 {
     const size_t n = events.size();
     std::vector<t_matrix> vec_Y (n);
@@ -1112,17 +1363,17 @@ SplineResults do_spline(const std::function <t_matrix (std::shared_ptr<Event>)> 
 }
 
 
-SplineResults doSplineX(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline)
+SplineResults doSplineX(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp, const double lambdaSpline)
 {
     return do_spline(get_Yx, matrices, events, vecH, decomp, lambdaSpline);
 }
 
-SplineResults doSplineY(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambdaSpline)
+SplineResults doSplineY(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp, const double lambdaSpline)
 {
     return do_spline(get_Yy, matrices, events, vecH, decomp, lambdaSpline);
 }
 
-SplineResults doSplineZ(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, MatrixDiag > &decomp, const double lambdaSpline)
+SplineResults doSplineZ(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp, const double lambdaSpline)
 {
     return do_spline(get_Yz, matrices, events, vecH, decomp, lambdaSpline);
 }
@@ -1130,90 +1381,101 @@ SplineResults doSplineZ(const SplineMatrices &matrices, const std::vector<std::s
 /**
  Cette procedure calcule la matrice inverse de B:
  B = R + lambda * Qt * W-1 * Q
- puis calcule la matrice d'influence A(lambda)
+ puis calcule la matrice d'influence A(lambda), SEULEMENT les termes diagonaux
  Bande : nombre de diagonales non nulles
  used only with MCMCLoopCurve::calcul_spline_variance()
 */
-std::vector<t_matrix> calculMatInfluence_origin(const SplineMatrices& matrices, const int nbBandes, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambda)
+DiagonalMatrixLD diagonal_influence_matrix(const SplineMatrices& matrices, const int nbBandes, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp, const double lambda)
 {
-    // Q_ASSERT_X(lambda!=0, "[CurveUtilities calculMatInfluence_origin]", "lambda=0");
+    // Q_ASSERT_X(lambda!=0, "[CurveUtilities diagonal_influence_matrix]", "lambda=0");
     /*
      * if (lambda == 0)
      * return matA.resize(n, 1.);
      */
-    const size_t n = matrices.diagWInv.size();
+    /* Calcul Matrice pleine, pour test
+    Matrix2D QB_1QT = matQ * matB_1 * matrices.matQT;
+    Matrix2D I = Matrix2D::Identity(n, n);
+
+    auto A = I - lambda * matrices.diagWInv * QB_1QT;
+    auto tA = A.trace();
+    showMatrix(A, "A calculMatIn");
+    */
+
+    const size_t n = matrices.diagWInv.rows();
 
     const Matrix2D &matB_1 = inverseMatSym_origin(decomp, nbBandes + 4, 1);
 
-    std::vector<t_matrix> matQB_1QT;
-    matQB_1QT.reserve(n);
+    DiagonalMatrixLD matQB_1QT (n);
+    //matQB_1QT.reserve(n);
 
     /*Calcul des termes diagonaux de Q (matB_1) Qt, de i=1 à nb_noeuds
              ??? vérifier le contrôle des indices i+1: débordement de matrices */
 
 
-    const auto* matQi = begin(matrices.matQ[0]); // matQ est une matrice encadrée de 0
+    const auto& matQ = matrices.matQ; //std::begin(matrices.matQ[0]); // matQ est une matrice encadrée de 0
     // long double term = pow(matQi[0], 2.0) * matB_1[0][0]; // matQ[0][0] ici vaut toujours 0
     // term += pow(matQi[1], 2.0) * matB_1[1][1];
     // term += 2.0 * matQi[0] * matQi[1] * matB_1[0][1]; // ici vaut toujours 0
 
 
-    t_matrix term = std::pow(matQi[0], 2.0L) * matB_1[0][0];
-    term += std::pow(matQi[1], 2.0L) * matB_1[1][1];
-    term += 2.0L * matQi[0] * matQi[1] * matB_1[0][1];
+    t_matrix term = std::pow(matrices.matQ(0, 0), 2.0L) * matB_1(0, 0);
+    term += std::pow(matQ(0, 1), 2.0L) * matB_1(1, 1);
+    term += 2.0L * matQ(0, 0) * matQ(0, 1) * matB_1(0, 1);
 
 
-    matQB_1QT.push_back(term);
+    matQB_1QT.diagonal()[0] = term;
 
     for (size_t i = 1; i < n-1; ++i) {
-        matQi = begin(matrices.matQ[i]);
+        //matQi = std::begin(matrices.matQ[i]);
 
-        t_matrix term_i = std::pow(matQi[i-1], 2.0L) * matB_1[i-1][i-1];
-        term_i += std::pow(matQi[i], 2.0L) * matB_1[i][i];
-        term_i += std::pow(matQi[i+1], 2.0L) * matB_1[i+1][i+1];
+        t_matrix term_i = std::pow(matQ(i, i-1), 2.0L) * matB_1(i-1, i-1);
+        term_i += std::pow(matQ(i, i), 2.0L) * matB_1(i, i);
+        term_i += std::pow(matQ(i, i+1), 2.0L) * matB_1(i+1, i+1);
 
-        term_i += 2.0L * matQi[i-1] * matQi[i] * matB_1[i-1][i];
-        term_i += 2.0L * matQi[i-1] * matQi[i+1] * matB_1[i-1][i+1];
-        term_i += 2.0L * matQi[i] * matQi[i+1] * matB_1[i][i+1];
+        term_i += 2.0L * matQ(i, i-1) * matQ(i, i) * matB_1(i-1, i);
+        term_i += 2.0L * matQ(i, i-1) * matQ(i, i+1) * matB_1(i-1, i+1);
+        term_i += 2.0L * matQ(i, i) * matQ(i, i+1) * matB_1(i, i+1);
 
 
-        matQB_1QT.push_back(term_i);
+        matQB_1QT.diagonal()[i] = term_i;
     }
 
-    matQi = begin(matrices.matQ[n-1]);
+    //matQi = std::begin(matrices.matQ[n-1]);
 
-    term = std::pow(matQi[n-2], 2.0L) * matB_1[n-2][n-2];
-    term += std::pow(matQi[n-1], 2.0L) * matB_1[n-1][n-1];
-    term += 2.0L * matQi[n-2] * matQi[n-1] * matB_1[n-2][n-1];
+    term = std::pow(matQ(n-1, n-2), 2.0L) * matB_1(n-2, n-2);
+    term += std::pow(matQ(n-1, n-1), 2.0L) * matB_1(n-1, n-1);
+    term += 2.0L * matQ(n-1, n-2) * matQ(n-1, n-1) * matB_1(n-2, n-1);
 
-    matQB_1QT.push_back(term);
+    matQB_1QT.diagonal()[n-1] = term;
+
+
 
     // Multi_diag_par_Mat(Diag_W_1c, Mat_QB_1QT, Nb_noeudsc, 1, tmp1); // donne une matrice, donc la diagonale est le produit des diagonales
     // Multi_const_par_Mat(-alphac, tmp1, Nb_noeudsc,1, Mat_Ac);
     // Addit_I_et_Mat(Mat_Ac,Nb_noeudsc);
     // remplacé par:
 
-    std::vector<t_matrix> matA;
-    matA.reserve(n);
+    DiagonalMatrixLD matA (n);
+    //matA.reserve(n);
 
     long double lambda_L = static_cast<long double>(lambda);
     for (size_t i = 0; i < n; ++i) {
-        long double mat_a = 1.0L - lambda_L * static_cast<long double>(matrices.diagWInv[i]) * matQB_1QT[i];
-        matA.push_back(std::clamp(mat_a, 0.0L, 1.0L));
+        long double mat_a = 1.0L - lambda_L * static_cast<long double>(matrices.diagWInv.diagonal()[i]) * matQB_1QT.diagonal()[i];
+        matA.diagonal()[i] = std::clamp(mat_a, 0.0L, 1.0L);
 
 #if DEBUG
        // const double mA = 1.0 - lambda * (double)matrices.diagWInv[i] * matQB_1QT[i];
         if (mat_a == 0.0) {
-            qWarning ("[MCMCLoopCurve::calculMatInfluence_origin] -> Oups matA.at(i) == 0 ");
+            qWarning ("[MCMCLoopCurve::diagonal_influence_matrix] -> Oups matA.at(i) == 0 ");
         }
 
        /* if (mat_a < 0.0) {
-            qDebug ()<<"[MCMCLoopCurve::calculMatInfluence_origin] -> Oups matA.at(i) ="<< matA[i] << " < 0  ; LambdaSpline="<<lambda;
+            qDebug ()<<"[MCMCLoopCurve::diagonal_influence_matrix] -> Oups matA.at(i) ="<< matA[i] << " < 0  ; LambdaSpline="<<lambda;
 
         }
 
         if (mat_a > 1.0) {
-            qWarning ("[MCMCLoopCurve::calculMatInfluence_origin] -> Oups matA.at(i) > 1  ");
+            qWarning ("[MCMCLoopCurve::diagonal_influence_matrix] -> Oups matA.at(i) > 1  ");
 
         }*/
 #endif
@@ -1223,15 +1485,15 @@ std::vector<t_matrix> calculMatInfluence_origin(const SplineMatrices& matrices, 
 }
 
 
-std::vector<double> calcul_spline_variance(const SplineMatrices& matrices, const std::vector<std::shared_ptr<Event>> &events, const std::pair<Matrix2D, MatrixDiag> &decomp, const double lambdaSpline)
+std::vector<double> calcul_spline_variance(const SplineMatrices& matrices, const std::vector<std::shared_ptr<Event>> &events, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp, const double lambdaSpline)
 {
     unsigned int n = (unsigned int)events.size();
-    std::vector<t_matrix> matA = calculMatInfluence_origin(matrices, 1, decomp, lambdaSpline);
+    DiagonalMatrixLD matA = diagonal_influence_matrix(matrices, 1, decomp, lambdaSpline);
     std::vector<double> varG;
 
     for (unsigned int i = 0; i < n; ++i) {
 #ifdef DEBUG
-        const double& aii = matA[i];
+        const double& aii = matA.diagonal()[i];
         // si Aii négatif ou nul, cela veut dire que la variance sur le point est anormalement trop grande,
         // d'où une imprécision dans les calculs de Mat_B (Cf. calcul spline) et de mat_A
         if (aii < 0. || events[i]->mW <0) {
@@ -1239,10 +1501,10 @@ std::vector<double> calcul_spline_variance(const SplineMatrices& matrices, const
             varG.push_back(0.);
 
         } else {
-            varG.push_back(matA[i]  / events[i]->mW);
+            varG.push_back(matA.diagonal()[i]  / events[i]->mW);
         }
 #else
-        varG.push_back(matA[i]  / events[i]->mW);
+        varG.push_back(matA.diagonal()[i]  / events[i]->mW);
 #endif
 
     }
@@ -1267,25 +1529,52 @@ MCMCSpline currentSpline (std::vector<std::shared_ptr<Event> > &events, const st
     // doSpline utilise les Y des events
     // => On le calcule ici pour la première composante (x)
 
-    Matrix2D matB; //matR;
+    Matrix2D matB (matrices.matR); //matR;
     //const double lambda = mModel->mLambdaSpline.mX;
     if (lambda != 0) {
-        const Matrix2D &tmp = multiConstParMat(matrices.matQTW_1Q, lambda, 5);
+        const Matrix2D tmp = multiConstParMat(matrices.matQTW_1Q, lambda, 5);
         matB = addMatEtMat(matrices.matR, tmp, 5);
 
-    } else {
+    } /*else {
         matB = matrices.matR;
-    }
+    } */
+
+    // test
+
+    // test
+   /* Matrix2D D00 (4,4);
+    D00 << 0.1, 0.0, 0.0, 0.0,
+        0.0, 0.09, 0.0, 0.0,
+        0.0, 0.0, 0.0933, 0.0,
+        0.0, 0.0, 0.0,    0.15;
+    Matrix2D L00 (4, 4);
+    L00 << 1.0, 0.0, 0.0, 0.0,
+        0.036, 1.0, 0.0, 0.0,
+        7.57576e-09, 0.0093, 1.0, 0.0,
+        7.0, 7.57576e-09,    0.036, 1.0;
+
+    Matrix2D test = L00 * D00 * L00.transpose();
+
+
+    Matrix2D A00 = seedMatrix(matB, 1);//L00 * D00 * L00.transpose();
+
+*/
+
 
     // Decomposition_Cholesky de matB en matL et matD
     // Si alpha global: calcul de Mat_B = R + alpha * Qt * W-1 * Q  et décomposition de Cholesky en Mat_L et Mat_D
-    const std::pair<Matrix2D, MatrixDiag> &decomp = decompositionCholesky(matB, 5, 1);
+    const std::pair<Matrix2D, DiagonalMatrixLD> decomp = decompositionCholesky(matB, 5, 1);
 
+    /*showMatrix(matB, "matB init");
+    showMatrix(decomp.second, "matD");
+    showMatrix(decomp.first, "matL");*/
+    //auto contr = decomp.first * decomp.second * decomp.first.transpose();
+    //showMatrix(contr, "controle matB");
 
     // le calcul de l'erreur est influencé par VG qui induit 1/mW, utilisé pour fabriquer matrices->DiagWinv et calculer matrices->matQTW_1Q
     // Tout le calcul précédent ne change pas
 
-    const SplineResults &sx = doSplineX(matrices, events, vecH, decomp, lambda); // Voir si matB est utile ???
+    const SplineResults sx = doSplineX(matrices, events, vecH, decomp, lambda); // Voir si matB est utile ???
     const std::vector<double> &vecVarG = calcul_spline_variance(matrices, events, decomp, lambda); // Les erreurs sont égales sur les trois composantes X, Y, Z splineY.vecErrG = splineX.vecErrG =
 
     // --------------------------------------------------------------
@@ -1312,7 +1601,7 @@ MCMCSpline currentSpline (std::vector<std::shared_ptr<Event> > &events, const st
         // doSpline utilise les Y des events
         // => On le calcule ici pour la seconde composante (y)
 
-        const SplineResults &sy = doSplineY(matrices, events, vecH, decomp, lambda); //matL et matB ne sont pas changés
+        const SplineResults sy = doSplineY(matrices, events, vecH, decomp, lambda); //matL et matB ne sont pas changés
 
         MCMCSplineComposante splineY;
 
@@ -1332,7 +1621,7 @@ MCMCSpline currentSpline (std::vector<std::shared_ptr<Event> > &events, const st
         // doSpline utilise les Z des events
         // => On le calcule ici pour la troisième composante (z)
 
-        const SplineResults &sz = doSplineZ(matrices, events, vecH, decomp, lambda);
+        const SplineResults sz = doSplineZ(matrices, events, vecH, decomp, lambda);
 
         MCMCSplineComposante splineZ;
 
@@ -1372,7 +1661,7 @@ MCMCSpline currentSpline_WI (std::vector<std::shared_ptr<Event>> &events, bool d
 
     // Decomposition_Cholesky de matB en matL et matD
     // Si alpha global: calcul de Mat_B = R + alpha * Qt * W-1 * Q  et décomposition de Cholesky en Mat_L et Mat_D
-    const std::pair<Matrix2D, MatrixDiag> &decomp = decompositionCholesky(matB, 5, 1);
+    const std::pair<Matrix2D, DiagonalMatrixLD> &decomp = decompositionCholesky(matB, 5, 1);
 
 
     // le calcul de l'erreur est influencé par VG qui induit 1/mW, utilisé pour fabriquer matrices->DiagWinv et calculer matrices->matQTW_1Q
@@ -1521,7 +1810,7 @@ double valeurErrG(const double t, const MCMCSplineComposante& spline, unsigned& 
     return errG;
 }
 
-// dans RenCurve U-CMT-Routine_Spline Valeur_Gp
+// dans RenCurve U-CMT-Routine_Spline Valeur_Gp // useless
 double valeurGPrime(const double t, const MCMCSplineComposante& spline, unsigned& i0, Model &model)
 {
     const unsigned n = (unsigned)spline.vecThetaReduced.size();
@@ -1566,6 +1855,7 @@ double valeurGPrime(const double t, const MCMCSplineComposante& spline, unsigned
     return gPrime;
 }
 
+// useless
 double valeurGSeconde(const double t, const MCMCSplineComposante& spline, Model& model)
 {
     const size_t n = spline.vecThetaReduced.size();
@@ -1588,85 +1878,94 @@ double valeurGSeconde(const double t, const MCMCSplineComposante& spline, Model&
     return gSeconde;
 }
 
-
+/**
+ * @brief Calcule la valeur de la spline (G), sa variance (varG), sa dérivée première (GP) et seconde (GS), à un instant t donné.
+ *
+ * @param t Le temps réel.
+ * @param spline La spline MCMC contenant les points et dérivées.
+ * @param[out] G Valeur de la spline.
+ * @param[out] varG Variance associée à G.
+ * @param[out] GP Dérivée première.
+ * @param[out] GS Dérivée seconde.
+ * @param[in,out] i0 Index initial estimé pour l’intervalle du temps réduit (optimisé si appel successif).
+ * @param tmin Temps réel minimum de la spline.
+ * @param tmax Temps réel maximum de la spline.
+ */
 void valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante &spline, double& G, double& varG, double& GP, double& GS, unsigned& i0, double tmin, double tmax)
 {
-    const unsigned long n = spline.vecThetaReduced.size();
-    const t_reduceTime tReduce =  (t - tmin)/(tmax - tmin);
-    const t_reduceTime t1 = spline.vecThetaReduced.at(0);
-    const t_reduceTime tn = spline.vecThetaReduced.at(n-1);
-    GP = 0.;
-    GS = 0.;
-    double h;
+    constexpr double one_sixth = 1.0 / 6.0;
+
+    const size_t n = spline.vecThetaReduced.size();
+    const double invDuration = 1.0 / (tmax - tmin);
+    const t_reduceTime tReduce =  (t - tmin) * invDuration;
+    const t_reduceTime t1 = spline.vecThetaReduced.front();
+    const t_reduceTime tn = spline.vecThetaReduced.back();
 
     // The first derivative is always constant outside the interval [t1,tn].
-    if (tReduce < t1) {
-        const t_reduceTime t2 = spline.vecThetaReduced.at(1);
+    if (tReduce <= t1) {
+        const t_reduceTime t2 = spline.vecThetaReduced[1];
+        const double h = t2 - t1;
 
         // ValeurGPrime
-        GP = (spline.vecG.at(1) - spline.vecG.at(0)) / (t2 - t1);
-        GP -= (t2 - t1) * spline.vecGamma.at(1) / 6.;
-       // if (spline.vecGamma.at(1) == 0)
-         //   qDebug()<< "[CurveUtilities::valeurs_G_VarG_GP_GS] spline.vecGamma.at(1) == 0?? t=" << t;
+        GP = (spline.vecG[1] - spline.vecG[0]) / h - h * spline.vecGamma[1] * one_sixth;
+
         // ValeurG
-        G = spline.vecG.at(0) - (t1 - tReduce) * GP;
+        G = spline.vecG[0] - (t1 - tReduce) * GP;
 
         // valeurErrG
-        varG = spline.vecVarG.at(0);
+        varG = spline.vecVarG[0];
 
         // valeurGSeconde
-        //GS = 0.;
+        GS = 0.0;
 
     } else if (tReduce >= tn) {
 
-        const t_reduceTime tn1 = spline.vecThetaReduced.at(n-2);
+        const t_reduceTime tn1 = spline.vecThetaReduced[n-2];
+        const double h = tn - tn1;
 
-        // valeurErrG
-        varG = spline.vecVarG.at(n-1);
+        GP = (spline.vecG[n-1] - spline.vecG[n-2]) / h + h * spline.vecGamma[n-2] * one_sixth;
 
-        // ValeurGPrime
-        GP = (spline.vecG.at(n-1) - spline.vecG.at(n-2)) / (tn - tn1);
-        GP += (tn - tn1) * spline.vecGamma.at(n-2) / 6.;
-
-        // valeurGSeconde
-        //GS =0.;
-
-        // ValeurG
-        G = spline.vecG.at(n-1) + (tReduce - tn) * GP;
+        G = spline.vecG[n-1] + (tReduce - tn) * GP;
+        varG = spline.vecVarG[n-1];
+        GS = 0.0;
 
 
     } else {
-        double err1, err2;
+
         for (; i0 < n-1; ++i0) {
-            const t_reduceTime ti1 = spline.vecThetaReduced.at(i0);
-            const t_reduceTime ti2 = spline.vecThetaReduced.at(i0 + 1);
-            h = ti2 - ti1;
+            const t_reduceTime ti1 = spline.vecThetaReduced[i0];
+            const t_reduceTime ti2 = spline.vecThetaReduced[i0 + 1];
+
 
             if ((tReduce >= ti1) && (tReduce < ti2)) {
+                const double h = ti2 - ti1;
+                const double u = tReduce - ti1;
+                const double v = ti2 - tReduce;
 
-                const double gi1 = spline.vecG.at(i0);
-                const double gi2 = spline.vecG.at(i0 + 1);
-                const double gamma1 = spline.vecGamma.at(i0);
-                const double gamma2 = spline.vecGamma.at(i0 + 1);
+                const double gi1 = spline.vecG[i0];
+                const double gi2 = spline.vecG[i0 + 1];
+                const double gamma1 = spline.vecGamma[i0];
+                const double gamma2 = spline.vecGamma[i0 + 1];
 
-                // ValeurG
 
-                G = ( (tReduce-ti1)*gi2 + (ti2-tReduce)*gi1 ) /h;
-                    // Smoothing part :
-                G -= (1./6.) * ((tReduce-ti1) * (ti2-tReduce)) * ((1.+(tReduce-ti1)/h) * gamma2 + (1.+(ti2-tReduce)/h) * gamma1);
+                // Spline value
+                G = ( u * gi2 + v * gi1 ) / h;
+                G -= one_sixth * (u * v) * ((1.0 + u / h) * gamma2 + (1.0 + v / h) * gamma1);
 
-                err1 = sqrt(spline.vecVarG.at(i0));
-                err2 = sqrt(spline.vecVarG.at(i0 + 1));
-                varG = pow(err1 + ((tReduce-ti1) / (ti2-ti1)) * (err2 - err1) , 2.l);
-#ifdef DEBUG
-                if (std::isnan(varG))
-                    qDebug()<< "[CurveUtilities::valeurs_G_VarG_GP_GS] varG is nan ??"<<ti1<<ti2;
-#endif
-                GP = ((gi2-gi1)/h) - (1./6.) * (tReduce-ti1) * (ti2-tReduce) * ((gamma2-gamma1)/h);
-                GP += (1./6.) * ((tReduce-ti1) - (ti2-tReduce)) * ( (1.+(tReduce-ti1)/h) * gamma2 + (1+(ti2-tReduce)/h) * gamma1 );
+                // Interpolated variance
+                const double err1 = sqrt(spline.vecVarG[i0]);
+                const double err2 = sqrt(spline.vecVarG[i0 + 1]);
+                const double alpha = u / h;
 
-                // valeurGSeconde
-                GS = ((tReduce-ti1) * gamma2 + (ti2-tReduce) * gamma1) / h;
+                varG = err1 + alpha * (err2 - err1);
+                varG *= varG;
+
+                // First derivative
+                GP = ((gi2 - gi1) / h) - one_sixth * u * v * (gamma2 - gamma1) / h;
+                GP += one_sixth * (u - v) * ( (1.0 + u / h) * gamma2 + (1.0 + v / h) * gamma1);
+
+                // Second derivative
+                GS = (u * gamma2 + v * gamma1) / h;
 
 
                 break;
@@ -1675,31 +1974,107 @@ void valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante &spline, do
 
     }
 
-    // Value slope correction
-    GP /= (tmax - tmin);
-    GS /= pow(tmax - tmin, 2.);
+    // Rescale derivatives for original time domain
+    GP *= invDuration;
+    GS *= invDuration * invDuration;
 
-#ifdef DEBUG
-    if (std::isnan(varG))
-        qDebug()<< "[CurveUtilities::valeurs_G_VarG_GP_GS] varG is nan ?? t=" << t;
 
-    if (std::isnan(G))
-        qDebug()<< "[CurveUtilities::valeurs_G_VarG_GP_GS] G is nan ?? t=" << t;
+}
+/**
+ * @brief Calcule la valeur de la spline (G), sa dérivée première (GP) et seconde (GS), à un instant t donné.
+ *
+ * @param t Le temps réel.
+ * @param spline La spline MCMC contenant les points et dérivées.
+ * @param[out] G Valeur de la spline.
+ * @param[out] GP Dérivée première.
+ * @param[out] GS Dérivée seconde.
+ * @param[in,out] i0 Index initial estimé pour l’intervalle du temps réduit (optimisé si appel successif).
+ * @param tmin Temps réel minimum de la spline.
+ * @param tmax Temps réel maximum de la spline.
+ */
+void valeurs_G_GP_GS(const double t, const MCMCSplineComposante &spline, double& G, double& GP, double& GS, unsigned& i0, double tmin, double tmax)
+{
+    constexpr double one_sixth = 1.0 / 6.0;
 
-    if (std::isnan(GP))
-        qDebug()<< "[CurveUtilities::valeurs_G_VarG_GP_GS] GP is nan ?? t=" << t;
+    const size_t n = spline.vecThetaReduced.size();
+    const double invDuration = 1.0 / (tmax - tmin);
+    const t_reduceTime tReduce =  (t - tmin) * invDuration;
+    const t_reduceTime t1 = spline.vecThetaReduced.front();
+    const t_reduceTime tn = spline.vecThetaReduced.back();
 
-    if (std::isnan(GS))
-        qDebug()<< "[CurveUtilities::valeurs_G_VarG_GP_GS] GS is nan ?? t=" << t;
-#endif
+    // The first derivative is always constant outside the interval [t1,tn].
+    if (tReduce <= t1) {
+        const t_reduceTime t2 = spline.vecThetaReduced[1];
+        const double h = t2 - t1;
+
+        // ValeurGPrime
+        GP = (spline.vecG[1] - spline.vecG[0]) / h - h * spline.vecGamma[1] * one_sixth;
+
+        // ValeurG
+        G = spline.vecG[0] - (t1 - tReduce) * GP;
+
+        // valeurGSeconde
+        GS = 0.0;
+
+    } else if (tReduce >= tn) {
+
+        const t_reduceTime tn1 = spline.vecThetaReduced[n-2];
+        const double h = tn - tn1;
+
+        GP = (spline.vecG[n-1] - spline.vecG[n-2]) / h + h * spline.vecGamma[n-2] * one_sixth;
+
+        G = spline.vecG[n-1] + (tReduce - tn) * GP;
+
+        GS = 0.0;
+
+
+    } else {
+
+        for (; i0 < n-1; ++i0) {
+            const t_reduceTime ti1 = spline.vecThetaReduced[i0];
+            const t_reduceTime ti2 = spline.vecThetaReduced[i0 + 1];
+
+
+            if ((tReduce >= ti1) && (tReduce < ti2)) {
+                const double h = ti2 - ti1;
+                const double u = tReduce - ti1;
+                const double v = ti2 - tReduce;
+
+                const double gi1 = spline.vecG[i0];
+                const double gi2 = spline.vecG[i0 + 1];
+                const double gamma1 = spline.vecGamma[i0];
+                const double gamma2 = spline.vecGamma[i0 + 1];
+
+
+                // Spline value
+                G = ( u * gi2 + v * gi1 ) / h;
+                G -= one_sixth * (u * v) * ((1.0 + u / h) * gamma2 + (1.0 + v / h) * gamma1);
+
+
+                // First derivative
+                GP = ((gi2 - gi1) / h) - one_sixth * u * v * (gamma2 - gamma1) / h;
+                GP += one_sixth * (u - v) * ( (1.0 + u / h) * gamma2 + (1.0 + v / h) * gamma1);
+
+                // Second derivative
+                GS = (u * gamma2 + v * gamma1) / h;
+
+                break;
+            }
+        }
+
+    }
+
+    // Rescale derivatives for original time domain
+    GP *= invDuration;
+    GS *= invDuration * invDuration;
+
 
 }
 
 
-
 #pragma mark Calcul Spline on vector Y
 
-std::vector<t_matrix> do_vec_gamma(const std::vector<t_matrix>& vec_Y, const std::vector<t_reduceTime>& vec_H, const std::pair<Matrix2D, MatrixDiag>& decomp)
+std::vector<t_matrix> do_vec_gamma(const std::vector<t_matrix>& vec_Y, const std::vector<t_reduceTime>& vec_H, const std::pair<Matrix2D, DiagonalMatrixLD>& decomp)
 {
     size_t N = vec_Y.size();
 
@@ -1715,6 +2090,29 @@ std::vector<t_matrix> do_vec_gamma(const std::vector<t_matrix>& vec_Y, const std
     return resolutionSystemeLineaireCholesky(decomp, vecQtY);
 }
 
+// Calcul de la matrice d'influence A
+Matrix2D calculateInfluenceMatrix(double L, const DiagonalMatrixLD& WInv, const Matrix2D& Q) {
+    int n = WInv.rows();
+
+    // Créer la matrice identité
+    Matrix2D I(n, true);
+
+    // Calculer W^(-1)
+    //Matrix2D WInv = createWInverse(W);
+
+    // Calculer L * W^(-1) * Q
+    auto temp = WInv * Q;
+    auto LWInvQ = temp * L;
+
+    // Calculer I + L * W^(-1) * Q
+    Matrix2D sum = I + LWInvQ;
+
+    // Calculer A = (I + L * W^(-1) * Q)^(-1)
+    Matrix2D A =  sum.inverse();//  inverse(sum);
+
+    return A;
+}
+
 // Calcul du vecteur g = Y - lambda * W-1 * Q * gamma
 // tout est calculé en t_matrix (càd long double)
 // Si lambda =0, il est préférable de faire directement vec_G=vec_Y
@@ -1724,8 +2122,8 @@ std::vector<t_matrix> do_vec_G(const SplineMatrices& matrices, const std::vector
     std::vector<t_matrix> vec_G;
     vec_G.reserve(n);
     if (lambdaSpline != 0) {
-        const std::vector<t_matrix>& Q_gamma = multiMatParVec(matrices.matQ, vec_Gamma, 3);
-        const MatrixDiag& W_Inv = matrices.diagWInv;
+        const std::vector<t_matrix> Q_gamma = multiMatParVec(matrices.matQ, vec_Gamma, 3);
+        const auto& W_Inv = matrices.diagWInv.diagonal();
         const t_matrix lambda = lambdaSpline;
 
         for (unsigned i = 0; i < n; ++i) {
@@ -1740,6 +2138,8 @@ std::vector<t_matrix> do_vec_G(const SplineMatrices& matrices, const std::vector
             }
 
         }
+        // ici calcul de A
+
 
     } else {
         vec_G = vec_Y;
@@ -1748,15 +2148,15 @@ std::vector<t_matrix> do_vec_G(const SplineMatrices& matrices, const std::vector
     return vec_G;
 }
 
-std::vector<double> calcul_spline_variance(const SplineMatrices& matrices, const std::pair<Matrix2D, MatrixDiag>& decomp, const double lambda)
+std::vector<double> calcul_spline_variance(const SplineMatrices& matrices, const std::pair<Matrix2D, DiagonalMatrixLD>& decomp, const double lambda)
 {
-    const std::vector<t_matrix>& matA = calculMatInfluence_origin(matrices, 1, decomp, lambda);
+    const DiagonalMatrixLD matA = diagonal_influence_matrix(matrices, 1, decomp, lambda);
     std::vector<double> varG;
-    const auto& W_Inv = matrices.diagWInv;
-    size_t n = W_Inv.size();
+    const auto& W_Inv = matrices.diagWInv.diagonal();
+    size_t n = W_Inv.rows();
 
     for (size_t i = 0; i < n; ++i) {
-        varG.push_back(static_cast<double>(matA[i]  * W_Inv[i]));
+        varG.push_back(static_cast<double>(matA.diagonal()[i]  * W_Inv[i]));
     }
 
     return varG;
@@ -1806,7 +2206,7 @@ std::vector<QMap<double, double>> composante_to_curve(MCMCSplineComposante splin
  *
  * @return SplineResults
  */
-SplineResults do_spline(const std::vector<t_matrix>& vec_Y, const SplineMatrices& matrices, const std::vector<t_reduceTime>& vecH, const std::pair<Matrix2D, MatrixDiag>& decomp, const double lambdaSpline)
+SplineResults do_spline(const std::vector<t_matrix>& vec_Y, const SplineMatrices& matrices, const std::vector<t_reduceTime>& vecH, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp, const double lambdaSpline)
 {
     SplineResults spline;
     try {
@@ -1836,8 +2236,395 @@ SplineResults do_spline(const std::vector<t_matrix>& vec_Y, const SplineMatrices
     return spline;
 }
 
+// === Kernel spline cubique ===
+double cubic_kernel(double x, double xi) {
+    return 0.5 * std::pow(std::abs(x - xi), 3);
+}
 
-std::pair<MCMCSpline, std::pair<double, double>> do_spline_composante(const std::vector<double> &vec_t, const std::vector<double> &vec_X, const std::vector<double> &vec_X_err, double tmin, double tmax, SilvermanParam &sv, const std::vector<double> &vec_Y, const std::vector<double> &vec_Y_err, const std::vector<double> &vec_Z, const std::vector<double> &vec_Z_err)
+// === f''(x) = sum_i 3 c_i |x - x_i| ===
+double second_derivative(double x, const std::vector<double>& xi, const Eigen::Matrix<t_matrix, Dynamic, 1>& c) {
+    double result = 0.0;
+    for (size_t i = 0; i < xi.size(); ++i) {
+        result += 3.0 * c[i] * std::abs(x - xi[i]);
+    }
+    return result;
+}
+
+// === Évalue f(x) = sum_i c_i * K(x, x_i) ===
+double evaluate(double x, const std::vector<double>& xi, const Eigen::Matrix<t_matrix, Dynamic, 1>& c) {
+    double result = 0.0;
+    for (size_t i = 0; i < xi.size(); ++i) {
+        result += c[i] * cubic_kernel(x, xi[i]);
+    }
+    return result;
+}
+
+// === Produit matriciel K * c ===
+std::vector<double> apply_kernel_matrix(const std::vector<std::vector<double>>& K, const std::vector<double>& c) {
+    size_t n = K.size();
+    std::vector<double> result(n, 0.0);
+    for (size_t i = 0; i < n; ++i)
+        for (size_t j = 0; j < n; ++j)
+            result[i] += K[i][j] * c[j];
+    return result;
+}
+
+// === Perte quadratique avec régularisation ===
+double loss(const std::vector<double>& y, const std::vector<std::vector<double>>& K, const std::vector<double>& c, double lambda) {
+    size_t n = y.size();
+    std::vector<double> Kc = apply_kernel_matrix(K, c);
+    double loss_val = 0.0;
+    for (size_t i = 0; i < n; ++i)
+        loss_val += std::pow(y[i] - Kc[i], 2);
+    // régularisation
+    double reg = 0.0;
+    for (size_t i = 0; i < n; ++i)
+        for (size_t j = 0; j < n; ++j)
+            reg += c[i] * K[i][j] * c[j];
+    return loss_val + lambda * reg;
+}
+
+// === Gradient de la fonction de coût ===
+std::vector<double> compute_gradient(const std::vector<double>& y, const std::vector<std::vector<double>>& K, const std::vector<double>& c, double lambda) {
+    size_t n = y.size();
+    std::vector<double> Kc = apply_kernel_matrix(K, c);
+    std::vector<double> grad(n, 0.0);
+    for (size_t j = 0; j < n; ++j) {
+        for (size_t i = 0; i < n; ++i) {
+            grad[j] += -2.0 * K[i][j] * (y[i] - Kc[i]);
+        }
+        for (size_t k = 0; k < n; ++k) {
+            grad[j] += 2.0 * lambda * K[j][k] * c[k];
+        }
+    }
+    return grad;
+}
+
+// === Gradient descent simple avec projection positive ===
+void constrained_gradient_descent(std::vector<double>& c, const std::vector<double>& y, const std::vector<std::vector<double>>& K, double lambda, double lr = 1e-3, int max_iter = 10000) {
+    for (int iter = 0; iter < max_iter; ++iter) {
+        auto grad = compute_gradient(y, K, c, lambda);
+        for (size_t i = 0; i < c.size(); ++i) {
+            c[i] -= lr * grad[i];
+            if (c[i] < 0.0) c[i] = 0.0; // projection sur c_i >= 0
+        }
+    }
+}
+
+// Produit scalaire
+double dot(const std::vector<double>& a, const std::vector<double>& b) {
+    double result = 0.0;
+    for (size_t i = 0; i < a.size(); ++i)
+        result += a[i] * b[i];
+    return result;
+}
+
+// Produit matrice * vecteur
+std::vector<double> mat_vec(const Matrix2D& M, const std::vector<double>& v) {
+    std::vector<double> result(M.size(), 0.0);
+    for (long i = 0; i < M.rows(); ++i)
+        for (long j = 0; j < M.cols(); ++j)
+            result[i] += M(i, j) * v[j];
+    return result;
+}
+
+// Inversion naive d'une matrice symétrique positive définie via Gauss-Jordan
+std::vector<std::vector<double>> inverse(const std::vector<std::vector<double>>& A) {
+    size_t n = A.size();
+    std::vector<std::vector<double>> inv(n, std::vector<double>(n, 0.0));
+    std::vector<std::vector<double>> aug(A);
+
+    // Create identity matrix
+    for (size_t i = 0; i < n; ++i)
+        inv[i][i] = 1.0;
+
+    // Gauss-Jordan elimination
+    for (size_t i = 0; i < n; ++i) {
+        double pivot = aug[i][i];
+        for (size_t j = 0; j < n; ++j) {
+            aug[i][j] /= pivot;
+            inv[i][j] /= pivot;
+        }
+        for (size_t k = 0; k < n; ++k) {
+            if (k == i) continue;
+            double factor = aug[k][i];
+            for (size_t j = 0; j < n; ++j) {
+                aug[k][j] -= factor * aug[i][j];
+                inv[k][j] -= factor * inv[i][j];
+            }
+        }
+    }
+
+    return inv;
+}
+
+// Calcule la variance autour de f(x)
+double prediction_variance(
+    double x,
+    const std::vector<double>& xi,
+    const Matrix2D& K,
+    const std::vector<double>& weights,
+    double lambda,
+    double sigma2
+    ) {
+    size_t n = xi.size();
+
+    // Vecteur K(x)
+    std::vector<double> Kx(n);
+    for (size_t i = 0; i < n; ++i)
+        Kx[i] = cubic_kernel(x, xi[i]);
+
+    // Construire matrice M = K + lambda * W^-1
+    Matrix2D M = K;
+    for (size_t i = 0; i < n; ++i)
+         M(i, i) = K(i, i) + lambda / weights[i] ;
+
+    // Inverse de M
+    Matrix2D M_inv = M.inverse();
+
+    // Calcul de M_inv * Kx
+    std::vector<double> tmp = mat_vec(M_inv, Kx);
+
+    // Poids W appliqués
+    for (size_t i = 0; i < n; ++i)
+        tmp[i] *= weights[i];
+
+    // Produit final
+    std::vector<double> M_inv_Kx = mat_vec(M_inv, tmp);
+
+    return sigma2 * dot(Kx, M_inv_Kx);
+}
+
+// Résolution d'un système linéaire M * x = b (Gauss-Jordan)
+std::vector<double> solveLinearSystem(std::vector<std::vector<double>> M, std::vector<double> b)
+{
+    size_t n = M.size();
+    for (size_t i = 0; i < n; ++i) {
+        double pivot = M[i][i];
+        for (size_t j = 0; j < n; ++j)
+            M[i][j] /= pivot;
+        b[i] /= pivot;
+        for (size_t k = 0; k < n; ++k) {
+            if (k != i) {
+                double factor = M[k][i];
+                for (size_t j = 0; j < n; ++j)
+                    M[k][j] -= factor * M[i][j];
+                b[k] -= factor * b[i];
+            }
+        }
+    }
+    return b;
+}
+
+// Fonction de tri
+void sort_by_x(std::vector<t_matrix>& x, std::vector<t_matrix>& y, std::vector<t_matrix>& w) {
+    struct DataPoint {
+        t_matrix x;
+        t_matrix y;
+        t_matrix w; // facultatif, utile si tu veux trier aussi les poids
+    };
+
+    size_t n = x.size();
+    std::vector<DataPoint> data(n);
+
+    // Rassembler les données
+    for (size_t i = 0; i < n; ++i)
+        data[i] = {x[i], y[i], w[i]};
+
+    // Trier par x croissant
+    std::sort(data.begin(), data.end(), [](const DataPoint& a, const DataPoint& b) {
+        return a.x < b.x;
+    });
+
+    // Réassigner les valeurs triées
+    for (size_t i = 0; i < n; ++i) {
+        x[i] = data[i].x;
+        y[i] = data[i].y;
+        w[i] = data[i].w;
+    }
+}
+
+std::pair<MCMCSpline, std::pair<double, double>> do_spline_kernel_composante(const std::vector<double> &vec_t, const std::vector<double> &vec_X, const std::vector<double> &vec_X_err, double tmin, double tmax, SilvermanParam &sv, const std::vector<double> &vec_Y, const std::vector<double> &vec_Y_err, const std::vector<double> &vec_Z, const std::vector<double> &vec_Z_err)
+{
+
+    bool doY = (!vec_Y.empty() && vec_Z.empty());
+    bool doYZ = (!vec_Y.empty() && !vec_Z.empty());
+
+
+    std::vector<t_matrix> vec_tmp_t;
+    std::vector<t_matrix> vec_tmp_x, vec_tmp_y, vec_tmp_z;
+    std::vector<t_matrix> vec_tmp_x_err, vec_tmp_y_err, vec_tmp_z_err;
+    // trie des temps et des données associées
+    if (!std::is_sorted(vec_t.begin(), vec_t.end())) {
+        //std::vector<int> l_index = get_order(vec_t);
+        std::vector<size_t> l_index = argsort(vec_t);
+
+        for (size_t i : l_index) {
+            vec_tmp_t.push_back(vec_t.at(i));
+            vec_tmp_x.push_back(vec_X.at(i));
+            vec_tmp_x_err.push_back(vec_X_err.at(i));
+            if (doY || doYZ) {
+                vec_tmp_y.push_back(vec_Y.at(i));
+                vec_tmp_y_err.push_back(vec_Y_err.at(i));
+            }
+            if (doYZ) {
+                vec_tmp_z.push_back(vec_Z.at(i));
+                vec_tmp_z_err.push_back(vec_Z_err.at(i));
+            }
+        }
+    } else {
+        vec_tmp_t = std::vector<t_matrix>(vec_t.begin(), vec_t.end()); //vec_t;
+        vec_tmp_x = std::vector<t_matrix>(vec_X.begin(), vec_X.end()); //vec_X;
+        vec_tmp_x_err = std::vector<t_matrix>(vec_X_err.begin(), vec_X_err.end()); //vec_X_err;
+        if (doY || doYZ) {
+            vec_tmp_y = std::vector<t_matrix>(vec_Y.begin(), vec_Y.end());
+            vec_tmp_y_err = std::vector<t_matrix>(vec_Y_err.begin(), vec_Y_err.end()); //vec_Y_err;
+        }
+        if (doYZ) {
+            vec_tmp_z = std::vector<t_matrix>(vec_Z.begin(), vec_Z.end()); //vec_Z;
+            vec_tmp_z_err = std::vector<t_matrix>(vec_Z_err.begin(), vec_Z_err.end()); //vec_Z_err;
+        }
+    }
+
+    std::vector<double> W_1;
+    if (sv.use_error_measure) {
+        if (doY) {
+            auto Y_err = vec_tmp_y_err.begin();
+            for (auto X_err : vec_tmp_x_err) {
+                const t_matrix Sy = pow(X_err, -2.) + pow(*Y_err++, -2.) ;
+                W_1.push_back(2./Sy);
+            }
+        } else if (doYZ) {
+            auto Y_err = vec_tmp_y_err.begin();
+            auto Z_err = vec_tmp_z_err.begin();
+            for (auto X_err : vec_tmp_x_err) {
+                const t_matrix Sy = pow(X_err, -2.) + pow(*Y_err++, -2.) + pow(*Z_err++, -2.) ;
+                W_1.push_back(3./Sy);
+            }
+        } else {
+
+            for (auto X_err : vec_tmp_x_err) {
+                W_1.push_back(pow(X_err, 2.));
+            }
+        }
+
+    } else {
+        W_1 = std::vector<double>(vec_tmp_x_err.size(), 1.0);
+    }
+
+    // Étape 1 : normaliser les poids w_i (inverses des erreurs²)
+    /*std::vector<double> w;
+    for (auto p_1 : W_1) {
+        double v = 1.0 / p_1;
+        w.push_back(v);
+    }
+    double sum_w = std::accumulate(w.begin(), w.end(), 0.0);
+    for (auto& v : w)
+        v /= sum_w;
+
+    // Étape 2 : construire W_1 = 1 / w_i_normalisés
+    //std::vector<double> W_1 ;
+    W_1.clear();
+    for (auto v : w)
+        W_1.push_back(1.0 / v);
+*/
+
+    std::vector<t_reduceTime> vec_theta_red;
+
+    for (auto t : vec_tmp_t) {
+        vec_theta_red.push_back((t-tmin)/(tmax-tmin));
+        //qDebug()<<"do spline compo t="<< t;
+    }
+    // --kernel method
+    // === Données ===
+    std::vector<double> x = vec_theta_red;//{0.0, 1.0, 2.0, 3.0};
+    std::vector<t_matrix> y = vec_tmp_x;// vec_X;//{1.0, 2.0, 1.5, 3.0};
+    size_t n = x.size();
+    double lambda = pow(10., sv.log_lambda_value);//0.1;
+
+    // 1
+    // tri suivant x
+   // sort_by_x(x, y, W_1); // déjà fait au dessus
+
+    // Matrice K symétrique
+    Matrix2D K (n, n);
+    for (size_t i = 0; i < n; ++i)
+        for (size_t j = 0; j < n; ++j)
+            K(i, j) = cubic_kernel(x[i], x[j]);
+
+    // Construction de M = K + lambda * W^-1
+    Matrix2D M = K;
+    for (size_t i = 0; i < n; ++i)
+        M(i, i) += lambda * W_1[i];
+
+    // Construction du vecteur W * y
+    // Construction du vecteur y (Eigen)
+    Eigen::Matrix<t_matrix, Dynamic, 1> y_vec(n);
+    for (size_t i = 0; i < n; ++i)
+        y_vec(i) = y[i];
+
+    // Résolution du système M * c = y
+    Eigen::Matrix<t_matrix, Dynamic, 1> ci = M.ldlt().solve(y_vec);  // LDLT pour matrice symétrique
+
+
+    // === Optimisation ===
+    // pour contraindre la positivité
+   // constrained_gradient_descent(c, y, M, lambda);
+
+    // === Affichage des résultats ===
+#ifdef DEBUG
+    std::cout << "Coefficients c_i:\n";
+    for (size_t i = 0; i < n; ++i)
+        std::cout << ci[i] << " ";
+    std::cout << "\n\n";
+#endif
+    // -- end kernel
+
+
+
+    // => On le calcule ici pour la première composante (x)
+
+    double lambda_cv = pow(10., sv.log_lambda_value);
+    double Vg;
+    std::pair<double, double> lambda_Vg;
+
+    Vg = 0.;// test
+
+    lambda_Vg = std::make_pair(lambda_cv, Vg);
+    qDebug()<<" end of kernel lambda : "<<lambda_cv<<" = 10E"<<log10(lambda_cv)<< " Vg="<< Vg <<"sqrt(Vg)"<<sqrt(Vg);
+
+    //  Spline final
+
+    // Calcul avec resultat du noyaux
+    std::vector<double> vec_G, vec_gamma, vec_varG;
+    for (double t : x) {
+        vec_G.push_back(evaluate(t, x, ci));
+        vec_gamma.push_back(second_derivative(t, x, ci));
+        vec_varG.push_back(prediction_variance(t, x, K, W_1, lambda, 1.0 ));
+    }
+
+    // --------------------------------------------------------------
+    //  Calcul de la spline g, g" pour chaque composante x y z + stockage
+    // --------------------------------------------------------------
+    MCMCSpline spline;
+
+    MCMCSplineComposante splineX, splineY, splineZ;
+
+    splineX.vecThetaReduced = vec_theta_red;
+    splineX.vecG = vec_G;
+    splineX.vecGamma = vec_gamma;
+
+    splineX.vecVarG = vec_varG;
+
+   spline.splineX = std::move(splineX);
+    spline.splineY = std::move(splineY);
+    spline.splineZ = std::move(splineZ);
+
+    return std::make_pair( spline, lambda_Vg);
+
+}
+
+std::pair<MCMCSpline, std::pair<double, double>> do_spline_composante(const std::vector<double> &vec_t, const std::vector<double> &vec_X, const std::vector<double> &vec_X_err, double tmin, double tmax, SilvermanParam& sv, const std::vector<double> &vec_Y, const std::vector<double> &vec_Y_err, const std::vector<double> &vec_Z, const std::vector<double> &vec_Z_err)
 {
 
     bool doY (!vec_Y.empty() && vec_Z.empty());
@@ -1905,10 +2692,18 @@ std::pair<MCMCSpline, std::pair<double, double>> do_spline_composante(const std:
     } else {
         lambda_cv = pow(10., sv.log_lambda_value);
 
-        std::vector<long double> W_1;
+       /* std::vector<t_matrix> W_1;
         for (auto X_err : vec_tmp_x_err) {
             W_1.push_back(pow(X_err, 2.0));
+        }*/
+
+        DiagonalMatrixLD W_1 (vec_tmp_x_err.size());
+        int i = 0;
+        for (auto X_err : vec_tmp_x_err) {
+            W_1.diagonal()[i++] = X_err * X_err;
         }
+
+
         const SplineMatrices& spline_matrices_tmp = prepare_calcul_spline(vecH, W_1);
         Vg = var_residual(vec_tmp_x, spline_matrices_tmp, vecH, lambda_cv);
 
@@ -1925,44 +2720,52 @@ std::pair<MCMCSpline, std::pair<double, double>> do_spline_composante(const std:
     lambda_Vg = std::make_pair(lambda_cv, Vg);
     qDebug()<<" end of cross_validation lambda : "<<lambda_cv<<" = 10E"<<log10(lambda_cv)<< " Vg="<< Vg <<"sqrt(Vg)"<<sqrt(Vg);
 
-    std::vector<t_matrix> W_1;
+   // std::vector<t_matrix> W_1;
+    DiagonalMatrixLD w_1 (vec_tmp_x_err.size());
+    int i = 0;
     if (sv.use_error_measure) {
         if (doY) {
             auto Y_err = vec_tmp_y_err.begin();
+            w_1.resize(vec_tmp_x_err.size());
+
             for (auto X_err : vec_tmp_x_err) {
                 const double Sy = pow(X_err, -2.) + pow(*Y_err++, -2.) ;
-                W_1.push_back(2./Sy);
+                w_1.diagonal()[i++] = 2.0 / Sy;
+               // W_1.push_back(2./Sy);
             }
         } else if (doYZ) {
             auto Y_err = vec_tmp_y_err.begin();
             auto Z_err = vec_tmp_z_err.begin();
             for (auto X_err : vec_tmp_x_err) {
                 const double Sy = pow(X_err, -2.) + pow(*Y_err++, -2.) + pow(*Z_err++, -2.) ;
-                W_1.push_back(3./Sy);
+                w_1.diagonal()[i++] = 3.0 / Sy;
+                //W_1.push_back(3./Sy);
             }
         } else {
 
             for (auto X_err : vec_tmp_x_err) {
-                W_1.push_back(pow(X_err, 2.));
+                w_1.diagonal()[i++] = pow(X_err, 2.);
+                //W_1.push_back(pow(X_err, 2.));
             }
         }
 
     } else {
-        W_1 = std::vector<t_matrix>(vec_tmp_x_err.size(), 1.0L);
+        //W_1 = std::vector<t_matrix>(vec_tmp_x_err.size(), 1.0L);
+        w_1.setIdentity(vec_tmp_x_err.size());
     }
 
-    const SplineMatrices& spline_matrices = prepare_calcul_spline(vecH, W_1);
+    const SplineMatrices& spline_matrices = prepare_calcul_spline(vecH, w_1);
 
 
   //  Spline final
 
-    std::unique_ptr<std::pair<Matrix2D, MatrixDiag>> decomp;
+    std::unique_ptr<std::pair<Matrix2D, DiagonalMatrixLD>> decomp;
 
     if (lambda_cv != 0.0) {
-        decomp = std::make_unique<std::pair<Matrix2D, MatrixDiag>>(decomp_matB(spline_matrices, lambda_cv));
+        decomp = std::make_unique<std::pair<Matrix2D, DiagonalMatrixLD>>(decomp_matB(spline_matrices, lambda_cv));
 
     } else {
-        decomp = std::make_unique<std::pair<Matrix2D, MatrixDiag>>(decompositionCholesky(spline_matrices.matR, 5, 1));
+        decomp = std::make_unique<std::pair<Matrix2D, DiagonalMatrixLD>>(decompositionCholesky(spline_matrices.matR, 5, 1));
     }
 
 
@@ -1972,19 +2775,22 @@ std::pair<MCMCSpline, std::pair<double, double>> do_spline_composante(const std:
 
     if (lambda_cv == 0) {
         if (sv.use_error_measure) {
-            varG = std::vector<double>(W_1.begin(), W_1.end());
+            varG = std::vector<double>(w_1.diagonal().begin(), w_1.diagonal().end());
 
         } else {
-            varG =  std::vector<double>(W_1.size(), 0.0);
+            varG =  std::vector<double>(w_1.size(), 0.0);
         }
 
 
     } else {
-        const std::vector<t_matrix>& matA = calculMatInfluence_origin(spline_matrices, 1, *decomp, lambda_cv);
-
+        DiagonalMatrixLD matA = diagonal_influence_matrix(spline_matrices, 1, *decomp, lambda_cv);
         // Affectation de Vg pour l'affichage de l'erreur global
-        for (auto ai : matA)
-            varG.push_back(ai*Vg);
+        matA = matA * Vg;
+
+        varG = std::vector<double>(matA.diagonal().data(), matA.diagonal().data() + matA.diagonal().size());
+
+        //for (auto ai : matA)
+          //  varG.push_back(ai*Vg);
     }
 
 
@@ -2059,10 +2865,17 @@ std::pair<MCMCSpline, std::pair<double, double>> do_spline_composante(const std:
 long double cross_validation (const std::vector<t_matrix>& vec_Y, const SplineMatrices& matrices, const std::vector<t_reduceTime>& vecH, const double lambda)
 {
 
-    const long double N = matrices.diagWInv.size();
+    const long double N = matrices.diagWInv.rows();
+    //showMatrix(matrices.matR, "matR");
+    //showMatrix(matrices.matQ, "matQ");
+
 
     Matrix2D matB = addMatEtMat(matrices.matR, multiConstParMat(matrices.matQTW_1Q, lambda, 5), 5);
 
+    //Matrix2D Btest = matrices.matR + lambda*matrices.matQTW_1Q;
+    //showMatrix(Btest, "Btest");
+
+//showMatrix(matB, "matB"); // vérifier si symetrique ------
     // Decomposition_Cholesky de matB en matL et matD
     // Si alpha global: calcul de Mat_B = R + alpha * Qt * W-1 * Q  et décomposition de Cholesky en Mat_L et Mat_D
     const auto &decomp = decompositionCholesky(matB, 5, 1);
@@ -2075,11 +2888,11 @@ long double cross_validation (const std::vector<t_matrix>& vec_Y, const SplineMa
 
     const std::vector<t_matrix>& g = do_vec_G(matrices, vec_gamma_L, vec_Y, lambda);
 
-    const std::vector<t_matrix>& matA = calculMatInfluence_origin(matrices, 1, decomp, lambda);
+    const DiagonalMatrixLD matA = diagonal_influence_matrix(matrices, 1, decomp, lambda);
 
     long double CV = 0.0;
     for (int i = 0 ; i < N; i++) {
-        CV +=  pow((g[i] - vec_Y[i]) / (1.0 - matA[i]), 2.0)/ matrices.diagWInv[i];
+        CV +=  pow((g[i] - vec_Y[i]) / (1.0 - matA.diagonal()[i]), 2.0)/ matrices.diagWInv.diagonal()[i];
     }
 
     return CV/N;
@@ -2116,6 +2929,7 @@ long double compensated_sum(const std::vector<long double>& values)
 
     return sum;
 }
+
 /**
  * @brief Calculates the Generalized Cross-Validation (GCV) score for a spline model.
  * i.e. the prediction of $(g_(ti)-Yij)$ without the point Yij. With weight in matrices
@@ -2146,7 +2960,7 @@ long double compensated_sum(const std::vector<long double>& values)
  */
 long double general_cross_validation (const std::vector<t_matrix> &vec_Y, const SplineMatrices& matrices, const std::vector<t_reduceTime> &vecH, const double lambda)
 {
-    const double N = matrices.diagWInv.size();
+    const double N = matrices.diagWInv.rows();
 
     // Create matB = R + lambda * Qt * W-1 * Q
 
@@ -2160,10 +2974,10 @@ long double general_cross_validation (const std::vector<t_matrix> &vec_Y, const 
     const std::vector<t_matrix>& g = do_vec_G(matrices, vec_gamma_L, vec_Y, lambda);
 
     // Calculate the influence matrix matA
-    const std::vector<t_matrix>& matA = calculMatInfluence_origin(matrices, 1, decomp, lambda);
+    const DiagonalMatrixLD matA = diagonal_influence_matrix(matrices, 1, decomp, lambda);
 
     //long double long_GCV = 0.0L;
-    const long double long_trace = compensated_sum(matA) / static_cast<long double>(N);
+    const t_matrix long_trace = matA.diagonal().trace() / static_cast<t_matrix>(N); //compensated_sum(matA) / static_cast<long double>(N);
     const long double long_DLEc = 1.0L - long_trace;
 
 /*
@@ -2180,7 +2994,7 @@ long double general_cross_validation (const std::vector<t_matrix> &vec_Y, const 
 
     for (size_t i = 0; i < vec_Y.size(); ++i) {
         long double residual = g[i] - vec_Y[i];
-        long double weight_inv = matrices.diagWInv[i];
+        long double weight_inv = matrices.diagWInv.diagonal()[i];
 
         // Calculer (residual * residual / weight_inv) avec ordre optimal d'opérations
         long double term = (residual / std::sqrt(weight_inv)) * (residual / std::sqrt(weight_inv));
@@ -2205,7 +3019,7 @@ long double general_cross_validation (const std::vector<t_matrix> &vec_Y, const 
 
 double RSS(const std::vector<t_matrix> &vec_Y, const SplineMatrices &matrices, const std::vector<t_reduceTime> &vecH, const double lambda)
 {
-    Matrix2D matB;
+    Matrix2D matB (matrices.matR.rows(), matrices.matR.cols());
     if (lambda != 0) {
         const Matrix2D &tmp = multiConstParMat(matrices.matQTW_1Q, lambda, 5);
         matB = addMatEtMat(matrices.matR, tmp, 5);
@@ -2216,7 +3030,7 @@ double RSS(const std::vector<t_matrix> &vec_Y, const SplineMatrices &matrices, c
 
     // Decomposition_Cholesky de matB en matL et matD
     // Si alpha global: calcul de Mat_B = R + alpha * Qt * W-1 * Q  et décomposition de Cholesky en Mat_L et Mat_D
-    const std::pair<Matrix2D, MatrixDiag> &decomp = decompositionCholesky(matB, 5, 1);
+    const std::pair<Matrix2D, DiagonalMatrixLD> &decomp = decompositionCholesky(matB, 5, 1);
 
     const SplineResults& sy = do_spline(vec_Y, matrices,  vecH, decomp, lambda);
 
@@ -2434,15 +3248,13 @@ std::pair<double, double> initLambdaSplineByCV(const bool depth, const std::vect
         }
 
 
-        std::vector<long double> vec_Vg_Si2;
-
+        DiagonalMatrixLD vec_Vg_Si2 (vec_X_err.size());
+        int i = 0;
         for (auto X_err : vec_X_err) {
-            vec_Vg_Si2.push_back(Vg + pow(X_err, 2.));
+            vec_Vg_Si2.diagonal()[i++] = Vg + X_err * X_err;
         }
 
         const SplineMatrices &test_matrices = prepare_calcul_spline(vecH, vec_Vg_Si2);
-
-
 
         //-----
         const double cv = cross_validation(vec_X, test_matrices, vecH, lambda_loop);
@@ -2520,9 +3332,14 @@ std::pair<double, double> initLambdaSplineByCV(const bool depth, const std::vect
             lambda_test =  lambda_vect->at(idx_test);
             Vg_test = Vg_vect->at(idx_test);
 
-            std::vector<long double> vec_Vg_Si2;
+            /*std::vector<long double> vec_Vg_Si2;
             for (auto X_err : vec_X_err) {
                 vec_Vg_Si2.push_back(Vg_test + pow(X_err, 2.));
+            }*/
+            DiagonalMatrixLD vec_Vg_Si2 (vec_X_err.size());
+            int i =0;
+            for (auto X_err : vec_X_err) {
+                vec_Vg_Si2.diagonal()[i++] = (Vg_test + X_err * X_err);
             }
             const SplineMatrices &spline_matrices = prepare_calcul_spline(vecH, vec_Vg_Si2);
 
@@ -2534,7 +3351,7 @@ std::pair<double, double> initLambdaSplineByCV(const bool depth, const std::vect
 
             // Decomposition_Cholesky de matB en matL et matD
             // Si alpha global: calcul de Mat_B = R + alpha * Qt * W-1 * Q  et décomposition de Cholesky en Mat_L et Mat_D
-            const std::pair<Matrix2D, MatrixDiag> &decomp = decompositionCholesky(matB, 5, 1);
+            const std::pair<Matrix2D, DiagonalMatrixLD> &decomp = decompositionCholesky(matB, 5, 1);
 
             const SplineResults &sx = do_spline(vec_X, spline_matrices,  vecH, decomp, lambda_test);
 
@@ -2599,31 +3416,49 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam& sv, const 
     unsigned long first_mini_cv_idx = 0;
 
 
-    std::vector<t_matrix> W_1;
+    int i = 0;
 
-    if (doY) {
-        auto Y_err = vec_Y_err.begin();
-        for (auto &X_err : vec_X_err) {
-            const double Sy = pow(X_err, -2.0) + pow(*Y_err++, -2.0);
-            W_1.push_back(2.0 / Sy);
-        }
-    }
-    else if (doYZ) {
-        auto Y_err = vec_Y_err.begin();
-        auto Z_err = vec_Z_err.begin();
-        for (auto &X_err : vec_X_err) {
-            const double Sy =
-                pow(X_err, -2.) + pow(*Y_err++, -2.0) + pow(*Z_err++, -2.0);
-            W_1.push_back(3.0 / Sy);
-        }
-    }
-    else {
-        for (auto &X_err : vec_X_err) {
-            W_1.push_back(pow(X_err, 2.0));
-        }
-    }
+    DiagonalMatrixLD diag_W_1 (vec_X_err.size());
+    if (sv.use_error_measure) {
 
-    const SplineMatrices& test_matrices = prepare_calcul_spline(vecH, W_1);
+        if (doY) {
+            auto Y_err = vec_Y_err.begin();
+            for (auto &X_err : vec_X_err) {
+                const double Sy = pow(X_err, -2.0) + pow(*Y_err++, -2.0);
+                diag_W_1.diagonal()[i++] = 2.0/ Sy;
+                //W_1.push_back(2.0 / Sy);
+            }
+        }
+        else if (doYZ) {
+            auto Y_err = vec_Y_err.begin();
+            auto Z_err = vec_Z_err.begin();
+            for (auto &X_err : vec_X_err) {
+                const double Sy = pow(X_err, -2.) + pow(*Y_err++, -2.0) + pow(*Z_err++, -2.0);
+                diag_W_1.diagonal()[i++] = 3.0/ Sy;
+                // W_1.push_back(3.0 / Sy);
+            }
+        }
+        else {
+            for (auto &X_err : vec_X_err) {
+                diag_W_1.diagonal()[i++] = X_err * X_err;
+                //W_1.push_back(pow(X_err, 2.0));
+            }
+        }
+
+    } else {
+        diag_W_1.setIdentity();
+    }
+    // Créer la matrice diagonale à partir du vecteur
+    //DiagonalMatrixLD diag_W_1 (W_1.begin(), W_1.end());
+
+    t_matrix ONE_sum_W = 1.0 / diag_W_1.diagonal().sum();
+
+
+    DiagonalMatrixLD W_1_normalized = diag_W_1 * ONE_sum_W;
+
+    //const SplineMatrices test_matrices2 = prepare_calcul_spline(vecH, W_1_normalized);
+
+    const SplineMatrices test_matrices = prepare_calcul_spline(vecH, diag_W_1);
 
     for (int lambda_loop_exp = -1000; lambda_loop_exp < 1001; ++lambda_loop_exp ) {
 
@@ -2692,7 +3527,7 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam& sv, const 
     }
 
     // A - Recherche de GCV --------------
-    int i = 0; // Sauvegarde du tableau brute
+    i = 0; // Sauvegarde du tableau brute
     for (auto& v : sv.tab_GCV) {
         v.second = GCV[i++];
     }
@@ -2869,26 +3704,26 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam& sv, const 
  */
 double var_residual(const std::vector<t_matrix>& vec_Y, const SplineMatrices& matrices, const std::vector<t_reduceTime>& vecH, const double lambda)
 {
-    std::unique_ptr<std::pair<Matrix2D, MatrixDiag>> decomp;
+    std::unique_ptr<std::pair<Matrix2D, DiagonalMatrixLD>> decomp;
 
     // Decomposition_Cholesky de matB en matL et matD
     if (lambda != 0.0) {
-        decomp = std::make_unique<std::pair<Matrix2D, MatrixDiag>>(decomp_matB(matrices, lambda));
+        decomp = std::make_unique<std::pair<Matrix2D, DiagonalMatrixLD>>(decomp_matB(matrices, lambda));
 
     } else {
-        decomp = std::make_unique<std::pair<Matrix2D, MatrixDiag>>(decompositionCholesky(matrices.matR, 5, 1));
+        decomp = std::make_unique<std::pair<Matrix2D, DiagonalMatrixLD>>(decompositionCholesky(matrices.matR, 5, 1));
     }
 
     //  Calcul de Mat_B = R + alpha * Qt * W-1 * Q
 
     const SplineResults& sy = do_spline(vec_Y, matrices,  vecH, *decomp, lambda);
 
-    const std::vector<t_matrix>& matA = calculMatInfluence_origin(matrices, 1, *decomp, lambda);
+    const DiagonalMatrixLD matA = diagonal_influence_matrix(matrices, 1, *decomp, lambda);
 
     long double N = static_cast<long double>(vec_Y.size());
 
     long double res = 0.0L;
-    const long double trace = compensated_sum(matA);
+    const long double trace = matA.diagonal().trace();// compensated_sum(matA);
 
     for (size_t i = 0; i < vec_Y.size(); ++i) {
         long double residual = static_cast<long double>(sy.vecG[i] - vec_Y[i]);
@@ -2922,7 +3757,7 @@ double var_residual(const std::vector<t_matrix>& vec_Y, const SplineMatrices& ma
 
 std::vector<double> general_residual(const std::vector<t_matrix> &vec_Y,  const SplineMatrices &matrices, const std::vector<t_reduceTime> &vecH, const double lambda)
 {
-    const double N = matrices.diagWInv.size();
+    const double N = matrices.diagWInv.rows();
 
     const Matrix2D& matB = addMatEtMat(matrices.matR, multiConstParMat(matrices.matQTW_1Q, lambda, 5), 5);
 
@@ -2931,14 +3766,15 @@ std::vector<double> general_residual(const std::vector<t_matrix> &vec_Y,  const 
     //std::pair<Matrix2D, std::vector<double>> decomp = decompositionCholesky(matB, 5, 1);
     //SplineResults s = calculSplineX (matrices, vecH, decomp, matB, lambdaSpline);
 
-    //auto matA = calculMatInfluence_origin(matrices, s , 1, lambdaSpline);
+    //auto matA = diagonal_influence_matrix(matrices, s , 1, lambdaSpline);
     const auto& decomp = decompositionCholesky(matB, 5, 1);
 
     const SplineResults &s = do_spline(vec_Y, matrices,  vecH, decomp, lambda);
-    const std::vector<t_matrix>& matA = calculMatInfluence_origin(matrices, 1, decomp, lambda);
+    const DiagonalMatrixLD matA = diagonal_influence_matrix(matrices, 1, decomp, lambda);
 
     // Nombre de degré de liberté
-    const auto DLEc = 1 - std::accumulate(matA.begin(), matA.end(), 0.0) / static_cast<t_matrix>(N);
+    //const auto DLEc = 1 - std::accumulate(matA.begin(), matA.end(), 0.0) / static_cast<t_matrix>(N);
+    const auto DLEc = 1 - matA.diagonal().trace() / static_cast<t_matrix>(N);
     // 1 - calcul de sigma2 star
     /*double sum_w = 0.;
     for (auto& w_1 : matrices.diagWInv) {
@@ -2957,7 +3793,7 @@ std::vector<double> general_residual(const std::vector<t_matrix> &vec_Y,  const 
     double sigma = 1.0;//sqrt(var);
     std::vector<double> g_res;
     for (int i = 0 ; i < N; i++) {
-        g_res.push_back(  ( vec_Y[i] - s.vecG.at(i))/ (sigma*sqrt(matrices.diagWInv.at(i))*sqrt(DLEc)) );
+        g_res.push_back(  ( vec_Y[i] - s.vecG.at(i))/ (sigma*sqrt(matrices.diagWInv.diagonal()[i])*sqrt(DLEc)) );
     }
 
     return g_res;
@@ -3150,7 +3986,7 @@ std::vector<int> get_order(const std::vector<t_reduceTime> &vec)
     return res;
 }
 
-std::pair<Matrix2D, MatrixDiag> decomp_matB (const SplineMatrices& matrices, const double lambdaSpline)
+std::pair<Matrix2D, DiagonalMatrixLD> decomp_matB(const SplineMatrices& matrices, const double lambdaSpline)
 {
     Q_ASSERT(lambdaSpline != 0);
     /*

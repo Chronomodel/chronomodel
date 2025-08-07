@@ -893,24 +893,41 @@ bool Project::load(const QString &path, bool force)
                     mModel->setProject();
 
                     QDataStream in(&dataFile);
-                    const bool restore_ok = mModel->restoreFromFile(&in);
 
-                    if (in.status() != QDataStream::Ok || !restore_ok) {
-                        std::cout << "[Project::load] DataStream Error" << std::endl;
-                        QMessageBox message(QMessageBox::Critical,
-                                            tr("Error setProject"),
-                                            tr("The project could not be loaded.") + "\r",
+                    int qDataStreamVersion;
+                    in >> qDataStreamVersion;
+                    in.setVersion(qDataStreamVersion);
+
+                    if (in.version() == QDataStream::Qt_6_7) {  // Depuis v3.3.0 avant Qt_6_4
+                         const bool restore_ok = mModel->restoreFromFile(&in);
+
+                        if (in.status() != QDataStream::Ok || !restore_ok) {
+                            std::cout << "[Project::load] loading file.res DataStream Error" << std::endl;
+                            QMessageBox message(QMessageBox::Critical,
+                                                tr("Error setProject"),
+                                                tr("The project could not be loaded.") + "\r",
+                                                QMessageBox::Ok,
+                                                qApp->activeWindow());
+                            message.exec();
+                            setNoResults();
+                            clear_and_shrink_model();
+                            //hasResults = false;
+
+                        } else {
+                            mModel->generateCorrelations(mModel->mChains);
+                            setWithResults();
+                            //hasResults = true;
+                        }
+                    } else {
+                        QMessageBox message(QMessageBox::Warning,
+                                            tr("Error Loading Results"),
+                                            tr("The result could not be loaded.") + "\r" +
+                                                tr("Older Stream Version: %1").arg(in.version()),
                                             QMessageBox::Ok,
                                             qApp->activeWindow());
                         message.exec();
                         setNoResults();
                         clear_and_shrink_model();
-                        //hasResults = false;
-
-                    } else {
-                        mModel->generateCorrelations(mModel->mChains);
-                        setWithResults();
-                        //hasResults = true;
                     }
                 } catch (const std::exception &e) {
                     QMessageBox message(QMessageBox::Warning,
@@ -1266,6 +1283,11 @@ bool Project::load_old(const QString &path, bool force)
                     mModel->setProject();
 
                     QDataStream in(&dataFile);
+
+                    int QDataStreamVersion;
+                    in >> QDataStreamVersion;
+                    in.setVersion(QDataStreamVersion);
+                    //if (in.version()!= QDataStream::Qt_6_7) { // since v3.3.0 before Qt_6_4
 
                     const bool restore_ok = mModel->restoreFromFile(&in);
 
@@ -1780,6 +1802,9 @@ bool Project::saveProjectToFile()
 
         if (file_res.open(QIODevice::WriteOnly)) {
             QDataStream out(&file_res);
+            out.setVersion(QDataStream::Qt_6_7); // since v3.3.0 before Qt_6_4
+            out << out.version();
+
             mModel->saveToFile(&out);
             file_res.close();
 

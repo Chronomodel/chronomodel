@@ -1257,6 +1257,9 @@ double sample_in_repartition (std::shared_ptr<CalibrationCurve> calibrateCurve, 
         const int idxUnder = floor(clampProp(min));
         const int idxUpper = floor(clampProp(max));
 
+        if (idxUpper == idxUnder)
+            return Generator::randomUniform(min, max);
+
         double idx = vector_interpolate_idx_for_value(value, calibrateCurve->mRepartition, idxUnder, idxUpper);
 
         double t = unionTmin + idx * unionStep;
@@ -1271,10 +1274,10 @@ double sample_in_repartition (std::shared_ptr<CalibrationCurve> calibrateCurve, 
 
 #ifdef DEBUG
         if (t > max) {
-            qDebug() <<" [sample_in_repartition] t>max"<<t<<max<<"[sample_in_repartition] Generator::randomUniform(min, max)";
+            qDebug() <<" [ModelUtilities::sample_in_repartition] t>max" << t << max << "Generator::randomUniform(min, max)";
 
         } else if (t<min) {
-            qDebug() <<" [sample_in_repartition] t<min"<<t<<min<<"[sample_in_repartition] Generator::randomUniform(min, max)";
+            qDebug() <<" [ModelUtilities::sample_in_repartition] t<min" << t << min <<" Generator::randomUniform(min, max)";
 
         }
 #endif

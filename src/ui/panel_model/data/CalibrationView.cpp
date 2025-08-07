@@ -151,7 +151,7 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):
     mMajorScaleEdit = new LineEdit(this);
     mMajorScaleEdit->setAdjustText();
     mMajorScaleEdit->setToolTip(tr("Enter a interval for the main division of the axes under the curves, upper than 1"));
-    mMajorScaleEdit->setText(locale().toString(mMajorScale));
+    mMajorScaleEdit->setText(QLocale().toString(mMajorScale));
 
     mMinorScaleLab = new Label(tr("Min. Cnt"), this);
     mMinorScaleLab->setAdjustText();
@@ -162,7 +162,7 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):
     mMinorScaleEdit = new LineEdit(this);
     mMinorScaleEdit->setAdjustText();
     mMinorScaleEdit->setToolTip(tr("Enter a interval for the subdivision of the Major Interval for the scale under the curves, upper than 1"));
-    mMinorScaleEdit->setText(locale().toString(mMinorScale));
+    mMinorScaleEdit->setText(QLocale().toString(mMinorScale));
 
     mHPDLab->raise();
     mHPDEdit->raise();
@@ -272,7 +272,7 @@ void CalibrationView::setDate(const Date& d)
         mEndEdit->setText(stringForGraph(mTmaxDisplay));
 
         if (std::isinf(-mTminDisplay) || std::isinf(mTmaxDisplay))
-            throw(tr("CalibrationView::setDate ") + mDate.mPlugin->getName() + mDate.mCalibration->getQStringName() + locale().toString(mDate.mCalibration->mTmin) + locale().toString(mDate.mCalibration->mTmax));
+            throw(tr("CalibrationView::setDate ") + mDate.mPlugin->getName() + mDate.mCalibration->getQStringName() + QLocale().toString(mDate.mCalibration->mTmin) + QLocale().toString(mDate.mCalibration->mTmax));
 
         updateScroll();
 
@@ -364,7 +364,7 @@ void CalibrationView::updateGraphs()
             periodCalib = equal_areas(periodCalib, 1.);
             std::map<double, double> hpd;
             QList<QPair<double, QPair<double, double> > > formated_intervals;
-            const double thresh = std::clamp(locale().toDouble(input), 0., 100.);
+            const double thresh = std::clamp(QLocale().toDouble(input), 0.0, 100.0);
 
             if (thresh>(100. - 2*mDate.threshold_limit)) {
                 // In the case of uniform, or calibrations with a length of less than 10, there is no reduction in support for the calibrate (see Date::calibrate).
@@ -516,7 +516,7 @@ void CalibrationView::updateScaleX()
 {
     QString str = mMajorScaleEdit->text();
     bool isNumber = true;
-    double aNumber = locale().toDouble(str, &isNumber);
+    double aNumber = QLocale().toDouble(str, &isNumber);
 
     qreal textSize = fontMetrics().horizontalAdvance(str)  + fontMetrics().horizontalAdvance("0");
     if (textSize > mMajorScaleEdit->width()) {
@@ -550,7 +550,7 @@ void CalibrationView::updateScaleX()
     } else
         mMinorScaleEdit->setFont(font());
 
-    aNumber = locale().toDouble(str, &isNumber);
+    aNumber = QLocale().toDouble(str, &isNumber);
 
     if (isNumber && aNumber >= 1) {
         mMinorScale =  int (aNumber);
@@ -565,13 +565,13 @@ void CalibrationView::updateScroll()
 {
     bool ok;
 
-    double val = locale().toDouble(mStartEdit->text(), &ok);
+    double val = QLocale().toDouble(mStartEdit->text(), &ok);
     if (ok)
         mTminDisplay = val;
     else
         mTminDisplay = mSettings.getTminFormated();
 
-    val = locale().toDouble(mEndEdit->text(), &ok);
+    val = QLocale().toDouble(mEndEdit->text(), &ok);
     if (ok)
         mTmaxDisplay = val;
     else

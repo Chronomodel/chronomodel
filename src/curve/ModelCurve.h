@@ -44,6 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "CurveUtilities.h"
 #include "CurveSettings.h"
 #include "Matrix.h"
+#include "version.h"
 //#include "Project.h"
 
 #include <QFile>
@@ -81,7 +82,9 @@ public:
     virtual void saveToFile(QDataStream *out);
 
     virtual bool restoreFromFile(QDataStream *in) {
-        std::cout << "[ModelCurve::restoreFromFile] entering";
+        //std::cout << "[ModelCurve::restoreFromFile] entering";
+        QList<QString> compatible_version_335;
+        compatible_version_335 << "3.3.5";
 
         QList<QString> compatible_version_330;
         compatible_version_330 << "3.3.0" << "3.3.5";
@@ -95,7 +98,10 @@ public:
 
         *in >> res_file_version;
 
-        if (compatible_version_330.contains(res_file_version))
+        if (compatible_version_335.contains(res_file_version))
+            return restoreFromFile_v335(in);
+
+        else if (compatible_version_330.contains(res_file_version))
             return restoreFromFile_v330(in);
 
         else if (compatible_version_328.contains(res_file_version))
@@ -108,6 +114,7 @@ public:
     bool restoreFromFile_v324(QDataStream *in);
     bool restoreFromFile_v328(QDataStream *in);
     bool restoreFromFile_v330(QDataStream *in);
+    bool restoreFromFile_v335(QDataStream *in);
 
     virtual QJsonObject toJson() const;
     virtual void fromJson( const QJsonObject &json);
@@ -138,14 +145,15 @@ public:
     QList<PosteriorMeanGComposante> getChainsMeanGComposanteZ();
 
     void memo_PosteriorG_3D(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted);
-    void memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted);
 
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5
+    void memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted);
+#endif
 
     void memo_PosteriorG(PosteriorMeanGComposante &postGCompo, const MCMCSplineComposante &splineComposante, const int realyAccepted);
     void memo_PosteriorG_filtering(PosteriorMeanGComposante &postGCompo, const MCMCSplineComposante &splineComposante, int &realyAccepted_old, const std::pair<double, double> GPfilter);
-    bool is_accepted_gy_filter(const MCMCSplineComposante& splineComposante, const std::pair<double, double> GPfilter);
+    bool is_accepted_by_filter(const MCMCSplineComposante& splineComposante, const std::pair<double, double> GPfilter);
 
-    PosteriorMeanGComposante buildCurveAndMap(const int nbPtsX, const int nbPtsY, const char charComp = 'X', const bool doMap = false, const double mapYMin = 0, double mapYMax = 0);
     // same as void GraphView::exportReferenceCurves()
     void exportMeanGComposanteToReferenceCurves(const PosteriorMeanGComposante pMeanCompoXYZ, const QString &defaultPath, QLocale csvLocale, const QString &csvSep) const;
 

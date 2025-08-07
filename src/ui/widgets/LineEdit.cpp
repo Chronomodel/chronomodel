@@ -56,6 +56,34 @@ LineEdit::LineEdit(QWidget* parent):
     }
 }
 
+void LineEdit::resetText(double value)
+{
+    QLineEdit::blockSignals(true);
+    //QString text = QLocale().toString(value, 'g', std::numeric_limits<double>::digits10 + 1); // Définit la précision au maximum de digits possibles pour un double
+    QString text;
+
+    if (value == 0.0) {
+        // Pour 0 On force la notation décimale avec 3 décimales en utilisant la locale
+        text = QLocale().toString(0.0, 'f', 3);
+
+    } else if (std::abs(value) < 1.0) {
+        // Notation scientifique avec 3 décimales en utilisant la locale
+        text = QLocale().toString(value, 'e', 3);
+    } else {
+        // Notation décimale avec 3 décimales en utilisant la locale
+        text = QLocale().toString(value, 'f', 3);
+    }
+    QLineEdit::setText(text);
+    QLineEdit::blockSignals(false);
+};
+
+void LineEdit::resetText(const QString& text)
+{
+    QLineEdit::blockSignals(true);
+    QLineEdit::setText(text);
+    QLineEdit::blockSignals(false);
+};
+
 void LineEdit::setVisible(bool visible)
 {
     QWidget::setVisible(visible);

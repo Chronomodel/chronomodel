@@ -131,7 +131,7 @@ PhaseDialog::PhaseDialog(QWidget* parent, Qt::WindowFlags flags):
                                   _data.value(STATE_COLOR_BLUE).toInt()));
 
     mTauTypeCombo->setCurrentIndex(_data.value(STATE_PHASE_TAU_TYPE).toInt());
-    mTauFixedEdit->setText(locale().toString(_data.value(STATE_PHASE_TAU_FIXED).toDouble()));
+    mTauFixedEdit->setText(QLocale().toString(_data.value(STATE_PHASE_TAU_FIXED).toDouble()));
     showAppropriateTauOptions();
 }
 
@@ -168,7 +168,7 @@ void PhaseDialog::setPhase(QJsonObject phaseObj)
                                   phaseObj.value(STATE_COLOR_GREEN).toInt(),
                                   phaseObj.value(STATE_COLOR_BLUE).toInt()));
     mTauTypeCombo->setCurrentIndex(phaseObj.value(STATE_PHASE_TAU_TYPE).toInt());
-    mTauFixedEdit->setText(locale().toString(phaseObj.value(STATE_PHASE_TAU_FIXED).toDouble()));
+    mTauFixedEdit->setText(QLocale().toString(phaseObj.value(STATE_PHASE_TAU_FIXED).toDouble()));
 
     showAppropriateTauOptions();
 }
@@ -182,7 +182,7 @@ QJsonObject PhaseDialog::getPhase()
     phaseObj[STATE_COLOR_GREEN] = mColorPicker->getColor().green();
     phaseObj[STATE_COLOR_BLUE] = mColorPicker->getColor().blue();
     phaseObj[STATE_PHASE_TAU_TYPE] = Phase::TauType (mTauTypeCombo->currentIndex());
-    phaseObj[STATE_PHASE_TAU_FIXED] = locale().toDouble(mTauFixedEdit->text());
+    phaseObj[STATE_PHASE_TAU_FIXED] = QLocale().toDouble(mTauFixedEdit->text());
 
     return phaseObj;
 }

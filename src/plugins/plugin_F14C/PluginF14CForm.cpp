@@ -134,7 +134,7 @@ void PluginF14CForm::setData(const QJsonObject& data, bool isCombined)
 QJsonObject PluginF14CForm::getData()
 {
     QJsonObject data;
-    const QLocale locale=QLocale();
+    const QLocale locale = QLocale();
     const double a = locale.toDouble(mAverageEdit->text());
     const double e = locale.toDouble(mErrorEdit->text());
 

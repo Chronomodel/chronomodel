@@ -433,26 +433,26 @@ void MCMCSettingsDialog::inputControl()
 
 void MCMCSettingsDialog::reset()
 {
-    mNumProcEdit->setText(locale().toString(MCMC_NUM_CHAINS_DEFAULT));
-    mNumIterEdit->setText(locale().toString(MCMC_NUM_RUN_DEFAULT));
-    mNumBurnEdit->setText(locale().toString(MCMC_NUM_BURN_DEFAULT));
-    mMaxBatchesEdit->setText(locale().toString(MCMC_MAX_ADAPT_BATCHES_DEFAULT));
-    mIterPerBatchEdit->setText(locale().toString(MCMC_ITER_PER_BATCH_DEFAULT));
-    mDownSamplingEdit->setText(locale().toString(MCMC_THINNING_INTERVAL_DEFAULT));
+    mNumProcEdit->setText(QLocale().toString(MCMC_NUM_CHAINS_DEFAULT));
+    mNumIterEdit->setText(QLocale().toString(MCMC_NUM_RUN_DEFAULT));
+    mNumBurnEdit->setText(QLocale().toString(MCMC_NUM_BURN_DEFAULT));
+    mMaxBatchesEdit->setText(QLocale().toString(MCMC_MAX_ADAPT_BATCHES_DEFAULT));
+    mIterPerBatchEdit->setText(QLocale().toString(MCMC_ITER_PER_BATCH_DEFAULT));
+    mDownSamplingEdit->setText(QLocale().toString(MCMC_THINNING_INTERVAL_DEFAULT));
     mSeedsEdit->setText("");
 
-    mLevelEdit->setText(locale().toString(MCMC_MIXING_DEFAULT));
+    mLevelEdit->setText(QLocale().toString(MCMC_MIXING_DEFAULT));
 }
 
 void MCMCSettingsDialog::setQuickTest()
 {
-    mNumProcEdit->setText(locale().toString(1));
+    mNumProcEdit->setText(QLocale().toString(1));
 
-    mNumBurnEdit->setText(locale().toString(10));
-    mMaxBatchesEdit->setText(locale().toString(10));
-    mIterPerBatchEdit->setText(locale().toString(20));
-    mNumIterEdit->setText(locale().toString(100));
-    mDownSamplingEdit->setText(locale().toString(1));
+    mNumBurnEdit->setText(QLocale().toString(10));
+    mMaxBatchesEdit->setText(QLocale().toString(10));
+    mIterPerBatchEdit->setText(QLocale().toString(20));
+    mNumIterEdit->setText(QLocale().toString(100));
+    mDownSamplingEdit->setText(QLocale().toString(1));
 
-    mLevelEdit->setText(locale().toString(0.99));
+    mLevelEdit->setText(QLocale().toString(0.99));
 }

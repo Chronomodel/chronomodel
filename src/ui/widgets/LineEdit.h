@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -53,6 +53,9 @@ public slots:
 
 public:
     explicit LineEdit(QWidget* parent = nullptr);
+    void resetText(double value);
+    void resetText(const QString& text);
+
     void setFont(const QFont &font);
     virtual ~LineEdit();
     void setAdjustText(bool ad = true);

@@ -127,15 +127,15 @@ StudyPeriodDialog::~StudyPeriodDialog()
     disconnect(mForcedCheck, &QCheckBox::toggled, this, &StudyPeriodDialog::showMessageStepForced);
 }
 
-void StudyPeriodDialog::setSettings(const StudyPeriodSettings &s)
+void StudyPeriodDialog::setSettings(const StudyPeriodSettings& s)
 {
-    mMinEdit->setText(locale().toString(s.mTmin));
-    mMaxEdit->setText(locale().toString(s.mTmax));
+    mMinEdit->setText(QLocale().toString(s.mTmin));
+    mMaxEdit->setText(QLocale().toString(s.mTmax));
     //const double suggested = s.getStep(s.mTmin, s.mTmax);
     // mForcedCheck -> setText(tr("(suggested/default value = %1 )").arg(QString::number(suggested) ) );
     mForcedCheck -> setChecked(s.mStepForced);
-    mStepSpin    -> setEnabled(s.mStepForced);
-    mStepSpin    -> setValue(s.mStep);
+    mStepSpin -> setEnabled(s.mStepForced);
+    mStepSpin -> setValue(s.mStep);
 
     mAdvancedCheck->setChecked(s.mStepForced);
     connect(mForcedCheck, &QCheckBox::toggled, this, &StudyPeriodDialog::showMessageStepForced);
@@ -145,15 +145,15 @@ void StudyPeriodDialog::setStep(double step, bool forced, double suggested)
 {
     mForcedCheck -> setText(tr("(suggested/default value = %1 )").arg(QString::number(suggested) ) );
     mForcedCheck -> setChecked(forced);
-    mStepSpin    -> setEnabled(forced);
-    mStepSpin    -> setValue(step);
+    mStepSpin -> setEnabled(forced);
+    mStepSpin -> setValue(step);
 }
 
 StudyPeriodSettings StudyPeriodDialog::getSettings() const
 {
     StudyPeriodSettings s = StudyPeriodSettings();
-    s.mTmin = locale().toDouble(mMinEdit->text());
-    s.mTmax = locale().toDouble(mMaxEdit->text());
+    s.mTmin = QLocale().toDouble(mMinEdit->text());
+    s.mTmax = QLocale().toDouble(mMaxEdit->text());
     if (mForcedCheck->isChecked())
         s.mStep = mStepSpin->value();
     else {
@@ -170,13 +170,13 @@ double StudyPeriodDialog::step() const
 }
 
 
-void StudyPeriodDialog::setOkEnabled(const QString &text)
+void StudyPeriodDialog::setOkEnabled(const QString& text)
 {
     (void) text;
     bool minOk (false);
     bool maxOk (false);
-    const double min = locale().toDouble(mMinEdit->text(), &minOk);
-    const double max = locale().toDouble(mMaxEdit->text(), &maxOk);
+    const double min = QLocale().toDouble(mMinEdit->text(), &minOk);
+    const double max = QLocale().toDouble(mMaxEdit->text(), &maxOk);
     const bool enable = ( min< max) && minOk && maxOk;
     mButtonBox->button(QDialogButtonBox::Ok)->setEnabled(enable);
 }

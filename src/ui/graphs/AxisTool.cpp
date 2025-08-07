@@ -64,18 +64,18 @@ AxisTool::AxisTool():
  * @param value
  * @return
  */
-qreal AxisTool::getXForValue(const qreal &value)
+qreal AxisTool::getXForValue(const qreal value)
 {
     return valueForProportion(value, qreal (mStartVal), qreal (mEndVal), 0., std::max(0., mTotalPix - BLANK_SPACE_ON_RIGHT), true);
 }
 
 
-qreal AxisTool::getYForValue(const qreal &value)
+qreal AxisTool::getYForValue(const qreal value)
 {
     return valueForProportion(value, mStartVal, mEndVal, 0., std::max(0., qreal(mTotalPix - BLANK_SPACE_ON_TOP)), true);
 }
 
-void AxisTool::updateValues(const int &totalPix, const int &minDeltaPix, const qreal &minVal, const qreal &maxVal)
+void AxisTool::updateValues(const int totalPix, const int minDeltaPix, const qreal minVal, const qreal maxVal)
 {
     mStartVal = minVal;
     mEndVal   = maxVal;
@@ -91,12 +91,12 @@ void AxisTool::updateValues(const int &totalPix, const int &minDeltaPix, const q
  * @brief AxisTool::setScaleDivision set the mark and the tip
  * @param sc
  */
-void AxisTool::setScaleDivision (const Scale & sc)
+void AxisTool::setScaleDivision (const Scale& sc)
 {
     setScaleDivision(sc.mark, sc.tip);
 }
 
-void AxisTool::setScaleDivision (const double &major, const int &minorCount)
+void AxisTool::setScaleDivision (const double major, const int minorCount)
 {
     mMajorScale = major;
     mMinorScaleCount = minorCount;

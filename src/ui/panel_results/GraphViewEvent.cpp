@@ -215,6 +215,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
          */
         else if (mCurrentVariableList.contains(eSigma)) {
             graph_density();
+            mGraph->mLegendX = "";
             mGraph->remove_all_zones(); // delete default zones made by graph_density()
 
             mGraph->setBackgroundColor(QColor(230, 230, 230));

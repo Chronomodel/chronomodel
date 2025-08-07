@@ -39,9 +39,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ChronoApp.h"
 #include "MainController.h"
+#include "version.h"
 
-
-#include <QtWidgets>
+#include <QIcon>
+#include <QFontInfo>
+#include <QFontDatabase>
+#include <QDateTime>
+#include <QFile>
+#include <QVersionNumber>
 #include <iostream>
 #include <cmath>
 #include <fenv.h>
@@ -95,16 +100,15 @@ int main(int argc, char *argv[])
 
 #endif
 
-    QVersionNumber version(VERSION_NUMBER);  // 1.2.3
+    //QVersionNumber version(VERSION_NUMBER);  // 1.2.3
+    QVersionNumber version = QVersionNumber(VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
 
-//#pragma omp parallel
-  // std::cout <<"Hello from thread %d, nthreads %d\n"<< omp_get_thread_num()<< omp_get_num_threads() << std::endl;
-  // QFont guiFont = QGuiApplication::font();
     ChronoApp a(argc, argv);
 
     a.setApplicationName("ChronoModel");
 #ifdef DEBUG
     const QString application_name = "ChronoModel v" + version.toString() +  " DEBUG Mode ";
+    qDebug() << "[main] VERSION_STRING (macro):" << VERSION_STRING << application_name;
 #else
     const QString application_name = "ChronoModel v" + version.toString();
 #endif
@@ -113,6 +117,8 @@ int main(int argc, char *argv[])
     a.setOrganizationDomain("https://www.chronomodel.com");
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel.png"));
+
+    qDebug() << "ApplicationVersion: " << a.applicationVersion();
 
 #ifdef Q_OS_MAC
     a.setStyle("macos");

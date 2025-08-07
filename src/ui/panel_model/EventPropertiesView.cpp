@@ -429,9 +429,9 @@ void EventPropertiesView::updateEvent()
 
         mS_X_IncEdit->setVisible(showXEdit);
 
-        auto updateLineEdit = [=, this](QLineEdit *lineEdit, double value) {
+        auto updateLineEdit = [=](QLineEdit *lineEdit, double value) {
             lineEdit->blockSignals(true);
-            QString text = locale().toString(value, 'g', std::numeric_limits<double>::digits10 + 1);
+            QString text = QLocale().toString(value, 'g', std::numeric_limits<double>::digits10 + 1);
             lineEdit->setText(text);
             lineEdit->blockSignals(false);
         };
@@ -442,29 +442,18 @@ void EventPropertiesView::updateEvent()
                 mX_IncLab->setText(tr("Inclination"));
                 updateLineEdit(mX_IncEdit, mEventObj->value(STATE_EVENT_X_INC_DEPTH).toDouble());
                 updateLineEdit(mS_X_IncEdit, mEventObj->value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble());
-                /*mX_IncEdit->setText(locale().toString(mEventObj->value(STATE_EVENT_X_INC_DEPTH).toDouble()));
-                mS_X_IncEdit->setText(locale().toString(mEventObj->value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble()));
-                */
+
 
             } else if (settings.mProcessType == CurveSettings::eProcess_Field) {
                 mX_IncLab->setText(settings.XLabel());
                 updateLineEdit(mX_IncEdit, mEventObj->value(STATE_EVENT_X_INC_DEPTH).toDouble());
                 updateLineEdit(mS_X_IncEdit, mEventObj->value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble());
 
-                /*mX_IncEdit->setText(locale().toString(mEventObj->value(STATE_EVENT_Z_F).toDouble()));
-                mS_X_IncEdit->setText(locale().toString(mEventObj->value(STATE_EVENT_SZ_SF).toDouble()));*/
-
             } else {
                 mX_IncLab->setText(settings.XLabel());
                 updateLineEdit(mX_IncEdit, mEventObj->value(STATE_EVENT_X_INC_DEPTH).toDouble());
                 updateLineEdit(mS_X_IncEdit, mEventObj->value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble());
 
-               /* mX_IncEdit->blockSignals(true);
-                mX_IncEdit->setText(locale().toString(mEventObj->value(STATE_EVENT_X_INC_DEPTH).toDouble(), 'g', std::numeric_limits<double>::digits10 + 1));
-                mX_IncEdit->blockSignals(false);
-                mS_X_IncEdit->blockSignals(true);
-                mS_X_IncEdit->setText(locale().toString(mEventObj->value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble()));
-                mS_X_IncEdit->blockSignals(false);*/
             }
         }
         
@@ -478,7 +467,7 @@ void EventPropertiesView::updateEvent()
             } else {
                 mY_DecLab->setText(settings.YLabel());
             }
-            mY_DecEdit->setText(locale().toString(mEventObj->value(STATE_EVENT_Y_DEC).toDouble()));
+            updateLineEdit(mY_DecEdit, mEventObj->value(STATE_EVENT_Y_DEC).toDouble());
         }
 
         mS_Y_Lab->setVisible(showYErr);
@@ -486,7 +475,7 @@ void EventPropertiesView::updateEvent()
 
         if (showYErr) {
             mS_Y_Lab->setText(tr("Error"));
-            mS_Y_Edit->setText(locale().toString(mEventObj->value(STATE_EVENT_SY).toDouble()));
+            updateLineEdit(mS_Y_Edit, mEventObj->value(STATE_EVENT_SY).toDouble());
         }
 
         mZ_IntLab->setVisible(showZEdit);
@@ -497,8 +486,8 @@ void EventPropertiesView::updateEvent()
         
         if (showZEdit) {
             mZ_IntLab->setText(settings.ZLabel());
-            mZ_IntEdit->setText(locale().toString(mEventObj->value(STATE_EVENT_Z_F).toDouble()));
-            mS_Z_IntEdit->setText(locale().toString(mEventObj->value(STATE_EVENT_SZ_SF).toDouble()));
+            updateLineEdit(mZ_IntEdit, mEventObj->value(STATE_EVENT_Z_F).toDouble());
+            updateLineEdit(mS_Z_IntEdit, mEventObj->value(STATE_EVENT_SZ_SF).toDouble());
         }
 
         mTopView->setVisible(true);
@@ -599,10 +588,10 @@ void EventPropertiesView::updateEventSampler(int index)
 
 // Event Known Properties
 
-void EventPropertiesView::updateKnownFixed(const QString &text)
+void EventPropertiesView::updateKnownFixed(const QString& text)
 {
     bool ok;
-    double fixedValue = locale().toDouble(text, &ok);
+    double fixedValue = QLocale().toDouble(text, &ok);
     if ( ok == false || fixedValue == mEventObj->value(STATE_EVENT_KNOWN_FIXED).toDouble())
         return;
 
@@ -622,15 +611,15 @@ void EventPropertiesView::updateCurveNode(bool isNode)
 
 void EventPropertiesView::updateEventXInc()
 {
-    const QJsonObject &state = MainWindow::getInstance()->getState();
-    const auto processType  = CurveSettings::processType_fromJson(state.value(STATE_CURVE).toObject());
+    const QJsonObject& state = MainWindow::getInstance()->getState();
+    const auto processType = CurveSettings::processType_fromJson(state.value(STATE_CURVE).toObject());
 
     QJsonObject ev (*mEventObj);
     if (processType == CurveSettings::eProcess_Field) {
-        ev[STATE_EVENT_Z_F] = locale().toDouble(mX_IncEdit->text());
+        ev[STATE_EVENT_Z_F] = QLocale().toDouble(mX_IncEdit->text());
 
     } else
-        ev[STATE_EVENT_X_INC_DEPTH] = locale().toDouble(mX_IncEdit->text());
+        ev[STATE_EVENT_X_INC_DEPTH] = QLocale().toDouble(mX_IncEdit->text());
 
     MainWindow::getInstance()->updateEvent(ev, "Event X-Inc updated");
 }
@@ -638,28 +627,28 @@ void EventPropertiesView::updateEventXInc()
 void EventPropertiesView::updateEventYDec()
 {
     QJsonObject ev (*mEventObj);
-    ev[STATE_EVENT_Y_DEC] = locale().toDouble(mY_DecEdit->text());
+    ev[STATE_EVENT_Y_DEC] = QLocale().toDouble(mY_DecEdit->text());
     MainWindow::getInstance()->updateEvent(ev, "Event Y-Dec updated");
 }
 
 void EventPropertiesView::updateEventZF()
 {
     QJsonObject ev (*mEventObj);
-    ev[STATE_EVENT_Z_F] = locale().toDouble(mZ_IntEdit->text());
+    ev[STATE_EVENT_Z_F] = QLocale().toDouble(mZ_IntEdit->text());
     MainWindow::getInstance()->updateEvent(ev, "Event Z-F updated");
 }
 
 void EventPropertiesView::updateEventSXInc()
 {
-    const QJsonObject &state = MainWindow::getInstance()->getState();
-    const auto processType  = CurveSettings::processType_fromJson(state.value(STATE_CURVE).toObject());
+    const QJsonObject& state = MainWindow::getInstance()->getState();
+    const auto processType = CurveSettings::processType_fromJson(state.value(STATE_CURVE).toObject());
 
     QJsonObject ev (*mEventObj);
     if (processType ==  CurveSettings::eProcess_Field) {
-        ev[STATE_EVENT_SZ_SF] = locale().toDouble(mS_X_IncEdit->text());
+        ev[STATE_EVENT_SZ_SF] = QLocale().toDouble(mS_X_IncEdit->text());
 
     } else
-       ev[STATE_EVENT_SX_ALPHA95_SDEPTH] = locale().toDouble(mS_X_IncEdit->text());
+       ev[STATE_EVENT_SX_ALPHA95_SDEPTH] = QLocale().toDouble(mS_X_IncEdit->text());
 
     MainWindow::getInstance()->updateEvent(ev, "Event S X-Inc updated");
 }
@@ -667,14 +656,14 @@ void EventPropertiesView::updateEventSXInc()
 void EventPropertiesView::updateEventSYDec()
 {
     QJsonObject ev (*mEventObj);
-    ev[STATE_EVENT_SY] = locale().toDouble(mS_Y_Edit->text());
+    ev[STATE_EVENT_SY] = QLocale().toDouble(mS_Y_Edit->text());
     MainWindow::getInstance()->updateEvent(ev, "Event S Y updated");
 }
 
 void EventPropertiesView::updateEventSZF()
 {
     QJsonObject ev (*mEventObj);
-    ev[STATE_EVENT_SZ_SF] = locale().toDouble(mS_Z_IntEdit->text());
+    ev[STATE_EVENT_SZ_SF] = QLocale().toDouble(mS_Z_IntEdit->text());
     MainWindow::getInstance()->updateEvent(ev, "Event S Z-F updated");
 }
 
@@ -682,8 +671,8 @@ void EventPropertiesView::updateKnownGraph()
 {
     mKnownGraph->removeAllCurves();
 
-    const QJsonObject &state = MainWindow::getInstance()->getState();
-    const QJsonObject &settings = state.value(STATE_SETTINGS).toObject();
+    const QJsonObject& state = MainWindow::getInstance()->getState();
+    const QJsonObject& settings = state.value(STATE_SETTINGS).toObject();
     const double tmin = settings.value(STATE_SETTINGS_TMIN).toDouble();
     const double tmax = settings.value(STATE_SETTINGS_TMAX).toDouble();
 

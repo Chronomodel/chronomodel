@@ -68,6 +68,8 @@ private:
     QList<CurveRefPts> mEventsPoints;
     QList<CurveRefPts> mDataPoints;
 
+    CurveMap densityMap_2_hpdMap (const CurveMap& densityMap, int nb_iter);
+
 };
 
 #endif

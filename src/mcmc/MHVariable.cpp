@@ -229,7 +229,7 @@ bool MHVariable::test_update(const double current_value, const double try_value,
 void MHVariable::accept_update(const double x)
 {
     if (mLastAccepts.size() >= mLastAcceptsLength)
-        mLastAccepts.erase(mLastAccepts.begin());//removeAt(0);
+        mLastAccepts.erase(mLastAccepts.begin());
 
     mX = x;
 
@@ -243,7 +243,7 @@ void MHVariable::accept_update(const double x)
 void MHVariable::reject_update()
 {
     if (mLastAccepts.size() >= mLastAcceptsLength)
-        mLastAccepts.erase(mLastAccepts.begin());//removeAt(0);
+        mLastAccepts.erase(mLastAccepts.begin());
 
     mLastAccepts.push_back(false);
 
@@ -568,6 +568,12 @@ void MHVariable::load_stream_v330(QDataStream& stream)
 {
     /* herited from MetropolisVariable*/
     MetropolisVariable::load_stream_v330(stream);
+
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[QtUtilities::load_stream_v330]  erreur de flux ; stream.status()=" << stream.status();
+        // throw std::runtime_error("Error reading from stream");
+        // return;
+    }
 
     qint64 l;
     stream >> l;
