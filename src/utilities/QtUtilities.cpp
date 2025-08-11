@@ -50,6 +50,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QSvgGenerator>
 #include <algorithm>
 #include <iterator>
+#include <QApplication>
+#include <QScreen>
+#include <QGraphicsScene>
+#include <QFileDialog>
 
 /**
  * @brief DHMS

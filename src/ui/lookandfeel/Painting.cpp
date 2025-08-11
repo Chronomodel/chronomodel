@@ -38,7 +38,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "Painting.h"
+
 #include "QtUtilities.h"
+
+#include <QApplication>
+#include <QIcon>
+#include <QPainter>
+#include <QPalette>
 
 
 QColor Painting::mainColorLight = QColor(49, 112, 176);
@@ -292,4 +298,180 @@ void drawCheckBoxBox(QPainter& painter, const QRectF& rect, Qt::CheckState state
     else if (state == Qt::PartiallyChecked)
         painter.drawLine(lr.x(), lr.y() + lr.height()/2, lr.x() + lr.width(), lr.y() + lr.height()/2);
 
+}
+
+#pragma mark palette density
+const std::vector<ColorStop>& ColorStops::getStops(ColorPalette palette) {
+
+    static const std::vector<ColorStop> BWStops = {
+        {0.0, QColor(0, 0, 0)},       // Noir
+        {1.0, QColor(255, 255, 255)}  // Blanc
+    };
+    static const std::vector<ColorStop> WBStops = {
+        {0.0, QColor(255, 255, 255)},  // Blanc
+        {1.0, QColor(0, 0, 0)}       // Noir
+    };
+    static const std::vector<ColorStop> pressureStops = {
+        {0.0, QColor(0, 0, 139)}, // Bleu foncé
+        {0.5, QColor(173, 216, 230)}, // Bleu claire
+        {1.0, QColor(255, 0, 0)} // Rouge
+    };
+
+    static const std::vector<ColorStop> elevationStops = {
+        {0.0, QColor(0, 100, 0)},     // Vert foncé (basses altitudes)
+        {0.5, QColor(255, 255, 0)},   // Jaune (altitudes moyennes)
+        {1.0, QColor(255, 255, 255)}  // Blanc (hautes altitudes)
+    };
+
+    // couleurs harmonieuses "Blues" de ColorBrewer //https://colorbrewer2.org/
+    static const std::vector<ColorStop> BluesStops = {
+        {0.0, QColor(8, 48, 107)},     // dark blue
+        {0.25, QColor(33, 113, 181)}, // medium dark blue
+        {0.5, QColor(189, 215, 231)},// light blue
+        {0.75, QColor(189, 215, 231)},// light blue
+        {1.0, QColor(247, 247, 247)}  // almost white
+    };
+
+    // "Inferno" (Matplotlib / Scientific colormaps)
+    static const std::vector<ColorStop> infernoStops = {
+        {0.0, QColor(0, 0, 4)},          // almost black
+        {0.25, QColor(153, 28, 59)},     // deep burgundy
+        {0.5, QColor(240, 96, 60)},      // deep orange
+        {0.75, QColor(254, 204, 92)},    // golden yellow
+        {1.0, QColor(252, 255, 164)}     // pale yellow
+    };
+    static const std::vector<ColorStop> infernoDensityStops = {
+        {0.0, QColor(0, 0, 4, 0)},          // almost black
+        {0.25, QColor(153, 28, 59, 63)},     // deep burgundy
+        {0.5, QColor(240, 96, 60, 127)},      // deep orange
+        {0.75, QColor(254, 204, 92, 191)},    // golden yellow
+        {1.0, QColor(252, 255, 164, 255)}     // pale yellow
+    };
+    static const std::vector<ColorStop> geophyStops = {
+        {0.0, QColor(161, 203, 148)}, // light green
+        {0.25, QColor(189, 215, 231)}, // light blue
+        {0.5, QColor(252, 255, 164)},     // pale yellow
+        {0.75, QColor(254, 204, 92)},    // golden yellow
+        {1.0, QColor(240, 96, 60)}      // deep orange
+    };
+    static const std::vector<ColorStop> geophyDensityStops = {
+        {0.0, QColor(161, 203, 148, 0)}, // light green
+        {0.25, QColor(189, 215, 23, 631)}, // light blue
+        {0.5, QColor(252, 255, 164, 125)},     // pale yellow
+        {0.75, QColor(254, 204, 92, 191)},    // golden yellow
+        {1.0, QColor(240, 96, 60, 255)}      // deep orange
+    };
+    static const std::vector<ColorStop> temperatureStops = {
+        {0.0, QColor(0, 0, 255)},     // Bleu froid (très basse température)
+        {0.25, QColor(100, 149, 237)}, // Bleu clair
+        {0.5, QColor(255, 255, 255)},  // Blanc (température neutre)
+        {0.75, QColor(255, 165, 0)},   // Orange
+        {1.0, QColor(255, 0, 0)}       // Rouge chaud (très haute température)
+    };
+
+    static const std::vector<ColorStop> temperatureSoftStops = {
+        {0.0, QColor(0, 0, 255)},     // Bleu foncé
+        {0.2, QColor(100, 149, 237)}, // Bleu clair
+        {0.4, QColor(173, 216, 230)}, // Bleu très clair
+        {0.5, QColor(255, 255, 255)}, // Blanc
+        {0.6, QColor(255, 165, 0)},   // Orange
+        {0.8, QColor(255, 69, 0)},    // Orange foncé
+        {1.0, QColor(255, 0, 0)}      // Rouge vif
+    };
+    static const std::vector<ColorStop> temperatureSoftDensityStops = {
+        {0.0, QColor(0, 0, 255, 0)},     // Bleu foncé
+        {0.3, QColor(100, 149, 237, 76)}, // Bleu clair
+        //{0.4, QColor(173, 216, 230, 102)}, // Bleu très clair
+        //{0.5, QColor(255, 255, 255, 125)}, // Blanc
+        {0.5, QColor(254, 204, 92, 125)}, // golden yellow
+
+        {0.7, QColor(255, 165, 0, 178)},   // Orange
+        //{0.8, QColor(255, 69, 0, 227)},    // Orange foncé
+        {1.0, QColor(255, 0, 0, 255)}      // Rouge vif
+    };
+    static const std::vector<ColorStop> temperatureScienceStops = {
+        {0.0, QColor(0, 0, 139, 120)},     // Bleu marine (très froid)
+        {0.25, QColor(65, 105, 225, 120)}, // Bleu royal
+        {0.5, QColor(135, 206, 235, 120)}, // Bleu ciel
+        {0.75, QColor(255, 140, 0, 120)},  // Orange foncé
+        {1.0, QColor(139, 0, 0, 120)}      // Rouge bordeaux (extrêmement chaud)
+    };
+    static const std::vector<ColorStop> probabilityDensityStops = {
+        {0.0, QColor(240, 248, 255, 0)},     // Blanc bleuté transparent
+        {0.2, QColor(176, 224, 230, 50)},    // Bleu pastel très transparent
+        {0.5, QColor(135, 206, 235, 120)},   // Bleu ciel semi-transparent
+        {0.75, QColor(70, 130, 180, 200)},   // Bleu acier plus opaque
+        {1.0, QColor(25, 25, 112, 255)}      // Bleu nuit complètement opaque
+    };
+
+    static const std::vector<ColorStop> pHScaleStops = {
+        {0.0/ 14.0, QColor(255, 0, 0, 125)},        // pH 0 - Rouge (acide fort)
+        {1.0/ 14.0, QColor(255, 64, 0, 125)},       // pH 1 - Rouge orangé
+        {2.0/ 14.0, QColor(255, 128, 0, 125)},      // pH 2 - Orange
+        {3.0/ 14.0, QColor(255, 191, 0, 125)},      // pH 3 - Jaune orangé
+        {4.0/ 14.0, QColor(255, 255, 0, 125)},      // pH 4 - Jaune
+        {5.0/ 14.0, QColor(191, 255, 0, 125)},      // pH 5 - Vert jaunâtre
+        {6.0/ 14.0, QColor(128, 255, 0, 125)},      // pH 6 - Vert clair
+        {7.0/ 14.0, QColor(0, 255, 0, 125)},        // pH 7 - Vert (neutre)
+        {8.0/ 14.0, QColor(0, 191, 255, 125)},      // pH 8 - Cyan
+        {9.0/ 14.0, QColor(0, 128, 255, 125)},      // pH 9 - Bleu clair
+        {10.0/ 14.0, QColor(0, 64, 255, 125)},      // pH 10 - Bleu
+        {11.0/ 14.0, QColor(0, 0, 255, 125)},       // pH 11 - Bleu foncé
+        {12.0/ 14.0, QColor(64, 0, 255, 125)},      // pH 12 - Violet
+        {13.0/ 14.0, QColor(128, 0, 255, 125)},     // pH 13 - Violet clair
+        {14.0/ 14.0, QColor(255, 0, 255, 125)}      // pH 14 - Magenta (basique fort)
+    };
+    static const std::vector<ColorStop> RHStops = {
+        {0.0, QColor(141, 90, 44)},  // marron-terre
+        {0.5, QColor(254, 254, 193)}, // jaune pale
+        {1.0, QColor(71, 121, 124)}  // bleu foncé
+    };
+    static const std::vector<ColorStop> RHDensityStops = {
+        {0.0, QColor(141, 90, 44, 0)},  // marron-terre
+        {0.5, QColor(254, 254, 193, 127)}, // jaune pale
+        {1.0, QColor(71, 121, 124, 255)}  // bleu foncé
+    };
+    switch (palette) {
+
+    case ColorPalette::BlackWhite: return BWStops;
+    case ColorPalette::WhiteBlack: return WBStops;
+    case ColorPalette::Pressure: return pressureStops;
+    case ColorPalette::Elevation: return elevationStops;
+    case ColorPalette::Blues: return BluesStops;
+    case ColorPalette::Inferno: return infernoStops;
+    case ColorPalette::InfernoDensity: return infernoDensityStops;
+
+    case ColorPalette::Geophy: return geophyStops;
+    case ColorPalette::GeophyDensity: return geophyDensityStops;
+
+    case ColorPalette::Temperature: return temperatureStops;
+    case ColorPalette::TemperatureSoft: return temperatureSoftStops;
+    case ColorPalette::TemperatureSoftDensity: return temperatureSoftDensityStops;
+    case ColorPalette::TemperatureScience: return temperatureScienceStops;
+    case ColorPalette::DataProbability: return probabilityDensityStops;
+
+    case ColorPalette::pHScale: return  pHScaleStops;
+    case ColorPalette::RH: return  RHStops;
+    case ColorPalette::RHDensity: return  RHDensityStops;
+
+    default: return BWStops;
+    }
+}
+
+QColor ColorStops::getColorFromStops(double normVal, ColorPalette palette) {
+    const auto& stops = getStops(palette);
+    normVal = std::clamp(normVal, 0.0, 1.0);
+
+    for (size_t i = 0; i < stops.size() - 1; ++i) {
+        if (normVal <= stops[i + 1].pos) {
+            double ratio = (normVal - stops[i].pos) / (stops[i + 1].pos - stops[i].pos);
+            int r = static_cast<int>(stops[i].color.red()   * (1 - ratio) + stops[i + 1].color.red()   * ratio);
+            int g = static_cast<int>(stops[i].color.green() * (1 - ratio) + stops[i + 1].color.green() * ratio);
+            int b = static_cast<int>(stops[i].color.blue()  * (1 - ratio) + stops[i + 1].color.blue()  * ratio);
+            int a = static_cast<int>(stops[i].color.alpha()  * (1 - ratio) + stops[i + 1].color.alpha()  * ratio);
+            return QColor(r, g, b, a);
+        }
+    }
+
+    return stops.back().color;
 }

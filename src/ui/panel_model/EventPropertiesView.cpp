@@ -54,6 +54,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "CurveSettings.h"
 #include "CurveWidget.h"
 
+#include <QComboBox>
+#include <QFormLayout>
+#include <QGroupBox>
+#include <QBoxLayout>
+#include <QKeyEvent>
+
 
 EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags):
     QWidget(parent, flags),

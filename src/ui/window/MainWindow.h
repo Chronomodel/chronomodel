@@ -44,16 +44,18 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "Project.h"
 #include "Singleton.h"
-#include "qpushbutton.h"
+#include "SwitchAction.h"
 
-class QMenu;
-class QAction;
-class QActionGroup;
-class SwitchAction;
-class QStackedWidget;
-class QUndoStack;
-class QUndoView;
-class QDockWidget;
+#include <QUndoStack>
+#include <QUndoView>
+#include <QDockWidget>
+#include <QStatusBar>
+#include <QActionGroup>
+#include <QPushButton>
+#include <QStackedWidget>
+#include <QWidgetAction>
+
+
 class ProjectView;
 
 class Event;

@@ -43,14 +43,16 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "DateUtils.h"
 #include "Painting.h"
 #include "MainWindow.h"
+
 #include <algorithm>
 
-#include <QtWidgets>
-#include <algorithm>
-#include <QtSvg>
 #include <QLocale>
 #include <QColor>
 #include <QWidget>
+#include <QMouseEvent>
+#include <QFileDialog>
+#include <QApplication>
+#include <QSvgGenerator>
 
 class StudyPeriodSettings;
 
@@ -1621,8 +1623,8 @@ void GraphView::drawMap(const GraphCurve& curve, QPainter& painter)
     QPainter::RenderHints originalRenderHints = painter.renderHints();
     painter.setRenderHint(QPainter::Antialiasing, false); // supprime le crénelage entre les rectangles contigues
 
-    QColor mainColor(curve.mPen.color());  // bleu moyen
-    auto getDynamicColor = makeColorGradientFromBase(mainColor);
+   // QColor mainColor(curve.mPen.color());  // bleu moyen
+   // auto getDynamicColor = makeColorGradientFromBase(mainColor);
 
     const double minY = curve.mMap.minY();
     const double maxY = curve.mMap.maxY();
@@ -1784,7 +1786,7 @@ void GraphView::drawMap(const GraphCurve& curve, QPainter& painter)
 
 #pragma mark Theme Map
 
-                    const auto colorPalette = ColorPalette::DataProbability;//
+                    const auto colorPalette = ColorPalette::TemperatureSoftDensity;//Geophy;//pHScale;//TemperatureSoftDensity; //TemperatureScience; //Inferno;// DataProbability //InfernoDensity
 
                     col = ColorStops::getColorFromStops(cumul_val/(maxVal - minVal), colorPalette);
                     //col.setAlphaF(0.5);
@@ -2966,117 +2968,4 @@ void GraphTitle::repaintGraph(const bool aAlsoPaintBackground)
     update();
 }
 
-const std::vector<ColorStop>& ColorStops::getStops(ColorPalette palette) {
 
-    static const std::vector<ColorStop> BWStops = {
-        {0.0, QColor(0, 0, 0)},       // Noir
-        {1.0, QColor(255, 255, 255)}  // Blanc
-    };
-    static const std::vector<ColorStop> WBStops = {
-        {0.0, QColor(255, 255, 255)},  // Blanc
-        {1.0, QColor(0, 0, 0)}       // Noir
-    };
-    static const std::vector<ColorStop> pressureStops = {
-        {0.0, QColor(0, 0, 139)},
-        {0.5, QColor(173, 216, 230)},
-        {1.0, QColor(255, 0, 0)}
-    };
-
-    static const std::vector<ColorStop> elevationStops = {
-        {0.0, QColor(0, 100, 0)},     // Vert foncé (basses altitudes)
-        {0.5, QColor(255, 255, 0)},   // Jaune (altitudes moyennes)
-        {1.0, QColor(255, 255, 255)}  // Blanc (hautes altitudes)
-    };
-
-    // couleurs harmonieuses "Blues" de ColorBrewer //https://colorbrewer2.org/
-    static const std::vector<ColorStop> BluesStops = {
-        {0.0, QColor(8, 48, 107)},     // dark blue
-        {0.25, QColor(33, 113, 181)}, // medium dark blue
-        {0.5, QColor(189, 215, 231)},// light blue
-        {0.75, QColor(189, 215, 231)},// light blue
-        {1.0, QColor(247, 247, 247)}  // almost white
-    };
-
-    // "Inferno" (Matplotlib / Scientific colormaps)
-    static const std::vector<ColorStop> infernoStops = {
-        {0.0, QColor(0, 0, 4)},          // almost black
-        {0.25, QColor(153, 28, 59)},     // deep burgundy
-        {0.5, QColor(240, 96, 60)},      // deep orange
-        {0.75, QColor(254, 204, 92)},    // golden yellow
-        {1.0, QColor(252, 255, 164)}     // pale yellow
-    };
-
-    static const std::vector<ColorStop> inferno2Stops = {
-        {0.0, QColor(161, 203, 148)}, // light green
-        {0.25, QColor(189, 215, 231)}, // light blue
-        {0.5, QColor(252, 255, 164)},     // pale yellow
-        {0.75, QColor(254, 204, 92)},    // golden yellow
-        {1.0, QColor(240, 96, 60)}      // deep orange
-    };
-
-    static const std::vector<ColorStop> temperatureStops = {
-        {0.0, QColor(0, 0, 255)},     // Bleu froid (très basse température)
-        {0.25, QColor(100, 149, 237)}, // Bleu clair
-        {0.5, QColor(255, 255, 255)},  // Blanc (température neutre)
-        {0.75, QColor(255, 165, 0)},   // Orange
-        {1.0, QColor(255, 0, 0)}       // Rouge chaud (très haute température)
-    };
-
-    static const std::vector<ColorStop> temperatureSoftStops = {
-        {0.0, QColor(0, 0, 255)},     // Bleu foncé
-        {0.2, QColor(100, 149, 237)}, // Bleu clair
-        {0.4, QColor(173, 216, 230)}, // Bleu très clair
-        {0.5, QColor(255, 255, 255)}, // Blanc
-        {0.6, QColor(255, 165, 0)},   // Orange
-        {0.8, QColor(255, 69, 0)},    // Orange foncé
-        {1.0, QColor(255, 0, 0)}      // Rouge vif
-    };
-
-    static const std::vector<ColorStop> temperatureScienceStops = {
-        {0.0, QColor(0, 0, 139)},     // Bleu marine (très froid)
-        {0.25, QColor(65, 105, 225)}, // Bleu royal
-        {0.5, QColor(135, 206, 235)}, // Bleu ciel
-        {0.75, QColor(255, 140, 0)},  // Orange foncé
-        {1.0, QColor(139, 0, 0)}      // Rouge bordeaux (extrêmement chaud)
-    };
-    static const std::vector<ColorStop> probabilityDensityStops = {
-        {0.0, QColor(240, 248, 255, 0)},     // Blanc bleuté très transparent
-        {0.2, QColor(176, 224, 230, 50)},    // Bleu pastel très transparent
-        {0.5, QColor(135, 206, 235, 120)},   // Bleu ciel semi-transparent
-        {0.75, QColor(70, 130, 180, 200)},   // Bleu acier plus opaque
-        {1.0, QColor(25, 25, 112, 255)}      // Bleu nuit complètement opaque
-    };
-    switch (palette) {
-
-    case ColorPalette::BlackWhite: return BWStops;
-    case ColorPalette::WhiteBlack: return WBStops;
-    case ColorPalette::Pressure: return pressureStops;
-    case ColorPalette::Elevation: return elevationStops;
-    case ColorPalette::Blues: return BluesStops;
-    case ColorPalette::Inferno: return infernoStops;
-    case ColorPalette::Inferno2: return inferno2Stops;
-    case ColorPalette::Temperature: return temperatureStops;
-    case ColorPalette::TemperatureSoft: return temperatureSoftStops;
-    case ColorPalette::TemperatureScience: return temperatureScienceStops;
-    case ColorPalette::DataProbability: return probabilityDensityStops;
-
-    default: return BWStops;
-    }
-}
-
-QColor ColorStops::getColorFromStops(double normVal, ColorPalette palette) {
-    const auto& stops = getStops(palette);
-    normVal = std::clamp(normVal, 0.0, 1.0);
-
-    for (size_t i = 0; i < stops.size() - 1; ++i) {
-        if (normVal <= stops[i + 1].pos) {
-            double ratio = (normVal - stops[i].pos) / (stops[i + 1].pos - stops[i].pos);
-            int r = static_cast<int>(stops[i].color.red()   * (1 - ratio) + stops[i + 1].color.red()   * ratio);
-            int g = static_cast<int>(stops[i].color.green() * (1 - ratio) + stops[i + 1].color.green() * ratio);
-            int b = static_cast<int>(stops[i].color.blue()  * (1 - ratio) + stops[i + 1].color.blue()  * ratio);
-            return QColor(r, g, b);
-        }
-    }
-
-    return stops.back().color;
-}

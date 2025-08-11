@@ -45,6 +45,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "version.h"
 
 #include <iostream>
+#include <qversionnumber.h>
+#include <QtCore/QCoreApplication>
 
 MainController::MainController(const QString& filePath)
 {

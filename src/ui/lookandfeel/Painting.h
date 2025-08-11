@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -41,7 +41,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define PAINTING_H
 
 #include <QList>
-#include <QtWidgets>
+#include <QColor>
+#include <QPainter>
+#include <QIcon>
+//#include <QtWidgets>
 
 //#define Curve_COLOR_TEXT QColor(44, 122, 123)
 //#define Curve_COLOR_BACK QColor(230, 255, 250)
@@ -80,5 +83,41 @@ void drawRadio(QPainter& painter, const QRectF& r, const QString& text, bool tog
 void drawCheckbox(QPainter &painter, const QRectF &r, const QString& text, Qt::CheckState state);
 void drawCheckBoxBox(QPainter& painter, const QRectF& r, Qt::CheckState state, const QColor& back, const QColor& border);
 
+struct ColorStop {
+    double pos;
+    QColor color;
+};
+
+enum class ColorPalette {
+    BlackWhite,
+    WhiteBlack,
+    Pressure,
+    Elevation,
+    Blues,
+
+    Inferno,
+    InfernoDensity,
+
+    Geophy,
+    GeophyDensity,
+
+    Temperature,
+    TemperatureSoft,
+    TemperatureSoftDensity,
+
+    TemperatureScience,
+    DataProbability,
+
+    pHScale,
+    RH,
+    RHDensity
+
+};
+
+class ColorStops {
+public:
+    static const std::vector<ColorStop>& getStops(ColorPalette palette);
+    static QColor getColorFromStops(double normVal, ColorPalette palette);
+};
 
 #endif

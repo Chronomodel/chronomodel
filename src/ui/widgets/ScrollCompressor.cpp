@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -39,6 +39,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ScrollCompressor.h"
 #include "Painting.h"
+
+#include <QMouseEvent>
 
 ScrollCompressor::ScrollCompressor(QWidget* parent, Qt::WindowFlags flags):
     QWidget(parent, flags),

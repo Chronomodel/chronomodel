@@ -53,6 +53,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QTextEdit>
 #include <QPointer>
 #include <QEvent>
+#include <QScrollArea>
+#include <QBoxLayout>
+#include <QLabel>
 
 class Button;
 

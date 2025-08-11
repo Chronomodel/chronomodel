@@ -53,6 +53,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QPixmap>
 #include <QFileInfo>
 #include <QPainterPath>
+#include <QStaticText>
 
 class GraphView: public GraphViewAbstract
 {
@@ -338,30 +339,6 @@ public:
     bool withTitle() const {return !mSubTitle.text().isEmpty();};
 };
 
-struct ColorStop {
-    double pos;
-    QColor color;
-};
 
-enum class ColorPalette {
-    BlackWhite,
-    WhiteBlack,
-    Pressure,
-    Elevation,
-    Blues,
-    Inferno,
-    Inferno2,
-    Temperature,
-    TemperatureSoft,
-    TemperatureScience,
-    DataProbability
-
-};
-
-class ColorStops {
-public:
-    static const std::vector<ColorStop>& getStops(ColorPalette palette);
-    static QColor getColorFromStops(double normVal, ColorPalette palette);
-};
 
 #endif

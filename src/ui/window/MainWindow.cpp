@@ -47,15 +47,30 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "AppSettingsDialog.h"
 #include "PluginManager.h"
 #include "ResultsView.h"
-#include "SwitchAction.h"
 #include "RebuildCurveDialog.h"
 #include "AppSettings.h"
 #include "version.h"
 
-//#include <QtWidgets>
+#include <iostream>
+
 #include <QLocale>
 #include <QFont>
-#include <iostream>
+#include <QMenuBar>
+#include <QMenu>
+#include <QTimer>
+#include <QToolBar>
+#include <QDesktopServices>
+#include <QFileDialog>
+#include <QToolTip>
+#include <QInputDialog>
+#include <QColorDialog>
+#include <QMessageBox>
+#include <QCloseEvent>
+#include <QKeyEvent>
+
+
+
+
 
 
 // Constructor / Destructor
@@ -1115,7 +1130,7 @@ void MainWindow::rebuildExportCurve()
             } else {
                 for (auto &splineXYZ : runTraceByChain) {
 #if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5
-                    curveModel->memo_PosteriorG_3D_335(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted++ );
+                    curveModel->memo_PosteriorG_3D_335(meanGByChain, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted++ );
 #else
                     curveModel->memo_PosteriorG_3D(meanGByChain, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted++ );
 #endif

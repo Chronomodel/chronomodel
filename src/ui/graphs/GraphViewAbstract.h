@@ -43,6 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QWidget>
 #include <qglobal.h>
 #include <QPainterPath>
+//#include <QtWidgets>
 
 #define BLANK_SPACE_ON_TOP 5. //Space used to draw the credibility bar
 #define BLANK_SPACE_ON_RIGHT 5.

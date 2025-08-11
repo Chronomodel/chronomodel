@@ -773,7 +773,7 @@ bool Project::load(const QString &path, bool force)
 #endif
                 } else { //if (in.version() != QDataStream::Qt_6_7) {  // Depuis v3.3.0 avant Qt_6_4
                     // Gérer les versions non compatibles
-                    std::cout << "[Project::load] file.cal Version du QDataStream non compatible:" << qDataStreamVersion << std::endl;
+                    std::cout << "[Project::load] file.cal Version du QDataStream non compatible: " << qDataStreamVersion << std::endl;
                     clear_and_shrink_model();
                     hasCalibration = false;
                     compatible_file = false;

@@ -47,6 +47,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QMessageBox>
 #include <QPointer>
 #include <QTextEdit>
+#include <QFileDialog>
+#include <QApplication>
+#include <QClipboard>
 
 
 //  Constructor / Destructor

@@ -40,6 +40,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Label.h"
 #include "Painting.h"
 
+#include <QApplication>
+
 Label::Label(QWidget* parent):
     QLabel(parent),
     mIsTitle(false),

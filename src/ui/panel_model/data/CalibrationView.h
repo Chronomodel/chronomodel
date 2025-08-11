@@ -40,12 +40,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef CALIBRATIONVIEW_H
 #define CALIBRATIONVIEW_H
 
-#include <QWidget>
-#include <QJsonObject>
-
 #include "Date.h"
 #include "StudyPeriodSettings.h"
 #include "GraphView.h"
+
+#include <QWidget>
+#include <QJsonObject>
+#include <QPushButton>
 
 class GraphViewRefAbstract;
 
