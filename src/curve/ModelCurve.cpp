@@ -1330,7 +1330,7 @@ void ModelCurve::memo_PosteriorG_3D(PosteriorMeanG &postG, const MCMCSpline &spl
             const double Inc = asin(gz / F);
             const double Dec = atan2(gy, gx);
 
-            const double ErrF = sqrt((varGx + varGy + varGz)/3.);
+            const double ErrF = sqrt((varGx + varGy + varGz)/3.); // Erreur ici -> rester en XYZ et convertir seulement au moment de la map
 
             const double ErrI = ErrF / F ;
             const double ErrD = ErrF / (F * cos(Inc)) ;
@@ -1618,24 +1618,24 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
 {
     //const double deg = 180. / M_PI ;
 
-    CurveMap* curveMap_XInc = &postG.gx.mapG;
-    CurveMap* curveMap_YDec = &postG.gy.mapG;
-    CurveMap* curveMap_ZF = &postG.gz.mapG;
+    CurveMap& curveMap_XInc = postG.gx.mapG;
+    CurveMap& curveMap_YDec = postG.gy.mapG;
+    CurveMap& curveMap_ZF = postG.gz.mapG;
 
-    const int nbPtsX = curveMap_XInc->column(); // identique à toutes les maps
+    const int nbPtsX = curveMap_XInc.column(); // identique à toutes les maps
 
-    const int nbPtsY_XInc = curveMap_XInc->row();
-    const int nbPtsY_YDec = curveMap_YDec->row();
-    const int nbPtsY_ZF = curveMap_ZF->row();
+    const int nbPtsY_XInc = curveMap_XInc.row();
+    const int nbPtsY_YDec = curveMap_YDec.row();
+    const int nbPtsY_ZF = curveMap_ZF.row();
 
-    const double ymin_XInc = curveMap_XInc->minY();
-    const double ymax_XInc = curveMap_XInc->maxY();
+    const double ymin_XInc = curveMap_XInc.minY();
+    const double ymax_XInc = curveMap_XInc.maxY();
 
-    const double ymin_YDec = curveMap_YDec->minY();
-    const double ymax_YDec = curveMap_YDec->maxY();
+    const double ymin_YDec = curveMap_YDec.minY();
+    const double ymax_YDec = curveMap_YDec.maxY();
 
-    const double ymin_ZF = curveMap_ZF->minY();
-    const double ymax_ZF = curveMap_ZF->maxY();
+    const double ymin_ZF = curveMap_ZF.minY();
+    const double ymax_ZF = curveMap_ZF.maxY();
 
     const double stepT = (mSettings.mTmax - mSettings.mTmin) / (nbPtsX - 1);
 
@@ -1644,42 +1644,32 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
     const double stepY_ZF = (ymax_ZF - ymin_ZF) / (nbPtsY_ZF - 1);
     // variable for GP
 
-    auto* curveMap_GP_XInc = &postG.gx.mapGP;
-    auto* curveMap_GP_YDec = &postG.gy.mapGP;
-    auto* curveMap_GP_ZF = &postG.gz.mapGP;
+    CurveMap& curveMap_GP_XInc = postG.gx.mapGP;
+    CurveMap& curveMap_GP_YDec = postG.gy.mapGP;
+    CurveMap& curveMap_GP_ZF = postG.gz.mapGP;
 
     // const int nbPts_GP_X = curveMap_GP_ZF->column(); // identique à toutes les maps
 
-    const int nbPtsY_GP_XInc = curveMap_GP_XInc->row();
-    const int nbPtsY_GP_YDec = curveMap_GP_YDec->row();
-    const int nbPtsY_GP_ZF = curveMap_GP_ZF->row();
+    const int nbPtsY_GP_XInc = curveMap_GP_XInc.row();
+    const int nbPtsY_GP_YDec = curveMap_GP_YDec.row();
+    const int nbPtsY_GP_ZF = curveMap_GP_ZF.row();
 
-    const double ymin_GP_XInc = curveMap_GP_XInc->minY();
-    const double ymax_GP_XInc = curveMap_GP_XInc->maxY();
+    const double ymin_GP_XInc = curveMap_GP_XInc.minY();
+    const double ymax_GP_XInc = curveMap_GP_XInc.maxY();
 
-    const double ymin_GP_YDec = curveMap_GP_YDec->minY();
-    const double ymax_GP_YDec = curveMap_GP_YDec->maxY();
+    const double ymin_GP_YDec = curveMap_GP_YDec.minY();
+    const double ymax_GP_YDec = curveMap_GP_YDec.maxY();
 
-    const double ymin_GP_ZF = curveMap_GP_ZF->minY();
-    const double ymax_GP_ZF = curveMap_GP_ZF->maxY();
+    const double ymin_GP_ZF = curveMap_GP_ZF.minY();
+    const double ymax_GP_ZF = curveMap_GP_ZF.maxY();
 
     const double step_GP_XInc = (ymax_GP_XInc - ymin_GP_XInc) / (nbPtsY_GP_XInc - 1);
     const double step_GP_YDec = (ymax_GP_YDec - ymin_GP_YDec) / (nbPtsY_GP_YDec - 1);
     const double step_GP_ZF = (ymax_GP_ZF - ymin_GP_ZF) / (nbPtsY_GP_ZF - 1);
 
     // 2 - Variables temporaires
-    // référence sur variables globales
-    std::vector<double> &vecVarG_XInc = postG.gx.vecVarG;
-    std::vector<double> &vecVarG_YDec = postG.gy.vecVarG;
-    std::vector<double> &vecVarG_ZF = postG.gz.vecVarG;
-    // Variables temporaires
-    // erreur inter spline, il n'y a plus d'erreur intra-spline comme dans les versions précédantes
-    std::vector<double> &vecVarianceG_XInc = postG.gx.vecVarianceG;
-    std::vector<double> &vecVarianceG_YDec = postG.gy.vecVarianceG;
-    std::vector<double> &vecVarianceG_ZF = postG.gz.vecVarianceG;
 
-
-    //Pointeur sur tableau
+    //Pointeur sur tableau des moyennes
     std::vector<double>::iterator itVecG_XInc = postG.gx.vecG.begin();
     std::vector<double>::iterator itVecGP_XInc = postG.gx.vecGP.begin();
     std::vector<double>::iterator itVecGS_XInc = postG.gx.vecGS.begin();
@@ -1692,15 +1682,15 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
     std::vector<double>::iterator itVecGP_ZF = postG.gz.vecGP.begin();
     std::vector<double>::iterator itVecGS_ZF = postG.gz.vecGS.begin();
 
-    // Variables temporaires
-    // erreur inter spline
-    std::vector<double>::iterator itVecVarianceG_XInc = postG.gx.vecVarianceG.begin();
-    std::vector<double>::iterator itVecVarianceG_YDec = postG.gy.vecVarianceG.begin();
-    std::vector<double>::iterator itVecVarianceG_ZF = postG.gz.vecVarianceG.begin();
-    // erreur intra spline, not used
+    // référence sur variance
+    std::vector<double> &vecVarG_XInc = postG.gx.vecVarG;
+    std::vector<double> &vecVarG_YDec = postG.gy.vecVarG;
+    std::vector<double> &vecVarG_ZF = postG.gz.vecVarG;
 
+    std::vector<double>::iterator itVecVarG_XInc = postG.gx.vecVarG.begin();
+    std::vector<double>::iterator itVecVarG_YDec = postG.gy.vecVarG.begin();
+    std::vector<double>::iterator itVecVarG_ZF = postG.gz.vecVarG.begin();
 
-    // inter derivate variance
 
     double t;
     double gx, gpx, gsx;
@@ -1709,7 +1699,7 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
 
 
     double n = realyAccepted;
-    double  prevMeanG_XInc, prevMeanG_YDec, prevMeanG_ZF;
+    //double  prevMeanG_XInc, prevMeanG_YDec, prevMeanG_ZF;
 
 
     //int  idx_Y, idx_GP_Y;
@@ -1754,115 +1744,117 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
 
         // -- Calcul Mean on XInc
         {
-            prevMeanG_XInc = *itVecG_XInc;
-            *itVecG_XInc +=  (gx - prevMeanG_XInc)/n;
+            //prevMeanG_XInc = *itVecG_XInc;
+            //*itVecG_XInc +=  (gx - prevMeanG_XInc)/n;
 
             *itVecGP_XInc +=  (gpx - *itVecGP_XInc)/n;
             *itVecGS_XInc +=  (gsx - *itVecGS_XInc)/n;
             // erreur inter spline
-            *itVecVarianceG_XInc +=  (gx - prevMeanG_XInc)*(gx - *itVecG_XInc);
+            //*itVecVarianceG_XInc +=  (gx - prevMeanG_XInc)*(gx - *itVecG_XInc);
 
+            // Version numériquement plus stable
+            double delta = gx - *itVecG_XInc; // = (g - prevMeanG_ZF)
+
+            *itVecG_XInc += delta / n;
+            double delta2 = gx - *itVecG_XInc;
+
+            *itVecVarG_XInc = *itVecVarG_XInc * (n-1) + delta * delta2;
+            if (idx_t == 0) {
+                std::cout << " delta "<< delta << " gx="<< gx << " vecg=" << *itVecG_XInc ;
+                std::cout << " var "<< *itVecVarG_XInc << std::endl;
+            }
 
             ++itVecG_XInc;
             ++itVecGP_XInc;
             ++itVecGS_XInc;
-            ++itVecVarianceG_XInc;
+            ++itVecVarG_XInc;
 
 
-            // -- Calcul map on XInc
+            // -- Calcul map on XInc ymin_XInc
 
-            const int idx_X = std::clamp( int((gx - ymin_XInc) / stepY_XInc), 0, nbPtsY_XInc-1);
-
-            const int idx_GP_X = std::clamp( int((gpx - ymin_GP_XInc) / step_GP_XInc), 0, nbPtsY_GP_XInc-1);
-
-#ifdef DEBUG
-            if ((curveMap_XInc->row()*idx_t + idx_X) < (curveMap_XInc->row()*curveMap_XInc->column()))
-                (*curveMap_XInc)(idx_t, idx_X) = curveMap_XInc->at(idx_t, idx_X) + 1.0;
-
-            else
-                qDebug() << "pb in [MCMCLoopCurve::memo_PosteriorG_3D_335]";
-#else
-            (*curveMap_XInc)(idx_t, idx_X) = curveMap_XInc->at(idx_t, idx_X) + 1.0;
-#endif
-
-            curveMap_XInc->max_value = std::max(curveMap_XInc->max_value, curveMap_XInc->at(idx_t, idx_X));
-
-            (*curveMap_GP_XInc)(idx_t, idx_GP_X) = curveMap_GP_XInc->at(idx_t, idx_GP_X) + 1.0;
-            curveMap_GP_XInc->max_value = std::max(curveMap_GP_XInc->max_value, curveMap_GP_XInc->at(idx_t, idx_GP_X));
+            if (ymin_XInc <= gx && gx <= ymax_XInc) {
+                const int idx_Y = std::clamp(int((gx - ymin_XInc) / stepY_XInc), 0, nbPtsY_XInc - 1);
+                ++curveMap_XInc(idx_t, idx_Y);
+                curveMap_XInc.max_value = std::max(curveMap_XInc.max_value, curveMap_XInc.at(idx_t, idx_Y));
+            }
+            if (ymin_GP_XInc <= gpx && gpx <= ymax_GP_XInc) {
+                const int idx_YGP = std::clamp(int((gpx - ymin_GP_XInc) / step_GP_XInc), 0, nbPtsY_GP_XInc - 1);
+                ++curveMap_GP_XInc(idx_t, idx_YGP);
+                curveMap_GP_XInc.max_value = std::max(curveMap_GP_XInc.max_value, curveMap_GP_XInc.at(idx_t, idx_YGP));
+            }
 
 
 
 
             // -- Calcul Mean on YDec
-            prevMeanG_YDec = *itVecG_YDec;
-            *itVecG_YDec +=  (gy - prevMeanG_YDec)/n;
+            //prevMeanG_YDec = *itVecG_YDec;
+            //*itVecG_YDec +=  (gy - prevMeanG_YDec)/n;
 
             *itVecGP_YDec +=  (gpy - *itVecGP_YDec)/n;
             *itVecGS_YDec +=  (gsy - *itVecGS_YDec)/n;
             // erreur inter spline
-            *itVecVarianceG_YDec +=  (gy - prevMeanG_YDec)*(gy - *itVecG_YDec);
+            //*itVecVarianceG_YDec +=  (gy - prevMeanG_YDec)*(gy - *itVecG_YDec);
+
+            // Version numériquement plus stable
+            delta = gy - *itVecG_YDec; // = (g - prevMeanG_ZF)
+            *itVecG_YDec += delta / n;
+            delta2 = gy - *itVecG_YDec;
+
+            *itVecVarG_YDec = *itVecVarG_YDec * (n-1) + delta * delta2;
 
             ++itVecG_YDec;
             ++itVecGP_YDec;
             ++itVecGS_YDec;
-            ++itVecVarianceG_YDec;
+            ++itVecVarG_YDec;
         }
 
         // -- Calcul map on YDec
 
         {
-            const int idx_Y = std::clamp( int((gy - ymin_YDec) / stepY_YDec), 0, nbPtsY_YDec - 1);
-            const int idx_GP_Y = std::clamp( int((gpy - ymin_GP_YDec) / step_GP_YDec), 0, nbPtsY_GP_YDec - 1);
+            if (ymin_YDec <= gy && gy <= ymax_YDec) {
+                const int idx_Y = std::clamp(int((gy - ymin_YDec) / stepY_YDec), 0, nbPtsY_YDec - 1);
+                ++curveMap_YDec(idx_t, idx_Y);
+                curveMap_YDec.max_value = std::max(curveMap_YDec.max_value, curveMap_YDec.at(idx_t, idx_Y));
+            }
+            if (ymin_GP_YDec <= gpy && gpy <= ymax_GP_YDec) {
+                const int idx_YGP = std::clamp(int((gpy - ymin_GP_YDec) / step_GP_YDec), 0, nbPtsY_GP_YDec -1);
+                ++curveMap_GP_YDec(idx_t, idx_YGP);
+                curveMap_GP_YDec.max_value = std::max(curveMap_GP_YDec.max_value, curveMap_GP_YDec.at(idx_t, idx_YGP));
+            }
 
-#ifdef DEBUG
-            if ((curveMap_YDec->row()*idx_t + idx_Y) < (curveMap_YDec->row()*curveMap_YDec->column()))
-                (*curveMap_YDec)(idx_t, idx_Y) = curveMap_YDec->at(idx_t, idx_Y) + 1.0;
-            else
-                qDebug()<<"pb in [MCMCLoopCurve::memo_PosteriorG_3D_335]";
-#else
-            (*curveMap_YDec)(idx_t, idx_Y) = curveMap_YDec->at(idx_t, idx_Y) + 1.0;
-#endif
-
-            curveMap_YDec->max_value = std::max(curveMap_YDec->max_value, curveMap_YDec->at(idx_t, idx_Y));
-
-            (*curveMap_GP_YDec)(idx_t, idx_GP_Y) = curveMap_GP_YDec->at(idx_t, idx_GP_Y) + 1;
-            curveMap_GP_YDec->max_value = std::max(curveMap_GP_YDec->max_value, curveMap_GP_YDec->at(idx_t, idx_GP_Y));
         }
 
 
         if (compute_Z) {
 
             // -- Calcul Mean on ZF
-            prevMeanG_ZF = *itVecG_ZF;
-            *itVecG_ZF +=  (gz - prevMeanG_ZF)/n;
-
             *itVecGP_ZF +=  (gpz - *itVecGP_ZF)/n;
             *itVecGS_ZF +=  (gsz - *itVecGS_ZF)/n;
-            // erreur inter spline
-            *itVecVarianceG_ZF += (gz - prevMeanG_ZF)*(gz - *itVecG_ZF);
+
+            // Version numériquement plus stable
+            double delta = gz - *itVecG_ZF; // = (g - prevMeanG_ZF)
+            *itVecG_ZF += delta / n;
+            double delta2 = gz - *itVecG_ZF;
+
+            *itVecVarG_ZF = *itVecVarG_ZF * (n-1) + delta * delta2;
 
             ++itVecG_ZF;
             ++itVecGP_ZF;
             ++itVecGS_ZF;
-            ++itVecVarianceG_ZF;
+            ++itVecVarG_ZF;
 
             // -- Calcul map on ZF
 
-            const int idx_Z = std::clamp( int((gz - ymin_ZF) / stepY_ZF), 0, nbPtsY_ZF - 1);
-            const int idx_GP_Z = std::clamp( int((gpz - ymin_GP_ZF) / step_GP_ZF), 0, nbPtsY_GP_ZF-1);
-
-#ifdef DEBUG
-            if ((curveMap_ZF->row()*idx_t + idx_Z) < (curveMap_ZF->row()*curveMap_ZF->column()))
-                (*curveMap_ZF)(idx_t, idx_Z) = curveMap_ZF->at(idx_t, idx_Z) + 1.0;
-            else
-                qDebug()<<"pb in [MCMCLoopCurve::memo_PosteriorG_3D_335]";
-#else
-            (*curveMap_ZF)(idx_t, idx_Z) = curveMap_ZF->at(idx_t, idx_Z) + 1.0;
-#endif
-
-            curveMap_ZF->max_value = std::max(curveMap_ZF->max_value, curveMap_ZF->at(idx_t, idx_Z));
-            (*curveMap_GP_ZF)(idx_t, idx_GP_Z) = curveMap_GP_ZF->at(idx_t, idx_GP_Z) + 1;
-            curveMap_GP_ZF->max_value = std::max(curveMap_GP_ZF->max_value, curveMap_GP_ZF->at(idx_t, idx_GP_Z));
+            if (ymin_ZF <= gz && gz <= ymax_ZF) {
+                const int idx_Y = std::clamp(int((gz - ymin_ZF) / stepY_ZF), 0, nbPtsY_ZF - 1);
+                ++curveMap_ZF(idx_t, idx_Y);
+                curveMap_ZF.max_value = std::max(curveMap_ZF.max_value, curveMap_ZF.at(idx_t, idx_Y));
+            }
+            if (ymin_GP_ZF <= gpz && gpz <= ymax_GP_ZF) {
+                const int idx_YGP = std::clamp(int((gpz - ymin_GP_ZF) / step_GP_ZF), 0, nbPtsY_GP_ZF - 1);
+                ++curveMap_GP_ZF(idx_t, idx_YGP);
+                curveMap_GP_ZF.max_value = std::max(curveMap_GP_ZF.max_value, curveMap_GP_ZF.at(idx_t, idx_YGP));
+            }
 
         }
 
@@ -1870,9 +1862,9 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
     }
 
     for (size_t i = 0; i < vecVarG_XInc.size(); ++i) {
-        vecVarG_XInc[i] = vecVarianceG_XInc[i] / n;
-        vecVarG_YDec[i] = vecVarianceG_YDec[i] / n;
-        vecVarG_ZF[i] = vecVarianceG_ZF[i] / n;
+        vecVarG_XInc[i] = vecVarG_XInc[i] / n;
+        vecVarG_YDec[i] = vecVarG_YDec[i] / n;
+        vecVarG_ZF[i] = vecVarG_ZF[i] / n;
     }
 
 }
