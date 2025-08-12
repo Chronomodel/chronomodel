@@ -1260,9 +1260,6 @@ QString MCMCLoopCurve::initialize_330()
 
     std::vector<std::shared_ptr<Event>> &allEvents (mModel->mEvents);
 
-  //  if (mCurveSettings.mVarianceType == CurveSettings::eModeFixed)
-   //     mCurveSettings.mUseVarianceIndividual = false;
-
     mNodeEvent.clear();
     mPointEvent.clear();
 
@@ -1413,58 +1410,8 @@ QString MCMCLoopCurve::initialize_330()
                 var_residual_Z = var_Gasser(vec_t, vec_Y);
             }
 
-
-            /*
-            if (mCurveSettings.mUseErrMesure) {
-                const auto& matrices_Sy2 = prepareCalculSpline_Sy2(mModel->mEvents, current_vecH);
-                //var_residual_X = S02_Vg_Yx(mModel->mEvents, matrices_Sy2, current_vecH, mModel->mLambdaSpline.mX);
-
-
-                std::vector<double> vec_Y(mModel->mEvents.size());
-                std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vec_Y.begin(),
-                               [](auto ev) { return ev->mYx; });
-                var_residual_X = var_Gasser(vec_t, vec_Y);
-
-                if (mModel->compute_Y) {
-                    std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vec_Y.begin(),
-                                   [](auto ev) { return ev->mYy; });
-                    var_residual_Y = var_Gasser(vec_t, vec_Y);//S02_Vg_Yy(mModel->mEvents, matrices_Sy2, current_vecH, mModel->mLambdaSpline.mX);
-
-                }
-                if (mModel->compute_Z) {
-                    std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vec_Y.begin(),
-                                   [](auto ev) { return ev->mYz; });
-                    var_residual_Z = var_Gasser(vec_t, vec_Y);//S02_Vg_Yz(mModel->mEvents, matrices_Sy2, current_vecH, mModel->mLambdaSpline.mX);
-
-                }
-
-            } else {
-
-                // const auto& matrices_wi = prepare_calcul_spline_WI(current_vecH);
-                //var_residual_X = S02_Vg_Yx(mModel->mEvents, matrices_wi, current_vecH, mModel->mLambdaSpline.mX);
-                std::vector<double> vec_Y(mModel->mEvents.size());
-                std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vec_Y.begin(),
-                               [](auto ev) { return ev->mYx; });
-                var_residual_X = var_Gasser(vec_t, vec_Y);
-
-                if (mModel->compute_Y) {
-                    //var_residual_Y = S02_Vg_Yy(mModel->mEvents, matrices_wi, current_vecH, mModel->mLambdaSpline.mX);
-                    std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vec_Y.begin(),
-                                   [](auto ev) { return ev->mYy; });
-                    var_residual_Y = var_Gasser(vec_t, vec_Y);
-                }
-                if (mModel->compute_Z) {
-                    //var_residual_Z = S02_Vg_Yz(mModel->mEvents, matrices_wi, current_vecH, mModel->mLambdaSpline.mX);
-                    std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vec_Y.begin(),
-                                   [](auto ev) { return ev->mYz; });
-                    var_residual_Z = var_Gasser(vec_t, vec_Y);
-                }
-            }
-            */
-            //std::cout<<" var_residu_X = " << var_residu_X;
             if (mModel->compute_X_only) {
                 Var_residual_spline = var_residual_X;
-
 
             } else {
 
@@ -1700,6 +1647,7 @@ QString MCMCLoopCurve::initialize_330()
         PosteriorMeanG clearMeanG;
         clearMeanG.gx = clearCompo;
 
+        /*
         double minY = +INFINITY;
         double maxY = -INFINITY;
 
@@ -1756,9 +1704,102 @@ QString MCMCLoopCurve::initialize_330()
             }
 
         }
+        */
+
+        //______
+        // find X for t_min and t_max
+        double g, gp, gs, varG;
+        unsigned i0 = 0;
+        valeurs_G_VarG_GP_GS(mModel->mSettings.mTmin, mModel->mSpline.splineX, g, varG, gp, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
+        double gx_tmin_sup = g + 1.96*sqrt(varG);
+        double gx_tmin_inf = g - 1.96*sqrt(varG);
+
+        valeurs_G_VarG_GP_GS(mModel->mSettings.mTmax, mModel->mSpline.splineX, g, varG, gp, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
+        double gx_tmax_sup = g + 1.96*sqrt(varG);;
+        double gx_tmax_inf = g - 1.96*sqrt(varG);
+
+        // La map est dans l'unité des données
+        std::vector< double> vect_XInc (mModel->mEvents.size());
+        std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vect_XInc.begin(), [](std::shared_ptr<Event> ev) {return ev->mXIncDepth;});
+        auto minMax_XInc = std::minmax_element(vect_XInc.begin(), vect_XInc.end());
+        const auto e = 0.1 *std::abs(*minMax_XInc.first - *minMax_XInc.second);
+
+        Scale scx ;
+        scx.findOptimal(std::min({*minMax_XInc.first - e, gx_tmin_inf, gx_tmax_inf  }) , std::max({ *minMax_XInc.second + e, gx_tmin_sup, gx_tmax_sup} ));
+
+        clearMeanG.gx.mapG.setRangeY(scx.min, scx.max);
+
+        if (mModel->compute_Y) {
+            double gy_tmin_sup , gy_tmin_inf, gy_tmax_sup, gy_tmax_inf;
+            i0 = 0;
+            valeurs_G_VarG_GP_GS(mModel->mSettings.mTmin, mModel->mSpline.splineY, g, varG, gp, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
+            gy_tmin_sup = g + 1.96*sqrt(varG);
+            gy_tmin_inf = g - 1.96*sqrt(varG);
+
+            valeurs_G_VarG_GP_GS(mModel->mSettings.mTmax, mModel->mSpline.splineY, g, varG, gp, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
+            gy_tmax_sup = g + 1.96*sqrt(varG);;
+            gy_tmax_inf = g - 1.96*sqrt(varG);
+
+
+            clearMeanG.gy = clearCompo;
+
+
+            std::vector< double> vect_YDec (mModel->mEvents.size());
+            std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vect_YDec.begin(), [](std::shared_ptr<Event> ev) {return ev->mYDec;});
+            auto minMax_YDec = std::minmax_element(vect_YDec.begin(), vect_YDec.end());
+
+            std::vector< double> vect_sYDec (mModel->mEvents.size());
+            std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vect_sYDec.begin(), [](std::shared_ptr<Event> ev) {return ev->mS_Y;});
+            auto minMax_sYDec = std::minmax_element(vect_sYDec.begin(), vect_sYDec.end());
+
+            const auto e = std::max(0.1 *std::abs(*minMax_YDec.first - *minMax_YDec.second), std::abs(*minMax_sYDec.second));
+
+
+            Scale scy ;
+            //sc.findOptimal(*minMax_YDec.first-e, *minMax_YDec.second+e);
+            scy.findOptimal(std::min({*minMax_YDec.first - e, gy_tmin_inf, gy_tmax_inf  }) , std::max({ *minMax_YDec.second + e, gy_tmin_sup, gy_tmax_sup} ));
+
+
+            clearMeanG.gy.mapG.setRangeY(scy.min, scy.max);
+
+            if (mModel->compute_Z) {
+                double gz_tmin_sup , gz_tmin_inf, gz_tmax_sup, gz_tmax_inf;
+                i0 = 0;
+                valeurs_G_VarG_GP_GS(mModel->mSettings.mTmin, mModel->mSpline.splineZ, g, varG, gp, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
+                gz_tmin_sup = g + 1.96*sqrt(varG);
+                gz_tmin_inf = g - 1.96*sqrt(varG);
+
+                valeurs_G_VarG_GP_GS(mModel->mSettings.mTmax, mModel->mSpline.splineZ, g, varG, gp, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
+                gz_tmax_sup = g + 1.96*sqrt(varG);;
+                gz_tmax_inf = g - 1.96*sqrt(varG);
+
+                clearMeanG.gz = clearCompo;
+
+                std::vector< double> vect_ZF (mModel->mEvents.size());
+                std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vect_ZF.begin(), [](std::shared_ptr<Event> ev) {return ev->mZField;});
+                auto minMax_ZF = std::minmax_element(vect_ZF.begin(), vect_ZF.end());
+
+                std::vector< double> vect_sZF (mModel->mEvents.size());
+                std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vect_sZF.begin(), [](std::shared_ptr<Event> ev) {return ev->mS_ZField;});
+                auto minMax_sZF = std::minmax_element(vect_sZF.begin(), vect_sZF.end());
+
+                const auto e = std::max(0.1 *std::abs(*minMax_ZF.first - *minMax_ZF.second), std::abs(*minMax_sZF.second));
+
+                Scale scz ;
+                //sc.findOptimal(*minMax_ZF.first-e, *minMax_ZF.second+e);
+                scz.findOptimal(std::min({*minMax_ZF.first - e, gz_tmin_inf, gz_tmax_inf  }) , std::max({ *minMax_ZF.second + e, gz_tmin_sup, gz_tmax_sup} ));
+
+
+                clearMeanG.gz.mapG.setRangeY(scz.min, scz.max);
+            }
+
+        }
+        //____
+
+
 
         // Convertion IDF
-        if (mModel->mCurveSettings.mProcessType == CurveSettings::eProcess_Vector ||  mModel->mCurveSettings.mProcessType == CurveSettings::eProcess_Spherical) {
+       /* if (mModel->mCurveSettings.mProcessType == CurveSettings::eProcess_Vector ||  mModel->mCurveSettings.mProcessType == CurveSettings::eProcess_Spherical) {
 
             const double deg = 180.0 / M_PI ;
             // 1 - new extrenum
@@ -1774,7 +1815,7 @@ QString MCMCLoopCurve::initialize_330()
             clearMeanG.gy.mapG.setRangeY(gyDecMin, gyDecMax);
             clearMeanG.gz.mapG.setRangeY(gzFmin, gzFmax);
 
-        }
+        }*/
 
 
         mModel->mPosteriorMeanGByChain.push_back(clearMeanG);
@@ -2941,7 +2982,7 @@ QString MCMCLoopCurve::initialize_335()
             mModel->mSpline = currentSpline(mModel->mEvents, current_vecH, current_splineMatrices, mModel->mLambdaSpline.mX, mModel->compute_Y, mModel->compute_Z);
         }
 
-        // find X for t_min
+        // find X for t_min and t_max
         double g, gp, gs, varG;
         unsigned i0 = 0;
         valeurs_G_VarG_GP_GS(mModel->mSettings.mTmin, mModel->mSpline.splineX, g, varG, gp, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
