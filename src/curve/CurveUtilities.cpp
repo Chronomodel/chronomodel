@@ -582,6 +582,41 @@ void display(const std::vector<double>& v)
 }
 
 
+#include <cmath>
+
+/**
+ * @brief Convertit les coordonnées polaires (Inclinaison, Déclinaison, Intensité) en un vecteur 3D (x, y, z).
+ *
+ * Données d'entrée : un vecteur en coordonnées polaires \f$ (Inc, Dec, F) \f$.
+ *
+ * Formules :
+ * - \f$ z = F \cdot \sin(\text{Inc}) \f$
+ * - \f$ F_{xy} = F \cdot \cos(\text{Inc}) \f$
+ * - \f$ x = F_{xy} \cdot \cos(\text{Dec}) \f$
+ * - \f$ y = F_{xy} \cdot \sin(\text{Dec}) \f$
+ *
+ * Inclinaison (Inc) et déclinaison (Dec) sont attendues en **degrés**.
+ *
+ * @param Inc inclinaison en degrés (angle entre F et l'horizontale)
+ * @param Dec déclinaison en degrés (angle entre le nord géographique et la projection horizontale)
+ * @param F intensité totale (norme du vecteur)
+ * @param[out] x composante x du vecteur
+ * @param[out] y composante y du vecteur
+ * @param[out] z composante z du vecteur
+ */
+void convertToXYZ(double Inc, double Dec, double F, double &x, double &y, double &z)
+{
+    // Convertir les angles de degrés à radians
+    double Inc_rad = Inc * M_PI / 180.0;
+    double Dec_rad = Dec * M_PI / 180.0;
+
+    // Calculer les coordonnées cartésiennes
+    z = F * std::sin(Inc_rad);
+    double F_xy = F * std::cos(Inc_rad);
+    x = F_xy * std::cos(Dec_rad);
+    y = F_xy * std::sin(Dec_rad);
+}
+
 /**
  * @brief Convertit un vecteur 3D (x, y, z) en Inclinaison, Déclinaison et Intensité.
  *
@@ -611,8 +646,8 @@ void convertToIDF(double x, double y, double z, double &Inc, double& Dec, double
         return;
     }
 
-    Inc = std::asin(z / F) * 180.0 / M_PI;        // en degrés
-    Dec = std::atan2(y, x) * 180.0 / M_PI;        // en degrés
+    Inc = std::asin(z / F) * 180.0 * M_1_PI;        // en degrés
+    Dec = std::atan2(y, x) * 180.0 * M_1_PI;        // en degrés
 }
 
 /**
@@ -677,8 +712,8 @@ void computeDerivatives(double gx, double gy, double gz,
     }
 
     // Conversion en degrés
-    dIncdt *= 180.0 / M_PI;
-    dDecdt *= 180.0 / M_PI;
+    dIncdt *= 180.0 * M_1_PI;
+    dDecdt *= 180.0 * M_1_PI;
 }
 
 /**
@@ -762,13 +797,13 @@ void computeSecondDerivatives(
     }
 
     // Convertir Inc et Dec en degrés/s²
-    d2Incdt2 *= 180.0 / M_PI;
-    d2Decdt2 *= 180.0 / M_PI;
+    d2Incdt2 *= 180.0 * M_1_PI;;
+    d2Decdt2 *= 180.0 * M_1_PI;;
 }
 
 PosteriorMeanG conversionIDF(const std::vector<double>& vecGx, const std::vector<double>& vecGy, const std::vector<double>& vecGz, const std::vector<double>& vecGxErr, const std::vector<double> &vecGyErr, const std::vector<double> &vecGzErr)
 {
-    const double deg = 180. / M_PI ;
+    constexpr double deg = 180.0 * M_1_PI;;
     auto n = vecGx.size();
     PosteriorMeanG res;
     res.gx.vecG.resize(n);
@@ -842,11 +877,7 @@ PosteriorMeanG conversionIDF(const std::vector<double>& vecGx, const std::vector
 
 void conversionIDF (PosteriorMeanG& G)
 {
-   //PosteriorMeanG res = conversionIDF(G.gx.vecG, G.gy.vecG, G.gz.vecG, G.gx.vecVarG, G.gy.vecVarG, G.gz.vecVarG );
-  // PosteriorMeanG res = G; // on peut utiliser le constructeur de la fonction par copie
-
-
-   const double deg = 180. / M_PI ;
+   constexpr double deg = 180.0 * M_1_PI; ;
 
    //PosteriorMeanG& res = G;
    auto& vecGx = G.gx.vecG;

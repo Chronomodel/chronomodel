@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -232,6 +232,7 @@ Matrix2D computeMatA_optimized_kahan(const Matrix2D& Q, const Matrix2D& B_1, con
 Matrix2D computeB_1_from_Q_W1_R_direct(const Matrix2D& Q, const DiagonalMatrixLD& W_1, const Matrix2D& R, double lambda);
 Matrix2D compute_AxBxAT(const Matrix2D& A, const Matrix2D& B);
 
+void convertToXYZ(double Inc, double Dec, double F, double& x, double& y, double& z);
 void convertToIDF(double x, double y, double z, double& Inc, double& Dec, double& F);
 void computeDerivatives(double gx, double gy, double gz, double gpx, double gpy, double gpz,
                         double& dIncdt, double& dDecdt, double& dFdt);
