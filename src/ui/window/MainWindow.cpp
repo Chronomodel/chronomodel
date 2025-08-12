@@ -69,10 +69,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QKeyEvent>
 
 
-
-
-
-
 // Constructor / Destructor
 MainWindow::MainWindow(QWidget* parent):
     QMainWindow(parent),

@@ -44,6 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "DateUtils.h"
 #include "ModelUtilities.h"
 #include "QtUtilities.h"
+#include "Painting.h"
 
 //#include <QtWidgets>
 
@@ -144,6 +145,8 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
 
         curveMap.mType = GraphCurve::eMapData;
         curveMap.mMap = mComposanteG.mapG;
+        curveMap.setPalette(ColorPalette::TemperatureSoftDensity);
+
         const double tminFormated = DateUtils::convertToAppSettingsFormat(mComposanteG.mapG.minX());
         const double tmaxFormated = DateUtils::convertToAppSettingsFormat(mComposanteG.mapG.maxX());
 
@@ -183,6 +186,21 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
 
             curveMapChain.mType = GraphCurve::eMapData;
             curveMapChain.mMap = mComposanteGChains.at(i).mapG;
+
+            const QColor color_0 = QColor(Painting::chainColors[i].red(),
+                                   Painting::chainColors[i].green(),
+                                   Painting::chainColors[i].blue(),
+                                   0);
+            const QColor color_1 = QColor(Painting::chainColors[i].red(),
+                                   Painting::chainColors[i].green(),
+                                   Painting::chainColors[i].blue(),
+                                   255);
+
+            std::vector<ColorStop> chainColorStop {
+                {0.0, color_0},
+                {1.0, color_1}
+            };
+            curveMapChain.setColorStops(chainColorStop);
 
             if (tmaxFormated > tminFormated) {
                 curveMapChain.mMap.setRangeX(tminFormated, tmaxFormated);
@@ -272,11 +290,16 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
             }
         }
 
-        const GraphCurve curveG = FunctionCurve(G_Data, "G", QColor(119, 95, 49) ); // This is the name of the columns when exporting the graphs
-        const QColor envColor (119, 95, 49 , 60);
+        //const GraphCurve curveG = FunctionCurve(G_Data, "G", QColor(119, 95, 49) ); // This is the name of the columns when exporting the graphs
+        const GraphCurve curveG = FunctionCurve(G_Data, "G", Painting::mainColorDark ); // This is the name of the columns when exporting the graphs
+
+        const QColor envColor (Painting::mainColorDark.red(),
+                               Painting::mainColorDark.green(),
+                               Painting::mainColorDark.blue(),
+                               60);
 
         const GraphCurve &curveGEnv = shapeCurve(curveGInf_Data, curveGSup_Data, "G Env",
-                                         QColor(119, 95, 49), Qt::CustomDashLine, envColor);
+                                         Painting::mainColorDark, Qt::CustomDashLine, envColor);
 
         mGraph->add_curve(curveMap); // to be draw in first
         //mGraph->add_curve(hpdMap); //
@@ -315,8 +338,11 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
         curveMap.mBrush = Qt::NoBrush;
         curveMap.mIsRectFromZero = false;
 
+
         curveMap.mType = GraphCurve::eMapData;
         curveMap.mMap = mComposanteG.mapGP;
+        curveMap.setPalette(ColorPalette::TemperatureSoftDensity);
+
         const double tminFormated = DateUtils::convertToAppSettingsFormat(mComposanteG.mapGP.minX());
         const double tmaxFormated = DateUtils::convertToAppSettingsFormat(mComposanteG.mapGP.maxX());
 
@@ -356,6 +382,21 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
             curveMapChain.mType = GraphCurve::eMapData;
             curveMapChain.mMap = mComposanteGChains.at(i).mapGP;
 
+            const QColor color_0 = QColor(Painting::chainColors[i].red(),
+                                          Painting::chainColors[i].green(),
+                                          Painting::chainColors[i].blue(),
+                                          0);
+            const QColor color_1 = QColor(Painting::chainColors[i].red(),
+                                          Painting::chainColors[i].green(),
+                                          Painting::chainColors[i].blue(),
+                                          255);
+
+            std::vector<ColorStop> chainColorStop {
+                {0.0, color_0},
+                {1.0, color_1}
+            };
+            curveMapChain.setColorStops(chainColorStop);
+
             if (tmaxFormated > tminFormated) {
                 curveMapChain.mMap.setRangeX(tminFormated, tmaxFormated);
 
@@ -364,7 +405,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
                 // we must reflect the map
                 CurveMap displayMap (curveMapChain.mMap._row, curveMapChain.mMap._column);
 
-                int c  = curveMap.mMap._column-1;
+                int c  = curveMap.mMap._column - 1;
                 unsigned i = 0;
                 while ( c >= 0) {
                     for (unsigned r = 0; r < curveMapChain.mMap._row ; r++) {
@@ -389,7 +430,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
         for (size_t idx = 0; idx < mComposanteG.vecGP.size() ; ++idx) {
             GP_Data.insert(DateUtils::convertToAppSettingsFormat(idx*step + tmin), mComposanteG.vecGP[idx]);
         }
-        const GraphCurve &curveGP = FunctionCurve(GP_Data, "G Prime", QColor(119, 95, 49));
+        const GraphCurve &curveGP = FunctionCurve(GP_Data, "G Prime", Painting::mainColorDark);//QColor(119, 95, 49));
 
         mGraph->add_curve(curveMap); // to be draw in first
         mGraph->add_curve(curveGP);
@@ -416,7 +457,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
         for (size_t idx = 0; idx < mComposanteG.vecGS.size() ; ++idx) {
             GS_Data.insert( DateUtils::convertToAppSettingsFormat(idx*step + tmin), mComposanteG.vecGS.at(idx));
         }
-        const GraphCurve &curveGS = FunctionCurve(GS_Data, "G Second", QColor(119, 95, 49));
+        const GraphCurve &curveGS = FunctionCurve(GS_Data, "G Second", Painting::mainColorDark);//QColor(119, 95, 49));
         mGraph->add_curve(curveGS);
 
         for (unsigned i = 0; i < mComposanteGChains.size(); ++i) {

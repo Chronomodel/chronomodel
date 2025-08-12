@@ -116,6 +116,7 @@ public:
     QString mName;
     QPen mPen;
     QBrush mBrush;
+    std::vector<ColorStop> mColorStops;
 
     bool mIsRectFromZero; // draw a vertical line when graph value leaves 0 : usefull for HPD and Unif, Typo!
 
@@ -148,6 +149,9 @@ public :
     void setBrush(const QBrush& brush)  { mBrush = brush;}
     void setPenStyle(const Qt::PenStyle& penStyle)  { mPen.setStyle(penStyle);}
     void setLineColor(const QColor& lineColor)  { mPen.setColor(lineColor);}
+
+    void setPalette(const ColorPalette& palette)  { mColorStops = ColorStops::getStops(palette);}
+    void setColorStops(const std::vector<ColorStop>& stops)  { mColorStops = stops;}
 };
 
 GraphCurve densityCurve(const QMap<double, double> data,

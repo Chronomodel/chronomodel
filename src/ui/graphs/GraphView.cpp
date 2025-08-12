@@ -1786,9 +1786,9 @@ void GraphView::drawMap(const GraphCurve& curve, QPainter& painter)
 
 #pragma mark Theme Map
 
-                    const auto colorPalette = ColorPalette::TemperatureSoftDensity;//Geophy;//pHScale;//TemperatureSoftDensity; //TemperatureScience; //Inferno;// DataProbability //InfernoDensity
+                    const auto& colorStops =  curve.mColorStops;//ColorPalette::TemperatureSoftDensity;//Geophy;//pHScale;//TemperatureSoftDensity; //TemperatureScience; //Inferno;// DataProbability //InfernoDensity
 
-                    col = ColorStops::getColorFromStops(cumul_val/(maxVal - minVal), colorPalette);
+                    col = ColorStops::getColorFromStops(cumul_val/(maxVal - minVal), colorStops);
                     //col.setAlphaF(0.5);
 
                     // conditions inversées
