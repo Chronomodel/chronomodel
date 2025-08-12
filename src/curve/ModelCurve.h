@@ -144,7 +144,20 @@ public:
     QList<PosteriorMeanGComposante> getChainsMeanGComposanteY();
     QList<PosteriorMeanGComposante> getChainsMeanGComposanteZ();
 
-    void memo_PosteriorG_3D(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted);
+
+#if VERSION_MAJOR == 3 && VERSION_MINOR >= 2 && VERSION_PATCH >= 0
+    inline void memo_PosteriorG_3D(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted) {
+        if (curveType == CurveSettings::eProcess_Vector ||  curveType == CurveSettings::eProcess_Spherical)
+            memo_PosteriorG_IDF(postG, spline, curveType, realyAccepted);
+        else
+            memo_PosteriorG_XYZ(postG, spline, curveType, realyAccepted);
+    };
+    void memo_PosteriorG_XYZ(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted);
+    void memo_PosteriorG_IDF(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted);
+    void memo_PosteriorG_IDF_old(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted);
+
+
+#endif
 
 #if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5
     void memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted);
