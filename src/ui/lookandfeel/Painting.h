@@ -118,6 +118,7 @@ class ColorStops {
 public:
     static const std::vector<ColorStop>& getStops(ColorPalette palette);
     static QColor getColorFromStops(double normVal, ColorPalette palette);
+    static QColor getColorFromStops(double normVal, const std::vector<ColorStop>& stops);
 };
 
 #endif

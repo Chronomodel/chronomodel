@@ -301,16 +301,18 @@ void drawCheckBoxBox(QPainter& painter, const QRectF& rect, Qt::CheckState state
 }
 
 #pragma mark palette density
-const std::vector<ColorStop>& ColorStops::getStops(ColorPalette palette) {
-
+const std::vector<ColorStop>& ColorStops::getStops(ColorPalette palette)
+{
     static const std::vector<ColorStop> BWStops = {
         {0.0, QColor(0, 0, 0)},       // Noir
         {1.0, QColor(255, 255, 255)}  // Blanc
     };
+
     static const std::vector<ColorStop> WBStops = {
         {0.0, QColor(255, 255, 255)},  // Blanc
         {1.0, QColor(0, 0, 0)}       // Noir
     };
+
     static const std::vector<ColorStop> pressureStops = {
         {0.0, QColor(0, 0, 139)}, // Bleu foncé
         {0.5, QColor(173, 216, 230)}, // Bleu claire
@@ -458,8 +460,27 @@ const std::vector<ColorStop>& ColorStops::getStops(ColorPalette palette) {
     }
 }
 
-QColor ColorStops::getColorFromStops(double normVal, ColorPalette palette) {
+QColor ColorStops::getColorFromStops(double normVal, ColorPalette palette)
+{
     const auto& stops = getStops(palette);
+    normVal = std::clamp(normVal, 0.0, 1.0);
+
+    for (size_t i = 0; i < stops.size() - 1; ++i) {
+        if (normVal <= stops[i + 1].pos) {
+            double ratio = (normVal - stops[i].pos) / (stops[i + 1].pos - stops[i].pos);
+            int r = static_cast<int>(stops[i].color.red()   * (1 - ratio) + stops[i + 1].color.red()   * ratio);
+            int g = static_cast<int>(stops[i].color.green() * (1 - ratio) + stops[i + 1].color.green() * ratio);
+            int b = static_cast<int>(stops[i].color.blue()  * (1 - ratio) + stops[i + 1].color.blue()  * ratio);
+            int a = static_cast<int>(stops[i].color.alpha()  * (1 - ratio) + stops[i + 1].color.alpha()  * ratio);
+            return QColor(r, g, b, a);
+        }
+    }
+
+    return stops.back().color;
+}
+
+QColor ColorStops::getColorFromStops(double normVal, const std::vector<ColorStop> &stops)
+{
     normVal = std::clamp(normVal, 0.0, 1.0);
 
     for (size_t i = 0; i < stops.size() - 1; ++i) {
