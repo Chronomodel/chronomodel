@@ -1388,13 +1388,43 @@ QString MCMCLoopCurve::initialize_330()
             Var_residual_spline = mCurveSettings.mVarianceFixed;
 
         } else { // si individuel ou global VG = S02
+
+
+            // ---
+            const std::vector<t_matrix>& current_vect_Theta = get_vector<t_matrix>(get_Theta, mModel->mEvents);
+
+            std::vector<t_matrix> current_vect_Yx, current_vect_Yy, current_vect_Yz;
+
+            // Les vecteurs positions X, Y et Z doivent suivre l'ordre des thétas
+            current_vect_Yx = get_vector<t_matrix>(get_Yx, mModel->mEvents);
+
+            if (mModel->compute_Y) {
+                current_vect_Yy = get_vector<t_matrix>(get_Yy, mModel->mEvents);
+            }
+
+            if (mModel->compute_Z) {
+                current_vect_Yz = get_vector<t_matrix>(get_Yz, mModel->mEvents);
+            }
+
+            if (mModel->compute_Z) {
+                Var_residual_spline = var_Gasser_3D(current_vect_Theta, current_vect_Yx, current_vect_Yy, current_vect_Yz);
+
+            } else if (mModel->compute_Y) {
+                Var_residual_spline = var_Gasser_2D(current_vect_Theta, current_vect_Yx, current_vect_Yy);
+
+            } else {
+                Var_residual_spline = var_Gasser(current_vect_Theta, current_vect_Yx);
+            }
+
+            /*
             std::vector<double> vec_t (mModel->mEvents.size());
             std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vec_t.begin(),
                            [](auto ev) { return ev->mTheta.mX; });
 
+
             double var_residual_X, var_residual_Y, var_residual_Z;
 
-            std::vector<double> vec_Y (mModel->mEvents.size());
+            std::vector<double> vec_Yx (mModel->mEvents.size());
             std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vec_Y.begin(),
                            [](auto ev) { return ev->mYx; });
             var_residual_X = var_Gasser(vec_t, vec_Y);
@@ -1423,6 +1453,7 @@ QString MCMCLoopCurve::initialize_330()
                 }
 
             }
+            */
 
 
         }
@@ -1436,7 +1467,7 @@ QString MCMCLoopCurve::initialize_330()
          * ---------------------------------------------------------------- */
 
         int i = 0;
-        //if (mCurveSettings.mUseVarianceIndividual) {
+
         if (mCurveSettings.mVarianceType == CurveSettings::eModeBayesian) {
             for (std::shared_ptr<Event>& e : mPointEvent) {
                 i++;
@@ -1908,7 +1939,7 @@ bool MCMCLoopCurve::update_330()
 
             std::vector<t_matrix> current_vect_Yx, current_vect_Yy, current_vect_Yz;
 
-            // Les vecteurs positions X, Y et Z sdoivent suivre l'ordre des thétas
+            // Les vecteurs positions X, Y et Z doivent suivre l'ordre des thétas
             current_vect_Yx = get_vector<t_matrix>(get_Yx, mModel->mEvents);
 
             if (mModel->compute_Y) {
@@ -1981,12 +2012,14 @@ bool MCMCLoopCurve::update_330()
                             try_ln_h_YWI_1_2 = ln_h_YWI_1_2(try_decomp_QTQ, try_decomp_matB);
                             try_ln_h_YWI_3 = ln_h_YWI_3_update(try_splineMatrices, mModel->mEvents, try_vecH, try_decomp_matB, mModel->mLambdaSpline.mX, mModel->compute_Y, mModel->compute_Z);
 
+                            try_h_theta = h_theta_Event(event);
+
                             /*if (mModel->mLambdaSpline.mSamplerProposal == MHVariable::eFixe)
                                 try_h_lambda = 1.0;
                             else
                                 try_h_lambda = h_lambda_330(mModel->mLambdaSpline.mX);
 
-                            try_h_theta = h_theta_Event(event);
+
 
                             rate = (try_h_lambda * try_h_theta) / (current_h_lambda * current_h_theta) * exp(0.5 * ( try_ln_h_YWI_1_2 + try_ln_h_YWI_3
                                                                                                                      - current_ln_h_YWI_1_2 - current_ln_h_YWI_3));
@@ -2019,35 +2052,32 @@ bool MCMCLoopCurve::update_330()
                                 rate_VG = pow(rate_VG, mPointEvent.size()); // faire ici avec seulement le nombre d'Event non-Bound;
 
                                 for (const auto &e : mPointEvent) {
-                                    rate_VG *= pow(e->mVg.mX*e->mVg.mX + current_var_Gasser*current_var_Gasser, 2.0)/ pow(e->mVg.mX*e->mVg.mX + try_var_Gasser*try_var_Gasser, 2.0);
+                                    rate_VG *= pow(e->mVg.mX * e->mVg.mX + current_var_Gasser * current_var_Gasser, 2.0)/ pow(e->mVg.mX * e->mVg.mX + try_var_Gasser * try_var_Gasser, 2.0);
 
                                 }
-                            } else {
-                                rate_VG *= pow(event->mVg.mX*event->mVg.mX + current_var_Gasser*current_var_Gasser, 2.0)/ pow(event->mVg.mX*event->mVg.mX + try_var_Gasser*try_var_Gasser, 2.0);
+                            } else if(mCurveSettings.mVarianceType == CurveSettings::eModeGlobal) {
+                                rate_VG *= pow(event->mVg.mX * event->mVg.mX + current_var_Gasser * current_var_Gasser, 2.0)/ pow(event->mVg.mX * event->mVg.mX + try_var_Gasser * try_var_Gasser, 2.0);
 
+                            } else { // mode VG Fixed
+                                rate_VG = 1.0;
                             }
                             // fin boucle VG
 
                             rate = (try_h_theta) / (current_h_theta) * exp(0.5 * ( try_ln_h_YWI_1_2 + try_ln_h_YWI_3 - current_ln_h_YWI_1_2 - current_ln_h_YWI_3));
                             rate *= rate_VG;
 
-                            if (!ok)
-                                qDebug()<<"[MCMCLoopCurve::update_330] rejetéé "<< event->name()<<(double) rate;
 
                         } else {
                             rate = -1.;
-                            ok = false;
+                            //ok = false;
 
                         }
 
 
-                        // restore Theta to used try_update()
-                        //event->mTheta.mX = current_value;
-                        //event->mTheta.test_update(current_value, try_value, rate);
-                        // update after tryUpdate or updateTheta
-                        //event->mThetaReduced = mModel->reduceTime(event->mTheta.mX);
 
-                        if ( event->mTheta.test_update(current_value, try_value, rate)) { // test_update() return true if accepted
+                        // test_update() return true if accepted
+                        // set current_value or try_value to mX according to the test of rate
+                        if ( event->mTheta.test_update(current_value, try_value, rate)) {
 
                             // Pour l'itération suivante :
                             std::swap(current_ln_h_YWI_1_2, try_ln_h_YWI_1_2);
@@ -9861,6 +9891,20 @@ std::vector<t_matrix> MCMCLoopCurve::multiMatByVectCol0(const Matrix2D& KKK, con
     return result;
 }
 
+/**
+ * @brief Multiplie une matrice par un vecteur colonne.
+ *
+ * Cette fonction effectue le produit d'une matrice `KKK` de dimensions
+ * $ n \times m $ par un vecteur colonne `gg` de taille $ m $.
+ * Pour chaque ligne de la matrice, elle calcule le produit scalaire
+ * avec le vecteur `gg` et stocke le résultat dans un vecteur de type
+ * `t_matrix`.
+ *
+ * @param KKK La matrice d'entrée de dimensions $ n \times m $.
+ * @param gg Le vecteur colonne d'entrée de taille $ m $.
+ * @return std::vector<t_matrix> Un vecteur contenant les résultats
+ *         du produit pour chaque ligne de la matrice.
+ */
 std::vector<t_matrix> MCMCLoopCurve::multiMatByVectCol0(const Matrix2D& KKK, const std::vector<double>& gg)
 {
     const size_t nl1 = KKK.rows();
@@ -9882,6 +9926,12 @@ std::vector<t_matrix> MCMCLoopCurve::multiMatByVectCol0(const Matrix2D& KKK, con
         result[i] = sum;
     }
 
+
+    // test matrice colonne
+    /*ColumnVectorLD cv = stdVectorToColumnVector( gg);
+    Matrix2D m = KKK;
+    showMatrix(m*cv, " m*cv");
+    */
     return result;
 }
 
@@ -9918,9 +9968,9 @@ std::vector<double> MCMCLoopCurve::multinormal_sampling(const std::vector<t_matr
  * @param mu
  * @param a
  * @return
- ✅ Ce que tu dois faire pour que tout soit cohérent :
+ ✅ Ce qui est fait :
 
-    Construis A = K + λ·diag(1/W)
+    Construction de  A = K + λ·diag(1/W)
 
     Calcule L = chol(A) (via LLᵀ)
 
@@ -9931,7 +9981,6 @@ ColumnVectorLD MCMCLoopCurve::multinormal_sampling (const ColumnVectorLD& mu, co
     size_t N = mu.size();
 
     const Matrix2D L = robust_LLt(A);
-    //const auto L = cholesky_LLt_MoreSorensen(a);
 
     ColumnVectorLD z (N);
     for (size_t i = 0; i< N; i++)
@@ -10150,12 +10199,11 @@ t_prob MCMCLoopCurve::rate_Theta_X(const std::vector<std::shared_ptr<Event>> &Ev
 
     const std::vector<t_matrix>& fxK = multiMatByVectCol0(K_try_K, vectfx);
 
-
     t_matrix som = 0.0;
     for (size_t i = 0; i < n; ++i) {
         som += fxK[i] * vectfx[i];
     }
-    //double dx = -0.5 * lambdaSpline * som;
+
     return exp(-0.5 * lambdaSpline * som);
 
 }
