@@ -47,16 +47,25 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <eigen_3.4.0/Eigen/Dense>
 
 
+
 struct SilvermanParam
 {
-    bool use_error_measure = true;
-    bool lambda_fixed = false;
-    double log_lambda_value = -6;
-    bool force_positive_curve = false;
+    // Enumération pour les types de lambda
+    enum class lambda_type {
+        Fixed,      // Type fixe
+        Silverman,  // Type Silverman
+        Kernel      // Type noyau
+    };
 
-    std::map<double, double> tab_CV;
-    std::map<double, double> tab_GCV;
-    std::string comment;
+    bool use_error_measure = true;         // Indique si la mesure d'erreur est utilisée
+    double log_lambda_value = -6;           // Valeur logarithmique de lambda
+    bool force_positive_curve = false;      // Force une courbe positive
+
+    std::map<double, double> tab_CV;        // Tableau pour la validation croisée
+    std::map<double, double> tab_GCV;       // Tableau pour la validation croisée généralisée
+    std::string comment;                    // Commentaire associé
+
+    lambda_type lambda_process = lambda_type::Silverman; // Type de processus lambda par défaut
 };
 
 typedef struct SplineMatrices

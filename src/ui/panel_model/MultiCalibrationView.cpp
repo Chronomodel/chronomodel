@@ -1901,19 +1901,43 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
         case CurveSettings::eProcess_Field:
         case CurveSettings::eProcess_Depth:
             // recherche du smoothing
-            do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam);
-            //do_spline_res = do_spline_kernel_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam); // test
+            if (mSilverParam.lambda_process == SilvermanParam::lambda_type::Silverman) {
+               do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam);
+
+            } else if (mSilverParam.lambda_process == SilvermanParam::lambda_type::Kernel) {
+                do_spline_res = do_spline_kernel_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam); // test
+
+            } else {
+                    do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam);
+            }
          break;
 
         case CurveSettings::eProcess_Unknwon_Dec:
         case CurveSettings::eProcess_2D:
         case CurveSettings::eProcess_Spherical:
-            do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam, vec_Y, vec_Y_err);
+            if (mSilverParam.lambda_process == SilvermanParam::lambda_type::Silverman) {
+                do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam, vec_Y, vec_Y_err);
+
+            } else if (mSilverParam.lambda_process == SilvermanParam::lambda_type::Kernel) {
+                do_spline_res = do_spline_kernel_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam, vec_Y, vec_Y_err);
+
+            } else {
+                do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam, vec_Y, vec_Y_err);
+            }
         break;
 
         case CurveSettings::eProcess_Vector:
         case CurveSettings::eProcess_3D:
-            do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam, vec_Y, vec_Y_err, vec_Z, vec_Z_err);
+
+            if (mSilverParam.lambda_process == SilvermanParam::lambda_type::Silverman) {
+                do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam, vec_Y, vec_Y_err, vec_Z, vec_Z_err);
+
+            } else if (mSilverParam.lambda_process == SilvermanParam::lambda_type::Kernel) {
+                do_spline_res = do_spline_kernel_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam, vec_Y, vec_Y_err, vec_Z, vec_Z_err);
+
+            } else {
+                do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam, vec_Y, vec_Y_err, vec_Z, vec_Z_err);
+            }
         break;
 
         default:
@@ -1930,7 +1954,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
     QString spline_info;
     auto lambda = lambda_Vg.first;
     // On peut rentrer "inf" comme valeur de lambda dans la boite ce qui force l'ajustement spline
-    if (mSilverParam.lambda_fixed) {
+    if (mSilverParam.lambda_process == SilvermanParam::lambda_type::Fixed) {
         if (lambda == 0.0) {
             spline_info =  tr("Forced Spline Fitting ;");
 
@@ -1939,7 +1963,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
         }
         mSilverParam.comment = "";
 
-    } else {
+    } else if (mSilverParam.lambda_process == SilvermanParam::lambda_type::Silverman) {
 
         if (lambda == 0.0) {
             spline_info = QString::fromStdString(mSilverParam.comment);//   tr(" Spline Fitting ;");
@@ -1951,7 +1975,10 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             spline_info += QString::fromStdString(mSilverParam.comment) + tr(" Smoothing = 10E%1 ;").arg(QLocale().toString(log10(lambda)));
         }
 
+    } else { // kernel
+        spline_info += QString::fromStdString(mSilverParam.comment) + tr("Kernel solution: Smoothing = 10E%1 ;").arg(QLocale().toString(log10(lambda)));
     }
+
     mSilverParam.comment = "";
     if (lambda != 0.0) {
         spline_info +=  tr(" Estimated std g = %1 ").arg(QLocale().toString(sqrt(lambda_Vg.second)));// + QString::fromStdString(mSilverParam.comment);

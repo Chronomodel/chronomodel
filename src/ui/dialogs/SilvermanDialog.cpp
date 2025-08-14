@@ -62,10 +62,19 @@ SilvermanDialog::SilvermanDialog(SilvermanParam *param, QWidget* parent, Qt::Win
     mLambdaTypeInput->addItem(tr("Cross-Validation"));
     mLambdaTypeInput->addItem(tr("Fixed"));
 
-    if (param->lambda_fixed)
+#ifdef DEBUG
+    mLambdaTypeInput->addItem(tr("Kernel"));
+    if (param->lambda_process == SilvermanParam::lambda_type::Kernel)
+        mLambdaTypeInput->setCurrentIndex(1);
+    else
+#endif
+
+    if (param->lambda_process == SilvermanParam::lambda_type::Fixed)
         mLambdaTypeInput->setCurrentIndex(1);
     else
         mLambdaTypeInput->setCurrentIndex(0);
+
+
     connect(mLambdaTypeInput, &QComboBox::currentIndexChanged, this, &SilvermanDialog::updateLayout);
     connect(mLambdaTypeInput, &QComboBox::currentIndexChanged,[this](int) { this->validateInputs(); });
 
@@ -74,11 +83,6 @@ SilvermanDialog::SilvermanDialog(SilvermanParam *param, QWidget* parent, Qt::Win
     mLambdaInput->setText(QLocale().toString(param->log_lambda_value));
 
     connect(mLambdaInput, &QLineEdit::textChanged, [this](const QString&) { this->validateInputs(); });
-
-   /* QDialogButtonBox* buttonBox = new QDialogButtonBox(this);
-    buttonBox->addButton(tr("OK"), QDialogButtonBox::AcceptRole);
-    buttonBox->addButton(tr("Cancel"), QDialogButtonBox::RejectRole);
-    */
 
     mButtonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
@@ -139,7 +143,21 @@ SilvermanDialog::~SilvermanDialog()
 
 void SilvermanDialog::memo()
 {
-    mParam->lambda_fixed = mLambdaTypeInput->currentIndex() == 1;
+    switch (mLambdaTypeInput->currentIndex()) {
+    case 2:
+        mParam->lambda_process = SilvermanParam::lambda_type::Kernel;
+        break;
+    case 1:
+        mParam->lambda_process = SilvermanParam::lambda_type::Fixed;
+        break;
+    case 0:
+        mParam->lambda_process = SilvermanParam::lambda_type::Silverman;
+        break;
+    default:
+        break;
+    }
+
+
     mParam->log_lambda_value = QLocale().toDouble(mLambdaInput->text());
     mParam->use_error_measure = mUseErrMesureInput->isChecked();
     mParam->force_positive_curve = false;

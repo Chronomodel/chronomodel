@@ -2272,11 +2272,96 @@ double cubic_kernel(double x, double xi) {
     return 0.5 * std::pow(std::abs(x - xi), 3);
 }
 
+// produit des noyaux 1D (anisotrope)
+// conserve la forme cubique 1D par dimension et produit → plus flexible si les axes ont des échelles différentes.
+double cubic_kernel_2D(const double& at, const double& ax,
+                       const double& bt, const double& bx,
+                       double scale_t, double scale_x)
+{
+    auto k1 = cubic_kernel(at / scale_t, bt/ scale_t);
+    auto k2 = cubic_kernel(ax / scale_x, bx / scale_x);
+    return k1 * k2;
+}
+
+double cubic_kernel_2D_rbf(const double& ax, const double& ay,
+                       const double& bx, const double& by)
+{
+    double dx = ax - bx;
+    double dy = ay - by;
+    double r = std::sqrt(dx*dx + dy*dy);
+    return std::pow(std::max(0.0, 1 - r), 3); // version cubic simple
+}
+
+// --- Noyau anisotrope produit 3D ---
+double cubic_kernel_3D(const double& at, const double& ax, const double& ay,
+                       const double& bt, const double& bx, const double& by,
+                       double scale_t, double scale_x, double scale_y)
+{
+    double kt = cubic_kernel(at / scale_t, bt / scale_t);
+    double kx = cubic_kernel(ax / scale_x, bx / scale_x);
+    double ky = cubic_kernel(ay / scale_y, by / scale_y);
+    return kt * kx * ky;
+
+}
+
+/**
+ * @brief cubic_kernel_3D
+ * @param ax
+ * @param ay
+ * @param az
+ * @param bx
+ * @param by
+ * @param bz
+ * @return
+ * 💡 Remarque importante :
+ * En 3D, la distance entre points augmente plus vite → ton paramètre d’échelle
+ * dans le noyau (1 - r) devra souvent être ajusté ou remplacé par un facteur d’échelle r/h
+ * pour que le noyau ait une portée adaptée.
+ */
+double cubic_kernel_3D_rbf(const double& ax, const double& ay, const double& az,
+                       const double& bx, const double& by, const double& bz)
+{
+    double dx = ax - bx;
+    double dy = ay - by;
+    double dz = az - bz;
+    double r = std::sqrt(dx*dx + dy*dy + dz*dz);
+    return std::pow(std::max(0.0, 1 - r), 3); // version cubic simple
+}
+
+// produit des noyaux 1D (anisotrope)
+// conserve la forme cubique 1D par dimension et produit → plus flexible si les axes ont des échelles différentes.
+double cubic_kernel_4D(const double& at, const double& ax, const double& ay, const double& az,
+                       const double& bt, const double& bx, const double& by, const double& bz)
+{
+    auto k1 = cubic_kernel(at, bt);
+    auto k2 = cubic_kernel(ax, bx);
+    auto k3 = cubic_kernel(ay, by);
+    auto k4 = cubic_kernel(az, bz);
+    return k1 * k2 * k3 * k4;
+}
+
+// Radial Basis Function,
+// Noyau radial basé sur la distance euclidienne (isotrope)
+// dépend seulement de la distance globale → plus simple et isotrope, mais sensible à l’échelle de chaque dimension.
+
+double cubic_kernel_4D_rbf(const double& at, const double& ax, const double& ay, const double& az,
+                         const double& bt, const double& bx, const double& by, const double& bz, double h=1.0)
+{
+    double r = sqrt(
+                   pow(at - bt,2) +
+                   pow(ax - bx,2) +
+                   pow(ay - by,2) +
+                   pow(az - bz,2)
+                   ) / h;
+    if (r < 1.0) return 1 - 3*r*r + 2*r*r*r;
+    else return 0;
+}
 // === f''(x) = sum_i 3 c_i |x - x_i| ===
+//  cas pour un lissage par splines cubiques naturelles dans l’espace des distances.
 double second_derivative(double x, const std::vector<double>& xi, const Eigen::Matrix<t_matrix, Dynamic, 1>& c) {
     double result = 0.0;
     for (size_t i = 0; i < xi.size(); ++i) {
-        result += 3.0 * c[i] * std::abs(x - xi[i]);
+        result += 6.0 * c[i] * std::abs(x - xi[i]);
     }
     return result;
 }
@@ -2389,42 +2474,41 @@ std::vector<std::vector<double>> inverse(const std::vector<std::vector<double>>&
     return inv;
 }
 
-// Calcule la variance autour de f(x)
+// Calcule la variance autour de f(x0)
 double prediction_variance(
-    double x,
+    t_matrix x0,
     const std::vector<double>& xi,
     const Matrix2D& K,
-    const std::vector<double>& weights,
-    double lambda,
-    double sigma2
-    ) {
+    const std::vector<double>& W_inv, // W^-1 diagonal
+    t_matrix lambda,
+    t_matrix sigma2
+) {
     size_t n = xi.size();
 
-    // Vecteur K(x)
-    std::vector<double> Kx(n);
-    for (size_t i = 0; i < n; ++i)
-        Kx[i] = cubic_kernel(x, xi[i]);
-
-    // Construire matrice M = K + lambda * W^-1
+    // Construire M = K + lambda * W^-1
     Matrix2D M = K;
     for (size_t i = 0; i < n; ++i)
-         M(i, i) = K(i, i) + lambda / weights[i] ;
+        M(i, i) += lambda * W_inv[i];
 
-    // Inverse de M
-    Matrix2D M_inv = M.inverse();
+    Eigen::LDLT<Matrix2D> solver(M);
 
-    // Calcul de M_inv * Kx
-    std::vector<double> tmp = mat_vec(M_inv, Kx);
-
-    // Poids W appliqués
+    // Kx = [K(x0, x1), ..., K(x0, xn)]
+    Eigen::Matrix<t_matrix, Dynamic, 1> Kx(n);
     for (size_t i = 0; i < n; ++i)
-        tmp[i] *= weights[i];
+        Kx(i) = cubic_kernel(x0, xi[i]);
 
-    // Produit final
-    std::vector<double> M_inv_Kx = mat_vec(M_inv, tmp);
+    // tmp = W * solver.solve(Kx)   (ici W = diag(1 / W_inv))
+    Eigen::Matrix<t_matrix, Dynamic, 1> tmp = solver.solve(Kx);
+    for (size_t i = 0; i < n; ++i)
+        tmp(i) /= W_inv[i]; // W = diag(1 / W_inv)
 
-    return sigma2 * dot(Kx, M_inv_Kx);
+    // M_inv_W_solver_Kx
+    Eigen::Matrix<t_matrix, Dynamic, 1> M_inv_Kx = solver.solve(tmp);
+
+    return sigma2 * Kx.dot(M_inv_Kx);
 }
+
+
 
 // Résolution d'un système linéaire M * x = b (Gauss-Jordan)
 std::vector<double> solveLinearSystem(std::vector<std::vector<double>> M, std::vector<double> b)
@@ -2475,19 +2559,98 @@ void sort_by_x(std::vector<t_matrix>& x, std::vector<t_matrix>& y, std::vector<t
     }
 }
 
+
+// Variance de chaque point lissé : Var[ŷ_i] = σ² * ∑_j S_ij²
+std::vector<t_matrix> compute_pointwise_variance(
+    const Matrix2D& S,
+    t_matrix sigma2
+    )
+{
+    size_t n = S.rows();
+    std::vector<t_matrix> var_yhat(n, 0.0);
+
+    for (size_t i = 0; i < n; ++i) {
+        t_matrix sum_sq = 0.0;
+        for (size_t j = 0; j < n; ++j) {
+            t_matrix val = S(i, j);
+            sum_sq += val * val;
+        }
+        var_yhat[i] = sigma2 * sum_sq;
+    }
+    return var_yhat;
+}
+
+
+
+// --- cubic kernel 2D : |t - t_i|^3 ---
+// --- notre cubic kernel 2D : 1/2*|t - t_i|^3 ---
+double cubic_kernel_2D_second_derivative(double t, double ti)
+{
+    // dérivée seconde de (1 - |t - ti|)^3 = 6 * |t - ti|
+    return 3.0 * abs(t - ti); // tu peux adapter si ton noyau est différent
+}
+
+// --- Calcul des dérivées secondes aux nœuds ---
+Matrix2D second_derivative_t_nodes(
+    const std::vector<double>& t_nodes,
+    const Matrix2D& C // n x m, m composantes
+    )
+{
+    size_t n = t_nodes.size();
+    size_t m = C.cols();
+    Matrix2D Fpp(n, m); // matrice résultat
+
+    for (size_t j = 0; j < n; ++j) {          // pour chaque noeud t_j
+        for (size_t k = 0; k < m; ++k) {      // pour chaque composante
+            double s = 0.0;
+            for (size_t i = 0; i < n; ++i) {  // somme sur les coefficients
+                s += C(i, k) * cubic_kernel_2D_second_derivative(t_nodes[j], t_nodes[i]);
+            }
+            Fpp(j, k) = s;
+        }
+    }
+    return Fpp;
+}
+
+double compute_GCV_weighted(
+    const Matrix2D& Y_mat,        // valeurs observées (n × d)
+    const Matrix2D& Y_hat,        // valeurs prédites (n × d)
+    const ColumnVectorLD& W_1,       // diagonale de W_1 (taille n)
+    const Matrix2D& S             // matrice d'influence A (n × n)
+    )
+{
+    size_t n_points = Y_mat.rows();
+    size_t n_components = Y_mat.cols();
+
+    // Trace(A)
+    double traceA = S.trace();
+
+    // Résidu pondéré
+    double rss_weighted = 0.0;
+    for (size_t i = 0; i < n_points; ++i) {
+        for (size_t j = 0; j < n_components; ++j) {
+            double err = Y_mat(i, j) - Y_hat(i, j);
+            rss_weighted += (err * err) * W_1[i];
+        }
+    }
+
+    double denom = n_points * (1.0 - traceA / n_points);
+    double gcv = rss_weighted / (denom * denom);
+
+    return gcv;
+}
+
 std::pair<MCMCSpline, std::pair<double, double>> do_spline_kernel_composante(const std::vector<double> &vec_t, const std::vector<double> &vec_X, const std::vector<double> &vec_X_err, double tmin, double tmax, SilvermanParam &sv, const std::vector<double> &vec_Y, const std::vector<double> &vec_Y_err, const std::vector<double> &vec_Z, const std::vector<double> &vec_Z_err)
 {
-
     bool doY = (!vec_Y.empty() && vec_Z.empty());
     bool doYZ = (!vec_Y.empty() && !vec_Z.empty());
-
 
     std::vector<t_matrix> vec_tmp_t;
     std::vector<t_matrix> vec_tmp_x, vec_tmp_y, vec_tmp_z;
     std::vector<t_matrix> vec_tmp_x_err, vec_tmp_y_err, vec_tmp_z_err;
     // trie des temps et des données associées
     if (!std::is_sorted(vec_t.begin(), vec_t.end())) {
-        //std::vector<int> l_index = get_order(vec_t);
+
         std::vector<size_t> l_index = argsort(vec_t);
 
         for (size_t i : l_index) {
@@ -2504,16 +2667,16 @@ std::pair<MCMCSpline, std::pair<double, double>> do_spline_kernel_composante(con
             }
         }
     } else {
-        vec_tmp_t = std::vector<t_matrix>(vec_t.begin(), vec_t.end()); //vec_t;
-        vec_tmp_x = std::vector<t_matrix>(vec_X.begin(), vec_X.end()); //vec_X;
-        vec_tmp_x_err = std::vector<t_matrix>(vec_X_err.begin(), vec_X_err.end()); //vec_X_err;
+        vec_tmp_t = std::vector<t_matrix>(vec_t.begin(), vec_t.end());
+        vec_tmp_x = std::vector<t_matrix>(vec_X.begin(), vec_X.end());
+        vec_tmp_x_err = std::vector<t_matrix>(vec_X_err.begin(), vec_X_err.end());
         if (doY || doYZ) {
             vec_tmp_y = std::vector<t_matrix>(vec_Y.begin(), vec_Y.end());
-            vec_tmp_y_err = std::vector<t_matrix>(vec_Y_err.begin(), vec_Y_err.end()); //vec_Y_err;
+            vec_tmp_y_err = std::vector<t_matrix>(vec_Y_err.begin(), vec_Y_err.end());
         }
         if (doYZ) {
-            vec_tmp_z = std::vector<t_matrix>(vec_Z.begin(), vec_Z.end()); //vec_Z;
-            vec_tmp_z_err = std::vector<t_matrix>(vec_Z_err.begin(), vec_Z_err.end()); //vec_Z_err;
+            vec_tmp_z = std::vector<t_matrix>(vec_Z.begin(), vec_Z.end());
+            vec_tmp_z_err = std::vector<t_matrix>(vec_Z_err.begin(), vec_Z_err.end());
         }
     }
 
@@ -2543,96 +2706,317 @@ std::pair<MCMCSpline, std::pair<double, double>> do_spline_kernel_composante(con
         W_1 = std::vector<double>(vec_tmp_x_err.size(), 1.0);
     }
 
-    // Étape 1 : normaliser les poids w_i (inverses des erreurs²)
-    /*std::vector<double> w;
-    for (auto p_1 : W_1) {
-        double v = 1.0 / p_1;
-        w.push_back(v);
-    }
-    double sum_w = std::accumulate(w.begin(), w.end(), 0.0);
-    for (auto& v : w)
-        v /= sum_w;
-
-    // Étape 2 : construire W_1 = 1 / w_i_normalisés
-    //std::vector<double> W_1 ;
-    W_1.clear();
-    for (auto v : w)
-        W_1.push_back(1.0 / v);
-*/
-
+    size_t n = vec_tmp_t.size();
     std::vector<t_reduceTime> vec_theta_red;
 
     for (auto t : vec_tmp_t) {
         vec_theta_red.push_back((t-tmin)/(tmax-tmin));
-        //qDebug()<<"do spline compo t="<< t;
     }
     // --kernel method
     // === Données ===
-    std::vector<double> x = vec_theta_red;//{0.0, 1.0, 2.0, 3.0};
-    std::vector<t_matrix> y = vec_tmp_x;// vec_X;//{1.0, 2.0, 1.5, 3.0};
-    size_t n = x.size();
-    double lambda = pow(10., sv.log_lambda_value);//0.1;
+    std::vector<double> t = vec_theta_red;//{0.0, 1.0, 2.0, 3.0};
 
-    // 1
-    // tri suivant x
-   // sort_by_x(x, y, W_1); // déjà fait au dessus
+    std::vector<t_matrix> x = vec_tmp_x;// vec_X;//{1.0, 2.0, 1.5, 3.0};
+
+    std::vector<t_matrix> y = vec_tmp_y;
+    std::vector<t_matrix> z = vec_tmp_z;
+
+    // Construction du vecteur x
+    ColumnVectorLD x_vec, y_vec, z_vec;
+    Matrix2D Y_mat(n, 1);
+
+    x_vec.resize(n);
+    for (size_t i = 0; i < n; ++i)
+        x_vec(i) = x[i];
+
+    Y_mat << x_vec;
+
+    if (doY) {
+        Y_mat.resize(n, 2);
+        y_vec.resize(n);
+        for (size_t i = 0; i < n; ++i)
+            y_vec(i) = y[i];
+
+        Y_mat << x_vec, y_vec;
+
+    } else if (doYZ) {
+        Y_mat.resize(n, 3);
+        y_vec.resize(n);
+        z_vec.resize(n);
+        for (size_t i = 0; i < n; ++i) {
+            y_vec(i) = y[i];
+            z_vec(i) = z[i];
+        }
+
+        Y_mat << x_vec, y_vec, z_vec;
+    }
 
     // Matrice K symétrique
+    // Typiquement, pour lisser X(t),Y(t),Z(t) on construit K sur t uniquement
+    // et on met les sorties dans Y ∈ R^(n×3).
     Matrix2D K (n, n);
     for (size_t i = 0; i < n; ++i)
         for (size_t j = 0; j < n; ++j)
-            K(i, j) = cubic_kernel(x[i], x[j]);
+            K(i, j) = cubic_kernel(t[i], t[j]);
 
+    // -------------------------------
+    // Balayage de lambda et GCV
+    // -------------------------------
+    std::vector<double> lambdas;        // les λ testés
+    std::vector<long double> GCV_vals;  // valeurs brutes GCV
+    std::vector<long double> CV_vals;   // valeurs brutes CV
+
+    double best_lambda_rss= 0.0, best_lambda_cv = 0.0, best_lambda_gcv = 0.0;
+
+    double best_rss = std::numeric_limits<double>::infinity();
+    double best_cv = std::numeric_limits<double>::infinity();
+    double best_gcv = std::numeric_limits<double>::infinity();
+
+    // M = K + lambda * W^-1
+    // M * C = Y
+    // S = K * M^{-1}
+    // Y_hat = S * Y
+    Matrix2D M, C, S, Y_hat;
+    double lambda;
+
+    for (int log_lambda = -1000; log_lambda < 601; log_lambda +=50) {
+
+        lambda = std::pow(10.0, log_lambda/100.0);
+        lambdas.push_back(lambda);
+        // M = K + lambda * W^-1 (ici W_1 est déjà W^-1 diag)
+        M = K;
+        for (size_t i = 0; i < n; ++i)
+            M(i, i) += lambda * W_1[i];
+
+        // Résolution : M * C = Y
+        C = M.ldlt().solve(Y_mat);
+
+        // S = K * M^{-1}
+        S = K * M.ldlt().solve(Matrix2D::Identity(n, n));
+
+        // y_hat = S * y // S est la matrice d'influence aussi appelé A
+        Y_hat = S * Y_mat;
+
+        // Trace(S)
+        auto traceS = S.trace();
+
+        // GCV
+        size_t n_points = Y_mat.rows();
+        size_t n_components = Y_mat.cols();
+
+        // =====================
+        // 1️⃣ RSS (non pondéré)
+        // =====================
+        double rss = (Y_mat - Y_hat).squaredNorm();
+        if (rss < best_rss) {
+            best_rss = rss;
+            best_lambda_rss = lambda;
+        }
+
+        // =====================
+        // 2️⃣ GCV pondéré
+        // =====================
+        double weighted_rss = 0.0;
+        for (size_t i = 0; i < n_points; ++i) {
+            double w_ii = 1.0 / W_1[i]; // récupérer W_{ii} (car W_1 = W^{-1})
+            for (size_t j = 0; j < n_components; ++j) {
+                double res = Y_mat(i, j) - Y_hat(i, j);
+                weighted_rss += (res * res) / w_ii;
+            }
+        }
+        double dle   = 1.0 - (traceS / n_points); // degrees of freedom correction
+        double gcv   = (weighted_rss / (n_points * n_components)) / (dle * dle);
+        if (gcv < best_gcv) {
+            best_gcv = gcv;
+            best_lambda_gcv = lambda;
+        }
+        //sv.tab_GCV[lambda] = gcv;
+
+        // =====================
+        // 3️⃣ CV pondéré (LOOCV)
+        // =====================
+        double cv = 0.0;
+        for (size_t i = 0; i < n_points; ++i) {
+            double denom = 1.0 - S(i, i);
+            double w_ii  = 1.0 / W_1[i]; // W_{ii}
+            for (size_t j = 0; j < n_components; ++j) {
+                double err = (Y_mat(i, j) - Y_hat(i, j)) / denom;
+                cv += (err * err) / w_ii;
+            }
+        }
+        cv /= (n_points * n_components);
+        if (cv < best_cv) {
+            best_cv = cv;
+            best_lambda_cv = lambda;
+        }
+        //sv.tab_CV[lambda] = cv;
+
+
+        // Sauvegarde dans vecteurs + tables
+        GCV_vals.push_back(gcv);
+        CV_vals.push_back(cv);
+
+        sv.tab_GCV[lambda] = gcv; // clé = lambda
+        sv.tab_CV[lambda]   = cv; // clé = lambda
+    }
+
+
+
+    // -------- Calcul avec resultat du noyaux
+    std::cout << "[do_spline_kernel_composante] best Lambda (RSS) = " << best_lambda_rss
+        << "   RSS min = " << best_rss << std::endl;
+    std::cout << "[do_spline_kernel_composante] best Lambda (GCV) = " << best_lambda_gcv
+              << "   GCV min = " << best_gcv << std::endl;
+    std::cout << "[do_spline_kernel_composante] best Lambda (CV)  = " << best_lambda_cv
+              << "   CV min  = " << best_cv << std::endl;
+
+
+    // --------------------------------------------------
+    // Filtrage + recherche du min pour GCV et CV
+    // --------------------------------------------------
+    auto process_min = [&](std::vector<long double> vals) {
+        // Supprimer zéros initiaux
+        auto it = std::find_if(vals.begin(), vals.end(),
+                               [](long double v) { return v != 0.0; });
+        size_t nb_0 = std::distance(vals.begin(), it);
+        if (it != vals.begin())
+            vals.erase(vals.begin(), it);
+
+        // Filtre gaussien
+        //vals = gaussian_filter(vals, 10.0, 1);
+        constexpr int padding_type = 1;
+        double sigma_filter= vals.size() / 20.0;
+        vals = gaussian_filter(vals, sigma_filter, padding_type);
+
+        // Recherche min
+        size_t idx_min = std::distance(vals.begin(),
+                                       std::min_element(vals.begin(), vals.end()));
+        idx_min += nb_0; // correction index après suppression zéros
+
+        return idx_min;
+    };
+
+    size_t idx_gcv = process_min(GCV_vals);
+    size_t idx_cv  = process_min(CV_vals);
+    best_lambda_gcv = lambdas[idx_gcv];
+    best_lambda_cv  = lambdas[idx_cv];
+
+    std::cout << "[initLambdaSplineBySilverman]"
+             << "Lambda optimal (GCV) =" << best_lambda_gcv
+             << " GCV min =" << GCV_vals[idx_gcv] << std::endl;
+
+    std::cout << "[initLambdaSplineBySilverman]"
+             << "Lambda optimal (CV)  =" << best_lambda_cv
+              << " CV min  =" << CV_vals[idx_cv] << std::endl;
+
+
+    double lambda_mini;
+
+    if (idx_gcv > 0 && idx_gcv < static_cast<size_t>(lambdas.size() - 1)) {
+        // Solution évidente avec GCV
+        lambda_mini = best_lambda_gcv;
+        sv.comment = "GCV solution; ";
+
+    } else if (idx_cv > 0 && idx_cv < static_cast<size_t>(lambdas.size() - 1)) {
+        // Solution évidente avec CV
+        lambda_mini = best_lambda_cv;
+        sv.comment = "CV solution; ";
+
+    } else {
+        // Si pas de minimum clair
+        if (GCV_vals.front() > GCV_vals.back()) {
+            lambda_mini = 1.0e20;  // Lin. regression
+            sv.comment = "No GCV solution; Linear Regression; ";
+        } else {
+            lambda_mini = 0.0;     // Interpolation spline
+            sv.comment = "No GCV solution; Spline Interpolation; ";
+        }
+    }
+
+    //  _________________
+    // ex:cross_validation lambda :  0.0040738  = 10E -2.39  Vg= 3.12168 sqrt(Vg) 1.76683
+    lambda = lambda_mini; //0.0040738;//pow(10, -2.39);
+    sv.log_lambda_value = log10(lambda);
     // Construction de M = K + lambda * W^-1
-    Matrix2D M = K;
+    M = K; // K ne dépend que des temps
     for (size_t i = 0; i < n; ++i)
         M(i, i) += lambda * W_1[i];
-
-    // Construction du vecteur W * y
-    // Construction du vecteur y (Eigen)
-    Eigen::Matrix<t_matrix, Dynamic, 1> y_vec(n);
-    for (size_t i = 0; i < n; ++i)
-        y_vec(i) = y[i];
-
-    // Résolution du système M * c = y
-    Eigen::Matrix<t_matrix, Dynamic, 1> ci = M.ldlt().solve(y_vec);  // LDLT pour matrice symétrique
-
 
     // === Optimisation ===
     // pour contraindre la positivité
    // constrained_gradient_descent(c, y, M, lambda);
 
     // === Affichage des résultats ===
-#ifdef DEBUG
-    std::cout << "Coefficients c_i:\n";
-    for (size_t i = 0; i < n; ++i)
-        std::cout << ci[i] << " ";
-    std::cout << "\n\n";
-#endif
-    // -- end kernel
-
 
 
     // => On le calcule ici pour la première composante (x)
 
-    double lambda_cv = pow(10., sv.log_lambda_value);
-    double Vg;
-    std::pair<double, double> lambda_Vg;
+    double lambda_cv = best_lambda_cv; //pow(10., sv.log_lambda_value);
+    //double Vg;
 
-    Vg = 0.;// test
 
-    lambda_Vg = std::make_pair(lambda_cv, Vg);
-    qDebug()<<" end of kernel lambda : "<<lambda_cv<<" = 10E"<<log10(lambda_cv)<< " Vg="<< Vg <<"sqrt(Vg)"<<sqrt(Vg);
+    // Reconstruction avec le lambda optimal GCV// Construction de M = K + lambda * W^-1
+    Matrix2D M_best = K;
+    for (size_t i = 0; i < n; ++i)
+        M_best(i, i) += lambda * W_1[i];
+
+    auto solver_best = M_best.ldlt();
+
+    // Matrice de lissage S_best
+    Matrix2D S_best = K * solver_best.solve(Matrix2D::Identity(n, n));
+
+
+    // Courbe lissée Y_hat contient toutes les composantes, rangées par colonne
+    Y_hat = S_best * Y_mat;
+    size_t n_points = Y_hat.rows();
+    size_t n_components = Y_hat.cols();
+
+    // 1️⃣ Variance globale des valeurs lissées
+    double mean_Y_hat = Y_hat.mean();
+    double V_global = (Y_hat.array() - mean_Y_hat).square().sum() / (n_points * n_components);
+
+    // 2️⃣ Variance résiduelle corrigée (Vg = sigma²)
+    double traceS = S_best.trace();
+
+    /* Note : certaines références utilisent traceS ou traceS * n_components selon que S est la matrice de lissage pour chaque composante ou la même pour toutes.
+     *  Donc si tu appliques le même S_best à toutes les colonnes, tu pourrais multiplier traceS par n_components :
+     */
+    //double sigma2 = (Y_mat - Y_hat).squaredNorm() / (n_points * n_components - traceS * n_components);
+
+    double EDF = n_points - traceS;
+    double sigma2 = 0.0;
+    for (int j = 0; j < Y_mat.cols(); ++j) {
+        Eigen::Vector<t_matrix, Dynamic> residual = Y_mat.col(j) - Y_hat.col(j);
+        sigma2 += residual.squaredNorm() / EDF;
+    }
+    sigma2 /= Y_mat.cols(); // moyenne sur les composantes
+
+
+    std::cout << "[do_spline_kernel_composante] Variance globale des valeurs lissées (Vg) = " << V_global << "\n";
+    std::cout << "[do_spline_kernel_composante] Variance résiduelle corrigée (sigma²)     = " << sigma2 << "\n";
+// ---
+
+    //--
+    double Vg = sigma2;
+
+    std::pair<double, double> lambda_Vg = std::make_pair(lambda, Vg);
 
     //  Spline final
 
-    // Calcul avec resultat du noyaux
+    // Résolution du système M * C = Y  pour toutes les composantes
+    C = M.ldlt().solve(Y_mat);
+    auto Ydt2 = second_derivative_t_nodes(t, C);
+    // Résolution : M * ci = yi
+    ColumnVectorLD ci = M.ldlt().solve(x_vec);  // LDLT pour matrice symétrique
+
     std::vector<double> vec_G, vec_gamma, vec_varG;
-    for (double t : x) {
-        vec_G.push_back(evaluate(t, x, ci));
-        vec_gamma.push_back(second_derivative(t, x, ci));
-        vec_varG.push_back(prediction_variance(t, x, K, W_1, lambda, 1.0 ));
-    }
+    // S_best est la matrice d'influence A
+    std::vector<t_matrix> var_pointwise  = compute_pointwise_variance(S_best, sigma2);
+    vec_varG = std::vector<double>(var_pointwise.begin(), var_pointwise.end());
+
+    vec_G = std::vector<double>(Y_hat.col(0).begin(), Y_hat.col(0).end());
+    vec_gamma = std::vector<double>(Ydt2.col(0).begin(), Ydt2.col(0).end());
+
 
     // --------------------------------------------------------------
     //  Calcul de la spline g, g" pour chaque composante x y z + stockage
@@ -2647,10 +3031,54 @@ std::pair<MCMCSpline, std::pair<double, double>> do_spline_kernel_composante(con
 
     splineX.vecVarG = vec_varG;
 
-   spline.splineX = std::move(splineX);
+    if (doY) {
+
+        vec_G = std::vector<double>(Y_hat.col(1).begin(), Y_hat.col(1).end());
+        vec_gamma = std::vector<double>(Ydt2.col(1).begin(), Ydt2.col(1).end());
+        std::vector<t_matrix> var_pointwise  = compute_pointwise_variance(S_best, sigma2);
+
+        vec_varG = std::vector<double>(var_pointwise.begin(), var_pointwise.end());
+
+        splineY.vecThetaReduced = vec_theta_red;
+        splineY.vecG = vec_G;
+        splineY.vecGamma = vec_gamma;
+
+        splineY.vecVarG = vec_varG;
+
+    } else if (doYZ) {
+
+        vec_G = std::vector<double>(Y_hat.col(1).begin(), Y_hat.col(1).end());
+        vec_gamma = std::vector<double>(Ydt2.col(1).begin(), Ydt2.col(1).end());
+
+        std::vector<t_matrix> var_pointwise  = compute_pointwise_variance(S_best, sigma2);
+        vec_varG = std::vector<double>(var_pointwise.begin(), var_pointwise.end());
+
+
+        splineY.vecThetaReduced = vec_theta_red;
+        splineY.vecG = vec_G;
+        splineY.vecGamma = vec_gamma;
+
+        splineY.vecVarG = vec_varG;
+
+        // Z
+
+        vec_G = std::vector<double>(Y_hat.col(2).begin(), Y_hat.col(2).end());
+        vec_gamma = std::vector<double>(Ydt2.col(2).begin(), Ydt2.col(2).end());
+
+        var_pointwise  = compute_pointwise_variance(S_best, sigma2);
+        vec_varG = std::vector<double>(var_pointwise.begin(), var_pointwise.end());
+
+        splineZ.vecThetaReduced = vec_theta_red;
+        splineZ.vecG = vec_G;
+        splineZ.vecGamma = vec_gamma;
+
+        splineZ.vecVarG = vec_varG;
+
+    }
+
+    spline.splineX = std::move(splineX);
     spline.splineY = std::move(splineY);
     spline.splineZ = std::move(splineZ);
-
     return std::make_pair( spline, lambda_Vg);
 
 }
@@ -2714,7 +3142,7 @@ std::pair<MCMCSpline, std::pair<double, double>> do_spline_composante(const std:
 
     double lambda_cv, Vg;
     std::pair<double, double> lambda_Vg;
-    if (sv.lambda_fixed == false) {
+    if (sv.lambda_process == SilvermanParam::lambda_type::Silverman) {
         lambda_Vg = initLambdaSplineBySilverman(sv, vec_tmp_x, vec_tmp_x_err, vecH, vec_tmp_y, vec_tmp_y_err, vec_tmp_z, vec_tmp_z_err);
         lambda_cv = lambda_Vg.first;
 
@@ -2723,10 +3151,6 @@ std::pair<MCMCSpline, std::pair<double, double>> do_spline_composante(const std:
     } else {
         lambda_cv = pow(10., sv.log_lambda_value);
 
-       /* std::vector<t_matrix> W_1;
-        for (auto X_err : vec_tmp_x_err) {
-            W_1.push_back(pow(X_err, 2.0));
-        }*/
 
         DiagonalMatrixLD W_1 (vec_tmp_x_err.size());
         int i = 0;
@@ -3326,9 +3750,6 @@ std::pair<double, double> initLambdaSplineByCV(const bool depth, const std::vect
 
         if (idxDifMinCV == 0 || idxDifMinCV == (CV.size()-1)) {
             qDebug()<<"[initLambdaSplineByCV] No solution with CV ="<<idxDifMinCV<< " On prend lambda_GCV[0] = 10E"<<log10(lambda_GCV.at(0));
-
-            //lambda_final = lambda_GCV.at(0);
-            //Vg = lambda_GCV_Vg.at(0);
 
             idx_vect = 0;
             lambda_vect = &lambda_GCV;
