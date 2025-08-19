@@ -319,6 +319,8 @@ long double compensated_sum(const std::vector<long double>& values);
 long double cross_validation (const std::vector<t_matrix> &vec_Y, const SplineMatrices& matrices, const std::vector<t_reduceTime> &vecH, const double lambda);
 long double general_cross_validation (const std::vector<t_matrix>& vec_Y,  const SplineMatrices& matrices, const std::vector<t_reduceTime>& vecH, const double lambda);
 
+// pour la spline cubique « standard » de Wahba / Green & Silverman (smoothing spline), la base non pénalisée est {1,x}, donc  p=2.
+long double restricted_likelihood (const std::vector<t_matrix> &vec_Y, const SplineMatrices& matrices, const std::vector<t_reduceTime> &vecH, const double lambda, const size_t p = 2);  // dimension de la partie polynomiale
 
 double RSS(const std::vector<t_matrix> &vec_Y, const SplineMatrices &matrices, const std::vector<t_reduceTime> &vecH, const double lambda);
 

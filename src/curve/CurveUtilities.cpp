@@ -2782,7 +2782,7 @@ std::pair<MCMCSpline, std::pair<double, double>> do_spline_kernel_composante(con
     for (int log_lambda = -1000; log_lambda < 601; log_lambda +=50) {
 
         lambda = std::pow(10.0, log_lambda/100.0);
-        lambdas.push_back(lambda);
+
         // M = K + lambda * W^-1 (ici W_1 est déjà W^-1 diag)
         M = K;
         for (size_t i = 0; i < n; ++i)
@@ -2830,7 +2830,6 @@ std::pair<MCMCSpline, std::pair<double, double>> do_spline_kernel_composante(con
             best_gcv = gcv;
             best_lambda_gcv = lambda;
         }
-        //sv.tab_GCV[lambda] = gcv;
 
         // =====================
         // 3️⃣ CV pondéré (LOOCV)
@@ -2849,15 +2848,15 @@ std::pair<MCMCSpline, std::pair<double, double>> do_spline_kernel_composante(con
             best_cv = cv;
             best_lambda_cv = lambda;
         }
-        //sv.tab_CV[lambda] = cv;
 
 
         // Sauvegarde dans vecteurs + tables
+        lambdas.push_back(lambda);
         GCV_vals.push_back(gcv);
         CV_vals.push_back(cv);
 
-        sv.tab_GCV[lambda] = gcv; // clé = lambda
-        sv.tab_CV[lambda]   = cv; // clé = lambda
+        sv.tab_GCV[lambda] = gcv;
+        sv.tab_CV[lambda]   = cv;
     }
 
 
@@ -2901,11 +2900,11 @@ std::pair<MCMCSpline, std::pair<double, double>> do_spline_kernel_composante(con
     best_lambda_gcv = lambdas[idx_gcv];
     best_lambda_cv  = lambdas[idx_cv];
 
-    std::cout << "[initLambdaSplineBySilverman]"
+    std::cout << "[do_spline_kernel_composante]"
              << "Lambda optimal (GCV) =" << best_lambda_gcv
              << " GCV min =" << GCV_vals[idx_gcv] << std::endl;
 
-    std::cout << "[initLambdaSplineBySilverman]"
+    std::cout << "[do_spline_kernel_composante]"
              << "Lambda optimal (CV)  =" << best_lambda_cv
               << " CV min  =" << CV_vals[idx_cv] << std::endl;
 
@@ -2951,7 +2950,7 @@ std::pair<MCMCSpline, std::pair<double, double>> do_spline_kernel_composante(con
 
     // => On le calcule ici pour la première composante (x)
 
-    double lambda_cv = best_lambda_cv; //pow(10., sv.log_lambda_value);
+    //double lambda_cv = best_lambda_cv; //pow(10., sv.log_lambda_value);
     //double Vg;
 
 
@@ -3435,14 +3434,6 @@ long double general_cross_validation (const std::vector<t_matrix> &vec_Y, const 
     const t_matrix long_trace = matA.diagonal().trace() / static_cast<t_matrix>(N); //compensated_sum(matA) / static_cast<long double>(N);
     const long double long_DLEc = 1.0L - long_trace;
 
-/*
-    for (size_t i = 0; i < vec_Y_L.size(); ++i) {
-        long double residual = g[i] - vec_Y_L[i];
-        long double weight_inv = matrices.diagWInv[i];
-
-        long_GCV += residual * residual / weight_inv;
-    }
-  */
     // Utilisation de l'algorithme de Kahan pour la sommation
     long double sum = 0.0L;
     long double c = 0.0L;  // Variable de compensation
@@ -3470,6 +3461,90 @@ long double general_cross_validation (const std::vector<t_matrix> &vec_Y, const 
     return sum;
 }
 
+/**
+ * @brief Calcule le critère REML (Restricted Maximum Likelihood) pour une spline cubique pénalisée.
+ *
+ * Formulation issue de :
+ *   Wahba, G. (1985). "A comparison of GCV and REML for smoothing spline models."
+ *   Annals of Statistics, 13(4), 1378–1402.
+ *
+ * Problème de lissage spline :
+ * \f[
+ *   \hat f = \arg\min_f \; \sum_{i=1}^N (y_i - f(x_i))^2 + \lambda \int (f''(t))^2 \, dt
+ * \f]
+ *
+ * Critère REML à maximiser :
+ * \f[
+ *   \ell_\text{REML}(\lambda) = -\tfrac{1}{2} \Big[ (N - p)\,\log(\hat\sigma^2_\lambda)
+ *   + \log |B_\lambda| + C \Big]
+ * \f]
+ *
+ * où :
+ * - \f$ \hat\sigma^2_\lambda = \frac{1}{N-p} (Y - \hat f_\lambda)^T W^{-1}(Y - \hat f_\lambda) \f$
+ * - \f$ B_\lambda = R + \lambda Q^T W^{-1} Q \f$
+ * - \f$ p \f$ = dimension de la base non pénalisée (typiquement 2 pour spline cubique)
+ * - \f$ C \f$ = constante indépendante de \f$ \lambda \f$
+ *
+ * En pratique, on choisit \f$ \lambda \f$ qui minimise :
+ * \f[
+ *   -2 \ell_\text{REML}(\lambda) = (N - p)\,\log(\hat\sigma^2_\lambda) + \log |B_\lambda|
+ * \f]
+ *
+ * @param vec_Y        Observations (vecteur Y)
+ * @param matrices     Structures de matrices pré-calculées (R, Q, W^{-1}, etc.)
+ * @param vecH         Paramètres réduits (ex. temps)
+ * @param lambda       Coefficient de lissage
+ * @param p            Dimension de la base polynomiale non pénalisée (typiquement 2)
+ *
+ * @return Valeur de \f$ -2 \ell_\text{REML}(\lambda) \f$ (à minimiser).
+ */
+
+long double restricted_likelihood (
+    const std::vector<t_matrix> &vec_Y,
+    const SplineMatrices& matrices,
+    const std::vector<t_reduceTime> &vecH,
+    const double lambda,
+    const size_t p  // dimension de la partie polynomiale
+    )
+{
+    const size_t N = matrices.diagWInv.rows();
+
+    // 1. Décomposition de B_lambda
+    const auto& decomp = decomp_matB(matrices, lambda);
+
+    // 2. Estimation des coefficients et prédiction spline
+    const std::vector<t_matrix>& vec_gamma_L = do_vec_gamma(vec_Y, vecH, decomp);
+    const std::vector<t_matrix>& g = do_vec_G(matrices, vec_gamma_L, vec_Y, lambda);
+
+    // 3. Calcul des résidus pondérés
+    long double rss = 0.0L;  // residual sum of squares
+    long double c = 0.0L;    // Kahan compensation
+    for (size_t i = 0; i < vec_Y.size(); ++i) {
+        long double residual = g[i] - vec_Y[i];
+        long double w_inv = matrices.diagWInv.diagonal()[i];
+        long double term = (residual * residual) / w_inv;
+
+        long double y = term - c;
+        long double t = rss + y;
+        c = (t - rss) - y;
+        rss = t;
+    }
+
+    // variance résiduelle estimée
+    long double sigma2 = rss / static_cast<long double>(N - p);
+
+    // 4. log |B_lambda| depuis la Cholesky de B
+    const Matrix2D &L = decomp.first;
+    long double logDetB = 0.0L;
+    for (long long i = 0; i < L.rows(); ++i) {
+        logDetB += 2.0L * std::log(L(i, i)); // produit des pivots
+    }
+
+    // 5. Calcul de -2*logL_REML
+    long double reml = (N - p) * std::log(sigma2) + logDetB;
+
+    return reml;  // plus petit = meilleur
+}
 
 
 double RSS(const std::vector<t_matrix> &vec_Y, const SplineMatrices &matrices, const std::vector<t_reduceTime> &vecH, const double lambda)
@@ -3864,8 +3939,8 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam& sv, const 
     const bool doY = !vec_Y.empty() && vec_Z.empty();
     const bool doYZ = !vec_Y.empty() && !vec_Z.empty();
 
-    unsigned long first_mini_gcv_idx = 0;
-    unsigned long first_mini_cv_idx = 0;
+    //unsigned long first_mini_gcv_idx = 0;
+    //unsigned long first_mini_cv_idx = 0;
 
 
     int i = 0;
@@ -3908,61 +3983,69 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam& sv, const 
 
     DiagonalMatrixLD W_1_normalized = diag_W_1 * ONE_sum_W;
 
-    //const SplineMatrices test_matrices2 = prepare_calcul_spline(vecH, W_1_normalized);
-
     const SplineMatrices test_matrices = prepare_calcul_spline(vecH, diag_W_1);
+
+    std::vector<double> lambdas;        // les λ testés
+    std::vector<long double> GCV_vals;  // valeurs brutes GCV
+    std::vector<long double> CV_vals;   // valeurs brutes CV
+    std::vector<long double> REML_vals;   // valeurs brutes CV
+
+    double best_lambda_cv = 0.0, best_lambda_gcv = 0.0, best_lambda_reml = 0.0; //best_lambda_rss = 0.0
+
+    double best_cv = std::numeric_limits<double>::infinity();
+    double best_gcv = std::numeric_limits<double>::infinity();
+    double best_reml = std::numeric_limits<double>::infinity();
 
     for (int lambda_loop_exp = -1000; lambda_loop_exp < 1001; ++lambda_loop_exp ) {
 
-        const double lambda_loop = pow(10.0, static_cast<double>(lambda_loop_exp)/100.0);
-        long double cv = cross_validation(vec_X, test_matrices, vecH, lambda_loop);
+        const double lambda = pow(10.0, static_cast<double>(lambda_loop_exp)/100.0);
+        long double cv = cross_validation(vec_X, test_matrices, vecH, lambda);
 
         if (doY) {
-            cv += cross_validation(vec_Y, test_matrices, vecH, lambda_loop);
+            cv += cross_validation(vec_Y, test_matrices, vecH, lambda);
             cv /= 2.0;
 
         }  else if (doYZ) {
-            cv += cross_validation(vec_Y, test_matrices, vecH, lambda_loop);
-            cv += cross_validation(vec_Z, test_matrices, vecH, lambda_loop);
+            cv += cross_validation(vec_Y, test_matrices, vecH, lambda);
+            cv += cross_validation(vec_Z, test_matrices, vecH, lambda);
             cv /= 3.0;
         }
 
-        long double gcv = general_cross_validation(vec_X, test_matrices, vecH, lambda_loop);
+        long double gcv = general_cross_validation(vec_X, test_matrices, vecH, lambda);
 
 
         if (doY) {
-            gcv += general_cross_validation(vec_Y, test_matrices, vecH, lambda_loop);
+            gcv += general_cross_validation(vec_Y, test_matrices, vecH, lambda);
             gcv /= 2.0;
 
         }  else if (doYZ) {
-            gcv += general_cross_validation(vec_Y, test_matrices, vecH, lambda_loop);
-            gcv += general_cross_validation(vec_Z, test_matrices, vecH, lambda_loop);
+            gcv += general_cross_validation(vec_Y, test_matrices, vecH, lambda);
+            gcv += general_cross_validation(vec_Z, test_matrices, vecH, lambda);
             gcv /= 3.0;
         }
         //const double rss = RSS(vec_X, test_matrices, vecH, lambda_loop);
 
 
-        if (!std::isnan(gcv) && !std::isinf(cv)) {
-            if (!GCV.empty() && gcv>GCV.back() && first_mini_gcv_idx == 0) {
-                first_mini_gcv_idx = GCV.size()-1;
-            }
-
-            GCV.push_back(gcv);
-            lambda_GCV.push_back(lambda_loop);
-            sv.tab_GCV[lambda_loop] = gcv;
+        if (gcv < best_gcv) {
+            best_gcv = gcv;
+            best_lambda_gcv = lambda;
         }
 
-        if (!std::isnan(cv) && !std::isinf(cv)) {
-            if (!CV.empty() && cv>CV.back()&& first_mini_cv_idx == 0) {
-                first_mini_cv_idx = CV.size()-1;
-            }
-
-
-            CV.push_back(cv);
-            lambda_CV.push_back(lambda_loop);
-            sv.tab_CV[lambda_loop] = cv;
+        if (cv < best_cv) {
+            best_cv = cv;
+            best_lambda_cv = lambda;
         }
 
+        long double reml = restricted_likelihood(vec_X, test_matrices, vecH, lambda);
+
+        // Sauvegarde dans vecteurs + tables
+        lambdas.push_back(lambda);
+        GCV_vals.push_back(gcv);
+        CV_vals.push_back(cv);
+        REML_vals.push_back(cv);
+
+        sv.tab_GCV[lambda] = gcv;
+        sv.tab_CV[lambda]   = cv;
         /*if (!std::isnan(rss) && !std::isinf(rss)) {
             if (!RSS_vec.empty() && rss>RSS_vec.back() && first_mini_rss_idx == 0) {
                 first_mini_rss_idx = RSS_vec.size()-1;
@@ -3979,7 +4062,7 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam& sv, const 
     }
 
     // A - Recherche de GCV --------------
-    i = 0; // Sauvegarde du tableau brute
+   /* i = 0; // Sauvegarde du tableau brute
     for (auto& v : sv.tab_GCV) {
         v.second = GCV[i++];
     }
@@ -3997,135 +4080,83 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam& sv, const 
     GCV = gaussian_filter(GCV, 10.0, 1);
     //GCV = low_pass_filter(GCV, 0.1, 1);
 
-    // Recherche de l'indice de la plus petite valeur
-    auto min_gcv_ptr = std::min_element(GCV.begin(), GCV.end());
+    */
 
-    auto lambda_min_gcv_idx = std::distance(GCV.begin(), min_gcv_ptr) + nb_0_GCV;
+    // --------------------------------------------------
+    // Filtrage + recherche du min pour GCV et CV
+    // --------------------------------------------------
+    auto process_min = [&](std::vector<long double> vals) {
+        // Supprimer zéros initiaux
+        auto it = std::find_if(vals.begin(), vals.end(),
+                               [](long double v) { return v != 0.0; });
+        size_t nb_0 = std::distance(vals.begin(), it);
+        if (it != vals.begin())
+            vals.erase(vals.begin(), it);
 
-    // B - Recherche de CV --------------
-    i = 0;
-    for (auto& v : sv.tab_CV) {
-        v.second = CV[i++];
-    }
-    auto it2 = std::find_if(CV.begin(), CV.end(),
-                           [](double val) { return val != 0.0; });
+        // Filtre gaussien
+        constexpr int padding_type = 1;
+        double sigma_filter= vals.size() / 20.0;
+        vals = gaussian_filter(vals, sigma_filter, padding_type);
 
-    // Supprimer tous les zéros au début
-    if (it2 != CV.begin()) {
-        CV.erase(CV.begin(), it2);
-    }
-    auto nb_0_CV = lambda_CV.size() - CV.size();
-    CV = gaussian_filter(CV, 10.0, 1);
+        // Recherche min
+        size_t idx_min = std::distance(vals.begin(),
+                                       std::min_element(vals.begin(), vals.end()));
+        idx_min += nb_0; // correction index après suppression zéros
 
-    // Recherche de l'indice de la plus petite valeur
-    auto min_cv_ptr = std::min_element(CV.begin(), CV.end());
+        return idx_min;
+    };
 
-    auto lambda_min_cv_idx = std::distance(CV.begin(), min_cv_ptr) + nb_0_CV;
+    size_t idx_gcv = process_min(GCV_vals);
+    size_t idx_cv  = process_min(CV_vals);
+    size_t idx_reml  = process_min(REML_vals);
+    best_lambda_gcv = lambdas[idx_gcv];
+    best_lambda_cv  = lambdas[idx_cv];
+    best_lambda_reml  = lambdas[idx_reml];
 
-    qDebug()<<"[initLambdaSplineBySilverman] min_gcv_idx"<< lambda_GCV[lambda_min_gcv_idx] << lambda_CV[lambda_min_cv_idx];
+    std::cout << "[initLambdaSplineBySilverman]"
+              << "Lambda optimal (GCV) =" << best_lambda_gcv
+              << " GCV min =" << GCV_vals[idx_gcv] << std::endl;
 
-    // If the mini is at one of the bounds, there is no solution in the interval for GCV
-    // See if there is a solution in CV
+    std::cout << "[initLambdaSplineBySilverman]"
+              << "Lambda optimal (CV)  =" << best_lambda_cv
+              << " CV min  =" << CV_vals[idx_cv] << std::endl;
+
+    std::cout << "[initLambdaSplineBySilverman]"
+              << "Lambda optimal (REML)  =" << best_lambda_reml
+              << " REML min  =" << REML_vals[idx_reml] << std::endl;
     double lambda_mini;
 
-    if (lambda_min_gcv_idx > 0 && lambda_min_gcv_idx <static_cast<size_t>(CV.size()-1)) { // solution évidente avec GCV
-        lambda_mini = lambda_GCV[lambda_min_gcv_idx];
+    if (idx_gcv > 0 && idx_gcv < static_cast<size_t>(lambdas.size() - 1)) {
+        // Solution évidente avec GCV
+        lambda_mini = best_lambda_gcv;
         sv.comment = "GCV solution; ";
 
-    } else  if (lambda_min_cv_idx > 0 && lambda_min_cv_idx < static_cast<size_t>(CV.size()-1)) { // solution évidente avec CV
-        lambda_mini = lambda_CV[lambda_min_cv_idx];
+    } else if (idx_cv > 0 && idx_cv < static_cast<size_t>(lambdas.size() - 1)) {
+        // Solution évidente avec CV
+        lambda_mini = best_lambda_cv;
         sv.comment = "CV solution; ";
 
+    } else if (idx_reml > 0 && idx_reml < static_cast<size_t>(lambdas.size() - 1)) {
+        // Solution évidente avec REML
+        lambda_mini = best_lambda_reml;
+        sv.comment = "REML solution; ";
+
     } else {
-
-        if (GCV.front() > GCV.back()) {
-            lambda_mini = 10.0E20;
-           // mini_gcv_idx = (GCV.size()-1);
+        // Pas de minimum clair
+        // Si CV diminue continûment vers λ→0, cela suggère qu’un lissage quasi nul (donc spline presque interpolante) est préféré.
+        // Si au contraire CV/GCV diminue quand  λ→∞, alors un lissage extrême (droite ou polynôme bas degré) est préféré.
+        if (GCV_vals.front() > GCV_vals.back()) {
+            lambda_mini = 1.0e20;  // Lin. regression
             sv.comment = "No GCV solution; Linear Regression; ";
-
         } else {
-            lambda_mini = 0.0; //lambda_GCV.front();
-            //mini_gcv_idx = 0;
+            lambda_mini = 0.0;     // Interpolation spline
             sv.comment = "No GCV solution; Spline Interpolation; ";
         }
-
     }
-    // test positif
 
-/*    if (sv.force_positive_curve) {
-
-        bool has_positif = false;
-
-        int idx_depth = 0;
-        double lambda_depth, Vg_depth;
-        // Recomposition de vec_theta_red
-        // Attention nous avons perdu la position du premier temps, il est considèré égale à Zéro pour le test
-        std::vector<double> vec_theta_red;
-        double som = 0.0;
-        vec_theta_red.push_back(som);
-        for (auto& h : vecH) {
-            som += h;
-            vec_theta_red.push_back(som);
-        }
-
-        do {
-            lambda_depth =  lambda_mini * pow(10, (double)idx_depth/10.0);
+    //  _________________
 
 
-            const SplineMatrices &spline_matrices = prepare_calcul_spline(vecH, W_1);
-
-            //  Spline final
-
-            const Matrix2D &tmp = multiConstParMat(spline_matrices.matQTW_1Q, lambda_depth, 5);
-            const Matrix2D &matB = addMatEtMat(spline_matrices.matR, tmp, 5);
-
-
-            // Decomposition_Cholesky de matB en matL et matD
-            // Si alpha global: calcul de Mat_B = R + alpha * Qt * W-1 * Q  et décomposition de Cholesky en Mat_L et Mat_D
-            const std::pair<Matrix2D, MatrixDiag> &decomp = decompositionCholesky(matB, 5, 1);
-
-            const SplineResults &sx = do_spline(vec_X, spline_matrices,  vecH, decomp, lambda_depth);
-
-            const std::vector<double> &vecVarG = calcul_spline_variance(spline_matrices, decomp, lambda_depth);
-
-
-            MCMCSplineComposante splineX;
-            splineX.vecThetaReduced = vec_theta_red;
-            splineX.vecG = std::move(sx.vecG);
-            splineX.vecGamma = std::move(sx.vecGamma);
-
-            splineX.vecVarG = vecVarG;
-
-            MCMCSpline spline;
-            spline.splineX = std::move(splineX);
-
-            has_positif =  hasPositiveGPrimeByDet(spline.splineX);//hasPositiveGPrimePlusConst ((spline.splineX, 0.);// hasPositiveGPrimeByDet(spline.splineX);
-            if (!has_positif) {
-                idx_depth++;
-            }
-
-        } while (!has_positif && lambda_depth<1E10);
-
-
-        Vg_depth = var_residual(vec_X, test_matrices, vecH, lambda_depth);
-
-        if (doY) {
-            Vg_depth += var_residual(vec_Y, test_matrices, vecH, lambda_depth);
-            Vg_depth /= 2.;
-
-        } else if (doYZ) {
-            Vg_depth += var_residual(vec_Y, test_matrices, vecH, lambda_depth) + var_residual(vec_Z, test_matrices, vecH, lambda_depth);
-            Vg_depth /= 3.;
-        }
-#if DEBUG
-        if (std::isnan(Vg_depth))
-            qDebug()<<" Vg is nan in Silverman";
-#endif
-        //------
-        return std::make_pair(lambda_depth, Vg_depth);
-
-    } else {
-*/
         double Vg = var_residual(vec_X, test_matrices, vecH, lambda_mini);
 
         if (doY) {
@@ -4138,10 +4169,6 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam& sv, const 
         }
 
         return std::make_pair(lambda_mini, Vg);
-//    }
-
-    // ----- RETURN
- //   return std::make_pair(1., 0.);
 
 }
 
