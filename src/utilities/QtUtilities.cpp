@@ -948,128 +948,251 @@ bool save_map_as_csv(const std::map<double, double>& map, const std::pair<QStrin
 }
 
 
-QList<double>* load_QList_ptr(QDataStream& stream)
+#pragma mark save_container
+
+void save_container(QDataStream& stream, const std::vector<long long>& data)
 {
-    quint32 size;
-    
-    stream >> size;
-    QList<double>* data = nullptr;
-    
-    
-    if (size>0) {
-        data = new QList<double>();
-        double v;
-        for (quint32 i = 0; i < size; ++i) {
-            stream >> v;
-            data->push_back(v);
-        }
-    } else {
-        data = nullptr;
-    }
-    
-    return std::move(data);
-    
-}
+    quint32 size = static_cast<quint32>(data.size());
 
-std::vector<double> load_std_vector(QDataStream& stream)
-{
-    quint32 size;
-
-    stream >> size;
-    std::vector<double> data;
-
-    if (size>0) {
-        double v;
-        for (quint32 i = 0; i < size; ++i) {
-            stream >> v;
-            data.push_back(v);
-        }
-    }
-
-    return data;
-}
-
-std::vector<bool> load_std_vector_bool(QDataStream& stream)
-{
-    quint32 size;
-
-    stream >> size;
-    std::vector<bool> data;
-
-    if (size>0) {
-        bool v;
-        for (quint32 i = 0; i < size; ++i) {
-            stream >> v;
-            data.push_back(v);
-        }
-    }
-
-    return data;
-}
-
-
-QList<double> load_QList(QDataStream& stream)
-{
-    quint32 size;
-    
-    stream >> size;
-    QList<double> data;
-    
-    if (size>0) {
-        double v;
-        for (quint32 i = 0; i < size; ++i) {
-            stream >> v;
-            data.push_back(v);
-        }
-    }
-    
-    return data;
-    
-}
-
-
-std::shared_ptr<std::vector<double>> load_std_vector_ptr(QDataStream& stream)
-{
-    quint32 size;
-
-    stream >> size;
-    std::shared_ptr<std::vector<double>> data = std::make_shared<std::vector<double>>();
-
-    if (size>0) {
-        double v;
-        for (quint32 i = 0; i < size; ++i) {
-            stream >> v;
-            data->push_back(v);
-        }
-    }
-
-    return data;
-}
-
-void reload_shared_ptr(const std::shared_ptr<std::vector<double>> data, QDataStream& stream)
-{
-    quint32 size;
-    stream >> size;
-    //size_t tmp = size;
-    // Gérer l'erreur de lecture ici
+    // Écrire la taille
+    stream << size;
     if (stream.status() != QDataStream::Ok) {
-        qDebug() << "[QtUtilities::reload_shared_ptr]  erreur 1 de flux ; stream.status()=" << stream.status();
-       // throw std::runtime_error("Error reading from stream");
-       // return;
+        qDebug() << "[QtUtilities::save_container] erreur écriture taille" << stream.device()->errorString();
+        throw std::runtime_error("Error writing to stream (size)");
     }
-    if (size > 0) {
-        double v;
-        for (quint32 i = 0; i < size; ++i) {
-            stream >> v;
 
-            // Gérer l'erreur de lecture ici
-            if (stream.status() != QDataStream::Ok) {
-                qDebug() << "[QtUtilities::reload_shared_ptr]  erreur 2 de flux";
-                throw std::runtime_error("Error reading from stream");
-                return;
-            }
-            data->push_back(v);//test
+    // Écrire les éléments
+    for (quint32 i = 0; i < size; ++i) {
+        qint64 v = static_cast<qint64>(data[i]);  // Conversion pour QDataStream
+        stream << v;
+
+        if (stream.status() != QDataStream::Ok) {
+            qDebug() << "[QtUtilities::save_container] erreur écriture élément" << i << stream.device()->errorString();
+            throw std::runtime_error("Error writing to stream (element)");
         }
+    }
+}
+
+void save_container(QDataStream& stream, const std::vector<bool>& data)
+{
+    quint32 size = static_cast<quint32>(data.size());
+
+    // Écrire la taille
+    stream << size;
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[QtUtilities::save_container] erreur écriture taille" << stream.device()->errorString();
+        throw std::runtime_error("Error writing to stream (size)");
+    }
+
+    // Écrire les éléments
+    for (quint32 i = 0; i < size; ++i) {
+        bool v = data[i];  // std::vector<bool> retourne une référence proxy
+        stream << v;
+
+        if (stream.status() != QDataStream::Ok) {
+            qDebug() << "[QtUtilities::save_container] erreur écriture élément" << i << stream.device()->errorString();
+            throw std::runtime_error("Error writing to stream (element)");
+        }
+    }
+}
+
+void save_container(QDataStream& stream, const std::vector<double>& data)
+{
+    quint32 size = static_cast<quint32>(data.size());
+
+    // Écrire la taille
+    stream << size;
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[QtUtilities::save_container] erreur écriture taille" << stream.device()->errorString();
+        throw std::runtime_error("Error writing to stream (size)");
+    }
+
+    // Écrire les éléments
+    for (quint32 i = 0; i < size; ++i) {
+        double v = data[i];
+        stream << v;  // QDataStream gère nativement double
+
+        if (stream.status() != QDataStream::Ok) {
+            qDebug() << "[QtUtilities::save_container] erreur écriture élément" << i << stream.device()->errorString();
+            throw std::runtime_error("Error writing to stream (element)");
+        }
+    }
+}
+
+void save_container(QDataStream& stream, const std::shared_ptr<std::vector<double>>& data)
+{
+    // Vérifier que le shared_ptr n'est pas null
+    if (!data) {
+        qDebug() << "[QtUtilities::save_container] shared_ptr est null";
+        throw std::runtime_error("Cannot save null shared_ptr");
+    }
+
+    quint32 size = static_cast<quint32>(data->size());
+
+    // Écrire la taille
+    stream << size;
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[QtUtilities::save_container] erreur écriture taille" << stream.device()->errorString();
+        throw std::runtime_error("Error writing to stream (size)");
+    }
+
+    // Écrire les éléments
+    for (quint32 i = 0; i < size; ++i) {
+        double v = (*data)[i];
+        stream << v;
+
+        if (stream.status() != QDataStream::Ok) {
+            qDebug() << "[QtUtilities::save_container] erreur écriture élément" << i << stream.device()->errorString();
+            throw std::runtime_error("Error writing to stream (element)");
+        }
+    }
+}
+// Version avec support des pointeurs null (optionnelle)
+void save_container_nullable(QDataStream& stream, const std::shared_ptr<std::vector<double>>& data)
+{
+    bool isNull = (data == nullptr);
+    stream << isNull;
+
+    if (!isNull) {
+        save_container(stream, data);  // Appel à la version normale
+    }
+}
+
+#pragma mark load_container
+// Spécialisation pour std::vector<long long>
+void load_container(QDataStream& stream, std::vector<long long>& data)
+{
+    quint32 size;
+    stream >> size;
+
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[QtUtilities::load_container] erreur lecture taille " << stream.device()->errorString();
+        throw std::runtime_error("Error reading from stream (size)");
+    }
+
+    data.clear();
+    data.reserve(size);  // Optimisation pour std::vector
+
+    for (quint32 i = 0; i < size; ++i) {
+        qint64 v;  // QDataStream utilise qint64 pour long long
+        stream >> v;
+
+        if (stream.status() != QDataStream::Ok) {
+            qDebug() << "[QtUtilities::load_container] erreur lecture élément" << i << stream.device()->errorString();
+            throw std::runtime_error("Error reading from stream (element)");
+        }
+
+        data.push_back(static_cast<long long>(v));
+    }
+}
+
+// Spécialisation pour std::vector<bool>
+void load_container(QDataStream& stream, std::vector<bool> &data)
+{
+    quint32 size;
+    stream >> size;
+
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[QtUtilities::load_container] erreur lecture taille" << stream.device()->errorString();
+        throw std::runtime_error("Error reading from stream (size)");
+    }
+
+    data.clear();
+    data.reserve(size);  // Optimisation pour std::vector
+
+    for (quint32 i = 0; i < size; ++i) {
+        bool v;
+        stream >> v;
+
+        if (stream.status() != QDataStream::Ok) {
+            qDebug() << "[QtUtilities::load_container] erreur lecture élément" << i << stream.device()->errorString();
+            throw std::runtime_error("Error reading from stream (element)");
+        }
+
+        data.push_back(v);
+    }
+}
+
+// Spécialisation pour std::vector<double>
+void load_container(QDataStream& stream, std::vector<double>& data)
+{
+    quint32 size;
+    stream >> size;
+
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[QtUtilities::load_container] erreur lecture taille" << stream.device()->errorString();
+        throw std::runtime_error("Error reading from stream (size)");
+    }
+
+    data.clear();
+    data.reserve(size);  // Optimisation pour std::vector
+
+    for (quint32 i = 0; i < size; ++i) {
+        double v;  // QDataStream gère nativement double
+        stream >> v;
+
+        if (stream.status() != QDataStream::Ok) {
+            qDebug() << "[QtUtilities::load_container] erreur lecture élément" << i << stream.device()->errorString();
+            throw std::runtime_error("Error reading from stream (element)");
+        }
+
+        data.push_back(v);
+    }
+}
+
+// Surcharge pour std::shared_ptr<std::vector<double>>
+void load_container(QDataStream& stream, std::shared_ptr<std::vector<double>>& data)
+{
+    quint32 size;
+    stream >> size;
+
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[QtUtilities::load_container] erreur lecture taille" << stream.device()->errorString();
+        throw std::runtime_error("Error reading from stream (size)");
+    }
+
+    // Créer ou réinitialiser le shared_ptr
+    if (!data) {
+        data = std::make_shared<std::vector<double>>();
+    } else {
+        data->clear();
+    }
+
+    data->reserve(size);  // Optimisation pour std::vector
+
+    for (quint32 i = 0; i < size; ++i) {
+        double v;
+        stream >> v;
+
+        if (stream.status() != QDataStream::Ok) {
+            qDebug() << "[QtUtilities::load_container] erreur lecture élément" << i << stream.device()->errorString();
+            throw std::runtime_error("Error reading from stream (element)");
+        }
+
+        data->push_back(v);
+    }
+}
+
+// Version avec support des pointeurs null (optionnelle)
+void load_container_nullable(QDataStream& stream, std::shared_ptr<std::vector<double>>& data)
+{
+    bool isNull;
+    stream >> isNull;
+
+    if (isNull) {
+        data = nullptr;  // Définit le pointeur comme null si le flag est vrai
+    }
+    else {
+        // Si ce n'est pas null, crée ou réinitialise le pointeur
+        if (!data) {
+            data = std::make_shared<std::vector<double>>();
+        }
+        else {
+            data->clear();  // Nettoie le conteneur existant avant de charger
+        }
+
+        // Charge les données dans le conteneur
+        load_container(stream, *data);
     }
 }
 

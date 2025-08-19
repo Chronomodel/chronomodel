@@ -1026,8 +1026,8 @@ QDataStream &operator>>( QDataStream &stream, CurveMap &map )
     stream >> map._row;
     stream >> map._column;
     stream >> map.min_value;
-    stream >>map. max_value;
-    stream >> map. rangeX;
+    stream >> map.max_value;
+    stream >> map.rangeX;
     stream >> map.rangeY;
 
     unsigned long siz = map._column * map._row;

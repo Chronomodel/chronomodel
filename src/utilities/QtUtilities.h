@@ -74,11 +74,8 @@ QString StdVectorIntToQString(const std::vector<int>& intList, const QString& se
 QString QListUnsignedToQString(const QList<unsigned>& intList, const QString& separator = ",");
 
 
-
 QString double_to_str(const long double value);
 QString long_double_to_str(const long double value);
-
-
 
 
 #ifdef DEBUG
@@ -298,72 +295,95 @@ std::vector<T> getVectorDataInRange(const std::vector<T>& data, const T subMin, 
     return subData;
 }
 
-QList<double>* load_QList_ptr(QDataStream& stream);
-QList<double> load_QList(QDataStream& stream);
-
-
-std::vector<double> load_std_vector(QDataStream& stream);
-std::vector<bool> load_std_vector_bool(QDataStream& stream);
-
-std::shared_ptr<std::vector<double> > load_std_vector_ptr(QDataStream& stream);
-void reload_shared_ptr(const std::shared_ptr<std::vector<double> > data, QDataStream& stream);
-
 template <template<typename...> class Container, class T>
-void save_container(QDataStream& stream, const Container<T>& data)
+void save_container_template(QDataStream& stream, const Container<T>& data)
 {
-    quint32 size = static_cast<quint32>(data.size());
-    stream << size;
-
-    if (stream.status() != QDataStream::Ok) {
-        // Gérer l'erreur de flux ici
-        qDebug()<<"[QtUtilities::save_container]  erreur 1 de flux";
-        throw std::runtime_error("Error saving from stream");
-        return;
+    // Déterminer la taille du container selon son type
+    quint32 size;
+    if constexpr (requires { data.size(); }) {
+        size = static_cast<quint32>(data.size());
+    } else if constexpr (requires { std::distance(data.begin(), data.end()); }) {
+        size = static_cast<quint32>(std::distance(data.begin(), data.end()));
+    } else {
+        // Fallback : compter manuellement
+        size = 0;
+        for (auto it = data.begin(); it != data.end(); ++it) {
+            ++size;
+        }
     }
 
-    if (size > 0) {
-        for (const auto& v : data) {
-            stream << v;
-            if (stream.status() != QDataStream::Ok) {
-                // Gérer l'erreur de flux ici
-                qDebug()<<"[QtUtilities::save_container]  erreur 2 de flux";
-                throw std::runtime_error("Error saving from stream");
-                return;
-            }
+    // Écrire la taille
+    stream << size;
+    if (stream.status() != QDataStream::Ok) { // || !stream.device()->errorString().isEmpty()) {
+        qDebug() << "[QtUtilities::save_container] erreur écriture taille";
+        throw std::runtime_error("Error writing to stream (size)");
+    }
+
+    // Écrire les éléments
+    quint32 i = 0;
+    for (const auto& element : data) {
+        stream << element;
+
+        if (stream.status() != QDataStream::Ok) { // || !stream.device()->errorString().isEmpty()) {
+            qDebug() << "[QtUtilities::save_container] erreur écriture élément" << i;
+            throw std::runtime_error("Error writing to stream (element)");
+        }
+        ++i;
+    }
+}
+
+// Surcharge save_container() pour spécialisation
+#pragma mark save_container
+void save_container(QDataStream& stream, const std::vector<long long>& data);
+void save_container(QDataStream& stream, const std::vector<bool>& data);
+void save_container(QDataStream& stream, const std::vector<double>& data);
+void save_container(QDataStream& stream, const std::shared_ptr<std::vector<double>>& data);
+// Version avec support des pointeurs null
+void save_container_nullable(QDataStream& stream, const std::shared_ptr<std::vector<double>>& data);
+
+
+template <template<typename...> class Container, class T>
+void load_container_template(QDataStream& stream, Container<T>& data)
+{
+    quint32 size;
+    stream >> size;
+
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[QtUtilities::load_container] erreur lecture taille";
+        throw std::runtime_error("Error reading from stream (size)");
+    }
+
+    data.clear();
+
+    // Utilisation d'itérateurs pour plus de compatibilité
+    for (quint32 i = 0; i < size; ++i) {
+        T v;
+        stream >> v;
+
+        if (stream.status() != QDataStream::Ok) { // || !stream.device()->errorString().isEmpty()) {
+            qDebug() << "[QtUtilities::load_container] erreur lecture élément" << i;
+            throw std::runtime_error("Error reading from stream (element)");
+        }
+
+        // Méthode compatible avec plus de containers
+        if constexpr (requires { data.push_back(v); }) {
+            data.push_back(v);
+        } else if constexpr (requires { data.insert(v); }) {
+            data.insert(v);
+        } else {
+            data[i] = v; // Fallback pour les containers indexables
         }
     }
 }
 
-template <template<typename...> class Container, class T>
-void load_container(QDataStream& stream, Container<T>& data)
-{
-    quint32 siz;
-    stream >> siz;
-
-    if (stream.status() != QDataStream::Ok) {
-        // Gérer l'erreur de lecture ici
-        qDebug()<<"[QtUtilities::load_container]  erreur 1 de flux";
-        throw std::runtime_error("Error reading from stream");
-        return;
-    }
-
-    data.resize(siz);
-
-    if (siz > 0) {
-        // Utilisation de std::generate pour remplir le conteneur
-        std::generate(data.begin(), data.end(), [&stream]() {
-            T v;
-            stream >> v;
-            if (stream.status() != QDataStream::Ok) {
-                // Gérer l'erreur de lecture ici
-                qDebug()<<"[QtUtilities::load_container]  erreur 2 de flux";
-                throw std::runtime_error("Error reading from stream");
-
-            }
-            return v;
-        });
-    }
-}
+// Surcharge load_container pour spécialisation
+#pragma mark load_container
+void load_container(QDataStream& stream, std::vector<long long>& data);
+void load_container(QDataStream& stream, std::vector<bool>& data);
+void load_container(QDataStream& stream, std::vector<double>& data);
+void load_container(QDataStream& stream, std::shared_ptr<std::vector<double>>& data);
+// Version avec support des pointeurs null
+void load_container_nullable(QDataStream& stream, std::shared_ptr<std::vector<double>>& data);
 
 std::shared_ptr<Project> getProject_ptr();
 std::shared_ptr<ModelCurve> getModel_ptr();

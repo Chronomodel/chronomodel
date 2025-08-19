@@ -2023,17 +2023,15 @@ void Model::clearTraces()
 /** @Brief Save .res file, the result of computation and compress it
  *
  * */
-void Model::saveToFile(QDataStream *out)
+void Model::saveToStream(QDataStream *out) const
 {
-    out->setVersion(QDataStream::Qt_6_7); // since v3.3.0 -> Qt_6_7
-
-    *out << quint32 (out->version());// we could add software version here << quint16(out.version());
-    *out << qApp->applicationVersion();
+   // *out << quint32 (out->version());// we could add software version here << quint16(out.version());
+   // *out << qApp->applicationVersion();
     // -----------------------------------------------------
     //  Write info
     // -----------------------------------------------------
-    *out << quint32 (mChains.size());
-    for (ChainSpecs& ch : mChains) {
+    *out << static_cast<quint32> (mChains.size());
+    for (ChainSpecs ch : mChains) {
         *out << ch.burnElapsedTime;
         *out << ch.mAdaptElapsedTime;
         *out << ch.mAcquisitionElapsedTime;
@@ -2055,7 +2053,7 @@ void Model::saveToFile(QDataStream *out)
     // -----------------------------------------------------
     //  Writing phase data
     // -----------------------------------------------------
-    for (std::shared_ptr<Phase>& phase : mPhases) {
+    for (const std::shared_ptr<Phase> &phase : mPhases) {
         *out << phase->mAlpha;
         *out << phase->mBeta;
         *out << phase->mTau;
@@ -2064,14 +2062,14 @@ void Model::saveToFile(QDataStream *out)
     // -----------------------------------------------------
     //  Writing event data
     // -----------------------------------------------------
-    for (std::shared_ptr<Event>& event : mEvents){
+    for (const std::shared_ptr<Event>& event : mEvents) {
         *out << event->mTheta;
         *out << event->mS02Theta;
     }
     // -----------------------------------------------------
     //  Writing date data
     // -----------------------------------------------------
-    for (std::shared_ptr<Event>& event : mEvents) {
+    for (const std::shared_ptr<Event>& event : mEvents) {
         if (event->mType == Event::eDefault ) {
             for (auto&& d  : event->mDates) {
                 *out << d.mTi;
@@ -2111,9 +2109,9 @@ void Model::saveToFile(QDataStream *out)
 /** @Brief Read the .res file, it's the result of the saved computation
  *
  * */
-bool Model::restoreFromFile_v323(QDataStream *in)
+bool Model::loadFromStream_v323(QDataStream *in)
 {
-    std::cout << "[Model::restoreFromFile_v323] Entering" << std::endl;
+    std::cout << "[Model::loadFromStream_v323] Entering" << std::endl;
 
     if (in->version()!= QDataStream::Qt_6_4)
         return false;
@@ -2236,9 +2234,9 @@ bool Model::restoreFromFile_v323(QDataStream *in)
     return true;
 }
 
-bool Model::restoreFromFile_v324(QDataStream *in)
+bool Model::loadFromStream_v324(QDataStream *in)
 {
-    std::cout << "[Model::restoreFromFile_v324] Entering"  << std::endl;
+    std::cout << "[Model::loadFromStream_v324] Entering"  << std::endl;
 
     const QList<QString> compatible_version {"3.2.4", "3.2.6"};
 
@@ -2247,10 +2245,10 @@ bool Model::restoreFromFile_v324(QDataStream *in)
 
 #ifdef DEBUG
     if (res_file_version != qApp->applicationVersion())
-        qDebug() << "[Model::restoreFromFile_v324] Different Model version =" << res_file_version<<" actual =" << qApp->applicationVersion();
+        qDebug() << "[Model::loadFromStream_v324] Different Model version =" << res_file_version<<" actual =" << qApp->applicationVersion();
 
     if (compatible_version.contains(res_file_version))
-        qDebug() << "[Model::restoreFromFile_v324] Version compatible 3.2.4";
+        qDebug() << "[Model::loadFromStream_v324] Version compatible 3.2.4";
 #endif
     // -----------------------------------------------------
     //  Read info
@@ -2356,7 +2354,7 @@ bool Model::restoreFromFile_v324(QDataStream *in)
                 const std::string toFind ("WID::"+ d.mUUID);
 
                 if (d.mWiggleCalibration == nullptr || d.mWiggleCalibration->mVector.empty()) {
-                    qDebug()<<"[Model::restoreFromFile] mWiggleCalibration vide";
+                    qDebug() << "[Model::loadFromStream_v324] mWiggleCalibration vide";
 
                 } else {
                     d.mWiggleCalibration = & (getProject_ptr()->mCalibCurves[toFind]);
@@ -2372,21 +2370,21 @@ bool Model::restoreFromFile_v324(QDataStream *in)
     return true;
 }
 
-bool Model::restoreFromFile_v328(QDataStream *in)
+bool Model::loadFromStream_v328(QDataStream *in)
 {
-    std::cout << "[Model::restoreFromFile_v328] Entering"  << std::endl;
+    std::cout << "[Model::loadFromStream_v328] Entering"  << std::endl;
 
-    const QList<QString> compatible_version { "3.2.4", "3.2.6","3.2.9"};
+    const QList<QString> compatible_version { "3.2.4", "3.2.6", "3.2.9"};
 
     if (in->version()!= QDataStream::Qt_6_4)
         return false;
 
 #ifdef DEBUG
     if (res_file_version != qApp->applicationVersion())
-        qDebug() << "[Model::restoreFromFile_v328] Different Model version = " << res_file_version << " actual =" << qApp->applicationVersion();
+        qDebug() << "[Model::loadFromStream_v328] Different Model version = " << res_file_version << " actual =" << qApp->applicationVersion();
 
     if (compatible_version.contains(res_file_version))
-        qDebug() << " [Model::restoreFromFile_v328] Version compatible 3.2.8";
+        qDebug() << " [Model::loadFromStream_v328] Version compatible 3.2.8";
 #endif
     // -----------------------------------------------------
     //  Read info
@@ -2509,23 +2507,12 @@ bool Model::restoreFromFile_v328(QDataStream *in)
     return true;
 }
 
-bool Model::restoreFromFile_v330(QDataStream *in)
+bool Model::loadFromStream_v330(QDataStream *in)
 {
-    std::cout << "[Model::restoreFromFile_v330] Entering" << std::endl;
-
-    const QList<QString> compatible_version {"3.3.0", "3.3.5"};
+    std::cout << "[Model::loadFromStream_v330] Entering" << std::endl;
 
     if (in->version()!= QDataStream::Qt_6_7)
         return false;
-
-
-#ifdef DEBUG
-    if (res_file_version != qApp->applicationVersion())
-        qDebug()<<"[Model::restoreFromFile_v330] Different Model version =" << res_file_version << " actual =" << qApp->applicationVersion();
-
-    if (compatible_version.contains(res_file_version))
-        qDebug() << "[Model::restoreFromFile_v330] Version compatible";
-#endif
 
     try {
 
@@ -2538,8 +2525,11 @@ bool Model::restoreFromFile_v330(QDataStream *in)
         quint32 tmp32;
         *in >> tmp32;
 
+        if (in->status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read variable tmp32");
+        }
         mChains.clear();
-        //mChains.reserve(int (tmp32));
+        mChains.reserve(int (tmp32));
         for (quint32 i=0 ; i<tmp32; ++i) {
             ChainSpecs ch;
             *in >> ch.burnElapsedTime;
@@ -2561,7 +2551,9 @@ bool Model::restoreFromFile_v330(QDataStream *in)
             *in >> ch.mTotalIter;
             mChains.push_back(ch);
         }
-
+        if (in->status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read variable Chain");
+        }
         // -----------------------------------------------------
         //  Read phases data
         // -----------------------------------------------------
@@ -2573,6 +2565,9 @@ bool Model::restoreFromFile_v330(QDataStream *in)
             p->mDuration.load_stream(*in);
 
         }
+        if (in->status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read variable Phase");
+        }
         // -----------------------------------------------------
         //  Read events data
         // -----------------------------------------------------
@@ -2580,6 +2575,9 @@ bool Model::restoreFromFile_v330(QDataStream *in)
         for (std::shared_ptr<Event> &e : mEvents) {
             e->mTheta.load_stream(*in);
             e->mS02Theta.load_stream(*in); // since 2023-06-01 v3.2.3
+        }
+        if (in->status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read variable Event");
         }
         // -----------------------------------------------------
         //  Read dates data
@@ -2630,17 +2628,29 @@ bool Model::restoreFromFile_v330(QDataStream *in)
                     //#endif
                 }
         }
+        if (in->status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read variable Date");
+        }
+
         *in >> mLogModel;
         *in >> mLogInit;
         *in >> mLogAdapt;
         *in >> mLogResults;
 
+        if (in->status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read variable Log");
+        }
         return true;
 
-    } catch (...) {
-        std::cout << "[Model::restoreFromFile_v330] Error" << std::endl;
+    }
+    catch (const std::exception& e) {
+        std::cout << "[Model::loadFromStream_v330]  " << e.what() << std::endl;
         return false;
     }
+    /*catch (...) {
+        std::cout << "[Model::loadFromStream_v330] Error " << std::endl;
+        return false;
+    }*/
 }
 
 

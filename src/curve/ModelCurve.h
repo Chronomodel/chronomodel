@@ -79,42 +79,43 @@ public:
     void setProject();
     void updateDesignFromJson();
 
-    virtual void saveToFile(QDataStream *out);
+    virtual void saveToStream(QDataStream *out) const;
 
-    virtual bool restoreFromFile(QDataStream *in) {
+    virtual bool loadFromStream(QDataStream *in)
+    {
         //std::cout << "[ModelCurve::restoreFromFile] entering";
         QList<QString> compatible_version_335;
         compatible_version_335 << "3.3.5";
 
         QList<QString> compatible_version_330;
-        compatible_version_330 << "3.3.0" << "3.3.5";
+        compatible_version_330 << "3.3.0";
 
         QList<QString> compatible_version_328;
         compatible_version_328 << "3.2.4" << "3.2.6" << "3.2.9";
 
-        int QDataStreamVersion;
-        *in >> QDataStreamVersion;
-        in->setVersion(QDataStreamVersion);
+       // int QDataStreamVersion;
+       // *in >> QDataStreamVersion;
+       // in->setVersion(QDataStreamVersion);
 
         *in >> res_file_version;
 
         if (compatible_version_335.contains(res_file_version))
-            return restoreFromFile_v335(in);
+            return loadFromStream_v335(in);
 
         else if (compatible_version_330.contains(res_file_version))
-            return restoreFromFile_v330(in);
+            return loadFromStream_v330(in);
 
         else if (compatible_version_328.contains(res_file_version))
-            return restoreFromFile_v328(in);
+            return loadFromStream_v328(in);
 
         else return false;
     };
 
-    bool restoreFromFile_v323(QDataStream *in);
-    bool restoreFromFile_v324(QDataStream *in);
-    bool restoreFromFile_v328(QDataStream *in);
-    bool restoreFromFile_v330(QDataStream *in);
-    bool restoreFromFile_v335(QDataStream *in);
+    bool loadFromStream_v323(QDataStream *in);
+    bool loadFromStream_v324(QDataStream *in);
+    bool loadFromStream_v328(QDataStream *in);
+    bool loadFromStream_v330(QDataStream *in);
+    bool loadFromStream_v335(QDataStream *in);
 
     virtual QJsonObject toJson() const;
     virtual void fromJson( const QJsonObject &json);

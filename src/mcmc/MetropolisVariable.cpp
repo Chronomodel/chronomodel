@@ -938,63 +938,83 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
     return list;
 }
 
-/** Write Data
- */
-QDataStream &operator<<( QDataStream &stream, const MetropolisVariable& data )
+#pragma mark Write Data
+void MetropolisVariable::save_stream_v330(QDataStream& stream) const
 {
-    QString qstr (data.getQStringName());
-    stream << qstr; // since 2024_08_23
-    if (stream.status() != QDataStream::Ok) {
-        // Gérer l'erreur de flux ici
-        qDebug()<<"[MetropolisVariable::operator<<]  erreur de flux";
-        throw std::runtime_error("Error saving from stream");
-        return stream;
-    }
-    switch (data.mSupport) {
-        case MetropolisVariable::eR : stream << quint8(0); // on R
-            break;
-        case MetropolisVariable::eRp: stream << quint8(1); // on R+
-            break;
-        case MetropolisVariable::eRm : stream << quint8(2); // on R-
-            break;
-        case MetropolisVariable::eRpStar : stream << quint8(3); // on R+*
-            break;
-        case MetropolisVariable::eRmStar : stream << quint8(4); // on R-*
-            break;
-        case  MetropolisVariable::eBounded : stream << quint8(5); // on bounded support
-            break;
-    }
+    try {
+        // Vérification initiale du stream
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Initial stream error");
+        }
 
-    switch (data.mFormat) { // useless, only for compatibility
-        case DateUtils::eUnknown : stream << qint16(-2);
-            break;
-        case DateUtils::eNumeric : stream << qint16(-1);
-            break;
-        case DateUtils::eBCAD : stream << qint16(0);
-            break;
-        case DateUtils::eCalBP : stream << qint16(1);
-            break;
-        case DateUtils::eCalB2K : stream << qint16(2);
-            break;
-        case  DateUtils::eDatBP : stream << qint16(3);
-            break;
-        case DateUtils::eDatB2K : stream << qint16(4);
-            break;
-        case DateUtils::eBCECE : stream << qint16(5);
-            break;
-        case  DateUtils::eKa : stream << qint16(6);
-            break;
-        case DateUtils::eMa : stream << qint16(7);
-            break;
+        // Écriture du nom
+        QString str = QString::fromStdString(_name);
+        stream << str;
+        std::cout << "[MetropolisVariable::save_stream_v330] name str = " << _name <<std::endl;
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to write variable name");
+        }
+
+        // Écriture du support
+        quint8 support;
+        switch (mSupport) {
+        case eR:        support = 0; break;
+        case eRp:       support = 1; break;
+        case eRm:       support = 2; break;
+        case eRpStar:   support = 3; break;
+        case eRmStar:   support = 4; break;
+        case eBounded:  support = 5; break;
+        default:
+            throw std::runtime_error("Invalid support type");
+        }
+        stream << support;
+
+        // Écriture du format de date
+        qint16 formatDate;
+        switch (mFormat) {
+        case DateUtils::eUnknown:  formatDate = -2; break;
+        case DateUtils::eNumeric:  formatDate = -1; break;
+        case DateUtils::eBCAD:     formatDate = 0; break;
+        case DateUtils::eCalBP:    formatDate = 1; break;
+        case DateUtils::eCalB2K:   formatDate = 2; break;
+        case DateUtils::eDatBP:    formatDate = 3; break;
+        case DateUtils::eDatB2K:   formatDate = 4; break;
+        case DateUtils::eBCECE:    formatDate = 5; break;
+        case DateUtils::eKa:       formatDate = 6; break;
+        case DateUtils::eMa:       formatDate = 7; break;
+        default:
+            throw std::runtime_error("Invalid date format");
+        }
+        stream << formatDate;
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to write date format");
+        }
+
+        // Écriture du trace brut
+        //save_shared_ptr(mRawTrace, stream);
+        save_container_nullable(stream, mRawTrace);
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to write raw trace");
+        }
+
+    } catch (const std::exception& e) {
+        qDebug() << "[MetropolisVariable::save_stream_v330] Error: "
+                 << e.what()
+                 << " ; stream.status()=" << stream.status();
+        // Politique de gestion d'erreur selon vos besoins
+        // Vous pouvez choisir de lancer, réinitialiser ou ignorer
     }
-
-    save_container(stream, *data.mRawTrace);
-
-    return stream;
 }
 
-/** Read Data
- */
+QDataStream &operator<<( QDataStream &stream, const MetropolisVariable& data )
+{
+    data.save_stream(stream);  // Sauvegarde
+    return stream;
+
+}
+
+#pragma mark Read Data
+
 void MetropolisVariable::load_stream_v328(QDataStream& stream)
 {
     QString qstr;
@@ -1023,116 +1043,89 @@ void MetropolisVariable::load_stream_v328(QDataStream& stream)
 
     mFormat = DateUtils::eUnknown; // to keep compatibility and force updateFormat
 
-    reload_shared_ptr(mRawTrace, stream);
+    load_container_nullable(stream, mRawTrace);
 }
 
 void MetropolisVariable::load_stream_v330(QDataStream& stream)
 {
+    // Initial stream check
     if (stream.status() != QDataStream::Ok) {
-        qDebug() << "[MetropolisVariable::load_stream_v330]  erreur str de flux ; stream.status()=" << stream.status();
-        // throw std::runtime_error("Error reading from stream");
-        // return;
-    }
-    QString str;
-    stream >> str; // since 2024_08_23 // ici bug avec Qt 6.9.1
-    if (stream.status() != QDataStream::Ok) {
-        qDebug() << "[MetropolisVariable::load_stream_v330]  erreur 1 de flux ; stream.status()=" << stream.status();
-        // throw std::runtime_error("Error reading from stream");
-        // return;
-    }
-    //setName(str);
-    _name = str.toStdString();
-
-    quint8 support;
-    stream >> support;
-    switch (int (support)) {
-        case 0 : mSupport = MetropolisVariable::eR; // on R
-            break;
-        case 1 : mSupport = MetropolisVariable::eRp; // on R+
-            break;
-        case 2 : mSupport = MetropolisVariable::eRm; // on R-
-            break;
-        case 3 : mSupport = MetropolisVariable::eRpStar; // on R+*
-            break;
-        case 4 : mSupport = MetropolisVariable::eRmStar; // on R-*
-            break;
-        case 5 : mSupport = MetropolisVariable::eBounded; // on bounded support
-            break;
+        std::cout << "[MetropolisVariable::load_stream_v330] Initial stream error" << std::endl;
+        return;
     }
 
-    qint16 formatDate;
-    stream >> formatDate;
+    try {
+        // Read name
+        QString str;
+        stream >> str;
 
-    switch (formatDate) { // useless, only for compatibility
-    case -2 : mFormat = DateUtils::eUnknown;
-        break;
-    case -1 : mFormat = DateUtils::eNumeric;
-        break;
-    case 0 : mFormat = DateUtils::eBCAD ;
-        break;
-    case 1 : mFormat = DateUtils::eCalBP;
-        break;
-    case 2 : mFormat = DateUtils::eCalB2K;
-        break;
-    case 3 : mFormat = DateUtils::eDatBP;
-        break;
-    case 4 : mFormat = DateUtils::eDatB2K;
-        break;
-    case 5 : mFormat = DateUtils::eBCECE;
-        break;
-    case 6 : mFormat = DateUtils::eKa;
-        break;
-    case 7 : mFormat = DateUtils::eMa;
-        break;
-    }
-    if (stream.status() != QDataStream::Ok) {
-        qDebug() << "[MetropolisVariable::load_stream_v330]  erreur 1 de flux ; stream.status()=" << stream.status();
-        // throw std::runtime_error("Error reading from stream");
-        // return;
-    }
+        if (stream.status() != QDataStream::Ok) {
+            std::cout << "[MetropolisVariable::load_stream_v330] Failed to read variable (name)" << std::endl;
+            throw std::runtime_error("Failed to read variable name");
+        }
 
-    reload_shared_ptr(mRawTrace, stream);
-    // Gérer l'erreur de lecture ici
-    if (stream.status() != QDataStream::Ok) {
-        qDebug() << "[MetropolisVariable::load_stream_v330]  erreur 1 de flux ; stream.status()=" << stream.status();
-        // throw std::runtime_error("Error reading from stream");
-        // return;
+        //std::cout << "[MetropolisVariable::load_stream_v330] name str = " << str.toStdString() << std::endl;
+        _name = str.toStdString();
+
+        // Read support
+        quint8 support;
+        stream >> support;
+        switch (int(support)) {
+        case 0: mSupport = MetropolisVariable::eR; break;
+        case 1: mSupport = MetropolisVariable::eRp; break;
+        case 2: mSupport = MetropolisVariable::eRm; break;
+        case 3: mSupport = MetropolisVariable::eRpStar; break;
+        case 4: mSupport = MetropolisVariable::eRmStar; break;
+        case 5: mSupport = MetropolisVariable::eBounded; break;
+        default:
+            throw std::runtime_error("Invalid support type");
+        }
+
+        // Read date format
+        qint16 formatDate;
+        stream >> formatDate;
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read date format");
+        }
+
+        // Convert date format
+        switch (formatDate) {
+        case -2: mFormat = DateUtils::eUnknown; break;
+        case -1: mFormat = DateUtils::eNumeric; break;
+        case 0: mFormat = DateUtils::eBCAD; break;
+        case 1: mFormat = DateUtils::eCalBP; break;
+        case 2: mFormat = DateUtils::eCalB2K; break;
+        case 3: mFormat = DateUtils::eDatBP; break;
+        case 4: mFormat = DateUtils::eDatB2K; break;
+        case 5: mFormat = DateUtils::eBCECE; break;
+        case 6: mFormat = DateUtils::eKa; break;
+        case 7: mFormat = DateUtils::eMa; break;
+        default:
+            throw std::runtime_error("Invalid date format");
+        }
+
+        // Read raw trace
+        load_container_nullable(stream, mRawTrace);
+
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read raw trace");
+        }
+
+    } catch (const std::exception& e) {
+        std::cout << "[MetropolisVariable::load_stream_v330] Error: "
+                 << e.what()
+                  << " ; stream.status()=" << stream.status()<< std::endl;
+        // Error handling policy based on your requirements
+        // You can choose to throw, reset, or ignore
     }
 }
 
 
+
+
 QDataStream &operator>>( QDataStream& stream, MetropolisVariable& data )
 {
-    QString str;
-    stream >> str; // since 2024_08_23
-    data.setName(str);
-
-    quint8 support;
-    stream >> support;
-    switch (int (support)) {
-      case 0 : data.mSupport = MetropolisVariable::eR; // on R
-       break;
-      case 1 : data.mSupport = MetropolisVariable::eRp; // on R+
-         break;
-      case 2 : data.mSupport = MetropolisVariable::eRm; // on R-
-         break;
-      case 3 : data.mSupport = MetropolisVariable::eRpStar; // on R+*
-         break;
-      case 4 : data.mSupport = MetropolisVariable::eRmStar; // on R-*
-         break;
-      case 5 : data.mSupport = MetropolisVariable::eBounded; // on bounded support
-         break;
-   }
-
-    qint16 formatDate;
-    stream >> formatDate;
-    data.mFormat = DateUtils::eUnknown; // to keep compatibility and force updateFormat
-
-    reload_shared_ptr(data.mRawTrace, stream);
-    
-    // regeneration of this->mFormatedTrace
-  
-
+    data.load_stream(stream);  // Chargement
     return stream;
 
 }

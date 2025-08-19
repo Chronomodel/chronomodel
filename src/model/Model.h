@@ -129,14 +129,14 @@ public:
 
     double yearTime(t_reduceTime reduceTime);
 
-    virtual void saveToFile(QDataStream* out);
+    virtual void saveToStream(QDataStream* out) const ;
 
-    virtual bool restoreFromFile(QDataStream* in) {return restoreFromFile_v330(in);};
+    virtual bool loadFromStream(QDataStream* in) {return loadFromStream_v330(in);};
 
-    bool restoreFromFile_v323(QDataStream* in);
-    bool restoreFromFile_v324(QDataStream* in);
-    bool restoreFromFile_v328(QDataStream* in);
-    bool restoreFromFile_v330(QDataStream* in);
+    bool loadFromStream_v323(QDataStream* in);
+    bool loadFromStream_v324(QDataStream* in);
+    bool loadFromStream_v328(QDataStream* in);
+    bool loadFromStream_v330(QDataStream* in);
 
     // Only trace needed for this :
     virtual void generateCorrelations(const std::vector<ChainSpecs>& chains);

@@ -112,12 +112,12 @@ QDataStream &operator<<( QDataStream &stream, const CalibrationCurve &data )
 QDataStream &operator>>( QDataStream &stream, CalibrationCurve &data )
 {
     QString str;
-    stream>> str;
+    stream >> str;
     data.setName(str);
     //stream >> data.mName;
     //stream >> data.mDescription;
-    stream>> str;
-    data.mDescription=str.toStdString();
+    stream >> str;
+    data.mDescription = str.toStdString();
     load_container(stream, data.mRepartition);
     //stream >> data.mRepartition;
     load_container(stream, data.mVector);

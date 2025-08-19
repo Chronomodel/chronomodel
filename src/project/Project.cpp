@@ -769,7 +769,7 @@ bool Project::load(const QString &path, bool force)
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
                 } else if (qDataStreamVersion == QDataStream::Qt_6_8) {
-                    in.setVersion(QDataStream::Qt_6_8);
+                    in.setVersion(QDataStream::Qt_6_7); // forçage
 #endif
                 } else { //if (in.version() != QDataStream::Qt_6_7) {  // Depuis v3.3.0 avant Qt_6_4
                     // Gérer les versions non compatibles
@@ -913,12 +913,17 @@ bool Project::load(const QString &path, bool force)
 
                     bool compatible_file = true;
 
+                    // *out << quint32 (out->version());// we could add software version here << quint16(out.version());
+                    //in >> res_file_version;
+                    //QString resVersion;
+                    //in >> resVersion;
+
                     if (qDataStreamVersion == QDataStream::Qt_6_7) {
                         in.setVersion(QDataStream::Qt_6_7);
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
                     } else if (qDataStreamVersion == QDataStream::Qt_6_8) {
-                        in.setVersion(QDataStream::Qt_6_8);
+                        in.setVersion(QDataStream::Qt_6_7); // Forçage
 #endif
                     } else {
                         std::cout << "[Project::load] file res : Version du QDataStream non compatible:" << qDataStreamVersion<< std::endl;
@@ -928,7 +933,7 @@ bool Project::load(const QString &path, bool force)
 
 
                     if (compatible_file) { //if (in.version() == QDataStream::Qt_6_7) {  // Depuis v3.3.0 avant Qt_6_4
-                         const bool restore_ok = mModel->restoreFromFile(&in);
+                         const bool restore_ok = mModel->loadFromStream(&in); // do in >> resVersion;
 
                         if (in.status() != QDataStream::Ok || !restore_ok) {
                             std::cout << "[Project::load] loading file.res DataStream Error" << std::endl;
@@ -1318,7 +1323,7 @@ bool Project::load_old(const QString &path, bool force)
                     in.setVersion(QDataStreamVersion);
                     //if (in.version()!= QDataStream::Qt_6_7) { // since v3.3.0 before Qt_6_4
 
-                    const bool restore_ok = mModel->restoreFromFile(&in);
+                    const bool restore_ok = mModel->loadFromStream(&in);
 
                     if (in.status() != QDataStream::Ok || !restore_ok) {
                         // Gestion de l'erreur de lecture du fichier
@@ -1801,15 +1806,22 @@ bool Project::saveProjectToFile()
         out << out.version();
 
         out << QApplication::applicationVersion();
+        // Vérification du statut de flux
+        if (out.status() != QDataStream::Ok) {
+            qDebug() << "Statut de flux invalide";
+
+        } else {
         // save Calibration Curve
         out << quint32 (mCalibCurves.size());
         for (auto it = mCalibCurves.cbegin() ; it != mCalibCurves.cend(); ++it) {
             out << QString::fromStdString(it->first);
             out << it->second;
         }
+        file_cal.flush();
         file_cal.close();
 
         AppSettings::mIsSaved = true;
+        }
     }
 
     QFileInfo checkFile(file_res.fileName());
@@ -1833,8 +1845,11 @@ bool Project::saveProjectToFile()
             QDataStream out(&file_res);
             out.setVersion(QDataStream::Qt_6_7); // since v3.3.0 before Qt_6_4
             out << out.version();
+            out << QApplication::applicationVersion();
 
-            mModel->saveToFile(&out);
+            mModel->saveToStream(&out);
+
+            file_res.flush();
             file_res.close();
 
             AppSettings::mIsSaved = true;

@@ -328,11 +328,14 @@ public:
     void updateFormatedTrace(const DateUtils::FormatDate fm);
 
     inline void load_stream(QDataStream& stream) {load_stream_v330(stream);}
+    inline void save_stream(QDataStream& stream) const {save_stream_v330(stream);}
 
 private:
 
     void generateBufferForHisto(double* input, const std::vector<double> &dataSrc, const int numPts, const double a, const double b);
     QMap<double, double> bufferToMap(const double* buffer);
+
+    void save_stream_v330(QDataStream& stream) const;
 
     void load_stream_v328(QDataStream& stream);
     void load_stream_v330(QDataStream& stream);

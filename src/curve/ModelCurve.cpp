@@ -307,9 +307,9 @@ void ModelCurve::settings_from_Json(const QJsonObject &json)
 /** @Brief Save .res file, the result of computation and compress it
 *
 * */
-void ModelCurve::saveToFile(QDataStream *out)
+void ModelCurve::saveToStream(QDataStream *out) const
 {
-    Model::saveToFile(out);
+    Model::saveToStream(out);
 
     if (!is_curve)
         return;
@@ -320,7 +320,7 @@ void ModelCurve::saveToFile(QDataStream *out)
     //  Write events VG
     // -----------------------------------------------------
 
-    for (std::shared_ptr<Event>& event : mEvents)
+    for (const std::shared_ptr<Event> &event : mEvents)
         *out << event->mVg;
 
     *out << mLambdaSpline;
@@ -336,14 +336,15 @@ void ModelCurve::saveToFile(QDataStream *out)
     for (auto& pMByChain : mPosteriorMeanGByChain)
         *out << pMByChain;
 
+
 }
 /** @Brief Read the .res file, it's the result of the saved computation
 *
 * */
-bool ModelCurve::restoreFromFile_v323(QDataStream* in)
+bool ModelCurve::loadFromStream_v323(QDataStream* in)
 {
 
-    bool ok = Model::restoreFromFile_v323(in);
+    bool ok = Model::loadFromStream_v323(in);
 
     if (!is_curve || !ok) {
         return ok;
@@ -380,9 +381,9 @@ bool ModelCurve::restoreFromFile_v323(QDataStream* in)
 
 }
 
-bool ModelCurve::restoreFromFile_v324(QDataStream* in)
+bool ModelCurve::loadFromStream_v324(QDataStream* in)
 {
-    bool ok = Model::restoreFromFile_v324(in);
+    bool ok = Model::loadFromStream_v324(in);
 
     if (!is_curve || !ok) {
         return ok;
@@ -411,9 +412,9 @@ bool ModelCurve::restoreFromFile_v324(QDataStream* in)
     return true;
 }
 
-bool ModelCurve::restoreFromFile_v328(QDataStream* in)
+bool ModelCurve::loadFromStream_v328(QDataStream* in)
 {
-    bool ok = Model::restoreFromFile_v328(in);
+    bool ok = Model::loadFromStream_v328(in);
 
     if (!is_curve || !ok) {
         return ok;
@@ -444,15 +445,19 @@ bool ModelCurve::restoreFromFile_v328(QDataStream* in)
     return true;
 }
 
-bool ModelCurve::restoreFromFile_v330(QDataStream* in)
+bool ModelCurve::loadFromStream_v330(QDataStream* in)
 {
-    bool ok = Model::restoreFromFile_v330(in);
+    bool ok = Model::loadFromStream_v330(in);
+
+    if (in->version()!= QDataStream::Qt_6_7) {
+        std::cout << "[ModelCurve::loadFromStream_v330] Bad QDataStream version" << std::endl;
+        return false;
+    }
 
     // Gérer l'erreur de lecture ici
     if (in->status() != QDataStream::Ok) {
-        qDebug() << "[ModelCurve::restoreFromFile_v330]  erreur de flux ; in->status()=" << in->status();
-        // throw std::runtime_error("Error reading from stream");
-        // return;
+        std::cout << "[ModelCurve::loadFromStream_v330] QDataStream Status Error  =" << in->status() << std::endl;
+        return false;
     }
 
     if (!is_curve || !ok) {
@@ -467,7 +472,6 @@ bool ModelCurve::restoreFromFile_v330(QDataStream* in)
         quint32 tmp32;
         mLambdaSpline.load_stream(*in);
 
-        //*in >> mS02Vg;
         mS02Vg.load_stream(*in);
 
         *in >> tmp32;
@@ -485,7 +489,7 @@ bool ModelCurve::restoreFromFile_v330(QDataStream* in)
         return true;
 
     } catch (...) {
-        //std::cout << "[ModelCurve::restoreFromFile_v330] error" << std::endl;
+        //std::cout << "[ModelCurve::loadFromStream_v330] error" << std::endl;
         return false;
     }
 
@@ -493,13 +497,13 @@ bool ModelCurve::restoreFromFile_v330(QDataStream* in)
 }
 
 
-bool ModelCurve::restoreFromFile_v335(QDataStream* in)
+bool ModelCurve::loadFromStream_v335(QDataStream* in)
 {
-    bool ok = Model::restoreFromFile_v330(in);
+    bool ok = Model::loadFromStream_v330(in);
 
     // Gérer l'erreur de lecture ici
     if (in->status() != QDataStream::Ok) {
-        qDebug() << "[ModelCurve::restoreFromFile_v335]  erreur de flux ; in->status()=" << in->status();
+        qDebug() << "[ModelCurve::loadFromStream_v335]  erreur de flux ; in->status()=" << in->status();
         // throw std::runtime_error("Error reading from stream");
         // return;
     }
@@ -535,7 +539,7 @@ bool ModelCurve::restoreFromFile_v335(QDataStream* in)
         return true;
 
     } catch (...) {
-        std::cout << "[ModelCurve::restoreFromFile_v335] error" << std::endl;
+        std::cout << "[loadFromStream_v335] error" << std::endl;
         return false;
     }
 
@@ -546,9 +550,9 @@ void ModelCurve::saveMapToFile(QFile *file, const QString csvSep, const CurveMap
 {
     QTextStream output(file);
     const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
-    output<<"# " +version+"\r";
+    output<<"# " + version + "\r";
 
-    output<<"# Date Format : "+ DateUtils::getAppSettingsFormatStr() +"\r";
+    output << "# Date Format : "+ DateUtils::getAppSettingsFormatStr() + "\r";
 
     auto mapG = map.data;
 
@@ -1912,7 +1916,7 @@ void ModelCurve::memo_PosteriorG_IDF_old(PosteriorMeanG &postG, const MCMCSpline
 {
     constexpr double rad = M_PI / 180.0;
     constexpr double deg = 180.0 * M_1_PI;
-    constexpr double deg2 = deg * deg;
+    //constexpr double deg2 = deg * deg;
 
     CurveMap& curveMap_Inc = postG.gx.mapG;
     CurveMap& curveMap_Dec = postG.gy.mapG;

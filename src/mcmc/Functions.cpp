@@ -2280,38 +2280,22 @@ Matrix2D addMatEtMat0(const Matrix2D &matrix1, const Matrix2D &matrix2)
  */
 Matrix2D addMatEtMat(const Matrix2D &matrix1, const Matrix2D &matrix2, const size_t nbBandes2)
 {
-   /* const size_t dim = static_cast<size_t>(matrix1.rows());
-    const size_t k = static_cast<size_t>(floor((nbBandes2-1)/2)); // calcul du nombre de bandes
 
-    Matrix2D result = matrix1;
-
-    for (size_t i = 0; i< dim; i++) {
-
-        size_t j1 = std::max(size_t(0), i - k);
-        size_t j2 = std::min(dim-1, i + k);
-         for (size_t j = j1; j <= j2; ++j) {
-            result(i, j) +=  matrix2(i, j);
-        }
-
-    }
-    return result;*/
-
-
-    const size_t rows = matrix1.rows();
-    const size_t cols = matrix1.cols();
+    const long rows = matrix1.rows();
+    const long cols = matrix1.cols();
 
     // Vérification dimensions compatibles
     assert(matrix2.rows() == rows && matrix2.cols() == cols && "Matrices doivent avoir les mêmes dimensions");
 
-    const size_t k = nbBandes2 / 2; // Supposé que bandwidth = 2k + 1 pour une bande symétrique
+    const long k = nbBandes2 / 2; // Supposé que bandwidth = 2k + 1 pour une bande symétrique
 
     Matrix2D result = matrix1;
 
-    for (size_t i = 0; i < rows; ++i) {
-        const size_t j_min = (i >= k) ? i - k : 0;
-        const size_t j_max = std::min(i + k, cols - 1);
+    for (long i = 0; i < rows; ++i) {
+        const long j_min = (i >= k) ? i - k : 0;
+        const long j_max = std::min(i + k, cols - 1);
 
-        for (size_t j = j_min; j <= j_max; ++j) {
+        for (long j = j_min; j <= j_max; ++j) {
             result(i, j) += matrix2(i, j);
         }
     }
@@ -3297,12 +3281,14 @@ Matrix2D cholesky_LLt_MoreSorensen(const Matrix2D &matrix)
 
     const size_t n = matrix.rows();
     Matrix2D L = Matrix2D::Zero (n, n);
+#ifdef DEBUG
     bool MS = false;
+#endif
     // Paramètre pour la correction
     const t_matrix delta = 1e-20;
 
     for (size_t j = 0; j < n; ++j) {
-        // Calcul de l'élément diagonal L[j][j]
+        // Calcul des éléments diagonaux L[j][j]
 
         t_matrix sum = matrix(j, j);
         for (size_t k = 0; k < j; ++k) {
@@ -3312,7 +3298,9 @@ Matrix2D cholesky_LLt_MoreSorensen(const Matrix2D &matrix)
         // Correction de Moré et Sorensen
 
         if (sum <= delta) {
+#ifdef DEBUG
             MS = true;
+#endif
             sum = std::max(delta, std::abs(sum)); // Assurer une valeur positive pour la racine carrée, en utlisant abs(sum) on reste dans les grandeurs d'ordres
 
         }

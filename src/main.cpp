@@ -118,7 +118,9 @@ int main(int argc, char *argv[])
     a.setOrganizationName("CNRS");
     a.setWindowIcon(QIcon(":chronomodel.png"));
 
-    qDebug() << "ApplicationVersion: " << a.applicationVersion();
+    qDebug() << "ApplicationVersion:" << a.applicationVersion()
+             << "Qt compile-time:" << QT_VERSION_STR
+             << "Qt runtime:" << qVersion();
 
 #ifdef Q_OS_MAC
     a.setStyle("macos");
@@ -134,7 +136,7 @@ int main(int argc, char *argv[])
 
 
     QString filePath = "";
-    for (int i = 0; i<argc; ++i) {
+    for (int i = 0; i < argc; ++i) {
         QString arg(argv[i]);
         if (arg.contains(".chr", Qt::CaseInsensitive))
             filePath = arg;
