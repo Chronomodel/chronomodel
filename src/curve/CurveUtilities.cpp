@@ -3894,12 +3894,7 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam& sv, const 
     const bool doY = !vec_Y.empty() && vec_Z.empty();
     const bool doYZ = !vec_Y.empty() && !vec_Z.empty();
 
-    //unsigned long first_mini_gcv_idx = 0;
-    //unsigned long first_mini_cv_idx = 0;
-
-
-    int i = 0;
-
+    long long i = 0;
     DiagonalMatrixLD W_1 (vec_X_err.size());
     if (sv.use_error_measure) {
 
@@ -3908,7 +3903,6 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam& sv, const 
             for (auto &X_err : vec_X_err) {
                 const double Sy = pow(X_err, -2.0) + pow(*Y_err++, -2.0);
                 W_1.diagonal()[i++] = 2.0/ Sy;
-                //W_1.push_back(2.0 / Sy);
             }
         }
         else if (doYZ) {
@@ -3917,32 +3911,26 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam& sv, const 
             for (auto &X_err : vec_X_err) {
                 const double Sy = pow(X_err, -2.) + pow(*Y_err++, -2.0) + pow(*Z_err++, -2.0);
                 W_1.diagonal()[i++] = 3.0/ Sy;
-                // W_1.push_back(3.0 / Sy);
             }
         }
         else {
             for (auto &X_err : vec_X_err) {
                 W_1.diagonal()[i++] = X_err * X_err;
-                //W_1.push_back(pow(X_err, 2.0));
             }
         }
 
     } else {
         W_1.setIdentity();
     }
-    // Créer la matrice diagonale à partir du vecteur
-    //DiagonalMatrixLD diag_W_1 (W_1.begin(), W_1.end());
 
+    // old code
+    /*
     t_matrix ONE_sum_W = 1.0 / W_1.diagonal().sum();
-
-
     DiagonalMatrixLD W_1_normalized = W_1 * ONE_sum_W;
-    auto W = W_1.inverse();
-
     const SplineMatrices test_matrices = prepare_calcul_spline(vecH, W_1);
+    */
 
-
-    // Utilisation matrice
+    // Pour calcul matriciel
     const Matrix2D R = calculMatR(vecH);
 
     const Matrix2D Q = calculMatQ(vecH);
