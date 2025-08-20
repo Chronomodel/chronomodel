@@ -382,12 +382,12 @@ const std::vector<ColorStop>& ColorStops::getStops(ColorPalette palette)
     };
     static const std::vector<ColorStop> temperatureSoftDensityStops = {
         {0.0, QColor(0, 0, 255, 0)},     // Bleu foncé
-        {0.3, QColor(100, 149, 237, 76)}, // Bleu clair
+        {0.25, QColor(100, 149, 237, 76)}, // Bleu clair
         //{0.4, QColor(173, 216, 230, 102)}, // Bleu très clair
         //{0.5, QColor(255, 255, 255, 125)}, // Blanc
         {0.5, QColor(254, 204, 92, 125)}, // golden yellow
 
-        {0.7, QColor(255, 165, 0, 178)},   // Orange
+        {0.75, QColor(255, 165, 0, 178)},   // Orange
         //{0.8, QColor(255, 69, 0, 227)},    // Orange foncé
         {1.0, QColor(255, 0, 0, 255)}      // Rouge vif
     };
