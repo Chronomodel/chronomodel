@@ -9431,13 +9431,6 @@ MCMCSpline MCMCLoopCurve::samplingSpline_multi(std::vector<std::shared_ptr<Event
  */
 MCMCSpline MCMCLoopCurve::samplingSpline_multi2(std::vector<std::shared_ptr<Event> > &lEvents, const Matrix2D &R, const Matrix2D &R_1Qt, const Matrix2D& Q)
 {
-    /*showMatrix(R, "R");
-    showMatrix(R_1QT, "R_1QT");
-    showMatrix(inverse_padded_matrix(R) * Q.transpose() , "controle doit egale R_1QT");
-
-    showMatrix(Q, "Q");
-*/
-
     MCMCSpline spline;
 
     const size_t n = lEvents.size() ;
