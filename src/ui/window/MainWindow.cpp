@@ -1061,8 +1061,7 @@ void MainWindow::rebuildExportCurve()
 
                 curveModel->memo_PosteriorG_filtering(meanG.gx, splineXYZ.splineX, totalIterAccepted, minMaxPFilter );
 #else
-                //curveModel->memo_PosteriorG(meanG.gx, splineXYZ.splineX,  totalIterAccepted++ );
-                curveModel->memo_PosteriorG(meanG.gx, splineXYZ.splineX,  totalIterAccepted++ );
+                curveModel->memo_PosteriorG(meanG.gx, splineXYZ.splineX,  totalIterAccepted );
 #endif
 
                 totalIterAccepted++;
@@ -1071,10 +1070,11 @@ void MainWindow::rebuildExportCurve()
         } else {
             for (auto &splineXYZ : runTrace) {
 #if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5
-                curveModel->memo_PosteriorG_3D_335(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted++ );
+                curveModel->memo_PosteriorG_3D_335(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted );
 #else
-                curveModel->memo_PosteriorG_3D(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted++ );
+                curveModel->memo_PosteriorG_3D(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted );
 #endif
+                totalIterAccepted++;
             }
         }
 
@@ -1126,11 +1126,11 @@ void MainWindow::rebuildExportCurve()
             } else {
                 for (auto &splineXYZ : runTraceByChain) {
 #if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5
-                    curveModel->memo_PosteriorG_3D_335(meanGByChain, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted++ );
+                    curveModel->memo_PosteriorG_3D_335(meanGByChain, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted );
 #else
-                    curveModel->memo_PosteriorG_3D(meanGByChain, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted++ );
+                    curveModel->memo_PosteriorG_3D(meanGByChain, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted );
 #endif
-
+                    totalIterAccepted++;
                 }
             }
 
