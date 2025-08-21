@@ -1,13 +1,38 @@
+License
 CeCILL-V2.1 Free Software License Agreement
 
- Copyright (c) 2026 CNRS
+Copyright (c) 2025 CNRS
 
- This License Agreement is based on the CeCILL-V2.1 license.
+This software is distributed under the terms of the CeCILL-V2.1 license, a French free software license compatible with the GNU GPL.
 
- See the official CeCILL-V2.1 license for more information:
- https://cecill.info/licences/Licence_CeCILL_V2.1-en.html
- 
-This software use C subroutine library from the FFTW project
- http://www.fftw.org/
- distributed under the terms of the GNU General Public License
- https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+For the complete license terms, please refer to:
+
+    Official CeCILL-V2.1 license: https://cecill.info/licences/Licence_CeCILL_V2.1-en.html
+    French version: https://cecill.info/licences/Licence_CeCILL_V2.1-fr.html
+
+Third-Party Dependencies
+
+This software incorporates the following third-party libraries, each distributed under their respective licenses:
+FFTW (Fastest Fourier Transform in the West)
+
+    Website: http://www.fftw.org/
+    License: GNU General Public License v2.0 or later
+    License URL: https://www.gnu.org/licenses/gpl-2.0.html
+    Usage: C subroutine library for discrete Fourier transforms
+
+Eigen
+
+    Website: https://eigen.tuxfamily.org/
+    License: Mozilla Public License v2.0 (MPL2)
+    License URL: http://www.mozilla.org/MPL/2.0/
+    Additional resources:
+        MPL2 FAQ: http://www.mozilla.org/MPL/2.0/FAQ.html
+        Local copy: See COPYING.MPL2 file in this distribution
+    Usage: C++ template library for linear algebra
+
+License Compatibility
+
+The combination of these licenses (CeCILL-V2.1, GPL v2+, and MPL2) is compatible for distribution as they are all copyleft licenses that permit such combinations under the terms of the GPL.
+
+
+Note: This notice must be preserved in all copies or substantial portions of the software.
