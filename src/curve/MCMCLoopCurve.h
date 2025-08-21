@@ -296,13 +296,16 @@ private:
 #pragma mark import_Komlan
 
     double rate_h_lambda_K(const double current_lambda, const double try_lambda, const double tr_K, const int n);
-    t_prob rate_h_lambda_X_335(const double current_lambda, const double try_lambda, const t_prob n);
-    t_prob rate_h_lambda_XY_335(const double current_lambda, const double try_lambda, const t_prob n);
-    t_prob rate_h_lambda_XYZ_335(const double current_lambda, const double try_lambda, const t_prob n);
+    t_prob rate_h_lambda_X_335(const double current_lambda, const double try_lambda, const t_prob n_points);
+    t_prob rate_h_lambda_XY_335(const double current_lambda, const double try_lambda, const t_prob n_points);
+    t_prob rate_h_lambda_XYZ_335(const double current_lambda, const double try_lambda, const t_prob n_points);
 
     double S02_lambda_WIK (const Matrix2D &K, const int nb_noeuds);
     double h_lambda_Komlan(const Matrix2D &K, const Matrix2D &K_new, const int nb_noeuds, const double &lambdaSpline);
     t_prob rapport_Theta(const std::function<double (std::shared_ptr<Event>)> &fun, const std::vector<std::shared_ptr<Event>> &lEvents, const Matrix2D &K, const Matrix2D &K_new, const double lambdaSpline);
+    // rapport avec utilisation des matrices Y(x, y, z)
+    t_prob rate_Theta(const Matrix2D &Y, const Matrix2D &K, const Matrix2D &K_try, const double lambda);
+
     t_prob rate_Theta_X(const std::vector<std::shared_ptr<Event>> &Events, const Matrix2D &K, const Matrix2D &K_try, const double lambdaSpline);
     t_prob rate_Theta_XY(const std::vector<std::shared_ptr<Event>> &Events, const Matrix2D &K, const Matrix2D &K_try, const double lambdaSpline);
     t_prob rate_Theta_XYZ(const std::vector<std::shared_ptr<Event>> &Events, const Matrix2D &K, const Matrix2D &K_try, const double lambdaSpline);

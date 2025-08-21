@@ -69,7 +69,7 @@ public:
     PosteriorMeanG mPosteriorMeanG; // valeurs en tout t
     std::vector<PosteriorMeanG> mPosteriorMeanGByChain; // valeurs en tout t par chaine
 
-    bool compute_Y, compute_Z, compute_X_only;
+    bool compute_Y, compute_XYZ, compute_X_only;
     bool is_curve;
 
     ModelCurve();

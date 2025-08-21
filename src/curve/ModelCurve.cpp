@@ -61,7 +61,7 @@ ModelCurve::ModelCurve():
     mS02Vg(),
     mSO2_beta(0),
     compute_Y(false),
-    compute_Z(false),
+    compute_XYZ(false),
     compute_X_only(false)
 {
     mLambdaSpline.setName(std::string("LambdaSpline of Curve"));
@@ -81,7 +81,7 @@ ModelCurve::ModelCurve(const QJsonObject& json):
     mS02Vg(),
     mSO2_beta(0),
     compute_Y(false),
-    compute_Z(false),
+    compute_XYZ(false),
     compute_X_only(false)
 {
     mLambdaSpline.setName(std::string("LambdaSpline of Curve"));
@@ -287,11 +287,11 @@ void ModelCurve::settings_from_Json(const QJsonObject &json)
     else
         mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
-    compute_Z = mCurveSettings.mProcessType == CurveSettings::eProcess_Vector ||
+    compute_XYZ = mCurveSettings.mProcessType == CurveSettings::eProcess_Vector ||
                 mCurveSettings.mProcessType == CurveSettings::eProcess_Spherical ||
                 mCurveSettings.mProcessType == CurveSettings::eProcess_3D;
 
-    compute_Y = compute_Z ||
+    compute_Y = compute_XYZ ||
                 mCurveSettings.mProcessType == CurveSettings::eProcess_2D ||
                 mCurveSettings.mProcessType == CurveSettings::eProcess_Unknwon_Dec;
 
@@ -1328,7 +1328,7 @@ void ModelCurve::memo_PosteriorG_XYZ(PosteriorMeanG &postG, const MCMCSpline &sp
         valeurs_G_VarG_GP_GS(t, spline.splineX, gx, varIntraGx, gpx, gsx, i0, mSettings.mTmin, mSettings.mTmax);
         valeurs_G_VarG_GP_GS(t, spline.splineY, gy, varIntraGy, gpy, gsy, i0, mSettings.mTmin, mSettings.mTmax);
 
-        if (compute_Z)
+        if (compute_XYZ)
             valeurs_G_VarG_GP_GS(t, spline.splineZ, gz, varIntraGz, gpz, gsz, i0, mSettings.mTmin, mSettings.mTmax);
 
 
@@ -1345,7 +1345,7 @@ void ModelCurve::memo_PosteriorG_XYZ(PosteriorMeanG &postG, const MCMCSpline &sp
         *itVecGS_Y +=  (gsy - *itVecGS_Y)/n;
 
 
-        if (compute_Z) {
+        if (compute_XYZ) {
             prevMeanG_Z = *itVecG_Z;
             *itVecG_Z +=  (gz - prevMeanG_Z)/n;
 
@@ -1361,7 +1361,7 @@ void ModelCurve::memo_PosteriorG_XYZ(PosteriorMeanG &postG, const MCMCSpline &sp
         *itVecVarIntraG_X += (varIntraGx - *itVecVarIntraG_X) / n  ;
         *itVecVarIntraG_Y += (varIntraGy - *itVecVarIntraG_Y) / n  ;
 
-        if (compute_Z) {
+        if (compute_XYZ) {
             // erreur inter spline
             *itVecVarianceG_Z +=  (gz - prevMeanG_Z)*(gz - *itVecG_Z);
             // erreur intra spline
@@ -1381,7 +1381,7 @@ void ModelCurve::memo_PosteriorG_XYZ(PosteriorMeanG &postG, const MCMCSpline &sp
         ++itVecVarianceG_Y;
         ++itVecVarIntraG_Y;
 
-        if (compute_Z) {
+        if (compute_XYZ) {
             ++itVecG_Z;
             ++itVecGP_Z;
             ++itVecGS_Z;
@@ -1491,7 +1491,7 @@ void ModelCurve::memo_PosteriorG_XYZ(PosteriorMeanG &postG, const MCMCSpline &sp
         curveMap_GP_Y.max_value = std::max(curveMap_GP_Y.max_value, curveMap_GP_Y.at(idx_t, idx_GP_Y));
 
 
-        if (compute_Z) {
+        if (compute_XYZ) {
 
             // -- Calcul map on ZF
 
@@ -2375,7 +2375,7 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
             gsz = d2Fdt2;
 
 
-        } else if (compute_Z)
+        } else if (compute_XYZ)
             valeurs_G_GP_GS(t, spline.splineZ, gz, gpz, gsz, i0, mSettings.mTmin, mSettings.mTmax);
 
 
@@ -2462,7 +2462,7 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
         }
 
 
-        if (compute_Z) {
+        if (compute_XYZ) {
 
             // -- Calcul Mean on ZF
             *itVecGP_ZF +=  (gpz - *itVecGP_ZF)/n;

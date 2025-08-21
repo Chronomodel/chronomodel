@@ -3653,13 +3653,13 @@ t_matrix var_Gasser_3D(const std::vector<t_matrix>& vec_t, const std::vector<t_m
         t_matrix di = vec_t[i + 1] - vec_t[i - 1];
         t_matrix ai = di > 0 ? (vec_t[i + 1] - vec_t[i]) / di : 0.5;
         t_matrix bi = 1.0 - ai;
+        t_matrix ci2 = 1.0 / (1.0 + ai * ai + bi * bi);
 
         // Errors in each dimension
         t_matrix ei_X = ai * vec_X[i - 1] + bi * vec_X[i + 1] - vec_X[i];
         t_matrix ei_Y = ai * vec_Y[i - 1] + bi * vec_Y[i + 1] - vec_Y[i];
         t_matrix ei_Z = ai * vec_Z[i - 1] + bi * vec_Z[i + 1] - vec_Z[i];
 
-        t_matrix ci2 = 1.0 / (1.0 + ai * ai + bi * bi);
 
         // Squared norm of the interpolation error
         t_matrix term = ci2 * (ei_X * ei_X + ei_Y * ei_Y + ei_Z * ei_Z);
@@ -3708,6 +3708,50 @@ t_matrix var_Gasser(const std::vector<t_matrix>& vec_t, const std::vector<t_matr
 
     return sum / static_cast<long double>(N - 2);
 }
+
+// Gasser avec utilisation de la matrice Y_mat des composants
+t_matrix var_Gasser(const std::vector<t_matrix>& vec_t, const Matrix2D& Y_mat)
+{
+    const size_t n_points = vec_t.size();
+
+#ifdef DEBUG
+    if (n_points < 3) {
+        return 0.0; // pas assez de points pour estimer
+    }
+#endif
+
+    const long long n_composents = Y_mat.cols();
+    t_matrix sum = 0.0;
+    t_matrix c = 0.0; // Compensation pour Kahan
+
+    for (size_t i = 1; i < n_points - 1; i++) {
+        const t_matrix di = vec_t[i + 1] - vec_t[i - 1];
+        const t_matrix ai = di > 0 ? (vec_t[i + 1] - vec_t[i]) / di : 0.5;
+        const t_matrix bi = 1.0 - ai;
+
+        t_matrix norm2 = 0.0;
+
+        // Calcul de l’erreur par dimension
+        for (long long d = 0; d < n_composents; ++d) {
+            const t_matrix ei = ai * Y_mat(i - 1, d)
+            + bi * Y_mat(i + 1, d)
+                -      Y_mat(i, d);
+            norm2 += ei * ei;
+        }
+
+        const t_matrix ci2 = 1.0 / (1.0 + ai * ai + bi * bi);
+        const t_matrix term = ci2 * norm2;
+
+        // Somme de Kahan
+        const t_matrix y = term - c;
+        const t_matrix t = sum + y;
+        c = (t - sum) - y;
+        sum = t;
+    }
+
+    return sum / (n_points - 2.0);
+}
+
 
 // Cross-validation initialization
 std::pair<double, double> initLambdaSplineByCV(const bool depth, const std::vector<t_matrix> &vec_X, const std::vector<t_matrix> &vec_X_err, const SplineMatrices &matrices, const std::vector<t_reduceTime> &vecH,const std::vector<t_matrix> &vec_Y, const std::vector<t_matrix> &vec_Z)

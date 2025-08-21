@@ -336,6 +336,8 @@ t_matrix var_Gasser_3D(const std::vector<t_matrix> &vec_t, const std::vector<t_m
 
 t_matrix var_Gasser(const std::vector<t_matrix>& vec_t, const std::vector<long double>& vec_Y);
 
+t_matrix var_Gasser(const std::vector<t_matrix>& vec_t, const Matrix2D& Y_mat);
+
 bool  hasPositiveGPrimeByDet (const MCMCSplineComposante &splineComposante);
 void spread_theta_reduced(std::vector<t_reduceTime> &sorted_t_red, t_reduceTime spread_span = 0.0);
 std::vector<int> get_order(const std::vector<t_reduceTime>& vec);
