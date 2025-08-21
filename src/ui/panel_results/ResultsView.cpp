@@ -1134,7 +1134,7 @@ void ResultsView::clearResults()
 
 void ResultsView::updateModel()
 {
-    createGraphs();
+    createGraphs(); // do deleteAllGraphsInList
     updateLayout();
 
 }
@@ -2402,12 +2402,27 @@ void ResultsView::createByCurveGraph()
 
 void ResultsView::deleteAllGraphsInList(QList<GraphViewResults*> &list)
 {
-    for (auto&& graph : list) {
-        disconnect(graph, nullptr, nullptr, nullptr); //Disconnect everything connected to
-        delete graph;
-        graph = nullptr;
+    /*for (auto&& graph : list) {
+        if (graph) {
+            graph->disconnect();
+            //disconnect(graph, nullptr, nullptr, nullptr); //Disconnect everything connected to
+            delete graph;
+            graph = nullptr;
+        }
     }
     list.clear();
+    */
+
+    for (auto it = list.begin(); it != list.end(); ) {
+        if (*it) {
+            (*it)->disconnect();
+            delete *it;
+            it = list.erase(it);  // Supprime l'élément de la liste
+        } else {
+            ++it;
+        }
+    }
+
     list.shrink_to_fit();
 }
 
@@ -3901,25 +3916,12 @@ void ResultsView::setTimeRange()
     mCurrentTMinEdit->resetText(mResultCurrentMinT);
     mCurrentTMaxEdit->resetText(mResultCurrentMaxT);
 
-    /*QLocale locale = QLocale();
-
-    mCurrentTMinEdit->blockSignals(true);
-    mCurrentTMaxEdit->blockSignals(true);
-
-    mCurrentTMinEdit->setText(locale.toString(mResultCurrentMinT));
-    mCurrentTMaxEdit->setText(locale.toString(mResultCurrentMaxT));
-
-    mCurrentTMinEdit->blockSignals(false);
-    mCurrentTMaxEdit->blockSignals(false);*/
 }
 
 void ResultsView::setTimeEdit(const double value)
 {
     mTimeEdit->resetText(value * 100.0);
 
-    /*mTimeEdit->blockSignals(true);
-    mTimeEdit->setText(QLocale().toString(value * 100.));
-    mTimeEdit->blockSignals(false);*/
 }
 
 void ResultsView::setTimeSlider(const int value)
@@ -3931,16 +3933,10 @@ void ResultsView::setTimeSlider(const int value)
 
 void ResultsView::setTimeScale()
 {
-
-    //mMinorScaleEdit->blockSignals(true);
-    //mMajorScaleEdit->blockSignals(true);
-
     QLocale locale = QLocale();
     mMinorScaleEdit->setText(locale.toString(mMinorCountScale));
     mMajorScaleEdit->setText(locale.toString(mMajorScale));
 
-    //mMinorScaleEdit->blockSignals(false);
-    //mMajorScaleEdit->blockSignals(false);
 }
 
 #pragma mark Controls actions
