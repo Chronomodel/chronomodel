@@ -2402,28 +2402,11 @@ void ResultsView::createByCurveGraph()
 
 void ResultsView::deleteAllGraphsInList(QList<GraphViewResults*> &list)
 {
-    /*for (auto&& graph : list) {
-        if (graph) {
-            graph->disconnect();
-            //disconnect(graph, nullptr, nullptr, nullptr); //Disconnect everything connected to
-            delete graph;
-            graph = nullptr;
-        }
-    }
+    //Pas besoin de déconnecter les signaux manuellement avant de détruire un QWidget
+
+    qDeleteAll(list);
     list.clear();
-    */
-
-    for (auto it = list.begin(); it != list.end(); ) {
-        if (*it) {
-            (*it)->disconnect();
-            delete *it;
-            it = list.erase(it);  // Supprime l'élément de la liste
-        } else {
-            ++it;
-        }
-    }
-
-    list.shrink_to_fit();
+    list.squeeze(); // équivalent Qt à shrink_to_fit()
 }
 
 QList<GraphViewResults*> ResultsView::allGraphs()
