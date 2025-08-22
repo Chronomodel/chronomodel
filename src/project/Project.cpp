@@ -2708,13 +2708,13 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
             if (date.find(STATE_DATE_METHOD) != date.end()) { // since version 3.0
                 switch (date.value(STATE_DATE_METHOD).toInt()) {
                 case 0 :
-                    date[STATE_DATE_SAMPLER] = MHVariable::eMHPrior;
+                    date[STATE_DATE_SAMPLER] = MHVariable::eMHPrior; // = 3
                     break;
                 case 1 :
-                    date[STATE_DATE_SAMPLER] = MHVariable::eInversion;
+                    date[STATE_DATE_SAMPLER] = MHVariable::eInversion; // = 4
                     break;
                 case 2:
-                    date[STATE_DATE_SAMPLER] = MHVariable::eMHAdaptGauss;
+                    date[STATE_DATE_SAMPLER] = MHVariable::eMHAdaptGauss; // =2
                     break;
                 default: // old version is eMHSymGaussAdapt = 5
                     date[STATE_DATE_SAMPLER] = MHVariable::eMHAdaptGauss;
@@ -2724,7 +2724,7 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
                 date.remove(STATE_DATE_METHOD);
             }
 
-            if (date.value(STATE_DATE_SAMPLER).toInt()>4)
+            if (date.value(STATE_DATE_SAMPLER).toInt()>4 || date.value(STATE_DATE_SAMPLER).toInt()< 2 )
                 date[STATE_DATE_SAMPLER] = MHVariable::eMHAdaptGauss;
             // etc...
 

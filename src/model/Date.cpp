@@ -2022,6 +2022,7 @@ void Date::autoSetTiSampler(const bool bSet)
                 break;
 
             default:
+                updateti = &Date::InversionWithArg;
                 break;
             
         }
@@ -2042,6 +2043,7 @@ void Date::autoSetTiSampler(const bool bSet)
                 break;
             
             default:
+                updateti = &Date::Inversion;
                 break;
             }
     }
