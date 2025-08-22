@@ -46,8 +46,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "Painting.h"
 
-//#include <QtWidgets>
-
 
 GraphViewCurve::GraphViewCurve(QWidget *parent):GraphViewResults(parent)
 {

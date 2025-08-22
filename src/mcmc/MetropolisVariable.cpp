@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -950,7 +950,7 @@ void MetropolisVariable::save_stream_v330(QDataStream& stream) const
         // Écriture du nom
         QString str = QString::fromStdString(_name);
         stream << str;
-        std::cout << "[MetropolisVariable::save_stream_v330] name str = " << _name <<std::endl;
+        //std::cout << "[MetropolisVariable::save_stream_v330] name str = " << _name <<std::endl;
         if (stream.status() != QDataStream::Ok) {
             throw std::runtime_error("Failed to write variable name");
         }

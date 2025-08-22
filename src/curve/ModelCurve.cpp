@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -2550,7 +2550,8 @@ void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, const MCM
 
         *itVecGP +=  (gp - *itVecGP) / n;
         *itVecGS +=  (gs - *itVecGS) / n;
-
+        //if (idx_t == 100)
+          //  std::cout << " g =" << g;
         // Version numériquement plus stable
         double delta = g - *itVecG; // = (g - prevMeanG)
         *itVecG += delta / n;
@@ -2581,7 +2582,7 @@ void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, const MCM
 
     std::transform(vecVarG.begin(), vecVarG.end(), vecVarG.begin(),
                    [n](double var) { return var / n; });
-
+    //std::cout << " memo G Gmean =" << postGCompo.vecG.at(100) << " var = " << vecVarG.at(100) << std::endl;
 }
 
 #else
