@@ -504,15 +504,25 @@ QList<double> autocorrelation_schoolbook(const QList<double> &trace, const int h
 
 }
 
+
+/**
+ * @brief autocorrelation_schoolbook,
+ * Si hmax ⁡≪ n, Alors ta méthode « schoolbook » optimisée est plus rapide que la FFT (setup FFT + padding + overhead).
+ * @param trace
+ * @param hmax
+ * @return
+ */
 std::vector<double> autocorrelation_schoolbook(const std::vector<double> &trace, const int hmax)
 {
-    std::vector<double> results;
-    const auto n = trace.size();
+
+    const size_t n = trace.size();
 
     double mean, variance;
     mean_variance_Knuth(trace, mean, variance);
-    variance *= (double)trace.size();
+    variance *= static_cast<double>(n);
 
+    /*
+     std::vector<double> results;
     results.push_back(1.); // force the first to exactly 1.
     double sH = 0.;
     for (int h = 1; h <= hmax; ++h) {
@@ -523,7 +533,21 @@ std::vector<double> autocorrelation_schoolbook(const std::vector<double> &trace,
 
         results.push_back(sH / variance);
     }
+    */
+    // Optimisation, moins d’accès mémoire et pas de reallocations
+    std::vector<double> results(hmax + 1);
+    // pré-centrer la série
+    std::vector<double> centered(n);
+    for (size_t i = 0; i < n; ++i)
+        centered[i] = trace[i] - mean;
 
+    results[0] = 1.0; // corr(0) = 1
+    for (int h = 1; h <= hmax; ++h) {
+        double sH = 0.0;
+        for (size_t i = 0; i < n - h; ++i)
+            sH += centered[i] * centered[i + h];
+        results[h] = sH / variance;
+    }
     return results;
 
 }
@@ -614,12 +638,12 @@ QList<double> autocorrelation_by_convol(const QList<double> &trace, const int hm
     return results;
 }
 
-// dataX and dataY must have the same length
 /**
  * @brief linear_regression using knuth algorithm
  * @param dataX
  * @param dataY
  * @return a, b coef and constant $$Y = a*t + b$$
+ * @remark dataX and dataY must have the same length
  */
 const std::pair<double, double> linear_regression(const std::vector<double> &dataX, const std::vector<double>& dataY)
 {
