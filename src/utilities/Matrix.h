@@ -377,9 +377,6 @@ public:
     Matrix2Do inverse() const;
 };
 
-//typedef std::vector<t_matrix> MatrixDiag;
-
-//Matrix2D initMatrix2D(size_t rows, size_t cols);
 
 QDataStream &operator<<( QDataStream& stream, const CurveMap& map );
 QDataStream &operator>>( QDataStream& stream, CurveMap& map );
