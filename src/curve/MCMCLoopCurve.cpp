@@ -3347,7 +3347,7 @@ bool MCMCLoopCurve::update_335()
 
                         // On stocke l'ancienne valeur :
                         current_value = event->mTheta.mX;
-
+current_h_theta = h_theta_Event(event); // ici test
                         // On tire une nouvelle valeur :
                         double sum_p = 0.;
                         double sum_t = 0.;
@@ -3379,24 +3379,8 @@ bool MCMCLoopCurve::update_335()
 
                             t_matrix try_var_Gasser = var_Gasser(try_vect_Theta, Y_mat);
                             // Les vecteurs positions X, Y et Z sdoivent suivre l'ordre des thétas
-                            /* const std::vector<t_matrix>& try_vect_Yx = get_vector<t_matrix>(get_Yx, mModel->mEvents);
 
-
-
-                            if (mModel->compute_XYZ) {
-                                const std::vector<t_matrix>& try_vect_Yy = get_vector<t_matrix>(get_Yy, mModel->mEvents);
-                                const std::vector<t_matrix>& try_vect_Yz = get_vector<t_matrix>(get_Yz, mModel->mEvents);
-                                try_var_Gasser = var_Gasser_3D(try_vect_Theta, try_vect_Yx, try_vect_Yy, try_vect_Yz);
-
-                            } else if (mModel->compute_Y) {
-                                const std::vector<t_matrix>& try_vect_Yy = get_vector<t_matrix>(get_Yy, mModel->mEvents);
-                                try_var_Gasser = var_Gasser_2D(try_vect_Theta, try_vect_Yx, try_vect_Yy);
-
-                            } else {
-                                try_var_Gasser = var_Gasser(try_vect_Theta, try_vect_Yx);
-                            }*/
-
-
+try_h_theta = h_theta_Event(event);
                             try_vecH = calculVecH(mModel->mEvents);
                             try_R = calculMatR(try_vecH); // dim n-2 * n-2
 
@@ -3419,7 +3403,8 @@ bool MCMCLoopCurve::update_335()
 
                             auto det_R =  determinant_padded_matrix(R);
                             auto det_QtQ = determinant_padded_matrix(QT * Q);
-                            rate_detPlus = det_try_QtQ /det_QtQ * det_R /det_try_R;
+                            //rate_detPlus = det_try_QtQ /det_QtQ * det_R /det_try_R;
+                            rate_detPlus = sqrt(det_try_QtQ /det_QtQ * det_R /det_try_R); //test ici
 
                             rate_fTKf = rate_Theta(Y_mat, K, try_K, mModel->mLambdaSpline.mX) ;
 
@@ -3466,6 +3451,7 @@ bool MCMCLoopCurve::update_335()
                             // fin boucle VG
 
                             rate =  rate_detPlus * rate_fTKf * rate_VG;
+ rate *=(try_h_theta) / (current_h_theta); //ici test
 
                             if (event->mTheta.test_update(current_value, try_value, rate)) {
                                 // Pour l'itération suivante :
