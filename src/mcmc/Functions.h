@@ -188,6 +188,7 @@ Matrix2D multiDiagParMat0(const DiagonalMatrixLD &diag, const Matrix2D& matrix);
 Matrix2D multiDiagParMat(const DiagonalMatrixLD &diag, const Matrix2D& matrix, const size_t nbBandes);
 
 t_matrix quadratic_form(const Matrix2D& A, const std::vector<t_matrix>& X);
+t_matrix quadratic_form(const Matrix2D& K, const Matrix2D& Y);
 
 std::vector<t_matrix> multiMatParVec(const Matrix2D& matrix, const std::vector<t_matrix>& vec, const size_t nbBandes);
 //std::vector<t_matrix> multiMatParVec(const Matrix2D& matrix, const MatrixDiag &vec, const size_t nbBandes);

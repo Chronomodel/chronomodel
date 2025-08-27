@@ -170,7 +170,7 @@ Matrix2D calculMatR0(const std::vector<t_reduceTime>& vec_h)
  * @param vec_h The input vector of size n-1, where n is the size of the containing matrix.
  * @return Matrix2D The computed R matrix within an n x n matrix.
  */
-Matrix2D calculMatR(const std::vector<t_reduceTime> &vec_h)
+/*Matrix2D calculMatR(const std::vector<t_reduceTime> &vec_h)
 {
     // vecH est de dimension n-1
     const unsigned long n = vec_h.size() + 1;
@@ -192,6 +192,72 @@ Matrix2D calculMatR(const std::vector<t_reduceTime> &vec_h)
 
     return matR;
 }
+*/
+
+/**
+ * @brief Calculates the R matrix as a sparse matrix contained within an n x n matrix.
+ *
+ * This function computes the R matrix of size (n-2) x (n-2), placed in the center of an n x n matrix
+ * using Eigen's SparseMatrix for efficient storage of the mostly-zero matrix.
+ * The R matrix is constructed using values from the input vector vec_h.
+ * For example, when n=5:
+ *   0 0 0 0 0
+ *   0 X X X 0
+ *   0 X X X 0
+ *   0 X X X 0
+ *   0 0 0 0 0
+ *
+ * @param vec_h The input vector of size n-1, where n is the size of the containing matrix.
+ * @return Eigen::SparseMatrix<t_matrix> The computed sparse R matrix within an n x n matrix.
+ */
+SparseMatrixLD calculMatR(const std::vector<t_reduceTime> &vec_h)
+{
+    // vecH est de dimension n-1
+    const unsigned long n = vec_h.size() + 1;
+
+    // Créer la matrice creuse
+    Eigen::SparseMatrix<t_matrix> matR(n, n);
+
+    // Pre-compute constants to avoid repeated divisions
+    constexpr t_matrix ONE_THIRD = 1.0L/3.0L;
+    constexpr t_matrix ONE_SIXTH = 1.0L/6.0L;
+
+    // Estimer le nombre d'éléments non-nuls pour optimiser l'allocation
+    // Pour une matrice tridiagonale de taille (n-2)x(n-2), on a:
+    // - (n-2) éléments diagonaux
+    // - 2*(n-3) éléments hors-diagonale
+    const unsigned long nnz_estimate = (n-2) + 2*(n-3);
+    matR.reserve(nnz_estimate);
+
+    // Utiliser un vecteur de triplets pour construire efficacement la matrice
+    std::vector<Eigen::Triplet<t_matrix>> triplets;
+    triplets.reserve(nnz_estimate);
+
+    // Remplir les triplets avec les valeurs non-nulles
+    for (unsigned long i = 1; i < n-2; ++i) {
+        // Élément diagonal
+        t_matrix diagonal = (vec_h[i-1] + vec_h[i]) * ONE_THIRD;
+        triplets.emplace_back(i, i, diagonal);
+
+        // Éléments hors-diagonale (symétriques)
+        t_matrix offDiagonal = vec_h[i] * ONE_SIXTH;
+        triplets.emplace_back(i, i+1, offDiagonal);
+        triplets.emplace_back(i+1, i, offDiagonal);
+    }
+
+    // Dernière itération (i = n-2)
+    t_matrix lastDiagonal = (vec_h[n-3] + vec_h[n-2]) * ONE_THIRD;
+    triplets.emplace_back(n-2, n-2, lastDiagonal);
+
+    // Construire la matrice à partir des triplets
+    matR.setFromTriplets(triplets.begin(), triplets.end());
+
+    // Compresser la matrice pour optimiser les opérations ultérieures
+    matR.makeCompressed();
+
+    return matR;
+}
+
 
 /**
  * @brief Computes the Q matrix of size n x (n-2) based on the provided vector vec_h.
@@ -293,6 +359,7 @@ Matrix2D calculMatQ0(const std::vector<t_reduceTime>& vec_h)
 
 
 // Dans RenCurve procedure Calcul_Mat_Q_Qt_R ligne 55
+/*
 Matrix2D calculMatQ(const std::vector<t_reduceTime>& vec_h)
 {
     // Calcul de la matrice Q, de dimension n x (n-2) contenue dans une matrice n x n
@@ -315,10 +382,7 @@ Matrix2D calculMatQ(const std::vector<t_reduceTime>& vec_h)
         matQ(i, i) = -((1.0L / vec_h[i-1]) + (1.0L /vec_h[i]));
         matQ(i+1, i) = 1.0L  / vec_h[i];
 
-#ifdef DEBUG
-        if (vec_h.at(i)<=0)
-            throw std::runtime_error("[CurveUtilities::calculMatQ] vec_h <= 0");
-#endif
+
     }
     // pHd : ici la vrai forme est une matrice de dimension n x (n-2), de bande k=1; les termes diagonaux sont négatifs
     // Les 1ère et dernière colonnes sont nulles
@@ -331,7 +395,74 @@ Matrix2D calculMatQ(const std::vector<t_reduceTime>& vec_h)
 
     return matQ;
 }
+*/
 
+/**
+ * @brief Calculates the Q matrix as a sparse matrix of dimension n x (n-2) contained within an n x n matrix.
+ *
+ * This function computes the Q matrix using Eigen's SparseMatrix for efficient storage.
+ * The first and last columns are null (zero).
+ * For example, when n=5:
+ * The actual structure is a banded matrix with k=1; diagonal terms are negative:
+ *   0 +X  0  0 0
+ *   0 -X +a  0 0
+ *   0 +a -X +b 0
+ *   0  0 +b -X 0
+ *   0  0  0 +X 0
+ *
+ * @param vec_h The input vector of size n-1, where n is the size of the containing matrix.
+ * @return Eigen::SparseMatrix<t_matrix> The computed sparse Q matrix within an n x n matrix.
+ * @throws std::runtime_error if any element in vec_h is <= 0 (in DEBUG mode).
+ */
+SparseMatrixLD calculMatQ(const std::vector<t_reduceTime>& vec_h)
+{
+    // vecH est de dimension n-1
+    const size_t n = vec_h.size() + 1;
+
+    // Créer la matrice creuse n x n
+    Eigen::SparseMatrix<t_matrix> matQ(n, n);
+
+    // Estimer le nombre d'éléments non-nuls
+    // Pour chaque colonne i (i = 1 à n-2), on a au maximum 3 éléments non-nuls
+    // Mais les colonnes aux extrémités peuvent avoir moins d'éléments
+    // Estimation conservative: 3 * (n-2)
+    const size_t nnz_estimate = 3 * (n - 2);
+    matQ.reserve(nnz_estimate);
+
+    // Utiliser un vecteur de triplets pour construire efficacement la matrice
+    std::vector<Eigen::Triplet<t_matrix>> triplets;
+    triplets.reserve(nnz_estimate);
+
+    // Parcourir les n-2 colonnes (i = 1 à n-2)
+    for (size_t i = 1; i < n-1; ++i) {
+#ifdef DEBUG
+        if (vec_h[i-1] <= 0 || vec_h[i] <= 0)
+            throw std::runtime_error("[CurveUtilities::calculMatQ] vec_h <= 0");
+#endif
+
+        // Précalculer les inverses pour éviter les divisions répétées
+        const t_matrix inv_h_prev = 1.0L / vec_h[i-1];
+        const t_matrix inv_h_curr = 1.0L / vec_h[i];
+
+        // Élément au-dessus de la diagonale: matQ(i-1, i)
+        triplets.emplace_back(i-1, i, inv_h_prev);
+
+        // Élément diagonal: matQ(i, i) - négatif
+        const t_matrix diagonal = -(inv_h_prev + inv_h_curr);
+        triplets.emplace_back(i, i, diagonal);
+
+        // Élément en-dessous de la diagonale: matQ(i+1, i)
+        triplets.emplace_back(i+1, i, inv_h_curr);
+    }
+
+    // Construire la matrice à partir des triplets
+    matQ.setFromTriplets(triplets.begin(), triplets.end());
+
+    // Compresser la matrice pour optimiser les opérations ultérieures
+    matQ.makeCompressed();
+
+    return matQ;
+}
 
 /**
  * @brief Calcule A = I + (-lambda) * W_1 * Q * B_1 * Q^T
@@ -1205,43 +1336,39 @@ SplineMatrices prepare_calcul_spline(const std::vector<std::shared_ptr<Event>>& 
 
 SplineMatrices prepare_calcul_spline(const std::vector<t_reduceTime>& vecH, const DiagonalMatrixLD& W_1)
 {
-    const Matrix2D R = calculMatR(vecH);
-    //showVector(vecH, "current_vecH in prepare_calcul_spline ");
-    //showMatrix(matR, "matR in prepare_calcul_spline");
+    const Matrix2D R = calculMatR(vecH); // SparseMatrix, mais mémorisé en matrice dense
 
-    const Matrix2D Q = calculMatQ(vecH);
+
+    const SparseMatrixLD Q = calculMatQ(vecH); // SparseMatrix
     //showMatrix(matQ, "matQ in prepare_calcul_spline");
 
     // Calcul de la transposée QT de la matrice Q, de dimension (n-2) x n
-    const Matrix2D QT =  Q.transpose();//  transpose(matQ, 3);
-
-    //DiagonalMatrix diagWInv (W_1);
-    // std::transform(W_1.begin(), W_1.end(), diagWInv.begin(), [](double v) {return v;});
+    const SparseMatrixLD Qt =  Q.transpose();//  transpose(matQ, 3);
 
     // Calcul de la matrice matQTW_1Q, de dimension (n-2) x (n-2) pour calcul Mat_B
     // matQTW_1Q possèdera 3+3-1=5 bandes
-    const Matrix2D tmp = multiMatParDiag(QT, W_1, 3);
+    const SparseMatrixLD QtW_1 = Qt * W_1;// multiMatParDiag(QT, W_1, 3);
     //showMatrix(tmp, "tmp Qt*W");
     //showMatrix(matQT * diagWInv, "direct qt*winv"); //identique
 
     //Matrix2D matQTW_1Qb = multiMatParMat(tmp, matQ, 3, 3);
-    const Matrix2D QTW_1Q = multiplyMatrixBanded_Winograd(tmp, Q, 1);
+    const SparseMatrixLD QtW_1Q = QtW_1 * Q; //multiplyMatrixBanded_Winograd(tmp, Q, 1);
     //showMatrix(matQTW_1Q, "matQTW_1Q=");
     //showMatrix(tmp * matQ, "direct qtw1*q"); // identique
 
     // Calcul de la matrice QTQ, de dimension (n-2) x (n-2) pour calcul Mat_B
     // Mat_QTQ possèdera 3+3-1=5 bandes
-    const Matrix2D QTQ = multiplyMatrixBanded_Winograd(QT, Q, 1);
+    const SparseMatrixLD QtQ =  Qt*Q; //multiplyMatrixBanded_Winograd(QT, Q, 1);
     //showMatrix(matQTQ, "matQTQ=");
     //showMatrix(matQT * matQ, "direct Qt*Q"); // identique
 
     SplineMatrices matrices;
     matrices.diagWInv = std::move(W_1);
     matrices.matR = std::move(R);
-    matrices.matQ = std::move(Q);
-    matrices.matQT = std::move(QT);
-    matrices.matQTW_1Q = std::move(QTW_1Q); // Seule affectée par changement de VG
-    matrices.matQTQ = std::move(QTQ);
+    matrices.matQ = Q.toDense();
+    matrices.matQT = Qt.toDense();
+    matrices.matQTW_1Q = QtW_1Q.toDense(); // Seule affectée par changement de VG
+    matrices.matQTQ = QtQ.toDense();
 
     return matrices;
 }

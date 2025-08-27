@@ -270,7 +270,8 @@ bool MCMCLoopChrono::adapt(const int batchIndex) //original code
                 noAdapt = date.mTi.adapt(taux_min, taux_max, delta) && noAdapt;
 
             //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
-            noAdapt = date.mSigmaTi.adapt(taux_min, taux_max, delta) && noAdapt;
+            if (date.mSigmaTi.mSamplerProposal == MHVariable::eMHAdaptGauss)
+                noAdapt = date.mSigmaTi.adapt(taux_min, taux_max, delta) && noAdapt;
 
         }
 

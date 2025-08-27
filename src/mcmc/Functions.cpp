@@ -2357,6 +2357,30 @@ t_matrix quadratic_form(const Matrix2D& A, const std::vector<t_matrix>& X)
     return result;
 }
 
+t_matrix quadratic_form(const Matrix2D& K, const Matrix2D& Y)
+{
+    /* Algo Schoolbook
+    long n_points = Y.rows();
+    long n_components = Y.cols();
+
+    Matrix2D KY = K * Y;
+
+    t_matrix som = 0.0;
+    for (long i = 0; i < n_points; ++i) {
+        for (long j = 0; j < n_components; ++j) {
+            som += KY(i, j) * Y(i, j);
+        }
+    }
+    return  som;
+    */
+    //,Optimization with Eigen
+
+    return (K * Y).cwiseProduct(Y).sum();
+
+
+}
+
+
 Matrix2D multiConstParMat(const Matrix2D& matrix, const double c, const size_t nbBandes)
 {
     /*const size_t i_max = static_cast<size_t>(matrix.rows())-1;
@@ -3846,8 +3870,6 @@ std::pair<Matrix2D, DiagonalMatrixLD> choleskyLDLT_Dsup0(const Matrix2D& matrix,
  **/
 std::pair<Matrix2D, DiagonalMatrixLD> decompositionCholesky(const Matrix2D &matrix, const size_t nbBandes, const size_t shift)
 {
-
-
     //errno = 0;
     //if (math_errhandling & MATH_ERREXCEPT) feclearexcept(FE_ALL_EXCEPT);
 
@@ -3954,33 +3976,6 @@ std::pair<Matrix2D, DiagonalMatrixLD> decompositionCholesky(const Matrix2D &matr
         // 0 0 0 0 0
 
 
-
-
-        // Définir la matrice d'entrée
-       /* Eigen::Matrix4d A2;
-        A2 << 0.156633, 0.0366667, 7.57576e-09, 0,
-            0.0366667, 0.0933334, 0.00999993, 7.57576e-09,
-            7.57576e-09, 0.00999993, 0.0933334, 0.0366667,
-            0, 7.57576e-09, 0.0366667, 0.156633;
-
-        Eigen::LDLT<Eigen::Matrix4d> ldlt2(A2);
-
-        if (ldlt2.info() != Eigen::Success) {
-            std::cerr << "Échec de la décomposition LDLᵗ" << std::endl;
-
-        }
-
-        Eigen::Matrix4d L2 = ldlt2.matrixL();  // triangulaire inférieure avec 1 sur la diagonale
-        Eigen::DiagonalMatrix<double, 4> D2 = ldlt2.vectorD().asDiagonal();
-
-        std::cout << "L:\n" << L2 << std::endl;
-        std::cout << "D:\n" << D2.diagonal() << std::endl;
-
-        Eigen::Matrix4d A_reconstruit = L2 * D2 * L2.transpose();
-        std::cout << "A reconstruite =\n" << A_reconstruit << std::endl;
-        std::cout << "ldlt2.reconstructedMatrix() =\n" << ldlt2.reconstructedMatrix() << std::endl;
-*/
-        //
 
     } catch(const char* e) {
         qCritical() << "[Function::decompositionCholesky] " << e;

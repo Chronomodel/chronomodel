@@ -1085,3 +1085,94 @@ void showVector(const std::vector<double> &m, const std::string& str)
     printf("\n");
 }
 
+#pragma mark sparse function
+
+
+/**
+ * @brief Factorise la matrice R
+ */
+void SparseQuadraticFormSolver::factorize(const SparseMatrixLD& R)
+{
+    R_template_ = R; // Garder une copie pour les dimensions
+
+    const auto n_center = R.rows() - 2 * shift_;
+    SparseMatrixLD R_center = R.block(shift_, shift_, n_center, n_center);
+
+    solver_.compute(R_center); // effectue la factorisation LDLT
+#ifdef DEBUG
+    if (solver_.info() != Eigen::Success) {
+        throw std::runtime_error("[SparseQuadraticFormSolver] LDLT factorization failed");
+    }
+
+    is_factorized_ = true;
+#endif
+}
+
+/**
+ * @brief Calcule R^(-1) * Q^T
+ */
+SparseMatrixLD SparseQuadraticFormSolver::compute_Rinv_QT(const SparseMatrixLD& Q)
+{
+#ifdef DEBUG
+    if (!is_factorized_) {
+        throw std::runtime_error("[SparseQuadraticFormSolver] Matrix must be factorized first");
+    }
+#endif
+    SparseMatrixLD QT = Q.transpose();
+    return solve_with_padding(QT);
+
+}
+
+/**
+ * @brief Calcule Q * R^(-1) * Q^T (forme quadratique complète)
+ */
+SparseMatrixLD SparseQuadraticFormSolver::compute_Q_Rinv_QT(const SparseMatrixLD& Q)
+{
+    SparseMatrixLD R_inv_QT = compute_Rinv_QT(Q);
+    return Q * R_inv_QT;
+}
+
+/**
+ * @brief Calcule les deux produits efficacement
+  */
+std::pair<SparseMatrixLD, SparseMatrixLD> SparseQuadraticFormSolver::compute_both_products(const SparseMatrixLD& Q)
+{
+    SparseMatrixLD R_inv_QT = compute_Rinv_QT(Q);
+    SparseMatrixLD Q_Rinv_QT = Q * R_inv_QT;
+
+    return std::make_pair(R_inv_QT, Q_Rinv_QT);
+}
+
+/**
+ * @brief Résout R * X = B avec gestion du padding
+ */
+SparseMatrixLD SparseQuadraticFormSolver::solve_with_padding(const SparseMatrixLD& B)
+{
+    const auto n_center = R_template_.rows() - 2 * shift_;
+    SparseMatrixLD B_relevant = B.block(shift_, 0, n_center, B.cols());
+
+    Matrix2D B_dense = Matrix2D(B_relevant);
+    Matrix2D solutions = solver_.solve(B_dense);
+
+    if (solver_.info() != Eigen::Success) {
+        throw std::runtime_error("[SparseQuadraticFormSolver] LDLT solve failed");
+    }
+
+    SparseMatrixLD result(R_template_.rows(), B.cols());
+    std::vector<Eigen::Triplet<t_matrix>> triplets;
+
+    const double tolerance = 1e-12;
+    for (int i = 0; i < solutions.rows(); ++i) {
+        for (int j = 0; j < solutions.cols(); ++j) {
+            const t_matrix value = static_cast<t_matrix>(solutions(i, j));
+            if (std::abs(value) > tolerance) {
+                triplets.emplace_back(i + shift_, j, value);
+            }
+        }
+    }
+
+    result.setFromTriplets(triplets.begin(), triplets.end());
+    result.makeCompressed();
+
+    return result;
+}

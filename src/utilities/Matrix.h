@@ -54,6 +54,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <eigen_3.4.0/Eigen/Dense>
 #include <eigen_3.4.0/Eigen/src/Core/DiagonalMatrix.h>
+#include <eigen_3.4.0/Eigen/Sparse>
 
 /**
  * @class CurveMap
@@ -66,22 +67,20 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <utility>
 #include <QDebug>
 
-typedef double t_reduceTime;
-typedef long double t_matrix;
+using t_reduceTime = double;
+using t_matrix = long double;
 
 using namespace Eigen;
-typedef Matrix<t_matrix, Dynamic, Dynamic> Matrix2D;
-
+using  Matrix2D = Matrix<t_matrix, Dynamic, Dynamic>;
 using DiagonalMatrixLD = DiagonalMatrix<t_matrix, Dynamic, Dynamic>;
-
-typedef Eigen::Matrix<t_matrix, Eigen::Dynamic, 1> ColumnVectorLD;
-typedef Eigen::Matrix<t_matrix, 1, Eigen::Dynamic> RowVectorLD;
+using ColumnVectorLD = Eigen::Matrix<t_matrix, Eigen::Dynamic, 1>;
+using RowVectorLD = Eigen::Matrix<t_matrix, 1, Eigen::Dynamic>;
+using SparseMatrixLD = Eigen::SparseMatrix<t_matrix> ;
 
 ColumnVectorLD stdVectorToColumnVector(const std::vector<double>& vec);
 ColumnVectorLD stdVectorToColumnVector(const std::vector<t_matrix>& vec);
 std::vector<t_matrix> eigenToStdVector(const ColumnVectorLD& vec);
 
-typedef Eigen::Matrix<t_matrix, 1, Eigen::Dynamic> RowVectorLD;
 RowVectorLD stdVectorToRowVector(const std::vector<double>& vec);
 RowVectorLD stdVectorToRowVector(const std::vector<t_matrix>& vec);
 std::vector<t_matrix> eigenToStdVector(const RowVectorLD& vec);
@@ -685,8 +684,53 @@ BandedMatrix operator*(long double scalar, const BandedMatrix& matrix);
  */
  std::ostream& operator<<(std::ostream& os, const BandedMatrix& matrix);
 
+#pragma mark Sparse Functions
+ class SparseQuadraticFormSolver {
+ private:
+     Eigen::SimplicialLDLT<SparseMatrixLD> solver_;
+     long shift_;
+#ifdef DEBUG
+     bool is_factorized_;
+#endif
+     SparseMatrixLD R_template_;
+
+ public:
+#ifdef DEBUG
+      explicit SparseQuadraticFormSolver(long shift = 1) : shift_(shift), is_factorized_(false) {}
+#else
+      explicit SparseQuadraticFormSolver(long shift = 1) : shift_(shift) {}
+#endif
 
 
+
+     /**
+     * @brief Factorise la matrice R
+     */
+     void factorize(const SparseMatrixLD& R);
+
+     /**
+     * @brief Calcule R^(-1) * Q^T
+     */
+     SparseMatrixLD compute_Rinv_QT(const SparseMatrixLD& Q);
+
+     /**
+     * @brief Calcule Q * R^(-1) * Q^T (forme quadratique complète)
+     */
+     SparseMatrixLD compute_Q_Rinv_QT(const SparseMatrixLD& Q);
+
+     /**
+     * @brief Calcule les deux produits efficacement
+     */
+     std::pair<SparseMatrixLD, SparseMatrixLD>
+     compute_both_products(const SparseMatrixLD& Q);
+
+ private:
+     /**
+     * @brief Résout R * X = B avec gestion du padding
+     */
+     SparseMatrixLD solve_with_padding(const SparseMatrixLD& B);
+
+ };
 
 
 #endif // MATRIX_H

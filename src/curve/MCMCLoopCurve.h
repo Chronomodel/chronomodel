@@ -304,7 +304,7 @@ private:
     double h_lambda_Komlan(const Matrix2D &K, const Matrix2D &K_new, const int nb_noeuds, const double &lambdaSpline);
     t_prob rapport_Theta(const std::function<double (std::shared_ptr<Event>)> &fun, const std::vector<std::shared_ptr<Event>> &lEvents, const Matrix2D &K, const Matrix2D &K_new, const double lambdaSpline);
     // rapport avec utilisation des matrices Y(x, y, z)
-    t_prob rate_Theta(const Matrix2D &Y, const Matrix2D &K, const Matrix2D &K_try, const double lambda);
+    t_prob rate_ftKf(const Matrix2D &Y, const Matrix2D &K, const Matrix2D &Y_try, const Matrix2D &K_try, const double lambda);
 
     t_prob rate_Theta_X(const std::vector<std::shared_ptr<Event>> &Events, const Matrix2D &K, const Matrix2D &K_try, const double lambdaSpline);
     t_prob rate_Theta_XY(const std::vector<std::shared_ptr<Event>> &Events, const Matrix2D &K, const Matrix2D &K_try, const double lambdaSpline);
@@ -313,7 +313,7 @@ private:
     SplineMatrices prepareCalculSpline_W_Vg0(const std::vector<std::shared_ptr<Event> > &sortedEvents, std::vector<double> &vecH);
 
     MCMCSpline samplingSpline_multi(std::vector<std::shared_ptr<Event>> &lEvents, std::vector<std::shared_ptr<Event>> &lEventsinit, std::vector<t_matrix> vecYx, std::vector<double> vecYstd, const Matrix2D &R, const Matrix2D &R_1QT, const Matrix2D &Q, const Matrix2D &QT);
-    MCMCSpline samplingSpline_multi2(std::vector<std::shared_ptr<Event> > &lEvents, const Matrix2D &R, const Matrix2D &R_1Qt, const Matrix2D& Q);
+    MCMCSpline samplingSpline_multi2(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixLD &R, const Matrix2D &R_1Qt, const SparseMatrixLD &Q);
     MCMCSpline samplingSpline_multi_depth(std::vector<std::shared_ptr<Event> > &lEvents, const Matrix2D &R, const Matrix2D &R_1QT, const Matrix2D& Q);
 
     std::vector<double> multinormal_sampling (const std::vector<t_matrix>& mu, const Matrix2D& a);

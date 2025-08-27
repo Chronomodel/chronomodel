@@ -244,4 +244,20 @@ std::vector<T> get_vector(Func fun, const std::vector<std::shared_ptr<Event>> &e
     return result;
 };
 
+
+template <typename T, typename Func>
+Eigen::Matrix<T, Eigen::Dynamic, 1>
+get_ColumnVectorLD(Func fun, const std::vector<std::shared_ptr<Event>>& events)
+{
+    Eigen::Matrix<T, Eigen::Dynamic, 1> result(events.size());
+
+    Eigen::Index i = 0;
+    for (const auto& event : events) {
+        result(i++) = fun(event);
+    }
+
+    return result;
+}
+
+
 #endif
