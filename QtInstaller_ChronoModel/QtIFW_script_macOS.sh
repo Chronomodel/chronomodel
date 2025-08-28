@@ -1,11 +1,18 @@
 #!/bin/bash
 # ne pas mettre de blanc autour de =
 # penser à faire Ch_copy_library.sh avant
+# cd /Users/dufresne/ChronoModel-SoftWare/chronomodel/QtInstaller_ChronoModel
+# sh Ch_copy_library.sh
+#
 # cd /Users/dufresne/ChronoModel-SoftWare/chronomodel/QtInstaller_ChronoModel/
 # sh QtIFW_script_macOS.sh
 # _________________________
 
 clear
+
+VERSION=3.3.5
+QT_BIN_PATH=/Users/dufresne/Qt/Tools/QtInstallerFramework/4.10/bin
+
 # _________________________
 echo " 1 - Script compile intaller "
 
@@ -29,8 +36,6 @@ cp -R $BUNDLE installer-packages-macOS/chronomodel_QtIFW.composant1/data
 # _________________________
 echo " 2 - Copy the ChronoModel_bash BUNDLE "
 
-#BASH_RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/build-Chronomodel_bash-Qt_6_5_3_for_macOS-Release/build/release/
-#BASH_RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/bash/Qt_6_7_2_for_macOS-Release/build/release/
 BASH_RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_9_1_for_macOS-Release/build/release/
 BASH_BUNDLE="$BASH_RELEASE_PATH"chronomodel_bash.app
 #/Users/dufresne/ChronoModel-SoftWare/chronomodel/QtIFW_src/installer-packages/chronomodel_QtIFW.composant2/data
@@ -39,9 +44,6 @@ cp -R $BASH_BUNDLE installer-packages-macOS/chronomodel_QtIFW.composant2/data
 # _________________________
 echo " 3 - Executing binarycreator"
 
-QT_BIN_PATH=/Users/dufresne/Qt/Tools/QtInstallerFramework/4.10/bin
-
-VERSION=3.3.0
 
 DATE_FILE=$(date '+%Y%m%d')
 

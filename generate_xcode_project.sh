@@ -1,14 +1,26 @@
 #!/bin/sh
+# version du 2025-08-28
+# pour lancer
+# cd /Users/dufresne/ChronoModel-SoftWare/chronomodel/
+# sh generate_xcode_project.sh
 
-ROOT_PATH=$(dirname $0)
-#BUNDLE_PATH=release/chronomodel.app
-# set the QT directory in argument ex: sh generate_xcode_project.sh /Users/myName/Qt/5.7/clang_64/bin
+ROOT_PATH=$(dirname "$0")
+QT_BIN_PATH=/Users/dufresne/Qt/6.9.1/macos/bin
 
-# to determine which version of the macOS SDK is installed with xcode? type on a terminal
-# xcodebuild -showsdks
-QT_BIN_PATH=$1
+echo "Génération du projet Xcode pour Chronomodel..."
 
-cd $ROOT_PATH
-${QT_BIN_PATH}/qmake -spec macx-xcode "CONFIG+=debug CONFIG+=no_autoqmake" $ROOT_PATH/Chronomodel.pro
+cd "$ROOT_PATH" || exit 1
+"$QT_BIN_PATH/qmake" \
+    -spec macx-xcode \
+    CONFIG+=xcode \
+    CONFIG+=debug \
+    CONFIG+=release \
+    QMAKE_XCODE_USE_MODERN_HEADERMAPS=YES \
+    QMAKE_XCODE_RUN_QMAKE_SCRIPT=NO \
+    QMAKE_MAC_SDK=macosx \
+    QMAKE_MACOSX_DEPLOYMENT_TARGET=12.0 \
+    QMAKE_XCODE_ALWAYS_SEARCH_USER_PATHS=NO \
+    "$ROOT_PATH/Chronomodel.pro"
 
+echo "Projet Xcode généré avec succès !"
 exit 0
