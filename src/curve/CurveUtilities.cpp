@@ -1277,12 +1277,12 @@ QDataStream &operator>>( QDataStream &stream, PosteriorMeanG& pMeanG )
 
 SplineMatrices prepare_calcul_spline_WI(const std::vector<t_reduceTime>& vecH)
 {
-    const Matrix2D matR = calculMatR(vecH);
-    const Matrix2D matQ = calculMatQ(vecH);
+    const SparseMatrixLD R = calculMatR(vecH);
+    const SparseMatrixLD Q = calculMatQ(vecH);
 
     // Calcul de la transposée QT de la matrice Q, de dimension (n-2) x n
 
-    const Matrix2D matQT = transpose(matQ, 3);
+    const SparseMatrixLD QT = Q.transpose();//transpose(Q, 3);
 
     // Calcul de la matrice matQTW_1Q, de dimension (n-2) x (n-2) pour calcul Mat_B
     // matQTW_1Q possèdera 3+3-1=5 bandes
@@ -1291,7 +1291,7 @@ SplineMatrices prepare_calcul_spline_WI(const std::vector<t_reduceTime>& vecH)
 
 
     // Matrix2D matQTW_1Qb = multiMatParMat(matQT, matQ, 3, 3);
-    const Matrix2D matQTW_1Q = multiplyMatrixBanded_Winograd(matQT, matQ, 1);
+    const Matrix2D matQTW_1Q = QT * Q; //multiplyMatrixBanded_Winograd(QT, Q, 1);
 
     // Calcul de la matrice QTQ, de dimension (n-2) x (n-2) pour calcul Mat_B
     // Mat_QTQ possèdera 3+3-1=5 bandes
@@ -1300,9 +1300,9 @@ SplineMatrices prepare_calcul_spline_WI(const std::vector<t_reduceTime>& vecH)
 
     SplineMatrices matrices;
     matrices.diagWInv = diagWInv;
-    matrices.matR = matR;
-    matrices.matQ = matQ;
-    matrices.matQT = matQT;
+    matrices.matR = R;
+    matrices.matQ = Q;
+    matrices.matQT = QT;
     matrices.matQTW_1Q = matQTW_1Q;
     matrices.matQTQ = matQTQ;
 
@@ -1336,7 +1336,7 @@ SplineMatrices prepare_calcul_spline(const std::vector<std::shared_ptr<Event>>& 
 
 SplineMatrices prepare_calcul_spline(const std::vector<t_reduceTime>& vecH, const DiagonalMatrixLD& W_1)
 {
-    const Matrix2D R = calculMatR(vecH); // SparseMatrix, mais mémorisé en matrice dense
+    const SparseMatrixLD R = calculMatR(vecH); // SparseMatrix, mais mémorisé en matrice dense
 
 
     const SparseMatrixLD Q = calculMatQ(vecH); // SparseMatrix
@@ -1364,9 +1364,9 @@ SplineMatrices prepare_calcul_spline(const std::vector<t_reduceTime>& vecH, cons
 
     SplineMatrices matrices;
     matrices.diagWInv = std::move(W_1);
-    matrices.matR = std::move(R);
-    matrices.matQ = Q.toDense();
-    matrices.matQT = Qt.toDense();
+    matrices.matR = R;
+    matrices.matQ = Q;
+    matrices.matQT = Qt;
     matrices.matQTW_1Q = QtW_1Q.toDense(); // Seule affectée par changement de VG
     matrices.matQTQ = QtQ.toDense();
 
@@ -1380,31 +1380,26 @@ SplineMatrices update_splineMatrice_with_vecH(SplineMatrices spline_matrices, co
     spline_matrices.matQ = calculMatQ(vecH);
 
     // Calcul de la transposée QT de la matrice Q, de dimension (n-2) x n
-    spline_matrices.matQT = transpose(spline_matrices.matQ, 3);
+    spline_matrices.matQT = spline_matrices.matQ.transpose();//transpose(spline_matrices.matQ, 3);
 
     //MatrixDiag diagWInv (sortedEvents.size());
     //std::transform(sortedEvents.begin(), sortedEvents.end(), diagWInv.begin(), [](std::shared_ptr<Event> ev) {return 1.0 /ev->mW;});
 
     // Calcul de la matrice matQTW_1Q, de dimension (n-2) x (n-2) pour calcul Mat_B
     // matQTW_1Q possèdera 3+3-1=5 bandes
-    const Matrix2D tmp = multiMatParDiag(spline_matrices.matQT, spline_matrices.diagWInv, 3);
+    const Matrix2D tmp = spline_matrices.matQT * spline_matrices.diagWInv ; //multiMatParDiag(spline_matrices.matQT, spline_matrices.diagWInv, 3);
 
-    spline_matrices.matQTW_1Q = multiplyMatrixBanded_Winograd(tmp, spline_matrices.matQ, 1); // Seule affectée par changement de VG
+    spline_matrices.matQTW_1Q = tmp * spline_matrices.matQ ; //multiplyMatrixBanded_Winograd(tmp, spline_matrices.matQ, 1); // Seule affectée par changement de VG
 
     // Calcul de la matrice QTQ, de dimension (n-2) x (n-2) pour calcul Mat_B
     // Mat_QTQ possèdera 3+3-1=5 bandes
-    spline_matrices.matQTQ  = multiplyMatrixBanded_Winograd(spline_matrices.matQT, spline_matrices.matQ, 1);
+    spline_matrices.matQTQ  = spline_matrices.matQT * spline_matrices.matQ; //multiplyMatrixBanded_Winograd(spline_matrices.matQT, spline_matrices.matQ, 1);
 
     return spline_matrices;
 }
 
 SplineMatrices update_splineMatrice_with_mW(SplineMatrices spline_matrices, const std::vector<std::shared_ptr<Event> >& sortedEvents)
 {
-    //const Matrix2D &rMatR = calculMatR(vecH);
-    //const Matrix2D &rMatQ = calculMatQ(vecH);
-
-    // Calcul de la transposée QT de la matrice Q, de dimension (n-2) x n
-    //const Matrix2D &rMatQT = transpose(rMatQ, 3);
 
     DiagonalMatrixLD W_1 (sortedEvents.size());
     std::transform(sortedEvents.begin(), sortedEvents.end(), W_1.diagonal().begin(), [](std::shared_ptr<Event> ev) {return 1.0L /ev->mW;});
@@ -1412,41 +1407,37 @@ SplineMatrices update_splineMatrice_with_mW(SplineMatrices spline_matrices, cons
     spline_matrices.diagWInv = W_1;
     // Calcul de la matrice matQTW_1Q, de dimension (n-2) x (n-2) pour calcul Mat_B
     // matQTW_1Q possèdera 3+3-1=5 bandes
-    const Matrix2D tmp = multiMatParDiag(spline_matrices.matQT, W_1, 3);
+    const Matrix2D tmp = spline_matrices.matQT * W_1 ; //multiMatParDiag(spline_matrices.matQT, W_1, 3);
 
     //Matrix2D matQTW_1Qb = multiMatParMat(tmp, matQ, 3, 3);
-    spline_matrices.matQTW_1Q = multiplyMatrixBanded_Winograd(tmp, spline_matrices.matQ, 1);
+    spline_matrices.matQTW_1Q = tmp * spline_matrices.matQ; //multiplyMatrixBanded_Winograd(tmp, spline_matrices.matQ, 1);
 
-    // Calcul de la matrice QTQ, de dimension (n-2) x (n-2) pour calcul Mat_B
-    // Mat_QTQ possèdera 3+3-1=5 bandes
-    //Matrix2D matQTQb = multiMatParMat(matQT, matQ, 3, 3);
-    //const Matrix2D &rMatQTQ = multiplyMatrixBanded_Winograd(rMatQT, rMatQ, 1);
 
     return spline_matrices;
 }
 
 SplineMatrices prepareCalculSpline_Sy2(const std::vector<std::shared_ptr<Event>> &sortedEvents, const std::vector<t_reduceTime> &vecH)
 {
-    const Matrix2D R = calculMatR(vecH);
-    const Matrix2D Q = calculMatQ(vecH);
+    const SparseMatrixLD R = calculMatR(vecH);
+    const SparseMatrixLD Q = calculMatQ(vecH);
 
     // Calcul de la transposée QT de la matrice Q, de dimension (n-2) x n
-    const Matrix2D QT = transpose(Q, 3);
+    const SparseMatrixLD QT = Q.transpose();// transpose(Q, 3);
 
     DiagonalMatrixLD W_1 (sortedEvents.size());
     std::transform(sortedEvents.begin(), sortedEvents.end(), W_1.diagonal().begin(), [](std::shared_ptr<Event> ev) {return ev->mSy * ev->mSy ;});
 
     // Calcul de la matrice matQTW_1Q, de dimension (n-2) x (n-2) pour calcul Mat_B
     // matQTW_1Q possèdera 3+3-1=5 bandes
-    const Matrix2D tmp = multiMatParDiag(QT, W_1, 3);
+    const Matrix2D tmp = QT * W_1; //multiMatParDiag(QT, W_1, 3);
 
     //Matrix2D matQTW_1Qb = multiMatParMat(tmp, matQ, 3, 3);
-    const Matrix2D QTW_1Q = multiplyMatrixBanded_Winograd(tmp, Q, 1);
+    const Matrix2D QTW_1Q = tmp * Q; //multiplyMatrixBanded_Winograd(tmp, Q, 1);
 
     // Calcul de la matrice QTQ, de dimension (n-2) x (n-2) pour calcul Mat_B
     // Mat_QTQ possèdera 3+3-1=5 bandes
     //Matrix2D matQTQb = multiMatParMat(matQT, matQ, 3, 3);
-    const Matrix2D QTQ = multiplyMatrixBanded_Winograd(QT, Q, 1);
+    const Matrix2D QTQ = QT * Q; //multiplyMatrixBanded_Winograd(QT, Q, 1);
 
     SplineMatrices matrices;
     matrices.diagWInv = std::move(W_1);
@@ -1466,58 +1457,6 @@ SplineResults do_spline(const std::function <t_matrix (std::shared_ptr<Event>)> 
     std::transform(events.begin(), events.end(), vec_Y.begin(), fun);
 
     return do_spline(vec_Y, matrices, vecH, decomp, lambdaSpline);
-
-    /*
-    * MatB doit rester en copie
-    */
-
-    /*    SplineResults spline;
-    try {
-        // calcul de: R + lambda * Qt * W-1 * Q = Mat_B
-
-
-        // Calcul des vecteurs G et Gamma en fonction de Y
-        const size_t n = events.size();
-
-        std::vector<double> vecG;
-        std::vector<double> vecQtY;
-
-        // VecQtY doit être de taille n, donc il faut mettre un zéro au début et à la fin
-        vecQtY.push_back(0.);
-        for (size_t i = 1; i < n-1; ++i) {
-            const double term1 = (fun(events[i+1]) - fun(events[i])) / vecH[i];
-            const double term2 = (fun(events[i]) - fun(events[i-1])) / vecH[i-1];
-            vecQtY.push_back(term1 - term2);
-        }
-        vecQtY.push_back(0.);
-
-        // Calcul du vecteur Gamma
-        const decltype(SplineResults::vecGamma) &vecGamma = resolutionSystemeLineaireCholesky(decomp, vecQtY);
-
-        // Calcul du vecteur g = Y - lambda * W-1 * Q * gamma
-        if (lambdaSpline != 0) {
-            const std::vector<double> &vecTmp2 = multiMatParVec(matrices.matQ, vecGamma, 3);
-            const MatrixDiag &diagWInv = matrices.diagWInv;
-
-            for (unsigned i = 0; i < n; ++i) {
-                vecG.push_back( fun(events[i]) - lambdaSpline * diagWInv[i] * vecTmp2[i]) ;
-            }
-
-        } else {
-            vecG.resize(n);
-            std::transform(events.begin(), events.end(), vecG.begin(), fun);
-        }
-
-
-        spline.vecG = std::move(vecG);
-        spline.vecGamma = std::move(vecGamma);
-
-    } catch(...) {
-        qCritical() << "[MCMCLoopCurve::doSpline] : Caught Exception!\n";
-    }
-
-    return spline;
-    */
 }
 
 
@@ -1551,7 +1490,6 @@ DiagonalMatrixLD diagonal_influence_matrix(const SplineMatrices& matrices, const
     const Matrix2D &matB_1 = inverseMatSym_origin(decomp, nbBandes + 4, 1);
 
     DiagonalMatrixLD matQB_1QT (n);
-    //matQB_1QT.reserve(n);
 
     /*Calcul des termes diagonaux de Q (matB_1) Qt, de i=1 à nb_noeuds
              ??? vérifier le contrôle des indices i+1: débordement de matrices */
@@ -1559,31 +1497,31 @@ DiagonalMatrixLD diagonal_influence_matrix(const SplineMatrices& matrices, const
 
     const auto& matQ = matrices.matQ; //std::begin(matrices.matQ[0]); // matQ est une matrice encadrée de 0
 
-    t_matrix term = std::pow(matrices.matQ(0, 0), 2.0L) * matB_1(0, 0);
-    term += std::pow(matQ(0, 1), 2.0L) * matB_1(1, 1);
-    term += 2.0L * matQ(0, 0) * matQ(0, 1) * matB_1(0, 1);
+    t_matrix term = std::pow(matrices.matQ.coeff(0, 0), 2.0L) * matB_1(0, 0);
+    term += std::pow(matQ.coeff(0, 1), 2.0L) * matB_1(1, 1);
+    term += 2.0L * matQ.coeff(0, 0) * matQ.coeff(0, 1) * matB_1(0, 1);
 
 
     matQB_1QT.diagonal()[0] = term;
 
     for (size_t i = 1; i < n-1; ++i) {
 
-        t_matrix term_i = std::pow(matQ(i, i-1), 2.0L) * matB_1(i-1, i-1);
-        term_i += std::pow(matQ(i, i), 2.0L) * matB_1(i, i);
-        term_i += std::pow(matQ(i, i+1), 2.0L) * matB_1(i+1, i+1);
+        t_matrix term_i = std::pow(matQ.coeff(i, i-1), 2.0L) * matB_1(i-1, i-1);
+        term_i += std::pow(matQ.coeff(i, i), 2.0L) * matB_1(i, i);
+        term_i += std::pow(matQ.coeff(i, i+1), 2.0L) * matB_1(i+1, i+1);
 
-        term_i += 2.0L * matQ(i, i-1) * matQ(i, i) * matB_1(i-1, i);
-        term_i += 2.0L * matQ(i, i-1) * matQ(i, i+1) * matB_1(i-1, i+1);
-        term_i += 2.0L * matQ(i, i) * matQ(i, i+1) * matB_1(i, i+1);
+        term_i += 2.0L * matQ.coeff(i, i-1) * matQ.coeff(i, i) * matB_1(i-1, i);
+        term_i += 2.0L * matQ.coeff(i, i-1) * matQ.coeff(i, i+1) * matB_1(i-1, i+1);
+        term_i += 2.0L * matQ.coeff(i, i) * matQ.coeff(i, i+1) * matB_1(i, i+1);
 
 
         matQB_1QT.diagonal()[i] = term_i;
     }
 
 
-    term = std::pow(matQ(n-1, n-2), 2.0L) * matB_1(n-2, n-2);
-    term += std::pow(matQ(n-1, n-1), 2.0L) * matB_1(n-1, n-1);
-    term += 2.0L * matQ(n-1, n-2) * matQ(n-1, n-1) * matB_1(n-2, n-1);
+    term = std::pow(matQ.coeff(n-1, n-2), 2.0L) * matB_1(n-2, n-2);
+    term += std::pow(matQ.coeff(n-1, n-1), 2.0L) * matB_1(n-1, n-1);
+    term += 2.0L * matQ.coeff(n-1, n-2) * matQ.coeff(n-1, n-1) * matB_1(n-2, n-1);
 
     matQB_1QT.diagonal()[n-1] = term;
 
@@ -1643,8 +1581,8 @@ MCMCSpline currentSpline (std::vector<std::shared_ptr<Event> > &events, const st
     // doSpline utilise les Y des events
     // => On le calcule ici pour la première composante (x)
 
-    Matrix2D matB (matrices.matR); //matR;
-    //const double lambda = mModel->mLambdaSpline.mX;
+    Matrix2D matB (matrices.matR);
+
     if (lambda != 0) {
         const Matrix2D tmp = multiConstParMat(matrices.matQTW_1Q, lambda, 5);
         matB = addMatEtMat(matrices.matR, tmp, 5);

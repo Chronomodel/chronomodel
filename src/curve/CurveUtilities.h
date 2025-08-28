@@ -71,9 +71,9 @@ struct SilvermanParam
 typedef struct SplineMatrices
 {
     DiagonalMatrixLD  diagWInv;
-    Matrix2D matR;
-    Matrix2D matQ;
-    Matrix2D matQT;
+    SparseMatrixLD matR;
+    SparseMatrixLD matQ;
+    SparseMatrixLD matQT;
     Matrix2D matQTW_1Q;
     Matrix2D matQTQ;
 

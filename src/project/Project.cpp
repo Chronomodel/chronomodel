@@ -754,7 +754,57 @@ bool Project::load(const QString &path, bool force)
             std::cout << "[Project::load] file.cal: " << calFileInfo.fileName().toStdString() << std::endl;
 
             QFile calFile(caliPath);
-            if (calFile.open(QIODevice::ReadOnly) && calFile.exists()) {
+
+            if (!calFile.open(QIODevice::ReadOnly)) {
+                // Problème du à la sécurité sous macOs, pour les application non signés
+                QString filename(calFileInfo.fileName());
+
+                QString strMessage = tr("The calibration file \"%1\" exists but cannot be opened.\n\n"
+                                        "This is likely due to macOS security restrictions.\n"
+                                        "Please allow the application to access this file "
+                                        "or move it to a location where access is permitted.\n\n"
+                                        "Do you want to retry opening the file?")
+                                         .arg(filename);
+
+                QString strTitle = tr("Permission Required");
+
+                QMessageBox message(QMessageBox::Warning,
+                                    strTitle,
+                                    strMessage,
+                                    QMessageBox::Yes | QMessageBox::No,
+                                    qApp->activeWindow());
+
+                if (message.exec() == QMessageBox::Yes) {
+                    if (!calFile.open(QIODevice::ReadOnly)) {
+                        QMessageBox::critical(qApp->activeWindow(),
+                                              tr("Error"),
+                                              tr("Still unable to open the calibration file.\n\n"
+                                                 "Please check your macOS security and privacy settings."));
+                        setNoResults();
+                        clear_and_shrink_model();
+                        hasCalibration = false;
+                    } else {
+                        hasCalibration = true;
+                    }
+                } else {
+                    setNoResults();
+                    clear_and_shrink_model();
+                    hasCalibration = false;
+                }
+            }
+            calFile.close();  // Fermeture
+
+
+
+
+            /*std::cout << "[Project::load] file.cal is calFile.open(QIODevice::ReadOnly): " << calFile.open(QIODevice::ReadOnly) << std::endl;
+
+            std::cout << "[Project::load] file.cal is calFile.exists(): " << calFile.exists() << std::endl;
+            std::cout << "caliPath = " << caliPath.toStdString() << std::endl;
+            std::cout << "absolute = " << QFileInfo(calFile).absoluteFilePath().toStdString() << std::endl;
+*/
+
+            if (calFile.open(QIODevice::ReadOnly) && calFile.exists()) { // ouverture pour test
                 std::cout << "[Project::load] file.cal is open: " << calFile.fileName().toStdString() << std::endl;
 
                 QDataStream in(&calFile);
@@ -778,7 +828,8 @@ bool Project::load(const QString &path, bool force)
                     hasCalibration = false;
                     compatible_file = false;
                 }
-
+                
+                
                 if (compatible_file) {
                     QString caliVersion;
                     in >> caliVersion;
@@ -835,6 +886,8 @@ bool Project::load(const QString &path, bool force)
                                 hasCalibration = false;
                             }
                         }
+                        calFile.close();  // Fermeture
+                        
                     } else {
                         // Version identique, chargement normal
                         try {

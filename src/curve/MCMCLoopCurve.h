@@ -114,7 +114,7 @@ protected:
 #pragma mark Version 3.3.5
 
     QString initialize_335();
-    bool update_335(); // estimation de G as Komlan
+    bool update_335(); // estimation de G as Komlan Thesis
 
 #elif VERSION_MAJOR == 4 && VERSION_MINOR >= 0 && VERSION_PATCH >= 0
 #pragma mark Version 4
@@ -131,9 +131,10 @@ protected:
 
     void test_depth(std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const SplineMatrices &matrices, const double lambda, double &rate, bool &ok);
 
+#if VERSION_MAJOR == KOMLAN
     QString initialize_Komlan();
     bool update_Komlan();
-
+#endif
 
 protected:
 
@@ -312,9 +313,9 @@ private:
 
     SplineMatrices prepareCalculSpline_W_Vg0(const std::vector<std::shared_ptr<Event> > &sortedEvents, std::vector<double> &vecH);
 
-    MCMCSpline samplingSpline_multi(std::vector<std::shared_ptr<Event>> &lEvents, std::vector<std::shared_ptr<Event>> &lEventsinit, std::vector<t_matrix> vecYx, std::vector<double> vecYstd, const Matrix2D &R, const Matrix2D &R_1QT, const Matrix2D &Q, const Matrix2D &QT);
+    MCMCSpline samplingSpline_multi(std::vector<std::shared_ptr<Event>> &lEvents, std::vector<std::shared_ptr<Event>> &lEventsinit, std::vector<t_matrix> vecYx, std::vector<double> vecYstd, const SparseMatrixLD &R, const Matrix2D &R_1QT, const SparseMatrixLD &Q);
     MCMCSpline samplingSpline_multi2(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixLD &R, const Matrix2D &R_1Qt, const SparseMatrixLD &Q);
-    MCMCSpline samplingSpline_multi_depth(std::vector<std::shared_ptr<Event> > &lEvents, const Matrix2D &R, const Matrix2D &R_1QT, const Matrix2D& Q);
+    MCMCSpline samplingSpline_multi_depth(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixLD &R, const Matrix2D &R_1QT, const SparseMatrixLD& Q);
 
     std::vector<double> multinormal_sampling (const std::vector<t_matrix>& mu, const Matrix2D& a);
     ColumnVectorLD multinormal_sampling (const ColumnVectorLD& mu, const Matrix2D& a);

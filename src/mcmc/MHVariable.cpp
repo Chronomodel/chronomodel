@@ -43,6 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QDebug>
 
+#define NoneStr QObject::tr("No Proposal")
 #define FixeStr QObject::tr("Fixed value")
 
 #define MHAdaptGaussStr QObject::tr("Proposal : Adapt. Gaussian random walk")
@@ -431,6 +432,9 @@ QString MHVariable::resultsString(const QString &noResultMessage, const QString 
 QString MHVariable::getSamplerProposalText(const MHVariable::SamplerProposal sp)
 {
     switch (sp) {
+    case MHVariable::eNone:
+        return NoneStr;
+        break;
     case MHVariable::eFixe:
         return FixeStr;
         break;
@@ -481,6 +485,9 @@ MHVariable::SamplerProposal MHVariable::getSamplerProposalFromText(const QString
 
     else if (text == FixeStr)
         return MHVariable::eFixe;
+
+    else if (text == NoneStr)
+        return MHVariable::eNone;
     else {
         // ouch... what to do ???
         return MHVariable::eMHAdaptGauss;

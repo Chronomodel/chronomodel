@@ -2813,7 +2813,7 @@ bool ModelCurve::is_accepted_by_filter(const MCMCSplineComposante& splineComposa
         const double p = t_i * t_i1;
         const double d = ( (t_i1 - 2*t_i)*gamma_i1 + (2*t_i1 - t_i) * gamma_i ) / (6.0 * hi);
 
-        // résolution équation, la dérivée est du deuxième degré
+        // résolution équation, la dérivée est du deuxième degrée
 
         const double aDelta = 3* b;
         const double bDelta = 2*d - 2*s*b;
