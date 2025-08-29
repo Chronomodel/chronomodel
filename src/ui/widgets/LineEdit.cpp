@@ -129,11 +129,14 @@ void LineEdit::setFont(const QFont& font)
 #ifdef Q_OS_MAC
     QString styleSh = "QLineEdit { border-radius: 5px; font: "+ QString::number(font.pointSize()) + "px ;font-family: "+font.family() + ";}";
     QLineEdit::setStyleSheet(styleSh);
-#else
-//#ifdef Q_OS_WIN
+#elif defined(Q_OS_WIN)
     QWidget::setStyleSheet("QLineEdit { border-radius: 5px;}");
     QLineEdit::setFont(font);
- #endif
+#else
+    QString styleSh = "QLineEdit { border-radius: 5px; font: "+ QString::number(font.pointSize()) + "px ;font-family: "+font.family() + ";}";
+    QLineEdit::setStyleSheet(styleSh);
+#endif
+
 }
 
 LineEdit::~LineEdit()
