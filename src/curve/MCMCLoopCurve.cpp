@@ -7038,12 +7038,13 @@ void MCMCLoopCurve::finalize()
  /*   if (mTh_memoCurve.joinable())
         mTh_memoCurve.join();
 */
-#pragma omp parallel for
+
 
     // Removing traces of chains without accepted curves
 
     int back_position = (int)mModel->mLambdaSpline.mRawTrace->size();
     size_t i = 0;
+#pragma omp parallel for
     for (auto chain = mLoopChains.rbegin(); chain != mLoopChains.rend(); chain++) {
         // we add 1 for the init
         const int initBurnAdaptAcceptSize = 1 + chain->mIterPerBurn + int (chain->mBatchIndex * chain->mIterPerBatch) + chain->mRealyAccepted;

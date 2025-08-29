@@ -49,7 +49,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QApplication>
 #include <QThread>
 
-#include <cfenv>
 #include <iostream>
 #include <map>
 #include <QTime>
@@ -4161,7 +4160,7 @@ std::pair<Matrix2D, DiagonalMatrixLD> decompositionCholeskyKK(const Matrix2D &ma
     //return BandedMoreSorensenCholesky(matrix, nbBandes, 0.0);
 
     errno = 0;
-    if (math_errhandling & MATH_ERREXCEPT) feclearexcept(FE_ALL_EXCEPT);
+    //if (math_errhandling & MATH_ERREXCEPT) feclearexcept(FE_ALL_EXCEPT);
 
 
     const size_t dim = matrix.rows();

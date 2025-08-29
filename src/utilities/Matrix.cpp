@@ -668,7 +668,7 @@ void BandedMatrix::computeLU(BandedMatrix& L, BandedMatrix& U) const {
 
 
 
-#pragma mark OPÉRATEURS D'ADDITION
+#pragma mark OPERATEURS D ADDITION
 
 /**
  * @brief Addition Matrix2Do + BandedMatrix
