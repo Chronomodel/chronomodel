@@ -2511,7 +2511,7 @@ bool Model::loadFromStream_v330(QDataStream *in)
 {
     std::cout << "[Model::loadFromStream_v330] Entering" << std::endl;
 
-    if (in->version()!= QDataStream::Qt_6_7)
+    if (in->version()!= QDataStream::Qt_6_4)
         return false;
 
     try {

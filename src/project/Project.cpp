@@ -814,12 +814,12 @@ bool Project::load(const QString &path, bool force)
 
                 bool compatible_file = true;
 
-                if (qDataStreamVersion == QDataStream::Qt_6_7) {
-                    in.setVersion(QDataStream::Qt_6_7);
+                if (qDataStreamVersion == QDataStream::Qt_6_4) {
+                    in.setVersion(QDataStream::Qt_6_4);
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
                 } else if (qDataStreamVersion == QDataStream::Qt_6_8) {
-                    in.setVersion(QDataStream::Qt_6_7); // forçage
+                    in.setVersion(QDataStream::Qt_6_4); // forçage
 #endif
                 } else { //if (in.version() != QDataStream::Qt_6_7) {  // Depuis v3.3.0 avant Qt_6_4
                     // Gérer les versions non compatibles
@@ -971,12 +971,12 @@ bool Project::load(const QString &path, bool force)
                     //QString resVersion;
                     //in >> resVersion;
 
-                    if (qDataStreamVersion == QDataStream::Qt_6_7) {
-                        in.setVersion(QDataStream::Qt_6_7);
+                    if (qDataStreamVersion == QDataStream::Qt_6_4) {
+                        in.setVersion(QDataStream::Qt_6_4);
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
                     } else if (qDataStreamVersion == QDataStream::Qt_6_8) {
-                        in.setVersion(QDataStream::Qt_6_7); // Forçage
+                        in.setVersion(QDataStream::Qt_6_4); // Forçage
 #endif
                     } else {
                         std::cout << "[Project::load] file res : Version du QDataStream non compatible:" << qDataStreamVersion<< std::endl;
@@ -985,7 +985,7 @@ bool Project::load(const QString &path, bool force)
                     }
 
 
-                    if (compatible_file) { //if (in.version() == QDataStream::Qt_6_7) {  // Depuis v3.3.0 avant Qt_6_4
+                    if (compatible_file) {  // Depuis v3.3.0 avant Qt_6_4
                          const bool restore_ok = mModel->loadFromStream(&in); // do in >> resVersion;
 
                         if (in.status() != QDataStream::Ok || !restore_ok) {
@@ -1235,7 +1235,7 @@ bool Project::load_old(const QString &path, bool force)
                     int QDataStreamVersion;
                     in >> QDataStreamVersion;
                     in.setVersion(QDataStreamVersion);
-                    if (in.version()!= QDataStream::Qt_6_7) { // since v3.3.0 before Qt_6_4
+                    if (in.version()!= QDataStream::Qt_6_4) { // since v3.3.0 before Qt_6_4
                         clear_and_shrink_model();
 
                         file.close();
@@ -1855,7 +1855,7 @@ bool Project::saveProjectToFile()
     if (file_cal.open(QIODevice::WriteOnly)) {
 
         QDataStream out(&file_cal);
-        out.setVersion(QDataStream::Qt_6_7); // since v3.3.0 before Qt_6_4
+        out.setVersion(QDataStream::Qt_6_4); // since v3.3.0 before Qt_6_4
         out << out.version();
 
         out << QApplication::applicationVersion();
@@ -1896,7 +1896,7 @@ bool Project::saveProjectToFile()
 
         if (file_res.open(QIODevice::WriteOnly)) {
             QDataStream out(&file_res);
-            out.setVersion(QDataStream::Qt_6_7); // since v3.3.0 before Qt_6_4
+            out.setVersion(QDataStream::Qt_6_4); // since v3.3.0 before Qt_6_4
             out << out.version();
             out << QApplication::applicationVersion();
 

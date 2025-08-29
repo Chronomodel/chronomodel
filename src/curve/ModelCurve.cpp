@@ -449,7 +449,7 @@ bool ModelCurve::loadFromStream_v330(QDataStream* in)
 {
     bool ok = Model::loadFromStream_v330(in);
 
-    if (in->version()!= QDataStream::Qt_6_7) {
+    if (in->version()!= QDataStream::Qt_6_4) {
         std::cout << "[ModelCurve::loadFromStream_v330] Bad QDataStream version" << std::endl;
         return false;
     }
