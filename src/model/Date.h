@@ -164,8 +164,8 @@ public:
 
     std::vector<double> getFormatedRepartition() const;
 
-    QPixmap generateCalibThumb(StudyPeriodSettings settings);
-    QPixmap generateUnifThumb(StudyPeriodSettings settings);
+    QPixmap generateCalibThumb(const StudyPeriodSettings &settings);
+    QPixmap generateUnifThumb(const StudyPeriodSettings& settings);
 
     QColor getEventColor() const;
 

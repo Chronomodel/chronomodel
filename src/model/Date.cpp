@@ -1464,7 +1464,7 @@ void Date::generateHistos(const std::vector<ChainSpecs>& chains, const int fftLe
 
 }
 
-QPixmap Date::generateUnifThumb(StudyPeriodSettings settings)
+QPixmap Date::generateUnifThumb(const StudyPeriodSettings &settings)
 {
     if (mIsValid){
         //  No need to draw the graph on a large size
@@ -1549,7 +1549,7 @@ QPixmap Date::generateUnifThumb(StudyPeriodSettings settings)
  * @brief Uses the calibration curve already calculated to update the thumbnail.
  * @return
  */
-QPixmap Date::generateCalibThumb(StudyPeriodSettings settings)
+QPixmap Date::generateCalibThumb(const StudyPeriodSettings& settings)
 {
     if (mIsValid) {
         //  No need to draw the graph on a large size

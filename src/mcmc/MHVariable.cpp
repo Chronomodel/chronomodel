@@ -85,7 +85,7 @@ MHVariable::MHVariable(const MHVariable& origin):
     mHistoryAcceptRateMH = std::make_shared<std::vector<double>>(*origin.mHistoryAcceptRateMH);
 #ifdef DEBUG
     if (mHistoryAcceptRateMH->empty()&& !origin.mHistoryAcceptRateMH->empty()) {
-        qDebug()<<"[MHVariable::MHVariable]" << _name;
+        qDebug()<<"[MHVariable::MHVariable]" << QString::fromStdString(_name);
     }
 #endif
 
@@ -105,7 +105,7 @@ MHVariable::MHVariable(MHVariable&& other) noexcept
     mHistoryAcceptRateMH = std::move(other.mHistoryAcceptRateMH);
 #ifdef DEBUG
     if (mHistoryAcceptRateMH->empty()&& !other.mHistoryAcceptRateMH->empty()) {
-        qDebug()<<"[MHVariable::MHVariable]" <<_name;
+        qDebug()<<"[MHVariable::MHVariable]" <<QString::fromStdString(_name);
     }
 #endif
 
@@ -125,7 +125,7 @@ MHVariable::MHVariable(const MetropolisVariable& origin):
 {
 #ifdef DEBUG
     if (mHistoryAcceptRateMH->empty()) {
-        qDebug()<<"[MHVariable::MHVariable]" << _name;
+        qDebug()<<"[MHVariable::MHVariable]" << QString::fromStdString(_name);
     }
 #endif
 }
@@ -273,7 +273,6 @@ void MHVariable::clear()
     MetropolisVariable::clear();
     if (mHistoryAcceptRateMH) {
         mHistoryAcceptRateMH->clear();
-        //qDebug()<<"[MHVariable::clear] mHistoryAcceptRateMH"<< _name;
     }
 
     mLastAccepts.clear();
@@ -298,7 +297,6 @@ void MHVariable::clear_and_shrink() noexcept
     MetropolisVariable::clear_and_shrink();
     if (mHistoryAcceptRateMH) {
         mHistoryAcceptRateMH->clear();
-        //qDebug()<<"[MHVariable::clear_and_shrink] mHistoryAcceptRateMH"<< _name;
         mHistoryAcceptRateMH->shrink_to_fit();
     }
 
@@ -339,7 +337,7 @@ MHVariable& MHVariable::operator=(const MHVariable& origin)
     mHistoryAcceptRateMH = std::shared_ptr<std::vector<double>>(origin.mHistoryAcceptRateMH);
 #ifdef DEBUG
     if (mHistoryAcceptRateMH->empty() && !origin.mHistoryAcceptRateMH->empty()) {
-        qDebug()<<"[MHVariable::MHVariable:: operator =]" << _name;
+        qDebug()<<"[MHVariable::MHVariable:: operator =]" << QString::fromStdString(_name);
     }
 #endif
       
@@ -359,7 +357,6 @@ double MHVariable::getCurrentAcceptRate() const
 void MHVariable::saveCurrentAcceptRate()
 {
     mHistoryAcceptRateMH->push_back(100. * getCurrentAcceptRate());
-   // qDebug()<<"[MHVariable::saveCurrentAcceptRate] "<<_name <<" size=" << mHistoryAcceptRateMH->size();
 }
 
 std::vector<double> MHVariable::acceptationForChain(const std::vector<ChainSpecs> &chains, size_t index)
@@ -376,7 +373,7 @@ std::vector<double> MHVariable::acceptationForChain(const std::vector<ChainSpecs
             //accept.resize(chainSize
             //std::copy(from_vector.begin(), from_vector.end(), to_vector.begin());
             if (mHistoryAcceptRateMH->size() < shift+chainSize) {
-                qDebug()<< "[MHVariable::acceptationForChain] variable : "<< _name << "No mHistoryAcceptRateMH";
+                qDebug()<< "[MHVariable::acceptationForChain] variable : "<< QString::fromStdString(_name) << "No mHistoryAcceptRateMH";
                 return accept;
             }
 

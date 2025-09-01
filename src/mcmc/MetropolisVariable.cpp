@@ -479,7 +479,6 @@ std::map<double, double> MetropolisVariable::generateHisto(const std::vector<dou
     if (dataSrc.size() == 1) {
         // value. It can appear with a fixed variable
         result.emplace(dataSrc.at(0), 1.) ;
-        //qDebug()<<"[MetropolisVariable::generateHisto] One Value = "<< dataSrc.at(0) << _name;
         return result;
     }
 
@@ -507,7 +506,7 @@ std::map<double, double> MetropolisVariable::generateHisto(const std::vector<dou
         // if sigma is null and there are several values, it means: this is a constant value
         // This can occur at the Begin or End of a Phase with a Bound.
         result.emplace(dataSrc.at(0), 1.) ;
-        qDebug()<<"[MetropolisVariable::generateHisto] Constant value = "<< dataSrc.at(0) << _name;
+        qDebug()<<"[MetropolisVariable::generateHisto] Constant value = "<< dataSrc.at(0) << QString::fromStdString(_name);
 
         return result;
     }
@@ -674,7 +673,7 @@ void MetropolisVariable::generateHPD(const double threshold)
         // We don't display the phase duration but we print the numerical HPD result.
         mFormatedHPD = std::map<double, double>();
         mRawHPDintervals.clear();
-        qDebug() << "[MetropolisVariable::generateHPD] WARNING : Cannot generate HPD on empty histo with " << _name;
+        qDebug() << "[MetropolisVariable::generateHPD] WARNING : Cannot generate HPD on empty histo with " << QString::fromStdString(_name);
     }
 }
 
@@ -950,7 +949,7 @@ void MetropolisVariable::save_stream_v330(QDataStream& stream) const
         // Écriture du nom
         QString str = QString::fromStdString(_name);
         stream << str;
-        //std::cout << "[MetropolisVariable::save_stream_v330] name str = " << _name <<std::endl;
+
         if (stream.status() != QDataStream::Ok) {
             throw std::runtime_error("Failed to write variable name");
         }
