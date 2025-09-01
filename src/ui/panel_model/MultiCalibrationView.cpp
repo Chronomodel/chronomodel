@@ -77,6 +77,8 @@ MultiCalibrationView::MultiCalibrationView(QWidget* parent, Qt::WindowFlags flag
     QPalette palette_BW;
     palette_BW.setColor(QPalette::Base, Qt::white);
     palette_BW.setColor(QPalette::Text, Qt::black);
+    palette_BW.setColor(QPalette::Window, Qt::white);
+    palette_BW.setColor(QPalette::WindowText, Qt::black);
 
     mButtonWidth = int (1.7 * AppSettings::widthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
     mButtonHeigth = int (1.7 * AppSettings::heigthUnit() * AppSettings::mIconSize/ APP_SETTINGS_DEFAULT_ICON_SIZE);
@@ -267,7 +269,10 @@ void MultiCalibrationView::setProject()
 
     mStartEdit->setText(QLocale().toString(mTminDisplay));
     mEndEdit->setText(QLocale().toString(mTmaxDisplay));
-    mHPDEdit->setText(QLocale().toString(95));
+
+    mThreshold = 95.;
+    mHPDEdit->setText(QLocale().toString(mThreshold));
+
 
     mMajorScaleEdit->setText(QLocale().toString(mMajorScale));
     mMinorScaleEdit->setText(QLocale().toString(mMinorScale));
@@ -329,7 +334,7 @@ void MultiCalibrationView::applyAppSettings()
 
     mStartEdit->setText(QLocale().toString(mTminDisplay));
     mEndEdit->setText(QLocale().toString(mTmaxDisplay));
-    mHPDEdit->setText(QLocale().toString(95));
+    mHPDEdit->setText(QLocale().toString(mThreshold));
 
     mMajorScaleEdit->setText(QLocale().toString(mMajorScale));
     mMinorScaleEdit->setText(QLocale().toString(mMinorScale));
@@ -750,6 +755,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
     mSettings = StudyPeriodSettings::fromJson(state->value(STATE_SETTINGS).toObject());
 
     mHPDEdit->setText(QLocale().toString(thres));
+    mThreshold = thres;
 
     QColor brushColor = mCurveCustomColor;
     brushColor.setAlpha(170);
@@ -1327,7 +1333,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 {
     const QJsonObject* state = getState_ptr();
-
+    mThreshold = thres;
     mHPDEdit->setText(QLocale().toString(thres));
 
     QColor brushColor = mCurveCustomColor;
