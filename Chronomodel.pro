@@ -155,6 +155,7 @@ win32{
         QMAKESPEC = win32-g++ #win32-msvc  # for 32-bit and 64-bit
         RC_ICONS = $$PRO_PATH/icon/Chronomodel.ico
         QT_FATAL_WARNING = 1
+        QMAKE_CXXFLAGS+= -O2
 }
 
 #########################################
