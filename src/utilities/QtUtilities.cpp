@@ -733,6 +733,8 @@ std::map<double, double> getMapDataInRange(const std::map<double, double> &data,
     }
 }
 */
+
+/*
 std::map<double, double> getMapDataInRange(const std::map<double, double>& data, const double subMin, const double subMax) {
     if (data.empty()) {
         return {};
@@ -775,6 +777,49 @@ std::map<double, double> getMapDataInRange(const std::map<double, double>& data,
     if (subData.empty() && data.size() == 2) {
         subData.emplace(data.begin()->first, data.begin()->second);
         subData.emplace(data.rbegin()->first, data.rbegin()->second);
+    }
+
+    return subData;
+}*/
+std::map<double,double> getMapDataInRange(const std::map<double,double>& data, double subMin, double subMax) {
+    std::map<double,double> subData;
+    if (data.empty() || subMin > subMax) return subData;
+
+    auto itLow = data.lower_bound(subMin);   // premier >= subMin
+    auto itPrev = (itLow == data.begin()) ? data.end() : std::prev(itLow);
+
+    // point d'interpolation avant subMin si nécessaire
+    if (itLow == data.end()) {
+        // tous les éléments < subMin
+        return subData;
+    }
+    if (itLow->first > subMin && itPrev != data.end()) {
+        subData[subMin] = interpolate(subMin, itPrev->first, itLow->first, itPrev->second, itLow->second);
+    } else if (itLow->first == subMin) {
+        subData[itLow->first] = itLow->second;
+    }
+
+    // copier les éléments entre itLow (ou next si itLow==exact) et itHigh
+    for (auto it = itLow; it != data.end() && it->first <= subMax; ++it) {
+        subData[it->first] = it->second;
+    }
+
+    auto itAfter = data.upper_bound(subMax); // premier > subMax
+    if (itAfter != data.begin() && itAfter != data.end()) {
+        auto itBefore = std::prev(itAfter);
+        if (itAfter->first > subMax) {
+            subData[subMax] = interpolate(subMax, itBefore->first, itAfter->first, itBefore->second, itAfter->second);
+        }
+    } else if (itAfter == data.begin()) {
+        // tout > subMax -> rien (déjà géré plus haut)
+    } else if (itAfter == data.end()) {
+        // subMax >= dernier point : si dernier clé < subMax, on peut décider d'ignorer ou d'extrapoler
+    }
+
+    // cas spécial si data.size()==1
+    if (subData.empty() && data.size() == 1) {
+        auto p = *data.begin();
+        if (p.first >= subMin && p.first <= subMax) subData.emplace(p);
     }
 
     return subData;
