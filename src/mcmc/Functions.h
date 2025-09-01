@@ -253,7 +253,6 @@ std::pair<Matrix2D, DiagonalMatrixLD> decompositionCholeskyKK(const Matrix2D& ma
 std::pair<Matrix2D, DiagonalMatrixLD> cholesky_LDLt_MoreSorensen(const Matrix2D& A, t_matrix regularization = 0.0);
 std::pair<Matrix2D, DiagonalMatrixLD> banded_Cholesky_LDLt_MoreSorensen(const Matrix2D& A, int bandwidth, t_matrix regularization = 1e-10);
 
-
 std::pair<Matrix2D, Matrix2D > decompositionLU0(const Matrix2D& A);
 std::pair<Matrix2D, Matrix2D> Doolittle_LU(const Matrix2D A);
 std::pair<Matrix2D, DiagonalMatrixLD> LU_to_LD(const std::pair<Matrix2D, Matrix2D> LU);
@@ -261,23 +260,7 @@ std::pair<Matrix2D, DiagonalMatrixLD> LU_to_LD(const std::pair<Matrix2D, Matrix2
 std::pair<Matrix2D, Matrix2D > decompositionQR(const Matrix2D& A);
 std::pair<Matrix2D, Matrix2D> householderQR(Matrix2D& A);
 
-std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, DiagonalMatrixLD> &decomp, const std::vector<double>& vecQtY);
 std::vector<t_matrix> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, DiagonalMatrixLD> &decomp, const std::vector<t_matrix>& vecQtY);
-std::vector<long double> resolutionSystemeLineaireCholesky_long(const std::pair<Matrix2D, DiagonalMatrixLD>& decomp, const std::vector<double>& vecQtY);
-struct Strassen
-{ //https://www.sanfoundry.com/java-program-strassen-algorithm/
-
-    Matrix2D multiply (const Matrix2D& A, const Matrix2D& B);
-    Matrix2D sub(const Matrix2D& A, const Matrix2D& B);
-    Matrix2D add(const Matrix2D& A, const Matrix2D& B);
-/** Funtion to split parent matrix into child matrices **/
-
-    void split(const Matrix2D& P, Matrix2D& C, size_t iB, size_t jB) ;
-/** Funtion to join child matrices intp parent matrix **/
-
- void join(const Matrix2D &C, Matrix2D &P, size_t iB, size_t jB) ;
-
-};
 
 inline double rounddouble(const double f, const int prec)
 {
@@ -458,99 +441,5 @@ std::vector<long double> gaussian_filter(std::vector<long double>& curve_input, 
 
 std::vector<double> low_pass_filter(std::vector<double>& curve_input, const double Tc, const short padding_type = 0);
 
-/**
- * @brief Implémente l'algorithme P² (Jain & Chlamtac) pour l'estimation en ligne d'un quantile donné.
- * doi: 10.1145/4372.4378
- *
- * Cette classe suit dynamiquement la valeur estimée d’un quantile (ex: médiane) sans stocker toutes les données.
- * Elle fonctionne en mettant à jour cinq marqueurs (minimum, Q1 approx, quantile cible, Q3 approx, maximum)
- * à chaque nouvelle valeur observée.
- *
- * - Complexité mémoire : O(1)
- * - Complexité temps par insertion : O(1)
- * - Fonctionne sans tri complet
- *
- * @see MultiQuantileEstimator pour le suivi simultané de plusieurs quantiles.
- */
-class P2Estimator {
-public:
-    /**
-     * @param quantile Le quantile à estimer (entre 0 et 1, exclu).
-     */
-    explicit P2Estimator(double quantile)
-        : q(quantile), count(0) {
-        if (q <= 0.0 || q >= 1.0)
-            throw std::invalid_argument("Quantile must be in (0,1)");
-    }
-
-    /**
-     * @brief Ajoute une nouvelle valeur au flux de données.
-     *
-     * @param x La nouvelle valeur observée.
-     */
-    void add(double x);
-
-    /**
-     * @brief Récupère l’estimation actuelle du quantile.
-     *
-     * @return La valeur estimée du quantile.
-     */
-    double get() const;
-
-    /**
-     * @brief Récupère la valeur du quantile suivi.
-     *
-     * @return La valeur q du quantile (ex: 0.5 pour la médiane).
-     */
-    double get_quantile() const { return q; }
-
-private:
-    double parabolic(int i, int d) const;
-    double linear(int i, int d) const;
-
-    double q;
-    int count;
-    std::array<double, 5> buffer{};
-    std::array<double, 5> heights{};
-    std::array<int, 5> positions{0, 1, 2, 3, 4};
-    std::array<double, 5> desired{0, 0, 0, 0, 4};
-    const std::array<double, 5> increments{0.0, 0.5, 1.0, 0.5, 0.0};
-};
-
-/**
- * @brief Classe utilitaire pour estimer plusieurs quantiles simultanément à l’aide de P².
- *
- * Cette classe gère plusieurs instances de `P2Estimator` en parallèle,
- * permettant de suivre en temps réel plusieurs quantiles (par exemple : Q1, médiane, Q3).
- */
-class MultiQuantileEstimator {
-public:
-    /**
-     * @param quantiles Vecteur des quantiles à suivre (ex: {0.25, 0.5, 0.75}).
-     */
-    MultiQuantileEstimator(const std::vector<double>& quantiles);
-
-    /**
-     * @brief Ajoute une nouvelle valeur à tous les estimateurs.
-     *
-     * @param value Nouvelle valeur observée.
-     */
-    void add(double value);
-
-    /**
-     * @brief Affiche les estimations actuelles de tous les quantiles suivis.
-     */
-    void print_estimates() const;
-
-    /**
-     * @brief Récupère toutes les valeurs estimées.
-     *
-     * @return Vecteur contenant les estimations dans l’ordre d’origine des quantiles.
-     */
-    std::vector<double> get_estimates() const;
-
-private:
-    std::vector<P2Estimator> estimators;
-};
 
 #endif

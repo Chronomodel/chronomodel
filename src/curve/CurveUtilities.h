@@ -347,5 +347,73 @@ std::vector<int> get_order(const std::vector<t_reduceTime>& vec);
 
 std::pair<Matrix2D, DiagonalMatrixLD> decomp_matB (const SplineMatrices& matrices, const double lambdaSpline);
 
+#pragma mark usefull math function for MCMCLoopCurve
+
+t_prob h_YWI_AY(const SplineMatrices& matrices, const std::vector<std::shared_ptr<Event>> &events, const  double lambdaSpline, const std::vector< t_reduceTime> &vecH, const bool hasY = false, const bool hasZ = false);
+
+t_prob h_YWI_AY_composanteX(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_matB, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_QTQ, const double lambdaSpline);
+t_prob h_YWI_AY_composanteY(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_matB, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_QTQ, const double lambdaSpline);
+t_prob h_YWI_AY_composanteZ(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_matB, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_QTQ, const double lambdaSpline);
+
+t_prob h_YWI_AY_composanteZ_decomp(const SplineMatrices& matrices, const QList<Event *> &events, const double lambdaSpline, const std::vector< t_reduceTime> &vecH);
+
+t_prob ln_h_YWI_3_update(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_matB, const double lambdaSpline, const bool hasY, const bool hasZ);
+
+t_prob ln_h_YWI_3_X(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_matB, const double lambdaSpline);
+t_prob ln_h_YWI_3_Y(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_matB, const double lambdaSpline);
+t_prob ln_h_YWI_3_Z(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_matB, const double lambdaSpline);
+
+
+double S02_lambda_WI(const SplineMatrices &matrices, const int nb_noeuds);
+
+double rapport_detK_plus(const Matrix2D &Mat_old, const Matrix2D &Mat_new);
+
+bool hasPositiveGPrimeByDet (const MCMCSplineComposante &splineComposante);
+bool hasPositiveGPrimeByDerivate (const MCMCSplineComposante &splineComposante, const double k = 0.0);
+bool hasPositiveGPrimePlusConst (const MCMCSplineComposante &splineComposante, const double tmin, const double tmax, const double dy_threshold = 0.0);
+
+inline double log_p(const double x, const double n) {
+    return log(x) / log(n) ;
+}
+
+Matrix2D inverseMatSym_originKK(const Matrix2D& matrixLE,  const DiagonalMatrixLD& matrixDE, const int nbBandes, const int shift);
+
+
+t_prob detPlus(const std::pair<Matrix2D, DiagonalMatrixLD > &decomp);
+
+
+
+/**
+    * @brief Calculates the natural logarithm of the determinant of a matrix's diagonal elements
+    *
+    * @details This function computes:
+    * @f[
+    * \ln(\det^+) = \sum_{i=1}^{n-2} \ln(m_i)
+    * @f]
+    * where @f$m_i@f$ are the diagonal elements of the matrix (excluding first and last elements).
+    * The "+" in @f$\det^+@f$ indicates that we're using a modified determinant calculation
+    * that skips the first and last diagonal elements.
+    *
+    * @param decomp A pair containing:
+    *        - First: A 2D matrix (Matrix2D)
+    *        - Second: A diagonal matrix (MatrixDiag) whose logarithmic determinant we calculate
+    *
+    * @return t_prob The sum of the natural logarithms of the diagonal elements
+    *
+    * @note The function skips the first and last elements of the diagonal matrix
+    * @note Uses parallel reduction for large matrices (> 1000 elements)
+    */
+t_prob ln_detPlus(const std::pair<Matrix2D, DiagonalMatrixLD>& decomp);
+
+t_prob ln_h_YWI_1(const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_QTQ);
+
+t_prob ln_h_YWI_2(const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_matB);
+
+t_prob ln_h_YWI_1_2(const std::pair<Matrix2D, DiagonalMatrixLD>& decomp_QTQ, const std::pair<Matrix2D, DiagonalMatrixLD >& decomp_matB);
+
+inline double Signe_Number(const double &a)
+{
+    return std::copysign(1.0, a);
+}
 
 #endif

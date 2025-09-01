@@ -4686,3 +4686,369 @@ std::pair<Matrix2D, DiagonalMatrixLD> decomp_matB(const SplineMatrices& matrices
     return decompositionCholesky(matB, 5, 1);
 
 }
+
+#pragma mark usefull math function for MCMCLoopCurve
+
+/**
+ * Calcul de h_YWI_AY pour toutes les composantes de Y event (suivant la configuration univarié, spérique ou vectoriel)
+ */
+t_prob h_YWI_AY(const SplineMatrices& matrices, const std::vector<std::shared_ptr<Event>> &events, const double lambdaSpline, const std::vector< double>& vecH, const bool hasY, const bool hasZ)
+{
+    (void) hasZ;
+    const Matrix2D& matR = matrices.matR;
+
+    Matrix2D matB;
+
+    if (lambdaSpline != 0) {
+        // Decomposition_Cholesky de matB en matL et matD
+        // Si lambda global: calcul de Mat_B = R + lambda * Qt * W-1 * Q  et décomposition de Cholesky en Mat_L et Mat_D
+
+        const Matrix2D &tmp = multiConstParMat(matrices.matQTW_1Q, lambdaSpline, 5);
+        matB = addMatEtMat(matR, tmp, 5);
+
+    } else {
+        matB = matR;
+    }
+
+    const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_matB = decompositionCholesky(matB, 5, 1);
+    const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_QTQ = decompositionCholesky(matrices.matQTQ, 5, 1);
+
+    if (hasY) {
+        // decomp_matB, decompQTQ sont indépendantes de la composante
+        const t_prob hX = h_YWI_AY_composanteX(matrices, events, vecH, decomp_matB, decomp_QTQ, lambdaSpline);
+        const t_prob hY = h_YWI_AY_composanteY(matrices, events, vecH, decomp_matB, decomp_QTQ, lambdaSpline);
+
+        // To treat the 2D case, we use the 3D case by setting Yint = 100
+        /*  const bool hasZ = (mCurveSettings.mProcessType == CurveSettings::eProcessType2D ||
+                                           mCurveSettings.mProcessType == CurveSettings::eProcessTypeVector ||
+                                           mCurveSettings.mProcessType == CurveSettings::eProcessTypeSpherical ||
+                                           mCurveSettings.mProcessType == CurveSettings::eProcessType3D);
+
+                        if (hasZ) {*/ //Always true
+        const t_prob hZ = h_YWI_AY_composanteZ(matrices, events, vecH, decomp_matB, decomp_QTQ, lambdaSpline);
+        return hX * hY *hZ;
+
+    } else {
+        return h_YWI_AY_composanteX(matrices, events, vecH, decomp_matB, decomp_QTQ, lambdaSpline);
+
+    }
+
+}
+
+
+t_prob h_YWI_AY_composanteX(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_matB, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_QTQ, const double lambdaSpline)
+{
+    if (lambdaSpline == 0) {
+        return 1.;
+    }
+
+    const SplineResults &spline = doSplineX(matrices, events, vecH, decomp_matB, lambdaSpline);
+    const std::vector< double> &vecG = spline.vecG;
+    const DiagonalMatrixLD &matD = decomp_matB.second;
+
+    // -------------------------------------------
+    // Calcul de l'exposant
+    // -------------------------------------------
+
+    // Calcul de la forme quadratique YT W Y  et  YT WA Y
+
+    const int n = (int)events.size();
+    // Schoolbook algo
+    /*
+    t_prob h_exp = 0.;
+    int i = 0;
+    for (const auto& e : events) {
+        h_exp  +=  e->mW * e->mYx * (e->mYx - vecG.at(i++));
+    }
+    */
+    // C++ algo
+    const t_prob h_exp = std::transform_reduce(PAR events.cbegin(), events.cend(), vecG.cbegin(), 0., std::plus{}, [](std::shared_ptr<Event> e,  double g) { return e->mW * e->mYx * (e->mYx - g); });
+
+    // -------------------------------------------
+    // Calcul de la norme
+    // -------------------------------------------
+    // Inutile de calculer le determinant de QT*Q (respectivement ST*Q)
+    // (il suffit de passer par la décomposition Cholesky du produit matriciel QT*Q)
+    // ni de calculer le determinant(Mat_B) car il suffit d'utiliser Mat_D (respectivement Mat_U) déjà calculé
+    // inutile de refaire : Multi_Mat_par_Mat(Mat_QT,Mat_Q,Nb_noeuds,3,3,Mat_QtQ); -> déjà effectué dans calcul_mat_RQ
+
+    const DiagonalMatrixLD &matDq = decomp_QTQ.second;
+
+    // Schoolbook algo
+    /*
+    t_prob log_det_1_2 = 0.; // ne dépend pas de la composante X, Y ou Z
+    for (int i = 1; i < n-1; ++i) { // correspond à i=shift jusqu'à nb_noeuds-shift
+        log_det_1_2 += logl(matDq.at(i)/ matD.at(i));
+    }
+    */
+    // C++ algo
+    const t_prob log_det_1_2 = std::transform_reduce(PAR matDq.diagonal().cbegin()+1, matDq.diagonal().cend()-1, matD.diagonal().cbegin()+1, 0., std::plus{}, [](double val1,  double val2) { return logl(val1/val2); });
+
+#ifdef DEBUG
+#ifdef Q_OS_MAC
+    if (math_errhandling & MATH_ERRNO) {
+        if (errno==EDOM)
+            qDebug()<<"[MCMCLoopCurve::h_YWI_AY_composanteX] errno set to EDOM";
+    }
+    if (math_errhandling  &MATH_ERREXCEPT) {
+        if (fetestexcept(FE_INVALID))
+            qDebug()<<"[MCMCLoopCurve::h_YWI_AY_composanteX] -> FE_INVALID raised : Domain error: At least one of the arguments is a value for which the function is not defined.";
+    }
+#endif
+#endif
+    // calcul à un facteur (2*PI) puissance -(n-2) près
+    const t_prob res = 0.5 * ( (n -2.) * logl(lambdaSpline) + log_det_1_2 - h_exp) ;
+    return exp(res) ;
+}
+
+t_prob h_YWI_AY_composanteY(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_matB, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_QTQ, const double lambdaSpline)
+{
+    if (lambdaSpline == 0) {
+        return 1.;
+    }
+
+    const SplineResults &spline = doSplineY(matrices, events, vecH, decomp_matB, lambdaSpline);
+    const std::vector< double> &vecG = spline.vecG;
+    const DiagonalMatrixLD &matD = decomp_matB.second;//.matD;
+    // -------------------------------------------
+    // Calcul de l'exposant
+    // -------------------------------------------
+
+    // Calcul de la forme quadratique YT W Y  et  YT WA Y
+
+    const int n = (int)events.size();
+
+    // Schoolbook algo
+    /*
+    t_prob h_exp = 0.;
+    int i = 0;
+    for (const auto& e : events) {
+        h_exp  +=  e->mW * e->mYy * (e->mYy - vecG.at(i++));
+    }
+    */
+    // C++ algo
+    const t_prob h_exp = std::transform_reduce(PAR events.cbegin(), events.cend(), vecG.cbegin(), 0., std::plus{}, [](std::shared_ptr<Event> e,  double g) { return e->mW * e->mYy * (e->mYy - g); });
+
+    // -------------------------------------------
+    // Calcul de la norme
+    // -------------------------------------------
+    // Inutile de calculer le determinant de QT*Q (respectivement ST*Q)
+    // (il suffit de passer par la décomposition Cholesky du produit matriciel QT*Q)
+    // ni de calculer le determinant(Mat_B) car il suffit d'utiliser Mat_D (respectivement Mat_U) déjà calculé
+    // inutile de refaire : Multi_Mat_par_Mat(Mat_QT,Mat_Q,Nb_noeuds,3,3,Mat_QtQ); -> déjà effectué dans calcul_mat_RQ
+
+    const DiagonalMatrixLD& matDq = decomp_QTQ.second;
+    /*
+    t_prob log_det_1_2 = 0.;
+    for (int i = 1; i < n-1; ++i) { // correspond à i=shift jusqu'à nb_noeuds-shift
+        log_det_1_2 += logl(matDq.at(i)/ matD.at(i));
+    }
+    */
+    // C++ algo
+    const t_prob log_det_1_2 = std::transform_reduce(PAR matDq.diagonal().cbegin()+1, matDq.diagonal().cend()-1, matD.diagonal().cbegin()+1, 0., std::plus{}, [](double val1,  double val2) { return log(val1/val2); });
+
+#ifdef DEBUG
+
+#ifdef Q_OS_MAC
+    if (math_errhandling & MATH_ERRNO) {
+        if (errno==EDOM)
+            qDebug()<<"[MCMCLoopCurve::h_YWI_AY_composanteY] errno set to EDOM";
+    }
+    if (math_errhandling  &MATH_ERREXCEPT) {
+        if (fetestexcept(FE_INVALID))
+            qDebug()<<"[MCMCLoopCurve::h_YWI_AY_composanteY] -> FE_INVALID raised : Domain error: At least one of the arguments is a value for which the function is not defined.";
+    }
+#endif
+#endif
+    // calcul à un facteur (2*PI) puissance -(n-2) près
+    const t_prob res = 0.5 * ( (n - 2.) * logl(lambdaSpline) + log_det_1_2 - h_exp) ;
+    return exp(res);
+}
+
+t_prob h_YWI_AY_composanteZ(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime>& vecH, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_matB, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_QTQ, const double lambdaSpline)
+{
+    if (lambdaSpline == 0) {
+        return 1.;
+    }
+
+    const SplineResults &spline = doSplineZ(matrices, events, vecH, decomp_matB, lambdaSpline);
+    const std::vector< double> &vecG = spline.vecG;
+    const DiagonalMatrixLD &matD = decomp_matB.second;//.matD;
+    // -------------------------------------------
+    // Calcul de l'exposant
+    // -------------------------------------------
+
+    // Calcul de la forme quadratique YT W Y  et  YT WA Y
+
+    const int n = (int)events.size();
+
+    /* Naive code
+    t_prob h_exp = 0.;
+    int i = 0;
+    for (const auto& e : events) {
+        h_exp  +=  e->mW * e->mYz * (e->mYz - vecG.at(i++));
+    }
+    */
+    // C++ algo
+    const t_prob h_exp = std::transform_reduce(PAR events.cbegin(), events.cend(), vecG.cbegin(), 0., std::plus{}, [](std::shared_ptr<Event> e,  double g) { return e->mW * e->mYz * (e->mYz - g); });
+
+    // -------------------------------------------
+    // Calcul de la norme
+    // -------------------------------------------
+    // Inutile de calculer le determinant de QT*Q (respectivement ST*Q)
+    // (il suffit de passer par la décomposition Cholesky du produit matriciel QT*Q)
+    // ni de calculer le determinant(Mat_B) car il suffit d'utiliser Mat_D (respectivement Mat_U) déjà calculé
+    // inutile de refaire : Multi_Mat_par_Mat(Mat_QT,Mat_Q,Nb_noeuds,3,3,Mat_QtQ); -> déjà effectué dans calcul_mat_RQ
+
+    const DiagonalMatrixLD& matDq = decomp_QTQ.second;
+
+    /* Naive code
+    t_prob log_det_1_2 = 0.;
+    for (int i = 1; i < n-1; ++i) { // correspond à i=shift jusqu'à nb_noeuds-shift
+        log_det_1_2 += logl(matDq.at(i)/ matD.at(i));
+    }
+    */
+    // C++ algo
+    const t_prob log_det_1_2 = std::transform_reduce(PAR matDq.diagonal().cbegin()+1, matDq.diagonal().cend()-1, matD.diagonal().cbegin()+1, 0.0, std::plus{}, [](double val1,  double val2) { return logl(val1/val2); });
+
+#ifdef DEBUG
+#ifdef Q_OS_MAC
+    if (math_errhandling & MATH_ERRNO) {
+        if (errno==EDOM)
+            qDebug()<<"[MCMCLoopCurve::h_YWI_AY_composanteZ] errno set to EDOM";
+    }
+    if (math_errhandling  &MATH_ERREXCEPT) {
+        if (fetestexcept(FE_INVALID))
+            qDebug()<<"[MCMCLoopCurve::h_YWI_AY_composanteZ] -> FE_INVALID raised : Domain error: At least one of the arguments is a value for which the function is not defined.";
+    }
+#endif
+#endif
+    // calcul à un facteur (2*PI) puissance -(n-2) près
+    const t_prob res = 0.5 * ( (n -2.) * logl(lambdaSpline) + log_det_1_2 - h_exp) ;
+    return exp(res);
+}
+
+# pragma mark optimization
+
+
+
+t_prob ln_h_YWI_3_update(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_matB, const double lambdaSpline, const bool hasY, const bool hasZ)
+{
+    Q_ASSERT_X(lambdaSpline!=0, "[ln_h_YWI_3_update]", "lambdaSpline = 0");
+    const t_prob try_ln_h_YWI_3_X = ln_h_YWI_3_X(matrices, events, vecH, decomp_matB, lambdaSpline);
+
+    const t_prob try_ln_h_YWI_3_Y = hasY ? ln_h_YWI_3_Y(matrices, events, vecH, decomp_matB, lambdaSpline) : 0.;
+
+    const t_prob try_ln_h_YWI_3_Z = hasZ ? ln_h_YWI_3_Z( matrices, events, vecH, decomp_matB, lambdaSpline) : 0.;
+
+    return try_ln_h_YWI_3_X + try_ln_h_YWI_3_Y + try_ln_h_YWI_3_Z;
+
+}
+
+t_prob ln_h_YWI_3_X(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_matB, const double lambdaSpline)
+{
+    const SplineResults& spline = doSplineX(matrices, events, vecH, decomp_matB, lambdaSpline);
+
+    const std::vector<double>& vecG = spline.vecG; //On peut utiliser do_vec_G
+
+    // Calcul de la forme quadratique YT W Y  et  YT WA Y
+
+    return -std::transform_reduce(PAR events.cbegin(), events.cend(), vecG.cbegin(), 0., std::plus{}, [](std::shared_ptr<Event> e,  double g) { return e->mW * e->mYx * (e->mYx - g); });
+
+}
+
+t_prob ln_h_YWI_3_Y(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_matB, const double lambdaSpline)
+{
+    const SplineResults &spline = doSplineY(matrices, events, vecH, decomp_matB, lambdaSpline);
+    const std::vector<double> &vecG = spline.vecG;
+    // Calcul de la forme quadratique YT W Y  et  YT WA Y
+
+    return -std::transform_reduce(PAR events.cbegin(), events.cend(), vecG.cbegin(), 0., std::plus{}, [](std::shared_ptr<Event> e,  double g) { return e->mW * e->mYy * (e->mYy - g); });
+}
+
+t_prob ln_h_YWI_3_Z(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events,  const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_matB, const double lambdaSpline)
+{
+    const SplineResults &spline = doSplineZ(matrices, events, vecH, decomp_matB, lambdaSpline);
+    const std::vector<double> &vecG = spline.vecG;
+
+    // Calcul de la forme quadratique YT W Y  et  YT WA Y
+
+    return -std::transform_reduce(PAR events.cbegin(), events.cend(), vecG.cbegin(), 0., std::plus{}, [](std::shared_ptr<Event> e,  double g) { return e->mW * e->mYz * (e->mYz - g); });
+}
+
+
+t_prob detPlus(const std::pair<Matrix2D, DiagonalMatrixLD > &decomp)
+{
+    return std::accumulate(decomp.second.diagonal().cbegin(), decomp.second.diagonal().cend(), 0., [](double prod, const double m){return prod + m;});
+}
+
+
+
+/**
+* @brief Calculates the natural logarithm of the determinant of a matrix's diagonal elements
+*
+* @details This function computes:
+* @f[
+* \ln(\det^+) = \sum_{i=1}^{n-2} \ln(m_i)
+* @f]
+* where @f$m_i@f$ are the diagonal elements of the matrix (excluding first and last elements).
+* The "+" in @f$\det^+@f$ indicates that we're using a modified determinant calculation
+* that skips the first and last diagonal elements.
+*
+* @param decomp A pair containing:
+*        - First: A 2D matrix (Matrix2D)
+*        - Second: A diagonal matrix (MatrixDiag) whose logarithmic determinant we calculate
+*
+* @return t_prob The sum of the natural logarithms of the diagonal elements
+*
+* @note The function skips the first and last elements of the diagonal matrix
+* @note Uses parallel reduction for large matrices (> 1000 elements)
+*/
+t_prob ln_detPlus(const std::pair<Matrix2D, DiagonalMatrixLD>& decomp)
+{
+    const auto& diag = decomp.second.diagonal();
+    const size_t size = diag.rows();
+
+    // Handle edge cases , yet tested before
+    // if (size <= 2) return 0.0;
+
+    t_prob sum = 0.0;
+    // Pour les petites matrices, utiliser la version séquentielle
+    if (size < 1000) {
+        for (size_t i = 1; i < size - 1; ++i) {
+            sum += std::log(diag[i]);
+        }
+        return sum;
+    }
+
+    // Pour les grandes matrices, utiliser la parallélisation
+#pragma omp parallel reduction(+:sum)
+    {
+#pragma omp for nowait
+        for (size_t i = 1; i < size - 1; ++i) {
+            sum += std::log(diag[i]);
+        }
+    }
+
+    return sum;
+}
+
+t_prob ln_h_YWI_1(const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_QTQ)
+{
+    return ln_detPlus(decomp_QTQ);
+}
+
+t_prob ln_h_YWI_2(const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_matB)
+{
+    return -ln_detPlus(decomp_matB);
+}
+
+t_prob ln_h_YWI_1_2(const std::pair<Matrix2D, DiagonalMatrixLD>& decomp_QTQ, const std::pair<Matrix2D, DiagonalMatrixLD >& decomp_matB)
+{
+    const auto& diagDq = decomp_QTQ.second.diagonal();  // Eigen::Matrix<t_matrix, Dynamic, 1>
+    const auto& diagD  = decomp_matB.second.diagonal();   // même type
+
+    return std::transform_reduce(PAR diagDq.cbegin()+1, diagDq.cend()-1, diagD.cbegin()+1, 0., std::plus{}, [](double val1,  double val2) { return std::log(val1) - std::log(val2); });
+
+}
+

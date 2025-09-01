@@ -2624,7 +2624,7 @@ void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, const MCM
     std::vector<double>::iterator itVecGP = postGCompo.vecGP.begin();
     std::vector<double>::iterator itVecGS = postGCompo.vecGS.begin();
 
-    std::vector<double>::iterator itVecVarG = postGCompo.vecVarG.begin(); // pour test
+    //std::vector<double>::iterator itVecVarG = postGCompo.vecVarG.begin(); // pour test
     // Variables temporaires
     // erreur inter spline
     // tableau intermediare pour stocker le calcul de la variance, car il n'est pas possible de retrouver la valeur lors de n-1.
