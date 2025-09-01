@@ -2652,7 +2652,7 @@ QString MCMCLoopCurve::initialize_335()
                     // try_spline = samplingSpline_multi_depth(mModel->mEvents, R, R_1QT, Q); // utilise mModel->mLambdaSpline.mX
                     try_spline = samplingSpline_multi2(mModel->mEvents, R, R_1QT, Q); // utilise mModel->mLambdaSpline.mX
 
-                    depth_OK = hasPositiveGPrimePlusConst(try_spline.splineX, mCurveSettings.mThreshold);
+                    depth_OK = hasPositiveGPrimePlusConst(try_spline.splineX, mModel->mSettings.mTmin, mModel->mSettings.mTmax, mCurveSettings.mThreshold);
 
                 }
 
@@ -3617,30 +3617,14 @@ bool MCMCLoopCurve::update_335()
         // --------------------------------------------------------------
 
         //-------- Simulation gaussienne multivariées des splines f
-        // G.1- Calcul spline
+        // F.1- Calcul spline
 
-       /* if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
-            current_vecH = calculVecH(mModel->mEvents); // normalement n'a pas changé depuis la mise à jour des theta
-
-            R = calculMatR(current_vecH); // dim n * n
-            //R_1 = inverse_padded_matrix(R);
-
-            Q = calculMatQ(current_vecH); // dim n * n-2
-
-            //QT = Q.transpose();
-            SparseQuadraticFormSolver solver(1); // shift selon votre padding
-            solver.factorize(R); // Factorisation une seule fois
-            // R_1QT = R_1 * QT;
-            R_1QT = solver.compute_Rinv_QT(Q);
-
-
-         }*/
         // Toutes les matrices doivent être à jours, aprés le passage dans update theta, et update VG met à jour event->mW
         mModel->mSpline = samplingSpline_multi2(mModel->mEvents, current_R, current_R_1QT, current_Q); // utilise mModel->mLambdaSpline.mX et ev->mW et mets à jour lEvents[i]-> mGx = fx[i];
 
         // F.2 - test GPrime positive
         if (mCurveSettings.mProcessType == CurveSettings::eProcess_Depth) {
-            return hasPositiveGPrimePlusConst(mModel->mSpline.splineX, mCurveSettings.mThreshold); // si dy >mCurveSettings.mThreshold => pas de memo de la courbe
+            return hasPositiveGPrimePlusConst(mModel->mSpline.splineX, mModel->mSettings.mTmin, mModel->mSettings.mTmax, mCurveSettings.mThreshold); // si dy >mCurveSettings.mThreshold => pas de memo de la courbe
 
         } else {
             return true;
