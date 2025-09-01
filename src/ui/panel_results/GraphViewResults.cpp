@@ -108,14 +108,16 @@ GraphViewResults::GraphViewResults(QWidget* parent):
     mStatArea->setText(mStatHTMLText);
     //mStatArea->setParent(this);
 
-   /* mStatArea->setFrameStyle(QFrame::HLine);
-    QPalette palette = mStatArea->palette();
-    palette.setColor(QPalette::Base, Qt::white);
-    palette.setColor(QPalette::Text, Qt::black);
-    mStatArea->setPalette(palette);
+   /* mStatArea->setFrameStyle(QFrame::HLine);*/
+    QPalette palette_BW = mStatArea->palette();
+    palette_BW.setColor(QPalette::Base, Qt::white);
+    palette_BW.setColor(QPalette::Text, Qt::black);
+    palette_BW.setColor(QPalette::Window, Qt::white);
+    palette_BW.setColor(QPalette::WindowText, Qt::black);
+    mStatArea->setPalette(palette_BW);
 
-    mStatArea->setFontFamily(mGraphFont.family());
-    mStatArea->setFontPointSize(mGraphFont.pointSizeF());*/
+    //mStatArea->setFontFamily(mGraphFont.family());
+    //mStatArea->setFontPointSize(mGraphFont.pointSizeF());*/
 
 
 

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -153,14 +153,7 @@ DateItem::~DateItem()
 {
     mEventsScene = nullptr;
     mCalibThumb = QPixmap();
-  //  mDate.~QJsonObject(); // Don't delete the JSON, we need it when we delete an event.
-  
-   /* delete mDatesAnim;
-    mDatesAnim = nullptr;
-    delete mDatesAnimTimer;
-    mDatesAnimTimer = nullptr;*/
 
-    
 }
 
 const QJsonObject& DateItem::date() const
