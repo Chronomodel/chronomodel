@@ -48,13 +48,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <valarray>
 #include <iostream>
 #include <stdexcept>
-
-#include <QDataStream>
-#include <QtDebug>
+#include <utility>
 
 #include <eigen_3.4.0/Eigen/Dense>
 #include <eigen_3.4.0/Eigen/src/Core/DiagonalMatrix.h>
 #include <eigen_3.4.0/Eigen/Sparse>
+
+#include <QDataStream>
+#include <QtDebug>
+
 
 /**
  * @class CurveMap
@@ -64,11 +66,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
  * indexées selon `data[column * _row + row]`. L'accès se fait via `operator()` ou `at()`.
  */
 
-#include <utility>
-#include <QDebug>
+
+
 
 using t_reduceTime = double;
 using t_matrix = long double;
+
+using t_prob = double;
 
 using namespace Eigen;
 using  Matrix2D = Matrix<t_matrix, Dynamic, Dynamic>;
