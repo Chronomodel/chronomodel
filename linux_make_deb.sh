@@ -15,7 +15,7 @@ SOURCES_PATH=~/chronomodel/chronomodel
 
 cd $SOURCES_PATH
 DATE_FILE=$(date '+%Y%m%d')
-VERSION=3.2.9
+VERSION=3.3.5
 PACKAGE_NAME=chronomodel_v${VERSION}_Qt6.4.2_amd64_deb12_${DATE_FILE}
 
 DEPLOY_PATH=$SOURCES_PATH/deploy/linux
@@ -109,10 +109,11 @@ lintian $WORKING_PATH/../$PACKAGE_NAME.deb
 
 #ar -rc CM327.deb debian-binary control.tar.xz data.tar.xz
 
-# Pour installer en ligne de commande
-# dpkg --install $PACKAGE_NAME.deb
-# sudo dpkg --install chronomodel_3.2.8_amd64.deb
-
+echo Pour installer en ligne de commande
+echo sudo dpkg --install $PACKAGE_NAME.deb
+echo
+echo Pour desinstaller
+echo dpkg --remove chronomodel
 # Pour forcer les dépendances "-y"
 # sudo dpkg -i --force-depends chronomodel_3.2.8_amd64.deb
 

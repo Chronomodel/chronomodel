@@ -93,20 +93,19 @@ QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas -Wno-unused-parameter # invalid o
 CONFIG += c++2a
 QMAKE_CXXFLAGS += -std=c++2a
 
-contains(CONFIG, release) {
-message("using Optimization O2")
-
-QMAKE_CXXFLAGS+= -O2
-QMAKE_CFLAGS+= -O2
-}
-
-contains(CONFIG, debug) {
+CONFIG(debug, debug|release) {
 message("using No Optimization O0")
 QMAKE_CXXFLAGS-= -O2
 QMAKE_CFLAGS-= -O2
 # niveau pour debug
 QMAKE_CXXFLAGS+= -O0
 QMAKE_CFLAGS+= -O0
+
+} else {
+message("using Optimization O2")
+
+QMAKE_CXXFLAGS+= -O3
+QMAKE_CFLAGS+= -O3
 }
 #########################################
 # Active OpenMP (compatible GCC/Clang/MSVC)
