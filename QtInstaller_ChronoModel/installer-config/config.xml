@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Installer>
 	<Name>ChronoModel</Name>
-    <Version>3.2.7</Version>
+    <Version>3.3.0</Version>
 	<Title>ChronoModel</Title>
 	<Publisher>ChronoModel Team</Publisher>
 	<ProductUrl>https://chronomodel.com</ProductUrl>
