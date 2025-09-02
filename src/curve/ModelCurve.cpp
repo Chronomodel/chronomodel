@@ -638,7 +638,8 @@ void ModelCurve::generatePosteriorDensities(const std::vector<ChainSpecs> &chain
     Model::generatePosteriorDensities(chains, fftLen, bandwidth);
     if (is_curve) {
         for (std::shared_ptr<Event> &event : mEvents) {
-            event->mVg.generateHistos(chains, fftLen, bandwidth);
+            if (event->mVg.mSamplerProposal != MHVariable::eFixe)
+                event->mVg.generateHistos(chains, fftLen, bandwidth);
         }
 
         mLambdaSpline.generateHistos(chains, fftLen, bandwidth);
