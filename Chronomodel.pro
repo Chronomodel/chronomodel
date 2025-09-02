@@ -93,6 +93,21 @@ QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas -Wno-unused-parameter # invalid o
 CONFIG += c++2a
 QMAKE_CXXFLAGS += -std=c++2a
 
+contains(CONFIG, release) {
+message("using Optimization O2")
+
+QMAKE_CXXFLAGS+= -O2
+QMAKE_CFLAGS+= -O2
+}
+
+contains(CONFIG, debug) {
+message("using No Optimization O0")
+QMAKE_CXXFLAGS-= -O2
+QMAKE_CFLAGS-= -O2
+# niveau pour debug
+QMAKE_CXXFLAGS+= -O0
+QMAKE_CFLAGS+= -O0
+}
 #########################################
 # Active OpenMP (compatible GCC/Clang/MSVC)
 !msvc:contains(QMAKE_CXX, clang++) {
@@ -155,7 +170,7 @@ win32{
         QMAKESPEC = win32-g++ #win32-msvc  # for 32-bit and 64-bit
         RC_ICONS = $$PRO_PATH/icon/Chronomodel.ico
         QT_FATAL_WARNING = 1
-        QMAKE_CXXFLAGS+= -O2
+        # QMAKE_CXXFLAGS+= -O2
 }
 
 #########################################

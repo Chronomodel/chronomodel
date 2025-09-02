@@ -1482,7 +1482,9 @@ SplineResults doSplineZ(const SplineMatrices &matrices, const std::vector<std::s
  Bande : nombre de diagonales non nulles
  used only with MCMCLoopCurve::calcul_spline_variance()
 */
-DiagonalMatrixLD diagonal_influence_matrix(const SplineMatrices& matrices, const int nbBandes, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp, const double lambda)
+
+// plus lent à cause de la fonction matQ.coeff(0, 1)
+DiagonalMatrixLD diagonal_influence_matrix_old(const SplineMatrices& matrices, const int nbBandes, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp, const double lambda)
 {
 
     const size_t n = matrices.diagWInv.rows();
@@ -1536,6 +1538,117 @@ DiagonalMatrixLD diagonal_influence_matrix(const SplineMatrices& matrices, const
     return matA;
 }
 
+DiagonalMatrixLD diagonal_influence_matrix(const SplineMatrices& matrices,
+                                           const int nbBandes,
+                                           const std::pair<Matrix2D, DiagonalMatrixLD> &decomp,
+                                           const double lambda)
+{
+    const Index n = matrices.diagWInv.rows();
+
+    const Matrix2D &matB_1 = inverseMatSym_origin(decomp, nbBandes + 4, 1);
+
+    DiagonalMatrixLD matQB_1QT(n);
+
+    // --- Extraire les trois diagonales de matQ (tridiagonale) dans des vecteurs contigus ---
+    std::vector<t_matrix> q_diag(n, 0.0L);
+    std::vector<t_matrix> q_sup(n > 1 ? n-1 : 0, 0.0L); // (i,i+1)
+    std::vector<t_matrix> q_sub(n > 1 ? n-1 : 0, 0.0L); // (i,i-1)
+
+    // Parcours efficace de la sparse matrix pour remplir diag/sup/sub
+    for (Index k = 0; k < matrices.matQ.outerSize(); ++k) {
+        for (typename SparseMatrix<t_matrix>::InnerIterator it(matrices.matQ, k); it; ++it) {
+            const Index i = it.row();
+            const Index j = it.col();
+            const t_matrix v = it.value();
+            if (i == j) {
+                q_diag[i] = v;
+
+            } else if (j == i+1) {
+                q_sup[i] = v;      // element (i,i+1) stored at index i
+
+            } else if (j+1 == i) {
+                q_sub[j] = v;      // element (i,i-1) => sub at index i-1 stored at j
+            }
+            // On suppose tridiagonale : autres éléments ignorés
+        }
+    }
+
+    // --- Extraire diagonales / bandes nécessaires de matB_1 (dense) ---
+    std::vector<t_matrix> B_diag(n, 0.0L);
+    std::vector<t_matrix> B_sup(n > 1 ? n-1 : 0, 0.0L);    // B(i,i+1)
+    std::vector<t_matrix> B_i1i1(n > 1 ? n-1 : 0, 0.0L);   // B(i-1,i-1) stocké à i-1 (utilisé pour lecture claire)
+    std::vector<t_matrix> B_i2(n > 2 ? n-2 : 0, 0.0L);     // B(i-1,i+1) stored at i-1 when needed
+
+    for (Index i = 0; i < n; ++i) {
+        B_diag[i] = matB_1(i, i);
+        if (i + 1 < n) {
+            B_sup[i] = matB_1(i, i+1);
+            B_i1i1[i] = matB_1(i, i); // same as B_diag but keep for clarity
+        }
+        if (i + 2 < n) {
+            // B(i, i+2) corresponds to matB_1(i, i+2) used when accessing B(i-1,i+1)
+            B_i2[i] = matB_1(i, i+2);
+        }
+    }
+    // Note: For B(i-1,i+1) we'll read B_i2[i-1] (i>=1 && i+1 < n => i-1 <= n-3 => valid)
+
+    // --- Calcul du diag matQB_1QT sans appels répétés à coeff() ---
+    // premier élément i = 0
+    if (n > 0) {
+        t_matrix term0 = q_diag[0]*q_diag[0]*B_diag[0];
+        if (n > 1) {
+            term0 += q_sup[0]*q_sup[0]*B_diag[1];
+            term0 += 2.0L * q_diag[0] * q_sup[0] * B_sup[0];
+        }
+        matQB_1QT.diagonal()[0] = term0; // utilisation Eigen API pour écrire le diag
+    }
+
+    // éléments intermédiaires 1 .. n-2
+    for (Index i = 1; i + 1 < n; ++i) {
+        // indices auxiliaires
+        const Index im1 = i - 1;
+        const Index ip1 = i + 1;
+
+        t_matrix a = q_sub[im1] * q_sub[im1] * B_diag[im1];   // q(i,i-1)^2 * B(i-1,i-1)
+        a += q_diag[i]*q_diag[i] * B_diag[i];               // q(i,i)^2 * B(i,i)
+        a += q_sup[i]*q_sup[i] * B_diag[ip1];               // q(i,i+1)^2 * B(i+1,i+1)
+
+        a += 2.0L * q_sub[im1] * q_diag[i] * B_sup[im1];    // 2*q(i,i-1)*q(i,i)*B(i-1,i)
+        // B(i-1,i+1) correspond à matB_1(i-1, i+1) -> stocké en B_i2[i-1]
+        if (im1 < static_cast<Index>( B_i2.size())) {
+            a += 2.0L * q_sub[im1] * q_sup[i] * B_i2[im1];
+        }
+        a += 2.0L * q_diag[i] * q_sup[i] * B_sup[i];        // 2*q(i,i)*q(i,i+1)*B(i,i+1)
+
+        matQB_1QT.diagonal()[i] = a;
+    }
+
+    // dernier élément i = n-1
+    if (n > 1) {
+        size_t i = n - 1;
+        t_matrix termN = q_sub[i-1]*q_sub[i-1]*B_diag[i-1];
+        termN += q_diag[i]*q_diag[i]*B_diag[i];
+        termN += 2.0L * q_sub[i-1] * q_diag[i] * B_sup[i-1];
+        matQB_1QT.diagonal()[i] = termN;
+    }
+
+    // --- Calcul matA diagonal avec clamp ---
+    DiagonalMatrixLD matA(n);
+    const t_matrix lambdaL = static_cast<t_matrix>(lambda);
+
+    for (Index i = 0; i < n; ++i) {
+        const t_matrix winv = matrices.diagWInv.diagonal()[i];
+        const t_matrix qb = matQB_1QT.diagonal()[i];
+        t_matrix mat_a = 1.0L - lambdaL * winv * qb;
+
+        if (mat_a < (t_matrix)0) mat_a = 0.0L;
+        else if (mat_a > 1.0) mat_a = 1.0L;
+
+        matA.diagonal()[i] = mat_a;
+    }
+
+    return matA;
+}
 
 std::vector<double> calcul_spline_variance(const SplineMatrices& matrices, const std::vector<std::shared_ptr<Event>> &events, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp, const double lambdaSpline)
 {
