@@ -5,7 +5,7 @@ PROJECT
 ChronoModel Project
 "https://www.chronomodel.com"
 version 3.3.0
-2025-03-05
+2025-09-02
 
 ————————————————————————————————————————————————————————————————————————
 CREDITS
