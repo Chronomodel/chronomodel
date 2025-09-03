@@ -679,11 +679,14 @@ void ModelCurve::generateNumericalResults(const std::vector<ChainSpecs> &chains)
 
     if (is_curve) {
         for (std::shared_ptr<Event>& event : mEvents) {
-            event->mVg.generateNumericalResults(chains);
+            if (event->mVg.mSamplerProposal != MHVariable::eFixe)
+                event->mVg.generateNumericalResults(chains);
         }
-        mLambdaSpline.generateNumericalResults(chains);
+        if (mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
+            mLambdaSpline.generateNumericalResults(chains);
 
-        mS02Vg.generateNumericalResults(chains);
+        if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
+            mS02Vg.generateNumericalResults(chains);
     }
 }
 

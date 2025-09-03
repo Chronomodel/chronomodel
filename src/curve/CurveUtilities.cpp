@@ -41,6 +41,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Model.h"
 #include "StdUtilities.h"
 #include "eigen_3.4.0/Eigen/src/Core/DiagonalMatrix.h"
+
+#ifdef DEBUG
+#ifdef Q_OS_MAC
+   #include <cfenv>
+#endif
+#endif
+
 #include <eigen_3.4.0/Eigen/Dense>
 #include <eigen_3.4.0/Eigen/OrderingMethods>
 
