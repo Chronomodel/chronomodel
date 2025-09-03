@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+    <Name>Curves</Name>
+    <Version>3.2.8</Version>
+    <Title>Curves_Installer</Title>
+    <Publisher>ChronoModel Team</Publisher>
+    <ProductUrl>https://chronomodel.com</ProductUrl>
+    
+    <InstallerWindowIcon>Install_Chronomodel.png</InstallerWindowIcon>
+    <InstallerApplicationIcon>Chronomodel</InstallerApplicationIcon>
+    
+    <MaintenanceToolAlias>Curves_UnInstaller</MaintenanceToolAlias> 
+    
+    <TargetDir>~/Library/Application Support/CNRS_test2/ChronoModel</TargetDir>
+    
+    <Logo>Chronomodel</Logo>
+    <MaintenanceToolName>Curves_uninstaller</MaintenanceToolName>
+    <WizardStyle>Mac</WizardStyle>
+    <Background>Chronomodel.icns</Background>
+    
+    <StartMenuDir>ChronoModel</StartMenuDir> <!-- Only available on Windows. -->
+    <InstallerApplicationIcon>installericon</InstallerApplicationIcon>
+    
+    <!-- Operations for Windows 
+    <Component>
+        <Name>MyComponent</Name>
+        <Description>My Component Description</Description>
+        <Version>1.0</Version>
+        <Default>true</Default>
+        <Script>installscript.qs</Script>
+    </Component>
+    
+    <Actions>
+        <Action>
+            <CreateShortcut>
+                <Target>@TargetDir@/Chronomodel.exe</Target>
+                <Shortcut>@StartMenuDir@/Chronomodel.lnk</Shortcut>
+            </CreateShortcut>
+        </Action>
+    </Actions>
+    -->
+</Installer>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+	<Name>Curves</Name>
+    <Version>3.2.8</Version>
+    <Title>Curves_Installer</Title>
+	<Publisher>ChronoModel Team</Publisher>
+	<ProductUrl>https://chronomodel.com</ProductUrl>
+	
+	<InstallerWindowIcon>Install_Chronomodel.png</InstallerWindowIcon>
+	<InstallerApplicationIcon>Chronomodel</InstallerApplicationIcon>
+	
+	<!--MaintenanceToolAlias>Curves_UnInstaller</MaintenanceToolAlias--> 
+		
+	<TargetDir>~/Library/Application Support/CNRS_test2/ChronoModel</TargetDir>
+
+	<Logo>Chronomodel</Logo>
+	<WizardStyle>Mac</WizardStyle>
+	<!--> only used by MacStyle<-->
+    <Background>Chronomodel.icns</Background>
+ 
+   <Components>
+    <Component id="compID_dirA" >
+      <DirectoryRef Id="~/Library/Application Support/CNRS_test2/ChronoModel" />
+      <File Source="/Users/dufresne/ChronoModel-SoftWare/chronomodel/deploy/Calib/*.*" TargetPath="~/Library/Application Support/CNRS_test2/ChronoModel" />
+    </Component>
+    
+  </Components>
+  
+  <!-- Define Directory References -->
+  <DirectoryRef Id="~/Library/Application Support/CNRS_test2/ChronoModel" Name="dirA" Root="/Users/dufresne/ChronoModel-SoftWare/chronomodel/deploy/Calib" />
+ 
+ 
+</Installer>
+ 
+
+</Installer>

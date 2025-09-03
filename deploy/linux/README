@@ -12,14 +12,27 @@ CREDITS
 ————————————————————————————————————————————————————————————————————————
 Copyright ©2025 CNRS
 
-used under the terms:
+Main Software License:
 CeCILL-V2.1 Free Software License Agreement
 "https://cecill.info/licences/Licence_CeCILL_V2.1-en.html"
+(Fully compatible with GPL and compatible with MPL 2.0)
 
-This software use C subroutine library from the FFTW project
- http://www.fftw.org/
- distributed under the terms of the GNU General Public License
- https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+Third-Party Libraries:
+
+    FFTW Library
+    http://www.fftw.org/
+    Distributed under the terms of the:
+        Gnu General Public License (GPL) v2 "https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html"
+
+    Eigen Library
+    https://eigen.tuxfamily.org/
+    Distributed under the:
+        Mozilla Public License 2.0 (MPL2) "https://www.mozilla.org/en-US/MPL/2.0/"
+
+License Compatibility Notice:
+This software combines multiple open-source libraries with compatible licensing terms.
+Each library retains its original license, and users must comply with the respective
+license conditions when using or distributing this software.
 
 ————————————————————————————————————————————————————————————————————————
 AUTHORS

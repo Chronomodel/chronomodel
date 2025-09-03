@@ -56,3 +56,10 @@ Chronomodel_bash.pro.user
 QtInstaller_ChronoModel/installer-packages-macOs/chronomodel_QtIFW.composant1/data
 QtInstaller_ChronoModel/installer-packages-macOs/chronomodel_QtIFW.composant2/data
 
+/modifyextract
+*.1_macOS12_20250828_Installer
+/QtInstaller_ChronoModel/ChronoModel_v3.3.0_Qt6.9.1_macOS12_20250828_Installer.app
+/QtInstaller_ChronoModel/ChronoModel_v3.3.5_Qt6.9.1_macOS12_20250828_Installer.app
+QtInstaller_ChronoModel/QtIFW_script_macOS_old.sh
+/QtInstaller_InstallCurves/ChronoModel_v3.2.8_Curves_Installer_Qt6.7.2_macOS_20240920.app
+/QtInstaller_InstallCurves/installer-packages/curves.composant1/data

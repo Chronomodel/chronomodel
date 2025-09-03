@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+	<Name>Curves</Name>
+        <Version>3.2.8</Version>
+        <Title>Curves_Installer</Title>
+	<Publisher>ChronoModel Team</Publisher>
+	<ProductUrl>https://chronomodel.com</ProductUrl>
+	
+	<InstallerWindowIcon>Install_Chronomodel.png</InstallerWindowIcon>
+	<InstallerApplicationIcon>Chronomodel</InstallerApplicationIcon>
+	
+	<MaintenanceToolAlias>Curves_UnInstaller</MaintenanceToolAlias> 
+	
+	<!--@TargetDir@/-->
+	if (installer.value("os") == "mac") {
+        	<TargetDir>~/Library/Application Support/CNRS_test2/ChronoModel</TargetDir>
+    } 
+	
+	
+	
+	</ELSEIF>
+	
+	
+        
+        <!--InstallerApplicationIcon>installericon</InstallerApplicationIcon-->
+         <Logo>Chronomodel</Logo>
+         
+        <MaintenanceToolName>Curves_uninstaller</MaintenanceToolName>
+		<WizardStyle>Mac</WizardStyle>
+		<!--> only used by MacStyle<-->
+        <Background>Chronomodel.icns</Background>
+        
+        if (installer.value("os") == "win") {
+        <!--InstallerWindowIcon> </InstallerWindowIcon-->
+        	<StartMenuDir>ChronoModel</StartMenuDir> <!--Only available on Windows.-->
+            component.addOperation("CreateShortcut", "@TargetDir@/Chronomodel.exe", "@StartMenuDir@/Chronomodel.lnk");
+        }
+</Installer>
