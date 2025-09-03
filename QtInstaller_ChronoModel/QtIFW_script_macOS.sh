@@ -10,7 +10,7 @@
 
 clear
 
-VERSION=3.3.5
+VERSION=3.3.0
 QT_BIN_PATH=/Users/dufresne/Qt/Tools/QtInstallerFramework/4.10/bin
 
 # _________________________
@@ -34,12 +34,12 @@ BUNDLE="$RELEASE_PATH"chronomodel.app
 cp -R $BUNDLE installer-packages-macOS/chronomodel_QtIFW.composant1/data
 
 # _________________________
-echo "➡️  2 - Copy the ChronoModel_bash BUNDLE "
+#echo "➡️  2 - Copy the ChronoModel_bash BUNDLE "
 
-BASH_RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_9_1_for_macOS-Release/build/release/
-BASH_BUNDLE="$BASH_RELEASE_PATH"chronomodel_bash.app
+#BASH_RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_9_1_for_macOS-Release/build/release/
+#BASH_BUNDLE="$BASH_RELEASE_PATH"chronomodel_bash.app
 #/Users/dufresne/ChronoModel-SoftWare/chronomodel/QtIFW_src/installer-packages/chronomodel_QtIFW.composant2/data
-cp -R $BASH_BUNDLE installer-packages-macOS/chronomodel_QtIFW.composant2/data
+#cp -R $BASH_BUNDLE installer-packages-macOS/chronomodel_QtIFW.composant2/data
 
 # _________________________
 echo "➡️  3 - Executing binarycreator"
