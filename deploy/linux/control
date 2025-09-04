@@ -1,5 +1,5 @@
 Package: chronomodel
-Version: 3.3.0
+Version: 3.3.5
 Section: utils
 Architecture: amd64
 Depends: libc6 (>= 2.4), libstdc++6, libqt6core6 (>=6.4), libqt6gui6, libqt6widgets6, libfftw3-bin, libqt6svg6, qt6-wayland
