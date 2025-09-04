@@ -1,0 +1,11 @@
+chronomodel (3.3.5-1) unstable; urgency=medium
+
+  * Package build 3.3.5 for Qt6.4.2; automated build on 20250904.
+
+ -- Dufresne Philippe <philippe.dufresne@univ-rennes.fr>  Thu, 04 Sep 2025 12:05:53 +0200
+
+chronomodel (3.2.7-0~jammy) jammy; urgency=low
+
+  * add curve calculation
+
+ -- Dufresne Philippe <philippe.dufresne@univ-rennes.fr>  Mon, 27 May 2024 17:09:05 +0200
