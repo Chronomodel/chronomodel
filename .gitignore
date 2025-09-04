@@ -65,3 +65,6 @@ QtInstaller_ChronoModel/QtIFW_script_macOS_old.sh
 /QtInstaller_InstallCurves/installer-packages/curves.composant1/data
 /QtInstaller_ChronoModel/chronomodel_QtIFW.composant2/data
 /QtInstaller_ChronoModel/chronomodel_QtIFW.composant2
+/.qtc_clangd
+linux_make_old.sh
+buildCM.sh
