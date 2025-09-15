@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -245,19 +245,15 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
                  *   Display envelope Uniform
                  * ------------------------------------------------------------*/
 
-                const GraphCurve &curveActivityUnifTheo = densityCurve(mPhase->mActivityUnifTheo,
+                GraphCurve curveActivityUnifTheo = densityCurve(mPhase->mActivityUnifTheo,
                                                                        "Post Distrib Unif Mean",
                                                                        Qt::darkGray, Qt::SolidLine);
 
-
+                curveActivityUnifTheo.mIsRectFromZero = false;
                 mGraph->add_curve(curveActivityEnv);
                 mGraph->add_curve(curveActivity);
 
                 mGraph->add_curve(curveActivityUnifTheo);
-
-                //const type_data yMax = std:: max(map_max(mPhase->mActivitySup)->second, map_max(mPhase->mActivityUnifTheo)->second);
-
-                //mGraph->setRangeY(0., yMax);
 
 
             }
