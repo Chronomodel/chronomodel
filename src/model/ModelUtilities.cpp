@@ -957,7 +957,7 @@ QString ModelUtilities::activityResultsHTML(const std::shared_ptr<Phase> p)
     QString textValue = stringForLocal(p->mValueStack.at("Activity_Significance_Score"), true);
     const double threshold = p->mValueStack.at("Activity_Threshold");
     const auto hActi = p->mValueStack.at("Activity_h");
-    text += line(textOrange("Significance Score"  + QString(" ( %1 %) = ").arg(threshold) + textValue + QString(" with h = %1").arg(hActi)));
+    text += textBold(line(textOrange("Significance Score"  + QString(" ( %1 %) = ").arg(threshold) + textValue + QString(" with a bandwidth h = %1").arg(hActi))));
 
     text += line(""); 
     text += line(textOrange("Activity max"  + QString(" = %1").arg(p->mValueStack.at("Activity_max")) ));
@@ -965,7 +965,7 @@ QString ModelUtilities::activityResultsHTML(const std::shared_ptr<Phase> p)
 
     const double hUnif = (3.686*p->mValueStack.at("Activity_std95"))/pow(p->mEvents.size(), 1./5.);
     text += "<br>";
-    text += line(textOrange("Optimal h (Uniform kernel) = " + stringForLocal(hUnif)));
+    text += line(textOrange("For comparison, the optimal h obtained with a uniform kernel for estimating a density function assumed to be Gaussian = " + stringForLocal(hUnif)));
 
     return text;
 }

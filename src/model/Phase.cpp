@@ -917,18 +917,18 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
         mActivityUnifTheo = mActivity;
 
-        mValueStack.insert_or_assign("Activity_Significance_Score", 0.);
-        mValueStack.insert_or_assign("Activity_max",  1./h);
+        mValueStack.insert_or_assign("Activity_Significance_Score", 0.0);
+        mValueStack.insert_or_assign("Activity_max",  1.0/h);
         mValueStack.insert_or_assign("Activity_mode", a_Unif);
 
         return;
     }
 
-    mRawActivityUnifTheo.emplace(a_Unif_minus_h_2,  0.);
+    mRawActivityUnifTheo.emplace(a_Unif_minus_h_2,  0.0);
     mRawActivityUnifTheo.emplace(a_Unif_plus_h_2,  ActivityUnif);
 
     mRawActivityUnifTheo.emplace(b_Unif_minus_h_2,  ActivityUnif);
-    mRawActivityUnifTheo.emplace(b_Unif_plus_h_2,  0.);
+    mRawActivityUnifTheo.emplace(b_Unif_plus_h_2,  0.0);
 
 #ifdef DEBUG
     if (max95 > s.mTmax) {
@@ -1073,7 +1073,12 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     qDebug()<<"[Phase::generateActivity] Phase = "<< getQStringName()<<" mean KScore = "<< somKScore/(double) gridLength <<"\n";
 #endif
     //mValueStack.insert_or_assign("Activity_Significance_Score", somKScore/(double) gridLength);
-    mValueStack.insert_or_assign("Activity_Significance_Score", UnifScore/(double) gridLength);
+    // nouvelle formule: Transformation du calcul du score en utilisant le log, pour se retrouver entre 0 et 1
+    // UnifScore peut être enter n et 0.
+    // Utilisation du log permet une meilleur lecture des valeurs
+    // Score = ln(1+UnifScore) / ln(n+1)
+    mValueStack.insert_or_assign("Activity_Significance_Score", log(1+ UnifScore * delta_t)/log(static_cast<double>(n+1) ));
+
     mValueStack.insert_or_assign("Activity_max", maxActivity);
     mValueStack.insert_or_assign("Activity_mode", modeActivity);
 
