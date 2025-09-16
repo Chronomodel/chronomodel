@@ -296,7 +296,7 @@ void GraphViewResults::imageToClipboard()
 void GraphViewResults::resultsToClipboard()
 {
     QClipboard* clipboard = QApplication::clipboard();
-    clipboard->setText(html_to_plain_text(mStatHTMLText));// mStatArea->toPlainText());
+    clipboard->setText( html_to_plain_text(mStatHTMLText));// mStatArea->toPlainText());
 }
 
 /**
@@ -309,7 +309,7 @@ void GraphViewResults::saveGraphData() const
     const QString csvSep = AppSettings::mCSVCellSeparator;
 
     QLocale csvLocal = AppSettings::mCSVDecSeparator == "." ? QLocale::English : QLocale::French;
-    csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
+    csvLocal.setNumberOptions( QLocale::OmitGroupSeparator);
 
     int offset (0);
 
@@ -317,12 +317,12 @@ void GraphViewResults::saveGraphData() const
         QMessageBox messageBox;
         messageBox.setWindowTitle(tr("Save all trace"));
         messageBox.setText(tr("Do you want the entire trace from the beginning of the process or only the acquisition part"));
-        QAbstractButton *allTraceButton = messageBox.addButton(tr("All trace"), QMessageBox::YesRole);
-        QAbstractButton *acquireTraceButton = messageBox.addButton(tr("Only acquired part"), QMessageBox::NoRole);
+        QAbstractButton *allTraceButton = messageBox.addButton( tr("All trace"), QMessageBox::YesRole);
+        QAbstractButton *acquireTraceButton = messageBox.addButton( tr("Only acquired part"), QMessageBox::NoRole);
 
         messageBox.exec();
         if (messageBox.clickedButton() == allTraceButton)
-            mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, 0);
+            mGraph->exportCurrentVectorCurves( MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, 0);
 
         else if (messageBox.clickedButton() == acquireTraceButton) {
                 int chainIdx = -1;
@@ -332,42 +332,43 @@ void GraphViewResults::saveGraphData() const
                 if (chainIdx != -1) // We add 1 for the init
                     offset = 1 + mChains.at(chainIdx).mIterPerBurn + mChains.at(chainIdx).mBatchIndex * mChains.at(chainIdx).mIterPerBatch;
 
-                mGraph->exportCurrentVectorCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, offset);
+                mGraph->exportCurrentVectorCurves( MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, offset);
         }
         else return;
     }
 
     else if (mCurrentTypeGraph == eCorrel)
-        mGraph->exportCurrentVectorCurves (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, 0);
+        mGraph->exportCurrentVectorCurves( MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, 0);
 
     else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eTempo))
-        mGraph->exportCurrentCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep, mTitle);
+        mGraph->exportCurrentCurves( MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, mSettings.mStep, mTitle);
 
     else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eActivity))
-        mGraph->exportCurrentCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep, mTitle);
+        mGraph->exportCurrentCurves( MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, mSettings.mStep, mTitle);
 
     else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eG)) {
         QMessageBox messageBox;
-        messageBox.setWindowTitle(tr("Save curve"));
-        messageBox.setText(tr("Do you want a reference curve to reused with ChronoModel or data of the graphic"));
-        QAbstractButton *referenceButton = messageBox.addButton(tr("Reference Curve"), QMessageBox::YesRole);
-        QAbstractButton *dataButton = messageBox.addButton(tr("Graphics data"), QMessageBox::NoRole);
+        messageBox.setWindowTitle(tr("Save Curve"));
+        messageBox.setText(tr("Would you like to export the curve in reference format (calibration curve) or in graphic format?"));
+        QAbstractButton *dataButton = messageBox.addButton(tr("Graphic Format"), QMessageBox::NoRole);
+        QAbstractButton *referenceButton = messageBox.addButton(tr("Reference Format"), QMessageBox::YesRole);
+
 
         messageBox.exec();
         if (messageBox.clickedButton() == referenceButton)
-            mGraph->exportReferenceCurves (MainWindow::getInstance()->getCurrentPath(), QLocale::English, ",",  mSettings.mStep);
+            mGraph->exportReferenceCurves( MainWindow::getInstance()->getCurrentPath(), QLocale::English, ",",  mSettings.mStep);
 
         else if (messageBox.clickedButton() == dataButton) { // Export raw Data, the step is not 1 is map.column()
-            mGraph->exportCurrentCurves (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, 0, mTitle);
+            mGraph->exportCurrentCurves( MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, 0, mTitle);
         }
         else return;
 
     } else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eGP)) {
-        mGraph->exportCurrentCurves(MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep, mTitle);
+        mGraph->exportCurrentCurves( MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep, mTitle);
 
     }    // All visible curves are saved in the same file, the credibility bar is not save
     else if (mCurrentTypeGraph == ePostDistrib && !mShowVariableList.contains(eG))
-        mGraph->exportCurrentDensities (MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
+        mGraph->exportCurrentDensities( MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
 
 }
 

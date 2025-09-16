@@ -722,6 +722,8 @@ void Phase::generateHistos(const std::vector<ChainSpecs>& chains, const int fftL
     mDuration.generateHistos(chains, fftLen, bandwidth);
 }
 
+
+
 void Phase::generateActivity(size_t gridLength, double h, const double threshold, const double timeRangeLevel)
 {
 #ifdef DEBUG
@@ -935,9 +937,6 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     const double t_min_grid = TimeRange_min - h_2;
     const double t_max_grid = TimeRange_max + h_2;
 
-
-    /// \f$ \delta_t_min = (max95 - min95)/(gridLength-1) \f$
-
     /// \f$ \delta_t = (max95 - min95 + h)/(gridLenth-1) \f$
     const double delta_t = (t_max_grid - t_min_grid) / double(gridLength-1);
 
@@ -1017,8 +1016,6 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
         esp_inf.push_back(QInf);
         esp_sup.push_back(QSup);
         // Calcul du score
-        /* Delta(h) = somme sur theta de ( max(Aunif - Ainf) - min(Aunif, Asup) ) / nbre de theta de la grille, nbre de pas de la grille
-             */
 
 
         double dUnif = 0.0;
@@ -1032,7 +1029,10 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
             dUnif = interpolateValueInStdMap(t, mRawActivityUnifTheo);
 
         }
-
+       /* auto addunif = std::max(dUnif, QInf) - std::min(dUnif, QSup);
+        if (addunif>0) {
+            qDebug() <<" t="<< t << " dUnif=" <<dUnif << " QInf=" <<QInf << " QSup="<< QSup << " t_min_grid="<< t_min_grid << "t_max_grid=" << t_max_grid << " a_Unif_minus_h_2=" << a_Unif_minus_h_2 << " b_Unif_plus_h_2=" << b_Unif_plus_h_2;
+        }*/
 
         UnifScore += std::max(dUnif, QInf) - std::min(dUnif, QSup);
 
@@ -1043,6 +1043,40 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     // UnifScore peut être enter n et 0.
     // Utilisation du log permet une meilleur lecture des valeurs
     // Score = ln(1+UnifScore) / ln(n+1)
+    /**
+     * @brief Calcule le score de signification de l'activité ("Activity_Significance_Score").
+     *
+     * Le calcul s'effectue en deux étapes :
+     *
+     * 1. **Accumulation de l'écart avec l'uniforme** :
+     *    \f[
+     *    \text{UnifScore} \;=\;
+     *    \sum_{i}
+     *    \left[
+     *        \max\!\bigl(d_{\text{Unif}}(t_i), Q_{\inf}(t_i)\bigr)
+     *        \;-\;
+     *        \min\!\bigl(d_{\text{Unif}}(t_i), Q_{\sup}(t_i)\bigr)
+     *    \right]
+     *    \f]
+     *
+     *    où :
+     *    - \f$d_{\text{Unif}}(t_i)\f$ est la valeur théorique de la loi uniforme au temps \f$t_i\f$,
+     *    - \f$Q_{\inf}(t_i)\f$ et \f$Q_{\sup}(t_i)\f$ sont respectivement les bornes
+     *      inférieure et supérieure de l'activité estimée.
+     *
+     * 2. **Score final normalisé** :
+     *    \f[
+     *    \text{Activity\_Significance\_Score} \;=\;
+     *    \frac{\ln\!\left(1 + \Delta t \cdot \text{UnifScore}\right)}{\ln(n+1)}
+     *    \f]
+     *
+     *    avec :
+     *    - \f$\Delta t\f$ le pas de discrétisation,
+     *    - \f$n\f$ le nombre d'événements de la phase considérée.
+     *
+     * @note La normalisation par \f$\ln(n+1)\f$ garantit que le score reste dans [0,1].
+     */
+
     mValueStack.insert_or_assign("Activity_Significance_Score", log(1+ UnifScore * delta_t)/log(static_cast<double>(n+1) ));
 
     mValueStack.insert_or_assign("Activity_max", maxActivity);
