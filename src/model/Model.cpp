@@ -1635,9 +1635,9 @@ void Model::generateTempo(const size_t gridLength)
         double t_max_data = *minmaxAll.second;
 
         // cas d'une borne seule dans la phase
-        if (t_min_data >= t_max_data) {
-           t_max_data = mSettings.mTmax;
-        }
+        //if (t_min_data >= t_max_data) {
+        //   t_max_data = mSettings.mTmax;
+        //}
         phase->mValueStack.insert_or_assign("t_min", t_min_data);
         phase->mValueStack.insert_or_assign("t_max", t_max_data);
 

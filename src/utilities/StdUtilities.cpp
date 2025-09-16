@@ -478,13 +478,21 @@ std::map<double, double> vector_to_map(const std::vector<double>& data, const do
         return map;
 
     if (min == max) {
-        if (data.empty()){
-            return {};
-        } else {
-            map.emplace(min, data.at(0));
-        }
+        map.emplace(min, data.front());
+        return map;
+    }
+    // Nombre de points attendu (gridLength)
+    const size_t expectedPts = data.size();
 
-    } else {
+    // On évite les problèmes de round : on force nbPts = data.size()
+    for (size_t i = 0; i < expectedPts; ++i) {
+        double t = min + i * step;
+        if (t > max + 1e-9) // tolérance pour éviter de dépasser max
+            break;
+        map.emplace(t, data[i]);
+    }
+
+    /*else {
         const size_t nbPts = std::min (1 + (size_t)round((max - min) / step), data.size()); // step is not usefull, it's must be data.size/(max-min+1)
 
         for (size_t i = 0; i<nbPts; ++i) {
@@ -492,7 +500,7 @@ std::map<double, double> vector_to_map(const std::vector<double>& data, const do
             map.emplace(t,  double (data.at(i)));
 
         }
-    }
+    }*/
     return map;
 }
 

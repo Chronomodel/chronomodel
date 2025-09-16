@@ -728,7 +728,16 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     QElapsedTimer tClock;
     tClock.start();
 #endif
+
     auto model = getModel_ptr();
+
+    const auto& s = model->mSettings;
+
+    // prevent h=0
+    if (h <= 0) {
+        h = ( s.mTmax - s.mTmin) / 1000.0;
+    }
+
     // Avoid to redo calculation, when mActivity exist, it happen when the control is changed
     if (!mRawActivity.empty() && gridLength == mValueStack.at("Activity_GridLength")
             && h == mValueStack.at("Activity_h")
@@ -740,12 +749,12 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     mValueStack.insert_or_assign("Activity_h", h);
     mValueStack.insert_or_assign("Activity_Threshold", threshold);
     mValueStack.insert_or_assign("Activity_max", 0.0);
-    mValueStack.insert_or_assign("Activity_mode",  0.0);
-    //mValueStack.emplace("Activity_TimeRange_Level", TValueStack( 0.));
+    mValueStack.insert_or_assign("Activity_mode", 0.0);
 
-    const auto& s = model->mSettings;
-    if (mEvents.size() < 1) {
-        mValueStack.insert_or_assign("Activity_Significance_Score",  0);
+    const int n = static_cast<int>(mEvents.size());
+
+    if (n < 1) {
+        mValueStack.insert_or_assign("Activity_Significance_Score", 0.0);
         mValueStack.insert_or_assign("R_etendue", ( s.mTmax - s.mTmin));
         mValueStack.insert_or_assign("t_min", s.mTmin);
         mValueStack.insert_or_assign("t_max", s.mTmax);
@@ -755,13 +764,13 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
         mValueStack.insert_or_assign("Activity_min95", s.mTmin);
         mValueStack.insert_or_assign("Activity_max95", s.mTmax);
-        mValueStack.insert_or_assign("Activity_mean95",  (s.mTmax + s.mTmin)/2.);
+        mValueStack.insert_or_assign("Activity_mean95", (s.mTmax + s.mTmin)/2.0);
         mValueStack.insert_or_assign("Activity_std95", 0.0);
         return;
     }
 
     // Curves for error binomial
-    const int n = static_cast<int>(mEvents.size());
+
 
     // clear old results
     mRawActivityUnifTheo.clear();
@@ -773,8 +782,6 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
     //---- timeRange
 
-    mValueStack.insert_or_assign("Activity_TimeRange_Level", timeRangeLevel);
-
     if (mValueStack.at("Activity_TimeRange_min") == mValueStack.at("Activity_TimeRange_max")
         || mValueStack.at("Activity_TimeRange_Level") != timeRangeLevel) {
         const std::pair<double, double> timeRange = timeRangeFromTraces( mAlpha.fullRunRawTrace(model->mChains),
@@ -782,6 +789,8 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
         mValueStack.insert_or_assign("Activity_TimeRange_min", timeRange.first);
         mValueStack.insert_or_assign("Activity_TimeRange_max", timeRange.second);
     }
+
+    mValueStack.insert_or_assign("Activity_TimeRange_Level", timeRangeLevel);
 
     const double TimeRange_min = mValueStack.at("Activity_TimeRange_min");
     const double TimeRange_max = mValueStack.at("Activity_TimeRange_max");
@@ -800,34 +809,37 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
                          std::back_inserter(concaTrace),
                          [TimeRange_min, TimeRange_max](double x) { return (TimeRange_min<= x && x<= TimeRange_max); });
         } else {
-            //min95 = std::min( min95, ev->mTheta.mRawTrace->at(0));
-            //max95 = std::max( max95, ev->mTheta.mRawTrace->at(0));
             const size_t begin_size = concaTrace.size();
             concaTrace.resize(concaTrace.size() + nRealyAccepted);
             std::fill_n( concaTrace.begin()+begin_size, nRealyAccepted, ev->mTheta.mRawTrace->at(0));
         }
 
     }
+
+
+    double nr = static_cast<double>(concaTrace.size());
+    if (nr <= 0.0) {
+        qWarning() << "[Phase::generateActivity] concaTrace empty after filtering -> no data in time range";
+        mValueStack.insert_or_assign("Activity_Significance_Score", 0.0);
+        mValueStack.insert_or_assign("Activity_max", 0.0);
+        mValueStack.insert_or_assign("Activity_mode", TimeRange_min);
+        // vider & retourner
+        mRawActivity.clear(); mRawActivityInf.clear(); mRawActivitySup.clear(); mRawActivityUnifTheo.clear();
+        mActivity.clear(); mActivityInf.clear(); mActivitySup.clear(); mActivityUnifTheo.clear();
+        return;
+    }
+
     const auto &minmax95 = std::minmax_element(concaTrace.begin(), concaTrace.end());
     min95 = *minmax95.first;
     max95 = *minmax95.second;
 
-   /* if (!concaTrace.empty()) {
-        const auto &minmax95 = std::minmax_element(concaTrace.begin(), concaTrace.end());
-        min95 = std::min( min95, *minmax95.first);
-        max95 = std::max( max95, *minmax95.second);
-    } else
-        return;
-        */
     mValueStack.insert_or_assign("Activity_min95", min95);
     mValueStack.insert_or_assign("Activity_max95", max95);
 
     if (min95 == max95) { // happen when there is only one bound in the phase ???
 
-        //qDebug()<<"[Phase::generateActivity] tmin == tmax : " << mName;
-
-        mValueStack.insert_or_assign("Activity_Significance_Score", 0);
-        mValueStack.insert_or_assign("R_etendue",  0);
+        mValueStack.insert_or_assign("Activity_Significance_Score", 0.0);
+        mValueStack.insert_or_assign("R_etendue",  0.0);
         mValueStack.insert_or_assign("a_Unif", min95);
         mValueStack.insert_or_assign("b_Unif", max95);
 
@@ -844,32 +856,24 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
     }
 
-    /* const double mu = -2;
-       const double R_etendue = (n+1)/(n-1)/(1.+ mu*sqrt(2./(double)((n-1)*(n+2))) )*(t_max_data-t_min_data);
-       const double gamma =  (n>=500 ? 1. : gammaActivity[(int)n]);
-       const double R_etendue =  (max95 - min95)/gamma;
-    */
-
     const double R_etendue =  max95 - min95;
 
-    // prevent h=0 and h >R_etendue;
-    if (min95 == max95) {
-        h = std::max(s.mStep, h);
-
-    } else {
-        h = std::min( std::max(s.mStep, h),  R_etendue) ;
+    // prevent h > R_etendue;
+    if (R_etendue > 0) {
+        h = std::min( h,  R_etendue) ;
     }
+
     mValueStack.insert_or_assign("Activity_h", h);
 
-    const double h_2 = h/2.;
+    const double h_2 = h/2.0;
 
-    const double fUnif = n > 1 ? h / R_etendue : 1.;
+    const double fUnif = n > 1 ? h / R_etendue : 1.0;
 
-    const double mid_R =  (max95 + min95)/2.;
+    const double mid_R =  (max95 + min95) /2.0;
 
     const double ActivityUnif = fUnif * n / h; //  remplace -> fUnif * n / std::min(h, R_etendue);
 
-    const double half_etendue = R_etendue/2. ;
+    const double half_etendue = R_etendue /2.0 ;
 
     // Recentrage de a_Unif et b_Unif
     // Variable pour courbe Unif Théo
@@ -884,26 +888,17 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     const double b_Unif_minus_h_2 = b_Unif - h_2;
     const double b_Unif_plus_h_2 = b_Unif + h_2;
 
-    // pour test theorique, sans le trapèze h=0
-   /* const double a_Unif_minus_h_2 = a_Unif;
-    const double a_Unif_plus_h_2 = a_Unif;
-
-    const double b_Unif_minus_h_2 = b_Unif;
-    const double b_Unif_plus_h_2 = b_Unif;
-*/
     mValueStack.insert_or_assign("a_Unif", a_Unif);
     mValueStack.insert_or_assign("b_Unif", b_Unif);
     mValueStack.insert_or_assign("R_etendue", R_etendue);
-
 
 
     /// Look for the maximum span containing values \f$ x=2 \f$
 
     if (min95 == max95) { // happen when there is only one bound in the phase ???
         qDebug()<<"[Phase::generateActivity] min95 == max95 : " << getQStringName();
-        mRawActivity.emplace(a_Unif_minus_h_2,  1./h);
-        //mRawActivity.emplace(a_Unif,  1./h);
-        mRawActivity.emplace(b_Unif_plus_h_2, 1./h);
+        mRawActivity.emplace(a_Unif_minus_h_2,  1.0/h);
+        mRawActivity.emplace(b_Unif_plus_h_2, 1.0/h);
 
         mRawActivityInf = mRawActivity;
         mRawActivitySup = mRawActivity;
@@ -937,8 +932,8 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
 #endif
 
-    const double t_min_grid = TimeRange_min - h_2 - s.mStep;
-    const double t_max_grid = TimeRange_max + h_2 + s.mStep;
+    const double t_min_grid = TimeRange_min - h_2;
+    const double t_max_grid = TimeRange_max + h_2;
 
 
     /// \f$ \delta_t_min = (max95 - min95)/(gridLength-1) \f$
@@ -948,7 +943,6 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
     // overlaps
 
-    double nr = concaTrace.size();
     const int maxGrid = (int)gridLength-1;
     // Loop
     std::vector<int> NiTot (gridLength);
@@ -976,11 +970,6 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
     }
 
-#ifdef DEBUG
-       double somNi =std::accumulate(NiTot.begin(), NiTot.end(), 0.);
-       qWarning() << "[Phase::generateActivity] somNi =" << somNi<< "\n";
-#endif
-
 
     ///# Calculation of the mean and variance
 
@@ -992,42 +981,33 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
     double UnifScore = 0.;
     int nbIt = 0;
-#ifdef DEBUG
-    //double somActivity = 0;
-    double somKScore = 0;
-#endif
+
     // Preallocate memory for esp, esp_inf, and esp_sup if the size is known
     esp.reserve(gridLength);
     esp_inf.reserve(gridLength);
     esp_sup.reserve(gridLength);
 
     for (const auto& ni : NiTot) {
+        // La grille est définie entre TimeRange_min - h_2 et TimeRange_max + h_2 avec gridlength case
+        //
+        const double t = nbIt * delta_t + t_min_grid ;
 
         const double fA = static_cast<double>(ni) / nr;
         const double eA =  fA * n / h;
         esp.push_back(eA);
         if (eA > maxActivity) {
             maxActivity =  eA;
-            modeActivity = (nbIt * delta_t) + t_min_grid;
+            modeActivity = t;
         }
 
-#ifdef DEBUG
-       //somActivity += eA;
-#endif
         double QInf, QSup;
         if (n == 1) {
             QInf = eA;
             QSup = eA;
 
         } else {
-            /*if (fA == 0) {
-                QInf = 0.;
-                QSup = 0.;
-
-            } else {*/
-                QSup = interpolate_value_from_curve(fA, Gx, 0, 1.)* n / h;
-                QInf = findOnOppositeCurve(fA, Gx)* n / h;
-          //  }
+            QSup = interpolate_value_from_curve(fA, Gx, 0, 1.)* n / h;
+            QInf = findOnOppositeCurve(fA, Gx)* n / h;
         }
 #ifdef DEBUG
         if (QSup < QInf) {
@@ -1039,8 +1019,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
         // Calcul du score
         /* Delta(h) = somme sur theta de ( max(Aunif - Ainf) - min(Aunif, Asup) ) / nbre de theta de la grille, nbre de pas de la grille
              */
-        // La grille est définie entre min95-h/2-step et max95+h/2+step avec gridlength case
-        const double t = nbIt * delta_t + t_min_grid ;
+
 
         double dUnif = 0.0;
         if ((a_Unif_minus_h_2 < t) && (t < a_Unif_plus_h_2)) {
@@ -1054,25 +1033,12 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
         }
 
-        if (n > 1) {
-#ifdef DEBUG
-            if (dUnif>0) {
-                const double addUnif = dUnif>eA ? (dUnif - eA)/QSup: (eA -dUnif)/ QInf;
-                somKScore += addUnif;
-                //qDebug()<<"[Phase::generateActivity] t= "<<t<<" add="<< addUnif<< " eA="<<eA<<" dUnif="<<dUnif<<" QSup="<<QSup<<" QInf="<<QInf;
-            }
 
-#endif
-            UnifScore += std::max(dUnif, QInf) - std::min(dUnif, QSup);
-        }
+        UnifScore += std::max(dUnif, QInf) - std::min(dUnif, QSup);
+
         nbIt++;
     }
 
-#ifdef DEBUG
-    //qDebug()<<"[Phase::generateActivity] Phase = "<< getQStringName()<<" somme Activity = "<< somActivity  <<"\n";
-    qDebug()<<"[Phase::generateActivity] Phase = "<< getQStringName()<<" mean KScore = "<< somKScore/(double) gridLength <<"\n";
-#endif
-    //mValueStack.insert_or_assign("Activity_Significance_Score", somKScore/(double) gridLength);
     // nouvelle formule: Transformation du calcul du score en utilisant le log, pour se retrouver entre 0 et 1
     // UnifScore peut être enter n et 0.
     // Utilisation du log permet une meilleur lecture des valeurs
@@ -1099,13 +1065,6 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
     mRawActivityInf.emplace(t_min_grid, QInf);
     mRawActivityInf.emplace(t_max_grid, QInf);
-
-
-    /*mActivity = DateUtils::convertMapToAppSettingsFormat(mRawActivity);
-    mActivityInf = DateUtils::convertMapToAppSettingsFormat(mRawActivityInf);
-    mActivitySup = DateUtils::convertMapToAppSettingsFormat(mRawActivitySup);
-
-    mActivityUnifTheo = DateUtils::convertMapToAppSettingsFormat(mRawActivityUnifTheo);*/
 
 
     acti = DateUtils::convertMapToAppSettingsFormat(mRawActivity);
