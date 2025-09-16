@@ -167,6 +167,7 @@ Date::Date(PluginAbstract* plugin):
     updateti(nullptr),
     _name("No Named Date")
 {
+    mSettings =  getModel_ptr()->mSettings;
 }
 
 void Date::init()
@@ -211,6 +212,8 @@ void Date::init()
 
     mCalibration = nullptr;
     mWiggleCalibration = nullptr;
+
+    mSettings =  getModel_ptr()->mSettings;
 
 }
 
@@ -268,6 +271,8 @@ void Date::moveFrom(Date&& other) noexcept
     updateti = other.updateti;
     _name = other._name;
 
+    mSettings = other.mSettings;
+
     // Réinitialiser l'autre objet
 
     other.mPlugin = nullptr;
@@ -321,6 +326,8 @@ void Date::copyFrom(const Date& date)
 
     mTminRefCurve = date.mTminRefCurve;
     mTmaxRefCurve = date.mTmaxRefCurve;
+
+    mSettings = date.mSettings;
 }
 
 Date::~Date()
@@ -385,7 +392,6 @@ void Date::fromJson(const QJsonObject& json)
     mSubDates = json.value(STATE_DATE_SUB_DATES).toArray();
 
     mMixingLevel = project->mState.value(STATE_MCMC).toObject().value(STATE_MCMC_MIXING).toDouble();
-
 
     if (mPlugin == nullptr)
         throw QObject::tr("Data could not be loaded : invalid plugin : %1").arg(pluginId);
@@ -468,6 +474,7 @@ void Date::fromJson(const QJsonObject& json)
     } else {
         mWiggleCalibration = nullptr;
     }
+
 
 }
 
@@ -1259,16 +1266,16 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, std::shared_ptr<
         lastRep = rep;
     }
 
-    mWiggleCalibration->mRepartition = stretch_vector(mWiggleCalibration->mRepartition, 0., 1.);
+    mWiggleCalibration->mRepartition = stretch_vector(mWiggleCalibration->mRepartition, 0.0, 1.0);
 
     /* ------------------------------------------------------------------
      * Restrict the calib and repartition vectors to where data are
      * ------------------------------------------------------------------ */
-    if (*mWiggleCalibration->mRepartition.crbegin() > 0.) {
+    if (*mWiggleCalibration->mRepartition.crbegin() > 0.0) {
 
         const double threshold = threshold_limit;// 0.00001;
         const int minIdx = int (floor(vector_interpolate_idx_for_value(double(threshold * lastRep), mWiggleCalibration->mRepartition)));
-        const int maxIdx = int (ceil(vector_interpolate_idx_for_value(double((1. - threshold) * lastRep), mWiggleCalibration->mRepartition)));
+        const int maxIdx = int (ceil(vector_interpolate_idx_for_value(double((1.0 - threshold) * lastRep), mWiggleCalibration->mRepartition)));
 
         const double tminCal = mWiggleCalibration->mTmin + minIdx * mWiggleCalibration->mStep;
         const double tmaxCal = mWiggleCalibration->mTmin + maxIdx * mWiggleCalibration->mStep;
@@ -1278,7 +1285,6 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, std::shared_ptr<
         //mWiggleCalibration->mRepartition = mWiggleCalibration->mRepartition.mid(minIdx, (maxIdx - minIdx) + 1);
         mWiggleCalibration->mVector.assign(mWiggleCalibration->mVector.begin() + minIdx, mWiggleCalibration->mVector.begin()+(maxIdx + 1));
         mWiggleCalibration->mRepartition.assign(mWiggleCalibration->mRepartition.begin()+minIdx, mWiggleCalibration->mRepartition.begin()+(maxIdx + 1));
-
 
         // Stretch repartition curve so it goes from 0 to 1
         mWiggleCalibration->mRepartition = stretch_vector(mWiggleCalibration->mRepartition, 0., 1.);
@@ -1323,7 +1329,7 @@ const std::map<double, double> Date::getFormatedCalibToShow() const
 
     std::map<double, double> calib = getRawCalibMap();
 
-    if (*mCalibration->mRepartition.crbegin() > 0.) {
+    if (*mCalibration->mRepartition.crbegin() > 0.0) {
         double tminCal, tmaxCal;
         std::vector<double> curve;
         const double threshold  = 0.01 * (*std::max_element(mCalibration->mVector.begin(), mCalibration->mVector.end())); // ici
@@ -1346,18 +1352,17 @@ const std::map<double, double> Date::getFormatedCalibToShow() const
         tminCal = mCalibration->mTmin + minIdx * mCalibration->mStep;
         tmaxCal = mCalibration->mTmin + maxIdx * mCalibration->mStep;
 
-        //curve = mCalibration->mVector.mid(minIdx, (maxIdx - minIdx) + 1);
         curve.assign(mCalibration->mVector.begin()+minIdx, mCalibration->mVector.begin()+(maxIdx + 1));
 
-        curve = equal_areas(curve, mCalibration->mStep, 1.);
+        curve = equal_areas(curve, mCalibration->mStep, 1.0);
         calib = vector_to_map(curve, tminCal, tmaxCal, mCalibration->mStep );
 
     } else {
         calib = mCalibration->mMap;
     }
 
-    calib[calib.cbegin()->first - mCalibration->mStep] = 0.;
-    calib[calib.crbegin()->first + mCalibration->mStep] = 0.;
+    calib[calib.cbegin()->first - mCalibration->mStep] = 0.0;
+    calib[calib.crbegin()->first + mCalibration->mStep] = 0.0;
 
     return DateUtils::convertMapToAppSettingsFormat(calib);
 }
@@ -1690,7 +1695,7 @@ void Date::initDelta()
 {
     switch (mDeltaType) {
         case eDeltaNone:
-            mDelta = 0.;
+            mDelta = 0.0;
             break;
         
         case eDeltaRange:
@@ -1721,7 +1726,7 @@ void Date::updateDelta(const double theta_mX)
     
     switch (mDeltaType) {
         case eDeltaNone:
-            mDelta = 0.;
+            mDelta = 0.0;
             break;
         
         case eDeltaRange:
@@ -1730,7 +1735,7 @@ void Date::updateDelta(const double theta_mX)
         
         case eDeltaGaussian: {
 
-            const double w = ( 1/(mSigmaTi.mX * mSigmaTi.mX) ) + ( 1/(mDeltaError * mDeltaError) );
+            const double w = ( 1.0/(mSigmaTi.mX * mSigmaTi.mX) ) + ( 1.0/(mDeltaError * mDeltaError) );
             const double deltaAvg = (lambdai / (mSigmaTi.mX * mSigmaTi.mX) + mDeltaAverage / (mDeltaError * mDeltaError)) / w;
             const double x = Generator::gaussByBoxMuller(0, 1);
             const double delta = deltaAvg + x / sqrt(w);
@@ -1753,8 +1758,8 @@ void Date::updateSigmaJeffreys(const double theta_mX)
     // ------------------------------------------------------------------------------------------
     const double lambda = pow(mTi.mX - (theta_mX - mDelta), 2) / 2.0;
 
-    const double a (0.0001); //precision
-    const double b (pow(mSettings.mTmax - mSettings.mTmin, 2.));
+    const double a = 0.0001; //precision
+    const double b = pow(mSettings.mTmax - mSettings.mTmin, 2.);
 
     const double V1 = mSigmaTi.mX * mSigmaTi.mX;
 
@@ -1768,9 +1773,9 @@ void Date::updateSigmaJeffreys(const double theta_mX)
     
     const double x1 = exp(-lambda * (V1 - V2) / (V1 * V2));
     const double x2 = V1/V2;
-    const double rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1; // (V2 / V1) est le jacobien!
+    const double rate = x1 * sqrt(V1/V2) * x2 * V2 / V1; // (V2 / V1) est le jacobien!
 
-    mSigmaTi.try_update(sqrt(V2), rapport);
+    mSigmaTi.try_update(sqrt(V2), rate);
 }
 
 void Date::updateSigmaShrinkage(const double theta_mX, const double S02Theta_mX, const double AShrinkage)
@@ -1790,9 +1795,9 @@ void Date::updateSigmaShrinkage(const double theta_mX, const double S02Theta_mX,
     if (logV2 >= logVMin && logV2 <= logVMax) {
         const double x1 = exp(-mu * (V1 - V2) / (V1 * V2));
         const double x2 = pow((S02Theta_mX + V1) / (S02Theta_mX + V2), AShrinkage + 1.0);
-        const double rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1 ; // (V2 / V1) est le jacobien!
+        const double rate = x1 * sqrt(V1/V2) * x2 * V2 / V1 ; // (V2 / V1) est le jacobien!
 
-        mSigmaTi.try_update(sqrt(V2), rapport);
+        mSigmaTi.try_update(sqrt(V2), rate);
 
     } else {
        mSigmaTi.reject_update();
@@ -1945,10 +1950,10 @@ Date Date::fromCSV(const QStringList &dataStr, const QLocale &csvLocale, const S
                     } else {
                         date.mDeltaType = eDeltaNone;
                         date.mDeltaFixed = 0.;
-                        date.mDeltaMin = 0.;
-                        date.mDeltaMax = 0;
-                        date.mDeltaAverage = 0.;
-                        date.mDeltaError = 0.;
+                        date.mDeltaMin = 0.0;
+                        date.mDeltaMax = 0.0;
+                        date.mDeltaAverage = 0.0;
+                        date.mDeltaError = 0.0;
 
                     }
                 } else {
@@ -2080,7 +2085,7 @@ CalibrationCurve generate_mixingCalibration(const std::vector<Date> &dates, cons
             if (d.mWiggleCalibration != nullptr && !d.mWiggleCalibration->mVector.empty() ) {
                 unionTmin = std::min(unionTmin, (long double)d.mWiggleCalibration->mTmin);
                 unionTmax = std::max(unionTmax, (long double)d.mWiggleCalibration->mTmax);
-                unionStep = std::min(unionStep,(long double) d.mWiggleCalibration->mStep);
+                unionStep = std::min(unionStep, (long double) d.mWiggleCalibration->mStep);
 
             } else if (d.mCalibration != nullptr && !d.mCalibration->mVector.empty() ) {
                 unionTmin = std::min(unionTmin, (long double)d.mCalibration->mTmin);
@@ -2105,13 +2110,13 @@ CalibrationCurve generate_mixingCalibration(const std::vector<Date> &dates, cons
         // 2 - Creation of the cumulative distribution curves in the interval
 
         double t = unionTmin;
-        long double sum = 0.;
-        long double sum_old = 0.;
+        long double sum = 0.0;
+        long double sum_old = 0.0;
         const double n = dates.size();
         int i = 0;
         while (t < unionTmax) {
             t = unionTmin + i*unionStep;
-            sum = 0.;
+            sum = 0.0;
             for (auto&& d : dates) {
                 if (d.mWiggleCalibration != nullptr)
                     sum += d.mWiggleCalibration->repartition_interpolate(t);
@@ -2136,19 +2141,10 @@ CalibrationCurve generate_mixingCalibration(const std::vector<Date> &dates, cons
  */
 void Date::Prior(const double theta_mX)
 {
-     // Ici, le marcheur est forcément gaussien avec H(theta i) : double_exp (gaussien tronqué)
-    /*   double tmin = date->mSettings.mTmin;
-        double tmax = date->mSettings.mTmax;
-         double theta = Generator::gaussByDoubleExp(event->mTheta.mX - date->mDelta, date->mSigma.mX, tmin, tmax);
-         //rapport = G(theta_new) / G(theta_old)
-         double rapport = date->getLikelyhoodFromCalib(theta) / date->getLikelyhoodFromCalib(date->mTheta.mX);
-         date->mTheta.tryUpdate(theta, rapport);
-    */
-
     const double tiNew = Generator::gaussByBoxMuller(theta_mX - mDelta, mSigmaTi.mX);
-    const double rapport = getLikelihood(tiNew) / getLikelihood(mTi.mX);
+    const double rate = getLikelihood(tiNew) / getLikelihood(mTi.mX);
 
-    mTi.try_update(tiNew, rapport);
+    mTi.try_update(tiNew, rate);
 }
 
 /**
@@ -2177,49 +2173,26 @@ void Date::PriorWithArg(const double theta_mX)
  */
 double Date::fProposalDensity(const double t, const double t0)
 {
-    const double tmin (mSettings.mTmin);
-    const double tmax (mSettings.mTmax);
-    double q1 (0.);
+    const double tmin = mSettings.mTmin;
+    const double tmax = mSettings.mTmax;
+    double q1 = 0.0;
 
-    const double tminCalib (mCalibration->mTmin);
-    const double tmaxCalib (mCalibration->mTmax);
+    const double tminCalib = mCalibration->mTmin;
+    const double tmaxCalib = mCalibration->mTmax;
 
     // ----q1------Defined only on Calibration range-----
-    if (t > tminCalib && t < tmaxCalib){
-
-        const double prop = (t - tminCalib) / (tmaxCalib - tminCalib);
-        const double idx = prop * (mCalibration->mRepartition.size() - 1);
-        const int idxUnder = (int)floor(idx);
-
-       const double step (mCalibration->mStep);
-
-        q1 = (mCalibration->mRepartition[idxUnder+1] - mCalibration->mRepartition[idxUnder])/step;
-        
+    if (t > tminCalib && t < tmaxCalib) {
+        q1 = mCalibration->interpolate(t);
     }
 
-    // ----q2 shrinkage-----------
-    /*double t0 =(tmax+tmin)/2;
-    double s = (tmax-tmin)/2;
-    double q2= s / ( 2* pow((s+fabs(t-t0)), 2) );
-     */
-
-    // ----q2 gaussian-----------
-    //double t0 = (tmax+tmin)/2;
-    
-    //modif 2020-09-28
-//    const double sigma = (qMax(tmax, tmaxCalib)  - qMin(tminCalib, tmin)) / 2.;
-//    const double mean = (qMax(tmax, tmaxCalib)  + qMin(tminCalib, tmin)) / 2.;
-//    const double q2 = Generator::gaussByBoxMuller(mean,  pow(sigma, 2.));
-//    
-    // origin
     const double sigma = std::max(tmax - tmin, tmaxCalib - tminCalib) / 2;
-    const double q2 = exp(-0.5* pow((t-t0)/ sigma, 2)) / (sigma*sqrt(2*M_PI));
+    const double q2 = dnorm(t, t0, sigma); //exp(-0.5* pow((t-t0)/ sigma, 2)) / (sigma*sqrt(2*M_PI));
 
     return (mMixingLevel * q1 + (1 - mMixingLevel) * q2);
 }
 
 /**
- *  @brief MH proposal = Distribution of Calibrated date, ti is defined on set R (real numbers)
+ *  @brief MH proposal = Distribution of Calibrated date, t_i is defined on set R (real numbers)
  *  @brief simulation according to uniform shrinkage with s parameter
  */
 void Date::Inversion(const double theta_mX)
@@ -2232,25 +2205,25 @@ void Date::Inversion(const double theta_mX)
     if (u1 < mMixingLevel) { // tiNew always in the study period
         const double idx = vector_interpolate_idx_for_value(u1, mCalibration->mRepartition);
         tiNew = tminCalib + idx * mCalibration->mStep;
+
     } else {
         // -- gaussian
         const double t0 = mTi.mX;
-        const double s = (mSettings.mTmax-mSettings.mTmin)/2.;
+        const double s = (mSettings.mTmax - mSettings.mTmin) / 2.0;
 
         tiNew = Generator::gaussByBoxMuller(t0, s);
     }
 
-    const double rapport1 = getLikelihood(tiNew) / getLikelihood(mTi.mX);
+    const double rate_1 = getLikelihood(tiNew) / getLikelihood(mTi.mX);
 
-    const double rapport2 = exp((-0.5 / (mSigmaTi.mX * mSigmaTi.mX)) *
+    const double rate_2 = exp((-0.5 / (mSigmaTi.mX * mSigmaTi.mX)) *
                           (pow(tiNew - (theta_mX - mDelta), 2) -
                            pow(mTi.mX - (theta_mX - mDelta), 2))
                           );
 
-    const double rapport3 = fProposalDensity(mTi.mX, tiNew) /
-                            fProposalDensity(tiNew, mTi.mX);
+    const double rate_3 = fProposalDensity(mTi.mX, tiNew) / fProposalDensity(tiNew, mTi.mX);
 
-    mTi.try_update(tiNew, rapport1 * rapport2 * rapport3);
+    mTi.try_update(tiNew, rate_1 * rate_2 * rate_3);
 }
 
 void Date::InversionWithArg(const double theta_mX)
@@ -2268,8 +2241,8 @@ void Date::InversionWithArg(const double theta_mX)
 
     } else {
         // -- gaussian
-        const double t0 =(mSettings.mTmax + mSettings.mTmin)/2.;
-        const double s = (mSettings.mTmax - mSettings.mTmin)/2.;
+        const double t0 =(mSettings.mTmax + mSettings.mTmin) / 2.0;
+        const double s = (mSettings.mTmax - mSettings.mTmin) / 2.0;
 
         tiNew = Generator::gaussByBoxMuller(t0, s);
 
@@ -2280,14 +2253,14 @@ void Date::InversionWithArg(const double theta_mX)
     argOld = getLikelihoodArg(mTi.mX);
     argNew = getLikelihoodArg(tiNew);
 
-    const long double logGRapport = argNew.second - argOld.second;
-    const long double logHRapport = (-0.5l/powl(mSigmaTi.mX, 2.)) * (  powl(tiNew - (theta_mX - mDelta), 2.) - powl(mTi.mX - (theta_mX - mDelta), 2.) ); // modif 2020-09-28
+    const long double logG_Rate = argNew.second - argOld.second;
+    const long double logH_Rate = (-0.5l/powl(mSigmaTi.mX, 2.)) * (  powl(tiNew - (theta_mX - mDelta), 2.) - powl(mTi.mX - (theta_mX - mDelta), 2.) ); // modif 2020-09-28
 
-    const long double rapport = sqrt(argOld.first/argNew.first) * exp(logGRapport+logHRapport);
+    const long double rate = sqrt(argOld.first/argNew.first) * exp(logG_Rate + logH_Rate);
 
-    const long double rapportPD = fProposalDensity(mTi.mX, tiNew) / fProposalDensity(tiNew, mTi.mX);
+    const long double rate_PD = fProposalDensity(mTi.mX, tiNew) / fProposalDensity(tiNew, mTi.mX);
 
-    mTi.try_update(tiNew, (double)(rapport * rapportPD));
+    mTi.try_update(tiNew, static_cast<double>(rate * rate_PD));
 
 }
 
@@ -2298,12 +2271,12 @@ void Date::InversionWithArg(const double theta_mX)
 void Date::MHAdaptGauss(const double theta_mX)
 {
     const double tiNew = Generator::gaussByBoxMuller(mTi.mX, mTi.mSigmaMH);
-    double rapport = getLikelihood(tiNew) / getLikelihood(mTi.mX);
-    rapport *= exp((-0.5/(mSigmaTi.mX * mSigmaTi.mX)) * (   pow(tiNew - (theta_mX - mDelta), 2)
+    double rate = getLikelihood(tiNew) / getLikelihood(mTi.mX);
+    rate *= exp((-0.5/(mSigmaTi.mX * mSigmaTi.mX)) * (   pow(tiNew - (theta_mX - mDelta), 2)
                                                            - pow(mTi.mX - (theta_mX - mDelta), 2)
                                                                  ));
 
-    mTi.try_update(tiNew, rapport);
+    mTi.try_update(tiNew, rate);
 }
 
 
@@ -2321,13 +2294,13 @@ void Date::MHAdaptGaussWithArg(const double theta_mX)//fMHSymGaussAdaptWithArg(E
     argOld = getLikelihoodArg(mTi.mX);
     argNew = getLikelihoodArg(tiNew);
 
-    const long double logGRapport = argNew.second - argOld.second;
-    const long double logHRapport = (-0.5 / (mSigmaTi.mX * mSigmaTi.mX)) * (  pow(tiNew - (theta_mX - mDelta), 2)
+    const long double logG_Rate = argNew.second - argOld.second;
+    const long double logH_Rate = (-0.5 / (mSigmaTi.mX * mSigmaTi.mX)) * (  pow(tiNew - (theta_mX - mDelta), 2)
                                                                       - pow(mTi.mX - (theta_mX - mDelta), 2)
                                                                       );
 
-    const long double rapport = sqrt(argOld.first / argNew.first) * exp(logGRapport+logHRapport);
+    const long double rate = sqrt(argOld.first / argNew.first) * exp(logG_Rate+logH_Rate);
 
-    mTi.try_update(tiNew, (double) rapport);
+    mTi.try_update(tiNew, (double) rate);
 
 }

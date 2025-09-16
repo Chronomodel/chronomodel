@@ -125,7 +125,30 @@ const std::pair<double, double> linear_regression(const std::vector<double>& dat
 
 double shrinkageUniform(const double s02);
 
-inline double dnorm (const double x, const double mu = 0., const double std = 1.) {return exp(-0.5*pow((x - mu)/ std, 2.))/ (sqrt(2.*M_PI)*std);}
+/**
+ * @brief Évalue la densité de probabilité de la loi normale (fonction de Gauss).
+ *
+ * La fonction renvoie la valeur de :
+ * \f[
+ * f(x \,|\, \mu, \sigma) =
+ * \frac{1}{\sigma \sqrt{2\pi}}
+ * \exp\!\left( -\tfrac{1}{2} \left(\frac{x - \mu}{\sigma}\right)^2 \right)
+ * \f]
+ *
+ * @param x      Valeur en laquelle la densité est évaluée.
+ * @param mu     Moyenne de la loi normale (par défaut 0.0).
+ * @param sigma  Écart-type de la loi normale (par défaut 1.0, doit être > 0).
+ * @return       Valeur de la densité de probabilité \f$f(x|\mu,\sigma)\f$.
+ *
+ * @note Optimisé : constante \f$1/\sqrt{2\pi}\f$ précalculée, pas d'appel inutile à pow().
+ * @warning Si @p sigma <= 0, le résultat n'est pas défini.
+ */
+inline double dnorm(const double x, const double mu = 0.0, const double sigma = 1.0)
+{
+    static constexpr double inv_sqrt_2pi = 0.3989422804014327; // 1 / sqrt(2π)
+    double z = (x - mu) / sigma;
+    return inv_sqrt_2pi / sigma * std::exp(-0.5 * z * z);
+}
 
 Quartiles quartilesForTrace(const QList<type_data> &trace);
 Quartiles quartilesForTrace(const std::vector<type_data> &trace);

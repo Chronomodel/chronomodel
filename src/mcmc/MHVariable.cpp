@@ -139,22 +139,28 @@ MHVariable::~MHVariable()
 /**
  * @brief MHVariable::tryUpdate
  * @param x : Value proposed and, if applicable, accepted
- * @param rate : Force reject with rate  = -1. or accept with rate = 2.
+ * @param rate : Force reject with rate < 0 or accept with rate = 2.
+ * @ref https://fr.wikipedia.org/wiki/Algorithme_de_Metropolis-Hastings
  * @return
  */
 bool MHVariable::try_update(const double x, const double rate)
 {
     if (mLastAccepts.size() >= mLastAcceptsLength)
-        mLastAccepts.erase(mLastAccepts.begin());//removeAt(0);
+        mLastAccepts.erase(mLastAccepts.begin());
 
     bool accepted (false);
+    if (!(rate >= 0.0)) {
+        accepted = false; // NaN ou négatif -> rejet forcé
 
-    if (rate >= 1.)
+    } else if (rate == 2.0) {
+        accepted = true; // force accept
+
+    } else if (rate >= 1.0) {
         accepted = true;
 
-    else if (rate >= 0){
+    } else if (rate >= 0){
         const double uniform = Generator::randomUniform();
-        accepted = (uniform <= rate);
+        accepted = (uniform < rate);
 #ifdef DEBUG
         if (uniform == 0)
             qDebug()<< "[MHVariable::try_update] uniform == 0";
