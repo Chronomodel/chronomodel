@@ -94,13 +94,18 @@ CONFIG += c++2a
 QMAKE_CXXFLAGS += -std=c++2a
 
 CONFIG(debug, debug|release) {
-    message("using No Optimization O2")
 
-    #QMAKE_CXXFLAGS-= -O2
-    #QMAKE_CFLAGS-= -O2
-    # niveau pour debug
+macx{
+message("using No Optimization O0")
+    QMAKE_CXXFLAGS-= -O0
+    QMAKE_CFLAGS-= -O0
+}
+    # niveau pour debug pour windows
+win32{
+message("using No Optimization O2")
     QMAKE_CXXFLAGS+= -O2 # usefull for windows compiling
     QMAKE_CFLAGS+= -O2
+}
 
 } else  {
     message("using Optimization O3")
