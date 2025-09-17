@@ -104,7 +104,7 @@ protected:
     QString initialize_321();
     bool update_321();
 
-#elif VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH == 0
+#elif VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
 #pragma mark Version 3.3.0
     QString initialize_330();
     bool update_330();

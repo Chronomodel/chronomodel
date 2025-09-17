@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -66,22 +66,7 @@ CalibrationCurve::CalibrationCurve(const CalibrationCurve &other):
     mStep(other.mStep),
     _name (other._name)
 {
-   /* _name = other._name;
-    mPluginId = other.mPluginId;
-    
-    mDescription = other.mDescription;
 
-    mRepartition.resize(other.mRepartition.size());
-    std::copy(other.mRepartition.begin(), other.mRepartition.end(), mRepartition.begin());
-
-    mVector.resize(other.mVector.size());
-    std::copy(other.mVector.begin(), other.mVector.end(), mVector.begin());
-
-    mMap = other.mMap;
-
-    mTmin = other.mTmin;
-    mTmax = other.mTmax;
-    mStep = other.mStep;*/
 }
 
 CalibrationCurve::~CalibrationCurve() noexcept

@@ -187,7 +187,7 @@ QString MCMCLoopCurve::initialize()
 #if VERSION_MAJOR == 3 && VERSION_MINOR == 2 && VERSION_PATCH == 1
     return initialize_321();
 
-#elif VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH == 0
+#elif VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
     return initialize_330();
 
 #elif VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5
@@ -1249,7 +1249,7 @@ bool MCMCLoopCurve::update_321()
 #endif
 
 #pragma mark Version 3.3.0
-#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH == 0
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
 
 QString MCMCLoopCurve::initialize_330()
 {
