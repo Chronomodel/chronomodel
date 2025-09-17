@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -42,13 +42,16 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "PluginSettingsViewAbstract.h"
 #include "AppSettings.h"
 
-#include <QtWidgets>
 #include <QPushButton>
 
 AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QDialog(parent, flags)
 {
     setWindowTitle(tr("Application Settings"));
     filesChanged = false;
+
+    mApplyButton = new QDialogButtonBox(QDialogButtonBox::Apply);
+    connect(mApplyButton, &QDialogButtonBox::clicked, this, &AppSettingsDialog::buttonClicked);
+
     // -----------------------------
     //  General View
     // -----------------------------
@@ -79,7 +82,6 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     mAutoSaveCheck = new QCheckBox(this);
     mAutoSaveDelayLab = new QLabel(tr("Auto Save Interval (in minutes)"), this);
     mAutoSaveDelayEdit = new QLineEdit(this);
-    //mAutoSaveDelayEdit->setPalette(palette);
 
     QIntValidator* positiveValidator = new QIntValidator();
     positiveValidator->setBottom(1);
@@ -87,7 +89,6 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
 
     mCSVCellSepLab = new QLabel(tr("CSV Cell Separator"), this);
     mCSVCellSepEdit = new QLineEdit(this);
-    //mCSVCellSepEdit->setPalette(palette);
 
     mCSVDecSepLab = new QLabel(tr("CSV Decimal Separator"), this);
     mCSVDecSepCombo = new QComboBox(this);
@@ -140,9 +141,6 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     mPrecision->setSingleStep(1);
 
     connect(mAutoSaveCheck, &QCheckBox::toggled, mAutoSaveDelayEdit, &QLineEdit::setEnabled);
-
-    mApplyButton = new QDialogButtonBox(QDialogButtonBox::Apply);
-    connect(mApplyButton, &QDialogButtonBox::clicked, this, &AppSettingsDialog::buttonClicked);
 
     mRestoreBox = new QPushButton(tr("Restore Default"), this);
 
@@ -203,8 +201,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     grid->addWidget(mPrecision, row, 1);
 
     QVBoxLayout* mainLayout = new QVBoxLayout();
-
-    mainLayout->addWidget(mApplyButton);
+    mainLayout->setContentsMargins(0, 10, 10, 10);
     mainLayout->addWidget(mRestoreBox);
     mainLayout->addLayout(grid);
     
@@ -233,7 +230,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     //  List & Stack
     // -----------------------------
     mList = new QListWidget();
-    AppSettingsDialogItemDelegate* delegate = new AppSettingsDialogItemDelegate();
+    AppSettingsDialogItemDelegate* delegate = new AppSettingsDialogItemDelegate(mList);
     mList->setItemDelegate(delegate);
     mList->setFixedWidth(180);
     mList->setPalette(palette);
@@ -267,8 +264,16 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     QHBoxLayout* layout = new QHBoxLayout();
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
+
+    // Layout pour la colonne droite
+    QVBoxLayout* sideLayout = new QVBoxLayout();
+    sideLayout->setContentsMargins(20, 10, 0, 0);
+    sideLayout->setSpacing(0);
+    sideLayout->addWidget(mApplyButton, 0, Qt::AlignLeft); // bouton reste en haut à gauche
+    sideLayout->addWidget(mStack, 1); // mStack s'agrandit si la fenêtre grandit
+
     layout->addWidget(mList);
-    layout->addWidget(mStack);
+    layout->addLayout(sideLayout);
     setLayout(layout);
 
     connect(mList, &QListWidget::currentRowChanged, mStack, &QStackedWidget::setCurrentIndex);

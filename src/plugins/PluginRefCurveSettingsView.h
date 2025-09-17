@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -62,7 +62,7 @@ public:
 protected slots:
     void addRefCurve();
     void deleteRefCurve();
-   // void openSelectedFile();
+
     void updateSelection();
 
 signals:
@@ -75,10 +75,11 @@ private:
     QListWidget* mRefCurvesList;
     QPushButton* mAddRefCurveBut;
     QPushButton* mDeleteRefCurveBut;
-  //  QPushButton* mOpenBut;
 
     QMap<QString, QString> mFilesOrg;
     QMap<QString, QString> mFilesNew;
+
+    friend class PluginDensitySettingsView;
 };
 
 #endif

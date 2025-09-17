@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -36,19 +36,21 @@ same conditions as regards security.
 The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
+#if USE_PLUGIN_DENSITY
 
 #include "PluginDensitySettingsView.h"
-#if USE_PLUGIN_DENSITY
 
 #include "PluginDensity.h"
 #include "PluginRefCurveSettingsView.h"
 
-#include <QtWidgets>
+#include <QLayout>
 
 
 PluginDensitySettingsView::PluginDensitySettingsView(PluginDensity* plugin, QWidget* parent, Qt::WindowFlags flags):PluginSettingsViewAbstract(plugin, parent, flags)
 {
     mRefView = new PluginRefCurveSettingsView(plugin);
+    mRefView->mRefCurvesLab->setText(tr("Available Date Probability Densities") + " :");
+
     connect(mRefView, &PluginRefCurveSettingsView::listRefCurveChanged, this, &PluginDensitySettingsView::calibrationNeeded);
 
     QVBoxLayout* layout = new QVBoxLayout();
@@ -59,7 +61,6 @@ PluginDensitySettingsView::PluginDensitySettingsView(PluginDensity* plugin, QWid
 
 PluginDensitySettingsView::~PluginDensitySettingsView()
 {
-
 }
 
 #endif

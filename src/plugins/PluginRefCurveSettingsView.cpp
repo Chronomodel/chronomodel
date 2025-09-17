@@ -45,11 +45,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QFileDialog>
 
 
-
 PluginRefCurveSettingsView::PluginRefCurveSettingsView(PluginAbstract* plugin, QWidget* parent, Qt::WindowFlags flags):QWidget(parent, flags),
 mPlugin(plugin)
 {
-    mRefCurvesLab = new QLabel(tr("Available reference curves") + " :" , this);
+    mRefCurvesLab = new QLabel(tr("Available Reference Curves") + " :", this);
     mRefCurvesLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     mRefCurvesLab->setToolTip(PluginAbstract::AppPluginLibrary());
 
@@ -61,12 +60,12 @@ mPlugin(plugin)
     mAddRefCurveBut = new QPushButton(tr("Add"), this);
     mDeleteRefCurveBut = new QPushButton(tr("Delete"), this);
 
-
     connect(mAddRefCurveBut, &QPushButton::clicked, this, &PluginRefCurveSettingsView::addRefCurve);
     connect(mDeleteRefCurveBut, &QPushButton::clicked, this, &PluginRefCurveSettingsView::deleteRefCurve);
     connect(mRefCurvesList, &QListWidget::itemSelectionChanged, this, &PluginRefCurveSettingsView::updateSelection);
 
     QGridLayout* layout = new QGridLayout();
+    layout->setContentsMargins(0, 10, 10, 10);
     layout->addWidget(mRefCurvesLab, 0, 0, 1, 2);
     layout->addWidget(mRefCurvesList, 1, 0, 1, 2);
     layout->addWidget(mAddRefCurveBut, 2, 0);
@@ -87,8 +86,8 @@ mPlugin(plugin)
     updateSelection();
 }
 
-PluginRefCurveSettingsView::~PluginRefCurveSettingsView(){
-
+PluginRefCurveSettingsView::~PluginRefCurveSettingsView()
+{
 }
 
 void PluginRefCurveSettingsView::updateRefsList()
