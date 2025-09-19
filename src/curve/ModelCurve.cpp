@@ -2311,7 +2311,29 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
     // 2 - Variables temporaires
 
     //Pointeur sur tableau des moyennes
-    std::vector<double>::iterator itVecG_XInc = postG.gx.vecG.begin();
+    //double* g = postG.gx.vecG.data();
+    double* vecG_XInc = postG.gx.vecG.data();
+    double* vecGP_XInc = postG.gx.vecGP.data();
+    double* vecGS_XInc = postG.gx.vecGS.data();
+
+    double* vecG_YDec = postG.gy.vecG.data();
+    double* vecGP_YDec = postG.gy.vecGP.data();
+    double* vecGS_YDec = postG.gy.vecGS.data();
+
+    double* vecG_ZF = postG.gz.vecG.data();
+    double* vecGP_ZF = postG.gz.vecGP.data();
+    double* vecGS_ZF = postG.gz.vecGS.data();
+
+    // référence sur variance
+    //std::vector<double> &vecVarG_XInc = postG.gx.vecVarG;
+    //std::vector<double> &vecVarG_YDec = postG.gy.vecVarG;
+    //std::vector<double> &vecVarG_ZF = postG.gz.vecVarG;
+
+    double* vecVarG_XInc = postG.gx.vecVarG.data();
+    double* vecVarG_YDec = postG.gy.vecVarG.data();
+    double* vecVarG_ZF = postG.gz.vecVarG.data();
+
+    /*std::vector<double>::iterator itVecG_XInc = postG.gx.vecG.begin();
     std::vector<double>::iterator itVecGP_XInc = postG.gx.vecGP.begin();
     std::vector<double>::iterator itVecGS_XInc = postG.gx.vecGS.begin();
 
@@ -2330,7 +2352,7 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
 
     std::vector<double>::iterator itVecVarG_XInc = postG.gx.vecVarG.begin();
     std::vector<double>::iterator itVecVarG_YDec = postG.gy.vecVarG.begin();
-    std::vector<double>::iterator itVecVarG_ZF = postG.gz.vecVarG.begin();
+    std::vector<double>::iterator itVecVarG_ZF = postG.gz.vecVarG.begin();*/
 
 
     double t;
@@ -2338,18 +2360,15 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
     double gy, gpy, gsy;
     double gz, gpz, gsz;
 
-
     double n = realyAccepted;
-    //double  prevMeanG_XInc, prevMeanG_YDec, prevMeanG_ZF;
-
-
-    //int  idx_Y, idx_GP_Y;
 
     // 3 - Calcul pour la composante
     unsigned i0 = 0; // tIdx étant croissant, i0 permet de faire la recherche à l'indice du temps précedent
     for (int idx_t = 0; idx_t < nbPtsX ; ++idx_t) {
         t = static_cast<double>(idx_t) * stepT + mSettings.mTmin ;
         valeurs_G_GP_GS(t, spline.splineX, gx, gpx, gsx, i0, mSettings.mTmin, mSettings.mTmax);
+        // i0 augmente jusqu'à trouver le bon temps dans valeur_G_GP_GS()
+        // ici i0 doit correspondre exactement au bon t
         valeurs_G_GP_GS(t, spline.splineY, gy, gpy, gsy, i0, mSettings.mTmin, mSettings.mTmax);
 
         // Conversion IDF
@@ -2385,31 +2404,23 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
 
         // -- Calcul Mean on XInc
         {
-            //prevMeanG_XInc = *itVecG_XInc;
-            //*itVecG_XInc +=  (gx - prevMeanG_XInc)/n;
 
-            *itVecGP_XInc +=  (gpx - *itVecGP_XInc)/n;
-            *itVecGS_XInc +=  (gsx - *itVecGS_XInc)/n;
-            // erreur inter spline
-            //*itVecVarianceG_XInc +=  (gx - prevMeanG_XInc)*(gx - *itVecG_XInc);
+            vecGP_XInc[idx_t] +=  (gpx - vecGP_XInc[idx_t])/n;
+            vecGS_XInc[idx_t] +=  (gsx - vecGS_XInc[idx_t])/n;
 
             // Version numériquement plus stable
-            double delta = gx - *itVecG_XInc; // = (g - prevMeanG_ZF)
+            double delta = gx - vecG_XInc[idx_t]; // = (g - prevMeanG_ZF)
 
-            *itVecG_XInc += delta / n;
-            double delta2 = gx - *itVecG_XInc;
+            vecG_XInc[idx_t] += delta / n;
+            double delta2 = gx - vecG_XInc[idx_t];
 
-            *itVecVarG_XInc = *itVecVarG_XInc * (n-1) + delta * delta2;
-            if (idx_t == 0) {
-                std::cout << " delta "<< delta << " gx="<< gx << " vecg=" << *itVecG_XInc ;
-                std::cout << " var "<< *itVecVarG_XInc << std::endl;
-            }
+            vecVarG_XInc[idx_t] = vecVarG_XInc[idx_t] * (n-1) + delta * delta2;
 
-            ++itVecG_XInc;
+           /* ++itVecG_XInc;
             ++itVecGP_XInc;
             ++itVecGS_XInc;
             ++itVecVarG_XInc;
-
+*/
 
             // -- Calcul map on XInc ymin_XInc
 
@@ -2428,25 +2439,23 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
 
 
             // -- Calcul Mean on YDec
-            //prevMeanG_YDec = *itVecG_YDec;
-            //*itVecG_YDec +=  (gy - prevMeanG_YDec)/n;
 
-            *itVecGP_YDec +=  (gpy - *itVecGP_YDec)/n;
-            *itVecGS_YDec +=  (gsy - *itVecGS_YDec)/n;
+            vecGP_YDec[idx_t] +=  (gpy - vecGP_YDec[idx_t])/n;
+            vecGS_YDec[idx_t] +=  (gsy - vecGS_YDec[idx_t])/n;
             // erreur inter spline
             //*itVecVarianceG_YDec +=  (gy - prevMeanG_YDec)*(gy - *itVecG_YDec);
 
             // Version numériquement plus stable
-            delta = gy - *itVecG_YDec; // = (g - prevMeanG_ZF)
-            *itVecG_YDec += delta / n;
-            delta2 = gy - *itVecG_YDec;
+            delta = gy - vecG_YDec[idx_t]; // = (g - prevMeanG_ZF)
+            vecG_YDec[idx_t] += delta / n;
+            delta2 = gy - vecG_YDec[idx_t];
 
-            *itVecVarG_YDec = *itVecVarG_YDec * (n-1) + delta * delta2;
+            vecVarG_YDec[idx_t] = vecVarG_YDec[idx_t] * (n-1) + delta * delta2;
 
-            ++itVecG_YDec;
+            /* ++itVecG_YDec;
             ++itVecGP_YDec;
             ++itVecGS_YDec;
-            ++itVecVarG_YDec;
+            ++itVecVarG_YDec;*/
         }
 
         // -- Calcul map on YDec
@@ -2469,20 +2478,20 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
         if (compute_XYZ) {
 
             // -- Calcul Mean on ZF
-            *itVecGP_ZF +=  (gpz - *itVecGP_ZF)/n;
-            *itVecGS_ZF +=  (gsz - *itVecGS_ZF)/n;
+            vecGP_ZF[idx_t] +=  (gpz - vecGP_ZF[idx_t])/n;
+            vecGS_ZF[idx_t] +=  (gsz - vecGS_ZF[idx_t])/n;
 
             // Version numériquement plus stable
-            double delta = gz - *itVecG_ZF; // = (g - prevMeanG_ZF)
-            *itVecG_ZF += delta / n;
-            double delta2 = gz - *itVecG_ZF;
+            double delta = gz - vecG_ZF[idx_t]; // = (g - prevMeanG_ZF)
+            vecG_ZF[idx_t] += delta / n;
+            double delta2 = gz - vecG_ZF[idx_t];
 
-            *itVecVarG_ZF = *itVecVarG_ZF * (n-1) + delta * delta2;
+            vecVarG_ZF[idx_t] = vecVarG_ZF[idx_t] * (n-1) + delta * delta2;
 
-            ++itVecG_ZF;
+           /* ++itVecG_ZF;
             ++itVecGP_ZF;
             ++itVecGS_ZF;
-            ++itVecVarG_ZF;
+            ++itVecVarG_ZF;*/
 
             // -- Calcul map on ZF
 
@@ -2502,7 +2511,7 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
 
     }
 
-    for (size_t i = 0; i < vecVarG_XInc.size(); ++i) {
+    for (size_t i = 0; i < nbPtsX; ++i) {
         vecVarG_XInc[i] = vecVarG_XInc[i] / n;
         vecVarG_YDec[i] = vecVarG_YDec[i] / n;
         vecVarG_ZF[i] = vecVarG_ZF[i] / n;

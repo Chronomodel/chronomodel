@@ -3951,7 +3951,7 @@ std::pair<Matrix2D, DiagonalMatrixLD> decompositionCholesky(const Matrix2D &matr
             if (matD.diagonal()[i] >= 1.0E20) {
                 qWarning() << "[Function::decompositionCholesky]  matD[i] ="<< static_cast<double>(matD.diagonal()[i]) << " >= 1.E+20 ";
             }
-            if (matD.diagonal()[i] <= 0) {
+            if (matD.diagonal()[i] < 0) {
                 std::cout << "[Function::decompositionCholesky] The matrix is not positive definite." << static_cast<double>(matD.diagonal()[i]) << std::endl;
                 throw std::runtime_error("[Function::decompositionCholesky] The matrix is not positive definite.");
                 //matD[i] = 0;

@@ -73,7 +73,7 @@ typedef struct SplineMatrices
     DiagonalMatrixLD  diagWInv;
     SparseMatrixLD matR;
     SparseMatrixLD matQ;
-    SparseMatrixLD matQT;
+    //SparseMatrixLD matQT;
     Matrix2D matQTW_1Q;
     Matrix2D matQTQ;
 
@@ -283,11 +283,11 @@ SplineMatrices prepareCalculSpline_Sy2(const std::vector<std::shared_ptr<Event>>
 
 
 
-SplineResults do_spline(const std::function<t_matrix (std::shared_ptr<Event>)> &fun, const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp, const double lambdaSpline);
+SplineResults do_spline(const std::function<t_matrix (std::shared_ptr<Event>)> &fun, const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_B, const double lambdaSpline);
 
-SplineResults doSplineX(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp, const double lambdaSpline);
-SplineResults doSplineY(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp, const double lambdaSpline);
-SplineResults doSplineZ(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp, const double lambdaSpline);
+SplineResults doSplineX(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_B, const double lambdaSpline);
+SplineResults doSplineY(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_B, const double lambdaSpline);
+SplineResults doSplineZ(const SplineMatrices &matrices, const std::vector<std::shared_ptr<Event>> &events, const std::vector<t_reduceTime> &vecH, const std::pair<Matrix2D, DiagonalMatrixLD > &decomp_B, const double lambdaSpline);
 
 DiagonalMatrixLD diagonal_influence_matrix_old(const SplineMatrices &matrices, const int nbBandes, const std::pair<Matrix2D, DiagonalMatrixLD> &decomp, const double lambda);
 
@@ -412,6 +412,26 @@ t_prob ln_h_YWI_1(const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_QTQ);
 t_prob ln_h_YWI_2(const std::pair<Matrix2D, DiagonalMatrixLD> &decomp_matB);
 
 t_prob ln_h_YWI_1_2(const std::pair<Matrix2D, DiagonalMatrixLD>& decomp_QTQ, const std::pair<Matrix2D, DiagonalMatrixLD >& decomp_matB);
+
+
+template <typename Derived1, typename Derived2>
+double log_det_ratio(const Eigen::MatrixBase<Derived1>& new_diag,
+                     const Eigen::MatrixBase<Derived2>& old_diag)
+{
+    assert(new_diag.size() == old_diag.size());
+    if (new_diag.size() <= 2) return 0.0;
+
+    auto new_seg = new_diag.segment(1, new_diag.size() - 2).template cast<double>();
+    auto old_seg = old_diag.segment(1, old_diag.size() - 2).template cast<double>();
+
+    return (new_seg.array().log() - old_seg.array().log()).sum();
+}
+
+
+t_prob ln_rate_det_B (const std::pair<Matrix2D, DiagonalMatrixLD>& try_decomp_B, const std::pair<Matrix2D, DiagonalMatrixLD >& current_decomp_B);
+
+t_prob ln_rate_det_QtQ_det_B (const std::pair<Matrix2D, DiagonalMatrixLD>& try_decomp_QtQ, const std::pair<Matrix2D, DiagonalMatrixLD >& try_decomp_B,
+                             const std::pair<Matrix2D, DiagonalMatrixLD>& current_decomp_QtQ, const std::pair<Matrix2D, DiagonalMatrixLD >& current_decomp_B);
 
 inline double Signe_Number(const double &a)
 {

@@ -63,7 +63,8 @@ public:
 protected:
     // Variable for update function
 
-    t_prob current_ln_h_YWI_2, current_ln_h_YWI_3, current_ln_h_YWI_1_2, current_h_theta, current_h_lambda, current_h_VG;
+    //t_prob current_ln_h_YWI_2, current_ln_h_YWI_3, current_ln_h_YWI_1_2, current_h_theta, current_h_lambda, current_h_VG;
+    t_prob current_ln_h_YWI_3, current_h_theta, current_h_lambda, current_h_VG;
 
     SplineMatrices current_splineMatrices, current_matriceWI;
     SplineResults current_spline;
@@ -72,7 +73,8 @@ protected:
     std::pair<Matrix2D, DiagonalMatrixLD> current_decomp_matB;
 
     t_prob try_h_theta, try_h_lambda, try_h_VG;
-    t_prob try_ln_h_YWI_2, try_ln_h_YWI_3, try_ln_h_YWI_1_2;
+    //t_prob try_ln_h_YWI_2, try_ln_h_YWI_3, try_ln_h_YWI_1_2;
+    t_prob try_ln_h_YWI_3;
 
     std::vector<t_reduceTime> try_vecH;
     SplineMatrices try_splineMatrices;

@@ -1765,7 +1765,7 @@ bool MCMCLoopCurve::update_330()
         current_ln_h_YWI_3 = mModel->mLambdaSpline.mX == 0.0 ? 0.0 :
                                  ln_h_YWI_3_update(current_splineMatrices, mModel->mEvents, current_vecH, current_decomp_matB, mModel->mLambdaSpline.mX, mModel->compute_Y, mModel->compute_XYZ);
 
-        current_ln_h_YWI_1_2 = ln_h_YWI_1_2(current_decomp_QTQ, current_decomp_matB);
+        //current_ln_h_YWI_1_2 = ln_h_YWI_1_2(current_decomp_QTQ, current_decomp_matB);
 
 
         /* --------------------------------------------------------------
@@ -1869,14 +1869,17 @@ bool MCMCLoopCurve::update_330()
                             try_decomp_QTQ = decompositionCholesky(try_splineMatrices.matQTQ, 5, 1);
                             try_decomp_matB = decomp_matB(try_splineMatrices, mModel->mLambdaSpline.mX);
 
-                            try_ln_h_YWI_1_2 = ln_h_YWI_1_2(try_decomp_QTQ, try_decomp_matB);
+                           // try_ln_h_YWI_1_2 = ln_h_YWI_1_2(try_decomp_QTQ, try_decomp_matB);
+
+                            auto ln_rate_det = ln_rate_det_QtQ_det_B(try_decomp_QTQ, try_decomp_matB, current_decomp_QTQ, current_decomp_matB);
+
                             try_ln_h_YWI_3 = ln_h_YWI_3_update(try_splineMatrices, mModel->mEvents, try_vecH, try_decomp_matB, mModel->mLambdaSpline.mX, mModel->compute_Y, mModel->compute_XYZ);
 
-                            t_prob rate_h_YWI = exp( 0.5 * ( try_ln_h_YWI_1_2 + try_ln_h_YWI_3 - current_ln_h_YWI_1_2 - current_ln_h_YWI_3));
+                           // t_prob rate_h_YWI2 = exp( 0.5 * ( try_ln_h_YWI_1_2 + try_ln_h_YWI_3 - current_ln_h_YWI_1_2 - current_ln_h_YWI_3));
 
+                            t_prob rate_h_YWI = exp( 0.5 * ( ln_rate_det + try_ln_h_YWI_3 - current_ln_h_YWI_3));
 
                             try_h_theta = h_theta_Event(event);
-
 
                             // Conditionnel du au shrinkage,
                             const std::vector<t_matrix>& try_vect_Theta = get_vector<t_matrix>(get_Theta, mModel->mEvents);
@@ -1906,11 +1909,14 @@ bool MCMCLoopCurve::update_330()
                                 rate_VG = pow(rate_VG, mPointEvent.size()); // faire puissance n pour individuelle, le nombre d'Event non-Bound;
 
                                 for (const auto &e : mPointEvent) {
-                                    rate_VG *= pow((e->mVg.mX + current_var_Gasser) / (e->mVg.mX + try_var_Gasser), 2.0);
-
+                                    //rate_VG *= pow((e->mVg.mX + current_var_Gasser) / (e->mVg.mX + try_var_Gasser), 2.0);
+                                    rate_VG *= (e->mVg.mX + current_var_Gasser) / (e->mVg.mX + try_var_Gasser);
                                 }
+                                rate_VG *= rate_VG;
+
                             } else {
-                                 rate_VG *= pow((event->mVg.mX + current_var_Gasser) / (event->mVg.mX + try_var_Gasser), 2.0);
+                                auto r = (event->mVg.mX + current_var_Gasser) / (event->mVg.mX + try_var_Gasser);
+                                rate_VG *= r * r;
 
                             }
 
@@ -1933,7 +1939,7 @@ bool MCMCLoopCurve::update_330()
                         if ( event->mTheta.test_update(current_value, try_value, rate)) {
 
                             // Pour l'itération suivante :
-                            std::swap(current_ln_h_YWI_1_2, try_ln_h_YWI_1_2);
+                           // std::swap(current_ln_h_YWI_1_2, try_ln_h_YWI_1_2);
                             std::swap(current_ln_h_YWI_3, try_ln_h_YWI_3);
 
                             std::swap(current_vecH, try_vecH);
@@ -2029,7 +2035,7 @@ bool MCMCLoopCurve::update_330()
 
                 //current_ln_h_YWI_2 = ln_h_YWI_2(current_decomp_matB); // Has not been initialized yet
                 // Normalement ici tout est déjà calculé
-                //current_ln_h_YWI_3 = ln_h_YWI_3_update(current_splineMatrices, mModel->mEvents, current_vecH, current_decomp_matB, mModel->mLambdaSpline.mX, mModel->compute_Y, mModel->compute_XYZ);
+                current_ln_h_YWI_3 = ln_h_YWI_3_update(current_splineMatrices, mModel->mEvents, current_vecH, current_decomp_matB, mModel->mLambdaSpline.mX, mModel->compute_Y, mModel->compute_XYZ);
                 //current_ln_h_YWI_1_2 = ln_h_YWI_1_2(current_decomp_QTQ, current_decomp_matB);
 
                 /* --------------------------------------------------------------
@@ -2039,21 +2045,15 @@ bool MCMCLoopCurve::update_330()
                 for (std::shared_ptr<Event>& event : mPointEvent) {
 
                     const double current_value = event->mVg.mX;
+                    //const t_prob W_current = event->mW; // pour test V335
+
                     double try_value = current_value;
 
                     if (current_value != 0.0) {
                         current_h_VG = h_VG_Event(current_value, mModel->mS02Vg.mX);
 
-                        // current_vecH = calculVecH(mModel->mEvents); // utilise e-> thetareduce
-                        //current_splineMatrices = prepare_calcul_spline(mModel->mEvents, current_vecH);
-                        //current_decomp_matB = decomp_matB(current_splineMatrices, mModel->mLambdaSpline.mX);
-
-                        //current_ln_h_YWI_3 = ln_h_YWI_3_update(current_splineMatrices, mModel->mEvents, current_vecH, current_decomp_matB, mModel->mLambdaSpline.mX, mModel->compute_Y, mModel->compute_XYZ);
-                        //current_ln_h_YWI_2 = ln_h_YWI_2(current_decomp_matB);
-
                         // On tire une nouvelle valeur :
                         const double try_value_log = Generator::gaussByBoxMuller(log10(current_value), event->mVg.mSigmaMH);
-
 
                         if (try_value_log >= logMin && try_value_log <= logMax) {
                             try_value = pow(10., try_value_log);
@@ -2065,17 +2065,16 @@ bool MCMCLoopCurve::update_330()
                             // Calcul du rapport : matrices utilise les temps reduits, elle est affectée par le changement de VG
 
                             try_splineMatrices = prepare_calcul_spline(mModel->mEvents, current_vecH); // utilise vecH et e->mW
-                            //try_splineMatrices = update_splineMatrice_with_mW(current_splineMatrices, mModel->mEvents );
                             try_decomp_matB = decomp_matB(try_splineMatrices, mModel->mLambdaSpline.mX);
 
                             try_ln_h_YWI_3 = ln_h_YWI_3_update(try_splineMatrices, mModel->mEvents, current_vecH, try_decomp_matB, mModel->mLambdaSpline.mX, mModel->compute_Y, mModel->compute_XYZ);
-                            try_ln_h_YWI_2 = ln_h_YWI_2(try_decomp_matB);
 
-                            t_prob rate_h_YWI = exp( 0.5 *  ( try_ln_h_YWI_2 + try_ln_h_YWI_3 - current_ln_h_YWI_2 - current_ln_h_YWI_3));
+                            auto ln_rate_B = ln_rate_det_B(try_decomp_matB, current_decomp_matB);
 
+                            auto rate_h_YWI = exp( 0.5 * ( ln_rate_B + try_ln_h_YWI_3 - current_ln_h_YWI_3));
 
+                            // conditionnel du au shrinkage
                             try_h_VG = h_VG_Event(try_value, mModel->mS02Vg.mX);
-
 
                             // Calcul du rapport de probabilité d'acceptation.
                             rate = rate_h_YWI;
@@ -2100,20 +2099,27 @@ bool MCMCLoopCurve::update_330()
                     if ( event->mVg.test_update(current_value, try_value, rate)) {
 
                         // Pour l'itération suivante : Car mVg a changé
-                        std::swap(current_ln_h_YWI_2, try_ln_h_YWI_2);
+                       // std::swap(current_ln_h_YWI_1_2, try_ln_h_YWI_1_2);
+                       // std::swap(current_ln_h_YWI_2, try_ln_h_YWI_2);
                         std::swap(current_ln_h_YWI_3, try_ln_h_YWI_3);
                         std::swap(current_splineMatrices, try_splineMatrices);
                         std::swap(current_decomp_matB, try_decomp_matB);
                     }
                     event->updateW();
+
+                    if (event->mVg.mX > 1E4*1E4) {
+                        qDebug() << "grand VG ??" << event->mVg.mX;
+                    }
                 }
 
 
             } else if (mCurveSettings.mVarianceType == CurveSettings::eModeGlobal) {
 #pragma mark update Vg Global
-                current_ln_h_YWI_2 = ln_h_YWI_2(current_decomp_matB); // Has not been initialized yet
+               // current_ln_h_YWI_2 = ln_h_YWI_2(current_decomp_matB); // Has not been initialized yet
 
                 current_ln_h_YWI_3 = ln_h_YWI_3_update(current_splineMatrices, mModel->mEvents, current_vecH, current_decomp_matB, mModel->mLambdaSpline.mX, mModel->compute_Y, mModel->compute_XYZ);
+
+
 
                 /* --------------------------------------------------------------
                 *  D.2 - Update Vg Global
@@ -2143,12 +2149,10 @@ bool MCMCLoopCurve::update_330()
                     try_splineMatrices = update_splineMatrice_with_mW(current_splineMatrices, mModel->mEvents );
 
                     try_decomp_matB = decomp_matB(try_splineMatrices, mModel->mLambdaSpline.mX);
-
-                    try_ln_h_YWI_2 = ln_h_YWI_2(try_decomp_matB);
                     try_ln_h_YWI_3 = mModel->mLambdaSpline.mX == 0.0 ? 0.0 : ln_h_YWI_3_update(try_splineMatrices, mModel->mEvents, current_vecH, try_decomp_matB, mModel->mLambdaSpline.mX, mModel->compute_Y, mModel->compute_XYZ);
 
-                    t_prob rate_h_YWI = exp( 0.5 * ( try_ln_h_YWI_2 + try_ln_h_YWI_3 - current_ln_h_YWI_2 - current_ln_h_YWI_3));
-
+                    auto ln_rate_B = ln_rate_det_B(try_decomp_matB, current_decomp_matB);
+                    auto rate_h_YWI = exp( 0.5 * ( ln_rate_B + try_ln_h_YWI_3 - current_ln_h_YWI_3));
 
                     try_h_VG = h_VG_Event(try_value, mModel->mS02Vg.mX);
 
@@ -2158,8 +2162,6 @@ bool MCMCLoopCurve::update_330()
 
                     // multiplier par le jacobien
                     rate *= try_value / current_value;
-
-
 
                     // On fait le test du rapport directement, car les fonctions test_update() et try_update(), ajoutent une valeur à mLastAccept
                     bool accepted;
@@ -2186,7 +2188,7 @@ bool MCMCLoopCurve::update_330()
 
                     if ( accepted) {
 
-                        std::swap(try_ln_h_YWI_2, current_ln_h_YWI_2);
+                        //std::swap(try_ln_h_YWI_2, current_ln_h_YWI_2);
                         std::swap(try_ln_h_YWI_3, current_ln_h_YWI_3);
                         std::swap(try_splineMatrices, current_splineMatrices);
                         std::swap(try_decomp_matB, current_decomp_matB);
@@ -2244,7 +2246,7 @@ bool MCMCLoopCurve::update_330()
                 constexpr double lambda_logMax = +10.0;
 
                 current_ln_h_YWI_3 = ln_h_YWI_3_update(current_splineMatrices, mModel->mEvents, current_vecH, current_decomp_matB, mModel->mLambdaSpline.mX, mModel->compute_Y, mModel->compute_XYZ);
-                current_ln_h_YWI_2 = ln_h_YWI_2(current_decomp_matB);
+                //current_ln_h_YWI_2 = ln_h_YWI_2(current_decomp_matB);
 
                 // On stocke l'ancienne valeur :
                 const double current_value = mModel->mLambdaSpline.mX;
@@ -2270,16 +2272,18 @@ bool MCMCLoopCurve::update_330()
 
                     try_decomp_matB = decomp_matB(current_splineMatrices, try_value);
                     //try_ln_h_YWI_3 = try_value == 0.0 ? 0.0 : ln_h_YWI_3_update(current_splineMatrices, mModel->mEvents, current_vecH, try_decomp_matB, try_value, mModel->compute_Y, mModel->compute_XYZ);
-                    try_ln_h_YWI_2 = ln_h_YWI_2(try_decomp_matB);
+                    //try_ln_h_YWI_2 = ln_h_YWI_2(try_decomp_matB);
 
+                    auto ln_rate_B = ln_rate_det_B(try_decomp_matB, current_decomp_matB);
 
                     try_ln_h_YWI_3 = try_value == 0.0 ? 0.0 : ln_h_YWI_3_update(current_splineMatrices, mModel->mEvents, current_vecH, try_decomp_matB, mModel->mLambdaSpline.mX, mModel->compute_Y, mModel->compute_XYZ);
 
                     // La partie exp( 0.5 *  ( (n-2)*log(try_value/current_value) , n'est pas présente dans les formules ln_h_YWI, il faut l'ajouter ici
+                    //t_prob rate_h_YWI2 = exp( 0.5 *   ( (n_points - 2)*log(try_value/current_value)
+                    //                                   + try_ln_h_YWI_2 + try_ln_h_YWI_3 - current_ln_h_YWI_2 - current_ln_h_YWI_3));
+
                     t_prob rate_h_YWI = exp( 0.5 *   ( (n_points - 2)*log(try_value/current_value)
-                                                       + try_ln_h_YWI_2 + try_ln_h_YWI_3 - current_ln_h_YWI_2 - current_ln_h_YWI_3));
-
-
+                                                       + ln_rate_B + try_ln_h_YWI_3 - current_ln_h_YWI_3));
 
                     // Calcul du rapport de probabilité d'acceptation.
                     rate = rate_h_YWI * rate_h_lambda;
@@ -2291,10 +2295,6 @@ bool MCMCLoopCurve::update_330()
                 } else {
                     mModel->mLambdaSpline.reject_update();
                 }
-
-
-
-
 
 
             }
@@ -5279,10 +5279,10 @@ bool MCMCLoopCurve::update_interpolate()
 
         //La partie h_YWI_3 = exp(ln_h_YWI_3) est placée dans le rapport MH
         //current_ln_h_YWI_3 = mModel->mLambdaSpline.mX == 0 ? 0. : ln_h_YWI_3_update(current_splineMatrices, mModel->mEvents, current_vecH, current_decomp_matB, mModel->mLambdaSpline.mX, hasY, hasZ);
-        current_ln_h_YWI_3 =  0.;
-        current_ln_h_YWI_1_2 = ln_h_YWI_1_2(current_decomp_QTQ, current_decomp_matB);
+        //current_ln_h_YWI_3 =  0.;
+        //current_ln_h_YWI_1_2 = ln_h_YWI_1_2(current_decomp_QTQ, current_decomp_matB);
 
-        current_h_lambda = 1;
+        //current_h_lambda = 1;
 
 
         /* --------------------------------------------------------------
@@ -5411,14 +5411,7 @@ bool MCMCLoopCurve::update_interpolate()
          *  G - Update mModel->mSpline
          * -------------------------------------------------------------- */
         // G.1- Update the current spline
-        /*
-         *  Preparation of the spline calculation / Tous ces calculs sont effectués dans currentSpline() avec doSortSpreadTheta=true
-         orderEventsByThetaReduced(mModel->mEvents); // On réordonne les Events suivant les thetas Réduits croissants
-         spreadEventsThetaReduced0(mModel->mEvents); // On espace les temps si il y a égalité de date
-         try_vecH = calculVecH(mModel->mEvents);
-         try_splineMatrices = prepareCalculSpline(mModel->mEvents, try_vecH);
 
-         */
         orderEventsByThetaReduced(mModel->mEvents);
         spreadEventsThetaReduced0(mModel->mEvents);
 
@@ -8668,7 +8661,7 @@ SplineMatrices MCMCLoopCurve::prepareCalculSpline_W_Vg0(const std::vector<std::s
     SparseMatrixLD matQ = calculMatQ(vecH);
 
     // Calcul de la transposée QT de la matrice Q, de dimension (n-2) x n
-    SparseMatrixLD matQT = matQ.transpose();// transpose(matQ, 3);
+    auto Qt = matQ.transpose();// transpose(matQ, 3);
 
     // Diag Winv est égale à la diagonale des variances
     DiagonalMatrixLD diagWInv (sortedEvents.size());
@@ -8676,18 +8669,18 @@ SplineMatrices MCMCLoopCurve::prepareCalculSpline_W_Vg0(const std::vector<std::s
 
     // Calcul de la matrice matQTW_1Q, de dimension (n-2) x (n-2) pour calcul Mat_B
     // matQTW_1Q possèdera 3+3-1=5 bandes
-    Matrix2D tmp = matQT * diagWInv; //multiMatParDiag(matQT, diagWInv, 3);
+    Matrix2D tmp = Qt * diagWInv; //multiMatParDiag(matQT, diagWInv, 3);
     Matrix2D matQTW_1Q = tmp * matQ;//multiMatParMat(tmp, matQ, 3, 3);
 
     // Calcul de la matrice QTQ, de dimension (n-2) x (n-2) pour calcul Mat_B
     // Mat_QTQ possèdera 3+3-1=5 bandes
-    Matrix2D matQTQ = matQT * matQ;//multiMatParMat(matQT, matQ, 3, 3);
+    Matrix2D matQTQ = Qt * matQ;//multiMatParMat(matQT, matQ, 3, 3);
 
     SplineMatrices matrices;
     matrices.diagWInv = std::move(diagWInv);
     matrices.matR = std::move(matR);
     matrices.matQ = std::move(matQ);
-    matrices.matQT = std::move(matQT);
+    //matrices.matQT = std::move(matQT);
     matrices.matQTW_1Q = std::move(matQTW_1Q); // Seule affectée par changement de VG, ici VG=0
     matrices.matQTQ = std::move(matQTQ);
 
@@ -9605,18 +9598,18 @@ t_prob MCMCLoopCurve::rate_Theta_XYZ(const std::vector<std::shared_ptr<Event>> &
 #pragma mark usefull math function
 double S02_lambda_WI(const SplineMatrices &matrices, const int nb_noeuds)
 {
-    const Matrix2D &matR = matrices.matR;
-    const Matrix2D &matQ = matrices.matQ;
-    const Matrix2D &matQT = matrices.matQT;
+    const Matrix2D &R = matrices.matR;
+    const Matrix2D &Q = matrices.matQ;
+    const auto Qt = Q.transpose();
 
     // On pose W = matrice unité
 
     // calcul des termes diagonaux de W_1.K
-    const std::pair<Matrix2D, DiagonalMatrixLD> decomp = decompositionCholesky(matR, 3, 1);
+    const std::pair<Matrix2D, DiagonalMatrixLD> decomp = decompositionCholesky(R, 3, 1);
 
     const Matrix2D matRInv = inverseMatSym_origin(decomp, 5, 1);
 
-    const Matrix2D matK = multiplyMatrixBanded_Winograd(multiplyMatrixBanded_Winograd(matQ, matRInv, 2), matQT, 0); // bandwith->k1=k2=0, car on peut utiliser que les diagonales pour calculer la digonale de matK
+    const Matrix2D matK = multiplyMatrixBanded_Winograd(multiplyMatrixBanded_Winograd(Q, matRInv, 2), Qt, 0); // bandwith->k1=k2=0, car on peut utiliser que les diagonales pour calculer la digonale de matK
 
     double vm = 0.;
     for (size_t i = 0; i < static_cast<size_t>(nb_noeuds); ++i) {
