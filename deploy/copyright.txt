@@ -1,6 +1,13 @@
 Copyright or © or Copr. CNRS
-Created by Helori LANOS on 07/06/2014.
-helori.lanos@gmail.com
+
+Project Manager
+Philippe LANOS
+
+ChronoModel was originally written by
+Helori LANOS on 07/06/2014.
+
+Current developer
+Philippe DUFRESNE (2015-2025)
 
 This software is a computer program whose purpose is to 
 create chronological models of archeological data using Bayesian statistics

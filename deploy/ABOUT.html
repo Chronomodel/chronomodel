@@ -1,83 +1,144 @@
 <!DOCTYPE html">
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>About ChronoModel</title>
-    <meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-    <meta NAME="Author" LANG="us" CONTENT="Dufresne Philippe">
-    <meta NAME="Description" CONTENT="About file for ChronoModel App">
-    <meta HTTP-EQUIV="Content-language" CONTENT="us">
-    <meta NAME="Copyright" CONTENT="Coryright © CNRS">
+    <meta name="author" content="Dufresne Philippe">
+    <meta name="description" content="About file for ChronoModel App">
+    <meta name="language" content="en-US">
+    <meta name="copyright" content="Copyright © CNRS">
+    
     <style type="text/css">
-        h1.title {color: rgb(31,80,128); font-size: 180%; text-align: center}
-        h2 {color: rgb(31,80,128); font-size: 120%}
-        h3 {color: rgb(31,80,128); font-size: 105%}
-        h4 {color: #000000; font-size: 100%}
-        h5 {color: #000000; font-size: 100%}
-        ul {color: rgb(31,80,128); font-size: 100%}
-        a {color: rgb(214,61,80); font-size: 100%; text-decoration:underline}     
-		body {background-color: white ; color: black} 
+      body {
+        background-image: url('Chronomodel.png');
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-size: cover;
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: rgba(255, 255, 255, 0.8);
+      }
+
+      h1.title, h2, h3 {
+        color: rgb(31,80,128);
+        margin-top: 20px;
+      }
+
+      h2 {
+        font-size: 1.5em;
+        border-bottom: 2px solid rgb(31,80,128);
+        padding-bottom: 10px;
+      }
+
+      h3 {
+        font-size: 1.2em;
+      }
+
+      a {
+        color: rgb(214,61,80);
+        text-decoration: underline;
+        transition: color 0.3s ease;
+      }
+
+      a:hover {
+        color: darken(rgb(214,61,80), 20%);
+      }
+
+      ul {
+        list-style-type: disc;
+        padding-left: 30px;
+      }
+
+      .section {
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      }
     </style>
   </head>
+  
+  <body>
+    <div class="section">
+      <h2>PROJECT</h2>
+      <hr>
+      <h3>ChronoModel Project</h3>
 
-  <body  background="Chronomodel.png" >
+      <p>
+        <strong>Version:</strong> 3.3.1<br>
+        <strong>Date:</strong> 2025-09-19<br>
+        <a href="https://www.chronomodel.com/">Official Website</a>
+      </p>
+    </div>
 
-    <h2>PROJECT</h2>
+    <div class="section">
+      <h2>CREDITS</h2>
+      <hr>
+      <h3>Copyright © 2025 CNRS</h3>
 
-    <hr>
-    <h3> ChronoModel Project </h3>
+      <p>Used under the terms:</p>
+      <ul>
+        <li>CeCILL FREE SOFTWARE LICENSE AGREEMENT</li>
+        <li>Version 3.2.1 dated 2023-01-20</li>
+        <li><a href="https://cecill.info/">CeCILL License Details</a></li>
+      </ul>
 
-    Version 3.3.0 <br>
-    2025-09-04 <br>
-    <a href="https://www.chronomodel.com/">https://www.chronomodel.com/</a><br><br>
+      <h3>Third-Party Libraries</h3>
+      
+      <h4>FFTW Project</h4>
+      <ul>
+        C subroutine library<br>
+        <li><a href="https://www.fftw.org/">FFTW Website</a></li>
+        <li>Distributed under: Gnu General Public License (GPL) v2 <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html">GPL v2 License</a></li>
+      </ul>
 
-    <hr>
-    <h2>CREDITS </h2>
-    <hr>
-
-    <h3> Copyright © 2025 CNRS </h3>
-
-    used under the terms:<br>
-    CeCILL FREE SOFTWARE LICENSE AGREEMENT<br>
-    Version 3.2.1  dated  2023-01-20<br>
-    <a href="https://cecill.info/">https://cecill.info/</a><br><br>
-
-    This software use C subroutine library from the FFTW project<br>
-    <a href="http://www.fftw.org/">http://www.fftw.org/</a><br>
-    distributed under the terms of the GNU General Public License <br> <br>
-
-    <i>  Release developed from the previous version 1.5 of ChronoModel, since April 2016 </i> <br> 
+      <h4>Eigen Library</h4>
+      <ul>
+        <li><a href="https://eigen.tuxfamily.org/">Eigen Website</a></li>
+        <li>Distributed under the:
+        Mozilla Public License 2.0 (MPL2) <a href="https://www.mozilla.org/en-US/MPL/2.0/">MPL2 License</a><br><br>
+	</div>
+	
+	<div class="section">
+    	<i>  Release developed from the previous version 1.5 of ChronoModel, since April 2016 </i> <br> 
     Ph. Lanos, A. Philippe, H. Lanos, Ph. Dufresne (2016). Chronomodel : Chronological Modelling of Archaeological Data using Bayesian Statistics. (Version 1.5).<br>
     Available from     <a href="https://chronomodel.com">https://chronomodel.com/</a><br>
 
-	<i> To cite ChronoModel Version 2.0 in your publications </i> <br>
+		<i> To cite ChronoModel Version 2.0 in your publications </i> <br>
     Ph. Lanos and Ph. Dufresne (2019). ChronoModel version 2.0: Software for  Chronological Modelling of Archaeological Data using Bayesian Statistics.<br>
     Available from     <a href="https://chronomodel.com">https://chronomodel.com/</a><br><br>
 
-    <h3> To cite ChronoModel Version 3.0 in your publications </h3>
+    	<h3> To cite ChronoModel Version 3.0 in your publications </h3>
     Ph. Lanos and Ph. Dufresne (2024). ChronoModel version 3.0: Software for  Chronological Modelling of Archaeological Data using Bayesian Statistics.<br>
     Available from     <a href="https://chronomodel.com">https://chronomodel.com/</a><br><br>
+	</div>
+    <div class="section">
+    	<h2>AUTHORS</h2>
+    	<hr>
 
-    <hr>
-    <h2>AUTHORS</h2>
-    <hr>
-
-    <h4> Project Manager </h4>
-    <ul>
-      Philippe LANOS
+    	<h4> Project Manager </h4>
+    	<ul>
+      	Philippe LANOS
     </ul>
 
+	<h4> Design, Architecture, Coding </h4>
+	<ul>
+		Helori LANOS (2014-2017 + 2020)<br>
+		Komlan Midodzino NOUKPOAPE (2021-2024)<br>
+		Philippe DUFRESNE (2015-present)<br>
+	</ul>
 
-    <h4> ChronoModel was originally written by </h4>
-    <ul>
-      Helori LANOS (2014-2017)
-    </ul>
 
-
-    <h4> The current developer is </h4>
+    <h4> Debugging, Maintenance, Support</h4>
     <ul>
       Philippe DUFRESNE (2015-present)
     </ul>
-    
+    </div>
 
   </body>
 
