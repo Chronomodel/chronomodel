@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -93,9 +93,6 @@ private:
     QLabel* mVarianceTypeLabel;
     QComboBox* mVarianceTypeInput;
     
-    //QLabel* mUseVarianceIndividualLabel;
-    //QCheckBox* mUseVarianceIndividualCB;
-    
     QLabel* mVarianceValueLabel;
     QLineEdit* mVarianceValueInput;
     
@@ -104,6 +101,8 @@ private:
     
     QLabel* mLambdaSplineLabel;
     QLineEdit* mLambdaSplineInput;
+
+    bool validateAndConvertDouble(const QString& text, double& result, const QString& fieldName) const;
 };
 
 #endif

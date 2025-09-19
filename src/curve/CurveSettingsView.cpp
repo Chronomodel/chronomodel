@@ -3,9 +3,9 @@
 Copyright or © or Copr. CNRS	2020 - 2025
 
 Authors :
-	Philippe LANOS
-	Helori LANOS
- 	Philippe DUFRESNE
+    Philippe LANOS
+    Helori LANOS
+    Philippe DUFRESNE
 
 This software is a computer program whose purpose is to
 create chronological models of archeological data using Bayesian statistics.
@@ -44,8 +44,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "StateKeys.h"
 
-#include <QtWidgets>
 #include <QVariant>
+#include <QLabel>
+#include <QComboBox>
+#include <QLineEdit>
+#include <QCheckBox>
+#include <QGridLayout>
+#include <QStyleFactory>
+#include <QtWidgets/qabstractitemview.h>
+#include <QMessageBox>
 
 
 CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
@@ -59,7 +66,7 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     QPalette palette = mTitleLabel->palette();
     palette.setColor(QPalette::WindowText, CURVE_COLOR_TEXT);
     mTitleLabel->setPalette(palette);
-    
+
     mDescriptionLabel = new QLabel(tr("These parameters give you controls over the way curves are built. MCMC (Bayesian) can be activated for event time, VG or global smoothing spline factor, etc. "), this);
     mDescriptionLabel->setAlignment(Qt::AlignCenter);
     mDescriptionLabel->setWordWrap(true);
@@ -67,36 +74,62 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     palette = mDescriptionLabel->palette();
     palette.setColor(QPalette::WindowText, Qt::gray);
     mDescriptionLabel->setPalette(palette);
-    
+
     mProcessTypeLabel = new QLabel(tr("Process") , this);
     mProcessTypeInput = new QComboBox(this);
-    mProcessTypeInput->addItem(tr("None"));
-    mProcessTypeInput->addItem(tr("Univariate (1D)"));
-    mProcessTypeInput->addItem(tr("Bi-variate (2D)"));
-    mProcessTypeInput->addItem(tr("Tri-variate (3D)"));
 
+    // Ajout des items avec leur valeur enum associée
+    mProcessTypeInput->addItem(tr("None"));
+    mProcessTypeInput->setItemData(0, static_cast<int>(CurveSettings::eProcess_None));
+
+    mProcessTypeInput->addItem(tr("Univariate (1D)"));
+    mProcessTypeInput->setItemData(1, static_cast<int>(CurveSettings::eProcess_Univariate));
+
+    mProcessTypeInput->addItem(tr("Bi-variate (2D)"));
+    mProcessTypeInput->setItemData(2, static_cast<int>(CurveSettings::eProcess_2D));
+
+    mProcessTypeInput->addItem(tr("Tri-variate (3D)"));
+    mProcessTypeInput->setItemData(3, static_cast<int>(CurveSettings::eProcess_3D));
+
+    // SÉPARATEUR - on peut le garder !
     mProcessTypeInput->insertSeparator(4);
+
     mProcessTypeInput->addItem(tr("Depth"));
+    mProcessTypeInput->setItemData(5, static_cast<int>(CurveSettings::eProcess_Depth));
+
+    // SÉPARATEUR - on peut le garder !
     mProcessTypeInput->insertSeparator(6);
 
     mProcessTypeInput->addItem(tr("Inclination"));
+    mProcessTypeInput->setItemData(7, static_cast<int>(CurveSettings::eProcess_Inclination));
+
     mProcessTypeInput->addItem(tr("Declination"));
+    mProcessTypeInput->setItemData(8, static_cast<int>(CurveSettings::eProcess_Declination));
+
     mProcessTypeInput->addItem(tr("Field Intensity"));
+    mProcessTypeInput->setItemData(9, static_cast<int>(CurveSettings::eProcess_Field));
+
     mProcessTypeInput->addItem(tr("Spherical (I, D)"));
+    mProcessTypeInput->setItemData(10, static_cast<int>(CurveSettings::eProcess_Spherical));
+
     mProcessTypeInput->addItem(tr("Unknown Dec (I, F)"));
+    mProcessTypeInput->setItemData(11, static_cast<int>(CurveSettings::eProcess_Unknwon_Dec));
+
     mProcessTypeInput->addItem(tr("Vector (I, D, F)"));
+    mProcessTypeInput->setItemData(12, static_cast<int>(CurveSettings::eProcess_Vector));
+
 
     mThresholdLabel = new QLabel(tr("Minimal Rate of Change"), this);
     mThresholdInput = new QLineEdit(this);
 
     mUseErrMesureLabel = new QLabel(tr("Use Measurement Err."), this);
     mUseErrMesureInput = new QCheckBox(this);
-    
+
     mTimeTypeLabel = new QLabel(tr("Event Date"), this);
     mTimeTypeInput = new QComboBox(this);
     mTimeTypeInput->addItem(tr("Fixed"));
     mTimeTypeInput->addItem(tr("Bayesian"));
-    
+
     mLambdaSplineTypeLabel = new QLabel(tr("Smoothing"), this);
     mLambdaSplineTypeInput = new QComboBox(this);
     mLambdaSplineTypeInput->addItem(tr("Fixed"));
@@ -113,7 +146,7 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     mVarianceTypeInput->addItem(tr("Ind. Bayesian"));
     mVarianceTypeInput->addItem(tr("Global Bayesian"));
     mVarianceTypeInput->addItem(tr("Global Fixed"));
-    
+
     mVarianceValueLabel = new QLabel(tr("Std gi = Global Value"), this);
     mVarianceValueInput = new QLineEdit(this);
 
@@ -122,7 +155,7 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     grid->setHorizontalSpacing(10);
     grid->setVerticalSpacing(5);
     int row = -1;
-    
+
     grid->addWidget(mProcessTypeLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mProcessTypeInput, row, 1);
 
@@ -132,10 +165,10 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     grid->setVerticalSpacing(15);
     grid->addWidget(mUseErrMesureLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mUseErrMesureInput, row, 1);
-    
+
     grid->addWidget(mTimeTypeLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mTimeTypeInput, row, 1);
-    
+
     grid->addWidget(mLambdaSplineTypeLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mLambdaSplineTypeInput, row, 1);
 
@@ -144,13 +177,12 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
 
     grid->addWidget(mVarianceTypeLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mVarianceTypeInput, row, 1);
-    
+
     grid->addWidget(mVarianceValueLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mVarianceValueInput, row, 1);
 
-    
+
     QVBoxLayout* vlayout = new QVBoxLayout();
-    //vlayout->setMargin(20);
     vlayout->addSpacing(20);
     vlayout->addWidget(mTitleLabel);
     vlayout->addSpacing(20);
@@ -158,25 +190,24 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     vlayout->addSpacing(30);
     vlayout->addLayout(grid);
     vlayout->addStretch();
-    
+
     QWidget* vlayoutWidget = new QWidget();
     vlayoutWidget->setFixedWidth(400);
     vlayoutWidget->setLayout(vlayout);
-    
+
     QHBoxLayout* hlayout = new QHBoxLayout();
     hlayout->setContentsMargins(0, 0, 0, 0);
     hlayout->setSpacing(0);
     hlayout->addStretch();
     hlayout->addWidget(vlayoutWidget);
     hlayout->addStretch();
-    
-    setLayout(hlayout);
 
+    setLayout(hlayout);
 }
 
 CurveSettingsView::~CurveSettingsView()
 {
-    
+
 }
 
 void CurveSettingsView::setConnections(const bool doConnections)
@@ -184,249 +215,196 @@ void CurveSettingsView::setConnections(const bool doConnections)
     if (doConnections) {
         // updateVisibilities
         connect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
-
         connect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
-
         connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
-
-        //connect(mUseVarianceIndividualCB, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::updateVisibilities);
 
         // Save
         connect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
-
         connect(mThresholdInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
-
         connect(mUseErrMesureInput, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::save);
-
         connect(mTimeTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
-
         connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
-
-        //connect(mUseVarianceIndividualCB, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::save);
-
         connect(mVarianceValueInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
-
         connect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
-
         connect(mLambdaSplineInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
 
     } else {
         // updateVisibilities
         disconnect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
-
         disconnect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
-
         disconnect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
-
-        //disconnect(mUseVarianceIndividualCB, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::updateVisibilities);
 
         // Save
         disconnect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
-
         disconnect(mThresholdInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
-
         disconnect(mUseErrMesureInput, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::save);
-
         disconnect(mTimeTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
-
         disconnect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
-
-        //disconnect(mUseVarianceIndividualCB, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::save);
-
         disconnect(mVarianceValueInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
-
         disconnect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
-
         disconnect(mLambdaSplineInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
     }
+}
 
+// Fonction utilitaire pour valider et convertir les valeurs numériques
+bool CurveSettingsView::validateAndConvertDouble(const QString& text, double& result, const QString& fieldName) const
+{
+    bool ok;
+    result = QLocale().toDouble(text, &ok);
+    if (!ok) {
+        QMessageBox::warning(const_cast<CurveSettingsView*>(this),
+                             tr("Invalid Input"),
+                             tr("Invalid value for %1: '%2'").arg(fieldName, text));
+        return false;
+    }
+    return true;
 }
 
 void CurveSettingsView::setSettings(const CurveSettings &settings)
 {
-    // Separators must be counted :index 4 and 6
-    switch (settings.mProcessType) {
-        case CurveSettings::eProcess_None:
-            mProcessTypeInput->setCurrentIndex(0);
+
+    // Cherche l'item qui contient la bonne valeur enum
+    for (int i = 0; i < mProcessTypeInput->count(); ++i) {
+        if (mProcessTypeInput->itemData(i).toInt() == static_cast<int>(settings.mProcessType)) {
+            mProcessTypeInput->setCurrentIndex(i);
             break;
-        case CurveSettings::eProcess_Univariate:
-            mProcessTypeInput->setCurrentIndex(1);
-            break;
-        case CurveSettings::eProcess_2D:
-            mProcessTypeInput->setCurrentIndex(2);
-            break;
-        case CurveSettings::eProcess_3D:
-            mProcessTypeInput->setCurrentIndex(3);
-            break;
-        case CurveSettings::eProcess_Depth:
-            mProcessTypeInput->setCurrentIndex(5);
-            break;
-        case CurveSettings::eProcess_Inclination:
-            mProcessTypeInput->setCurrentIndex(7);
-            break;
-        case CurveSettings::eProcess_Declination:
-            mProcessTypeInput->setCurrentIndex(8);
-            break;
-        case CurveSettings::eProcess_Field:
-            mProcessTypeInput->setCurrentIndex(9);
-            break;
-        case CurveSettings::eProcess_Spherical:
-            mProcessTypeInput->setCurrentIndex(10);
-            break;
-        case CurveSettings::eProcess_Unknwon_Dec:
-            mProcessTypeInput->setCurrentIndex(11);
-            break;
-        case CurveSettings::eProcess_Vector:
-            mProcessTypeInput->setCurrentIndex(12);
-            break;
+        }
     }
 
-    
     mUseErrMesureInput->setChecked(settings.mUseErrMesure);
-    
+
+    // Mapping pour TimeType avec valeur par défaut explicite
+    int timeTypeIndex = 1; // Bayesian par défaut
     if (settings.mTimeType == CurveSettings::eModeFixed) {
-        mTimeTypeInput->setCurrentIndex(0);
-
+        timeTypeIndex = 0;
     } else if (settings.mTimeType == CurveSettings::eModeBayesian) {
-        mTimeTypeInput->setCurrentIndex(1);
+        timeTypeIndex = 1;
     }
-    
+    mTimeTypeInput->setCurrentIndex(timeTypeIndex);
+
+    // Mapping pour VarianceType avec valeur par défaut explicite
+    int varianceTypeIndex = 0; // Ind. Bayesian par défaut
     if (settings.mVarianceType == CurveSettings::eModeBayesian) {
-        mVarianceTypeInput->setCurrentIndex(0);
-
+        varianceTypeIndex = 0;
     } else if (settings.mVarianceType == CurveSettings::eModeGlobal) {
-        mVarianceTypeInput->setCurrentIndex(1);
-
+        varianceTypeIndex = 1;
     } else if (settings.mVarianceType == CurveSettings::eModeFixed) {
-        mVarianceTypeInput->setCurrentIndex(2);
+        varianceTypeIndex = 2;
     }
+    mVarianceTypeInput->setCurrentIndex(varianceTypeIndex);
+
     mThresholdInput->setText(stringForLocal(settings.mThreshold));
-
-
-    //mUseVarianceIndividualCB->setChecked(settings.mUseVarianceIndividual);
     mVarianceValueInput->setText(stringForLocal(sqrt(settings.mVarianceFixed)));
-    
+
+    // Mapping pour LambdaSplineType avec valeur par défaut explicite
+    int lambdaSplineTypeIndex = 1; // Bayesian par défaut
     if (settings.mLambdaSplineType == CurveSettings::eModeFixed) {
-        mLambdaSplineTypeInput->setCurrentIndex(0);
+        lambdaSplineTypeIndex = 0;
         mLambdaSplineInput->setText(stringForLocal(log10(settings.mLambdaSpline)));
-
     } else if (settings.mLambdaSplineType == CurveSettings::eModeBayesian) {
-        mLambdaSplineTypeInput->setCurrentIndex(1);
-
+        lambdaSplineTypeIndex = 1;
     } else if (settings.mLambdaSplineType == CurveSettings::eInterpolation) {
-        mLambdaSplineTypeInput->setCurrentIndex(2);
+        lambdaSplineTypeIndex = 2;
         mLambdaSplineInput->setText("0");
     }
-    
+    mLambdaSplineTypeInput->setCurrentIndex(lambdaSplineTypeIndex);
+
     updateVisibilities();
 }
 
 CurveSettings CurveSettingsView::getSettings() const
 {
     CurveSettings settings;
-    // Separators must be counted : index 4 and 6
-    switch (mProcessTypeInput->currentIndex()) {
-        case 1:
-            settings.mProcessType = CurveSettings::eProcess_Univariate;
-            break;
-        case 2:
-            settings.mProcessType = CurveSettings::eProcess_2D;
-            break;
-        case 3:
-            settings.mProcessType = CurveSettings::eProcess_3D;
-            break;
-        case 5:
-            settings.mProcessType = CurveSettings::eProcess_Depth;
-            break;
-        case 7:
-            settings.mProcessType = CurveSettings::eProcess_Inclination;
-            break;
-        case 8:
-            settings.mProcessType = CurveSettings::eProcess_Declination;
-            break;
-        case 9:
-            settings.mProcessType = CurveSettings::eProcess_Field;
-            break;
-        case 10:
-            settings.mProcessType = CurveSettings::eProcess_Spherical;
-            break;
-        case 11:
-            settings.mProcessType = CurveSettings::eProcess_Unknwon_Dec;
-            break;
-        case 12:
-            settings.mProcessType = CurveSettings::eProcess_Vector;
-            break;
 
-        case 0:
-        default:
-            settings.mProcessType = CurveSettings::eProcess_None;
-            break;
+    // Récupère directement la valeur enum stockée
+    QVariant data = mProcessTypeInput->currentData();
+    if (data.isValid()) {
+        settings.mProcessType = static_cast<CurveSettings::ProcessType>(data.toInt());
+    } else {
+        settings.mProcessType = CurveSettings::eProcess_None; // défaut
     }
-    
+
     settings.mUseErrMesure = mUseErrMesureInput->isChecked();
-    
+
+    // Mapping pour TimeType avec gestion des valeurs par défaut
     switch (mTimeTypeInput->currentIndex()) {
     case 0:
         settings.mTimeType = CurveSettings::eModeFixed;
         break;
-
     case 1:
     default:
         settings.mTimeType = CurveSettings::eModeBayesian;
         break;
     }
 
+    // Mapping pour VarianceType avec gestion des valeurs par défaut
     switch (mVarianceTypeInput->currentIndex()) {
-    case 2:
-        settings.mVarianceType = CurveSettings::eModeFixed;
+    case 0:
+        settings.mVarianceType = CurveSettings::eModeBayesian;
         break;
-
     case 1:
         settings.mVarianceType = CurveSettings::eModeGlobal;
         break;
-
-    case 0:
+    case 2:
+        settings.mVarianceType = CurveSettings::eModeFixed;
+        break;
     default:
         settings.mVarianceType = CurveSettings::eModeBayesian;
         break;
     }
-    settings.mThreshold = QLocale().toDouble(mThresholdInput->text());
 
-    //settings.mUseVarianceIndividual = mUseVarianceIndividualCB->isChecked() && (mVarianceTypeInput->currentIndex() == 1) ;
-    settings.mVarianceFixed = pow(QLocale().toDouble(mVarianceValueInput->text()), 2.);
+    // Validation des valeurs numériques avec gestion d'erreur
+    double thresholdValue = 0.0;
+    if (validateAndConvertDouble(mThresholdInput->text(), thresholdValue, tr("Threshold"))) {
+        settings.mThreshold = thresholdValue;
+    } else {
+        settings.mThreshold = 0.0; // valeur par défaut en cas d'erreur
+    }
 
+    double varianceValue = 1.0;
+    if (validateAndConvertDouble(mVarianceValueInput->text(), varianceValue, tr("Variance Value"))) {
+        settings.mVarianceFixed = pow(varianceValue, 2.0);
+    } else {
+        settings.mVarianceFixed = 1.0; // valeur par défaut en cas d'erreur
+    }
 
+    // Mapping pour LambdaSplineType avec validation
     switch (mLambdaSplineTypeInput->currentIndex()) {
-    case 0:
+    case 0: // Fixed
         settings.mLambdaSplineType = CurveSettings::eModeFixed;
-        if (QLocale().toDouble(mLambdaSplineInput->text())>10)
-            settings.mLambdaSpline = pow(10., 10.);
-        else
-            settings.mLambdaSpline = pow(10., QLocale().toDouble(mLambdaSplineInput->text()));
+        {
+            double lambdaValue = -6.0;
+            if (validateAndConvertDouble(mLambdaSplineInput->text(), lambdaValue, tr("Lambda Spline"))) {
+                if (lambdaValue > 10.0) {
+                    settings.mLambdaSpline = pow(10.0, 10.0);
+                } else {
+                    settings.mLambdaSpline = pow(10.0, lambdaValue);
+                }
+            } else {
+                settings.mLambdaSpline = pow(10.0, -6.0); // valeur par défaut
+            }
+        }
         break;
-
-    case 2:
+    case 2: // Interpolation
         settings.mLambdaSplineType = CurveSettings::eInterpolation;
         settings.mLambdaSpline = 0.0;
         break;
-
-    case 1:
+    case 1: // Bayesian
     default:
         settings.mLambdaSplineType = CurveSettings::eModeBayesian;
         break;
-
     }
-    
+
     return settings;
 }
 
 void CurveSettingsView::setProject()
 {
-    auto project =getProject_ptr();
+    auto project = getProject_ptr();
     if (project != nullptr)
         setConnections(false);
 
-    const CurveSettings curveSettings (project->mState.value(STATE_CURVE).toObject());
+    const CurveSettings curveSettings(project->mState.value(STATE_CURVE).toObject());
 
     setSettings(curveSettings);
 
@@ -450,56 +428,37 @@ void CurveSettingsView::save()
 
 void CurveSettingsView::updateVisibilities()
 {
-    if (mProcessTypeInput->currentText() == "None") {
+    // Récupère directement l'enum au lieu de l'index
+    CurveSettings::ProcessType currentProcess = static_cast<CurveSettings::ProcessType>(
+        mProcessTypeInput->currentData().toInt()
+        );
 
-        mUseErrMesureLabel->setVisible(false);
-        mUseErrMesureInput->setVisible(false);
+    const bool isProcessNone = (currentProcess == CurveSettings::eProcess_None);
+    const bool isProcessDepth = (currentProcess == CurveSettings::eProcess_Depth);
 
-        mTimeTypeLabel->setVisible(false);
-        mTimeTypeInput->setVisible(false);
+    const bool isLambdaSplineFixed = (mLambdaSplineTypeInput->currentIndex() == 0);
+    const bool isLambdaSplineInterpol = (mLambdaSplineTypeInput->currentIndex() == 2);
+    const bool isVarianceFixed = (mVarianceTypeInput->currentIndex() == 2);
 
-        mThresholdLabel->setVisible(false);
-        mThresholdInput->setVisible(false);
+    // Visibilité des contrôles de base
+    mUseErrMesureLabel->setVisible(!isProcessNone);
+    mUseErrMesureInput->setVisible(!isProcessNone);
+    mTimeTypeLabel->setVisible(!isProcessNone);
+    mTimeTypeInput->setVisible(!isProcessNone);
 
-        mVarianceTypeLabel->setVisible(false);
-        mVarianceTypeInput->setVisible(false);
+    // Threshold seulement pour Depth
+    mThresholdLabel->setVisible(isProcessDepth);
+    mThresholdInput->setVisible(isProcessDepth);
 
-        mVarianceValueLabel->setVisible(false);
-        mVarianceValueInput->setVisible(false);
+    // Lambda spline
+    mLambdaSplineTypeLabel->setVisible(!isProcessNone);
+    mLambdaSplineTypeInput->setVisible(!isProcessNone);
+    mLambdaSplineLabel->setVisible(!isProcessNone && isLambdaSplineFixed);
+    mLambdaSplineInput->setVisible(!isProcessNone && isLambdaSplineFixed);
 
-        mLambdaSplineTypeLabel->setVisible(false);
-        mLambdaSplineTypeInput->setVisible(false);
-
-        mLambdaSplineLabel->setVisible(false);
-        mLambdaSplineInput->setVisible(false);
-
-    } else {
-
-        mUseErrMesureLabel->setVisible(true);
-        mUseErrMesureInput->setVisible(true);
-        mTimeTypeLabel->setVisible(true);
-        mTimeTypeInput->setVisible(true);
-
-        const bool showThreshold = (mProcessTypeInput->currentIndex() ==  5);//"Depth");
-        mThresholdLabel->setVisible(showThreshold);
-        mThresholdInput->setVisible(showThreshold);
-
-        mLambdaSplineTypeLabel->setVisible(true);
-        mLambdaSplineTypeInput->setVisible(true);
-        const bool lambdaSplineFixed = (mLambdaSplineTypeInput->currentText() == "Fixed");
-        const bool lambdaSplineInterpol = (mLambdaSplineTypeInput->currentIndex() == 2);
-        mLambdaSplineLabel->setVisible(lambdaSplineFixed);
-        mLambdaSplineInput->setVisible(lambdaSplineFixed);
-
-        mVarianceTypeLabel->setVisible(!lambdaSplineInterpol);
-        mVarianceTypeInput->setVisible(!lambdaSplineInterpol);
-        const bool varianceFixed = (mVarianceTypeInput->currentIndex() == 2);// "Global fixed"
-
-        mVarianceValueLabel->setVisible(!lambdaSplineInterpol && varianceFixed );
-        mVarianceValueInput->setVisible(!lambdaSplineInterpol && varianceFixed );
-
-
-    }
-    
+    // Variance
+    mVarianceTypeLabel->setVisible(!isProcessNone && !isLambdaSplineInterpol);
+    mVarianceTypeInput->setVisible(!isProcessNone && !isLambdaSplineInterpol);
+    mVarianceValueLabel->setVisible(!isProcessNone && !isLambdaSplineInterpol && isVarianceFixed);
+    mVarianceValueInput->setVisible(!isProcessNone && !isLambdaSplineInterpol && isVarianceFixed);
 }
-

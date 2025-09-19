@@ -165,7 +165,7 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent, const bool show_help):QD
 #else
     mTestBut->setVisible(false);
 #endif
-setAttribute(Qt::WA_AlwaysShowToolTips);
+    setAttribute(Qt::WA_AlwaysShowToolTips);
     mResetBut = new QPushButton(tr("Restore Defaults"), this);
     mResetBut->setToolTip(tr("Restore default parameter values"));
     mResetBut->setToolTipDuration(1000);

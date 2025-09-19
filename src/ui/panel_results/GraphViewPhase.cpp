@@ -59,7 +59,6 @@ GraphViewPhase::GraphViewPhase(QWidget* parent):
 
 GraphViewPhase::~GraphViewPhase()
 {
-   // mPhase = nullptr;
 }
 
 void GraphViewPhase::setPhase(std::shared_ptr<Phase> phase)
@@ -431,9 +430,13 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 // This text is displayed by ResultsView using the mInfos property of graph
                 if (showError
                     && mPhase->mEvents.size()>1
-                    && mPhase->mValueStack.contains("Activity_Threshold") && mPhase->mValueStack.contains("Activity_Significance_Score") )
-                    mGraph->setInfo(QString("Significance Score ( %1 %) = %2").arg(stringForLocal(mPhase->mValueStack.at("Activity_Threshold")), stringForLocal(mPhase->mValueStack.at("Activity_Significance_Score"), true)) );
-                else
+                    && mPhase->mValueStack.contains("Activity_Threshold") && mPhase->mValueStack.contains("Activity_Significance_Score") ) {
+                    QString txt = QString("h = %1  \u2192  Significance Score (%2 %) = %3").arg(
+                        stringForLocal(mPhase->mValueStack.at("Activity_h")),
+                        stringForLocal(mPhase->mValueStack.at("Activity_Threshold")),
+                        stringForLocal(mPhase->mValueStack.at("Activity_Significance_Score"), true));
+                    mGraph->setInfo(txt );
+                } else
                     mGraph->clearInfos();
 
                 // Activity Uniform
