@@ -93,26 +93,87 @@ QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas -Wno-unused-parameter # invalid o
 CONFIG += c++2a
 QMAKE_CXXFLAGS += -std=c++2a
 
+####
+# ======================================================
+# Optimisations C++ multiplateforme (Windows, macOS, Linux)
+# Compatible x86_64 et ARM (Apple Silicon)
+# ======================================================
+
+# ======================================================
+# RELEASE configuration
+# ======================================================
+CONFIG(release, debug|release) {
+    # ---- Options générales (valide partout) ----
+    QMAKE_CXXFLAGS += -O3 -funroll-loops -ffast-math
+    QMAKE_CFLAGS   += -O3 -funroll-loops -ffast-math
+
+    # ---- Linux / MinGW (x86_64 générique optimisé) ----
+    unix:!macx {
+        QMAKE_CXXFLAGS += -march=x86-64-v2 -mtune=generic
+        QMAKE_CFLAGS   += -march=x86-64-v2 -mtune=generic
+    }
+
+    # ---- macOS (Intel + ARM universel) ----Seulemeznt Intel
+    macx {
+        #message("Building Universal Binary (x86_64 + arm64)")
+        message("Building Binary x86_64 ")
+
+        # This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
+        #QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14 # OS X 10.9 	Mavericks oct 2013  # essai sinon 10.14
+        # cible au minimum macOS 12 (Monterey).
+        QMAKE_MACOSX_DEPLOYMENT_TARGET = 12.0 # Since 2022-10-11 work with fftw 3.3.2
+        # 11.0 = plus compatible (Intel Big Sur 2020 inclus).
+
+         QMAKE_APPLE_DEVICE_ARCHS = x86_64 #arm64
+
+        QMAKE_CXXFLAGS += -arch x86_64 #-arch arm64
+        QMAKE_CFLAGS   += -arch x86_64 #-arch arm64
+        QMAKE_LFLAGS   += -arch x86_64 #-arch arm64
+    }
+
+    # ---- Windows (MSVC) ----
+    win32-msvc* {
+        QMAKE_CXXFLAGS += /O2 /fp:fast
+    }
+
+    # ---- Windows (MinGW) ----
+    win32-g++ {
+        QMAKE_CXXFLAGS += -march=x86-64-v2 -mtune=generic
+        QMAKE_CFLAGS   += -march=x86-64-v2 -mtune=generic
+    }
+}
+
+# ======================================================
+# DEBUG configuration
+# ======================================================
 CONFIG(debug, debug|release) {
+    macx {
+        message("Debug build on macOS → No Optimization (-O0)")
+        QMAKE_CXXFLAGS -= -O0
+        QMAKE_CFLAGS   -= -O0
+        QMAKE_CXXFLAGS += -O0 -g
+        QMAKE_CFLAGS   += -O0 -g
+    }
 
-macx{
-message("using No Optimization O0")
-    QMAKE_CXXFLAGS-= -O0
-    QMAKE_CFLAGS-= -O0
-}
-    # niveau pour debug pour windows
-win32{
-message("using No Optimization O2")
-    QMAKE_CXXFLAGS+= -O2 # usefull for windows compiling
-    QMAKE_CFLAGS+= -O2
+    win32 {
+        message("Debug build on Windows → Keep some optimization (/O2)")
+        # ⚠️ sous MSVC : /Od = pas d’optimisation, /O2 = optimisé
+        win32-msvc* {
+            QMAKE_CXXFLAGS += /O2 /Zi
+        }
+        win32-g++ {
+            QMAKE_CXXFLAGS += -O2 -g
+            QMAKE_CFLAGS   += -O2 -g
+        }
+    }
+
+    unix:!macx {
+        message("Debug build on Linux → No Optimization (-O0)")
+        QMAKE_CXXFLAGS += -O0 -g
+        QMAKE_CFLAGS   += -O0 -g
+    }
 }
 
-} else  {
-    message("using Optimization O3")
-
-    QMAKE_CXXFLAGS+= -O3
-    QMAKE_CFLAGS+= -O3
-}
 
 #########################################
 # Active OpenMP (compatible GCC/Clang/MSVC)
@@ -148,9 +209,6 @@ macx{
         QMAKE_MAC_SDK = macosx
         message("QMAKE_MAC_SDK = $$QMAKE_MAC_SDK")
 
-	# This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
-        #QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14 # OS X 10.9 	Mavericks oct 2013  # essai sinon 10.14
-        QMAKE_MACOSX_DEPLOYMENT_TARGET = 12 # Since 2022-10-11 work with fftw 3.3.2
 
        # Spécifiez la version minimale de macOS requise
         #QMAKE_REQUIRED_MAC_OS_X_VERSION = 13
