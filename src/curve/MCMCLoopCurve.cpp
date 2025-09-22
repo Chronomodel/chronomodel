@@ -2616,16 +2616,7 @@ QString MCMCLoopCurve::initialize_335()
             if (mCurveSettings.mProcessType == CurveSettings::eProcess_Depth) {
                 // F.2 - test GPrime positive
                 mModel->mLambdaSpline.mX = 1.0;
-                // init e->mW pour suite de calcul, on utilise juste sy
-               /* for (std::shared_ptr<Event>& e : mModel->mEvents) {
-                    if (mCurveSettings.mVarianceType == CurveSettings::eModeFixed) {
-                        e->mVg.mX = mCurveSettings.mVarianceFixed;
 
-                    } else {
-                        e->mVg.mX = 0.0;
-                    }
-                    e->updateW();
-                }*/
 
                 double try_value = 10;//mModel->mLambdaSpline.mX;
                 SparseMatrixLD R = calculMatR(current_vecH);// dim n-2 * n-2 //R est une matrice creuse symetrique padded
@@ -2659,12 +2650,11 @@ QString MCMCLoopCurve::initialize_335()
                 try_spline_matrices.diagWInv = W_1;
                 try_spline_matrices.matR = R;
                 try_spline_matrices.matQ = Q;
-                try_spline_matrices.matQT = QT;
                 try_spline_matrices.matQTW_1Q = QT* W_1* Q;
                 try_spline_matrices.matQTQ = QT * Q;
 
                 mModel->mLambdaSpline.mX = try_value * 10;
-                std::cout << " lambda for depth = " << try_value*10 << " depth_OK = " << depth_OK  << std::endl;
+                // std::cout << " lambda for depth = " << try_value*10 << " depth_OK = " << depth_OK  << std::endl;
 
 
              } else
@@ -2734,12 +2724,12 @@ QString MCMCLoopCurve::initialize_335()
         PosteriorMeanGComposante clearCompo;
         clearCompo.mapG = CurveMap (nbPoint, nbPoint);// (row, column)
         clearCompo.mapG.setRangeX(mModel->mSettings.mTmin, mModel->mSettings.mTmax);
-        clearCompo.mapG.min_value = +INFINITY;
+        clearCompo.mapG.min_value = +std::numeric_limits<double>::infinity();
         clearCompo.mapG.max_value = 0;
 
         clearCompo.mapGP = CurveMap (nbPoint, nbPoint);// (row, column)
         clearCompo.mapGP.setRangeX(mModel->mSettings.mTmin, mModel->mSettings.mTmax);
-        clearCompo.mapGP.min_value = +INFINITY;
+        clearCompo.mapGP.min_value = +std::numeric_limits<double>::infinity();
         clearCompo.mapGP.max_value = 0;
 
         clearCompo.vecG = std::vector<double> (nbPoint); // column
@@ -3066,7 +3056,7 @@ bool MCMCLoopCurve::update_335()
                             SparseMatrixLD try_R = calculMatR(try_vecH); // dim n-2 * n-2
                             SparseMatrixLD try_Q = calculMatQ(try_vecH); // dim n * n-2
 
-                            SparseQuadraticFormSolver try_solver(1); // shift selon votre padding
+                            SparseQuadraticFormSolver try_solver(1); // shift selon notre padding
                             try_solver.factorize(try_R); // Factorisation une seule fois
 
                             Matrix2D try_R_1QT = try_solver.compute_Rinv_QT(try_Q);
@@ -3078,13 +3068,17 @@ bool MCMCLoopCurve::update_335()
                             // pseudo-déterminant (produit des valeurs propres non nulles) : le déterminant de K n'est pas définie
                             // pdet⁡(K)  =  det⁡ ⁣(R−1/2(Q⊤Q)R−1/2)  =  det⁡(Q⊤Q)det⁡(R).
 
-                            t_matrix det_try_R =  determinant_padded_matrix(try_R);
+                            /* t_matrix det_try_R =  determinant_padded_matrix(try_R);
                             t_matrix det_try_QtQ = determinant_padded_matrix(try_Q.transpose() * try_Q); // Qt*Q est une padded Matrix
 
                             t_matrix det_R =  determinant_padded_matrix(current_R);
                             t_matrix det_QtQ = determinant_padded_matrix(current_Q.transpose() * current_Q);
 
                             t_prob rate_detPlusK = sqrt(det_try_QtQ /det_QtQ * det_R /det_try_R);
+                            */
+
+                            t_prob rate_detPlusK = exp(0.5*(ln_rate_determinant_padded_matrix_A_B(try_Q.transpose() * try_Q, try_R)
+                                                          - ln_rate_determinant_padded_matrix_A_B(current_Q.transpose() * current_Q, current_R)));
 
                             if (mModel->compute_XYZ) {
                                  rate_detPlusK = pow(rate_detPlusK, 3.0) ;
@@ -7000,7 +6994,7 @@ void MCMCLoopCurve::memo()
 }
 
 
-
+/*
 void MCMCLoopCurve::finalize()
 {
 
@@ -7009,17 +7003,12 @@ void MCMCLoopCurve::finalize()
     QElapsedTimer startTime;
     startTime.start();
 #endif
-    // il faut la derniere iter
- /*   if (mTh_memoCurve.joinable())
-        mTh_memoCurve.join();
-*/
-
 
     // Removing traces of chains without accepted curves
 
     int back_position = (int)mModel->mLambdaSpline.mRawTrace->size();
     size_t i = 0;
-#pragma omp parallel for
+
     for (auto chain = mLoopChains.rbegin(); chain != mLoopChains.rend(); chain++) {
         // we add 1 for the init
         const int initBurnAdaptAcceptSize = 1 + chain->mIterPerBurn + int (chain->mBatchIndex * chain->mIterPerBatch) + chain->mRealyAccepted;
@@ -7159,6 +7148,245 @@ void MCMCLoopCurve::finalize()
 #endif
 
 
+}
+*/
+
+void MCMCLoopCurve::finalize()
+{
+#ifdef DEBUG
+    qDebug()<<QString("[MCMCLoopCurve::finalize]");
+    QElapsedTimer startTime;
+    startTime.start();
+#endif
+
+    // Helper utilitaires
+    auto safe_erase_range = [](auto &vec, int front, int back) {
+        // vec must support size(), begin(), erase()
+        if (front < 0) front = 0;
+        if (back < 0) return;
+        const auto sz = static_cast<int>(vec.size());
+        if (front >= sz || front >= back) return;
+        if (back > sz) back = sz;
+        vec.erase(vec.begin() + front, vec.begin() + back);
+    };
+
+    auto safe_erase_index = [](auto &vec, size_t idx) {
+        if (idx < vec.size()) vec.erase(vec.begin() + static_cast<std::ptrdiff_t>(idx));
+    };
+
+    struct RemovalInfo {
+        size_t idx_from_begin; // index dans mLoopChains (depuis begin)
+        int front;             // front_position
+        int back;              // back_position
+        bool remove;
+        QString warning;
+    };
+
+    // 1) Phase d'analyse (lecture seule) : parcourir en reverse pour reproduire la logique
+    std::vector<RemovalInfo> removals;
+    removals.reserve(mLoopChains.size());
+
+    int back_position = static_cast<int>(mModel->mLambdaSpline.mRawTrace->size());
+    size_t reverse_i = 0; // counter like in original code (i used in message)
+
+    for (auto it = mLoopChains.rbegin(); it != mLoopChains.rend(); ++it, ++reverse_i) {
+        const auto &chain = *it;
+        const int initBurnAdaptAcceptSize =
+            1 + chain.mIterPerBurn + static_cast<int>(chain.mBatchIndex * chain.mIterPerBatch) + chain.mRealyAccepted;
+
+        const int front_position = back_position - initBurnAdaptAcceptSize;
+
+        RemovalInfo info;
+        // convert reverse index to forward index
+        info.idx_from_begin = static_cast<size_t>(mLoopChains.size() - 1 - reverse_i);
+        info.front = front_position;
+        info.back = back_position;
+        info.remove = (chain.mRealyAccepted == 0);
+
+        if (info.remove) {
+            info.warning = tr("Warning : NO POSITIVE curve available with chain n° %1, current seed to change %2")
+                               .arg(QString::number(reverse_i + 1), QString::number(chain.mSeed));
+        }
+
+        removals.push_back(std::move(info));
+
+        back_position = front_position;
+    }
+
+    // 2) Phase de suppression : rassembler indices à supprimer et supprimer par ordre décroissant
+    std::vector<size_t> indices_to_erase;
+    indices_to_erase.reserve(removals.size());
+    for (const auto &r : removals) if (r.remove) indices_to_erase.push_back(r.idx_from_begin);
+
+    /* 👉 Sur macOS, toute création de fenêtre (NSWindow, QMessageBox, QDialog, …) doit se faire dans le thread principal GUI.
+     * Si tu appelles QMessageBox::warning(...) depuis ton MCMCLoopCurve::finalize() alors que ça tourne dans un thread de calcul MCMC,
+     * Qt va tenter de créer une NSWindow depuis un thread secondaire → crash immédiat.
+     */
+/*
+    if (!indices_to_erase.empty()) {
+        // Construire le texte de warning
+        QString msg = tr("The following chains have no positive curves and will be removed:\n\n");
+
+        for (size_t idx : indices_to_erase) {
+            const auto &r = removals.at(idx);  // récupération du RemovalInfo
+            const auto &chain = mLoopChains.at(idx);
+            msg += tr(" - Chain #%1 (seed %2)\n")
+                       .arg(r.idx_from_begin + 1)
+                       .arg(chain.mSeed);
+
+        }
+
+       // QMessageBox::warning(nullptr,
+         //                    tr("Invalid chains"),
+           //                  msg);
+
+
+
+    }
+*/
+
+
+    if (!indices_to_erase.empty()) {
+
+        std::sort(indices_to_erase.begin(), indices_to_erase.end(), std::greater<size_t>());
+
+        // Build map idx -> RemovalInfo for quick lookup
+        std::unordered_map<size_t, RemovalInfo> remap;
+        remap.reserve(removals.size());
+        for (const auto &r : removals) if (r.remove) remap.emplace(r.idx_from_begin, r);
+
+        // For convenience, take references/pointers to commonly used containers
+        auto &lambda = mModel->mLambdaSpline;
+        auto &s02Vg = mModel->mS02Vg;
+        auto &posteriorByChain = mModel->mPosteriorMeanGByChain;
+        auto &events = mModel->mEvents;
+
+        for (size_t idx : indices_to_erase) {
+            const auto &r = remap.at(idx);
+            const int front = r.front;
+            const int back = r.back;
+
+            // Emit warning (sequential, GUI-safe)
+            //emit setMessage(r.warning);
+#ifdef DEBUG
+            qDebug()<<tr("[MCMCLoopCurve::finalize] %1").arg(r.warning);
+#endif
+            // 1) erase chain structure
+            safe_erase_index(mLoopChains, idx);
+
+            // 2) erase posterior per-chain
+            safe_erase_index(posteriorByChain, idx);
+
+            // 3) erase global traces (lambda)
+            if (lambda.mSamplerProposal != MHVariable::eFixe) {
+                if (lambda.mRawTrace) safe_erase_range(*lambda.mRawTrace, front, back);
+                if (lambda.mHistoryAcceptRateMH) safe_erase_range(*lambda.mHistoryAcceptRateMH, front, back);
+                safe_erase_index(lambda.mNbValuesAccepted, idx);
+            }
+
+            // 4) s02Vg
+            if (s02Vg.mSamplerProposal != MHVariable::eFixe) {
+                if (s02Vg.mRawTrace) safe_erase_range(*s02Vg.mRawTrace, front, back);
+                if (s02Vg.mHistoryAcceptRateMH) safe_erase_range(*s02Vg.mHistoryAcceptRateMH, front, back);
+                safe_erase_index(s02Vg.mNbValuesAccepted, idx);
+            }
+
+            // 5) events
+            for (const auto &ev : events) {
+                if (ev->mTheta.mSamplerProposal != MHVariable::eFixe) {
+                    if (ev->mTheta.mRawTrace) safe_erase_range(*ev->mTheta.mRawTrace, front, back);
+                    if (ev->mTheta.mHistoryAcceptRateMH) safe_erase_range(*ev->mTheta.mHistoryAcceptRateMH, front, back);
+                    safe_erase_index(ev->mTheta.mNbValuesAccepted, idx);
+
+                    if (!ev->mVg.mRawTrace->empty() && ev->mVg.mSamplerProposal != MHVariable::eFixe) {
+                        safe_erase_range(*ev->mVg.mRawTrace, front, back);
+                        safe_erase_range(*ev->mVg.mHistoryAcceptRateMH, front, back);
+                        safe_erase_index(ev->mVg.mNbValuesAccepted, idx);
+                    }
+
+                    if (!ev->mS02Theta.mRawTrace->empty() && ev->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
+                        safe_erase_range(*ev->mS02Theta.mRawTrace, front, back);
+                        safe_erase_range(*ev->mS02Theta.mHistoryAcceptRateMH, front, back);
+                        safe_erase_index(ev->mS02Theta.mNbValuesAccepted, idx);
+                    }
+
+                    for (auto &d : ev->mDates) {
+                        if (d.mTi.mRawTrace) safe_erase_range(*d.mTi.mRawTrace, front, back);
+                        if (d.mTi.mHistoryAcceptRateMH) safe_erase_range(*d.mTi.mHistoryAcceptRateMH, front, back);
+                        safe_erase_index(d.mTi.mNbValuesAccepted, idx);
+
+                        if (d.mSigmaTi.mRawTrace) safe_erase_range(*d.mSigmaTi.mRawTrace, front, back);
+                        if (d.mSigmaTi.mHistoryAcceptRateMH) safe_erase_range(*d.mSigmaTi.mHistoryAcceptRateMH, front, back);
+                        safe_erase_index(d.mSigmaTi.mNbValuesAccepted, idx);
+
+                        if (d.mWiggle.mRawTrace) safe_erase_range(*d.mWiggle.mRawTrace, front, back);
+                        safe_erase_index(d.mWiggle.mNbValuesAccepted, idx);
+                    }
+                }
+            }
+        } // for each idx to erase
+    } // if any to erase
+
+    // After deletions check
+    if (mLoopChains.empty()) {
+        mAbortedReason = QString(tr("Warning : NO POSITIVE curve available "));
+        throw mAbortedReason;
+    }
+
+
+    // Copy remaining chains into model
+    mModel->mChains = mLoopChains;
+
+    // Compute correlations & densities (unchanged)
+    emit setMessage(tr("Computing posterior distributions and numerical results"));
+    mModel->generateCorrelations(mLoopChains);
+    mModel->initDensities();
+
+    // ----------------------------------------
+    // Curve specific : compute min_values
+    // ----------------------------------------
+    auto compute_min_in_map = [](auto &mapContainer) {
+        // assume mapContainer.data is a container
+        if (!mapContainer.data.empty()) {
+            mapContainer.min_value = *std::min_element(std::begin(mapContainer.data), std::end(mapContainer.data));
+        }
+    };
+
+    for (auto &pmc : mModel->mPosteriorMeanGByChain) {
+        compute_min_in_map(pmc.gx.mapG);
+        compute_min_in_map(pmc.gx.mapGP);
+
+        if (mModel->compute_Y) {
+            compute_min_in_map(pmc.gy.mapG);
+            compute_min_in_map(pmc.gy.mapGP);
+
+            if (mModel->compute_XYZ) {
+                compute_min_in_map(pmc.gz.mapG);
+                compute_min_in_map(pmc.gz.mapGP);
+            }
+        }
+    }
+
+    if (mLoopChains.size() == 1) {
+        mModel->mPosteriorMeanG = mModel->mPosteriorMeanGByChain[0];
+    } else {
+        compute_min_in_map(mModel->mPosteriorMeanG.gx.mapG);
+        compute_min_in_map(mModel->mPosteriorMeanG.gx.mapGP);
+
+        if (mModel->compute_Y) {
+            compute_min_in_map(mModel->mPosteriorMeanG.gy.mapG);
+            compute_min_in_map(mModel->mPosteriorMeanG.gy.mapGP);
+
+            if (mModel->compute_XYZ) {
+                compute_min_in_map(mModel->mPosteriorMeanG.gz.mapG);
+                compute_min_in_map(mModel->mPosteriorMeanG.gz.mapGP);
+            }
+        }
+    }
+
+#ifdef DEBUG
+    qDebug()<<tr("[MCMCLoopCurve::finalize] elapsed ms: %1").arg(startTime.elapsed());
+#endif
 }
 
 
