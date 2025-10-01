@@ -3420,10 +3420,16 @@ void ResultsView::updatePhasesOptions(qreal &optionWidgetHeight)
 
     add(mBeginEndRadio);
     add(mTempoRadio);
-    if (mTempoRadio->isChecked()) {
+    if (mTempoRadio->isChecked()||mActivityRadio->isChecked() ) {
         mErrCheck->show();
 
-        QVBoxLayout* unfoldLayout = new QVBoxLayout();
+    } else {
+        mErrCheck->hide();
+    }
+
+    if (mTempoRadio->isChecked()) {
+
+        QHBoxLayout* unfoldLayout = new QHBoxLayout();
         unfoldLayout->setContentsMargins(15, 0, 0, 0);
         unfoldLayout->setSpacing(10);
         unfoldLayout->addWidget(mErrCheck, Qt::AlignLeft);
@@ -3431,13 +3437,11 @@ void ResultsView::updatePhasesOptions(qreal &optionWidgetHeight)
 
         addTotalHeight(totalH, mErrCheck);
         totalH += unfoldLayout->spacing() * 1;
-    } else {
-        mErrCheck->hide();
     }
+
     add(mActivityRadio);
     if (mActivityRadio->isChecked()) {
         mActivityUnifCheck->show();
-        mErrCheck->show();
 
         QVBoxLayout* unfoldLayout = new QVBoxLayout();
         unfoldLayout->setContentsMargins(15, 0, 0, 0);
@@ -3452,7 +3456,6 @@ void ResultsView::updatePhasesOptions(qreal &optionWidgetHeight)
 
     } else {
         mActivityUnifCheck->hide();
-        mErrCheck->hide();
     }
 
     add(mDurationRadio);
@@ -3569,6 +3572,7 @@ void ResultsView::updateDisplayOptions(qreal &optionWidgetHeight)
 
     QHBoxLayout* spanLayout1 = new QHBoxLayout();
     spanLayout1->setContentsMargins(0, 0, 0, 0);
+    spanLayout1->setSpacing(5);
     spanLayout1->addWidget(mCurrentTMinEdit);
     spanLayout1->addWidget(mSpanLab);
     spanLayout1->addWidget(mCurrentTMaxEdit);
@@ -3577,6 +3581,7 @@ void ResultsView::updateDisplayOptions(qreal &optionWidgetHeight)
 
     QHBoxLayout* spanLayout2 = new QHBoxLayout();
     spanLayout2->setContentsMargins(0, 0, 0, 0);
+    spanLayout2->setSpacing(3);
     spanLayout2->addWidget(mTimeLab);
     spanLayout2->addWidget(mTimeSlider);
     spanLayout2->addWidget(mTimeEdit);
@@ -3585,6 +3590,7 @@ void ResultsView::updateDisplayOptions(qreal &optionWidgetHeight)
 
     QHBoxLayout* spanLayout3 = new QHBoxLayout();
     spanLayout3->setContentsMargins(0, 0, 0, 0);
+    spanLayout3->setSpacing(5);
     spanLayout3->addWidget(mMajorScaleLab);
     spanLayout3->addWidget(mMajorScaleEdit);
 
@@ -3592,6 +3598,7 @@ void ResultsView::updateDisplayOptions(qreal &optionWidgetHeight)
 
     QHBoxLayout* spanLayout4 = new QHBoxLayout();
     spanLayout4->setContentsMargins(0, 0, 0, 0);
+    spanLayout4->setSpacing(5);
     spanLayout4->addWidget(mMinorScaleLab);
     spanLayout4->addWidget(mMinorScaleEdit);
 
@@ -3636,6 +3643,7 @@ void ResultsView::updateDisplayOptions(qreal &optionWidgetHeight)
 
             QHBoxLayout* XOptionLayout1 = new QHBoxLayout();
             XOptionLayout1->setContentsMargins(0, 0, 0, 0);
+            XOptionLayout1->setSpacing(5);
             XOptionLayout1->addWidget(mCurrentXMinEdit);
             XOptionLayout1->addWidget(mXOptionLab);
             XOptionLayout1->addWidget(mCurrentXMaxEdit);
@@ -3679,6 +3687,7 @@ void ResultsView::updateDisplayOptions(qreal &optionWidgetHeight)
 
             QHBoxLayout* YOptionLayout1 = new QHBoxLayout();
             YOptionLayout1->setContentsMargins(0, 0, 0, 0);
+            YOptionLayout1->setSpacing(5);
             YOptionLayout1->addWidget(mCurrentYMinEdit);
             YOptionLayout1->addWidget(mYOptionLab);
             YOptionLayout1->addWidget(mCurrentYMaxEdit);
@@ -3719,6 +3728,7 @@ void ResultsView::updateDisplayOptions(qreal &optionWidgetHeight)
 
             QHBoxLayout* ZOptionLayout1 = new QHBoxLayout();
             ZOptionLayout1->setContentsMargins(0, 0, 0, 0);
+            ZOptionLayout1->setSpacing(5);
             ZOptionLayout1->addWidget(mCurrentZMinEdit);
             ZOptionLayout1->addWidget(mZOptionLab);
             ZOptionLayout1->addWidget(mCurrentZMaxEdit);
@@ -3775,6 +3785,7 @@ void ResultsView::updateDisplayOptions(qreal &optionWidgetHeight)
     mGraphicGroup->show();
     QHBoxLayout* graphicLayout1 = new QHBoxLayout();
     graphicLayout1->setContentsMargins(0, 0, 0, 0);
+    graphicLayout1->setSpacing(3);
     graphicLayout1->addWidget(mZoomLab);
     graphicLayout1->addWidget(mZoomSlider);
     graphicLayout1->addWidget(mZoomEdit);
@@ -3782,18 +3793,21 @@ void ResultsView::updateDisplayOptions(qreal &optionWidgetHeight)
 
     QHBoxLayout* graphicLayout2 = new QHBoxLayout();
     graphicLayout2->setContentsMargins(0, 0, 0, 0);
+    graphicLayout2->setSpacing(5);
     graphicLayout2->addWidget(mLabFont);
     graphicLayout2->addWidget(mFontBut);
     addTotalHeight(totalH, mFontBut);
 
     QHBoxLayout* graphicLayout3 = new QHBoxLayout();
     graphicLayout3->setContentsMargins(0, 0, 0, 0);
+    graphicLayout3->setSpacing(3);
     graphicLayout3->addWidget(mLabThickness);
     graphicLayout3->addWidget(mThicknessCombo);
     addTotalHeight(totalH, mThicknessCombo);
 
     QHBoxLayout* graphicLayout4 = new QHBoxLayout();
     graphicLayout4->setContentsMargins(0, 0, 0, 0);
+    graphicLayout4->setSpacing(3);
     graphicLayout4->addWidget(mLabOpacity);
     graphicLayout4->addWidget(mOpacityCombo);
     addTotalHeight(totalH, mOpacityCombo);
@@ -3881,6 +3895,7 @@ void ResultsView::updateDistribOptions(qreal &optionWidgetHeight, bool isPostDis
 
         QHBoxLayout* densityLayout1 = new QHBoxLayout();
         densityLayout1->setContentsMargins(0, 0, 0, 0);
+        densityLayout1->setSpacing(5);
         densityLayout1->addWidget(mThreshLab);
         densityLayout1->addWidget(mThresholdEdit);
         addTotalHeight(totalH, mThresholdEdit);
@@ -3891,6 +3906,7 @@ void ResultsView::updateDistribOptions(qreal &optionWidgetHeight, bool isPostDis
 
         QHBoxLayout* densityLayout2 = new QHBoxLayout();
         densityLayout2->setContentsMargins(0, 0, 0, 0);
+        densityLayout2->setSpacing(5);
         densityLayout2->addWidget(mFFTLenLab);
         densityLayout2->addWidget(mFFTLenCombo);
         addTotalHeight(totalH, mFFTLenCombo);
@@ -3900,6 +3916,7 @@ void ResultsView::updateDistribOptions(qreal &optionWidgetHeight, bool isPostDis
         mBandwidthEdit->show();
         QHBoxLayout* densityLayout3 = new QHBoxLayout();
         densityLayout3->setContentsMargins(0, 0, 0, 0);
+        densityLayout3->setSpacing(5);
         densityLayout3->addWidget(mBandwidthLab);
         densityLayout3->addWidget(mBandwidthEdit);
         addTotalHeight(totalH, mBandwidthEdit);
@@ -3926,7 +3943,7 @@ void ResultsView::updateDistribOptions(qreal &optionWidgetHeight, bool isPostDis
 
             QHBoxLayout* HActivitiyLayout = new QHBoxLayout();
             HActivitiyLayout->setContentsMargins(0, 0, 0, 0);
-            HActivitiyLayout->setSpacing(0);
+            HActivitiyLayout->setSpacing(5);
             HActivitiyLayout->addWidget(mHActivityLab);
             HActivitiyLayout->addWidget(mHActivityEdit);
             addTotalHeight(totalH, mHActivityEdit);
@@ -3934,7 +3951,7 @@ void ResultsView::updateDistribOptions(qreal &optionWidgetHeight, bool isPostDis
 
             QHBoxLayout* rangeLayout = new QHBoxLayout();
             rangeLayout->setContentsMargins(0, 0, 0, 0);
-            rangeLayout->setSpacing(0);
+            rangeLayout->setSpacing(5);
             rangeLayout->addWidget(mRangeThreshLab);
             rangeLayout->addWidget(mRangeThresholdEdit);
             addTotalHeight(totalH, mRangeThresholdEdit);
@@ -4741,7 +4758,6 @@ void ResultsView::setGraphicOption(GraphViewResults& graph)
 }
 
 
-
 void ResultsView::applyFFTLength()
 {
     const int len = mFFTLenCombo->currentText().toInt();
@@ -4780,6 +4796,7 @@ void ResultsView::applyThreshold()
         mCurveHpdCheck->setText(tr("HPD (at %1)").arg(threshold_str));
 
         getModel_ptr()->setThreshold(hpd);
+        //createGraphs();
         generateCurves();
     }
 }

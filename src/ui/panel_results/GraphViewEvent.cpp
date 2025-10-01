@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
