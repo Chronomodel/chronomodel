@@ -563,7 +563,7 @@ bool Project::load(const QString &path, bool force)
         QMessageBox message(QMessageBox::Critical,
                             tr("Error loading project file"),
                             tr("The project file could not be loaded.") + "\r" +
-                                path + " " + tr("could not be found"),
+                                path + " " + tr("does not exist"),
                             QMessageBox::Ok,
                             qApp->activeWindow());
         message.exec();
@@ -992,7 +992,7 @@ bool Project::load(const QString &path, bool force)
                             std::cout << "[Project::load] loading file.res DataStream Error" << std::endl;
                             QMessageBox message(QMessageBox::Critical,
                                                 tr("Error setProject"),
-                                                tr("The project could not be loaded.") + "\r",
+                                                tr("The file.res could not be loaded.") + "\r",
                                                 QMessageBox::Ok,
                                                 qApp->activeWindow());
                             message.exec();

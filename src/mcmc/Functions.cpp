@@ -2899,7 +2899,7 @@ t_matrix determinant_padded_matrix(const Matrix2D& paddedMatrix, const long shif
     auto m = paddedMatrix.cols() - 2 *shift;
 #ifdef DEBUG
     if (n != m)
-        throw std::runtime_error("[inverse_padded_matrix] Matrix is not quadratic");
+        throw std::runtime_error("[determinant_padded_matrix] Matrix is not quadratic");
 #endif
 
     t_matrix determinant;
@@ -2922,8 +2922,44 @@ t_matrix determinant_padded_matrix(const Matrix2D& paddedMatrix, const long shif
         determinant  = std::exp(log_det);
 
     }
-    return determinant; // Retourner la matrice inversée
+    return determinant;
 }
+
+
+
+t_matrix ln_rate_determinant_padded_matrix_A_B(const Matrix2D& paddedMatrix_A,
+                                               const Matrix2D& paddedMatrix_B,
+                                               const long shift)
+{
+    auto na = paddedMatrix_A.rows() - 2 * shift;
+    auto ma = paddedMatrix_A.cols() - 2 * shift;
+#ifdef DEBUG
+    if (na != ma)
+        throw std::runtime_error("[inverse_padded_matrix] Matrix A is not quadratic");
+#endif
+    t_matrix log_det_A = paddedMatrix_A.block(shift, shift, na, ma)
+                             .ldlt()
+                             .vectorD()
+                             .array()
+                             .log()
+                             .sum();
+
+    auto nb = paddedMatrix_B.rows() - 2 * shift;
+    auto mb = paddedMatrix_B.cols() - 2 * shift;
+#ifdef DEBUG
+    if (nb != mb)
+        throw std::runtime_error("[inverse_padded_matrix] Matrix B is not quadratic");
+#endif
+    t_matrix log_det_B = paddedMatrix_B.block(shift, shift, nb, mb)
+                             .ldlt()
+                             .vectorD()
+                             .array()
+                             .log()
+                             .sum();
+
+    return log_det_A - log_det_B;
+}
+
 
 /**
  * Inversion d'une matrice symétrique définie positive
@@ -4894,6 +4930,112 @@ std::vector<long double> gaussian_filter(std::vector<long double>& curve_input, 
     */
 }
 
+
+/**
+ * @brief gaussian_filter, we assume a uniform step between values.
+ * @param map
+ * @param sigma, of the gaussian
+ * @return
+ */
+QMap<double, double> gaussian_filter(QMap<double, double> &map, const double sigma)
+{
+    std::vector<double> curve_input;
+
+    const double min = map.firstKey();
+    const double max = map.lastKey();
+
+    const double step = (max - min) / (map.size()-1);
+
+    for (auto [key, value] : map.asKeyValueRange()) {
+        curve_input.push_back(value);
+    }
+
+    /* ----- FFT -----
+        http://www.fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html#One_002dDimensional-DFTs-of-Real-Data
+        https://jperalta.wordpress.com/2006/12/12/using-fftw3/
+    */
+
+
+
+    //qDebug() <<"filtre Gaussian";
+    //  data
+    const int inputSize = (int) curve_input.size();
+
+    const double sigma_filter = sigma * step;
+
+    const int gaussSize = std::max(inputSize, int(3*sigma));
+    const int paddingSize = 2*gaussSize;
+
+    const int N = gaussSize + 2*paddingSize;
+    //const int NComplex = 2* (N/2)+1;
+
+    const int NComplex =  (N/2)+1;
+
+    // https://www.fftw.org/fftw3_doc/Real_002ddata-DFT-Array-Format.html
+
+    double *inputReal;
+    inputReal = new double [N];
+
+
+    fftw_complex *inputComplex;
+    inputComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
+
+
+    // we could use std::copy
+    for (int i  = 0; i< paddingSize; i++) {
+        inputReal[i] = curve_input[0];//0.;
+    }
+    for (int i = 0; i< inputSize; i++) {
+        inputReal[i+paddingSize] = curve_input[i];
+    }
+    for (int i ( inputSize+paddingSize); i< N; i++) {
+        inputReal[i] = curve_input[inputSize-1];//0.;
+    }
+    fftw_plan plan_input = fftw_plan_dft_r2c_1d(N, inputReal, inputComplex, FFTW_ESTIMATE);
+
+    fftw_execute(plan_input);
+
+    for (int i = 0; i < NComplex; ++i) {
+        const double s =  M_PI * (double)i / (double)NComplex;
+        const double factor = exp(-2. * pow(s * sigma_filter, 2.));
+        if (isnan(factor)) {
+            qDebug()<<"gaussian filter"<< s << " isnan";
+        }
+        inputComplex[i][0] *= factor;
+        inputComplex[i][1] *= factor;
+
+    }
+
+
+    double *outputReal;
+    outputReal = new double [2* (N/2)+1];//;[N];
+
+
+    fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, inputComplex, outputReal, FFTW_ESTIMATE);
+    fftw_execute(plan_output);
+
+    QMap<double, double> results;
+    for ( int i = 0; i < inputSize; i++) {
+        const double t = min + i* step;
+        results[t] = outputReal[i + paddingSize]/N;
+#ifdef DEBUG
+        if (isnan(results[t])) {
+            qDebug()<<"gaussian filter"<<t<< " isnan";
+        }
+#endif
+    }
+
+    fftw_destroy_plan(plan_input);
+    fftw_destroy_plan(plan_output);
+    fftw_free(inputComplex);
+
+    delete [] inputReal;
+    delete [] outputReal;
+
+    fftw_cleanup();
+    return results;
+}
+
 /**
  * @brief low_pass_filter, Since the signal exhibits a discontinuity,
  * the filtered signal exhibits a significant disturbance at the extremities.
@@ -4989,4 +5131,61 @@ std::vector<double> low_pass_filter(std::vector<double>& curve_input, const doub
     fftw_cleanup();
 
     return results;
+}
+
+
+
+/**
+ * @brief Version simplifiée sans FFT pour les petites courbes
+ *
+ * Plus simple et souvent plus stable pour de petites courbes (< 100 points)
+ * sigma = 0.5-1.0 : Lissage léger, préserve les détails
+ * sigma = 2.0-5.0 : Lissage modéré, bon compromis
+ * sigma > 5.0 : Lissage fort, courbe très lisse
+ */
+QMap<double, double> gaussian_filter_simple(const QMap<double, double> &map, const double sigma)
+{
+    if (map.isEmpty() || sigma <= 0) return map;
+
+    QMap<double, double> result;
+    const double step = (map.lastKey() - map.firstKey()) / (map.size() - 1);
+    const double sigma_filter = sigma * step;
+    const int kernel_size = static_cast<int>(6 * sigma) | 1; // Impair
+    const int half_kernel = kernel_size / 2;
+
+    // Pré-calculer le noyau gaussien
+    std::vector<double> kernel(kernel_size);
+    double kernel_sum = 0.0;
+    for (int i = 0; i < kernel_size; ++i) {
+        const double x = (i - half_kernel) * step;
+        kernel[i] = std::exp(-0.5 * std::pow(x / sigma_filter, 2));
+        kernel_sum += kernel[i];
+    }
+
+    // Normaliser le noyau
+    for (double &k : kernel) {
+        k /= kernel_sum;
+    }
+
+    // Appliquer le filtre
+    auto keys = map.keys();
+    auto values = map.values();
+
+    for (int i = 0; i < values.size(); ++i) {
+        double filtered_value = 0.0;
+        double weight_sum = 0.0;
+
+        for (int j = -half_kernel; j <= half_kernel; ++j) {
+            int idx = i + j;
+            if (idx >= 0 && idx < values.size()) {
+                const double weight = kernel[j + half_kernel];
+                filtered_value += values[idx] * weight;
+                weight_sum += weight;
+            }
+        }
+
+        result[keys[i]] = filtered_value / weight_sum;
+    }
+
+    return result;
 }

@@ -568,13 +568,124 @@ Container<T> stretch_vector(const Container<T> &vector, const T from, const T to
 }
 
 
+/**
+ * @brief Calcule la probabilité qu'une variable gaussienne soit dans l'intervalle [a, b].
+ *
+ * On considère une loi normale de moyenne \f$\mu\f$ et d'écart-type \f$\sigma\f$ :
+ * \f[
+ * f(x) = \frac{1}{\sigma \sqrt{2\pi}}
+ *        \exp\!\left(-\frac{(x - \mu)^2}{2\sigma^2}\right).
+ * \f]
+ *
+ * La probabilité que la variable aléatoire \f$X\f$ appartienne à [a, b] est donnée par :
+ * \f[
+ * P(a \leq X \leq b) =
+ * \frac{1}{2}
+ * \left[
+ * \operatorname{erf}\!\left(\frac{b - \mu}{\sigma \sqrt{2}}\right)
+ * - \operatorname{erf}\!\left(\frac{a - \mu}{\sigma \sqrt{2}}\right)
+ * \right].
+ * \f]
+ *
+ * @param a borne inférieure de l'intervalle
+ * @param b borne supérieure de l'intervalle
+ * @param mu moyenne de la loi normale (par défaut 0.0)
+ * @param sigma écart-type (>0) de la loi normale (par défaut 1.0)
+ * @return Probabilité que X soit dans [a, b].
+ *
+ * @throw std::invalid_argument si sigma <= 0
+ */
+inline double diff_erf(double a, double b,
+                       double mu = 0.0,
+                       double sigma = 1.0)
+{
+#if DEBUG
+    if (sigma <= 0.0) {
+        throw std::invalid_argument("sigma must be > 0");
+    }
+#endif
+    const double z_a = (a - mu) / (sigma * M_SQRT2);
+    const double z_b = (b - mu) / (sigma * M_SQRT2);
 
-inline double diff_erf(double a, double b, double mu = 0., double sigma = 1.) {
-    return 0.5*(erf((b-mu)/(sigma*M_SQRT2)) - erf((a-mu)/(sigma*M_SQRT2)));
+    return 0.5 * (std::erf(z_b) - std::erf(z_a));
 }
 
 /**
- * @brief N compute Normal law = Gauss law
+ * @brief Calcule le z-score associé à un intervalle de confiance bilatéral (version noexcept).
+ *
+ * Pour un niveau de risque \f$\alpha\f$, le z-score est :
+ * \f[
+ * z_{\alpha/2} = \Phi^{-1}(1 - \alpha/2)
+ * \f]
+ * où \f$\Phi^{-1}\f$ est la fonction quantile de la loi normale standard.
+ *
+ * Exemples :
+ * - alpha = 0.05  →  z ≈ 1.96  (IC à 95%)
+ * - alpha = 0.10  →  z ≈ 1.645 (IC à 90%)
+ * - alpha = 0.01  →  z ≈ 2.576 (IC à 99%)
+ *
+ * @param alpha Niveau de risque (0 < alpha < 1).
+ * @return z-score \f$z_{\alpha/2}\f$, ou NaN si alpha est invalide.
+ *  * https://en.wikipedia.org/wiki/Standard_score
+ */
+[[nodiscard]] inline double zScore(double alpha) noexcept
+{
+    if (alpha <= 0.0 || alpha >= 1.0) {
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+
+    // Convertit alpha en probabilité cumulée
+    const double p = 1.0 - alpha / 2.0;
+
+    // Coefficients de l’approximation rationnelle (Peter J. Acklam, 2003)
+    static const double a1 = -3.969683028665376e+01;
+    static const double a2 =  2.209460984245205e+02;
+    static const double a3 = -2.759285104469687e+02;
+    static const double a4 =  1.383577518672690e+02;
+    static const double a5 = -3.066479806614716e+01;
+    static const double a6 =  2.506628277459239e+00;
+
+    static const double b1 = -5.447609879822406e+01;
+    static const double b2 =  1.615858368580409e+02;
+    static const double b3 = -1.556989798598866e+02;
+    static const double b4 =  6.680131188771972e+01;
+    static const double b5 = -1.328068155288572e+01;
+
+    static const double c1 = -7.784894002430293e-03;
+    static const double c2 = -3.223964580411365e-01;
+    static const double c3 = -2.400758277161838e+00;
+    static const double c4 = -2.549732539343734e+00;
+    static const double c5 =  4.374664141464968e+00;
+    static const double c6 =  2.938163982698783e+00;
+
+    static const double d1 =  7.784695709041462e-03;
+    static const double d2 =  3.224671290700398e-01;
+    static const double d3 =  2.445134137142996e+00;
+    static const double d4 =  3.754408661907416e+00;
+
+    const double plow  = 0.02425;
+    const double phigh = 1 - plow;
+
+    double q, r;
+    if (p < plow) {
+        q = std::sqrt(-2 * std::log(p));
+        return (((((c1*q+c2)*q+c3)*q+c4)*q+c5)*q+c6) /
+               ((((d1*q+d2)*q+d3)*q+d4)*q+1);
+    } else if (p <= phigh) {
+        q = p - 0.5;
+        r = q * q;
+        return (((((a1*r+a2)*r+a3)*r+a4)*r+a5)*r+a6)*q /
+               (((((b1*r+b2)*r+b3)*r+b4)*r+b5)*r+1);
+    } else {
+        q = std::sqrt(-2 * std::log(1 - p));
+        return -(((((c1*q+c2)*q+c3)*q+c4)*q+c5)*q+c6) /
+               ((((d1*q+d2)*q+d3)*q+d4)*q+1);
+    }
+}
+
+
+/**
+ * @brief N compute Normal law = Gauss law // see dnorm()
  * @param x
  * @param mean
  * @param stddev

@@ -237,6 +237,9 @@ Matrix2D multiplyMatrixBanded_Winograd(const Matrix2D& a, const Matrix2D& b,  co
 Matrix2D inverseMatSym0(const Matrix2D& matrix, const size_t shift = 0);
 Matrix2D inverse_padded_matrix(const Matrix2D& paddedMatrix, const long shift = 1);
 t_matrix determinant_padded_matrix(const Matrix2D& paddedMatrix, const long shift = 1);
+t_matrix ln_rate_determinant_padded_matrix_A_B(const Matrix2D& paddedMatrix_A,
+                                               const Matrix2D& paddedMatrix_B,
+                                               const long shift = 1);
 
 Eigen::MatrixXd geninv(const Eigen::MatrixXd& G);
 Matrix2D geninv(const Matrix2D& G);
@@ -461,6 +464,9 @@ std::pair<double, double> solve_quadratic(const double y, const double a, const 
 
 std::vector<double> gaussian_filter(std::vector<double>& curve_input, const double sigma, const short padding_type=1);
 std::vector<long double> gaussian_filter(std::vector<long double>& curve_input, const double sigma, const short padding_type=1);
+QMap<double, double> gaussian_filter(QMap<double, double> &map, const double sigma);
+
+QMap<double, double> gaussian_filter_simple(const QMap<double, double> &map, const double sigma);
 
 std::vector<double> low_pass_filter(std::vector<double>& curve_input, const double Tc, const short padding_type = 0);
 

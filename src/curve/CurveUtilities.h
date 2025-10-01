@@ -239,6 +239,8 @@ Matrix2D calculMatQ0(const std::vector<t_reduceTime>& vec_h);
 //Matrix2D calculMatQ(const std::vector<t_reduceTime>& vec_h);
 SparseMatrixLD calculMatQ(const std::vector<t_reduceTime>& vec_h);
 
+std::pair<SparseMatrixLD, SparseMatrixLD> calculMatQR(const std::vector<t_reduceTime>& vec_h);
+
 Matrix2D computeMatA_direct(const Matrix2D& Q, const Matrix2D& B1, const DiagonalMatrixLD& W1_diag, double lambda);
 Matrix2D computeMatA_optimized_kahan(const Matrix2D& Q, const Matrix2D& B_1, const DiagonalMatrixLD& W_1, double lambda);
 Matrix2D computeB_1_from_Q_W1_R_direct(const Matrix2D& Q, const DiagonalMatrixLD& W_1, const Matrix2D& R, double lambda);

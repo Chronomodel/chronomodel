@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -72,9 +72,6 @@ private:
 
     double compute_mean_ID(double incl, double decl, const double alpha95) const;
 };
-
-
-QMap<double, double> gaussian_filter(QMap<double, double> &map, const double sigma = 0.01);
 
 QMap<double, double> low_pass_filter(QMap<double, double> &map, const double Tc);
 

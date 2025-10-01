@@ -472,6 +472,116 @@ SparseMatrixLD calculMatQ(const std::vector<t_reduceTime>& vec_h)
 }
 
 /**
+ * @brief Calculates both Q and R matrices as sparse matrices contained within n x n matrices.
+ *
+ * This function computes both the Q matrix (n x (n-2) within n x n) and R matrix ((n-2) x (n-2) within n x n)
+ * using Eigen's SparseMatrix for efficient storage.
+ *
+ * Optimized version returning both matrices as a pair with RVO and direct construction.
+ *
+ * Q matrix structure (banded matrix with k=1; diagonal terms are negative):
+ * For n=5:
+ *   0 +X  0  0 0
+ *   0 -X +a  0 0
+ *   0 +a -X +b 0
+ *   0  0 +b -X 0
+ *   0  0  0 +X 0
+ *
+ * R matrix structure (tridiagonal matrix in center):
+ * For n=5:
+ *   0 0 0 0 0
+ *   0 X X X 0
+ *   0 X X X 0
+ *   0 X X X 0
+ *   0 0 0 0 0
+ *
+ *
+ * @param vec_h The input vector of size n-1.
+ * @return std::pair<SparseMatrixLD, SparseMatrixLD> Pair containing (Q, R) matrices.
+ * @throws std::runtime_error if any element in vec_h is <= 0 (in DEBUG mode).
+ */
+std::pair<SparseMatrixLD, SparseMatrixLD> calculMatQR(const std::vector<t_reduceTime>& vec_h)
+{
+    // vecH est de dimension n-1
+    const size_t n = vec_h.size() + 1;
+
+    // Pre-compute constants
+    constexpr t_matrix ONE_THIRD = 1.0L/3.0L;
+    constexpr t_matrix ONE_SIXTH = 1.0L/6.0L;
+
+    // Estimer le nombre d'éléments non-nuls
+    const size_t nnz_Q_estimate = 3 * (n - 2);
+    const size_t nnz_R_estimate = (n-2) + 2*(n-3);
+
+    // Construction directe dans le pair pour bénéficier de RVO
+    std::pair<SparseMatrixLD, SparseMatrixLD> result{
+        SparseMatrixLD(n, n),  // matQ
+        SparseMatrixLD(n, n)   // matR
+    };
+
+    auto& [matQ, matR] = result;  // Structured binding pour clarté
+
+    // Réserver l'espace
+    matQ.reserve(nnz_Q_estimate);
+    matR.reserve(nnz_R_estimate);
+
+    // Vecteurs de triplets avec allocation optimisée
+    std::vector<Eigen::Triplet<t_matrix>> tripletsQ, tripletsR;
+    tripletsQ.reserve(nnz_Q_estimate);
+    tripletsR.reserve(nnz_R_estimate);
+
+    // ========== CALCUL SIMULTANÉ DES DEUX MATRICES ==========
+    // Une seule boucle pour calculer les deux matrices
+    for (size_t i = 1; i < n-1; ++i) {
+#ifdef DEBUG
+        if (vec_h[i-1] <= 0 || (i < n-1 && vec_h[i] <= 0))
+            throw std::runtime_error("[CurveUtilities::calculMatQR] vec_h <= 0");
+#endif
+
+        // Précalculer les valeurs communes
+        const t_matrix inv_h_prev = 1.0L / vec_h[i-1];
+        const t_matrix inv_h_curr = (i < n-1) ? 1.0L / vec_h[i] : 0.0L;
+
+        // ===== MATRICE Q =====
+        if (i < n-1) {  // Éviter le dernier élément pour Q
+            // Élément au-dessus de la diagonale
+            tripletsQ.emplace_back(i-1, i, inv_h_prev);
+
+            // Élément diagonal (négatif)
+            tripletsQ.emplace_back(i, i, -(inv_h_prev + inv_h_curr));
+
+            // Élément en-dessous de la diagonale
+            tripletsQ.emplace_back(i+1, i, inv_h_curr);
+        }
+
+        // ===== MATRICE R =====
+        if (i <= n-2) {  // Pour R: i de 1 à n-2
+            // Élément diagonal
+            const t_matrix diagonal = (i == n-2) ?
+                                          (vec_h[n-3] + vec_h[n-2]) * ONE_THIRD :
+                                          (vec_h[i-1] + vec_h[i]) * ONE_THIRD;
+            tripletsR.emplace_back(i, i, diagonal);
+
+            // Éléments hors-diagonale (seulement si pas le dernier)
+            if (i < n-2) {
+                const t_matrix offDiagonal = vec_h[i] * ONE_SIXTH;
+                tripletsR.emplace_back(i, i+1, offDiagonal);
+                tripletsR.emplace_back(i+1, i, offDiagonal);
+            }
+        }
+    }
+
+    // Construction et compression en une fois
+    matQ.setFromTriplets(tripletsQ.begin(), tripletsQ.end());
+    matR.setFromTriplets(tripletsR.begin(), tripletsR.end());
+    matQ.makeCompressed();
+    matR.makeCompressed();
+
+    return result;  // RVO s'applique automatiquement
+}
+
+
+/**
  * @brief Calcule A = I + (-lambda) * W_1 * Q * B_1 * Q^T
  *
  * Toutes les opérations sont déroulées manuellement avec des boucles.

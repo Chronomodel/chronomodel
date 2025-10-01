@@ -59,7 +59,8 @@ public:
     MHVariable mLambdaSpline;
     double mC_lambda;
 
-    MHVariable mS02Vg;
+  //  MHVariable mS02Vg;
+    double mS02Vg;
     double mSO2_beta; // used for updated
 
     MCMCSpline mSpline; // valeurs courrantes de la spline

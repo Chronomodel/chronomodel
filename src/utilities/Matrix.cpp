@@ -1001,6 +1001,7 @@ BandedMatrix toBandedMatrix(const Matrix2Do& matrix, size_t bandWidth)
 
 /** Write Data
  */
+/*
 QDataStream &operator<<( QDataStream &stream , const CurveMap &map )
 {
     stream << map._row;
@@ -1018,9 +1019,10 @@ QDataStream &operator<<( QDataStream &stream , const CurveMap &map )
 
    return stream;
 }
-
+*/
 /** Read Data
  */
+/*
 QDataStream &operator>>( QDataStream &stream, CurveMap &map )
 {
     stream >> map._row;
@@ -1044,7 +1046,7 @@ QDataStream &operator>>( QDataStream &stream, CurveMap &map )
     return stream;
 
 }
-
+*/
 void showMatrix(const Matrix2D& m, const std::string& str)
 {
     std::cout << str << "\n";
@@ -1175,4 +1177,71 @@ SparseMatrixLD SparseQuadraticFormSolver::solve_with_padding(const SparseMatrixL
     result.makeCompressed();
 
     return result;
+}
+
+
+/** Write Data - Version optimisée */
+QDataStream& operator<<(QDataStream& stream, const CurveMap& map)
+{
+    // Écrire les métadonnées
+    stream << map._row;
+    stream << map._column;
+    stream << map.min_value;
+    stream << map.max_value;
+    stream << map.rangeX;
+    stream << map.rangeY;
+
+    // Écrire les données en bloc (plus efficace)
+    const quint32 data_size = static_cast<quint32>(map.data.size());
+    stream << data_size;
+
+    if (!map.data.empty()) {
+        // Écriture en bloc des données brutes (très rapide)
+        stream.writeRawData(reinterpret_cast<const char*>(map.data.data()),
+                            static_cast<int>(data_size * sizeof(double)));
+    }
+
+    return stream;
+}
+
+/** Read Data - Version optimisée */
+QDataStream& operator>>(QDataStream& stream, CurveMap& map)
+{
+    // Lire les métadonnées
+    stream >> map._row;
+    stream >> map._column;
+    stream >> map.min_value;
+    stream >> map.max_value;
+    stream >> map.rangeX;
+    stream >> map.rangeY;
+
+    // Mettre à jour le cache
+    map._row_cache = map._row;
+
+    // Lire la taille des données
+    quint32 data_size;
+    stream >> data_size;
+
+    // Redimensionner le vecteur
+    map.data.resize(data_size);
+
+    if (data_size > 0) {
+        // Lecture en bloc des données brutes (très rapide)
+        const int bytes_to_read = static_cast<int>(data_size * sizeof(double));
+        const int bytes_read = stream.readRawData(reinterpret_cast<char*>(map.data.data()),
+                                                  bytes_to_read);
+
+        if (bytes_read != bytes_to_read) {
+            // Fallback vers la méthode élément par élément si la lecture en bloc échoue
+            map.data.clear();
+            map.data.resize(data_size);
+            double v;
+            for (quint32 i = 0; i < data_size; ++i) {
+                stream >> v;
+                map.data[i] = v;
+            }
+        }
+    }
+
+    return stream;
 }

@@ -661,18 +661,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
                HTMLText +=  line(textGreen(QObject::tr(" - Sigma_MH on Smoothing : %1").arg(stringForLocal(model->mLambdaSpline.mSigmaMH))));
             }
         }
-        HTMLText += "<br>";
-        HTMLText +=  line(textGreen(QObject::tr("sqrt Variance Param. : %1").arg(QLocale().toString(sqrt(model->mS02Vg.mX), 'G', 2))));
-        if (model->mS02Vg.mLastAccepts.size() > 2) {
-            const auto acceptRate = model->mS02Vg.getCurrentAcceptRate();
-            const auto samplerType = model->mS02Vg.mSamplerProposal;
-            if (samplerType == MHVariable::eMHAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
-                HTMLText += line(textGreen(QObject::tr(". . . . . Current Acceptance Rate : ") + textBold(textRed(stringForLocal(acceptRate*100.) + " %"))  + " (" + MHVariable::getSamplerProposalText(samplerType)) + ")");
-            else
-                HTMLText += line(textGreen(QObject::tr(". . . . . Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(acceptRate*100.), MHVariable::getSamplerProposalText(samplerType))));
 
-            HTMLText +=  line(textGreen(QObject::tr(" - Sigma_MH on Shrinkage param. : %1").arg(stringForLocal(model->mS02Vg.mSigmaMH))));
-        }
         HTMLText += "<br>";
         HTMLText +=  line(textGreen(QObject::tr("Curve beta parameter : %1").arg(QLocale().toString(model->mSO2_beta, 'G', 2))));
     }
@@ -1037,15 +1026,6 @@ QString ModelUtilities::curveResultsHTML(const std::shared_ptr<ModelCurve> model
         text += lambdaResultsHTML(model);
     }
 
-    if (model->mS02Vg.mSamplerProposal == MHVariable::eFixe) {
-        text += line(textGreen(QObject::tr("- Variance Param. ; Fixed value = %1").arg(QString::number(pow( model->mS02Vg.mRawTrace->at(0), 2.)))));
-
-    } else {
-        //text += line(textGreen(QObject::tr("- Mean of the sqrt of Variance Param. = %1").arg(stringForLocal(model->mS02Vg.mResults.funcAnalysis.mean))));
-        text += "<br>";
-        text += S02ResultsHTML(model);
-    }
-
     if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Depth) {
         text += "<br>" + line( textBold(textGreen(QObject::tr("Positive curves accepted with Threshold : %1").arg(stringForLocal(model->mCurveSettings.mThreshold)))));
         const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
@@ -1092,19 +1072,6 @@ QString ModelUtilities::lambdaResultsHTML(const std::shared_ptr<ModelCurve> mode
     return text;
 }
 
-QString ModelUtilities::S02ResultsHTML(const std::shared_ptr<ModelCurve> model)
-{
-    QString text;
-    /*if (model->mS02Vg.mSamplerProposal == MHVariable::eFixe) {
-        text = line(textBold(textGreen(QObject::tr("S02 Vg"))));
-        text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(pow( model->mS02Vg.mRawTrace->at(0), 2.)))));
-
-    } else {*/
-        text = line(textBold(textGreen(QObject::tr("Stat. on the sqrt(Variance Parameter)"))));
-        text += line(textGreen(model->mS02Vg.MetropolisVariable::resultsString("", nullptr)));
-   // }
-    return text;
-}
 /**
  * @brief HPDOutsideSudyPeriod
  * @param hpd, the hpd must be send with the good date format

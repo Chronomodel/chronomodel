@@ -90,6 +90,404 @@ RowVectorLD stdVectorToRowVector(const std::vector<t_matrix>& vec);
 std::vector<t_matrix> eigenToStdVector(const RowVectorLD& vec);
 
 
+
+/**
+ * @brief CurveMap optimisée pour l'accès et l'écriture haute performance
+ */
+/**
+ * @brief CurveMap optimisée pour l'accès et l'écriture haute performance
+ */
+class CurveMap
+{
+public:
+    using iterator = std::vector<double>::iterator;
+    using const_iterator = std::vector<double>::const_iterator;
+    using value_type = double;
+    using size_type = size_t;
+
+private:
+    unsigned _row;
+    unsigned _column;
+protected:
+    std::vector<double> data;
+    std::pair<double, double> rangeY;
+    std::pair<double, double> rangeX;
+    double min_value;
+    double max_value;
+
+    // Cache pour éviter les multiplications répétées
+    mutable size_t _row_cache;
+
+public:
+    // Constructeurs corrigés
+    CurveMap()
+        : _row(0), _column(0), data(), rangeY(0.0, 0.0),
+        rangeX(0.0, 0.0), min_value(0.0), max_value(0.0), _row_cache(0) {}
+
+    explicit CurveMap(unsigned rows, unsigned cols)
+        : _row(rows), _column(cols), data(static_cast<size_t>(rows) * cols, 0.0),
+        rangeY(0.0, 0.0), rangeX(0.0, 0.0), min_value(0.0), max_value(0.0), _row_cache(rows) {
+        // Pré-allouer et initialiser pour éviter les réallocations
+        data.reserve(static_cast<size_t>(rows) * cols);
+    }
+
+    // Constructeur avec initialisation des ranges
+    CurveMap(unsigned rows, unsigned cols, double minX, double maxX, double minY, double maxY)
+        : CurveMap(rows, cols) {
+        setRangeX(minX, maxX);
+        setRangeY(minY, maxY);
+    }
+
+    // ============= MÉTHODES D'OPTIMISATION =============
+
+    /**
+     * @brief Redimensionne la matrice en préservant les données si possible
+     */
+    void resize(unsigned new_rows, unsigned new_cols, double fill_value = 0.0) {
+        if (new_rows == _row && new_cols == _column) return;
+
+        const size_t new_size = static_cast<size_t>(new_rows) * new_cols;
+        data.resize(new_size, fill_value);
+        _row = new_rows;
+        _column = new_cols;
+        _row_cache = new_rows;
+    }
+
+    /**
+     * @brief Réserve la mémoire sans initialiser (plus rapide)
+     */
+    void reserve(unsigned rows, unsigned cols) {
+        const size_t total_size = static_cast<size_t>(rows) * cols;
+        data.reserve(total_size);
+    }
+
+    /**
+     * @brief Initialisation rapide en mémoire
+     */
+    void fast_fill(double value = 0.0) {
+        std::fill(data.begin(), data.end(), value);
+    }
+
+    /**
+     * @brief Initialisation ultra-rapide avec memset (seulement pour 0.0)
+     */
+    void zero_fill() {
+        std::memset(data.data(), 0, data.size() * sizeof(double));
+    }
+
+    // ============= ACCÈS OPTIMISÉS =============
+
+    /**
+     * @brief Accès le plus rapide possible (sans vérification)
+     */
+    inline double& operator()(unsigned c, unsigned r) noexcept {
+        return data[_row_cache * c + r];
+    }
+
+    inline const double& operator()(unsigned c, unsigned r) const noexcept {
+        return data[_row_cache * c + r];
+    }
+
+    /**
+     * @brief Accès avec vérification de bornes (version sécurisée)
+     */
+    double& at(unsigned c, unsigned r) {
+        if (c >= _column || r >= _row) [[unlikely]] {
+            throw std::out_of_range("CurveMap::at - indices out of range");
+        }
+        return data[_row_cache * c + r];
+    }
+
+    const double& at(unsigned c, unsigned r) const {
+        if (c >= _column || r >= _row) [[unlikely]] {
+            throw std::out_of_range("CurveMap::at - indices out of range");
+        }
+        return data[_row_cache * c + r];
+    }
+
+    /**
+     * @brief Accès par index linéaire (le plus rapide)
+     */
+    inline double& operator[](size_t idx) noexcept {
+        return data[idx];
+    }
+    inline const double& operator[](size_t idx) const noexcept {
+        return data[idx];
+    }
+
+    /**
+     * @brief Conversion coordonnées → index linéaire
+     */
+    [[nodiscard]] inline size_t to_linear_index(unsigned c, unsigned r) const noexcept {
+        return _row_cache * c + r;
+    }
+
+    /**
+     * @brief Conversion index linéaire → coordonnées
+     */
+    [[nodiscard]] inline std::pair<unsigned, unsigned> from_linear_index(size_t idx) const noexcept {
+        return {static_cast<unsigned>(idx / _row_cache), static_cast<unsigned>(idx % _row_cache)};
+    }
+
+    // ============= OPÉRATIONS OPTIMISÉES =============
+
+    /**
+     * @brief Incrémentation rapide
+     */
+    inline void increment(unsigned col, unsigned row) noexcept {
+        data[_row_cache * col + row] += 1.0;
+    }
+
+    /**
+     * @brief Incrémentation avec valeur personnalisée
+     */
+    inline void increment(unsigned col, unsigned row, double value) noexcept {
+        data[_row_cache * col + row] += value;
+    }
+
+    /**
+     * @brief Ajout par index linéaire (plus rapide)
+     */
+    inline void increment_linear(size_t idx, double value = 1.0) noexcept {
+        data[idx] += value;
+    }
+
+    /**
+     * @brief Opérateur += optimisé
+     */
+    void operator+=(const std::pair<unsigned, unsigned>& coord) {
+        increment(coord.first, coord.second);
+    }
+
+    /**
+     * @brief Définit une valeur directement (plus rapide que at() puis =)
+     */
+    inline void set(unsigned c, unsigned r, double value) noexcept {
+        data[_row_cache * c + r] = value;
+    }
+
+    /**
+     * @brief Définit une valeur par index linéaire
+     */
+    inline void set_linear(size_t idx, double value) noexcept {
+        data[idx] = value;
+    }
+
+    // ============= ACCÈS AUX POINTEURS (TRÈS RAPIDE) =============
+
+    /**
+     * @brief Pointeur direct vers une cellule
+     */
+    [[nodiscard]] inline double* dataPtr(unsigned c, unsigned r) noexcept {
+        return &data[_row_cache * c + r];
+    }
+
+    [[nodiscard]] inline const double* dataPtr(unsigned c, unsigned r) const noexcept {
+        return &data[_row_cache * c + r];
+    }
+
+    /**
+     * @brief Pointeur vers le début d'une ligne
+     */
+    [[nodiscard]] inline double* rowPtr(unsigned r) noexcept {
+        return &data[r];
+    }
+
+    /**
+     * @brief Pointeur vers le début d'une colonne
+     */
+    [[nodiscard]] inline double* columnPtr(unsigned c) noexcept {
+        return &data[_row_cache * c];
+    }
+
+    /**
+     * @brief Accès direct au buffer de données
+     */
+    [[nodiscard]] inline double* raw_data() noexcept { return data.data(); }
+    [[nodiscard]] inline const double* raw_data() const noexcept { return data.data(); }
+
+    // ============= OPÉRATIONS EN BLOC =============
+
+    /**
+     * @brief Copie rapide d'une ligne entière
+     */
+    void copy_row(unsigned src_row, unsigned dst_row) {
+        if (src_row >= _row || dst_row >= _row) return;
+
+        for (unsigned c = 0; c < _column; ++c) {
+            data[_row_cache * c + dst_row] = data[_row_cache * c + src_row];
+        }
+    }
+
+    /**
+     * @brief Copie rapide d'une colonne entière
+     */
+    void copy_column(unsigned src_col, unsigned dst_col) {
+        if (src_col >= _column || dst_col >= _column) return;
+
+        const size_t src_offset = _row_cache * src_col;
+        const size_t dst_offset = _row_cache * dst_col;
+
+        std::memcpy(&data[dst_offset], &data[src_offset], _row * sizeof(double));
+    }
+
+    /**
+     * @brief Remplissage rapide d'une région rectangulaire
+     */
+    void fill_region(unsigned start_col, unsigned start_row,
+                     unsigned end_col, unsigned end_row, double value) {
+        for (unsigned c = start_col; c < std::min(end_col, _column); ++c) {
+            for (unsigned r = start_row; r < std::min(end_row, _row); ++r) {
+                data[_row_cache * c + r] = value;
+            }
+        }
+    }
+
+    // ============= ACCÈS AUX MEMBRES PRIVÉS POUR SÉRIALISATION =============
+
+    /**
+     * @brief Accès aux membres privés pour les opérateurs de sérialisation
+     */
+    friend QDataStream& operator<<(QDataStream& stream, const CurveMap& map);
+    friend QDataStream& operator>>(QDataStream& stream, CurveMap& map);
+
+    void setRangeX(double minX, double maxX) { rangeX = {minX, maxX}; }
+    void setRangeY(double minY, double maxY) { rangeY = {minY, maxY}; }
+
+    [[nodiscard]] unsigned row() const noexcept { return _row; }
+    [[nodiscard]] unsigned column() const noexcept { return _column; }
+    [[nodiscard]] size_t size() const noexcept { return data.size(); }
+    [[nodiscard]] bool empty() const noexcept { return data.empty(); }
+
+    [[nodiscard]] double minX() const noexcept { return rangeX.first; }
+    [[nodiscard]] double maxX() const noexcept { return rangeX.second; }
+    [[nodiscard]] double minY() const noexcept { return rangeY.first; }
+    [[nodiscard]] double maxY() const noexcept { return rangeY.second; }
+    std::pair<double, double> minMaxY() const noexcept { return rangeY; }
+    std::pair<double, double> minMaxX() const noexcept { return rangeX; }
+
+    // Setters/Getters pour min/max values
+    void setMinValue(double minV) noexcept { min_value = minV; }
+    void setMaxValue(double maxV) noexcept { max_value = maxV; }
+    void setMinMaxValues(double minV, double maxV) noexcept {
+        min_value = minV;
+        max_value = maxV;
+    }
+
+    [[nodiscard]] double minValue() const noexcept { return min_value; }
+    [[nodiscard]] double maxValue() const noexcept { return max_value; }
+    [[nodiscard]] std::pair<double, double> minMaxValues() const noexcept {
+        return {min_value, max_value};
+    }
+
+     [[nodiscard]] bool isEmpty() const noexcept { return data.empty(); }
+    void clear() {
+        data.clear();
+        _row = _column = 0;
+        _row_cache = 0;
+        min_value = max_value = 0.0;
+        rangeX = rangeY = {0.0, 0.0};
+    }
+
+    [[nodiscard]] const std::vector<double>& Data() const noexcept {
+        return data;
+    }
+
+
+    void setData(const std::vector<double>& newData) {
+        data = newData;
+    }
+
+    void setData(std::vector<double>&& newData) noexcept {
+        data = std::move(newData);
+    }
+    // Itérateurs
+    iterator begin() noexcept { return data.begin(); }
+    iterator end() noexcept { return data.end(); }
+    const_iterator begin() const noexcept { return data.begin(); }
+    const_iterator end() const noexcept { return data.end(); }
+    const_iterator cbegin() const noexcept { return data.cbegin(); }
+    const_iterator cend() const noexcept { return data.cend(); }
+
+    virtual ~CurveMap() = default;
+};
+
+/**
+ * @brief Opérateurs de sérialisation optimisés
+ */
+
+/** Write Data - Version optimisée */
+QDataStream& operator<<(QDataStream& stream, const CurveMap& map);
+
+/** Read Data - Version optimisée */
+QDataStream& operator>>(QDataStream& stream, CurveMap& map);
+
+
+/** Version alternative avec compatibility pour anciens formats */
+  /*
+QDataStream& operator_legacy_read(QDataStream& stream, CurveMap& map)
+{
+    // Version compatible avec votre ancien code
+    stream >> map._row;
+    stream >> map._column;
+    stream >> map.min_value;
+    stream >> map.max_value;
+    stream >> map.rangeX;
+    stream >> map.rangeY;
+
+    map._row_cache = map._row;
+
+    const size_t siz = static_cast<size_t>(map._column) * map._row;
+    map.data.resize(siz);
+
+    double v;
+    for (size_t i = 0; i < siz; ++i) {
+        stream >> v;
+        map.data[i] = v;
+    }
+
+    return stream;
+}
+*/
+
+/**
+ * @brief Version spécialisée pour les très grandes matrices (>1M éléments)
+ */
+class CurveMapLarge : public CurveMap {
+private:
+    // Cache des offsets de colonnes pour éviter les multiplications
+    std::vector<size_t> column_offsets;
+
+public:
+    explicit CurveMapLarge(unsigned rows, unsigned cols) : CurveMap(rows, cols) {
+        // Pré-calculer les offsets de toutes les colonnes
+        column_offsets.reserve(cols);
+        for (unsigned c = 0; c < cols; ++c) {
+            column_offsets.push_back(static_cast<size_t>(rows) * c);
+        }
+    }
+
+    /**
+     * @brief Accès ultra-optimisé avec cache d'offsets
+     */
+
+    [[nodiscard]] inline virtual double& operator()(unsigned c, unsigned r) noexcept {
+        return data[_row_cache * c + r];
+    }
+
+    [[nodiscard]] inline virtual const double& operator()(unsigned c, unsigned r) const noexcept {
+        return data[_row_cache * c + r];
+    }
+    inline void increment(unsigned col, unsigned row) noexcept {
+        data[column_offsets[col] + row] += 1.0;
+    }
+
+    inline void set(unsigned c, unsigned r, double value) noexcept {
+        data[column_offsets[c] + r] = value;
+    }
+};
+
+#if false
 class CurveMap
 {
 public:
@@ -169,7 +567,7 @@ public:
     virtual ~CurveMap() = default;
 };
 
-#if false
+
 class CurveMap
 {
 public:

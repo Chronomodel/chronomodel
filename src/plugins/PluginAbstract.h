@@ -224,7 +224,7 @@ public:
      * ------------------------------- */
     virtual QPair<double, double> getTminTmaxRefsCurve(const QJsonObject &data) const = 0;
 
-    virtual double getMinStepRefsCurve(const QJsonObject &data) const {(void) data; return INFINITY;};
+    virtual double getMinStepRefsCurve(const QJsonObject &data) const {(void) data; return  std::numeric_limits<double>::infinity();};
     /*
      * For the majority of the plugins, i.e. having a calibration curve,
      * the wiggles densities are on the same support as the calibrated densities,
@@ -239,8 +239,8 @@ public:
     /* Obsolete */
     virtual QPair<double,double> getTminTmaxRefsCurveCombine(const QJsonArray &subDateArray)
     {
-        double tmin (INFINITY);
-        double tmax (-INFINITY);
+        double tmin = std::numeric_limits<double>::infinity();
+        double tmax = - std::numeric_limits<double>::infinity();
         for ( auto&& sD : subDateArray ) {
                 QPair<double, double> tminTmax = getTminTmaxRefsCurve( sD.toObject());
 

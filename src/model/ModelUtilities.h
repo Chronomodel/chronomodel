@@ -48,52 +48,49 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QIcon>
 #include <QString>
 
-class ModelUtilities
+namespace ModelUtilities
 {
-public:
+    std::vector<std::vector<std::shared_ptr<Event>>> getNextBranches(const std::vector<std::shared_ptr<Event>> &curBranch, std::shared_ptr<Event> lastNode);
+    std::vector<std::vector<std::shared_ptr<Event>>> getBranchesFromEvent(std::shared_ptr<Event> start);
+    std::vector<std::vector<std::shared_ptr<Event>>> getAllEventsBranches(const std::vector<std::shared_ptr<Event>>& events);
 
-    static std::vector<std::vector<std::shared_ptr<Event>>> getNextBranches(const std::vector<std::shared_ptr<Event>> &curBranch, std::shared_ptr<Event> lastNode);
-    static std::vector<std::vector<std::shared_ptr<Event>>> getBranchesFromEvent(std::shared_ptr<Event> start);
-    static std::vector<std::vector<std::shared_ptr<Event>>> getAllEventsBranches(const std::vector<std::shared_ptr<Event>>& events);
+    std::vector<std::vector<Phase *> > getNextBranches(const std::vector<Phase *> &curBranch, const Phase *lastNode, const double gammaSum, const double maxLength);
+    std::vector<std::vector<Phase *> > getBranchesFromPhase(Phase *start, const double maxLength);
+    std::vector<std::vector<Phase*> > getAllPhasesBranches(const std::vector<std::shared_ptr<Phase> > &events, const double maxLength);
 
-    static std::vector<std::vector<Phase *> > getNextBranches(const std::vector<Phase *> &curBranch, const Phase *lastNode, const double gammaSum, const double maxLength);
-    static std::vector<std::vector<Phase *> > getBranchesFromPhase(Phase *start, const double maxLength);
-    static std::vector<std::vector<Phase*> > getAllPhasesBranches(const std::vector<std::shared_ptr<Phase> > &events, const double maxLength);
-
-    static std::vector<std::shared_ptr<Event>> unsortEvents(const std::vector<std::shared_ptr<Event>> &events);
-    static QString modelDescriptionHTML(const std::shared_ptr<ModelCurve> model);
-    static QString getMCMCSettingsLog(const std::shared_ptr<ModelCurve> model = nullptr);
-    static QString modelStateDescriptionHTML(const std::shared_ptr<ModelCurve> model = nullptr, QString stateDescript = "");
-    static QString modelStateDescriptionText(const std::shared_ptr<ModelCurve> model = nullptr, QString stateDescript = "");
+    std::vector<std::shared_ptr<Event>> unsortEvents(const std::vector<std::shared_ptr<Event>> &events);
+    QString modelDescriptionHTML(const std::shared_ptr<ModelCurve> model);
+    QString getMCMCSettingsLog(const std::shared_ptr<ModelCurve> model = nullptr);
+    QString modelStateDescriptionHTML(const std::shared_ptr<ModelCurve> model = nullptr, QString stateDescript = "");
+    QString modelStateDescriptionText(const std::shared_ptr<ModelCurve> model = nullptr, QString stateDescript = "");
 
 #pragma mark Results in HTML format
-    static QString dateResultsHTML(const Date* d, const std::shared_ptr<ModelCurve> &model = nullptr);
-    static QString dateResultsHTML(const Date* d, const double tmin_formated, const double tmax_formated);
-    static QString sigmaTiResultsHTML(const Date* d);
+    QString dateResultsHTML(const Date* d, const std::shared_ptr<ModelCurve> &model = nullptr);
+    QString dateResultsHTML(const Date* d, const double tmin_formated, const double tmax_formated);
+    QString sigmaTiResultsHTML(const Date* d);
 
-    static QString eventResultsHTML(const std::shared_ptr<Event> e, const bool withDates, const std::shared_ptr<ModelCurve> model = nullptr);
-    static QString eventResultsHTML(const std::shared_ptr<Event> e, const bool withDates, const double tmin_formated, const double tmax_formated, bool with_curve = false);
-    static QString EventS02ResultsHTML(const std::shared_ptr<Event> e);
-    static QString VgResultsHTML(const std::shared_ptr<Event> e);
+    QString eventResultsHTML(const std::shared_ptr<Event> e, const bool withDates, const std::shared_ptr<ModelCurve> model = nullptr);
+    QString eventResultsHTML(const std::shared_ptr<Event> e, const bool withDates, const double tmin_formated, const double tmax_formated, bool with_curve = false);
+    QString EventS02ResultsHTML(const std::shared_ptr<Event> e);
+    QString VgResultsHTML(const std::shared_ptr<Event> e);
 
-    static QString phaseResultsHTML(const std::shared_ptr<Phase> p);
+    QString phaseResultsHTML(const std::shared_ptr<Phase> p);
 
-    static QString tempoResultsHTML(const std::shared_ptr<Phase> p);
-    static QString activityResultsHTML(const std::shared_ptr<Phase> p);
-    static QString durationResultsHTML(const std::shared_ptr<Phase> p);
-    static QString constraintResultsHTML(const std::shared_ptr<PhaseConstraint> p);
+    QString tempoResultsHTML(const std::shared_ptr<Phase> p);
+    QString activityResultsHTML(const std::shared_ptr<Phase> p);
+    QString durationResultsHTML(const std::shared_ptr<Phase> p);
+    QString constraintResultsHTML(const std::shared_ptr<PhaseConstraint> p);
 
-    static QString curveResultsHTML(const std::shared_ptr<ModelCurve> model = nullptr);
-    static QString lambdaResultsHTML(const std::shared_ptr<ModelCurve> model = nullptr);
-    static QString S02ResultsHTML(const std::shared_ptr<ModelCurve> model = nullptr);
+    QString curveResultsHTML(const std::shared_ptr<ModelCurve> model = nullptr);
+    QString lambdaResultsHTML(const std::shared_ptr<ModelCurve> model = nullptr);
 
-    static short HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const std::shared_ptr<ModelCurve> model);
-    static short HPDOutsideSudyPeriod(const std::map<double, double> &hpd, const std::shared_ptr<ModelCurve> model);
+    short HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const std::shared_ptr<ModelCurve> model);
+    short HPDOutsideSudyPeriod(const std::map<double, double> &hpd, const std::shared_ptr<ModelCurve> model);
 
-    static short HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const double tmin_formated, const double tmax_formated);
-    static short HPDOutsideSudyPeriod(const std::map<double, double> &hpd, const double tmin_formated, const double tmax_formated);
+    short HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const double tmin_formated, const double tmax_formated);
+    short HPDOutsideSudyPeriod(const std::map<double, double> &hpd, const double tmin_formated, const double tmax_formated);
 
-};
+}; // namespace ModelUtilities
 
 std::string html_to_plain_text(const std::string &html);
 QString html_to_plain_text(const QString &html);
