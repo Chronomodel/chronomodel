@@ -825,6 +825,12 @@ void ModelCurve::clear_and_shrink() noexcept
 
 }
 
+void ModelCurve::setThreshold(const double threshold)
+{
+    Model::setThreshold(threshold);
+
+}
+
 void ModelCurve::setThresholdToAllModel(const double threshold)
 {
     Model::setThresholdToAllModel(threshold);

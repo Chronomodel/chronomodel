@@ -145,7 +145,7 @@ public:
     double getBandwidth() const;
     int getFFTLength() const;
 
-    void setThreshold(const double threshold);
+    virtual void setThreshold(const double threshold);
     void setBandwidth(const double bandwidth);
     void setFFTLength(int FFTLength);
     void setHActivity(const double h, const double rangePercent);

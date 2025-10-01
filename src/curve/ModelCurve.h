@@ -124,6 +124,7 @@ public:
     virtual void generateModelLog();
     virtual void generateResultsLog();
 
+
     void generatePosteriorDensities(const std::vector<ChainSpecs> &chains, int fftLen, double bandwidth);
     virtual void generateCorrelations(const std::vector<ChainSpecs> &chains);
     void generateNumericalResults(const std::vector<ChainSpecs> &chains);
@@ -139,7 +140,8 @@ public:
     void clear_and_shrink() noexcept;
 
     virtual void updateFormatSettings();
-    
+
+    virtual void setThreshold(const double threshold);
     virtual void setThresholdToAllModel(const double threshold);
     
     QList<PosteriorMeanGComposante> getChainsMeanGComposanteX();

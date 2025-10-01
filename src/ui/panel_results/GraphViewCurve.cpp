@@ -247,7 +247,8 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
             curveHPDSup_Data.insert(t, val_sup);
         }
 
-        auto hbwd = 0.02 * curveMap.mMap.column();
+        //auto hbwd = 0.02 * curveMap.mMap.column();
+        auto hbwd = 0.005 * curveMap.mMap.column();
         curveHPDMid_Data = gaussian_filter_simple(curveHPDMid_Data, hbwd);
         curveHPDInf_Data = gaussian_filter_simple(curveHPDInf_Data, hbwd);
         curveHPDSup_Data = gaussian_filter_simple(curveHPDSup_Data, hbwd);

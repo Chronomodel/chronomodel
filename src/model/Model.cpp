@@ -1560,7 +1560,7 @@ void Model::generateHPD(const double thresh)
 #ifdef DEBUG
     qDebug()<<QString("[Model::generateHPD] Treshold =  %1 %; in progress").arg(thresh);
     QElapsedTimer t;
-    t.start();
+     t.start();
 #endif
 
     for (const auto& event : mEvents) {
