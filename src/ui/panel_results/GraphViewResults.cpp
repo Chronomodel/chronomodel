@@ -304,7 +304,7 @@ void GraphViewResults::resultsToClipboard()
  * @brief So there is two export functon exportCurrentVectorCurves and exportCurrentDensityCurves.
  * @brief In the Posterior Density tab, the Credibility bar is not save
  */
-void GraphViewResults::saveGraphData() const
+void GraphViewResults::saveGraphData(double threshold) const
 {
     const QString csvSep = AppSettings::mCSVCellSeparator;
 
@@ -355,8 +355,10 @@ void GraphViewResults::saveGraphData() const
 
 
         messageBox.exec();
-        if (messageBox.clickedButton() == referenceButton)
-            mGraph->exportReferenceCurves( MainWindow::getInstance()->getCurrentPath(), QLocale::English, ",",  mSettings.mStep);
+        if (messageBox.clickedButton() == referenceButton) {
+            mGraph->exportReferenceCurves( MainWindow::getInstance()->getCurrentPath(), QLocale::English, ",",  mSettings.mStep,"" ,threshold, false);
+            mGraph->exportReferenceCurves( MainWindow::getInstance()->getCurrentPath(), QLocale::English, ",",  mSettings.mStep,"" ,threshold, true);
+        }
 
         else if (messageBox.clickedButton() == dataButton) { // Export raw Data, the step is not 1 is map.column()
             mGraph->exportCurrentCurves( MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, 0, mTitle);
@@ -442,7 +444,6 @@ void GraphViewResults::updateLayout()
         const int area_w = width() - area_x -2 - 2;
 
         mStatArea->setGeometry(area_x, 2, area_w, height() - 2);
-        //mStatArea->setText(mStatText);
 
     } else {
         mGraph->setGeometry(0, mTopShift, width(), height() - mTopShift);

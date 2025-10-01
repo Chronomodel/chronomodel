@@ -189,11 +189,11 @@ public:
         eError,
         eDuration,
 
-        eG, eGError, eMap, eGEventsPts, eGDatesPts,
+        eG, eGError, eGHpd, eMap, eGEventsPts, eGDatesPts,
         eGP,
         eGS,
-        eLambda,
-        eS02Vg
+        eLambda
+        // ,eS02Vg
     };
 
 
@@ -328,7 +328,7 @@ public slots:
     void saveAsImage();
     void imageToClipboard();
     void resultsToClipboard();
-    void saveGraphData() const; // must be accessible by ResultsView
+    void saveGraphData(double threshold) const; // must be accessible by ResultsView
     void changeXScaleDivision(const Scale &sc) {mGraph->changeXScaleDivision(sc);};
     void changeXScaleDivision(const double &major, const int &minor) {mGraph->changeXScaleDivision(major, minor);};
 

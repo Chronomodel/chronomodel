@@ -89,7 +89,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
     setNumericalResults(resultsHTML);
 
     // We use the parameter saved with the map
-    const double step = (mComposanteG.mapG.maxX() - mComposanteG.mapG.minX()) / (mComposanteG.mapG._column -1);
+    const double step = (mComposanteG.mapG.maxX() - mComposanteG.mapG.minX()) / (mComposanteG.mapG.column() -1);
     const double tmin = mComposanteG.mapG.minX();
 
     if (mCurrentVariableList.contains(eG)) {
@@ -155,20 +155,20 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
             curveMap.mMap.setRangeX(tmaxFormated, tminFormated);
             // we must reflect the map
 
-            CurveMap displayMap (curveMap.mMap._row, curveMap.mMap._column);
+            CurveMap displayMap (curveMap.mMap.row(), curveMap.mMap.column());
 
-            int c  = curveMap.mMap._column-1;
+            int c  = curveMap.mMap.column() - 1;
 
             unsigned i = 0 ;
             while ( c >= 0) {
-                for (unsigned r = 0; r < curveMap.mMap._row ; r++) {
-                    displayMap.data[i++] = mComposanteG.mapG.at(c, r);
+                for (unsigned r = 0; r < curveMap.mMap.row() ; r++) {
+                    displayMap[i++] = mComposanteG.mapG.at(c, r);
 
                 }
                 c--;
             }
 
-            curveMap.mMap.data = std::move(displayMap.data);
+            curveMap.mMap.setData(displayMap.Data());
         }
 
 
@@ -206,58 +206,65 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
             } else {
                 curveMapChain.mMap.setRangeX(tmaxFormated, tminFormated);
                 // we must reflect the map
-                CurveMap displayMap (curveMapChain.mMap._row, curveMapChain.mMap._column);
+                CurveMap displayMap (curveMapChain.mMap.row(), curveMapChain.mMap.column());
 
-                int c  = curveMap.mMap._column-1;
+                int c  = curveMap.mMap.column() - 1;
                 unsigned i = 0;
                 while ( c >= 0) {
-                    for (unsigned r = 0; r < curveMapChain.mMap._row ; r++) {
-                         displayMap.data[i++] = curveMapChain.mMap.at(c, r);
+                    for (unsigned r = 0; r < curveMapChain.mMap.row() ; r++) {
+                         displayMap[i++] = curveMapChain.mMap.at(c, r);
                     }
                     c--;
                 }
-                curveMapChain.mMap.data = std::move(displayMap.data);
+                curveMapChain.mMap.setData(displayMap.Data());
             }
 
             curveMapChains.append(curveMapChain);
         }
 
 
-        // Create HPD map
-        /*
-        GraphCurve hpdMap = curveMap;
-        hpdMap.mName = "Hpd_Map";
+        // Create HPD Env
+        double threshold = getModel_ptr()->mThreshold;
+        std::vector<int> min_indices, max_indices;
+        densityMap_2_thresholdIndices_optimized(curveMap.mMap, threshold, min_indices, max_indices);
 
+        QMap<type_data, type_data> curveHPDMid_Data ;
+        QMap<type_data, type_data> curveHPDSup_Data ;
+        QMap<type_data, type_data> curveHPDInf_Data ;
+        type_data Ymin_map = curveMap.mMap.minY();
+        type_data Ymax_map = curveMap.mMap.maxY();
+        type_data step_map_Y = (Ymax_map - Ymin_map) / (curveMap.mMap.row() -1);
 
-        double nb_iter = 0;
-        for (auto c : mChains) {
-            nb_iter += c.mRealyAccepted;
+        type_data tmin_map = curveMap.mMap.minX();
+        type_data tmax_map = curveMap.mMap.maxX();
+        type_data step_map_t = (tmax_map - tmin_map) / (curveMap.mMap.column() -1);
+        for (unsigned c = 0; c < curveMap.mMap.column() ; c++) {
+            const double t = DateUtils::convertToAppSettingsFormat(c * step_map_t + tmin_map);
+            auto val_inf = min_indices[c] * step_map_Y + Ymin_map;
+            auto val_sup = max_indices[c] * step_map_Y + Ymin_map;
+            curveHPDMid_Data.insert(t, (val_sup + val_inf) / 2.0);
+            curveHPDInf_Data.insert(t, val_inf);
+            curveHPDSup_Data.insert(t, val_sup);
         }
 
-        hpdMap.mMap = densityMap_2_hpdMap(curveMap.mMap, nb_iter);
+        auto hbwd = 0.02 * curveMap.mMap.column();
+        curveHPDMid_Data = gaussian_filter_simple(curveHPDMid_Data, hbwd);
+        curveHPDInf_Data = gaussian_filter_simple(curveHPDInf_Data, hbwd);
+        curveHPDSup_Data = gaussian_filter_simple(curveHPDSup_Data, hbwd);
 
+        /*const QColor envHPDColor (Painting::mainGreen.red(),
+                              Painting::mainGreen.green(),
+                              Painting::mainGreen.blue(),
+                              90);*/
 
-        {
+        const GraphCurve curveHPD = FunctionCurve(curveHPDMid_Data, "HPD Mid", Painting::mainGreen );
+        const GraphCurve &curveHPDEnv = shapeCurve(curveHPDInf_Data, curveHPDSup_Data, "HPD Env",
+                                                 Painting::mainGreen, Qt::CustomDashLine, Qt::NoBrush);
 
-            hpdMap.mMap.setRangeX(tmaxFormated, tminFormated);
-            // we must reflect the map
+        // Quantile normal pour 1 - alpha/2
+        // 95% envelope  https://en.wikipedia.org/wiki/1.96
+        const double z_score = zScore(1.0 - threshold * 0.01); // Pour 95% z = 1.96
 
-            CurveMap displayMap (hpdMap.mMap._row, hpdMap.mMap._column);
-
-            int c  = hpdMap.mMap._column-1;
-
-            unsigned i = 0 ;
-            while ( c >= 0) {
-                for (unsigned r = 0; r < hpdMap.mMap._row ; r++) {
-                    displayMap.data[i++] = hpdMap.mMap.at(c, r);
-
-                }
-                c--;
-            }
-
-            hpdMap.mMap.data = std::move(displayMap.data);
-        }
-        */
 
         // create G curve
         QMap<type_data, type_data> G_Data ;
@@ -273,37 +280,35 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
             const double t = DateUtils::convertToAppSettingsFormat(idx*step + tmin);
 
             G_Data.insert(t, mComposanteG.vecG[idx]);
-            // 95% envelope  https://en.wikipedia.org/wiki/1.96
-            curveGSup_Data.insert(t, mComposanteG.vecG[idx] + 1.96 * sqrt(mComposanteG.vecVarG[idx]));
-            curveGInf_Data.insert(t, mComposanteG.vecG[idx] - 1.96 * sqrt(mComposanteG.vecVarG[idx]));
 
-            // 68% envelope
-            //curveGSup.mData.insert(t, mComposanteG.vecG.at(idx) + 1. * mComposanteG.vecGErr.at(idx));
-            //curveGInf.mData.insert(t, mComposanteG.vecG.at(idx) - 1. * mComposanteG.vecGErr.at(idx));
+            curveGSup_Data.insert(t, mComposanteG.vecG[idx] + z_score * sqrt(mComposanteG.vecVarG[idx]));
+            curveGInf_Data.insert(t, mComposanteG.vecG[idx] - z_score * sqrt(mComposanteG.vecVarG[idx]));
+
 
             for (int i = 0; i<mComposanteGChains.size(); ++i) {
                 curveG_Data_i[i].insert(t, mComposanteGChains.at(i).vecG[idx]);
-                curveGInf_Data_i[i].insert(t, mComposanteGChains.at(i).vecG[idx] - 1.96 * sqrt(mComposanteGChains.at(i).vecVarG[idx]));
-                curveGSup_Data_i[i].insert(t, mComposanteGChains.at(i).vecG[idx] + 1.96 * sqrt(mComposanteGChains.at(i).vecVarG[idx]));
+                curveGInf_Data_i[i].insert(t, mComposanteGChains.at(i).vecG[idx] - z_score * sqrt(mComposanteGChains.at(i).vecVarG[idx]));
+                curveGSup_Data_i[i].insert(t, mComposanteGChains.at(i).vecG[idx] + z_score * sqrt(mComposanteGChains.at(i).vecVarG[idx]));
             }
         }
 
-        //const GraphCurve curveG = FunctionCurve(G_Data, "G", QColor(119, 95, 49) ); // This is the name of the columns when exporting the graphs
         const GraphCurve curveG = FunctionCurve(G_Data, "G", Painting::mainColorDark ); // This is the name of the columns when exporting the graphs
 
-        const QColor envColor (Painting::mainColorDark.red(),
+       /* const QColor envColor (Painting::mainColorDark.red(),
                                Painting::mainColorDark.green(),
                                Painting::mainColorDark.blue(),
-                               60);
+                               60);*/
 
         const GraphCurve &curveGEnv = shapeCurve(curveGInf_Data, curveGSup_Data, "G Env",
-                                         Painting::mainColorDark, Qt::CustomDashLine, envColor);
+                                         Painting::mainColorDark, Qt::CustomDashLine, Qt::NoBrush);
 
         mGraph->add_curve(curveMap); // to be draw in first
         //mGraph->add_curve(hpdMap); //
 
         mGraph->add_curve(curveG); // This is the order of the columns when exporting the graphs
         mGraph->add_curve(curveGEnv);
+        mGraph->add_curve(curveHPD);
+        mGraph->add_curve(curveHPDEnv);
 
         QColor envColor_i;
         for (int i = 0; i<mComposanteGChains.size(); ++i) {
@@ -351,20 +356,20 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
             curveMap.mMap.setRangeX(tmaxFormated, tminFormated);
             // we must reflect the map
 
-            CurveMap displayMap (curveMap.mMap._row, curveMap.mMap._column);
+            CurveMap displayMap (curveMap.mMap.row(), curveMap.mMap.column());
 
-            int c  = curveMap.mMap._column-1;
+            int c  = curveMap.mMap.column() - 1;
 
             unsigned i = 0 ;
             while ( c >= 0) {
-                for (unsigned r = 0; r < curveMap.mMap._row ; r++) {
-                    displayMap.data[i++] = mComposanteG.mapGP.at(c, r);
+                for (unsigned r = 0; r < curveMap.mMap.row() ; r++) {
+                    displayMap[i++] = mComposanteG.mapGP.at(c, r);
 
                 }
                 c--;
             }
 
-            curveMap.mMap.data = std::move(displayMap.data);
+            curveMap.mMap.setData(displayMap.Data());
         }
 
         QList<GraphCurve> curveMapChains;
@@ -401,17 +406,17 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
             } else {
                 curveMapChain.mMap.setRangeX(tmaxFormated, tminFormated);
                 // we must reflect the map
-                CurveMap displayMap (curveMapChain.mMap._row, curveMapChain.mMap._column);
+                CurveMap displayMap (curveMapChain.mMap.row(), curveMapChain.mMap.column());
 
-                int c  = curveMap.mMap._column - 1;
+                int c  = curveMap.mMap.column() - 1;
                 unsigned i = 0;
                 while ( c >= 0) {
-                    for (unsigned r = 0; r < curveMapChain.mMap._row ; r++) {
-                        displayMap.data[i++] = curveMapChain.mMap.at(c, r);
+                    for (unsigned r = 0; r < curveMapChain.mMap.row() ; r++) {
+                        displayMap[i++] = curveMapChain.mMap.at(c, r);
                     }
                     c--;
                 }
-                curveMapChain.mMap.data = std::move(displayMap.data);
+                curveMapChain.mMap.setData(displayMap.Data());
             }
 
             curveMapChains.append(curveMapChain);
@@ -495,6 +500,7 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
     
     const bool showG = showVariableList.contains(eG);
     const bool showGError = showVariableList.contains(eGError);
+    const bool showGHpd = showVariableList.contains(eGHpd);
     const bool showMap = showVariableList.contains(eMap);
     const bool showEventsPoints = showVariableList.contains(eGEventsPts);
     const bool showDataPoints = showVariableList.contains(eGDatesPts);
@@ -509,8 +515,11 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
     mGraph->setCurveVisible("Map", mShowAllChains && (showG||showGP) && showMap);
    // mGraph->setCurveVisible("Hpd_Map", mShowAllChains && (showG||showGP) && showMap);
 
-    mGraph->setCurveVisible("G", mShowAllChains && showG);
+    mGraph->setCurveVisible("G", mShowAllChains && showGError);
     mGraph->setCurveVisible("G Env", mShowAllChains && showGError && showG);
+
+    mGraph->setCurveVisible("HPD Mid", mShowAllChains && showGHpd);
+    mGraph->setCurveVisible("HPD Env", mShowAllChains && showGHpd);
 
     mGraph->set_points_visible("Events Points", showEventsPoints);
     mGraph->set_points_visible("Data Points", showDataPoints);
@@ -536,8 +545,8 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
 CurveMap GraphViewCurve::densityMap_2_hpdMap (const CurveMap& densityMap, int nb_iter)
 {
     CurveMap hpdMap (densityMap);
-    hpdMap.max_value = nb_iter;
-    hpdMap.min_value = 0;
+    hpdMap.setMaxValue(nb_iter);
+    hpdMap.setMinValue(0);
 
     const size_t numRows = densityMap.row();
     // transforme la mapCurve en hpd
@@ -567,7 +576,7 @@ CurveMap GraphViewCurve::densityMap_2_hpdMap (const CurveMap& densityMap, int nb
         //si la valeur=0, c'est qu'il n'y a pas de courbe, donc par convention pour l'affichage
         // La probabilité reste à 0
 
-        while (i < indices.size() && val > 0) { // comme les indices trient les valeurs, lorsqu'on atteint un 0, il n'y a plus de valeur ensuite
+        while (i < indices.size() && val > 0) { // comme "indices" trient les valeurs, lorsqu'on atteint un 0, il n'y a plus de valeur ensuite
             size_t j = i + 1;
             val = prob[indices[i]];
             double group_sum = val;
@@ -593,29 +602,104 @@ CurveMap GraphViewCurve::densityMap_2_hpdMap (const CurveMap& densityMap, int nb
 
         }
 
-        // Si le total est différent de nb_iter. Nous n'avons pas toutes les iterations. Donc il faut corriger le résultat
-        /*size_t indice_max = indices[0];
-        if (sum < nb_iter) {
-             for (size_t j = 0; j < indices.size(); ++j) {
-                val = cumul_prob[j];
-                if (val >0)
-                    cumul_prob[j] = nb_iter - 2 * sum + 2* val;
-
-            }
-
-        }*/
-
-        // inversion pour affichage standard, la valeur maximum correspondant au pic
-        // pour que le pic ait la plus petite valeur
-        // normalisation par nb_iter
         for (unsigned r = 0; r < prob.size(); ++r) {
-            if (cumul_prob[r] == 0)
-                hpdMap(c, r) = 0; // convention pour l'affichage
-            else
-                hpdMap(c, r) =  cumul_prob[r];
-                //hpdMap(c, r) = static_cast<double>(nb_iter) - cumul_prob[r];
+            hpdMap(c, r) =  cumul_prob[r];
+
         }
     } // fin boucle c
 
     return hpdMap;
+}
+
+/**
+ * @brief Version optimisée avec early exit pour de meilleures performances.
+ *
+ * Cette version s'arrête dès que le seuil est atteint pour optimiser les performances
+ * sur de grandes matrices avec des seuils élevés.
+ *
+ * @param densityMap La carte de densité d'entrée
+ * @param threshold La taux seuil [0 : 100]
+ * @param min_indices Vecteur de sortie pour les indices minimum
+ * @param max_indices Vecteur de sortie pour les indices maximum
+ */
+void GraphViewCurve::densityMap_2_thresholdIndices_optimized(const CurveMap& densityMap,
+                                             double threshold,
+                                             std::vector<int>& min_indices,
+                                             std::vector<int>& max_indices)
+{
+    const size_t numRows = densityMap.row();
+    const size_t numCols = densityMap.column();
+
+    min_indices.assign(numCols, -1);
+    max_indices.assign(numCols, -1);
+
+    for (unsigned c = 0; c < numCols; ++c) {
+        std::vector<double> prob(numRows);
+        double total_prob = 0.0;
+
+        // Extraire les probabilités pour cette colonne
+        for (unsigned r = 0; r < numRows; ++r) {
+            prob[r] = densityMap(c, r);
+            total_prob += prob[r];
+        }
+
+        if (total_prob <= 0) continue;  // Pas de données
+
+        // Calculer le seuil absolu à atteindre
+        const double threshold_absolute = threshold / 100.0 * total_prob;
+
+        // Trier par probabilité décroissante
+        std::vector<size_t> indices(numRows);
+        std::iota(indices.begin(), indices.end(), 0);
+        std::sort(indices.begin(), indices.end(), [&](size_t i, size_t j) {
+            return prob[i] > prob[j];
+        });
+
+        // Traitement par groupes de valeurs identiques (comme dans l'original)
+        std::vector<bool> above_threshold(numRows, false);
+        double cumulative = 0.0;
+        size_t i = 0;
+        double val = prob[indices[0]]; // correspond à la densité max
+
+        // Si la valeur initiale est 0, pas de données dans cette colonne
+        if (val <= 0) continue;
+
+        while (i < indices.size() && val > 0) {
+            val = prob[indices[i]];
+
+            if (val > 0 && cumulative <= threshold_absolute) {
+
+                double group_sum = val;
+                above_threshold[indices[i]] = true;
+                size_t j = i + 1;
+                // Regrouper TOUTES les valeurs identiques
+                while (j < indices.size() && prob[indices[j]] == val) {
+                    group_sum += prob[indices[j]];
+                    above_threshold[indices[j]] = true;
+                    ++j;
+                }
+
+                // Mettre à jour la somme cumulative avec tout le groupe
+                cumulative += group_sum;
+
+                i = j;
+
+            } else {
+                break;
+            }
+        }
+
+        // Trouver les indices min et max parmi ceux qui dépassent le seuil
+        for (unsigned r = 0; r < numRows; ++r) {
+            if (above_threshold[r]) {
+                if (min_indices[c] == -1 || r < static_cast<unsigned>(min_indices[c])) {
+                    min_indices[c] = static_cast<int>(r);
+                }
+                if (max_indices[c] == -1 || r > static_cast<unsigned>(max_indices[c])) {
+                    max_indices[c] = static_cast<int>(r);
+                }
+            }
+        }
+        //qDebug() << " colonne = " <<c << " min_indices[c]= " << min_indices[c] << " max_indices= " << max_indices[c];
+    }
 }

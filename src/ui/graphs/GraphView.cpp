@@ -278,9 +278,9 @@ void GraphView::adjustYScale()
                         yMin = std::min(yMin, map_min(curve.mData, mCurrentMinX, mCurrentMaxX).value());
                         yMax = std::max(yMax, map_max(curve.mData, mCurrentMinX, mCurrentMaxX).value());
 
-                    } else if (curve.mMap.data.size() > 0) {// map
-                        yMin = std::min(yMin, curve.mMap.rangeY.first);
-                        yMax = std::max(yMax, curve.mMap.rangeY.second);
+                    } else if (!curve.mMap.isEmpty()) {// map
+                        yMin = std::min(yMin, curve.mMap.minY());
+                        yMax = std::max(yMax, curve.mMap.maxY());
 
                     }  else if (curve.isHorizontalLine()) {
                         yMin = std::min(yMin, curve.mHorizontalValue);
@@ -906,7 +906,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
 
          if (mOverflowArrowMode == eBothOverflow || mOverflowArrowMode == eUnderMin) {
 
-             type_data maxData = type_data (- INFINITY);
+             type_data maxData = - std::numeric_limits<type_data>::infinity();
              for (auto& curve : mCurves)
                  if (curve.mVisible && curve.mData.size()>0)
                     maxData = std::max(maxData, curve.mData.lastKey());
@@ -934,7 +934,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
 
          }
          if (mOverflowArrowMode == eBothOverflow || mOverflowArrowMode == eOverMax) {
-             type_data minData = type_data (INFINITY);
+             type_data minData = std::numeric_limits<type_data>::infinity();;
 
              for (auto& curve : mCurves) {
                  if (curve.mVisible && curve.mData.size() > 0)
@@ -1630,8 +1630,8 @@ void GraphView::drawMap(const GraphCurve& curve, QPainter& painter)
     const double maxY = curve.mMap.maxY();
     const double minX = curve.mMap.minX();
     const double maxX = curve.mMap.maxX();
-    const double maxVal = curve.mMap.max_value;
-    const double minVal = curve.mMap.min_value;
+    const double maxVal = curve.mMap.maxValue();
+    const double minVal = curve.mMap.minValue();
 
     const size_t numCols = curve.mMap.column();
     const size_t numRows = curve.mMap.row();
@@ -2228,8 +2228,8 @@ void GraphView::exportCurrentDensities(const QString& defaultPath, const QLocale
         QStringList list;
 
         list << " X Axis";
-        type_data xMin = INFINITY;
-        type_data xMax = INFINITY;
+        type_data xMin = std::numeric_limits<type_data>::infinity();;
+        type_data xMax = std::numeric_limits<type_data>::infinity();;
 
         for (const GraphCurve& curve : std::as_const(mCurves)) {
             if (!curve.mData.empty() &&
@@ -2430,8 +2430,8 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
         list << "G";
         list << "G sup 95";
         list << "G inf 95"; */
-        double xMin = INFINITY;
-        double xMax = -INFINITY;
+        double xMin = std::numeric_limits<double>::infinity();
+        double xMax = - std::numeric_limits<double>::infinity();
 
         for (const GraphCurve& curve : std::as_const(mCurves)) {
             if ((curve.isDensityCurve()||curve.isFunction()) && curve.mVisible) {
@@ -2556,7 +2556,7 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
  * @param csvSep
  * @param step
  */
-void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step, QString filename) const
+void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step, QString filename, const double threshold, bool isHPD) const
 {
     if (step <= 0)
         step = 1;
@@ -2564,8 +2564,8 @@ void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale 
     if (filename == "") {
         const QString fiName = MainWindow::getInstance()->getNameProject();
 
-        const QString defaultFilename = defaultPath + "/"+ fiName.mid(0, fiName.size()-4) + "_ref.csv";
-        qDebug()<<"GraphView::exportReferenceCurves : "<<defaultFilename;
+        const QString defaultFilename = defaultPath + "/"+ fiName.mid(0, fiName.size()-4) + (isHPD ? "_HPD_ref.csv":"_Gauss_ref.csv");
+        qDebug() << "GraphView::exportReferenceCurves : " << defaultFilename;
         filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                 tr("Save Reference Curve as..."),
                                                 defaultFilename, "CSV (*.csv)");
@@ -2576,29 +2576,50 @@ void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale 
     QFile file(filename);
 
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-        qDebug()<<"[GraphView::exportReferenceCurves] Save Reference Curve as..."<<filename;
+        qDebug() << "[GraphView::exportReferenceCurves] Save Reference Curve as..." << filename;
 
         QList<QStringList> rows;
         QStringList list;
         // 1 -Create the header
         list << "X Axis";
-        list << "G";
-        list << "err G";
-        type_data xMin = INFINITY;
-        type_data xMax = INFINITY;
+        if (isHPD) {
+            list << "HPD Mid";
+            list << "HPD err";
+
+        } else {
+            list << "G";
+            list << "err G";
+        }
+
+        type_data xMin = std::numeric_limits<type_data>::infinity();;
+        type_data xMax = std::numeric_limits<type_data>::infinity();;
 
         QMap <type_data, type_data> G, G_Sup;
-        for (const GraphCurve& curve : std::as_const(mCurves)) {
-            if (curve.mName == "G") {
-                G = curve.mData;
-                xMin = G.firstKey();
-                xMax = G.lastKey();
+        if (isHPD) {
+            for (const GraphCurve& curve : std::as_const(mCurves)) {
+                if (curve.mName == "HPD Mid") {
+                    G = curve.mData;
+                    xMin = G.firstKey();
+                    xMax = G.lastKey();
 
-            } else if (curve.mName == "G Env") {
-                G_Sup = curve.mShape.second;
+                } else if (curve.mName == "HPD Env") {
+                    G_Sup = curve.mShape.second;
+                }
+
             }
+        } else {
+            for (const GraphCurve& curve : std::as_const(mCurves)) {
+                if (curve.mName == "G") {
+                    G = curve.mData;
+                    xMin = G.firstKey();
+                    xMax = G.lastKey();
 
+                } else if (curve.mName == "G Env") {
+                    G_Sup = curve.mShape.second;
+                }
+            }
         }
+
         if (std::isinf(xMin) || std::isinf(xMax))
             return;
 
@@ -2614,6 +2635,13 @@ void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale 
         auto xMax_BCAD = DateUtils::convertFromAppSettingsFormat(xMax);
         auto xMin_BCAD = DateUtils::convertFromAppSettingsFormat(xMin);
 
+        // il faut retrouver l'erreur sigma sur la courbe à partir de l'enveloppe et du seuil courrant
+        // https://en.wikipedia.org/wiki/Standard_score
+        // Quantile normal pour 1 - alpha/2
+
+        const double z_score = zScore(1.0 - threshold/100.0); // Pour 95% z=1.96
+        // Déduction de sigma à partir de la largeur de l'intervalle
+        //return std::abs((b - a) / (2.0 * z_score));
         if (xMin_BCAD < xMax_BCAD) {
             for (int i = 0; i <= nbData; ++i) {
                 const auto x = static_cast<type_data>(i)*step + xMin;
@@ -2625,7 +2653,11 @@ void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale 
                 const type_data xi = interpolateValueInQMap(x, G); // G
                 const type_data err_xi = interpolateValueInQMap(x, G_Sup); // GSup
                 list << csvLocal.toString(xi, 'g', 15);
-                list << csvLocal.toString((err_xi-xi)/1.96, 'g', 15);
+
+                // il faut retrouver l'erreur sigma sur la courbe à partir de l'enveloppe et du seuil courrant
+                //auto sigma = (err_xi - xi) / 1.96; // dans le cas d'un seuil à 95%
+                auto sigma = (err_xi - xi) / z_score;
+                list << csvLocal.toString(sigma, 'g', 15);
 
                 //      }
                 rows << list;
@@ -2641,7 +2673,7 @@ void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale 
                 const type_data xi = interpolateValueInQMap(x, G); // G
                 const type_data err_xi = interpolateValueInQMap(x, G_Sup); // GSup
                 list << csvLocal.toString(xi, 'g', 15);
-                list << csvLocal.toString((err_xi-xi)/1.96, 'g', 15);
+                list << csvLocal.toString((err_xi - xi) / 1.96, 'g', 15);
 
                 //      }
                 rows<<list;
@@ -2655,6 +2687,9 @@ void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale 
 
         output << "# "+ version + "\r";
         output << "# "+ projectName + "\r";
+        if (isHPD) {
+          output << "# "+ tr("Curve derived from the %1% HPD").arg(threshold) + " % \r";
+        }
         output << "# BC/AD \r";//DateUtils::getAppSettingsFormatStr() + "\r";
 
         for (auto& row : rows) {

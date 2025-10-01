@@ -50,6 +50,8 @@ class LineEdit: public QLineEdit
 
 public slots:
     virtual void setVisible(bool visible);
+    virtual void show();
+    virtual void hide();
 
 public:
     explicit LineEdit(QWidget* parent = nullptr);

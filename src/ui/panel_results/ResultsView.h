@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -93,6 +93,13 @@ public:
     void applyAppSettings();
 
 protected:
+    void updateEventsOptions(qreal &optionWidgetHeight, bool isPostDistrib);
+    void updatePhasesOptions(qreal& optionWidgetHeight);
+    void updateCurvesOptions(qreal& optionWidgetHeight);
+    void updateDisplayOptions(qreal& optionWidgetHeight);
+    void updateDistribOptions(qreal& optionWidgetHeight, bool isPostDistrib);
+    void updatePageSaveOptions(qreal& optionWidgetHeight);
+    void updateOptionsWidget();
     // ------------------------------------------------
     //  Events & Layout
     // ------------------------------------------------
@@ -204,7 +211,6 @@ private slots:
      */
     //void extracted(int &idSelect);
     void updateScales();
-    void updateOptionsWidget();
     void updateTotalGraphs();
     
     // ------------------------------------
@@ -346,7 +352,7 @@ private:
 #endif
     RadioButton* mEventVGRadio;
 
-    CheckBox* mStatCheck;
+    CheckBox* mEventsStatCheck;
 
     // Tab Phases
     QWidget* mPhasesGroup;
@@ -368,9 +374,9 @@ private:
     RadioButton* mCurveGPRadio;
     RadioButton* mCurveGSRadio;
     RadioButton* mLambdaRadio;
-    RadioButton* mS02VgRadio;
 
     CheckBox* mCurveErrorCheck;
+    CheckBox* mCurveHpdCheck;
     CheckBox* mCurveMapCheck;
     CheckBox* mCurveEventsPointsCheck;
     CheckBox* mCurveDataPointsCheck;
@@ -379,9 +385,13 @@ private:
     // ---------------------------------------------------------------------
     // Tabs : Display / Distrib. Options
     // ---------------------------------------------------------------------
+    QWidget* mDisplayGroup;
     Tabs* mDisplayDistribTab;
-    QWidget* mDisplayWidget;
-    QWidget* mDistribWidget;
+
+    //QWidget* mDisplayWidget;
+
+
+    QWidget* mDistribGroup;
 
     // ---------------------------------------------------------------------
     //  Span options : UI components to manipulate X axis scale
@@ -490,21 +500,24 @@ private:
     CheckBox* mCredibilityCheck;
     LineEdit* mThresholdEdit;
 
-    QLabel* mRangeThreshLab;
-    LineEdit* mRangeThresholdEdit; // Used with Activity
     QLabel* mFFTLenLab;
     QComboBox* mFFTLenCombo;
     QLabel* mBandwidthLab;
     LineEdit* mBandwidthEdit;
     Button* mUpdateDisplay;
 
+    // Used with Activity
+    QWidget* mActivityOptsGroup;
+    Label* mActivityOptsTitle;
+    QLabel* mRangeThreshLab;
+    LineEdit* mRangeThresholdEdit;
     QLabel* mHActivityLab;
     LineEdit* mHActivityEdit;
 
     // ------------------------------------
     //  Pagination / Exoprt Tools
     // ------------------------------------
-    QWidget* mPageSavegWidget;
+    QWidget* mPageSaveGroup;
 
     Tabs* mPageSaveTab;
     QWidget* mPageWidget;
@@ -534,7 +547,7 @@ private:
     QList<GraphViewResults::variable_t> mCurrentVariableList;
     GraphViewResults::variable_t mMainVariable;
     bool mHasPhases;
-
+    double mHpdThreshold; // [0 : 100]%
     // ----------------------------------------
     //  Time Span Variables
     // ----------------------------------------

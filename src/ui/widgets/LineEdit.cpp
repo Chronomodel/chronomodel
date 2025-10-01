@@ -88,6 +88,16 @@ void LineEdit::setVisible(bool visible)
 {
     QWidget::setVisible(visible);
 }
+void LineEdit::show()
+{
+    QWidget::show();
+}
+
+void LineEdit::hide()
+{
+    QWidget::hide();
+}
+
 
 void LineEdit::setAdjustText(bool ad)
 {

@@ -69,6 +69,10 @@ private:
     QList<CurveRefPts> mDataPoints;
 
     CurveMap densityMap_2_hpdMap (const CurveMap& densityMap, int nb_iter);
+    void densityMap_2_thresholdIndices_optimized(const CurveMap& densityMap,
+                                            double threshold,
+                                            std::vector<int>& min_indices,
+                                            std::vector<int>& max_indices);
 
 };
 

@@ -37,7 +37,7 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#include "GraphViewS02.h"
+#include "GraphViewS02_old.h"
 #include "GraphView.h"
 #include "Painting.h"
 #include "ModelUtilities.h"
