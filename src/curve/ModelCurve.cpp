@@ -1384,7 +1384,7 @@ void ModelCurve::memo_PosteriorG_XYZ(PosteriorMeanG &postG, const MCMCSpline &sp
 
         if (idxYErrMin == idxYErrMax && idxYErrMin > 0 && idxYErrMax < nbPtsY_X - 1) {
             ++curveMap_X(idx_t, idxYErrMin);
-            curveMap_X.setMaxValue(std::max(curveMap_X.maxValue(), curveMap_X.at(idx_t, idxYErrMin)) );
+            curveMap_X.setMaxValue(std::max(curveMap_X.maxValue(), curveMap_X(idx_t, idxYErrMin)) );
 
         } else if (0 <= idxYErrMin && idxYErrMax < nbPtsY_X) {
             double* ptr_Ymin = curveMap_X.dataPtr(idx_t, idxYErrMin);
@@ -1413,7 +1413,7 @@ void ModelCurve::memo_PosteriorG_XYZ(PosteriorMeanG &postG, const MCMCSpline &sp
             idx_GP_X = nbPtsY_GP_X - 1;
         }
         ++curveMap_GP_X(idx_t, idx_GP_X);
-        curveMap_GP_X.setMaxValue(std::max(curveMap_GP_X.maxValue(), curveMap_GP_X.at(idx_t, idx_GP_X)));
+        curveMap_GP_X.setMaxValue(std::max(curveMap_GP_X.maxValue(), curveMap_GP_X(idx_t, idx_GP_X)));
 
 
 
@@ -1434,7 +1434,7 @@ void ModelCurve::memo_PosteriorG_XYZ(PosteriorMeanG &postG, const MCMCSpline &sp
 
             ++curveMap_Y(idx_t, idxYErrMin); // correction à faire dans finalize/nbIter ;
 
-            curveMap_Y.setMaxValue(std::max(curveMap_Y.maxValue(), curveMap_Y.at(idx_t, idxYErrMin)) );
+            curveMap_Y.setMaxValue(std::max(curveMap_Y.maxValue(), curveMap_Y(idx_t, idxYErrMin)) );
 
         } else if (0 <= idxYErrMin && idxYErrMax < nbPtsY_Y) {
             double* ptr_Ymin = curveMap_Y.dataPtr(idx_t, idxYErrMin);
@@ -1457,7 +1457,7 @@ void ModelCurve::memo_PosteriorG_XYZ(PosteriorMeanG &postG, const MCMCSpline &sp
 
         double idx_GP_Y = std::clamp( int((gpy - ymin_GP_Y) / step_GP_Y), 0, nbPtsY_GP_Y - 1);
         ++curveMap_GP_Y(idx_t, idx_GP_Y);
-        curveMap_GP_Y.setMaxValue(std::max(curveMap_GP_Y.maxValue(), curveMap_GP_Y.at(idx_t, idx_GP_Y)));
+        curveMap_GP_Y.setMaxValue(std::max(curveMap_GP_Y.maxValue(), curveMap_GP_Y(idx_t, idx_GP_Y)));
 
 
         if (compute_XYZ) {
@@ -1493,7 +1493,7 @@ void ModelCurve::memo_PosteriorG_XYZ(PosteriorMeanG &postG, const MCMCSpline &sp
 
                 ++curveMap_Z(idx_t, idxYErrMin);
 
-                curveMap_Z.setMaxValue(std::max(curveMap_Z.maxValue(), curveMap_Z.at(idx_t, idxYErrMin)));
+                curveMap_Z.setMaxValue(std::max(curveMap_Z.maxValue(), curveMap_Z(idx_t, idxYErrMin)));
 
 
             } else if (0 <= idxYErrMin && idxYErrMax < nbPtsY_Z) {
@@ -1522,7 +1522,7 @@ void ModelCurve::memo_PosteriorG_XYZ(PosteriorMeanG &postG, const MCMCSpline &sp
                 idxYErrMax = nbPtsY_GP_Z - 1;
             }
             ++curveMap_GP_Z(idx_t, idx_GP_Z);
-            curveMap_GP_Z.setMaxValue(std::max(curveMap_GP_Z.maxValue(), curveMap_GP_Z.at(idx_t, idx_GP_Z)));
+            curveMap_GP_Z.setMaxValue(std::max(curveMap_GP_Z.maxValue(), curveMap_GP_Z(idx_t, idx_GP_Z)));
 
         }
 
@@ -1763,7 +1763,7 @@ void ModelCurve::memo_PosteriorG_IDF(PosteriorMeanG &postG, const MCMCSpline &sp
 
             ++curveMap_Inc(idx_t, idxYErrMin); // correction à faire dans finalize/nbIter ;
 
-            curveMap_Inc.setMaxValue(std::max(curveMap_Inc.maxValue(), curveMap_Inc.at(idx_t, idxYErrMin)));
+            curveMap_Inc.setMaxValue(std::max(curveMap_Inc.maxValue(), curveMap_Inc(idx_t, idxYErrMin)));
 
 
         } else if (0 <= idxYErrMin && idxYErrMax < nbPtsY_Inc) {
@@ -1793,7 +1793,7 @@ void ModelCurve::memo_PosteriorG_IDF(PosteriorMeanG &postG, const MCMCSpline &sp
         }
 
         ++curveMap_GP_Inc(idx_t, idx_GP_Inc);
-        curveMap_GP_Inc.setMaxValue(std::max(curveMap_GP_Inc.maxValue(), curveMap_GP_Inc.at(idx_t, idx_GP_Inc)));
+        curveMap_GP_Inc.setMaxValue(std::max(curveMap_GP_Inc.maxValue(), curveMap_GP_Inc(idx_t, idx_GP_Inc)));
 
 
 
@@ -1823,7 +1823,7 @@ void ModelCurve::memo_PosteriorG_IDF(PosteriorMeanG &postG, const MCMCSpline &sp
 
             ++curveMap_Dec(idx_t, idxYErrMin); // correction à faire dans finalize/nbIter ;
 
-            curveMap_Dec.setMaxValue(std::max(curveMap_Dec.maxValue(), curveMap_Dec.at(idx_t, idxYErrMin)));
+            curveMap_Dec.setMaxValue(std::max(curveMap_Dec.maxValue(), curveMap_Dec(idx_t, idxYErrMin)));
 
         } else if (0 <= idxYErrMin && idxYErrMax < nbPtsY_Dec) {
             double* ptr_Ymin = curveMap_Dec.dataPtr(idx_t, idxYErrMin);
@@ -1852,7 +1852,7 @@ void ModelCurve::memo_PosteriorG_IDF(PosteriorMeanG &postG, const MCMCSpline &sp
             idx_GP_Dec = nbPtsY_GP_Dec - 1;
         }
         ++curveMap_GP_Dec(idx_t, idx_GP_Dec);
-        curveMap_GP_Dec.setMaxValue( std::max(curveMap_GP_Dec.maxValue(), curveMap_GP_Dec.at(idx_t, idx_GP_Dec)));
+        curveMap_GP_Dec.setMaxValue( std::max(curveMap_GP_Dec.maxValue(), curveMap_GP_Dec(idx_t, idx_GP_Dec)));
 
 
 
@@ -1882,7 +1882,7 @@ void ModelCurve::memo_PosteriorG_IDF(PosteriorMeanG &postG, const MCMCSpline &sp
 
             ++curveMap_F(idx_t, idxYErrMin);
 
-            curveMap_F.setMaxValue(std::max(curveMap_F.maxValue(), curveMap_F.at(idx_t, idxYErrMin)));
+            curveMap_F.setMaxValue(std::max(curveMap_F.maxValue(), curveMap_F(idx_t, idxYErrMin)));
 
 
         } else if (0 <= idxYErrMin && idxYErrMax < nbPtsY_F) {
@@ -1911,7 +1911,7 @@ void ModelCurve::memo_PosteriorG_IDF(PosteriorMeanG &postG, const MCMCSpline &sp
             idx_GP_F = nbPtsY_GP_F - 1;
         }
         ++curveMap_GP_F(idx_t, idx_GP_F);
-        curveMap_GP_F.setMaxValue(std::max(curveMap_GP_F.maxValue(), curveMap_GP_F.at(idx_t, idx_GP_F)));
+        curveMap_GP_F.setMaxValue(std::max(curveMap_GP_F.maxValue(), curveMap_GP_F(idx_t, idx_GP_F)));
 
     }
 
@@ -2154,7 +2154,7 @@ void ModelCurve::memo_PosteriorG_IDF_old(PosteriorMeanG &postG, const MCMCSpline
 
             ++curveMap_Inc(idx_t, idxYErrMin); // correction à faire dans finalize/nbIter ;
 
-            curveMap_Inc.setMaxValue(std::max(curveMap_Inc.maxValue(), curveMap_Inc.at(idx_t, idxYErrMin)));
+            curveMap_Inc.setMaxValue(std::max(curveMap_Inc.maxValue(), curveMap_Inc(idx_t, idxYErrMin)));
 
 
         } else if (0 <= idxYErrMin && idxYErrMax < nbPtsY_Inc) {
@@ -2178,7 +2178,7 @@ void ModelCurve::memo_PosteriorG_IDF_old(PosteriorMeanG &postG, const MCMCSpline
         double idx_GP_Inc = std::clamp( int((dpInc - ymin_GP_Inc) / step_GP_Inc), 0, nbPtsY_GP_Inc - 1);
 
         ++curveMap_GP_Inc(idx_t, idx_GP_Inc);
-        curveMap_GP_Inc.setMaxValue(std::max(curveMap_GP_Inc.maxValue(), curveMap_GP_Inc.at(idx_t, idx_GP_Inc)));
+        curveMap_GP_Inc.setMaxValue(std::max(curveMap_GP_Inc.maxValue(), curveMap_GP_Inc(idx_t, idx_GP_Inc)));
 
 
 
@@ -2196,7 +2196,7 @@ void ModelCurve::memo_PosteriorG_IDF_old(PosteriorMeanG &postG, const MCMCSpline
 
             ++curveMap_Dec(idx_t, idxYErrMin); // correction à faire dans finalize/nbIter ;
 
-            curveMap_Dec.setMaxValue(std::max(curveMap_Dec.maxValue(), curveMap_Dec.at(idx_t, idxYErrMin)));
+            curveMap_Dec.setMaxValue(std::max(curveMap_Dec.maxValue(), curveMap_Dec(idx_t, idxYErrMin)));
 
         } else if (0 <= idxYErrMin && idxYErrMax < nbPtsY_Dec) {
             double* ptr_Ymin = curveMap_Dec.dataPtr(idx_t, idxYErrMin);
@@ -2219,7 +2219,7 @@ void ModelCurve::memo_PosteriorG_IDF_old(PosteriorMeanG &postG, const MCMCSpline
 
         double idx_GP_Dec = std::clamp( int((dpDec - ymin_GP_Dec) / step_GP_Dec), 0, nbPtsY_GP_Dec - 1);
         ++curveMap_GP_Dec(idx_t, idx_GP_Dec);
-        curveMap_GP_Dec.setMaxValue( std::max(curveMap_GP_Dec.maxValue(), curveMap_GP_Dec.at(idx_t, idx_GP_Dec)));
+        curveMap_GP_Dec.setMaxValue( std::max(curveMap_GP_Dec.maxValue(), curveMap_GP_Dec(idx_t, idx_GP_Dec)));
 
 
 
@@ -2237,7 +2237,7 @@ void ModelCurve::memo_PosteriorG_IDF_old(PosteriorMeanG &postG, const MCMCSpline
 
             ++curveMap_F(idx_t, idxYErrMin);
 
-            curveMap_F.setMaxValue(std::max(curveMap_F.maxValue(), curveMap_F.at(idx_t, idxYErrMin)));
+            curveMap_F.setMaxValue(std::max(curveMap_F.maxValue(), curveMap_F(idx_t, idxYErrMin)));
 
 
         } else if (0 <= idxYErrMin && idxYErrMax < nbPtsY_F) {
@@ -2260,7 +2260,7 @@ void ModelCurve::memo_PosteriorG_IDF_old(PosteriorMeanG &postG, const MCMCSpline
         }
         double idx_GP_F = std::clamp( int((dpF - ymin_GP_F) / step_GP_F), 0, nbPtsY_GP_F - 1);
         ++curveMap_GP_F(idx_t, idx_GP_F);
-        curveMap_GP_F.setMaxValue(std::max(curveMap_GP_F.maxValue(), curveMap_GP_F.at(idx_t, idx_GP_F)));
+        curveMap_GP_F.setMaxValue(std::max(curveMap_GP_F.maxValue(), curveMap_GP_F(idx_t, idx_GP_F)));
 
 
     }
@@ -2430,7 +2430,7 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
                 }
 
                 ++curveMap_XInc(idx_t, idx_Y);
-                curveMap_XInc.setMaxValue(std::max(curveMap_XInc.maxValue(), curveMap_XInc.at(idx_t, idx_Y)));
+                curveMap_XInc.setMaxValue(std::max(curveMap_XInc.maxValue(), curveMap_XInc(idx_t, idx_Y)));
             }
             if (ymin_GP_XInc <= gpx && gpx <= ymax_GP_XInc) {
                 int idx_YGP = floor((gpx - ymin_GP_XInc)/step_GP_XInc + 0.5);
@@ -2441,7 +2441,7 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
 
                 }
                 ++curveMap_GP_XInc(idx_t, idx_YGP);
-                curveMap_GP_XInc.setMaxValue(std::max(curveMap_GP_XInc.maxValue(), curveMap_GP_XInc.at(idx_t, idx_YGP)));
+                curveMap_GP_XInc.setMaxValue(std::max(curveMap_GP_XInc.maxValue(), curveMap_GP_XInc(idx_t, idx_YGP)));
             }
 
 
@@ -2473,7 +2473,7 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
 
                 }
                 ++curveMap_YDec(idx_t, idx_Y);
-                curveMap_YDec.setMaxValue(std::max(curveMap_YDec.maxValue(), curveMap_YDec.at(idx_t, idx_Y)));
+                curveMap_YDec.setMaxValue(std::max(curveMap_YDec.maxValue(), curveMap_YDec(idx_t, idx_Y)));
             }
             if (ymin_GP_YDec <= gpy && gpy <= ymax_GP_YDec) {
                 int idx_YGP = floor((gpy - ymin_GP_YDec)/step_GP_YDec + 0.5);
@@ -2484,7 +2484,7 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
 
                 }
                 ++curveMap_GP_YDec(idx_t, idx_YGP);
-                curveMap_GP_YDec.setMaxValue(std::max(curveMap_GP_YDec.maxValue(), curveMap_GP_YDec.at(idx_t, idx_YGP)));
+                curveMap_GP_YDec.setMaxValue(std::max(curveMap_GP_YDec.maxValue(), curveMap_GP_YDec(idx_t, idx_YGP)));
             }
 
         }
@@ -2515,7 +2515,7 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
 
                 }
                 ++curveMap_ZF(idx_t, idx_Y);
-                curveMap_ZF.setMaxValue(std::max(curveMap_ZF.maxValue(), curveMap_ZF.at(idx_t, idx_Y)));
+                curveMap_ZF.setMaxValue(std::max(curveMap_ZF.maxValue(), curveMap_ZF(idx_t, idx_Y)));
             }
             if (ymin_GP_ZF <= gpz && gpz <= ymax_GP_ZF) {
                 //const int idx_YGP = std::clamp(int((gpz - ymin_GP_ZF) / step_GP_ZF), 0, nbPtsY_GP_ZF - 1);
@@ -2527,7 +2527,7 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
 
                 }
                 ++curveMap_GP_ZF(idx_t, idx_YGP);
-                curveMap_GP_ZF.setMaxValue(std::max(curveMap_GP_ZF.maxValue(), curveMap_GP_ZF.at(idx_t, idx_YGP)));
+                curveMap_GP_ZF.setMaxValue(std::max(curveMap_GP_ZF.maxValue(), curveMap_GP_ZF(idx_t, idx_YGP)));
             }
 
         }
@@ -2614,7 +2614,7 @@ void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, const MCM
 
             }
             ++curveMap(idx_X, idx_Y);
-            curveMap.setMaxValue(std::max(curveMap.maxValue(), curveMap.at(idx_X, idx_Y)));
+            curveMap.setMaxValue(std::max(curveMap.maxValue(), curveMap(idx_X, idx_Y)));
         }
 
         if (yminGP <= gp && gp <= ymaxGP) {
@@ -2627,7 +2627,7 @@ void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, const MCM
 
             }
             ++curveMapGP(idx_X, idx_YGP);
-            curveMapGP.setMaxValue(std::max(curveMapGP.maxValue(), curveMapGP.at(idx_X, idx_YGP)));
+            curveMapGP.setMaxValue(std::max(curveMapGP.maxValue(), curveMapGP(idx_X, idx_YGP)));
         }
 
     }
@@ -2763,7 +2763,7 @@ void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, const MCM
 
             ++curveMap(idxT, idxYErrMin); // correction à faire dans finalize/nbIter ;
 
-            curveMap.max_value = std::max(curveMap.max_value, curveMap.at(idxT, idxYErrMin));
+            curveMap.setMaxValue( std::max(curveMap.maxValue(), curveMap(idxT, idxYErrMin)));
 
         } else if (0 <= idxYErrMin && idxYErrMax < nbPtsY) {
             double* ptr_Ymin = curveMap.dataPtr(idxT, idxYErrMin);
@@ -2776,7 +2776,7 @@ void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, const MCM
                 double surfG = diff_erf(a, b, g, stdG );// correction à faire dans finalyze /nbIter;
                 *ptr_idErr = (*ptr_idErr) + surfG;
 
-                curveMap.max_value = std::max(curveMap.max_value, *ptr_idErr);
+                curveMap.setMaxValue(std::max(curveMap.maxValue(), *ptr_idErr));
 
                 idErr++;
             }
@@ -2794,7 +2794,7 @@ void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, const MCM
 
             }
             ++curveMapGP(idxT, idxYGP);
-            curveMapGP.max_value = std::max(curveMapGP.max_value, curveMapGP.at(idxT, idxYGP));
+            curveMapGP.setMaxValue(std::max(curveMapGP.maxValue(), curveMapGP(idxT, idxYGP)));
         }
 
     }

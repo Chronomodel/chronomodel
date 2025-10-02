@@ -89,14 +89,10 @@ public:
         compatible_version_335 << "3.3.5";
 
         QList<QString> compatible_version_330;
-        compatible_version_330 << "3.3.0";
+        compatible_version_330 << "3.3.0" << "3.3.1";
 
         QList<QString> compatible_version_328;
         compatible_version_328 << "3.2.4" << "3.2.6" << "3.2.9";
-
-       // int QDataStreamVersion;
-       // *in >> QDataStreamVersion;
-       // in->setVersion(QDataStreamVersion);
 
         *in >> res_file_version;
 

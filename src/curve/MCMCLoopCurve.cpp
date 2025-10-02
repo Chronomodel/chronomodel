@@ -1535,13 +1535,13 @@ QString MCMCLoopCurve::initialize_330()
         PosteriorMeanGComposante clearCompo;
         clearCompo.mapG = CurveMap (nbPoint, nbPoint);// (row, column)
         clearCompo.mapG.setRangeX(mModel->mSettings.mTmin, mModel->mSettings.mTmax);
-        clearCompo.mapG.min_value = +INFINITY;
-        clearCompo.mapG.max_value = 0;
+        clearCompo.mapG.setMinValue(+INFINITY);
+        clearCompo.mapG.setMaxValue(0);
 
         clearCompo.mapGP = CurveMap (nbPoint, nbPoint);// (row, column)
         clearCompo.mapGP.setRangeX(mModel->mSettings.mTmin, mModel->mSettings.mTmax);
-        clearCompo.mapGP.min_value = +INFINITY;
-        clearCompo.mapGP.max_value = 0;
+        clearCompo.mapGP.setMinValue(+INFINITY);
+        clearCompo.mapGP.setMaxValue(0);
 
         clearCompo.vecG = std::vector<double> (nbPoint); // column
         clearCompo.vecGP = std::vector<double> (nbPoint);
@@ -1552,65 +1552,6 @@ QString MCMCLoopCurve::initialize_330()
 
         PosteriorMeanG clearMeanG;
         clearMeanG.gx = clearCompo;
-
-        /*
-        double minY = +INFINITY;
-        double maxY = -INFINITY;
-
-        minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double x, std::shared_ptr<Event> e) {return std::min(e->mYx - e->mSy, x);});
-        maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double x, std::shared_ptr<Event> e) {return std::max(e->mYx + e->mSy, x);});
-
-        const auto e = 0.1 *(maxY -minY);
-
-        minY = minY - e;
-        maxY = maxY + e;
-
-        Scale sc ;
-        sc.findOptimal(minY, maxY);
-
-        clearMeanG.gx.mapG.setRangeY(sc.min, sc.max);
-
-        if (mModel->compute_Y) {
-            clearMeanG.gy = clearCompo;
-
-            minY = +INFINITY;
-            maxY = -INFINITY;
-
-            minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double y, std::shared_ptr<Event> e) {return std::min(e->mYy, y);});
-            maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double y, std::shared_ptr<Event> e) {return std::max(e->mYy, y);});
-
-            const auto e = 0.1 *(maxY -minY);
-
-            minY = minY - e;
-            maxY = maxY + e;
-
-            Scale sc ;
-            sc.findOptimal(minY, maxY);
-
-            clearMeanG.gy.mapG.setRangeY(sc.min, sc.max);
-
-            if (mModel->compute_XYZ) {
-                clearMeanG.gz = clearCompo;
-
-                minY = +INFINITY;
-                maxY = -INFINITY;
-
-                minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double z, std::shared_ptr<Event> e) {return std::min(e->mYz, z);});
-                maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double z, std::shared_ptr<Event> e) {return std::max(e->mYz, z);});
-
-                const auto e = 0.1 *(maxY -minY);
-
-                minY = minY - e;
-                maxY = maxY + e;
-
-                Scale sc ;
-                sc.findOptimal(minY, maxY);
-
-                clearMeanG.gz.mapG.setRangeY(sc.min, sc.max);
-            }
-
-        }
-        */
 
         //______
         // find X for t_min and t_max
@@ -1639,12 +1580,12 @@ QString MCMCLoopCurve::initialize_330()
             double gy_tmin_sup , gy_tmin_inf, gy_tmax_sup, gy_tmax_inf;
             i0 = 0;
             valeurs_G_VarG_GP_GS(mModel->mSettings.mTmin, mModel->mSpline.splineY, g, varG, gp, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
-            gy_tmin_sup = g + 1.96*sqrt(varG);
-            gy_tmin_inf = g - 1.96*sqrt(varG);
+            gy_tmin_sup = g + 1.96 * sqrt(varG);
+            gy_tmin_inf = g - 1.96 * sqrt(varG);
 
             valeurs_G_VarG_GP_GS(mModel->mSettings.mTmax, mModel->mSpline.splineY, g, varG, gp, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
-            gy_tmax_sup = g + 1.96*sqrt(varG);;
-            gy_tmax_inf = g - 1.96*sqrt(varG);
+            gy_tmax_sup = g + 1.96 * sqrt(varG);;
+            gy_tmax_inf = g - 1.96 * sqrt(varG);
 
 
             clearMeanG.gy = clearCompo;
@@ -1672,12 +1613,12 @@ QString MCMCLoopCurve::initialize_330()
                 double gz_tmin_sup , gz_tmin_inf, gz_tmax_sup, gz_tmax_inf;
                 i0 = 0;
                 valeurs_G_VarG_GP_GS(mModel->mSettings.mTmin, mModel->mSpline.splineZ, g, varG, gp, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
-                gz_tmin_sup = g + 1.96*sqrt(varG);
-                gz_tmin_inf = g - 1.96*sqrt(varG);
+                gz_tmin_sup = g + 1.96 * sqrt(varG);
+                gz_tmin_inf = g - 1.96 * sqrt(varG);
 
                 valeurs_G_VarG_GP_GS(mModel->mSettings.mTmax, mModel->mSpline.splineZ, g, varG, gp, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
-                gz_tmax_sup = g + 1.96*sqrt(varG);;
-                gz_tmax_inf = g - 1.96*sqrt(varG);
+                gz_tmax_sup = g + 1.96 * sqrt(varG);;
+                gz_tmax_inf = g - 1.96 * sqrt(varG);
 
                 clearMeanG.gz = clearCompo;
 
@@ -1692,9 +1633,7 @@ QString MCMCLoopCurve::initialize_330()
                 const auto e = std::max(0.1 *std::abs(*minMax_ZF.first - *minMax_ZF.second), std::abs(*minMax_sZF.second));
 
                 Scale scz ;
-                //sc.findOptimal(*minMax_ZF.first-e, *minMax_ZF.second+e);
                 scz.findOptimal(std::min({*minMax_ZF.first - e, gz_tmin_inf, gz_tmax_inf  }) , std::max({ *minMax_ZF.second + e, gz_tmin_sup, gz_tmax_sup} ));
-
 
                 clearMeanG.gz.mapG.setRangeY(scz.min, scz.max);
             }
@@ -1778,7 +1717,7 @@ bool MCMCLoopCurve::update_330()
                 }
 
             } catch(std::exception& exc) {
-                qWarning() << "[MCMCLoopCurve::update_330] Ti : Caught Exception!\n"<<exc.what();
+                qWarning() << "[MCMCLoopCurve::update_330] Ti : Caught Exception!\n" << exc.what();
 
             }  catch (...) {
                 qWarning() << "[MCMCLoopCurve::update_330] Ti : Caught Exception!";
