@@ -253,14 +253,11 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
         curveHPDInf_Data = gaussian_filter_simple(curveHPDInf_Data, hbwd);
         curveHPDSup_Data = gaussian_filter_simple(curveHPDSup_Data, hbwd);
 
-        /*const QColor envHPDColor (Painting::mainGreen.red(),
-                              Painting::mainGreen.green(),
-                              Painting::mainGreen.blue(),
-                              90);*/
+        const QColor envHPDColor (162, 47, 52, 200);
 
-        const GraphCurve curveHPD = FunctionCurve(curveHPDMid_Data, "HPD Mid", Painting::mainGreen );
+        const GraphCurve curveHPD = FunctionCurve(curveHPDMid_Data, "HPD Mid", envHPDColor );
         const GraphCurve &curveHPDEnv = shapeCurve(curveHPDInf_Data, curveHPDSup_Data, "HPD Env",
-                                                 Painting::mainGreen, Qt::CustomDashLine, Qt::NoBrush);
+                                                 envHPDColor, Qt::CustomDashLine, Qt::NoBrush);
 
         // Quantile normal pour 1 - alpha/2
         // 95% envelope  https://en.wikipedia.org/wiki/1.96
@@ -703,4 +700,200 @@ void GraphViewCurve::densityMap_2_thresholdIndices_optimized(const CurveMap& den
         }
         //qDebug() << " colonne = " <<c << " min_indices[c]= " << min_indices[c] << " max_indices= " << max_indices[c];
     }
+}
+
+inline double gaussianKernel(double u) noexcept {
+    return std::exp(-0.5 * u * u) / std::sqrt(2.0 * M_PI);
+}
+
+/**
+ * @brief LOOCV rapide pour lissage par noyau gaussien sur std::map<double,double>.
+ *
+ * Utilise la formule :
+ *   ŷ_{-i}(x_i) = (ŷ(x_i) - H_ii * y_i) / (1 - H_ii)
+ * avec
+ *   ŷ(x_i) = (Σ_j K((x_i-x_j)/h) * y_j) / Σ_j K((x_i-x_j)/h)
+ *   H_ii   = K(0) / Σ_j K((x_i-x_j)/h)
+ *
+ * @param data Données sous forme de std::map<double,double>.
+ * @param h Largeur du noyau (bandwidth).
+ * @return Score CV(h), plus petit = meilleur.
+ */
+inline double loocv_fast(const std::map<double,double>& data, double h) noexcept {
+    const int n = static_cast<int>(data.size());
+    if (n <= 1) return std::numeric_limits<double>::infinity();
+
+    std::vector<double> yhat(n, 0.0);
+    std::vector<double> Hdiag(n, 0.0);
+
+    // Stockage temporaire pour itérateurs
+    std::vector<double> xs, ys;
+    xs.reserve(n);
+    ys.reserve(n);
+    for (auto& kv : data) {
+        xs.push_back(kv.first);
+        ys.push_back(kv.second);
+    }
+
+    // 1. Calcul de ŷ(x_i) et H_ii
+    for (int i = 0; i < n; ++i) {
+        double xi = xs[i];
+        double num = 0.0, den = 0.0;
+        for (int j = 0; j < n; ++j) {
+            double w = gaussianKernel((xi - xs[j]) / h);
+            num += w * ys[j];
+            den += w;
+        }
+        yhat[i] = (den > 0.0) ? num / den : 0.0;
+        Hdiag[i] = gaussianKernel(0.0) / den;  // poids propre
+    }
+
+    // 2. Calcul du CV via la formule optimisée
+    double sum = 0.0;
+    for (int i = 0; i < n; ++i) {
+        double denom = 1.0 - Hdiag[i];
+        if (denom <= 1e-14) continue; // éviter division par zéro
+        double yhat_minus_i = (yhat[i] - Hdiag[i] * ys[i]) / denom;
+        double r = ys[i] - yhat_minus_i;
+        sum += r * r;
+    }
+
+    return sum / n;
+}
+
+/**
+ * @brief Recherche du meilleur bandwidth h minimisant loocv_fast(data, h).
+ *
+ * Méthode :
+ *  - balayage grossier en log-échelle (coarse_steps) pour trouver un bon point de départ,
+ *  - golden-section search (sur log(h)) pour affiner localement,
+ *  - cache des évaluations de loocv_fast pour éviter recomputations.
+ *
+ * @param data données (std::map<x,y>, x triés et régulièrement espacés)
+ * @param h_min borne inférieure (si <=0, choisie automatiquement)
+ * @param h_max borne supérieure (si <=0, choisie automatiquement)
+ * @param coarse_steps nombre de points pour balayage grossier (ex : 20)
+ * @param max_iter nombre max d'itérations pour l'optimisation locale
+ * @param tol tolérance sur la différence en log(h) pour arrêter (ex : 1e-6)
+ * @return valeur de h qui minimise la LOOCV. Retourne NaN si données insuffisantes.
+ *
+ * Attention : nécessite que loocv_fast(const std::map<double,double>&, double) soit défini.
+ */
+double find_best_bandwidth_map(const std::map<double,double>& data,
+                               double h_min = -1.0, double h_max = -1.0,
+                               int coarse_steps = 20, int max_iter = 40,
+                               double tol = 1e-6)
+{
+    if (data.size() <= 1) return std::numeric_limits<double>::quiet_NaN();
+
+    // Heuristiques sur les bornes si non fournies
+    // calcul dx_min, x_range, stddev(x)
+    double x_prev = data.begin()->first;
+    double x_first = x_prev;
+    double x_last = x_prev;
+    double dx_min = std::numeric_limits<double>::infinity();
+    double sumx = x_prev, sumx2 = x_prev*x_prev;
+    size_t n = 1;
+    for (auto it = std::next(data.begin()); it != data.end(); ++it, ++n) {
+        double x = it->first;
+        dx_min = std::min(dx_min, std::abs(x - x_prev));
+        x_prev = x;
+        sumx += x;
+        sumx2 += x*x;
+        x_last = x;
+    }
+    const double x_range = x_last - x_first;
+    const double meanx = sumx / double(n);
+    const double varx = std::max(0.0, sumx2/double(n) - meanx*meanx);
+    const double stdx = std::sqrt(varx);
+
+    // if dx_min not set (shouldn't happen), fallback
+    if (!std::isfinite(dx_min) || dx_min <= 0.0) dx_min = (x_range > 0.0) ? x_range / (double)n : 1.0;
+
+    // default bounds if not provided
+    if (h_min <= 0.0) {
+        // ne pas descendre sous la résolution d'échantillonnage
+        h_min = std::max(0.5 * dx_min, 1e-12);
+    }
+    if (h_max <= 0.0) {
+        // au plus la moitié de l'intervalle (raisonnable)
+        h_max = std::max(x_range * 0.5, std::max(h_min * 10.0, stdx));
+    }
+    if (!(h_max > h_min)) {
+        // invalid bounds
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+
+    // cache pour éviter recomputation
+    std::map<double,double> cache;
+
+    auto eval = [&](double h)->double {
+        // clamp h
+        if (!(h > 0.0)) return std::numeric_limits<double>::infinity();
+        auto it = cache.find(h);
+        if (it != cache.end()) return it->second;
+        double v = loocv_fast(data, h); // <- ta fonction optimisée
+        cache.emplace(h, v);
+        return v;
+    };
+
+    // 1) coarse log-grid scan
+    double best_h = h_min;
+    double best_score = std::numeric_limits<double>::infinity();
+    const double log_hmin = std::log(h_min);
+    const double log_hmax = std::log(h_max);
+    for (int i = 0; i < coarse_steps; ++i) {
+        double t = (coarse_steps == 1) ? 0.5 : double(i) / double(coarse_steps - 1);
+        double logh = log_hmin + t * (log_hmax - log_hmin);
+        double h = std::exp(logh);
+        double s = eval(h);
+        if (s < best_score) {
+            best_score = s;
+            best_h = h;
+        }
+    }
+
+    // set local search interval around best_h (clamped)
+    double left = std::max(h_min, best_h * 0.5);
+    double right = std::min(h_max, best_h * 2.0);
+    // ensure left < right
+    if (!(right > left)) {
+        left = h_min;
+        right = h_max;
+    }
+
+    // 2) golden-section search on log(h)
+    const double gr = (std::sqrt(5.0) - 1.0) / 2.0; // ~0.618
+    double logL = std::log(left), logR = std::log(right);
+    // initialize points
+    double logC = logR - gr * (logR - logL);
+    double logD = logL + gr * (logR - logL);
+    double scoreC = eval(std::exp(logC));
+    double scoreD = eval(std::exp(logD));
+
+    for (int iter = 0; iter < max_iter && (logR - logL) > tol; ++iter) {
+        if (scoreC < scoreD) {
+            logR = logD;
+            logD = logC;
+            scoreD = scoreC;
+            logC = logR - gr * (logR - logL);
+            scoreC = eval(std::exp(logC));
+        } else {
+            logL = logC;
+            logC = logD;
+            scoreC = scoreD;
+            logD = logL + gr * (logR - logL);
+            scoreD = eval(std::exp(logD));
+        }
+    }
+
+    // best among cached evaluated points
+    for (const auto &kv : cache) {
+        if (kv.second < best_score) {
+            best_score = kv.second;
+            best_h = kv.first;
+        }
+    }
+
+    return best_h;
 }

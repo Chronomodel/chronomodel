@@ -257,7 +257,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mActivityUnifCheck = new CheckBox(tr("Unif Theo"), mPhasesGroup);
     mActivityUnifCheck->setFixedHeight(h_Check);
 
-    mErrCheck = new CheckBox(tr("Error"), mPhasesGroup);
+    mErrCheck = new CheckBox(tr("Error (Clopper-Pearson)"), mPhasesGroup);
     mErrCheck->setFixedHeight(h_Check);
 
     mDurationRadio = new RadioButton(tr("Duration"), mPhasesGroup);
@@ -296,16 +296,12 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     // -----------------------------------------------------------------
     mCurvesGroup = new QWidget();
 
-    mCurveGRadio = new RadioButton(tr("Curve"), mCurvesGroup);
+    auto threshold_str = stringForLocal(mHpdThreshold);
+    mCurveGRadio = new RadioButton(tr("Curve (at %1% Level)").arg(threshold_str), mCurvesGroup);
     mCurveGRadio->setFixedHeight(h_Radio);
     mCurveGRadio->setChecked(true);
 
-    auto threshold_str = stringForLocal(mHpdThreshold);
-    mCurveErrorCheck = new CheckBox(tr("Gauss Error (at %1%)").arg(threshold_str), mCurvesGroup);
-    mCurveErrorCheck->setFixedHeight(h_Check);
-    mCurveErrorCheck->setChecked(true);
-    
-    mCurveHpdCheck = new CheckBox(tr("HPD (at %1%)").arg(threshold_str), mCurvesGroup);
+    mCurveHpdCheck = new CheckBox(tr("HPD Envelope"), mCurvesGroup);
     mCurveHpdCheck->setFixedHeight(h_Check);
     mCurveHpdCheck->setChecked(true);
 
@@ -313,15 +309,19 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mCurveMapCheck->setFixedHeight(h_Check);
     mCurveMapCheck->setChecked(true);
 
-    mCurveDataPointsCheck = new CheckBox(tr("Reference Points (HPD)"), mCurvesGroup);
+    mCurveDataPointsCheck = new CheckBox(tr("Reference Points (HPD Interval)"), mCurvesGroup);
     mCurveDataPointsCheck->setFixedHeight(h_Check);
     mCurveDataPointsCheck->setChecked(true);
 
-    mCurveEventsPointsCheck = new CheckBox(tr("Event Dates (HPD)"), mCurvesGroup);
+    mCurveErrorCheck = new CheckBox(tr("Gauss Envelope"), mCurvesGroup);
+    mCurveErrorCheck->setFixedHeight(h_Check);
+    mCurveErrorCheck->setChecked(false);
+    
+    mCurveEventsPointsCheck = new CheckBox(tr("Event Dates (HPD Interval)"), mCurvesGroup);
     mCurveEventsPointsCheck->setFixedHeight(h_Check);
     mCurveEventsPointsCheck->setChecked(false);
 
-    mCurveGPRadio = new RadioButton(tr("Variation Rate"), mCurvesGroup);
+    mCurveGPRadio = new RadioButton(tr("Speed of Change (Derivatve)"), mCurvesGroup);
     mCurveGPRadio->setFixedHeight(h_Radio);
     
     mCurveGSRadio = new RadioButton(tr("Acceleration"), mCurvesGroup);
@@ -338,15 +338,15 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
 
     QVBoxLayout* curveOptionGroupLayout = new QVBoxLayout();
     curveOptionGroupLayout->setContentsMargins(15, 0, 0, 0);
-    curveOptionGroupLayout->addWidget(mCurveErrorCheck, Qt::AlignLeft);
-    curveOptionGroupLayout->addWidget(mCurveHpdCheck, Qt::AlignLeft);
-    curveOptionGroupLayout->addWidget(mCurveMapCheck, Qt::AlignLeft);
-    curveOptionGroupLayout->addWidget(mCurveDataPointsCheck, Qt::AlignLeft);
     curveOptionGroupLayout->addWidget(mCurveEventsPointsCheck, Qt::AlignLeft);
+    curveOptionGroupLayout->addWidget(mCurveMapCheck, Qt::AlignLeft);
+    curveOptionGroupLayout->addWidget(mCurveHpdCheck, Qt::AlignLeft);
+    curveOptionGroupLayout->addWidget(mCurveDataPointsCheck, Qt::AlignLeft);
+    curveOptionGroupLayout->addWidget(mCurveErrorCheck, Qt::AlignLeft);
 
     curveGroupLayout->setContentsMargins(10, 10, 10, 10);
     curveGroupLayout->addWidget(mCurveGRadio);
-    curveGroupLayout->setSpacing(0);
+    curveGroupLayout->setSpacing(7);
     curveGroupLayout->addLayout(curveOptionGroupLayout);
     curveGroupLayout->addWidget(mCurveGPRadio);
     curveGroupLayout->addWidget(mCurveGSRadio);
@@ -1201,8 +1201,7 @@ void ResultsView::initModel()
 
     mHpdThreshold = model->getThreshold();
     auto threshold_str = stringForLocal(mHpdThreshold) + "%";
-    mCurveErrorCheck->setText(tr("Gauss Error (at %1)").arg(threshold_str));
-    mCurveHpdCheck->setText(tr("HPD (at %1)").arg(threshold_str));
+    mCurveGRadio->setText(tr("Curve (at %1% Level)").arg(threshold_str));
 
     mThresholdEdit->resetText(mHpdThreshold);
     mHActivityEdit->resetText(model->mHActivity);
@@ -1328,17 +1327,14 @@ void ResultsView::applyAppSettings()
     auto model = getModel_ptr();
 
     auto threshold_str = stringForLocal(model->getThreshold());
-    mCurveErrorCheck->setText(tr("Gauss Error (at %1%)").arg(threshold_str));
-    mCurveHpdCheck->setText(tr("HPD (at %1%)").arg(threshold_str));
+    mCurveGRadio->setText(tr("Curve (at %1% Level)").arg(threshold_str));
 
     mRangeThresholdEdit->setText(stringForLocal(95.0));
     mThresholdEdit->setText(stringForLocal(model->getThreshold()));
     mHActivityEdit->setText(stringForLocal(model->mHActivity));
 
     mFFTLenCombo->setCurrentText(stringForLocal(model->getFFTLength()));
-    //mBandwidthEdit->blockSignals(true);
     mBandwidthEdit->resetText(model->getBandwidth());
-    //mBandwidthEdit->blockSignals(false);
 
     setTimeRange();
 
@@ -3974,7 +3970,7 @@ void ResultsView::updateEventsOptions(qreal& optionWidgetHeight, bool isPostDist
     qreal totalH = 0;
     QVBoxLayout* eventLayout = new QVBoxLayout();
     eventLayout->setContentsMargins(10, 10, 10, 10);
-    eventLayout->setSpacing(10);
+    eventLayout->setSpacing(7);
 
     auto add = [&](QWidget* w) {
         w->show();
@@ -4039,7 +4035,7 @@ void ResultsView::updatePhasesOptions(qreal &optionWidgetHeight)
     qreal totalH = 0;
     QVBoxLayout* phaseLayout = new QVBoxLayout();
     phaseLayout->setContentsMargins(10, 10, 10, 10);
-    phaseLayout->setSpacing(10);
+    phaseLayout->setSpacing(7);
     auto add = [&](QWidget* w) {
         w->show();
         phaseLayout->addWidget(w);
@@ -4116,7 +4112,7 @@ void ResultsView::updateCurvesOptions(qreal &optionWidgetHeight)
     qreal totalH = 0;
     QVBoxLayout* curveLayout = new QVBoxLayout();
     curveLayout->setContentsMargins(10, 10, 10, 10);
-    curveLayout->setSpacing(10);
+    curveLayout->setSpacing(7);
 
     auto add = [&](QWidget* w) {
         curveLayout->addWidget(w);
@@ -4135,10 +4131,10 @@ void ResultsView::updateCurvesOptions(qreal &optionWidgetHeight)
         QVBoxLayout* GLayout = new QVBoxLayout();
         GLayout->setContentsMargins(15, 0, 0, 0);
         GLayout->setSpacing(10);
-        GLayout->addWidget(mCurveErrorCheck, Qt::AlignLeft);
         GLayout->addWidget(mCurveHpdCheck, Qt::AlignLeft);
         GLayout->addWidget(mCurveMapCheck, Qt::AlignLeft);
         GLayout->addWidget(mCurveDataPointsCheck, Qt::AlignLeft);
+        GLayout->addWidget(mCurveErrorCheck, Qt::AlignLeft);
         GLayout->addWidget(mCurveEventsPointsCheck, Qt::AlignLeft);
 
         curveLayout->addLayout(GLayout);
@@ -4165,7 +4161,7 @@ void ResultsView::updateCurvesOptions(qreal &optionWidgetHeight)
     add(mCurveStatCheck);
 
     totalH += curveLayout->contentsMargins().top() + curveLayout->contentsMargins().bottom();
-    totalH += curveLayout->spacing() * (mCurveGRadio->isChecked()? 3 : 2);
+    totalH += curveLayout->spacing() * (mCurveGRadio->isChecked()? 0: 2);
     replaceLayout(mCurvesGroup, curveLayout);
     mCurvesGroup->setFixedHeight(totalH);
     mOptionsLayout->addWidget(mCurvesGroup);
@@ -4182,7 +4178,7 @@ void ResultsView::updateDisplayOptions(qreal &optionWidgetHeight)
     qreal totalH = 0.0;
     QVBoxLayout* dispLayout = new QVBoxLayout();
     dispLayout->setContentsMargins(10, 5, 10, 5);
-    dispLayout->setSpacing(10);
+    dispLayout->setSpacing(7);
 
     mDisplayStudyBut->setText(xScaleRepresentsTime() ? tr("Study Period Display") : tr("Fit Display"));
 
@@ -4267,8 +4263,6 @@ void ResultsView::updateDisplayOptions(qreal &optionWidgetHeight)
             mXOptionTitle->setText(curveName + " " + tr("Scale"));
             mXOptionLab->setText(curveName);
             mXOptionBut->setText(tr("Optimal") + " " + curveName + " " + tr("Display"));
-
-
 
 
             addTotalHeight(totalH, mXOptionTitle);
@@ -4509,7 +4503,7 @@ void ResultsView::updateDistribOptions(qreal &optionWidgetHeight, bool isPostDis
     qreal totalH = 0.0;
     QVBoxLayout* distribLayout = new QVBoxLayout();
     distribLayout->setContentsMargins(10, 5, 10, 5);
-    distribLayout->setSpacing(10);
+    distribLayout->setSpacing(7);
     auto add = [&](QWidget* w) {
         w->show();
         distribLayout->addWidget(w);
@@ -5427,8 +5421,7 @@ void ResultsView::applyThreshold()
 
         mHpdThreshold = hpd;
         auto threshold_str = stringForLocal(mHpdThreshold) + "%";
-        mCurveErrorCheck->setText(tr("Gauss Error (at %1)").arg(threshold_str));
-        mCurveHpdCheck->setText(tr("HPD (at %1)").arg(threshold_str));
+        mCurveGRadio->setText(tr("Curve (at %1% Level)").arg(threshold_str));
 
         getModel_ptr()->setThreshold(hpd);
 

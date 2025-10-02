@@ -2591,8 +2591,8 @@ void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale 
             list << "err G";
         }
 
-        type_data xMin = std::numeric_limits<type_data>::infinity();;
-        type_data xMax = std::numeric_limits<type_data>::infinity();;
+        type_data xMin = std::numeric_limits<type_data>::infinity();
+        type_data xMax = std::numeric_limits<type_data>::infinity();
 
         QMap <type_data, type_data> G, G_Sup;
         if (isHPD) {
