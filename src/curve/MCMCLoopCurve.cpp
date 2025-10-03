@@ -1833,7 +1833,9 @@ bool MCMCLoopCurve::update_330()
 
                                 for (const auto &e : mPointEvent) {
                                     //rate_VG *= pow((e->mVg.mX + current_var_Gasser) / (e->mVg.mX + try_var_Gasser), 2.0);
-                                    rate_VG *= (e->mVg.mX + current_var_Gasser) / (e->mVg.mX + try_var_Gasser);
+                                    // rate_VG *= (e->mVg.mX + current_var_Gasser) / (e->mVg.mX + try_var_Gasser); false
+                                    auto r = (e->mVg.mX + current_var_Gasser) / (e->mVg.mX + try_var_Gasser);
+                                    rate_VG *= r * r;
                                 }
                                 rate_VG *= rate_VG;
 
@@ -1850,9 +1852,10 @@ bool MCMCLoopCurve::update_330()
 
 
                         } else {
-                            rate = -1.;
-                            //ok = false;
-
+                            rate = -1.0;
+#ifdef DEBUG
+                            qDebug() << " update_330 try_value >= min && try_value <= max " << min << try_value << max << current_value << event->mTheta.mSigmaMH << event->name();
+#endif
                         }
 
 
@@ -1862,7 +1865,7 @@ bool MCMCLoopCurve::update_330()
                         if ( event->mTheta.test_update(current_value, try_value, rate)) {
 
                             // Pour l'itération suivante :
-                           // std::swap(current_ln_h_YWI_1_2, try_ln_h_YWI_1_2);
+
                             std::swap(current_ln_h_YWI_3, try_ln_h_YWI_3);
 
                             std::swap(current_vecH, try_vecH);
@@ -2029,10 +2032,11 @@ bool MCMCLoopCurve::update_330()
                         std::swap(current_decomp_matB, try_decomp_matB);
                     }
                     event->updateW();
-
+#ifdef DEBUG
                     if (event->mVg.mX > 1E4*1E4) {
-                        qDebug() << "grand VG ??" << event->mVg.mX;
+                        qDebug() << "[MCMCLoopCurve::update_330] grand VG ??" << event->mVg.mX << event->name();
                     }
+#endif
                 }
 
 

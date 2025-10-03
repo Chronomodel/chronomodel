@@ -28,7 +28,7 @@ echo  5 - Ignore - Copy file chronomodel_bash.exe in the installer-packages-winO
 rem copy C:\Users\Lanos\Documents\github\chronomodel\build\Desktop_Qt_6_9_2_MinGW_64_bit-Release\build\release\chronomodel_bash.exe C:\Users\Lanos\Documents\github\chronomodel\QtInstaller_ChronoModel\installer-packages-winOS\chronomodel_QtIFW.composant2\data
 rem copy C:\Users\Lanos\Documents\github\chronomodel\icon\chronomodel_bash.ico C:\Users\Lanos\Documents\github\chronomodel\QtInstaller_ChronoModel\installer-packages-winOS\chronomodel_QtIFW.composant2\data
 
-set VERSION=3.3.5
+set VERSION=3.3.1
 set DATE_STR = %date:~6,4%%date:~3,2%%date:~0,2%
 
 echo  6 - Execution de binarycreator

@@ -150,7 +150,10 @@ bool MHVariable::try_update(const double x, const double rate)
 
     bool accepted (false);
     if (!(rate >= 0.0)) {
-        accepted = false; // NaN ou négatif -> rejet forcé
+        accepted = false; // NaN ou négatif -> Force rejecté
+#ifdef DEBUG
+        qDebug()<< "[MHVariable::try_update] NaN ou negatif -> Force reject : " << _name;
+#endif
 
     } else if (rate == 2.0) {
         accepted = true; // force accept
@@ -193,7 +196,7 @@ bool MHVariable::try_update(const double x, const double rate)
  * @param rate The acceptance rate, typically the ratio pi(try_value)/pi(current_value).
  * @return bool True if the new value is accepted, false otherwise.
  */
-bool MHVariable::test_update(const double current_value, const double try_value, const double rate) {
+/* bool MHVariable::test_update(const double current_value, const double try_value, const double rate) {
     // Ensure mLastAccepts does not exceed its capacity
     if (mLastAccepts.size() >= mLastAcceptsLength) {
         mLastAccepts.erase(mLastAccepts.begin());
@@ -227,7 +230,76 @@ bool MHVariable::test_update(const double current_value, const double try_value,
         return false;
     }
 }
+*/
+bool MHVariable::test_update(const double current_value, const double try_value, const double rate) {
+    // Ensure mLastAccepts does not exceed its capacity
+    if (mLastAccepts.size() >= mLastAcceptsLength) {
+        mLastAccepts.erase(mLastAccepts.begin());
+    }
 
+    bool accepted (false);
+    if (!(rate >= 0.0)) {
+        accepted = false; // NaN ou négatif -> rejet forcé
+#ifdef DEBUG
+        if (rate<0)
+            qDebug()<< "[MHVariable::test_update] Negatif -> rejet force : " << _name;
+        else
+            qDebug()<< "[MHVariable::test_update] NaN  -> rejet force : " << _name;
+#endif
+
+    } else if (rate == 2.0) {
+        accepted = true; // force accept
+
+    } else if (rate >= 1.0) {
+        accepted = true;
+
+    } else if (rate >= 0){
+        const double uniform = Generator::randomUniform();
+        accepted = (uniform < rate);
+#ifdef DEBUG
+        if (uniform == 0)
+            qDebug()<< "[MHVariable::test_update] uniform == 0";
+#endif
+    }
+
+    if (accepted) {
+        mX = try_value;
+    } else {
+        mX = current_value;
+    }
+    mLastAccepts.push_back(accepted);
+
+    return accepted;
+    /*
+    if (rate >= 1.0) {
+        // Accept unconditionally
+        mX = try_value;
+        mLastAccepts.push_back(true);
+        return true;
+    }
+
+    if (rate < 0.0) {
+        // Reject outright
+        mX = current_value;
+        mLastAccepts.push_back(false);
+        return false;
+    }
+
+    // For rate between 0.0 and 1.0, perform a Metropolis-Hastings accept/reject step
+    const double random_number = Generator::randomUniform();
+
+    if (random_number <= rate) {
+        mX = try_value;
+        mLastAccepts.push_back(true);
+        return true;
+
+    } else {
+        mX = current_value;
+        mLastAccepts.push_back(false);
+        return false;
+    }
+*/
+}
 /**
  * @brief MHVariable::accept_update force setting mX with the value of x.
  * And append a true value to mLastAccept
