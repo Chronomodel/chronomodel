@@ -321,7 +321,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mCurveEventsPointsCheck->setFixedHeight(h_Check);
     mCurveEventsPointsCheck->setChecked(false);
 
-    mCurveGPRadio = new RadioButton(tr("Speed of Change (Derivatve)"), mCurvesGroup);
+    mCurveGPRadio = new RadioButton(tr("Speed of Change (Derivative)"), mCurvesGroup);
     mCurveGPRadio->setFixedHeight(h_Radio);
     
     mCurveGSRadio = new RadioButton(tr("Acceleration"), mCurvesGroup);
@@ -4101,9 +4101,9 @@ void ResultsView::updatePhasesOptions(qreal &optionWidgetHeight)
 
 void ResultsView::updateCurvesOptions(qreal &optionWidgetHeight)
 {
-    mGraphTypeTabs->setTabVisible(1, false);
-    mGraphTypeTabs->setTabVisible(2, mLambdaRadio->isChecked());
-    mGraphTypeTabs->setTabVisible(3, mLambdaRadio->isChecked());
+    mGraphTypeTabs->setTabVisible(1, mLambdaRadio->isChecked()); // history plot
+    mGraphTypeTabs->setTabVisible(2, mLambdaRadio->isChecked()); // acceptance Rate
+    mGraphTypeTabs->setTabVisible(3, mLambdaRadio->isChecked()); // auto- correlation
 
     mEventsGroup->hide();
     mPhasesGroup->hide();
@@ -4763,7 +4763,7 @@ void ResultsView::updateOptionsWidget()
         mSaveAllWidget->hide();
 
         mPageWidget->show();
-
+        updateTotalGraphs();
         const int numPages = ceil((double)mMaximunNumberOfVisibleGraph / (double)mGraphsPerPage);
         if (mCurrentPage >= numPages) {
             mCurrentPage = 0;
