@@ -77,6 +77,12 @@ message("RCC_DIR : $$RCC_DIR")
 # Qt modules (must be deployed along with the application)
 QT += core gui widgets svg
 
+
+QT_CONFIG -= opengl
+LIBS -= -framework AGL
+LIBS -= -framework OpenGL
+
+
 # Resource file (for images)
 RESOURCES = $$PRO_PATH/Chronomodel.qrc
 
@@ -129,6 +135,7 @@ CONFIG(release, debug|release) {
         QMAKE_CXXFLAGS += -arch x86_64 #-arch arm64
         QMAKE_CFLAGS   += -arch x86_64 #-arch arm64
         QMAKE_LFLAGS   += -arch x86_64 #-arch arm64
+
     }
 
     # ---- Windows (MSVC) ----
@@ -203,10 +210,16 @@ macx{
 	# to determine which version of the macOS SDK is installed with xcode? type on a terminal
 	# xcodebuild -showsdks
 
+        # Message de débogage
+           #message("Frameworks disponibles:")
+           #system(ls /System/Library/Frameworks)
 
         QMAKESPEC = macx-clang
-
         QMAKE_MAC_SDK = macosx
+
+        #  Désactive les fonctions dépréciées avant Qt 6.0
+        DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000
+
         message("QMAKE_MAC_SDK = $$QMAKE_MAC_SDK")
 
 
@@ -224,7 +237,20 @@ macx{
         #RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns
 	QMAKE_BUNDLE_DATA += RESOURCES_FILES
 
+       # Supprimez explicitement la référence à AGL, elle est inutile
+       #LIBS -= -framework AGL
+
+       # Frameworks recommandés
+       #LIBS += -framework Foundation
+       #LIBS += -framework AppKit
+
+       message("Removing legacy AGL framework (macOS Sequoia fix)")
+       LIBS -= -framework AGL
+       QMAKE_LIBDIR -= /System/Library/Frameworks/AGL.framework
+       QMAKE_LFLAGS -= -framework AGL
+
 }
+
 #########################################
 # Windows specific settings
 #########################################
