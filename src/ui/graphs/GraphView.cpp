@@ -875,10 +875,10 @@ void GraphView::paintToDevice(QPaintDevice* device)
     /* ---------------------- Zones --------------------------*/
 
     for (auto&& zone : mZones) {
-        QRect r(int (getXForValue(zone.mXStart)),
-                int (mMarginTop),
-                int (getXForValue(zone.mXEnd) - getXForValue(zone.mXStart)),
-                int (mGraphHeight));
+        QRectF r(getXForValue(zone.mXStart),
+                mMarginTop,
+                getXForValue(zone.mXEnd) - getXForValue(zone.mXStart),
+                mGraphHeight);
 
         if (r.width()>1) {
             p.save();

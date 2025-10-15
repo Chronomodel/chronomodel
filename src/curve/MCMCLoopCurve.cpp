@@ -65,6 +65,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QApplication>
 #include <QTime>
 #include <QProgressDialog>
+#include <QElapsedTimer>
 
 #include <exception>
 #include <vector>
@@ -2624,12 +2625,6 @@ QString MCMCLoopCurve::initialize_335()
             valeurs_G_GP_GS(mModel->mSettings.mTmax, mModel->mSpline.splineY, g, gp, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
             gy_tmax = g ;
         }
-        // Conversion IDF à  faire TODO
-        /*if (mModel->mCurveSettings.mProcessType == CurveSettings::eProcess_Vector ||  curveType == CurveSettings::eProcess_Spherical) {
-
-            double F_tmin_sup, Inc_tmin_sup, Dec_tmin_sup;
-            convertToIDF(g_tmin_sup, gy_tmin_sup, gz_tmin_sup, Inc_tmin_sup, Dec_tmin_sup, F_tmin_sup);
-        }*/
 
         // init Posterior MeanG and map
         const int nbPoint = 300;// Density curve size and curve size
@@ -2670,20 +2665,6 @@ QString MCMCLoopCurve::initialize_335()
         if (mModel->compute_Y) {
             clearMeanG.gy = clearCompo;
 
-            /*minY = +INFINITY;
-            maxY = -INFINITY;
-
-            minY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), minY, [](double y, std::shared_ptr<Event> e) {return std::min(e->mYy, y);});
-            maxY = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), maxY, [](double y, std::shared_ptr<Event> e) {return std::max(e->mYy, y);});
-
-            const auto e = 0.1 *(maxY -minY);
-
-            minY = minY - e;
-            maxY = maxY + e;
-
-            Scale sc ;
-            sc.findOptimal(minY, maxY);*/
-
             std::vector< double> vect_XDec (mModel->mEvents.size());
             std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), vect_XDec.begin(), [](std::shared_ptr<Event> ev) {return ev->mYDec;});
             auto minMax_YDec = std::minmax_element(vect_XDec.begin(), vect_XDec.end());
@@ -2720,25 +2701,6 @@ QString MCMCLoopCurve::initialize_335()
             }
 
         }
-
-        // Convertion IDF -- INUTILE
-      /* if (mModel->mCurveSettings.mProcessType == CurveSettings::eProcess_Vector ||  mModel->mCurveSettings.mProcessType == CurveSettings::eProcess_Spherical) {
-           const double deg = 180.0 / M_PI ;
-            // 1 - new extrenum
-            const double gzFmax = sqrt(pow(clearMeanG.gx.mapG.maxY(), 2.0) + pow(clearMeanG.gy.mapG.maxY(), 2.0) + pow(clearMeanG.gz.mapG.maxY(), 2.0));
-            const double gxIncMax = asin(clearMeanG.gz.mapG.maxY() / gzFmax) * deg;
-            const double gyDecMax = atan2(clearMeanG.gy.mapG.maxY(), clearMeanG.gx.mapG.maxY()) * deg;
-
-            const double gzFmin = sqrt(pow(clearMeanG.gx.mapG.minY(), 2.0) + pow(clearMeanG.gy.mapG.minY(), 2.0) + pow(clearMeanG.gz.mapG.minY(), 2.0));
-            const double gxIncMin = asin(clearMeanG.gz.mapG.minY() / gzFmin) * deg;
-            const double gyDecMin = atan2(clearMeanG.gy.mapG.minY(), clearMeanG.gx.mapG.minY()) * deg;
-
-            clearMeanG.gx.mapG.setRangeY(gxIncMin, gxIncMax);
-            clearMeanG.gy.mapG.setRangeY(gyDecMin, gyDecMax);
-            clearMeanG.gz.mapG.setRangeY(gzFmin, gzFmax);
-
-        }*/
-
 
         mModel->mPosteriorMeanGByChain.push_back(clearMeanG);
         if (mChainIndex == 0)

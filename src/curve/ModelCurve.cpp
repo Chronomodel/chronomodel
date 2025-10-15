@@ -48,6 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QFile>
 #include <QFileDialog>
+#include <QElapsedTimer>
 #include <qdatastream.h>
 #include <qapplication.h>
 

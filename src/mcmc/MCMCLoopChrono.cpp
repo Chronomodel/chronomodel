@@ -44,6 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "CalibrationCurve.h"
 
+#include <QElapsedtimer>
 #include <cmath>
 #include <QDebug>
 #include <QMessageBox>

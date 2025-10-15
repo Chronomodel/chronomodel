@@ -2118,16 +2118,19 @@ void Project::showStudyPeriodWarning()
 
 int Project::getUnusedEventId(const QJsonArray& events)
 {
-    auto as_ID = [](int id) {
-        return [id](QJsonValueConstRef ev) { return ev.toObject().value(STATE_ID).toInt() == id; };
-    };
-
     int id = -1;
     bool idIsFree = false;
     while (!idIsFree) {
         ++id;
-        idIsFree = !std::ranges::any_of(events, as_ID(id));
+        idIsFree = true;
+        for (const auto& event : events) {
+            if (event.toObject().value(STATE_ID).toInt() == id) {
+                idIsFree = false;
+                break;
+            }
+        }
     }
+
     return id;
 }
 
