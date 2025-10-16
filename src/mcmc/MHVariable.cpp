@@ -241,10 +241,10 @@ bool MHVariable::test_update(const double current_value, const double try_value,
     if (!(rate >= 0.0)) {
         accepted = false; // NaN ou négatif -> rejet forcé
 #ifdef DEBUG
-        if (rate<0)
-            qDebug()<< "[MHVariable::test_update] Negatif -> rejet force : " << _name;
-        else
-            qDebug()<< "[MHVariable::test_update] NaN  -> rejet force : " << _name;
+       // if (rate<0)
+        //    qDebug()<< "[MHVariable::test_update] Negatif -> rejet force : " << _name;
+       // else
+      //      qDebug()<< "[MHVariable::test_update] NaN  -> rejet force : " << _name;
 #endif
 
     } else if (rate == 2.0) {

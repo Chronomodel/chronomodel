@@ -134,7 +134,7 @@ void PluginGaussRefView::setDate(const Date& date, const StudyPeriodSettings& se
 
                 double t = 0;
                 const int imax = (tmaxDisplay - tminDisplay +1) / stepDisplay;
-                for (int i = 0; i<= imax; i++) {
+                for (int i = 0; i <= imax; i++) {
                     t = tminDisplay + i*stepDisplay;
                     const double tRaw = DateUtils::convertFromAppSettingsFormat(t);
                     refCurve[t] = a * tRaw * tRaw + b * tRaw + c;

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -47,7 +47,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Generator.h"
 
 #include <QJsonObject>
-#include <QtWidgets>
 
 #include <cstdlib>
 #include <stdio.h>
@@ -143,7 +142,7 @@ QString PluginGauss::getDateDesc(const Date* date) const
     
     if (date->mOrigin == Date::eSingleDate) {
 
-        const QJsonObject &data = date->mData;
+        const QJsonObject data = date->mData;
 
         const QString mode = data[DATE_GAUSS_MODE_STR].toString();
 
@@ -215,7 +214,7 @@ QString PluginGauss::getDateDesc(const Date* date) const
 QString PluginGauss::getDateRefCurveName(const Date* date)
 {
     Q_ASSERT(date);
-    const QJsonObject &data = date->mData;
+    const QJsonObject data = date->mData;
 
     const QString mode = data[DATE_GAUSS_MODE_STR].toString();
 
@@ -331,110 +330,94 @@ RefCurve PluginGauss::loadRefFile(QFileInfo refFile)
     RefCurve curve;
     curve.mName = refFile.fileName().toLower();
 
-   // QFile file(refFile.absoluteFilePath());
-
-    FILE * pFile;
-    pFile = fopen (refFile.absoluteFilePath().toLocal8Bit(),"r");
+    FILE *pFile = fopen(refFile.absoluteFilePath().toLocal8Bit(), "r");
     double prev_t = -INFINITY;
     double delta_t = INFINITY;
 
-    if (pFile != nullptr) {
-    //if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        QLocale locale = QLocale(QLocale::English);
-     //   QTextStream stream(&file);
+    if (!pFile)
+        return curve;
 
-        bool firstLine = true;
+    QLocale locale(QLocale::English);
+    bool firstLine = true;
+    QString line;
 
-        char ch = ' ';
-        while (ch != EOF)  {
+    while (true) {
+        int ch = fgetc(pFile);
 
-            QString line;
-            // this code allows to open the MacOS file (QChar::LineFeed) and WindowsOS file (QChar::CarriageReturn)
-            do {
-                ch = fgetc (pFile);
-                if (ch == QChar::LineFeed || ch == QChar::CarriageReturn)
-                    break;
-                line.append(ch);
-            } while (ch != EOF);
-
-            if (!isComment(line)) {
-                QStringList values = line.split(",");
+        // Si fin de ligne ou fin de fichier, on traite la ligne accumulée
+        if (ch == '\n' || ch == '\r' || ch == EOF) {
+            if (!line.isEmpty() && !isComment(line)) {
+                QStringList values = line.split(',');
                 if (values.size() > 2) {
                     bool ok = true;
-                    const double t = locale.toDouble(values.at(0), &ok);
-                    if (!ok)
-                        continue;
+                    double t = locale.toDouble(values.at(0), &ok);
+                    if (!ok) { line.clear(); if (ch == EOF) break; else continue; }
 
-                    delta_t = std::min(delta_t, abs(t-prev_t));
+                    delta_t = std::min(delta_t, std::abs(t - prev_t));
 
-                    const double g = locale.toDouble(values.at(1), &ok);
-                    if (!ok)
-                        continue;
+                    double g = locale.toDouble(values.at(1), &ok);
+                    if (!ok) { line.clear(); if (ch == EOF) break; else continue; }
 
-                    const double e = locale.toDouble(values.at(2), &ok);
-                    if (!ok)
-                        continue;
+                    double e = locale.toDouble(values.at(2), &ok);
+                    if (!ok) { line.clear(); if (ch == EOF) break; else continue; }
 
-                    const double gSup = g + 1.96 * e;
-                    if (!ok)
-                        continue;
+                    double gSup = g + 1.96 * e;
+                    double gInf = g - 1.96 * e;
 
-                    const double gInf = g - 1.96 * e;
-                    if (!ok)
-                        continue;
-
+                    // Ajout dans les courbes
                     curve.mDataMean[t] = g;
                     curve.mDataError[t] = e;
                     curve.mDataSup[t] = gSup;
                     curve.mDataInf[t] = gInf;
 
                     if (firstLine) {
-                        curve.mDataMeanMin = g;
-                        curve.mDataMeanMax = g;
-
-                        curve.mDataErrorMin = e;
-                        curve.mDataErrorMax = e;
-
-                        curve.mDataSupMin = gSup;
-                        curve.mDataSupMax = gSup;
-
-                        curve.mDataInfMin = gInf;
-                        curve.mDataInfMax = gInf;
-
+                        curve.mDataMeanMin = curve.mDataMeanMax = g;
+                        curve.mDataErrorMin = curve.mDataErrorMax = e;
+                        curve.mDataSupMin = curve.mDataSupMax = gSup;
+                        curve.mDataInfMin = curve.mDataInfMax = gInf;
+                        firstLine = false;
                     } else {
-                        curve.mDataMeanMin = qMin(curve.mDataMeanMin, g);
-                        curve.mDataMeanMax = qMax(curve.mDataMeanMax, g);
-
-                        curve.mDataErrorMin = qMin(curve.mDataErrorMin, e);
-                        curve.mDataErrorMax = qMax(curve.mDataErrorMax, e);
-
-                        curve.mDataSupMin = qMin(curve.mDataSupMin, gSup);
-                        curve.mDataSupMax = qMax(curve.mDataSupMax, gSup);
-
-                        curve.mDataInfMin = qMin(curve.mDataInfMin, gInf);
-                        curve.mDataInfMax = qMax(curve.mDataInfMax, gInf);
+                        curve.mDataMeanMin = std::min(curve.mDataMeanMin, g);
+                        curve.mDataMeanMax = std::max(curve.mDataMeanMax, g);
+                        curve.mDataErrorMin = std::min(curve.mDataErrorMin, e);
+                        curve.mDataErrorMax = std::max(curve.mDataErrorMax, e);
+                        curve.mDataSupMin = std::min(curve.mDataSupMin, gSup);
+                        curve.mDataSupMax = std::max(curve.mDataSupMax, gSup);
+                        curve.mDataInfMin = std::min(curve.mDataInfMin, gInf);
+                        curve.mDataInfMax = std::max(curve.mDataInfMax, gInf);
                     }
-                    firstLine = false;
+
                     prev_t = t;
                 }
             }
-        }
-        fclose(pFile);
 
-        curve.mMinStep = delta_t;
-        // invalid file ?
-        if (!curve.mDataMean.isEmpty()) {
-            curve.mTmin = curve.mDataMean.firstKey();
-            curve.mTmax = curve.mDataMean.lastKey();
+            line.clear();
+
+            // Si fin de fichier → on sort après traitement
+            if (ch == EOF)
+                break;
+        } else {
+            line.append(static_cast<QChar>(ch));
         }
     }
+
+    fclose(pFile);
+
+    curve.mMinStep = delta_t;
+
+    if (!curve.mDataMean.isEmpty()) {
+        curve.mTmin = curve.mDataMean.firstKey();
+        curve.mTmax = curve.mDataMean.lastKey();
+    }
+
     return curve;
 }
+
 
 // Reference Values & Errors
 long double PluginGauss::getRefValueAt(const QJsonObject &data, const double t)
 {
-    const QString &mode = data.value(DATE_GAUSS_MODE_STR).toString();
+    const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
 
     if (mode == DATE_GAUSS_MODE_NONE) {
         return t;
@@ -451,7 +434,7 @@ long double PluginGauss::getRefValueAt(const QJsonObject &data, const double t)
         return getRefCurveValueAt(ref_curve, t);
 
     } else
-        return 0.;
+        return 0.0;
 }
 
 double PluginGauss::getRefErrorAt(const QJsonObject &data, const double t, const QString mode)
@@ -461,13 +444,13 @@ double PluginGauss::getRefErrorAt(const QJsonObject &data, const double t, const
         return getRefCurveErrorAt(ref_curve, t);
 
     } else
-        return 0.;
+        return 0.0;
 }
 
 QPair<double, double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject &data) const
 {
-    double tmin = 0.;
-    double tmax = 0.;
+    double tmin = 0.0;
+    double tmax = 0.0;
 
     if (data.value(DATE_GAUSS_MODE_STR).toString() == DATE_GAUSS_MODE_CURVE) {
         const QString &ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
@@ -524,15 +507,87 @@ QPair<double, double> PluginGauss::getTminTmaxRefsCurve(const QJsonObject &data)
     return QPair<double, double>(tmin, tmax);
 }
 
+double computeMinStepFromRefCurve(const QMap<double, double>& refData, const QJsonObject& data, int k_sigma)
+{
+    const int search_frac = k_sigma * 5;
+    const double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
+    const double error = k_sigma * data.value(DATE_GAUSS_ERROR_STR).toDouble();
+
+    std::vector<double> ordered_pts;
+    ordered_pts.reserve(2 * search_frac + 1);
+
+    // Parcours de la courbe de référence
+    for (int f = -search_frac; f <= search_frac; ++f) {
+        const double value = age + error * static_cast<double>(f) / search_frac;
+
+        auto prev_data = refData.cbegin();
+        for (; prev_data != refData.cend(); ++prev_data) {
+            auto next_data = std::next(prev_data);
+            if (next_data == refData.cend()) break;
+
+            const double prev_value = prev_data.value();
+            const double next_value = next_data.value();
+
+            // Plateau : deux points consécutifs identiques
+            if (prev_value == value && next_value == value) {
+                auto plateau_start = prev_data;
+                auto plateau_end = next_data;
+
+                while (plateau_start != refData.cbegin() &&
+                       std::prev(plateau_start).value() == value)
+                    --plateau_start;
+
+                while (std::next(plateau_end) != refData.cend() &&
+                       std::next(plateau_end).value() == value)
+                    ++plateau_end;
+
+                const double y = (plateau_start.key() + plateau_end.key()) * 0.5;
+                ordered_pts.push_back(y);
+                break;
+            }
+            // Cas normal : interpolation entre deux valeurs qui encadrent la cible
+            else if ((prev_value < value && value <= next_value) ||
+                     (prev_value > value && value >= next_value)) {
+                const double y = interpolate(value, prev_value, next_value,
+                                             prev_data.key(), next_data.key());
+                ordered_pts.push_back(y);
+                break;
+            }
+        }
+    }
+
+    // Nettoyage des doublons
+    std::sort(ordered_pts.begin(), ordered_pts.end());
+    ordered_pts.erase(std::unique(ordered_pts.begin(), ordered_pts.end()), ordered_pts.end());
+
+    if (ordered_pts.empty()) {
+        qDebug() << "[PluginGauss::computeMinStepFromRefCurve] step = INFINITY";
+        return INFINITY;
+    }
+
+    double min_dif_mean = std::numeric_limits<double>::max();
+    for (auto it = std::next(ordered_pts.begin()); it != ordered_pts.end(); ++it) {
+        min_dif_mean = std::min(min_dif_mean, std::abs(*it - *std::prev(it)));
+    }
+
+    if (min_dif_mean == 0) {
+        qDebug() << "[PluginGauss::computeMinStepFromRefCurve] step = 0";
+        return INFINITY;
+    }
+
+    return min_dif_mean / 3.0;
+}
+
+
 double PluginGauss::getMinStepRefsCurve(const QJsonObject &data) const
 {
-    int frac = 1001;
+    constexpr double one_frac = 1.0/1001.0;
     const QString &ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
     const QString &mode = data.value(DATE_GAUSS_MODE_STR).toString();
 
     if (mode == DATE_GAUSS_MODE_NONE) {
         double error = data.value(DATE_GAUSS_ERROR_STR).toDouble();
-        return  2 * error/ frac;
+        return  2 * error * one_frac;
 
     } else if (mode == DATE_GAUSS_MODE_EQ) {
         double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
@@ -553,89 +608,34 @@ double PluginGauss::getMinStepRefsCurve(const QJsonObject &data) const
                 return INFINITY;
 
             } else {
-                return (s2.second - s2.first)/frac;
+                return (s2.second - s2.first) * one_frac;
             }
         } else if (isinf(s2.first)) {
-           return (s1.second - s1.first)/frac;
+           return (s1.second - s1.first) * one_frac;
 
         } else {
             double sp1 = std::abs(s2.first - s1.first);
             double sp2 = std::abs(s2.second - s1.second);
 
-            return std::min(sp1, sp2)/frac;
+            return std::min(sp1, sp2) * one_frac;
         }
 
 
     } else  if (mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
-        int search_frac = k_sigma * 5;
-        double age = data.value(DATE_GAUSS_AGE_STR).toDouble();
-        double error = k_sigma * data.value(DATE_GAUSS_ERROR_STR).toDouble();
 
-        std::vector<double> ordered_pts;
-        ordered_pts.reserve(2 * search_frac + 1); // Pré-allocation pour éviter les réallocations
+        const double stepMean = computeMinStepFromRefCurve(mRefCurves[ref_curve].mDataMean, data, k_sigma);
+        const double stepInf  = computeMinStepFromRefCurve(mRefCurves[ref_curve].mDataInf,  data, k_sigma);
+        const double stepSup  = computeMinStepFromRefCurve(mRefCurves[ref_curve].mDataSup,  data, k_sigma);
 
-
-        const auto& refData = mRefCurves[ref_curve].mDataMean;
-
-        // parcours de toute la courbe avec chaque fraction de la mesure
-        for (int f = - search_frac; f<=search_frac; f++) {
-            double value = age + error * static_cast<double>(f) / search_frac;
-            auto prev_data = refData.cbegin();
-            for ( ; prev_data != refData.cend(); prev_data++ ) {
-                auto next_data = std::next(prev_data);
-
-                double prev_value = prev_data.value();
-                double next_value = next_data.value();
-
-                // Détection du plateau : deux points consécutifs égaux
-                if (prev_value == value && next_value == value) {
-                    // Recherche du début et de la fin du plateau
-                    auto plateau_start = prev_data;
-                    auto plateau_end = next_data;
-
-                    // Trouver le début du plateau
-                    while (plateau_start != refData.cbegin() &&
-                           std::prev(plateau_start).value() == value) {
-                        --plateau_start;
-                    }
-
-                    // Trouver la fin du plateau
-                    while (std::next(plateau_end) != refData.cend() &&
-                           std::next(plateau_end).value() == value) {
-                        ++plateau_end;
-                    }
-
-                    // Calculer la position moyenne du plateau
-                    const auto y = (plateau_start.key() + plateau_end.key()) / 2.0;
-                    ordered_pts.push_back(y);
-                    break;
-                }
-                else if ((prev_value < value && value <= next_value) ||
-                         (prev_value > value && value >= next_value)) {
-                    // Interpolation uniquement quand on traverse strictement
-                    const auto y = interpolate(value, prev_value, next_value,
-                                               prev_data.key(), next_data.key());
-                    ordered_pts.push_back(y);
-                    break;  // On sort après avoir interpolé un point
-                }
-
-            }
-        }
-        // Suppression des doublons
-        std::sort(ordered_pts.begin(), ordered_pts.end());
-        ordered_pts.erase(std::unique(ordered_pts.begin(), ordered_pts.end()), ordered_pts.end());
-
-        double min_dif = std::numeric_limits<double>::max();
-        for (auto it = std::next(ordered_pts.begin()); it != ordered_pts.end(); ++it) {
-            min_dif = std::min(min_dif, std::abs(*it - *std::prev(it)));
-            if (min_dif==0)
-                qDebug()<<"plugin gauss step=0";
+        auto stepRes = std::min({ stepMean, stepInf, stepSup });
+        if (stepRes == 0) {
+            qDebug()<<"[PluginGauss::getMinStepRefsCurve] step = INFINITY";
+            return INFINITY;
         }
 
-        return min_dif/3.;
+        return stepRes;
 
     } else {
-
         return INFINITY;
     }
 }
