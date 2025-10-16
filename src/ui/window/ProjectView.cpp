@@ -241,8 +241,8 @@ void ProjectView::applyFilesSettings(std::shared_ptr<ModelCurve> &model)
 {
     // Rebuild all calibration curve
 
-    const QJsonObject &state = getProject_ptr()->state();
-    const StudyPeriodSettings &s = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
+    const QJsonObject state = getProject_ptr()->state();
+    const StudyPeriodSettings s = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
     const bool calibrate = mModelView->findCalibrateMissing();
     if (calibrate)
         mModelView->calibrateAll(s);
@@ -260,7 +260,6 @@ void ProjectView::applySettings(std::shared_ptr<ModelCurve> &model)
         model->clearThreshold();
         model->updateDensities(model->mFFTLength, model->mBandwidth, memoThreshold);
         mResultsView->applyAppSettings();
-        //mResultsView->generateCurves();
 
         mLogInitEdit->setText(model->getInitLog());
         mLogAdaptEdit->setText(model->getAdaptLog());

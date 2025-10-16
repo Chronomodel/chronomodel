@@ -63,6 +63,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define MCMC_METHODE_RESET_REASON "MCMC methods reset"
 #define CURVE_SETTINGS_UPDATED_REASON "Curve Settings updated"
 #define DATE_MOVE_TO_EVENT_REASON "Date moved to event"
+#define DATE_CREATED "Date created"
+#define DATE_UPDATED "Date updated"
+
 #define NEW_EVEN_BY_CSV_DRAG_REASON "New Event by CSV drag"
 
 #define PROJECT_UNDO_REDO_REASON "Undo-Redo action"
@@ -75,7 +78,6 @@ class PhaseConstraint;
 class PluginAbstract;
 
 
-//QString res_file_version;
 
 class Project: public QObject, std::enable_shared_from_this<Project>
 {
@@ -95,9 +97,12 @@ private :
     bool mDesignIsChanged;
     bool mStructureIsChanged;
     bool mItemsIsMoved;
+    bool mEventPropertiesChanged; // to refresh Event Properties View
+
     QSet<QString> mReasonChangeStructure;
     QSet<QString> mReasonChangeDesign;
     QSet<QString> mReasonChangePosition;
+    QSet<QString> mReasonChangeEventProperties;
 
     bool mNoResults;
 
@@ -247,7 +252,7 @@ public slots:
 signals:
     void noResult();
     void projectStateChanged();
-    void currentEventChanged(QJsonObject *event);
+    void currentEventChanged(QJsonObject event = QJsonObject());
 
     void eyedPhasesModified(const QMap<int, bool> &eyedPhases);
 

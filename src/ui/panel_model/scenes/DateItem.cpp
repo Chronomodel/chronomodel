@@ -294,8 +294,6 @@ void DateItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
         // redraw find set the new position
         hoveredEventItem->redrawEvent();
 
-        emit mEventsScene->eventsAreModified(tr("Date moved to event"), true, true);
-
     } else {
         if (pos() != mOriginalPos) {
             mDatesAnim->setItem(this);

@@ -53,8 +53,7 @@ public:
     SetProjectState(Project* project,
                     const QJsonObject& prevState,
                     const QJsonObject& nextState,
-                    const QString& reason,
-                    bool notify);
+                    const QString& reason);
     virtual ~SetProjectState();
     virtual void undo();
     virtual void redo();
@@ -64,7 +63,7 @@ private:
     QJsonObject mPrevState;
     QJsonObject mNextState;
     QString mReason;
-    bool mNotify;
+
 };
 
 

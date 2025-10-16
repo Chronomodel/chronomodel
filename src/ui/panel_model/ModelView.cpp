@@ -68,11 +68,16 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "StudyPeriodDialog.h"
 #include "PhaseDialog.h"
 
-#include <QtWidgets>
-#include <QtSvg>
 #include <QPropertyAnimation>
 #include <QSequentialAnimationGroup>
 #include <QRectF>
+#include <QToolTip>
+#include <QGraphicsView>
+#include <QProgressDialog>
+#include <QMessageBox>
+#include <QMouseEvent>
+#include <QSettings>
+#include <QApplication>
 
 #include <assert.h>
 
@@ -427,8 +432,16 @@ void ModelView::updateProject()
     // false : ne pas envoyer de notification pour updater l'état du projet,
     // puisque c'est justement ce que l'on fait ici!
     // DONE BY UPDATEPROJECT ????
-    if (mButProperties->isChecked() && mButProperties->isEnabled())
+    if (mButProperties->isChecked() && mButProperties->isEnabled()) {
+        for (auto& item : mEventsScene->selectedItems()) {
+            const auto& itm = dynamic_cast<EventItem*>(item);
+            if (itm != nullptr ) {
+                mEventPropertiesView->setEvent(itm->mData);
+                break;
+            }
+        }
         mEventPropertiesView->updateEvent();
+    }
 
     updateLayout();
 }
@@ -666,7 +679,7 @@ bool ModelView::findCalibrateMissing()
 void ModelView::calibrateAll(StudyPeriodSettings newS)
 {
     auto project = getProject_ptr();
-    const QJsonObject &state = project->state();
+    const QJsonObject state = project->state();
 
     QJsonArray Qevents = state.value(STATE_EVENTS).toArray();
 
@@ -713,7 +726,7 @@ void ModelView::calibrateAll(StudyPeriodSettings newS)
                     progress->setValue(position);
                 }
           }
-         project -> setSettings(newS); //do pushProjectState
+        project -> setSettings(newS); //do pushProjectState
     }
 
 
@@ -725,7 +738,7 @@ void ModelView::modifyPeriod()
     QJsonObject state = project->state();
     StudyPeriodSettings s = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
 
-    StudyPeriodDialog dialog(qApp->activeWindow());
+    StudyPeriodDialog dialog(QApplication::activeWindow());
     dialog.setSettings(s);
 
     if (dialog.exec() == QDialog::Accepted) {
@@ -742,9 +755,9 @@ void ModelView::modifyPeriod()
             mCalibrationView->initScale(xScale);
             //  mCalibrationView->applyStudyPeriod();
 
-            project -> setSettings(newS); //do pushProjectState //done in ModelView::calibrateAll(newS);??
-            MainWindow::getInstance() -> setResultsEnabled(false);
-            MainWindow::getInstance() -> setLogEnabled(false);
+            //project -> setSettings(newS); //do pushProjectState //done in ModelView::calibrateAll(newS);??
+            MainWindow::getInstance()->setResultsEnabled(false);
+            MainWindow::getInstance()->setLogEnabled(false);
         }
 
     }
@@ -755,7 +768,7 @@ void ModelView::updateCurveButton()
 {
     const QJsonObject &state = getProject_ptr()->state();
 
-    const CurveSettings cs (state.value(STATE_CURVE).toObject());
+    const CurveSettings cs = state.value(STATE_CURVE).toObject();
     mButCurve->setText(tr("ChronoCurve : ") + cs.processText());
 }
 
@@ -1029,7 +1042,7 @@ void ModelView::showProperties()
        for (auto& item : mEventsScene->selectedItems()) {
            const auto& itm = dynamic_cast<EventItem*>(item);
            if (itm != nullptr ) {
-                 mEventPropertiesView->setEvent(&itm->mData);
+                 mEventPropertiesView->setEvent(itm->mData);
                  break;
            }
        }
@@ -1256,11 +1269,11 @@ void ModelView::togglePropeties(AbstractItem* item)
 
     mButProperties->setChecked(true);
     mButProperties->update();
-      //  updateLayout();
+
     const auto& eventItem = dynamic_cast<EventItem*>(item);
 
     if(eventItem) {
-        mEventPropertiesView->setEvent(&item->mData);
+        mEventPropertiesView->setEvent(item->mData);
         showProperties();
     }
 

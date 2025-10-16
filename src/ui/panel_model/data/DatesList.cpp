@@ -69,7 +69,7 @@ DatesList::~DatesList()
 
 }
 
-void DatesList::setEvent(const QJsonObject &event)
+void DatesList::setEvent(const QJsonObject event)
 {
     mEvent = event;
 

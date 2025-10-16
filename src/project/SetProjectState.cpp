@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -40,12 +40,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "SetProjectState.h"
 #include "Project.h"
 
-SetProjectState::SetProjectState(Project* project, const QJsonObject& prevState, const QJsonObject& nextState, const QString& reason, bool notify):
+SetProjectState::SetProjectState(Project* project, const QJsonObject& prevState, const QJsonObject& nextState, const QString& reason):
     mProject(project),
     mPrevState(prevState),
     mNextState(nextState),
-    mReason(reason),
-    mNotify(notify)
+    mReason(reason)
 {
     // Activate this to show undo/redo actions title in the UndoStack list view
     // However, this will also display action names in the main toolbar undo/redo buttons,
@@ -60,9 +59,9 @@ SetProjectState::~SetProjectState()
 
 void SetProjectState::undo()
 {
-    qDebug()<<"[SetProjectState::undo] notify=" << mNotify << " reason=" << mReason;
+    qDebug() << "[SetProjectState::undo] reason = " << mReason;
     mProject->mState = mPrevState;
-    emit mProject->currentEventChanged(nullptr);
+    emit mProject->currentEventChanged();
 
     emit mProject->projectStateChanged();
 }
@@ -71,9 +70,10 @@ void SetProjectState::undo()
 // come from Project::pushProjectState() with the command MainWindow::getInstance()->getUndoStack()->push(command);
 void SetProjectState::redo()
 {
-    qDebug()<<"[SetProjectState::redo] notify=" << mNotify << " reason=" << mReason;
+    qDebug() << "[SetProjectState::redo] reason = " << mReason;
     mProject->mState = mNextState;
-    if (mNotify)
-        emit mProject->projectStateChanged();
+    emit mProject->currentEventChanged();
+
+    emit mProject->projectStateChanged();
 
 }

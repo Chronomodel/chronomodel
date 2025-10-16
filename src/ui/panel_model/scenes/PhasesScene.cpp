@@ -158,7 +158,7 @@ void PhasesScene::setShowAllEvents(const bool show)
  */
 void PhasesScene::sendUpdateProject(const QString& reason, bool notify, bool storeUndoCommand)
 {
-    qDebug()<<"[PhasesScene::sendUpdateProject] "<<reason<<notify<<storeUndoCommand;
+    qDebug()<<"[PhasesScene::sendUpdateProject] "<< reason << notify << storeUndoCommand;
     //QJsonObject statePrev = mProject->state();
     QJsonObject stateNext = getProject_ptr()->state();
 
@@ -503,7 +503,7 @@ void PhasesScene::updateStateSelectionFromItem()
         bool oneSelection = false;
         auto curItem = dynamic_cast<PhaseItem*>(currentItem());
         blockSignals(true);
-        for (qsizetype i=0; i<mItems.size(); ++i) {
+        for (qsizetype i = 0; i < mItems.size(); ++i) {
             PhaseItem* item = dynamic_cast<PhaseItem*>(mItems.at(i));
 
             // without selected update
@@ -526,7 +526,7 @@ void PhasesScene::updateStateSelectionFromItem()
 
 #ifdef DEBUG
             if (modified)
-                qDebug()<<"[PhasesScene::updateStateSelectionFromItem] "<< nextPhase.value(STATE_NAME).toString()<<selected<<isCurrent;
+                qDebug()<<"[PhasesScene::updateStateSelectionFromItem] " << nextPhase.value(STATE_NAME).toString() << selected << isCurrent;
 #endif
 
 
@@ -534,7 +534,7 @@ void PhasesScene::updateStateSelectionFromItem()
         blockSignals(false);
 
         if (modified ) {
-           sendUpdateProject(tr("Phases selection"), true, false);//true);
+           sendUpdateProject(tr("Phases selection"), true, false);
 
             // refresh the thumbs in the Events scene
             if (!oneSelection) {// selectedItems().size() == 0) {
@@ -597,7 +597,7 @@ bool PhasesScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent*)
     qDebug() << "[PhasesScene::itemClicked]";
 
     PhaseItem* phaseClicked = dynamic_cast< PhaseItem*>(item);
-    PhaseItem* current = currentPhase();//dynamic_cast< PhaseItem*>(currentItem().get());
+    PhaseItem* current = currentPhase();
 
     // if mDrawingArrow is true, an Phase is already selected and we can create a Constraint.
     if (phaseClicked ) {
@@ -606,8 +606,6 @@ bool PhasesScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent*)
                 createConstraint(current, phaseClicked);
                 mTempArrow->setVisible(false);
                 mDrawingArrow = false;
-                sendUpdateProject("Phase constraint created", true, true);
-
               }
         }
 

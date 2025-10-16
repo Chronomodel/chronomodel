@@ -139,7 +139,7 @@ void EventsScene::createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo)
 {
     const QJsonObject eventFrom = dynamic_cast<EventItem*>(itemFrom)->getData();
     const QJsonObject eventTo = dynamic_cast<EventItem*>(itemTo)->getData();
-    qDebug()<<"[EventsScene::createConstraint]"<<eventFrom.value(STATE_NAME)<<eventTo.value(STATE_NAME);
+    qDebug() << "[EventsScene::createConstraint] " << eventFrom.value(STATE_NAME) << eventTo.value(STATE_NAME);
 
     getProject_ptr()->createEventConstraint(eventFrom.value(STATE_ID).toInt(),
                                     eventTo.value(STATE_ID).toInt());
@@ -221,8 +221,9 @@ void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool sto
     // State with correct value of the selection
     QJsonArray events = QJsonArray();
 
-    for (const auto &item : mItems) {
-        events.append(static_cast<EventItem*>(item)->getData());
+    for (auto it = mItems.cbegin(); it != mItems.cend(); ++it) {
+        auto* eventItem = static_cast<EventItem*>(*it);
+        events.append(eventItem->getData());
     }
 
     stateNext[STATE_EVENTS] = events;
@@ -250,25 +251,27 @@ void EventsScene::setShowAllThumbs(const bool show)
     mShowAllThumbs = show ;
 
     // update EventItem GreyedOut according to the phase selection
-    for (auto item : mItems) {
+    const auto& items = mItems;
+    for (auto* item : items) {
         bool selectedPhase = false;
         QJsonArray phases = dynamic_cast<EventItem*>(item)->getPhases();
-        for (const QJsonValue phase : phases) {
-            if ((selectedPhase == false) && (phase.toObject().value(STATE_IS_SELECTED).toBool() == true)) {
+        for (auto it = phases.cbegin(); it != phases.cend(); ++it) {
+            const QJsonValue& phase = *it;
+            if (phase.toObject().value(STATE_IS_SELECTED).toBool()) {
                 selectedPhase = true;
+                break;
             }
         }
-        dynamic_cast<EventItem*>(item)->setWithSelectedPhase(selectedPhase);
-        if (selectedPhase || show)
-            dynamic_cast<EventItem*>(item)->setGreyedOut(false);
-        else
-            dynamic_cast<EventItem*>(item)->setGreyedOut(true);
+        auto* eventItem = dynamic_cast<EventItem*>(item);
+        eventItem->setWithSelectedPhase(selectedPhase);
+        eventItem->setGreyedOut(!(selectedPhase || show));
 
     }
 
     // update constraintItems GreyedOut according to the EventItem GreyedOut
 
-    for (auto arrow : mConstraintItems) {
+    for (auto it = mConstraintItems.cbegin(); it != mConstraintItems.cend(); ++it) {
+        auto* arrow = *it;
 
         const int eventFromId = arrow->mData.value(STATE_CONSTRAINT_BWD_ID).toInt();
         const int eventToId = arrow->mData.value(STATE_CONSTRAINT_FWD_ID).toInt();
@@ -986,6 +989,7 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
             //qDebug()<<"EventsScene::dateReleased MERGE";
 
             QJsonObject* state = getState_ptr();
+            QJsonObject nextState = *state;
             QJsonArray events = state->value(STATE_EVENTS).toArray();
             bool isRemove (false);
             bool isAdd (false);
@@ -1041,10 +1045,11 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
 
                 events[i] = event;
             }
-            (*state)[STATE_EVENTS] = events;
+            nextState[STATE_EVENTS] = events;
 
             hoveredEventItem->setMergeable(false);
-            getProject_ptr()->pushProjectState(*state, DATE_MOVE_TO_EVENT_REASON, true); // used to disable ResultsView
+            getProject_ptr()->pushProjectState(nextState, DATE_MOVE_TO_EVENT_REASON, true); // used to disable ResultsView
+
             return hoveredEventItem;
 
         } else
@@ -1107,24 +1112,16 @@ bool EventsScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e)
 
     // if mDrawingArrow is true, an Event is already selected and we can create a Constraint.
     if (eventClicked && current && (eventClicked != current)) {
-                // create constraint if possible
-                if (mDrawingArrow && constraintAllowed(current, eventClicked)) {
-                        createConstraint(current, eventClicked);
-                        mTempArrow->setVisible(false);
-                        mDrawingArrow = false;
+        // create constraint if possible
+        if (mDrawingArrow && constraintAllowed(current, eventClicked)) {
+            createConstraint(current, eventClicked);
+            mTempArrow->setVisible(false);
+            mDrawingArrow = false;
+            return true;
 
-                        sendUpdateProject("Event constraint created", true, true);
-                        return true;
-
-                }
-
-
-
-
+        }
 
     }
-    //updateStateSelectionFromItem(); // emit sendUpdateProject
-   // sendUpdateProject("Item selected", true, false);//  bool notify = true, bool storeUndoCommand = false
 
     return true;
 }
@@ -1176,11 +1173,6 @@ void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
        emit selectionChanged();
     }
 
-    /*if (keyEvent->key() == Qt::Key_Delete) {
-        deleteSelectedItems();
-
-    // spotting the  Alt key
-    } else*/
 
     if (keyEvent->modifiers() == Qt::AltModifier && selectedItems().count()==1) {
 
@@ -1242,7 +1234,7 @@ void EventsScene::keyReleaseEvent(QKeyEvent* keyEvent)
        // qDebug() << "[EventsScene::keyReleaseEvent] You Released: "<<"Qt::Key_Alt";
         mDrawingArrow = false;
         mAltIsDown = false;
-        //mSelectKeyIsDown = false;
+
         mTempArrow->setState(ArrowTmpItem::eNormal);
         mTempArrow->setVisible(false);
         AbstractScene::keyReleaseEvent(keyEvent);
@@ -1261,8 +1253,7 @@ void EventsScene::keyReleaseEvent(QKeyEvent* keyEvent)
     else if ((QApplication::keyboardModifiers() == Qt::ControlModifier)) {
        // qDebug() << "EventsScene::keyReleaseEvent You Released: "<<"Qt::ControlModifier";
         mDrawingArrow = false;
-        //mAltIsDown = false;
-        mSelectKeyIsDown = false;
+           mSelectKeyIsDown = false;
         mTempArrow->setVisible(false);
         AbstractScene::keyReleaseEvent(keyEvent);
     }

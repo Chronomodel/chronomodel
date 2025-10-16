@@ -55,7 +55,7 @@ public:
     DatesList(QWidget* parent = nullptr);
     ~DatesList();
 
-    void setEvent(const QJsonObject& event);
+    void setEvent(const QJsonObject event);
 
 protected slots:
     void handleItemClicked(QListWidgetItem* item);

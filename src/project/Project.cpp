@@ -104,7 +104,7 @@ Project::Project():
     mReasonChangeStructure << NEW_EVEN_BY_CSV_DRAG_REASON;
 
     // dates changes
-    mReasonChangeStructure << "Date created" << DATE_MOVE_TO_EVENT_REASON << "Date updated";
+    mReasonChangeStructure << DATE_CREATED << DATE_MOVE_TO_EVENT_REASON << DATE_UPDATED;
     mReasonChangeStructure << "Dates splitted" << "Dates combined" << "Update selected data method";
 
     // Event changes
@@ -120,7 +120,7 @@ Project::Project():
     mReasonChangeStructure << "Phase selected";
 
     // Curve and MCMC Settings
-    mReasonChangeStructure << "Curve Settings updated" << "MCMC Settings updated";
+    mReasonChangeStructure << CURVE_SETTINGS_UPDATED_REASON << MCMC_SETTINGS_UPDATED_REASON;
 
     // Curve paramters
     mReasonChangeStructure << "Event X-Inc updated" << "Event S X-Inc updated";
@@ -139,6 +139,15 @@ Project::Project():
     mReasonChangePosition << "item moved";
     mReasonChangePosition.squeeze();
 
+
+    mReasonChangeEventProperties << "Date name updates" << "Date color updated" << "Event X-Inc updated" << "Event S X-Inc updated";
+    mReasonChangeEventProperties << "Event X-Inc updated" << "Event S X-Inc updated";
+    mReasonChangeEventProperties << "Event Y-Dec updated" << "Event S Y updated";
+    mReasonChangeEventProperties << "Event Z-F updated"  << "Event S Z-F updated";
+    mReasonChangeEventProperties << "Event Node updated";
+    mReasonChangeEventProperties << DATE_CREATED << DATE_MOVE_TO_EVENT_REASON << DATE_UPDATED;
+    mReasonChangeEventProperties << "Dates splitted" << "Dates combined" << "Update selected data method";
+    mReasonChangeEventProperties.squeeze();
 
 }
 
@@ -207,6 +216,7 @@ bool Project::pushProjectState(const QJsonObject &state, const QString &reason, 
     mStructureIsChanged = false;
     mDesignIsChanged = false;
     mItemsIsMoved = false;
+    mEventPropertiesChanged = false;
 
     if (reason != NEW_PROJECT_REASON && reason != PROJECT_LOADED_REASON ) {
         qDebug()<<"[Project::pushProjectState] "<< reason << notify;
@@ -220,11 +230,14 @@ bool Project::pushProjectState(const QJsonObject &state, const QString &reason, 
         else if (mReasonChangePosition.contains(reason))
             mItemsIsMoved = true;
 
+        else if (mReasonChangeEventProperties.contains(reason))
+            mEventPropertiesChanged = true;
+
         else
             checkStateModification(state, mState);
 
-        SetProjectState* command = new SetProjectState(this, mState, state, reason, false);// notify);
-        MainWindow::getInstance()->getUndoStack()->push(command); // connected to SetProjectState::redo] if notify emit mProject->projectStateChanged()
+        SetProjectState* command = new SetProjectState(this, mState, state, reason);
+        MainWindow::getInstance()->getUndoStack()->push(command); // connected to SetProjectState::redo] emit mProject->projectStateChanged()
         command = nullptr;
     }
 
@@ -2227,7 +2240,7 @@ void Project::deleteSelectedEvents()
     pushProjectState(stateNext, "Event(s) deleted", true);
 
     // send to clear the propertiesView
-    emit currentEventChanged(nullptr);
+    emit currentEventChanged();
 
     clear_model();
     MainWindow::getInstance() -> setResultsEnabled(false);
@@ -2320,10 +2333,10 @@ void Project::updateEvent(const QJsonObject& event, const QString& reason)
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
     bool found = false;
 
-    for (QJsonValueRef eventRef : events) {
-        QJsonObject eventObj = eventRef.toObject();
+    for (int i = 0; i < events.size(); ++i) {
+        QJsonObject eventObj = events[i].toObject();
         if (eventObj.value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
-            eventRef = event;
+            events[i] = event; // OK ici, modification directe du QJsonArray
             found = true;
             break;
         }
@@ -2636,7 +2649,7 @@ void Project::addDate(int eventId, QJsonObject date)
             eventObj[STATE_EVENT_DATES] = dates;
             events[i] = eventObj;
             stateNext[STATE_EVENTS] = events;
-            pushProjectState(stateNext, "Date created", true);
+            pushProjectState(stateNext, DATE_CREATED, true);
             break;
         }
     }
@@ -2861,8 +2874,7 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
  */
 void Project::updateDate(int eventId, int dateIndex)
 {
-
-    const QJsonObject& settingsJson = mState.value(STATE_SETTINGS).toObject();
+    const QJsonObject settingsJson = mState.value(STATE_SETTINGS).toObject();
     StudyPeriodSettings settings = StudyPeriodSettings::fromJson(settingsJson);
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
 
@@ -3156,7 +3168,7 @@ void Project::splitDate(const int eventId, const int dateId)
 
         if (event.value(STATE_ID).toInt() == eventId) {
             QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
-            for (qsizetype j=0; j<dates.size(); ++j) {
+            for (qsizetype j = 0; j<dates.size(); ++j) {
                 QJsonObject date = dates.at(j).toObject();
                 if (date.value(STATE_ID).toInt() == dateId) {
                     
@@ -3164,12 +3176,12 @@ void Project::splitDate(const int eventId, const int dateId)
                     QJsonArray subdates = date.value(STATE_DATE_SUB_DATES).toArray();
                     PluginAbstract* plugin = PluginManager::getPluginFromId(date.value(STATE_DATE_PLUGIN_ID).toString());
 
-                    for (qsizetype k = 0; k<subdates.size(); ++k) {
+                    for (qsizetype k = 0; k < subdates.size(); ++k) {
                         QJsonObject sd = subdates.at(k).toObject();
                         bool valid = plugin->isDateValid(sd[STATE_DATE_DATA].toObject(), settings);
                         sd[STATE_DATE_VALID] = valid;
                         sd[STATE_DATE_ORIGIN] = Date::eSingleDate;
-                        sd[STATE_ID] =getUnusedDateId(dates);
+                        sd[STATE_ID] = getUnusedDateId(dates);
                         dates.push_back(sd);
                     }
                     dates.removeAt(j);
@@ -3182,6 +3194,7 @@ void Project::splitDate(const int eventId, const int dateId)
     }
     stateNext[STATE_EVENTS] = events;
     pushProjectState(stateNext, "Dates splitted", true);
+
 }
 
 // Grouped actions on dates
@@ -3514,7 +3527,7 @@ void Project::createEventConstraint(const int eventFromId, const int eventToId)
     }
 
 
-    qDebug()<<"[Project::createEventConstraint] "<<eventFrom.value(STATE_NAME)<<eventTo.value(STATE_NAME);
+    qDebug() << "[Project::createEventConstraint] " << eventFrom.value(STATE_NAME) << eventTo.value(STATE_NAME);
     EventConstraint c;
     c.mId = getUnusedEventConstraintId(constraints);
     c.mFromId = eventFrom.value(STATE_ID).toInt();
@@ -3523,7 +3536,7 @@ void Project::createEventConstraint(const int eventFromId, const int eventToId)
     constraints.append(constraint);
     state[STATE_EVENTS_CONSTRAINTS] = constraints;
 
-    pushProjectState(state, "Event constraint created", true);// notify=true, force=false
+    pushProjectState(state, "Event constraint created", false);
 
 }
 
@@ -3532,15 +3545,15 @@ void Project::deleteEventConstraint(int constraintId)
     QJsonObject state = mState;
     QJsonArray constraints = mState.value(STATE_EVENTS_CONSTRAINTS).toArray();
 
-    for (int i=0; i<constraints.size(); ++i) {
-        const QJsonObject &c = constraints.at(i).toObject();
+    for (int i = 0; i < constraints.size(); ++i) {
+        const QJsonObject c = constraints.at(i).toObject();
         if (c.value(STATE_ID).toInt() == constraintId) {
             constraints.removeAt(i);
             break;
         }
     }
     state[STATE_EVENTS_CONSTRAINTS] = constraints;
-    pushProjectState(state, "Event constraint deleted", true);
+    pushProjectState(state, "Event constraint deleted", false);
 }
 
 void Project::updateEventConstraint(int constraintId)

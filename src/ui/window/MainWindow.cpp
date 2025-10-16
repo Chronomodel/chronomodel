@@ -72,8 +72,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 // Constructor / Destructor
 MainWindow::MainWindow(QWidget* parent):
     QMainWindow(parent),
-    undo_action(false),
-    redo_action(false),
     mProject(new Project())
 {
 
@@ -95,7 +93,11 @@ MainWindow::MainWindow(QWidget* parent):
     mUndoDock->setWidget(mUndoView);
     mUndoDock->setAllowedAreas(Qt::RightDockWidgetArea);
     addDockWidget(Qt::RightDockWidgetArea, mUndoDock);
-    mUndoDock->setVisible(false); // toggle to see the undo-list
+#ifdef DEBUG
+    mUndoDock->setVisible(true); // toggle to see the undo-list
+#else
+    mUndoDock->setVisible(false);
+#endif
 
     createActions();
     createMenus();
@@ -136,6 +138,21 @@ MainWindow::MainWindow(QWidget* parent):
 
     activateInterface(false);
     setMinimumSize(1000, 700);
+
+#ifdef DEBUG
+    const QString file_name = " DEBUG Mode ";
+#else
+    const QString file_name = "" ;
+#endif
+
+#ifdef Q_OS_WIN
+    setWindowTitle(" v" + VERSION_STRING + " " + file_name);
+
+#else
+
+    setWindowTitle(qApp->applicationName() + " v" + VERSION_STRING + " " + file_name);// see main.cpp for the application name
+#endif
+    std::cout << "MainWindow::updateWindowTitle] version " << VERSION_STRING << file_name.toStdString() << std::endl;
 }
 
 MainWindow::~MainWindow()
@@ -222,7 +239,7 @@ void MainWindow::createActions()
     mUndoAction->setText(tr("Undo"));
     mUndoAction->setToolTip(tr("Undo"));
 
-    connect(mUndoAction, &QAction::triggered, this, &MainWindow::toggleUndo);
+   // connect(mUndoAction, &QAction::triggered, this, &MainWindow::toggleUndo);
 
     mRedoAction = mUndoStack->createRedoAction(this);
     mRedoAction->setShortcuts(QKeySequence::Redo);
@@ -230,7 +247,7 @@ void MainWindow::createActions()
     mRedoAction->setText(tr("Redo"));
     mRedoAction->setToolTip(tr("Redo"));
 
-    connect(mRedoAction, &QAction::triggered, this, &MainWindow::toggleRedo);
+   // connect(mRedoAction, &QAction::triggered, this, &MainWindow::toggleRedo);
 
     mUndoViewAction = mUndoDock->toggleViewAction();
     mUndoViewAction->setText(tr("Show Undo Stack"));
@@ -761,15 +778,15 @@ void MainWindow::updateWindowTitle()
 }
 
 /**
- * @brief MainWindow::updateProject come from undo and redo action and Project::projectStateChanged() and Project::pushProjectState(
+ * @brief MainWindow::updateProject originates from undo and redo actions, as well as from Project::projectStateChanged() and Project::pushProjectState().
  */
 void MainWindow::updateProject()
 {
     qDebug()<<"[MainWindow::updateProject]";
-   /*
+
     if (mProject->structureIsChanged())
-        noResult(); // done by push
-*/
+        noResult(); // performed by push() and Project::pushProjectState(), but necessary when using redo(), which uses Project::projectStateChanged()
+
     mRunAction->setEnabled(true);
     mProjectView->updateProject();
     updateWindowTitle();

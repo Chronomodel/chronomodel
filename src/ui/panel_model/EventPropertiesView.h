@@ -40,12 +40,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef EVENTPROPERTIESVIEW_H
 #define EVENTPROPERTIESVIEW_H
 
+#include "Button.h"
 
 #include <QCheckBox>
 #include <QWidget>
 #include <QJsonObject>
-
-#include "Button.h"
 
 class Label;
 class LineEdit;
@@ -81,11 +80,11 @@ public:
     bool hasEvent() const;
     bool hasBound() const;
     bool hasEventWithDates() const;
-    void initEvent(QJsonObject *eventObj);
+    void initEvent(const QJsonObject &eventObj);
     void resetEvent();
 
 public slots:
-    void setEvent(QJsonObject *eventObj);
+    void setEvent(const QJsonObject &eventObj);
     void applyAppSettings();
 
 protected:
@@ -136,7 +135,7 @@ signals:
 
 private:
     int minimumHeight;
-    QJsonObject* mEventObj;
+    QJsonObject mEventObj;
     int mCurrentDateIdx;
 
     QWidget* mTopView;
@@ -199,7 +198,7 @@ private:
     QLineEdit* mS_Z_IntEdit;
 
     bool mCurveEnabled;
-   // CurveSettings::ProcessType mCurveProcessType;
+
 };
 
 #endif
