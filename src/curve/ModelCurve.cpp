@@ -693,7 +693,8 @@ void ModelCurve::generateCredibility(const double thresh)
 
     if (getProject_ptr()->isCurve()) {
         for (const auto& event : mEvents) {
-            event->mVg.generateCredibility(mChains, thresh);
+            if (event->mVg.mSamplerProposal != MHVariable::eFixe)
+                event->mVg.generateCredibility(mChains, thresh);
         }
         mLambdaSpline.generateCredibility(mChains, thresh);
 

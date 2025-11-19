@@ -501,7 +501,7 @@ Event const Event::fromJson(const QJsonObject& json)
     event.mS02Theta.setName("S02 of Event : "+ event.name());
     event.mS02Theta.mSupport = MHVariable::eRpStar;
 #ifdef S02_BAYESIAN
-    event->mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    event.mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
 #else
     event.mS02Theta.mSamplerProposal = MHVariable::eFixe;
 #endif

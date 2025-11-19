@@ -1848,10 +1848,10 @@ void resizeMatrix(std::vector<std::vector<double>> &matrix,  size_t rows, size_t
     }
 }
 
-void resizeLongMatrix(Matrix2D& matrix, size_t rows, size_t cols)
+void resizeLongMatrix(MatrixLD& matrix, size_t rows, size_t cols)
 {
     // Créer une nouvelle matrice avec les dimensions spécifiées
-    Matrix2D resMatrix(rows, cols);
+    MatrixLD resMatrix(rows, cols);
 
     // Déterminer le nombre de lignes à copier
     size_t minRows = std::min(size_t(matrix.rows()), rows);
@@ -1869,7 +1869,7 @@ void resizeLongMatrix(Matrix2D& matrix, size_t rows, size_t cols)
 }
 
 
-Matrix2D seedMatrix(const Matrix2D& matrix, size_t shift)
+MatrixLD seedMatrix(const MatrixLD& matrix, size_t shift)
 {
     if (shift == 0)
         return matrix;
@@ -1882,7 +1882,7 @@ Matrix2D seedMatrix(const Matrix2D& matrix, size_t shift)
         throw std::invalid_argument("[seedMatrix] Shift is too large for the given matrix dimensions.");
     }
 #endif
-    Matrix2D resMatrix(n, m);
+    MatrixLD resMatrix(n, m);
 
     for (size_t i = 0; i < n; ++i) {
         for (size_t j = 0; j < m; ++j)
@@ -1893,14 +1893,14 @@ Matrix2D seedMatrix(const Matrix2D& matrix, size_t shift)
 }
 
 
-Matrix2D remove_bands_Matrix(const Matrix2D& matrix, size_t shift)
+MatrixLD remove_bands_Matrix(const MatrixLD& matrix, size_t shift)
 {
     if (shift == 0)
         return matrix;
 
     size_t nb_row = matrix.rows();
     size_t nb_col = matrix.cols() - 2 * shift;
-    Matrix2D resMatrix(nb_row, nb_col);
+    MatrixLD resMatrix(nb_row, nb_col);
 
     /*for (size_t i = 0; i < nb_row; i++) {
         resMatrix[i] = matrix[i][std::slice(shift, nb_col, 1)];
@@ -1930,7 +1930,7 @@ Matrix2D remove_bands_Matrix(const Matrix2D& matrix, size_t shift)
  * @return La trace de la matrice
  * @throws std::invalid_argument si la matrice n'est pas carrée
  */
-t_matrix trace_kahan(const Matrix2D& mat)
+t_matrix trace_kahan(const MatrixLD& mat)
 {
     size_t n = mat.rows();
 #ifdef DEBUG
@@ -1950,7 +1950,7 @@ t_matrix trace_kahan(const Matrix2D& mat)
     return sum;
 }
 
-t_matrix determinant(const Matrix2D& matrix, size_t shift)
+t_matrix determinant(const MatrixLD& matrix, size_t shift)
 {
     size_t n = matrix.rows();
     t_matrix det;
@@ -1962,7 +1962,7 @@ t_matrix determinant(const Matrix2D& matrix, size_t shift)
         det = matrix(shift, shift) * matrix(1+shift, 1+shift) - matrix(1+shift, shift) * matrix(shift, 1+shift);
 
     } else {
-        Matrix2D matrix2;
+        MatrixLD matrix2;
         if (shift == 0)
             matrix2 = matrix;
         else
@@ -1970,7 +1970,7 @@ t_matrix determinant(const Matrix2D& matrix, size_t shift)
 
         n = matrix2.rows();
 
-        Matrix2D matTmp (n-1, n-1);
+        MatrixLD matTmp (n-1, n-1);
 
         det = 0.;
         int j2;
@@ -2007,7 +2007,7 @@ t_matrix determinant(const Matrix2D& matrix, size_t shift)
  * @param shift
  * @return
  */
-t_matrix determinant_gauss(const Matrix2D& matrix, size_t shift)
+t_matrix determinant_gauss(const MatrixLD& matrix, size_t shift)
 {
     size_t n = matrix.rows();
     t_matrix det;
@@ -2019,10 +2019,10 @@ t_matrix determinant_gauss(const Matrix2D& matrix, size_t shift)
         det = matrix(shift, shift) * matrix(1+shift, 1+shift) - matrix(1+shift, shift) * matrix(shift, 1+shift);
 
     } else {
-        Matrix2D matrix2 = seedMatrix(matrix, shift);
+        MatrixLD matrix2 = seedMatrix(matrix, shift);
         n = matrix2.rows();
 
-        Matrix2D matTmp = matrix2; //initLongMatrix(n-1, n-1);
+        MatrixLD matTmp = matrix2; //initLongMatrix(n-1, n-1);
 
    // size_t   x,y;  // <x> pour les colonnes
                 // <y> pour les lignes
@@ -2099,11 +2099,11 @@ t_matrix determinant_gauss(const Matrix2D& matrix, size_t shift)
     return (det);
 }
 // On suppose une matrice quelconque M*N
- Matrix2D transpose0(const Matrix2D &A)
+ MatrixLD transpose0(const MatrixLD &A)
 {
    /*size_t n = A.size();
    size_t m = A[0].size();
-   Matrix2D TA  = initMatrix2D(m, n);
+   MatrixLD TA  = initMatrixlD(m, n);
 
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -2127,10 +2127,10 @@ t_matrix determinant_gauss(const Matrix2D& matrix, size_t shift)
 
 
 // On suppose une matrice carrée N*N
-Matrix2D transpose(const Matrix2D& matrix, const size_t nbBandes)
+MatrixLD transpose(const MatrixLD& matrix, const size_t nbBandes)
 {
     const size_t dim = matrix.rows();
-    Matrix2D result (dim, dim);
+    MatrixLD result (dim, dim);
 
     const int k = floor((nbBandes-1)/2); // calcul du nombre de bandes
 
@@ -2147,12 +2147,12 @@ Matrix2D transpose(const Matrix2D& matrix, const size_t nbBandes)
 }
 
 // Multiplication d'une matrice pleine A par une matrice diagonale D (A×D)
-Matrix2D multiMatParDiag0(const Matrix2D& matrix, const DiagonalMatrixLD& diag)
+MatrixLD multiMatParDiag0(const MatrixLD& matrix, const DiagonalMatrixLD& diag)
 {
     const size_t n = matrix.rows();
     const size_t m = matrix.cols();
 
-    Matrix2D result = Matrix2D::Zero(n, m);
+    MatrixLD result = MatrixLD::Zero(n, m);
 
     const auto& diagVec = diag.diagonal();
 
@@ -2166,10 +2166,10 @@ Matrix2D multiMatParDiag0(const Matrix2D& matrix, const DiagonalMatrixLD& diag)
 }
 
 
-Matrix2D multiMatParDiag(const Matrix2D& matrix, const DiagonalMatrixLD& diag, size_t nbBandes)
+MatrixLD multiMatParDiag(const MatrixLD& matrix, const DiagonalMatrixLD& diag, size_t nbBandes)
 {
     const size_t dim = matrix.rows();
-    Matrix2D result = Matrix2D::Zero (dim, dim);
+    MatrixLD result = MatrixLD::Zero (dim, dim);
     const size_t k = (nbBandes - 1) / 2; // calcul du nombre de bandes
 
     for (size_t i = 0; i < dim; ++i) {
@@ -2186,7 +2186,7 @@ Matrix2D multiMatParDiag(const Matrix2D& matrix, const DiagonalMatrixLD& diag, s
 
 // Multiplication d'une matrice diagonale par une matrice pleine
 // La matrice diagonale doit avoir autant de ligne que la matrice pleine
-Matrix2D multiDiagParMat0(const DiagonalMatrixLD &diag, const Matrix2D &matrix)
+MatrixLD multiDiagParMat0(const DiagonalMatrixLD &diag, const MatrixLD &matrix)
 {
     const long rows = matrix.rows();
     const long cols = matrix.cols();
@@ -2197,7 +2197,7 @@ Matrix2D multiDiagParMat0(const DiagonalMatrixLD &diag, const Matrix2D &matrix)
     }
 #endif
 
-    Matrix2D result = Matrix2D::Zero (rows, cols);
+    MatrixLD result = MatrixLD::Zero (rows, cols);
 
     //  diag est un vecteur avec un nombre d'éléments égal au nombre de lignes
     for (long i = 0; i < rows; ++i) {
@@ -2210,10 +2210,10 @@ Matrix2D multiDiagParMat0(const DiagonalMatrixLD &diag, const Matrix2D &matrix)
 }
 
 // Multiplication d'une matrice diagonale par une matrice de bande
-Matrix2D multiDiagParMat(const DiagonalMatrixLD& diag, const Matrix2D& matrix, const size_t nbBandes)
+MatrixLD multiDiagParMat(const DiagonalMatrixLD& diag, const MatrixLD& matrix, const size_t nbBandes)
 {
     const long dim = matrix.rows();
-    Matrix2D result = Matrix2D::Zero (dim, dim);
+    MatrixLD result = MatrixLD::Zero (dim, dim);
     const long k = (nbBandes - 1) / 2; // calcul du nombre de bandes
 
     for (long i = 0; i < dim; ++i) {
@@ -2238,7 +2238,7 @@ Matrix2D multiDiagParMat(const DiagonalMatrixLD& diag, const Matrix2D& matrix, c
  * @param nbBandes = k1+k2+1
  * @return
  */
-std::vector<t_matrix> multiMatParVec(const Matrix2D &matrix, const std::vector<t_matrix> &vec, const size_t nbBandes)
+std::vector<t_matrix> multiMatParVec(const MatrixLD &matrix, const std::vector<t_matrix> &vec, const size_t nbBandes)
 {
     const int dim = (int)vec.size();
     std::vector<t_matrix> result;
@@ -2257,32 +2257,30 @@ std::vector<t_matrix> multiMatParVec(const Matrix2D &matrix, const std::vector<t
     return result;
 }
 
-/* std::vector<t_matrix> multiMatParVec(const Matrix2D& matrix, const MatrixDiag &vec, const size_t nbBandes)
+std::vector<double> multiMatParVec(const MatrixD &matrix, const std::vector<double> &vec, const size_t nbBandes)
 {
-    const int dim = static_cast<int>(vec.size());
-    std::vector<t_matrix> result;
+    const int dim = (int)vec.size();
+    std::vector<double> result;
     const int  k = floor((nbBandes-1)/2); // calcul du nombre de bandes
-    t_matrix sum;
+    double sum;
     for (int i = 0; i < dim; ++i) {
-        sum = 0.0;
+        sum = 0.;
         int  j1 = std::max(0, i - k);
         int  j2 = std::min(dim-1, i + k);
-        const t_matrix* matrix_i = begin(matrix[i]);
+
         for (int j = j1; j <= j2; ++j) {
-            sum += matrix_i[j] * vec[j];
+            sum += matrix(i, j) * vec[j];
         }
         result.push_back(sum);
     }
     return result;
 }
-*/
 
-
-Matrix2D addMatEtMat0(const Matrix2D &matrix1, const Matrix2D &matrix2)
+MatrixLD addMatEtMat0(const MatrixLD &matrix1, const MatrixLD &matrix2)
 {
     const long dim = matrix1.cols();
 
-    Matrix2D result = matrix1;
+    MatrixLD result = matrix1;
 
     for (long i = 0; i< result.rows(); i++) {
          for (long j = 0; j < dim; ++j) {
@@ -2301,7 +2299,7 @@ Matrix2D addMatEtMat0(const Matrix2D &matrix1, const Matrix2D &matrix2)
  * @param nbBandes2 The total Bandwidth = k1+k2 of Band matrix 2
  * @return
  */
-Matrix2D addMatEtMat(const Matrix2D &matrix1, const Matrix2D &matrix2, const size_t nbBandes2)
+MatrixLD addMatEtMat(const MatrixLD &matrix1, const MatrixLD &matrix2, const size_t nbBandes2)
 {
 
     const long rows = matrix1.rows();
@@ -2312,7 +2310,7 @@ Matrix2D addMatEtMat(const Matrix2D &matrix1, const Matrix2D &matrix2, const siz
 
     const long k = nbBandes2 / 2; // Supposé que bandwidth = 2k + 1 pour une bande symétrique
 
-    Matrix2D result = matrix1;
+    MatrixLD result = matrix1;
 
     for (long i = 0; i < rows; ++i) {
         const long j_min = (i >= k) ? i - k : 0;
@@ -2324,15 +2322,12 @@ Matrix2D addMatEtMat(const Matrix2D &matrix1, const Matrix2D &matrix2, const siz
     }
 
     return result;
-
-
-
 }
 
-Matrix2D addIdentityToMat(const Matrix2D& matrix)
+MatrixLD addIdentityToMat(const MatrixLD& matrix)
 {
     const size_t dim = matrix.rows();
-    Matrix2D result = matrix;
+    MatrixLD result = matrix;
 
     for (size_t i = 0; i < dim; ++i)
         result(i, i) += 1.0L;
@@ -2342,7 +2337,7 @@ Matrix2D addIdentityToMat(const Matrix2D& matrix)
 
 
 // Fonction pour calculer la forme quadratique d'une matrice
-t_matrix quadratic_form(const Matrix2D& A, const std::vector<t_matrix>& X)
+t_matrix quadratic_form(const MatrixLD& A, const std::vector<t_matrix>& X)
 {
     size_t n = A.rows();
     t_matrix result = 0.0;
@@ -2356,13 +2351,13 @@ t_matrix quadratic_form(const Matrix2D& A, const std::vector<t_matrix>& X)
     return result;
 }
 
-t_matrix quadratic_form(const Matrix2D& K, const Matrix2D& Y)
+t_matrix quadratic_form(const MatrixLD& K, const MatrixLD& Y)
 {
     /* Algo Schoolbook
     long n_points = Y.rows();
     long n_components = Y.cols();
 
-    Matrix2D KY = K * Y;
+    MatrixLD KY = K * Y;
 
     t_matrix som = 0.0;
     for (long i = 0; i < n_points; ++i) {
@@ -2376,14 +2371,34 @@ t_matrix quadratic_form(const Matrix2D& K, const Matrix2D& Y)
 
     return (K * Y).cwiseProduct(Y).sum();
 
+}
+
+double quadratic_form(const MatrixD& K, const MatrixD& Y)
+{
+    /* Algo Schoolbook
+    long n_points = Y.rows();
+    long n_components = Y.cols();
+
+    MatrixLD KY = K * Y;
+
+    t_matrix som = 0.0;
+    for (long i = 0; i < n_points; ++i) {
+        for (long j = 0; j < n_components; ++j) {
+            som += KY(i, j) * Y(i, j);
+        }
+    }
+    return  som;
+    */
+    //,Optimization with Eigen
+
+    return (K * Y).cwiseProduct(Y).sum();
 
 }
 
-
-Matrix2D multiConstParMat(const Matrix2D& matrix, const double c, const size_t nbBandes)
+MatrixLD multiConstParMat(const MatrixLD& matrix, const double c, const size_t nbBandes)
 {
     /*const size_t i_max = static_cast<size_t>(matrix.rows())-1;
-    Matrix2D result = matrix;
+    MatrixLD result = matrix;
     const size_t k = floor((nbBandes-1)/2.0); // calcul du nombre de bandes
 
     t_matrix cL = static_cast<t_matrix>(c);
@@ -2401,14 +2416,14 @@ Matrix2D multiConstParMat(const Matrix2D& matrix, const double c, const size_t n
 }
 
 
-Matrix2D multiMatParMat0(const Matrix2D& matrix1, const Matrix2D& matrix2)
+MatrixLD multiMatParMat0(const MatrixLD& matrix1, const MatrixLD& matrix2)
 {
    /* const size_t nl1 = matrix1.rows();
     //const int nc1 = matrix1[0].size();
     const size_t nl2 = (int)matrix2.rows();
     const size_t nc2 = (int)matrix2.cols();
     // nc1 doit etre égal à nl2
-    Matrix2D result (nl1, nc2);
+    MatrixLD result (nl1, nc2);
 
     t_matrix sum;
 
@@ -2431,10 +2446,10 @@ Matrix2D multiMatParMat0(const Matrix2D& matrix1, const Matrix2D& matrix2)
     return matrix1 * matrix2;
 }
 
-Matrix2D multiConstParMat0(const Matrix2D &matrix, const double c)
+MatrixLD multiConstParMat0(const MatrixLD &matrix, const double c)
 {
     /*const size_t n = matrix.rows() ;
-    Matrix2D result (n, n);
+    MatrixLD result (n, n);
     for (size_t i = 0; i < n; i++) {
         for (size_t j = 0; j < n; j++) {
             result(i, j) = c * matrix(i, j);
@@ -2445,10 +2460,10 @@ Matrix2D multiConstParMat0(const Matrix2D &matrix, const double c)
 }
 
 
-Matrix2D addDiagToMat(const DiagonalMatrixLD &diag, Matrix2D matrix)
+MatrixLD addDiagToMat(const DiagonalMatrixLD &diag, MatrixLD matrix)
 {
     const size_t dim = matrix.rows();
-    Matrix2D result = matrix;
+    MatrixLD result = matrix;
     for (size_t i = 0; i < dim; ++i)
         result(i, i) += diag.diagonal()[i];
 
@@ -2456,10 +2471,10 @@ Matrix2D addDiagToMat(const DiagonalMatrixLD &diag, Matrix2D matrix)
 }
 
 
-Matrix2D soustractMatToIdentity(const Matrix2D& matrix)
+MatrixLD soustractMatToIdentity(const MatrixLD& matrix)
 {
     const size_t n = matrix.rows();
-    Matrix2D result = matrix;
+    MatrixLD result = matrix;
     for (size_t i = 0; i < n; i++) {
         for (size_t j = 0; j < size_t(result.cols()); j++)
             result(i, j) *= -1.0;
@@ -2475,7 +2490,7 @@ Matrix2D soustractMatToIdentity(const Matrix2D& matrix)
  * Naive implementation with std::inner_product optimization
  * using the schoolbook algorithm
  */
-Matrix2D multiplyMatrix_Naive(const Matrix2D& a, const Matrix2D& b)
+MatrixLD multiplyMatrix_Naive(const MatrixLD& a, const MatrixLD& b)
 {
     /*const size_t a_row = a.rows();
     const size_t a_col = a.cols();
@@ -2484,7 +2499,7 @@ Matrix2D multiplyMatrix_Naive(const Matrix2D& a, const Matrix2D& b)
     if (a_col != b_row)
         throw std::runtime_error("[Function::multiplyMatrix_Naive] a.col != b.row");
 
-    Matrix2D c(a_row, b_col);
+    MatrixLD c(a_row, b_col);
 
     for (size_t i = 0; i < a_row; i++) {
         for (size_t j = 0; j < b_col; j++) {
@@ -2504,10 +2519,10 @@ Matrix2D multiplyMatrix_Naive(const Matrix2D& a, const Matrix2D& b)
  * from RenCurve software
  * is Winograd algorithm
  */
-Matrix2D multiMatParMat(const Matrix2D& matrix1, const Matrix2D& matrix2, const size_t nbBandes1, const size_t nbBandes2)
+MatrixLD multiMatParMat(const MatrixLD& matrix1, const MatrixLD& matrix2, const size_t nbBandes1, const size_t nbBandes2)
 {
     const size_t dim = matrix1.rows();
-    Matrix2D result (dim, dim);
+    MatrixLD result (dim, dim);
 
     const size_t bande1 = floor((nbBandes1-1)/2);
     const size_t bande2 = floor((nbBandes2-1)/2);
@@ -2540,7 +2555,7 @@ Matrix2D multiMatParMat(const Matrix2D& matrix1, const Matrix2D& matrix2, const 
  * A band matrix with Bandwidth=0 is a diagonal matrix
  * faster than schoolbook algorithm
  */
-Matrix2D multiplyMatrixBanded_Winograd(const Matrix2D& a, const Matrix2D& b, const int bandwidth)
+MatrixLD multiplyMatrixBanded_Winograd(const MatrixLD& a, const MatrixLD& b, const int bandwidth)
 {
 #ifdef DEBUG
     const size_t a_row = a.rows();
@@ -2553,7 +2568,7 @@ Matrix2D multiplyMatrixBanded_Winograd(const Matrix2D& a, const Matrix2D& b, con
 #endif
 
     const size_t n = a.rows();
-    Matrix2D c = Matrix2D::Zero(n, n);
+    MatrixLD c = MatrixLD::Zero(n, n);
 
     for (size_t i = 0; i < n-bandwidth; ++i) {
         size_t j1 = std::max(size_t(0), i - bandwidth -1);
@@ -2581,13 +2596,13 @@ Matrix2D multiplyMatrixBanded_Winograd(const Matrix2D& a, const Matrix2D& b, con
  * faster than schoolbook algorithm
  */
 /**
- * @brief multiplyMatrix_Winograd compute the product of two matrix2D
+ * @brief multiplyMatrix_Winograd compute the product of two matrixlD
  * with the Winograd algorithm. Full matrix
  * @param a Martrix2D
  * @param b Martrix2D
  * @return Martrix2D
  */
-Matrix2D multiplyMatrix_Winograd(const Matrix2D& a, const Matrix2D& b)
+MatrixLD multiplyMatrix_Winograd(const MatrixLD& a, const MatrixLD& b)
 {
     const size_t a_row = a.rows();
     const size_t a_col = a.cols();
@@ -2596,7 +2611,7 @@ Matrix2D multiplyMatrix_Winograd(const Matrix2D& a, const Matrix2D& b)
     if (a_col != b_row)
         std::cerr << "[Function] multiplyMatrix_Winograd() a.col diff b.row";
 
-    Matrix2D c = Matrix2D::Zero(a_row, b_col);
+    MatrixLD c = MatrixLD::Zero(a_row, b_col);
 
     for (size_t j = 0; j < a_row; j++) {
       for (size_t k = 0; k < b_col; k++) {
@@ -2618,16 +2633,16 @@ Matrix2D multiplyMatrix_Winograd(const Matrix2D& a, const Matrix2D& b)
  * @param shift
  * @return
  */
-Matrix2D inverseMatSym0(const Matrix2D& matrix, const size_t shift)
+MatrixLD inverseMatSym0(const MatrixLD& matrix, const size_t shift)
 {
     if (matrix.rows() != matrix.cols())
         throw std::runtime_error("Matrix is not quadratic");
 
 
-    const Matrix2D& matrix2 = seedMatrix(matrix, shift);
+    const MatrixLD& matrix2 = seedMatrix(matrix, shift);
 
     //const size_t n = matrix.rows();
-    Matrix2D matInv = matrix.inverse();//matrix.rows(), matrix.cols());
+    MatrixLD matInv = matrix.inverse();//matrix.rows(), matrix.cols());
 
    /* if (n == 1) {
         matInv(0, 0) = 1.0L / matrix(0, 0);
@@ -2635,7 +2650,7 @@ Matrix2D inverseMatSym0(const Matrix2D& matrix, const size_t shift)
     }
 
 
-    const Matrix2D& matInv2 = comatrice0(matrix2);
+    const MatrixLD& matInv2 = comatrice0(matrix2);
 
     const auto det = determinant(matrix2);
     if (det == 0) {
@@ -2651,7 +2666,7 @@ Matrix2D inverseMatSym0(const Matrix2D& matrix, const size_t shift)
 }
 
 
-Matrix2D inverse_padded_matrix(const Matrix2D& paddedMatrix, const long shift)
+MatrixLD inverse_padded_matrix(const MatrixLD& paddedMatrix, const long shift)
 {
     auto n = paddedMatrix.rows() - 2 *shift;
     auto m = paddedMatrix.cols() - 2 *shift;
@@ -2661,36 +2676,36 @@ Matrix2D inverse_padded_matrix(const Matrix2D& paddedMatrix, const long shift)
 #endif
 
     // Crée une copie pour le résultat
-    Matrix2D inverseMatrix = Matrix2D::Zero(paddedMatrix.rows(), paddedMatrix.cols());
+    MatrixLD inverseMatrix = MatrixLD::Zero(paddedMatrix.rows(), paddedMatrix.cols());
 
     // Extraction du bloc central
-    Matrix2D centralBlock = paddedMatrix.block(shift, shift, n, m);
+    MatrixLD centralBlock = paddedMatrix.block(shift, shift, n, m);
 
     // Vérification du conditionnement (optionnelle mais utile en debug)
 #ifdef DEBUG
-    Eigen::JacobiSVD<Matrix2D> svd(centralBlock);
+    Eigen::JacobiSVD<MatrixLD> svd(centralBlock);
     double cond = svd.singularValues()(0) / svd.singularValues().tail(1)(0);
     if (!std::isfinite(cond) || cond > 1e10)
         std::cerr << "[inverse_padded_matrix] Warning: poorly conditioned matrix (cond=" << cond << ")\n";
 #endif
     // Définir un bloc de la matrice (partie centrale)
-    //Matrix2D inverseMatrix = paddedMatrix;
-    //Eigen::Block<Matrix2D> centralBlock = inverseMatrix.block(shift, shift, n, m);
+    //MatrixLD inverseMatrix = paddedMatrix;
+    //Eigen::Block<MatrixLD> centralBlock = inverseMatrix.block(shift, shift, n, m);
 
 
     // Inversion avec gestion des petits cas
-    Matrix2D centralInverse;
+    MatrixLD centralInverse;
     if (centralBlock.rows() < 20) {
         centralInverse = centralBlock.inverse(); // Inverser et stocker dans inverseMatrix
 
     } else {
         // Décomposition LU
-        Eigen::PartialPivLU<Matrix2D> lu(centralBlock);
+        Eigen::PartialPivLU<MatrixLD> lu(centralBlock);
 
         // Inverser la matrice
 
 #ifdef DEBUG
-        Eigen::JacobiSVD<Matrix2D> svd(centralBlock);
+        Eigen::JacobiSVD<MatrixLD> svd(centralBlock);
         double cond = svd.singularValues()(0) / svd.singularValues().tail(1)(0);
         if (cond > 1e12 || !std::isfinite(cond)) {
             throw std::runtime_error("[inverse_padded_matrix] Matrix is ill-conditioned or singular.");
@@ -2764,12 +2779,12 @@ Eigen::MatrixXd geninv(const Eigen::MatrixXd& G)
     }
 }
 
-Matrix2D geninv(const Matrix2D& G) {
+MatrixLD geninv(const MatrixLD& G) {
     long m = G.rows();
     long n = G.cols();
     bool transpose = false;
 
-    Matrix2D A;
+    MatrixLD A;
     if (m < n) {
         transpose = true;
         A = G * G.transpose();
@@ -2779,7 +2794,7 @@ Matrix2D geninv(const Matrix2D& G) {
         A = G.transpose() * G;
     }
 
-    Matrix2D dA = A.diagonal();
+    MatrixLD dA = A.diagonal();
     //t_matrix tol = dA(dA.array() > 0).minCoeff() * 1e-9;
 
 
@@ -2799,15 +2814,15 @@ Matrix2D geninv(const Matrix2D& G) {
 
 
 
-    Matrix2D L = Matrix2D::Zero(A.rows(), A.cols());
+    MatrixLD L = MatrixLD::Zero(A.rows(), A.cols());
     long r = 0;
 
     for (long k = 0; k < n; ++k) {
         ++r;
-        Matrix2D vec = A.block(k, k, n - k, 1);
+        MatrixLD vec = A.block(k, k, n - k, 1);
 
         if (r > 1) {
-            Matrix2D L_sub = L.block(k, 0, n - k, r - 1);
+            MatrixLD L_sub = L.block(k, 0, n - k, r - 1);
             RowVectorLD Lk = L.block(k, 0, 1, r - 1);
             vec -= L_sub * Lk.transpose();
         }
@@ -2824,7 +2839,7 @@ Matrix2D geninv(const Matrix2D& G) {
     }
 
     L = L.leftCols(r);
-    Matrix2D M = (L.transpose() * L).inverse();
+    MatrixLD M = (L.transpose() * L).inverse();
 
     if (transpose) {
         return G.transpose() * L * M * M * L.transpose();
@@ -2848,11 +2863,11 @@ Eigen::MatrixXd pseudoInverseSVD(const Eigen::MatrixXd& G, double tol)
     return svd.matrixV() * S_inv * svd.matrixU().transpose();
 }
 
-Matrix2D pseudoInverseSVD(const Matrix2D& G, t_matrix tol)
+MatrixLD pseudoInverseSVD(const MatrixLD& G, t_matrix tol)
 {
-    JacobiSVD<Matrix2D> svd(G, ComputeThinU | ComputeThinV);
+    JacobiSVD<MatrixLD> svd(G, ComputeThinU | ComputeThinV);
     const auto& S = svd.singularValues();
-    Matrix2D S_inv = Matrix2D::Zero(svd.matrixV().cols(), svd.matrixU().cols());
+    MatrixLD S_inv = MatrixLD::Zero(svd.matrixV().cols(), svd.matrixU().cols());
 
     for (int i = 0; i < S.size(); ++i)
         if (S(i) > tol)
@@ -2862,7 +2877,7 @@ Matrix2D pseudoInverseSVD(const Matrix2D& G, t_matrix tol)
 }
 
 
-Matrix2D inverse_banded_padded_matrix(const Matrix2D& bandedPaddedMatrix, const long shift)
+MatrixLD inverse_banded_padded_matrix(const MatrixLD& bandedPaddedMatrix, const long shift)
 {
 
     auto n = bandedPaddedMatrix.rows();
@@ -2870,17 +2885,17 @@ Matrix2D inverse_banded_padded_matrix(const Matrix2D& bandedPaddedMatrix, const 
 
 
     // Crée une copie pour le résultat
-    Matrix2D inverseMatrix = Matrix2D::Zero(bandedPaddedMatrix.rows(), bandedPaddedMatrix.cols());
+    MatrixLD inverseMatrix = MatrixLD::Zero(bandedPaddedMatrix.rows(), bandedPaddedMatrix.cols());
 
     // Extraction du bloc central
-    Matrix2D centralBlock = bandedPaddedMatrix.block(0, shift, n, m);
+    MatrixLD centralBlock = bandedPaddedMatrix.block(0, shift, n, m);
    // showMatrix(centralBlock, "centrale");
 
     // Inversion avec gestion des petits cas
-    Matrix2D centralInverse;
+    MatrixLD centralInverse;
     centralInverse = geninv(centralBlock);
 
-    //Matrix2D centralInverse2 = pseudoInverseSVD(centralBlock);
+    //MatrixLD centralInverse2 = pseudoInverseSVD(centralBlock);
 
    //showMatrix(centralInverse2 * centralBlock, "Controle pseudo SVD");
 
@@ -2893,7 +2908,7 @@ Matrix2D inverse_banded_padded_matrix(const Matrix2D& bandedPaddedMatrix, const 
 }
 
 
-t_matrix determinant_padded_matrix(const Matrix2D& paddedMatrix, const long shift)
+t_matrix determinant_padded_matrix(const MatrixLD& paddedMatrix, const long shift)
 {
     auto n = paddedMatrix.rows() - 2 *shift;
     auto m = paddedMatrix.cols() - 2 *shift;
@@ -2904,19 +2919,19 @@ t_matrix determinant_padded_matrix(const Matrix2D& paddedMatrix, const long shif
 
     t_matrix determinant;
     // Définir un bloc de la matrice (partie centrale)
-    Matrix2D inverseMatrix = paddedMatrix;
-    Eigen::Block<Matrix2D> centralBlock = inverseMatrix.block(shift, shift, n, m);
+    MatrixLD inverseMatrix = paddedMatrix;
+    Eigen::Block<MatrixLD> centralBlock = inverseMatrix.block(shift, shift, n, m);
 
     if (centralBlock.rows() < 2) {
         determinant = centralBlock.determinant();
 
     } else {
         // Décomposition LU // pour des matrices générales
-       /* Eigen::PartialPivLU<Matrix2D> lu(centralBlock);
+       /* Eigen::PartialPivLU<MatrixLD> lu(centralBlock);
           determinant = lu.determinant();
         */
 
-        Eigen::LDLT<Matrix2D> ldlt(centralBlock); // pour des matrices SPD
+        Eigen::LDLT<MatrixLD> ldlt(centralBlock); // pour des matrices SPD
         //determinant = ldlt.vectorD().array().log().sum().exp();  // produit des Dᵢ
         t_matrix log_det = ldlt.vectorD().array().log().sum(); // Pour éviter le dépassement de capacité ou les problèmes de précision
         determinant  = std::exp(log_det);
@@ -2927,8 +2942,8 @@ t_matrix determinant_padded_matrix(const Matrix2D& paddedMatrix, const long shif
 
 
 
-t_matrix ln_rate_determinant_padded_matrix_A_B(const Matrix2D& paddedMatrix_A,
-                                               const Matrix2D& paddedMatrix_B,
+t_matrix ln_rate_determinant_padded_matrix_A_B(const MatrixLD& paddedMatrix_A,
+                                               const MatrixLD& paddedMatrix_B,
                                                const long shift)
 {
     auto na = paddedMatrix_A.rows() - 2 * shift;
@@ -2960,6 +2975,38 @@ t_matrix ln_rate_determinant_padded_matrix_A_B(const Matrix2D& paddedMatrix_A,
     return log_det_A - log_det_B;
 }
 
+double ln_rate_determinant_padded_matrix_A_B(const MatrixD& paddedMatrix_A,
+                                             const MatrixD& paddedMatrix_B,
+                                             const long shift)
+{
+    auto na = paddedMatrix_A.rows() - 2 * shift;
+    auto ma = paddedMatrix_A.cols() - 2 * shift;
+#ifdef DEBUG
+    if (na != ma)
+        throw std::runtime_error("[inverse_padded_matrix] Matrix A is not quadratic");
+#endif
+    t_matrix log_det_A = paddedMatrix_A.block(shift, shift, na, ma)
+                             .ldlt()
+                             .vectorD()
+                             .array()
+                             .log()
+                             .sum();
+
+    auto nb = paddedMatrix_B.rows() - 2 * shift;
+    auto mb = paddedMatrix_B.cols() - 2 * shift;
+#ifdef DEBUG
+    if (nb != mb)
+        throw std::runtime_error("[inverse_padded_matrix] Matrix B is not quadratic");
+#endif
+    double log_det_B = paddedMatrix_B.block(shift, shift, nb, mb)
+                             .ldlt()
+                             .vectorD()
+                             .array()
+                             .log()
+                             .sum();
+
+    return log_det_A - log_det_B;
+}
 
 /**
  * Inversion d'une matrice symétrique définie positive
@@ -2973,17 +3020,17 @@ t_matrix ln_rate_determinant_padded_matrix_A_B(const Matrix2D& paddedMatrix_A,
  * @param decomp Une paire contenant la matrice L et le vecteur diagonal D
  * @return La matrice inverse de A
  */
-Matrix2D choleskyInvert(const std::pair<Matrix2D, DiagonalMatrixLD>& decomp)
+MatrixLD choleskyInvert(const std::pair<MatrixLD, DiagonalMatrixLD>& decomp)
 {
-    const Matrix2D &L = decomp.first;    // Matrice triangulaire inférieure
+    const MatrixLD &L = decomp.first;    // Matrice triangulaire inférieure
     const DiagonalMatrixLD& D = decomp.second; // Vecteur diagonal
     size_t n = D.rows();                 // Dimension de la matrice
 
     // Initialiser la matrice inverse avec des zéros
-    Matrix2D inv = Matrix2D::Zero(n, n);
+    MatrixLD inv = MatrixLD::Zero(n, n);
 
     // Étape 1: Calculer Z = L^(-1)
-    Matrix2D Z = Matrix2D::Zero (n, n);
+    MatrixLD Z = MatrixLD::Zero (n, n);
     for (size_t i = 0; i < n; i++) {
         Z(i, i) = 1.0; // Diagonale = 1
 
@@ -2998,7 +3045,7 @@ Matrix2D choleskyInvert(const std::pair<Matrix2D, DiagonalMatrixLD>& decomp)
     }
 
     // Étape 2: Calculer W = D^(-1) * Z^T
-    Matrix2D W = Matrix2D::Zero (n, n);
+    MatrixLD W = MatrixLD::Zero (n, n);
     for (size_t i = 0; i < n; i++) {
         for (size_t j = 0; j <= i; j++) {
             W(j, i) = Z(i, j) / D.diagonal()[i];
@@ -3033,19 +3080,19 @@ Matrix2D choleskyInvert(const std::pair<Matrix2D, DiagonalMatrixLD>& decomp)
 
 
 // inverse_Mat_sym dans RenCurve
-Matrix2D inverseMatSym_origin(const std::pair<Matrix2D, DiagonalMatrixLD> &decomp, const size_t nbBandes, const size_t shift)
+MatrixLD inverseMatSym_origin(const std::pair<MatrixLD, DiagonalMatrixLD> &decomp, const size_t nbBandes, const size_t shift)
 {
-    const Matrix2D &L = decomp.first;
+    const MatrixLD &L = decomp.first;
     const DiagonalMatrixLD& D = decomp.second;
     size_t dim = L.rows();
-    Matrix2D matInv = Matrix2D::Zero (dim, dim);
+    MatrixLD matInv = MatrixLD::Zero (dim, dim);
     size_t bande = floor((nbBandes-1)/2);
 
     matInv(dim-1-shift, dim-1-shift) = 1.0 / D.diagonal()[dim-1-shift];
 
     if (dim >= 4) {
         matInv(dim-2-shift, dim-1-shift) = -L(dim-1-shift, dim-2-shift) * matInv(dim-1-shift, dim-1-shift);
-        matInv(dim-2-shift, dim-2-shift) = (1. / D.diagonal()[dim-2-shift]) - L(dim-1-shift, dim-2-shift) * matInv(dim-2-shift, dim-1-shift);
+        matInv(dim-2-shift, dim-2-shift) = (1.0 / D.diagonal()[dim-2-shift]) - L(dim-1-shift, dim-2-shift) * matInv(dim-2-shift, dim-1-shift);
     }
 
     // shift : décalage qui permet d'éliminer les premières et dernières lignes et colonnes
@@ -3077,12 +3124,55 @@ Matrix2D inverseMatSym_origin(const std::pair<Matrix2D, DiagonalMatrixLD> &decom
     return matInv;
 }
 
+MatrixD inverseMatSym_origin(const std::pair<MatrixD, DiagonalMatrixD> &decomp, const size_t nbBandes, const size_t shift)
+{
+    const MatrixD &L = decomp.first;
+    const DiagonalMatrixD& D = decomp.second;
+    size_t dim = L.rows();
+    MatrixD matInv = MatrixD::Zero (dim, dim);
+    size_t bande = floor((nbBandes-1)/2);
+
+    matInv(dim-1-shift, dim-1-shift) = 1.0 / D.diagonal()[dim-1-shift];
+
+    if (dim >= 4) {
+        matInv(dim-2-shift, dim-1-shift) = -L(dim-1-shift, dim-2-shift) * matInv(dim-1-shift, dim-1-shift);
+        matInv(dim-2-shift, dim-2-shift) = (1.0 / D.diagonal()[dim-2-shift]) - L(dim-1-shift, dim-2-shift) * matInv(dim-2-shift, dim-1-shift);
+    }
+
+    // shift : décalage qui permet d'éliminer les premières et dernières lignes et colonnes
+    // La boucle suivante n'est executée que si dim >=5
+    if (dim >= 5) {
+        for (size_t i = dim-3-shift; i>=shift; --i) {
+            matInv(i, i+2) = -L(i+1, i) * matInv(i+1, i+2) - L(i+2, i) * matInv(i+2, i+2);
+            matInv(i, i+1) = -L(i+1, i) * matInv(i+1, i+1) - L(i+2, i) * matInv(i+1, i+2);
+            matInv(i, i) = (1.0 / D.diagonal()[i]) - L(i+1, i) * matInv(i, i+1) - L(i+2, i) * matInv(i, i+2);
+
+            if (bande >= 3)  {
+                for (size_t k=3; k<=bande; ++k) {
+                    if (i+k < (dim - shift))  {
+                        matInv(i, i+k) = -L(i+1, i) * matInv(i+1, i+k) - L(i+2, i) * matInv(i+2, i+k);
+                    }
+                }
+            }
+        }
+    }
+
+    for (size_t i = shift; i< dim-shift; ++i)  {
+        for (size_t j = i+1; j <= i+bande; ++j)  {
+            if (j < (dim-shift))   {
+                matInv(j, i) = matInv(i, j);
+            }
+        }
+    }
+
+    return matInv;
+}
 
 
-Matrix2D inverseMatSym(const Matrix2D& matrixLE, const DiagonalMatrixLD &matrixDE, const int nbBandes, const size_t shift)
+MatrixLD inverseMatSym(const MatrixLD& matrixLE, const DiagonalMatrixLD &matrixDE, const int nbBandes, const size_t shift)
 {
     const size_t dim = matrixLE.rows();
-    Matrix2D matInv = Matrix2D::Zero (dim, dim);
+    MatrixLD matInv = MatrixLD::Zero (dim, dim);
     const size_t bande = floor((nbBandes-1)/2);
 
     matInv(dim-1-shift, dim-1-shift) = 1.0 / matrixDE.diagonal()[dim-1-shift];
@@ -3162,7 +3252,7 @@ double sumAllMatrix(const std::vector<std::vector<double>>& matrix)
     return sum;
 }
 
-t_matrix sumAllMatrix(const Matrix2D &m)
+t_matrix sumAllMatrix(const MatrixLD &m)
 {
     t_matrix som = 0;
     size_t n = m.rows();
@@ -3183,11 +3273,11 @@ double sumAllVector(const std::vector<double>& vector)
     return std::accumulate(vector.begin(), vector.end(), 0.);
 }
 
-Matrix2D cofactor0(const Matrix2D& matrix)
+MatrixLD cofactor0(const MatrixLD& matrix)
 {
     const size_t n = matrix.rows();
-    Matrix2D result (n, n);
-    Matrix2D matMinorTmp (n-1, n-1);
+    MatrixLD result (n, n);
+    MatrixLD matMinorTmp (n-1, n-1);
     t_matrix det;
     size_t i1, k1;
     for (size_t j=0; j<n; j++) {
@@ -3219,11 +3309,11 @@ Matrix2D cofactor0(const Matrix2D& matrix)
  * @param matrix
  * @return
  */
-Matrix2D comatrice0(const Matrix2D& matrix)
+MatrixLD comatrice0(const MatrixLD& matrix)
 {
     const size_t n = matrix.rows();
-    Matrix2D result = Matrix2D::Zero (n, n);
-    Matrix2D matMinorTmp = Matrix2D::Zero (n-1, n-1);
+    MatrixLD result = MatrixLD::Zero (n, n);
+    MatrixLD matMinorTmp = MatrixLD::Zero (n-1, n-1);
     t_matrix det;
     size_t i1, k1;
     for (size_t j=0; j<n; j++) {
@@ -3256,11 +3346,11 @@ Matrix2D comatrice0(const Matrix2D& matrix)
  * @return matrix triangulaire supérieur
  */
 
-Matrix2D choleskyLL0(const Matrix2D &matrix)
+MatrixLD choleskyLL0(const MatrixLD &matrix)
 {
     const size_t n = matrix.rows();
 
-    Matrix2D L = Matrix2D::Zero (n, n);
+    MatrixLD L = MatrixLD::Zero (n, n);
     t_matrix sum;
 
     for (size_t i = 0; i < n; i++) {
@@ -3283,10 +3373,10 @@ Matrix2D choleskyLL0(const Matrix2D &matrix)
 }
 
 
-void verify_cholesky_decomposition(const Matrix2D& original, const Matrix2D& L, bool verbose = true) {
+void verify_cholesky_decomposition(const MatrixLD& original, const MatrixLD& L, bool verbose = true) {
     // Reconstruction
-    Matrix2D reconstructed = L * L.transpose();
-    Matrix2D error_matrix = original - reconstructed;
+    MatrixLD reconstructed = L * L.transpose();
+    MatrixLD error_matrix = original - reconstructed;
     std::cout << "original \n" << original <<std::endl;
     std::cout << "reconstructed \n" << reconstructed <<std::endl;
     std::cout << "error_matrix \n" << error_matrix <<std::endl;
@@ -3305,7 +3395,7 @@ void verify_cholesky_decomposition(const Matrix2D& original, const Matrix2D& L, 
     metrics.max_absolute_error = error_matrix.cwiseAbs().maxCoeff();
 
     // Calcul du conditionnement (optionnel, plus coûteux)
-    Eigen::JacobiSVD<Matrix2D> svd(original);
+    Eigen::JacobiSVD<MatrixLD> svd(original);
     auto singular_values = svd.singularValues();
     metrics.condition_number = singular_values.maxCoeff() / singular_values.minCoeff();
 
@@ -3337,7 +3427,7 @@ void verify_cholesky_decomposition(const Matrix2D& original, const Matrix2D& L, 
 }
 
 // code qui fonctionne mais pourquoi ???
-Matrix2D cholesky_LLt_MoreSorensen(const Matrix2D &matrix)
+MatrixLD cholesky_LLt_MoreSorensen(const MatrixLD &matrix)
 {
 
 
@@ -3351,7 +3441,7 @@ Matrix2D cholesky_LLt_MoreSorensen(const Matrix2D &matrix)
         0, 0, 0, 2, 2, 4
     };
     // Utiliser Eigen::Map pour créer une matrice à partir du tableau
-    Eigen::Map<Matrix2D> matrix2(data, 6, 6);
+    Eigen::Map<MatrixLD> matrix2(data, 6, 6);
     * resultat : L=
     *  2        0        0        0        0        0
        1  1.73205        0        0        0        0
@@ -3363,7 +3453,7 @@ Matrix2D cholesky_LLt_MoreSorensen(const Matrix2D &matrix)
     */
 
     const size_t n = matrix.rows();
-    Matrix2D L = Matrix2D::Zero (n, n);
+    MatrixLD L = MatrixLD::Zero (n, n);
 #ifdef DEBUG
     bool MS = false;
 #endif
@@ -3414,7 +3504,7 @@ Matrix2D cholesky_LLt_MoreSorensen(const Matrix2D &matrix)
      * LDLt fonctionne même pour les matrices semi-définies positives, tant qu'elles sont symétriques
      * Ne Produit pas une précision meilleur à notre choleskyLDLT sans pivot
      */
-   /* Eigen::LDLT<Matrix2D> ldlt(matrix);
+   /* Eigen::LDLT<MatrixLD> ldlt(matrix);
     if (ldlt.info() != Eigen::Success) {
         std::cerr << "LDLT decomposition failed" << std::endl;
     }
@@ -3426,7 +3516,7 @@ Matrix2D cholesky_LLt_MoreSorensen(const Matrix2D &matrix)
     auto Dvec = ldlt.vectorD();
     showMatrix(Dvec, " Dvec");
 
-    Matrix2D Lmod = L1;
+    MatrixLD Lmod = L1;
 
     for (int i = 0; i < Dvec.size(); ++i) {
         t_matrix sqrtD = (Dvec[i] > 0) ? std::sqrt(Dvec[i]) : 0.0;  // tolérance ici
@@ -3443,14 +3533,14 @@ Matrix2D cholesky_LLt_MoreSorensen(const Matrix2D &matrix)
      * Recomposer manuellement une racine semi-positive
      * NE DONNE PAS UNE MATRICE TRIANGULAIRE
     */
-    /* Eigen::SelfAdjointEigenSolver<Matrix2D> eig(matrix2);
+    /* Eigen::SelfAdjointEigenSolver<MatrixLD> eig(matrix2);
     auto D2 = eig.eigenvalues();
     auto Q = eig.eigenvectors();
 
     for (int i = 0; i < D2.size(); ++i)
         D2[i] = std::max(0.0L, D2[i]);  // tolérance
 
-    Matrix2D L2 = Q * D2.cwiseSqrt().asDiagonal();
+    MatrixLD L2 = Q * D2.cwiseSqrt().asDiagonal();
    showMatrix(L2, "L2") ;
     verify_cholesky_decomposition(matrix2, L2);
 */
@@ -3470,7 +3560,7 @@ Matrix2D cholesky_LLt_MoreSorensen(const Matrix2D &matrix)
  * @param matrix
  * @return
  */
-Matrix2D cholesky_LLt_MoreSorensen_adapt(const Matrix2D& matrix)
+MatrixLD cholesky_LLt_MoreSorensen_adapt(const MatrixLD& matrix)
 {
     const size_t n = matrix.rows();
 #ifdef DEBUG
@@ -3484,8 +3574,8 @@ Matrix2D cholesky_LLt_MoreSorensen_adapt(const Matrix2D& matrix)
 #endif
 
     // Faire une copie de la matrice originale pour ne pas la modifier
-    Matrix2D A = matrix;
-    Matrix2D L = Matrix2D::Zero (n, n);
+    MatrixLD A = matrix;
+    MatrixLD L = MatrixLD::Zero (n, n);
 
     // Paramètres pour la correction
     const t_matrix delta_min = 1e-20;  // Delta minimum
@@ -3564,8 +3654,8 @@ Matrix2D cholesky_LLt_MoreSorensen_adapt(const Matrix2D& matrix)
 
 #ifdef DEBUG
     if (MS) {
-        Matrix2D Lt = transpose0(L);
-        Matrix2D prod = multiMatParMat0(L, Lt);
+        MatrixLD Lt = transpose0(L);
+        MatrixLD prod = multiMatParMat0(L, Lt);
         // test la différence entrée sortie
         t_matrix som_prod = 0;
         for (size_t i = 0; i < n; i++)
@@ -3599,7 +3689,7 @@ Matrix2D cholesky_LLt_MoreSorensen_adapt(const Matrix2D& matrix)
  */
 
 /*
-std::pair<Matrix2D, DiagonalMatrixLD> choleskyLDLT(const Matrix2D& matrix)
+std::pair<MatrixLD, DiagonalMatrixLD> choleskyLDLT(const MatrixLD& matrix)
 {
 
 #ifdef DEBUG
@@ -3609,7 +3699,7 @@ std::pair<Matrix2D, DiagonalMatrixLD> choleskyLDLT(const Matrix2D& matrix)
     }
 #endif
     const size_t n = matrix.rows();
-    Matrix2D L = Matrix2D::Identity(n, n);  // ✅ Identity plus efficace que Zero + boucle
+    MatrixLD L = MatrixLD::Identity(n, n);  // ✅ Identity plus efficace que Zero + boucle
     DiagonalMatrixLD D(n);
 
     for (size_t i = 0; i < n; i++) {
@@ -3641,7 +3731,7 @@ std::pair<Matrix2D, DiagonalMatrixLD> choleskyLDLT(const Matrix2D& matrix)
 }
 */
 
-std::pair<Matrix2D, DiagonalMatrixLD> choleskyLDLT(const Matrix2D& matrix)
+std::pair<MatrixLD, DiagonalMatrixLD> choleskyLDLT(const MatrixLD& matrix)
 {
     constexpr double epsilon = 1e-12;  // tolérance numérique
 
@@ -3653,7 +3743,7 @@ std::pair<Matrix2D, DiagonalMatrixLD> choleskyLDLT(const Matrix2D& matrix)
 #endif
 
     const size_t n = matrix.rows();
-    Matrix2D L = Matrix2D::Identity(n, n);  // plus sûr
+    MatrixLD L = MatrixLD::Identity(n, n);  // plus sûr
     DiagonalMatrixLD D(n);
 
     for (size_t i = 0; i < n; ++i) {
@@ -3695,11 +3785,11 @@ std::pair<Matrix2D, DiagonalMatrixLD> choleskyLDLT(const Matrix2D& matrix)
 
 // Cette fonction ne sort pas lorsqu'il y a des valeurs sur la diagonal, nulle ou inférieur à zéro
 // utilise dans multisampling
-std::pair<Matrix2D, DiagonalMatrixLD > choleskyLDLT(const Matrix2D &matrix, const size_t shift)
+std::pair<MatrixLD, DiagonalMatrixLD > choleskyLDLT(const MatrixLD &matrix, const size_t shift)
 {
     const size_t n = matrix.rows();
  
-    Matrix2D L = Matrix2D::Zero (n, n);
+    MatrixLD L = MatrixLD::Zero (n, n);
     DiagonalMatrixLD D (n);
 
     for (size_t i = shift; i < n-shift; i++) {
@@ -3716,7 +3806,7 @@ std::pair<Matrix2D, DiagonalMatrixLD > choleskyLDLT(const Matrix2D &matrix, cons
                 D.diagonal()[i] -=  D.diagonal()[j] * powl(L(i,j), 2.L);
       }
 
-    return std::pair<Matrix2D, DiagonalMatrixLD>(L, D);
+    return std::pair<MatrixLD, DiagonalMatrixLD>(L, D);
 }
 
 /**
@@ -3727,7 +3817,7 @@ std::pair<Matrix2D, DiagonalMatrixLD > choleskyLDLT(const Matrix2D &matrix, cons
  * ✅ Solution recommandée : utiliser LDLT avec tolérance
  * LDLT fonctionne même pour les matrices semi-définies positives, tant qu'elles sont symétriques
  */
-Matrix2D robust_LLt(const Matrix2D& matrix)
+MatrixLD robust_LLt(const MatrixLD& matrix)
 {
     constexpr t_matrix epsilon = 1e-100;  // tolérance numérique
 
@@ -3740,7 +3830,7 @@ Matrix2D robust_LLt(const Matrix2D& matrix)
 #endif
 
     const size_t n = matrix.rows();
-    Matrix2D L = Matrix2D::Identity(n, n);  // plus sûr
+    MatrixLD L = MatrixLD::Identity(n, n);  // plus sûr
     DiagonalMatrixLD D(n);
 
     for (size_t i = 0; i < n; ++i) {
@@ -3749,20 +3839,7 @@ Matrix2D robust_LLt(const Matrix2D& matrix)
             sum -= L(i, k) * L(i, k) * D.diagonal()[k];
         }
 
-        // Vérifie la stabilité numérique
-       /* if (sum < -epsilon) {
-            std::cout << "[Function::robust_LLt] Matrix is not positive semi-definite at row " << i << "\n";
-            showMatrix(matrix, "robust LLt matrix");
-
-            D.diagonal()[i] = 0.0;
-
-        } else if (std::abs(sum) < epsilon) {
-            D.diagonal()[i] = 0.0;  // tolère les petits pivots nuls
-
-        } else {
-*/
-            D.diagonal()[i] = sum;
-     //   }
+        D.diagonal()[i] = sum;
 
         // Remplir colonne i de L
         for (size_t j = i + 1; j < n; ++j) {
@@ -3781,9 +3858,7 @@ Matrix2D robust_LLt(const Matrix2D& matrix)
     }
 
 
-    //
-
-
+#pragma omp parallel for
     for (int i = 0; i < D.rows(); ++i) {
         t_matrix sqrtD = (D.diagonal()[i] > 0) ? std::sqrt(D.diagonal()[i]) : 0.0;
         L.col(i) *= sqrtD;
@@ -3793,6 +3868,179 @@ Matrix2D robust_LLt(const Matrix2D& matrix)
     return L;
 }
 
+MatrixD robust_LLt(const MatrixD& matrix)
+{
+    constexpr double epsilon = 1e-100;
+
+#ifdef DEBUG
+    if (matrix.rows() != matrix.cols()) {
+        throw std::invalid_argument("[Function::robust_LLt] Matrix must be square");
+    }
+#endif
+    // Phase 1 : Calcul de LDL^T
+    const size_t n = matrix.rows();
+
+    if (n<100) {
+
+        // Essayer d'abord LLT (plus rapide)
+        Eigen::LLT<MatrixD> llt(matrix);
+
+        if (llt.info() == Eigen::Success) {
+            return llt.matrixL();
+        }
+
+        // Fallback vers LDLT si la matrice n'est pas définie positive
+        Eigen::LDLT<MatrixD> ldlt(matrix);
+
+        if (ldlt.info() == Eigen::Success) {
+            // return MatrixD::Zero(matrix.rows(), matrix.cols());
+
+
+            MatrixD L = ldlt.matrixL();
+            Eigen::VectorXd D = ldlt.vectorD();
+
+            // Convertir LDL^T → LL^T
+            for (Eigen::Index i = 0; i < D.size(); ++i) {
+                L.col(i) *= (D(i) > 0) ? std::sqrt(D(i)) : 0.0;
+            }
+            return L;
+        }
+    }
+
+    MatrixD L = MatrixD::Zero(n, n);
+    std::vector<double> sqrtD(n);
+
+    for (size_t i = 0; i < n; ++i) {
+        double sum = matrix(i, i);
+
+        // Pré-calculer les termes réutilisés
+        for (size_t k = 0; k < i; ++k) {
+            const double Lik = L(i, k);
+            sum -= Lik * Lik;
+        }
+
+        sqrtD[i] = (sum > epsilon) ? std::sqrt(sum) : 0.0;
+        L(i, i) = sqrtD[i];
+
+        if (sqrtD[i] > epsilon) {
+            const double inv_sqrtD = 1.0 / sqrtD[i];
+
+// Phase 2 : Conversion LDL^T → LL^T
+// Parallélisation de la boucle interne (seulement si rentable)
+#pragma omp parallel for if(n - i > 100)
+            for (size_t j = i + 1; j < n; ++j) {
+                double lij = matrix(j, i);
+                for (size_t k = 0; k < i; ++k) {
+                    lij -= L(j, k) * L(i, k);
+                }
+                L(j, i) = lij * inv_sqrtD;
+            }
+        }
+    }
+
+    return L;
+}
+/**
+ * robust_SVD
+ * -------------
+ * Retourne une "racine carrée" d'une matrice V : L tel que L * L^T = V
+ * Utilise la SVD pour plus de robustesse si V est mal conditionnée.
+ *
+ * @param V : matrice de covariance (symétrique positive ou presque)
+ * @return Vroot : matrice telle que Vroot * Vroot^T ≈ V
+ */
+MatrixLD robust_SVD(const MatrixLD& V)
+{
+    Eigen::JacobiSVD<MatrixLD> svd(V, Eigen::ComputeFullU | Eigen::ComputeFullV);
+
+    MatrixLD U  = svd.matrixU();
+    MatrixLD S  = svd.singularValues();
+    MatrixLD Vt = svd.matrixV().transpose();
+
+    // Racine carrée des valeurs singulières (clip négatives)
+    for (int i = 0; i < S.size(); i++) {
+        S(i) = (S(i) > 0.0) ? std::sqrt(S(i)) : 0.0;
+    }
+
+    // Vroot = robust_SVD(V); = U * sqrt(S) * V^T
+    return U * S.asDiagonal() * Vt;
+}
+
+MatrixD robust_SVD(const MatrixD& V)
+{
+
+#ifdef _OPENMP
+    // BDCSVD est optimal pour matrices > 16×16, profite du parallélisme, sinon plus lent
+    // remarque: ne fonctionne pas correctement, retourne souvant des nan
+
+    //Eigen::setNbThreads(5);
+    //Eigen::initParallel();
+
+    // Essayer BDCSVD d'abord (plus rapide)
+    /*    if (V.rows() > 19 && V.cols() > 19) {
+            Eigen::BDCSVD<MatrixD> bdcsvd(V, Eigen::ComputeThinU | Eigen::ComputeThinV);
+//std::cout << "info " << bdcsvd.info() << std::endl;
+            if (bdcsvd.info() == Eigen::Success) {
+                auto U = bdcsvd.matrixU().eval();
+
+                //showMatrix(U, "U");
+                auto S = bdcsvd.singularValues();
+                if (std::any_of(S.data(), S.data() + S.size(), [](double val) { return std::isnan(val); })) {
+                    std::cout << "ATTENTION: BDCSVD S.hasNaN(), fallback sur JacobiSVD" << std::endl;
+                }
+                auto Vt = bdcsvd.matrixV().transpose();
+                if (std::any_of(Vt.data(), Vt.data() + Vt.size(), [](double val) { return std::isnan(val); })) {
+                    std::cout << "ATTENTION: BDCSVD Vt.hasNaN(), fallback sur JacobiSVD" << std::endl;
+                }
+                // Vérifier si le résultat est valide
+                //if (!U.hasNaN() && !S.hasNaN() && !Vt.hasNaN()) {
+                //if (!(U.array().isNaN().any()) && !(S.array().isNaN().any()) && !(Vt.array().isNaN().any())) {
+                    for (int i = 0; i < S.size(); i++) {
+                        S(i) = (S(i) > 0.0) ? std::sqrt(S(i)) : 0.0;
+                    }
+                    MatrixD res = U * S.asDiagonal() * Vt;
+                    showMatrix(res, "res");
+                    return res;
+               // } else {
+               //     std::cout << "ATTENTION: BDCSVD a produit des NaN, fallback sur JacobiSVD" << std::endl;
+               // }
+            }
+        }
+*/
+    // Fallback sur JacobiSVD (plus lent mais plus robuste)
+
+    Eigen::JacobiSVD<MatrixD> svd(V, Eigen::ComputeThinU | Eigen::ComputeThinV);
+    MatrixD U = svd.matrixU();
+    Eigen::VectorXd S = svd.singularValues();
+    MatrixD Vt = svd.matrixV().transpose();
+
+    for (int i = 0; i < S.size(); i++) {
+        S(i) = (S(i) > 0.0) ? std::sqrt(S(i)) : 0.0;
+    }
+
+    return U * S.asDiagonal() * Vt;
+
+
+#else
+    // Eigen::JacobiSVD<MatrixD> svd(V, Eigen::ComputeFullU | Eigen::ComputeFullV);
+    Eigen::JacobiSVD<MatrixD> svd(V, Eigen::ComputeThinU | Eigen::ComputeThinV);
+    MatrixD U  = svd.matrixU();
+    Eigen::VectorXd S  = svd.singularValues();
+    MatrixD Vt = svd.matrixV().transpose();
+
+    // Racine carrée des valeurs singulières (clip négatives)
+    for (int i = 0; i < S.size(); i++) {
+        S(i) = (S(i) > 0.0) ? std::sqrt(S(i)) : 0.0;
+    }
+    // Vroot = robust_SVD(V); = U * sqrt(S) * V^T
+    MatrixD res = U * S.asDiagonal() * Vt;
+    //showMatrix(res, "res");
+    return res;
+#endif
+
+
+
+}
 /**
  * @brief abs_minus Calcul std:abs(a-b) for type size_t
  * @param a
@@ -3804,11 +4052,11 @@ size_t abs_minus(size_t a, size_t b)
     return a>b? a-b: b-a;
 }
 
-std::pair<Matrix2D, DiagonalMatrixLD > choleskyLDLT(const Matrix2D &matrix, const size_t nbBandes, const size_t shift)
+std::pair<MatrixLD, DiagonalMatrixLD > choleskyLDLT(const MatrixLD &matrix, const size_t nbBandes, const size_t shift)
 {
     const size_t n = matrix.rows();
     const size_t n_shift = n>shift? n-shift: 0;//n-shift;
-    Matrix2D L = Matrix2D::Zero (n, n);
+    MatrixLD L = MatrixLD::Zero (n, n);
     DiagonalMatrixLD D (n);
 
     for (size_t i = shift; i < n_shift; i++) {
@@ -3828,12 +4076,12 @@ std::pair<Matrix2D, DiagonalMatrixLD > choleskyLDLT(const Matrix2D &matrix, cons
                     D.diagonal()[i] -=  D.diagonal()[j] * pow(L(i, j), 2.);
       }
 
-    return std::pair<Matrix2D, DiagonalMatrixLD>(L, D);
+    return std::pair<MatrixLD, DiagonalMatrixLD>(L, D);
 }
 
 
 
-std::pair<Matrix2D, DiagonalMatrixLD> choleskyLDLT_Dsup0(const Matrix2D& matrix, const size_t nbBandes, const size_t shift)
+std::pair<MatrixLD, DiagonalMatrixLD> choleskyLDLT_Dsup0(const MatrixLD& matrix, const size_t nbBandes, const size_t shift)
 {
     const size_t n = matrix.rows();
     const size_t n_shift = n-shift;
@@ -3842,7 +4090,7 @@ std::pair<Matrix2D, DiagonalMatrixLD> choleskyLDLT_Dsup0(const Matrix2D& matrix,
     if (det == 0)
         qDebug() << "[ Function] choleskyLDLT_Dsup0 : singular matrix, not regular : determinant =" << (double) det;
 #endif
-    Matrix2D L = Matrix2D::Zero (n, n);
+    MatrixLD L = MatrixLD::Zero (n, n);
     DiagonalMatrixLD D (n);
 
     for (size_t i = shift; i < n_shift; i++) {
@@ -3871,7 +4119,7 @@ std::pair<Matrix2D, DiagonalMatrixLD> choleskyLDLT_Dsup0(const Matrix2D& matrix,
         }
     }
 #endif
-    return std::pair<Matrix2D, DiagonalMatrixLD>(L, D);
+    return std::pair<MatrixLD, DiagonalMatrixLD>(L, D);
 }
 
 
@@ -3891,26 +4139,26 @@ std::pair<Matrix2D, DiagonalMatrixLD> choleskyLDLT_Dsup0(const Matrix2D& matrix,
  * @param nbBandes Nombre de bandes de la matrice.
  * @param shift Décalage utilisé pour éliminer les premières et dernières lignes et colonnes de zéros.
  *
- * @return std::pair<Matrix2D, MatrixDiag> Un paire contenant la matrice triangulaire inférieure (matL)
+ * @return std::pair<MatrixLD, MatrixDiag> Un paire contenant la matrice triangulaire inférieure (matL)
  *         et la matrice diagonale (matD).
  *
  * @note Cette fonction suppose que la matrice est symétrique et définie positive.
  *
  * @example
  * // Exemple d'utilisation
- * Matrix2D A = ...;
+ * MatrixLD A = ...;
  * auto result = decompositionCholesky(A, 2, 1);
- * Matrix2D L = result.first;
+ * MatrixLD L = result.first;
  * MatrixDiag D = result.second;
  **/
-std::pair<Matrix2D, DiagonalMatrixLD> decompositionCholesky(const Matrix2D &matrix, const size_t nbBandes, const size_t shift)
+std::pair<MatrixLD, DiagonalMatrixLD> decompositionCholesky(const MatrixLD &matrix, const size_t nbBandes, const size_t shift)
 {
     //errno = 0;
     //if (math_errhandling & MATH_ERREXCEPT) feclearexcept(FE_ALL_EXCEPT);
 
     const size_t dim = matrix.rows();
     const size_t dim_shift = dim > shift ? dim-shift : 0;
-    Matrix2D matL = Matrix2D::Zero (dim, dim);
+    MatrixLD matL = MatrixLD::Zero (dim, dim);
     DiagonalMatrixLD matD (dim);
 
     if (dim - 2*shift == 1) { // cas des splines avec 3 points
@@ -4023,6 +4271,128 @@ std::pair<Matrix2D, DiagonalMatrixLD> decompositionCholesky(const Matrix2D &matr
 
     return {matL, matD};
 }
+
+std::pair<MatrixD, DiagonalMatrixD> decompositionCholesky(const MatrixD &matrix, const size_t nbBandes, const size_t shift)
+{
+    //errno = 0;
+    //if (math_errhandling & MATH_ERREXCEPT) feclearexcept(FE_ALL_EXCEPT);
+
+    const size_t dim = matrix.rows();
+    const size_t dim_shift = dim > shift ? dim-shift : 0;
+    MatrixD matL = MatrixD::Zero (dim, dim);
+    DiagonalMatrixD matD (dim);
+
+    if (dim - 2*shift == 1) { // cas des splines avec 3 points
+        matD.diagonal()[1] = matrix(1, 1);
+        matL(1, 1) = 1.0L;
+        return {matL, matD};
+
+    }
+
+    // shift : décalage qui permet d'éliminer les premières et dernières lignes et colonnes constituées de zéro
+    for (size_t i = shift; i < dim-shift; ++i) {
+        matL(i, i) = 1.0L;
+    }
+    matD.diagonal()[shift] = matrix(shift, shift);
+
+    try {
+        for (size_t i = shift+1; i < dim_shift; ++i) {
+            matL(i, shift) = matrix(i, shift) / matD.diagonal()[shift];
+
+            // Calcul des éléments de matL avec la bande
+            for (size_t j = shift+1; j < i; ++j) {
+                if (abs_minus(i, j) <= nbBandes) {
+                    double sum = 0.0L;
+                    // Calcul de la somme des produits
+                    /* for (size_t k = shift; k < j; ++k) {
+                        if (abs_minus(i, k) <= nbBandes) {
+                            sum += matL[i][k] * matD[k] * matL[j][k];
+                        }
+                    } */
+                    //
+                    //t_matrix sum = 0.0L;
+                    double compensation = 0.0L;  // terme de compensation
+                    for (size_t k = shift; k < j; ++k) {
+                        if (abs_minus(i, k) <= nbBandes){
+                            t_matrix product = matL(i, k) * matD.diagonal()[k] * matL(j, k);
+                            // Algorithme Kahan pour la sommation
+                            double y = product - compensation;
+                            double t = sum + y;
+                            compensation = (t - sum) - y;
+                            sum = t;
+                        }
+                    }
+
+                    matL(i, j) = (matrix(i, j) - sum) / matD.diagonal()[j];
+                }
+            }
+
+            // Calcul de la diagonale de matD
+            /*t_matrix sumDiag = 0.0L;
+            for (size_t k = shift; k < i; ++k) {
+                if (abs_minus(i, k) <= nbBandes) {
+                    sumDiag += matL[i][k] * matL[i][k] * matD[k];
+                }
+            }*/
+            double sumDiag = 0.0;
+            double compensation = 0.0; // Compensation de Kahan
+
+            for (size_t k = shift; k < i; ++k) {
+                if (abs_minus(i, k) <= nbBandes) {
+                    double y = matL(i, k) * matL(i, k) * matD.diagonal()[k] - compensation;
+                    double t = sumDiag + y;
+                    compensation = (t - sumDiag) - y;
+                    sumDiag = t;
+                }
+            }
+
+            matD.diagonal()[i] = matrix(i, i) - sumDiag;
+            //matD[i] = matrix[i][i] - sumDiag; // doit être non-nul;
+
+
+
+
+#ifdef DEBUG
+            if (matD.diagonal()[i] >= 1.0E20) {
+                qWarning() << "[Function::decompositionCholesky]  matD[i] ="<< static_cast<double>(matD.diagonal()[i]) << " >= 1.E+20 ";
+            }
+            if (matD.diagonal()[i] < 0) {
+                std::cout << "[Function::decompositionCholesky] The matrix is not positive definite." << static_cast<double>(matD.diagonal()[i]) << std::endl;
+                throw std::runtime_error("[Function::decompositionCholesky] The matrix is not positive definite.");
+                //matD[i] = 0;
+            }
+#endif
+
+        }
+
+        // matL : Par exemple pour n = 5 et shift =0:
+        // 1 0 0 0 0
+        // X 1 0 0 0
+        // X X 1 0 0
+        // X X X 1 0
+        // X X X X 1
+
+        // matL : Par exemple pour n = 5 et shift =1:
+        // 0 0 0 0 0
+        // 0 1 0 0 0
+        // 0 X 1 0 0
+        // 0 X X 1 0
+        // 0 0 0 0 0
+
+
+
+    } catch(const char* e) {
+        qCritical() << "[Function::decompositionCholesky] " << e;
+
+    } catch(...) {
+        qCritical() << "[Function::decompositionCholesky]  Caught Exception!\n";
+
+    }
+
+
+    return {matL, matD};
+}
+
 // https://hatefdastour.github.io/notes/Numerical_Analysis/chapter_07/LDL_decomposition.html
 /**
  * @brief modifiedCholeskyDecomposition Décomposition de Cholesky alternative ou décomposition de Crout
@@ -4031,10 +4401,10 @@ std::pair<Matrix2D, DiagonalMatrixLD> decompositionCholesky(const Matrix2D &matr
  * @return
  * https://en.wikipedia.org/wiki/Cholesky_decomposition
  */
-std::pair<Matrix2D, DiagonalMatrixLD> modifiedCholeskyDecomposition(const Matrix2D& matrix, double epsilon = 1e-10)
+std::pair<MatrixLD, DiagonalMatrixLD> modifiedCholeskyDecomposition(const MatrixLD& matrix, double epsilon = 1e-10)
 {
     const size_t n = matrix.rows();
-    Matrix2D L = Matrix2D::Zero (n, n);
+    MatrixLD L = MatrixLD::Zero (n, n);
     DiagonalMatrixLD D (n);
 
     for (size_t i = 0; i < n; ++i)
@@ -4074,7 +4444,7 @@ std::pair<Matrix2D, DiagonalMatrixLD> modifiedCholeskyDecomposition(const Matrix
  * @return
  * @ref https://mcsweeney90.github.io/files/modified-cholesky-decomposition-and-applications.pdf
  */
-std::pair<Matrix2D, DiagonalMatrixLD> cholesky_LDLt_MoreSorensen(const Matrix2D& A, t_matrix regularization)
+std::pair<MatrixLD, DiagonalMatrixLD> cholesky_LDLt_MoreSorensen(const MatrixLD& A, t_matrix regularization)
 {
     size_t n = A.rows();
     t_matrix delta = regularization;
@@ -4088,7 +4458,7 @@ std::pair<Matrix2D, DiagonalMatrixLD> cholesky_LDLt_MoreSorensen(const Matrix2D&
     }
 #endif
     // Initialiser L comme une matrice identité
-    Matrix2D L (n, n);
+    MatrixLD L (n, n);
     for (size_t i = 0; i < n; i++) {
         L(i, i) = 1.0;
     }
@@ -4124,7 +4494,7 @@ std::pair<Matrix2D, DiagonalMatrixLD> cholesky_LDLt_MoreSorensen(const Matrix2D&
 }
 
 // Constructeur pour la décomposition LDLt avec amélioration Moré-Sorensen d'une matrice de bande symétrique
-std::pair<Matrix2D, DiagonalMatrixLD> banded_Cholesky_LDLt_MoreSorensen(const Matrix2D &A, int bandwidth, t_matrix regularization)
+std::pair<MatrixLD, DiagonalMatrixLD> banded_Cholesky_LDLt_MoreSorensen(const MatrixLD &A, int bandwidth, t_matrix regularization)
 {
     size_t n = A.rows();
     size_t k = bandwidth;
@@ -4139,7 +4509,7 @@ std::pair<Matrix2D, DiagonalMatrixLD> banded_Cholesky_LDLt_MoreSorensen(const Ma
     }
 #endif
 
-    Matrix2D L = Matrix2D::Zero (n, n);
+    MatrixLD L = MatrixLD::Zero (n, n);
     for (size_t i = 0; i < n; i++) {
         L(i, i) = 1.0;
     }
@@ -4191,7 +4561,7 @@ std::pair<Matrix2D, DiagonalMatrixLD> banded_Cholesky_LDLt_MoreSorensen(const Ma
 }
 
 
-std::pair<Matrix2D, DiagonalMatrixLD> decompositionCholeskyKK(const Matrix2D &matrix, const size_t nbBandes, const size_t shift)
+std::pair<MatrixLD, DiagonalMatrixLD> decompositionCholeskyKK(const MatrixLD &matrix, const size_t nbBandes, const size_t shift)
 {
     //return BandedMoreSorensenCholesky(matrix, nbBandes, 0.0);
 
@@ -4200,7 +4570,7 @@ std::pair<Matrix2D, DiagonalMatrixLD> decompositionCholeskyKK(const Matrix2D &ma
 
 
     const size_t dim = matrix.rows();
-    Matrix2D matL = Matrix2D::Zero  (dim, dim);
+    MatrixLD matL = MatrixLD::Zero  (dim, dim);
     DiagonalMatrixLD matD (dim);
 
     if (dim - 2*shift == 1) { // cas des splines avec 3 points
@@ -4267,7 +4637,7 @@ std::pair<Matrix2D, DiagonalMatrixLD> decompositionCholeskyKK(const Matrix2D &ma
                     std::cout << "[Function::decompositionCholeskyKK] The matrix is not positive definite. " << static_cast<double>(d) << std::endl;
                     // throw std::runtime_error("[Function::decompositionCholeskyKK] The matrix is not positive definite.");
 
-                    //return std::make_pair(Matrix2D(), MatrixDiag());
+                    //return std::make_pair(MatrixLD(), MatrixDiag());
                     //auto corrected_matrix = modifiedCholeskyDecomposition(matrix);
                     auto corrected_matrix1 = banded_Cholesky_LDLt_MoreSorensen(matrix, nbBandes, 0.0);
                     //auto corrected_matrix = MoreSorensenCholesky(matrix);
@@ -4293,15 +4663,15 @@ std::pair<Matrix2D, DiagonalMatrixLD> decompositionCholeskyKK(const Matrix2D &ma
 
         } catch(const char* e) {
             std::cout << "[Function::decompositionCholesky] " << e << std::endl;
-            return std::make_pair(Matrix2D(), DiagonalMatrixLD());
+            return std::make_pair(MatrixLD(), DiagonalMatrixLD());
 
         } catch(...) {
             std::cout << "[Function::decompositionCholeskyKK] : Caught Exception!" << std::endl;
-            return std::make_pair(Matrix2D(), DiagonalMatrixLD());
+            return std::make_pair(MatrixLD(), DiagonalMatrixLD());
         }
     }
 
-    return std::pair<Matrix2D, DiagonalMatrixLD>(matL, matD);
+    return std::pair<MatrixLD, DiagonalMatrixLD>(matL, matD);
 }
 
 
@@ -4313,9 +4683,9 @@ std::pair<Matrix2D, DiagonalMatrixLD> decompositionCholeskyKK(const Matrix2D &ma
  * @param vecQtY
  * @return
  */
-std::vector<t_matrix> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D, DiagonalMatrixLD>& decomp, const std::vector<t_matrix>& vecQtY)
+std::vector<t_matrix> resolutionSystemeLineaireCholesky(const std::pair<MatrixLD, DiagonalMatrixLD>& decomp, const std::vector<t_matrix>& vecQtY)
 {
-    const Matrix2D& L = decomp.first;
+    const MatrixLD& L = decomp.first;
     const DiagonalMatrixLD& D = decomp.second;
     const size_t n = D.rows();
     std::vector<t_matrix> vecGamma (n);
@@ -4354,7 +4724,46 @@ std::vector<t_matrix> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D
     return vecGamma;
 }
 
+std::vector<double> resolutionSystemeLineaireCholesky(const std::pair<MatrixD, DiagonalMatrixD>& decomp, const std::vector<double>& vecQtY)
+{
+    const MatrixD& L = decomp.first;
+    const DiagonalMatrixD& D = decomp.second;
+    const size_t n = D.rows();
+    std::vector<double> vecGamma (n);
+    std::vector<double> vecU (n);
+    std::vector<double> vecNu (n);
 
+    if (n > 3 ) {
+        vecU[1] = vecQtY[1];
+        vecU[2] = vecQtY[2] - L(2, 1) * vecU[1];
+
+        for (size_t i = 3; i < n-1; ++i) {
+            vecU[i] = vecQtY[i] - L(i, i-1) * vecU[i-1] - L(i, i-2) * vecU[i-2]; // pHd : Attention utilisation des variables déjà modifiées
+        }
+
+        for (size_t i = 1; i < n-1; ++i) {
+            vecNu[i] = vecU[i] / D.diagonal()[i];
+        }
+
+        vecGamma[n-2] = vecNu.at(n-2);
+        if (std::isnan(vecGamma[n-2]))
+            vecGamma[n-2] = 0.0;
+
+        vecGamma[n-3] = vecNu[n-3] - L(n-2, n-3) * vecGamma[n-2];
+        if (std::isnan(vecGamma[n-3]))
+            vecGamma[n-3] = 0.0;
+
+        for (size_t i = n-4; i > 0; --i) {
+            vecGamma[i] = vecNu[i] - L(i+1, i) * vecGamma[i+1] - L(i+2, i) * vecGamma[i+2]; // pHd : Attention utilisation des variables déjà modifiées
+        }
+
+    } else {
+        // cas n = 3
+        vecGamma[1] = vecQtY[1] / D.diagonal()[1];
+    }
+
+    return vecGamma;
+}
 
 
 /**
@@ -4363,12 +4772,12 @@ std::vector<t_matrix> resolutionSystemeLineaireCholesky(const std::pair<Matrix2D
  * @param A
  * @return
  */
-std::pair<Matrix2D, Matrix2D > decompositionLU0(const Matrix2D& A)
+std::pair<MatrixLD, MatrixLD > decompositionLU0(const MatrixLD& A)
 {
    const size_t n = A.rows();
 
-    Matrix2D L = Matrix2D::Zero (n, n);
-    Matrix2D U = Matrix2D::Zero (n, n);
+    MatrixLD L = MatrixLD::Zero (n, n);
+    MatrixLD U = MatrixLD::Zero (n, n);
 
     size_t i, j , k;
 
@@ -4395,14 +4804,14 @@ std::pair<Matrix2D, Matrix2D > decompositionLU0(const Matrix2D& A)
 
     }
 
-    return std::pair<Matrix2D, Matrix2D>(L, U);
+    return std::pair<MatrixLD, MatrixLD>(L, U);
 }
 
-std::pair<Matrix2D, Matrix2D> Doolittle_LU(const Matrix2D A)
+std::pair<MatrixLD, MatrixLD> Doolittle_LU(const MatrixLD A)
 {
     const size_t n =  A.rows();
-    Matrix2D L = Matrix2D::Zero (n, n);
-    Matrix2D U = Matrix2D::Zero (n, n);
+    MatrixLD L = MatrixLD::Zero (n, n);
+    MatrixLD U = MatrixLD::Zero (n, n);
     // Decomposing matrix into Upper and Lower
     // triangular matrix
     for (size_t i = 0; i < n; i++) {
@@ -4436,26 +4845,26 @@ std::pair<Matrix2D, Matrix2D> Doolittle_LU(const Matrix2D A)
 
     }
 
-    return std::pair<Matrix2D, Matrix2D>(L, U);
+    return std::pair<MatrixLD, MatrixLD>(L, U);
 }
 
-std::pair<Matrix2D, DiagonalMatrixLD> LU_to_LD(const std::pair<Matrix2D, Matrix2D> LU)
+std::pair<MatrixLD, DiagonalMatrixLD> LU_to_LD(const std::pair<MatrixLD, MatrixLD> LU)
 {
     DiagonalMatrixLD D (LU.second.rows());
     for (long i = 0; i< LU.second.rows(); i++) {
         D.diagonal()[i] = LU.second(i, i);
     }
-    return std::pair<Matrix2D, DiagonalMatrixLD>(LU.first, D);
+    return std::pair<MatrixLD, DiagonalMatrixLD>(LU.first, D);
 }
 
 //https://en.wikipedia.org/wiki/QR_decomposition#Example
 // faster than que householderQR
-std::pair<Matrix2D, Matrix2D > decompositionQR(const Matrix2D& A)
+std::pair<MatrixLD, MatrixLD > decompositionQR(const MatrixLD& A)
 {
    const long n = A.rows(); // on considère une matrice carré
 
 
-   Matrix2D Mat_H (n, n);
+   MatrixLD Mat_H (n, n);
 
    for (long i=0; i<n; i++)
        Mat_H(i, i) = 1.0;
@@ -4520,12 +4929,12 @@ std::pair<Matrix2D, Matrix2D > decompositionQR(const Matrix2D& A)
    }  //fin boucle sur k
 
    // Q est la transposée de H
-  // Matrix2D Q = transpose0(Mat_H);
+  // MatrixLD Q = transpose0(Mat_H);
 
    // R est Ègal à Mat
-  // Matrix2D& R = Mat;
+  // MatrixLD& R = Mat;
 
-    return std::pair<Matrix2D, Matrix2D>(transpose0(Mat_H), Mat);
+    return std::pair<MatrixLD, MatrixLD>(transpose0(Mat_H), Mat);
 }
 
 // Householder algo
@@ -4566,7 +4975,7 @@ void vmadd(const std::vector<t_matrix>& a, const std::vector<t_matrix>& b, doubl
 
 // mat = I - 2*v*v^T
 // !!! m is allocated here !!!
-void compute_householder_factor(Matrix2D& A, std::vector<t_matrix>& v)
+void compute_householder_factor(MatrixLD& A, std::vector<t_matrix>& v)
 {
   size_t n = v.size();
   A (n, n);
@@ -4582,7 +4991,7 @@ void compute_householder_factor(Matrix2D& A, std::vector<t_matrix>& v)
 }
 
 // take c-th column of a matrix, put results in Vector v
-std::vector<t_matrix> extract_column(Matrix2D& A, const int c)
+std::vector<t_matrix> extract_column(MatrixLD& A, const int c)
 {
   std::vector<t_matrix> v (A.rows());
   for (long i = 0; i < A.rows(); i++)
@@ -4592,10 +5001,10 @@ std::vector<t_matrix> extract_column(Matrix2D& A, const int c)
 }
 
 // compute minor ??
-Matrix2D compute_minor(const Matrix2D& A, const long d)
+MatrixLD compute_minor(const MatrixLD& A, const long d)
 {
     const long n = A.rows();
-    Matrix2D M (n, n);
+    MatrixLD M (n, n);
 
     for (long i = 0; i < d; i++)
       M(i, i) = 1.0;
@@ -4614,21 +5023,21 @@ Matrix2D compute_minor(const Matrix2D& A, const long d)
  * @ref https://en.wikipedia.org/wiki/QR_algorithm#The_implicit_QR_algorithm
  * @param A
  *
- * @return pair of Matrix2D Q and R
+ * @return pair of MatrixLD Q and R
  */
 
-std::pair<Matrix2D, Matrix2D> householderQR(Matrix2D& A)
+std::pair<MatrixLD, MatrixLD> householderQR(MatrixLD& A)
 {
 
   size_t m = A.rows();
   size_t n = A.rows();
 
   // array of factor Q1, Q2, ... Qm
-  std::vector<Matrix2D> qv(m);
+  std::vector<MatrixLD> qv(m);
 
   // temp array
-  Matrix2D z = A;
-  Matrix2D z1 = Matrix2D::Zero (n, m);
+  MatrixLD z = A;
+  MatrixLD z1 = MatrixLD::Zero (n, m);
 
   for (size_t k = 0; k < n && k < m-1 ; k++) {
 
@@ -4662,7 +5071,7 @@ std::pair<Matrix2D, Matrix2D> householderQR(Matrix2D& A)
 
   }
 
-  Matrix2D Q = qv[0];
+  MatrixLD Q = qv[0];
 
   // after this loop, we will obtain Q (up to a transpose operation)
   for (size_t i = 1; i < n && i < m-1 ; i++) {
@@ -4674,10 +5083,10 @@ std::pair<Matrix2D, Matrix2D> householderQR(Matrix2D& A)
   }
 
   //R = multiplyWinograd0(Q, mat);
-  Matrix2D R = multiplyMatrix_Naive(Q, A);
+  MatrixLD R = multiplyMatrix_Naive(Q, A);
   Q = transpose0(Q);
 
- return std::pair<Matrix2D, Matrix2D>(Q, R);
+ return std::pair<MatrixLD, MatrixLD>(Q, R);
 }
 
 /**

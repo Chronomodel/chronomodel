@@ -130,7 +130,7 @@ QString MCMCLoop::initialize_time()
         ev->mInitialized = false;
 
 #ifdef S02_BAYESIAN
-        //ev->mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;// not yet integrate within update_321
+        ev->mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;// not yet integrate within update_321
 
 # else
         ev->mS02Theta.mSamplerProposal = MHVariable::eFixe;

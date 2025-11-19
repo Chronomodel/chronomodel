@@ -38,6 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "ChronoApp.h"
+
 #include "MainController.h"
 #include "version.h"
 
@@ -51,6 +52,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <cmath>
 #include <fenv.h>
 #include <stdlib.h>
+#include <thread>
+
+#include <eigen_3.4.0/Eigen/Core>
 
 // STDC FENV_ACCESS ON // not supported with Clang
 
@@ -90,6 +94,58 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
 int main(int argc, char *argv[])
 {
 
+    // Macros détaillées possibles (définies si vectorisation spécifique présente)
+#if defined(EIGEN_VECTORIZE_SSE)
+    std::cout << "EIGEN_VECTORIZE_SSE\n";
+#endif
+#if defined(EIGEN_VECTORIZE_SSE2)
+    std::cout << "EIGEN_VECTORIZE_SSE2\n";
+#endif
+#if defined(EIGEN_VECTORIZE_SSE3)
+    std::cout << "EIGEN_VECTORIZE_SSE3\n";
+#endif
+#if defined(EIGEN_VECTORIZE_SSSE3)
+    std::cout << "EIGEN_VECTORIZE_SSSE3\n";
+#endif
+#if defined(EIGEN_VECTORIZE_SSE4_1)
+    std::cout << "EIGEN_VECTORIZE_SSE4_1\n";
+#endif
+#if defined(EIGEN_VECTORIZE_SSE4_2)
+    std::cout << "EIGEN_VECTORIZE_SSE4_2\n";
+#endif
+#if defined(EIGEN_VECTORIZE_AVX)
+    std::cout << "EIGEN_VECTORIZE_AVX\n";
+#endif
+#if defined(EIGEN_VECTORIZE_AVX2)
+    std::cout << "EIGEN_VECTORIZE_AVX2\n";
+#endif
+#if defined(EIGEN_VECTORIZE_NEON)
+    std::cout << "EIGEN_VECTORIZE_NEON\n";
+#endif
+
+    // 1️⃣ Nombre de cœurs logiques détectés par le système
+    unsigned int nCores = std::thread::hardware_concurrency();
+    if (nCores == 0) nCores = 1;
+
+    // 2️⃣ Choix du nombre optimal de threads : max 80% des cœurs
+    int optimalThreads = std::max(1, static_cast<int>(nCores * 0.8));
+
+#ifdef _OPENMP
+    omp_set_num_threads(optimalThreads);
+    std::cout << "OpenMP threads set to: " << omp_get_max_threads() << "\n";
+#endif
+
+    Eigen::setNbThreads(optimalThreads);
+    Eigen::initParallel();
+
+    std::cout << "[main::Eigen] Threading info:\n";
+    std::cout << "  - Logical Threads detected by hardware: " << nCores << "\n";
+    std::cout << "  - Eigen threads set to:         " << Eigen::nbThreads() << "\n";
+    std::cout << "  - Threads used by Eigen:        " << Eigen::nbThreads() << "\n";
+    std::cout << "  - Using multi-threading:        " << (Eigen::nbThreads() > 1 ? "✅ YES" : "❌ NO") << "\n";
+
+
+// ---
 #ifdef Q_OS_MAC
     if (math_errhandling & MATH_ERREXCEPT) {
         std::cout << "cmath raises exceptions" << std::endl;

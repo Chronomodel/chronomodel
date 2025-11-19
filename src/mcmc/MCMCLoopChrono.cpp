@@ -308,7 +308,9 @@ void MCMCLoopChrono::memo()
             }
 
             if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
-                event->mS02Theta.memo();
+                double memoS02 = sqrt(event->mS02Theta.mX);
+                event->mS02Theta.memo(&memoS02);
+                //event->mS02Theta.memo();
                 event->mS02Theta.saveCurrentAcceptRate();
             }
 

@@ -90,20 +90,76 @@ RESOURCES = $$PRO_PATH/Chronomodel.qrc
 QMAKE_CXXFLAGS_WARN_ON += -Wno-unknown-pragmas -Wno-unused-parameter # invalid option for MSVC2015
 # QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-parameter
 
-
 #########################################
 # C++ 2a
 # Config must use C++ 11 for random number generator
 # This works for Windows, Linux & Mac 10.7 and +
 #########################################
-CONFIG += c++2a
-QMAKE_CXXFLAGS += -std=c++2a
+CONFIG += c++20
+QMAKE_CXXFLAGS += -std=c++20
 
 ####
 # ======================================================
 # Optimisations C++ multiplateforme (Windows, macOS, Linux)
 # Compatible x86_64 et ARM (Apple Silicon)
 # ======================================================
+
+
+# --- Flag pour activer/désactiver OpenMP ---
+# Ajouter dans Qt Creator : CONFIG += use_openmp
+CONFIG -= use_openmp
+contains(CONFIG, use_openmp) {
+    message("✅ OpenMP enabled")
+    OPENMP_ENABLED = 1
+
+} else {
+    message("❌ OpenMP disabled")
+    OPENMP_ENABLED = 0
+}
+
+macx {
+    GCC_PATH = /usr/local/bin   # ou /opt/homebrew/bin sur Apple Silicon
+    exists($$GCC_PATH/g++-14) { # je mets g++-14 pour déactiver l'utilisation de g++-15
+    # --- Compiler override for macOS (use Homebrew GCC instead of Apple Clang)
+        message("✅ Using GCC 15 from $$GCC_PATH")
+        QMAKE_CC = $$GCC_PATH/gcc-15
+        QMAKE_CXX = $$GCC_PATH/g++-15
+        QMAKE_LINK = $$GCC_PATH/g++-15
+        QMAKESPEC = macx-g++
+
+        # OpenMP activé seulement si flag
+        contains(CONFIG, use_openmp) {
+            QMAKE_CXXFLAGS += -fopenmp
+            QMAKE_LFLAGS   += -fopenmp
+            LIBS += -L$$GCC_PATH/../lib/gcc/15 -lgomp
+        }
+
+        # Chemins des headers standard de GCC
+        INCLUDEPATH += /usr/local/Cellar/gcc/15.2.0/include/c++/15.2.0
+        INCLUDEPATH += /usr/local/Cellar/gcc/15.2.0/include/c++/15.2.0/x86_64-apple-darwin20
+        INCLUDEPATH += /usr/local/Cellar/gcc/15.2.0/include
+
+    } else {
+        # message("❌ GCC 15 not found in $$GCC_PATH — will fallback to Apple Clang ")
+        # --- Forcer explicitement l’utilisation de Clang ---
+        QMAKE_CC = /usr/bin/clang
+        QMAKE_CXX = /usr/bin/clang++
+        QMAKE_LINK = /usr/bin/clang++
+        QMAKESPEC = macx-clang
+        QMAKE_MAC_SDK = macosx
+
+        message("✅ Using Apple Clang compiler")
+        # OpenMP pour Clang si flag activé
+        contains(CONFIG, use_openmp) {
+            LIBOMP_INCLUDE = /usr/local/opt/libomp/include
+            LIBOMP_LIB     = /usr/local/opt/libomp/lib
+            QMAKE_CXXFLAGS += -Xpreprocessor -fopenmp -I$$LIBOMP_INCLUDE
+            QMAKE_LFLAGS   += -lomp -L$$LIBOMP_LIB
+            message("Using libomp from $$LIBOMP_LIB")
+        }
+    }
+}
+
 
 # ======================================================
 # RELEASE configuration
@@ -182,20 +238,6 @@ CONFIG(debug, debug|release) {
 }
 
 
-#########################################
-# Active OpenMP (compatible GCC/Clang/MSVC)
-!msvc:contains(QMAKE_CXX, clang++) {
-    message("using OpenMP")
-    QMAKE_CXXFLAGS += -fopenmp
-    QMAKE_LFLAGS += -fopenmp -lomp
-}
-
-
-# Active OpenMP Windows  MSVC
-#QMAKE_CXXFLAGS += -openmp
-#QMAKE_LFLAGS += -openmp
-
-#########################################
 
 #########################################
 # MacOS specific settings
@@ -209,13 +251,6 @@ macx{
 	# This is the SDK used to compile : change it to whatever latest version of mac you are using.
 	# to determine which version of the macOS SDK is installed with xcode? type on a terminal
 	# xcodebuild -showsdks
-
-        # Message de débogage
-           #message("Frameworks disponibles:")
-           #system(ls /System/Library/Frameworks)
-
-        QMAKESPEC = macx-clang
-        QMAKE_MAC_SDK = macosx
 
         #  Désactive les fonctions dépréciées avant Qt 6.0
         DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000
@@ -260,8 +295,34 @@ win32{
         QMAKESPEC = win32-g++ #win32-msvc  # for 32-bit and 64-bit
         RC_ICONS = $$PRO_PATH/icon/Chronomodel.ico
         QT_FATAL_WARNING = 1
-        # QMAKE_CXXFLAGS+= -O2
+
 }
+
+#########################################
+# Active OpenMP (compatible GCC/Clang/MSVC)
+#########################################
+# ✅ Active OpenMP (si ton compilateur le supporte)👉 le compilateur AppleClang ne supporte pas OpenMP par défaut. Il faut utiliser GCC
+# Détection simple : si QMAKE_CXX contient "g++-" alors on assume GCC (Homebrew)
+contains(QMAKE_CXX, g\+\+-) {
+    message("Using GCC toolchain for OpenMP")
+    QMAKE_CXXFLAGS += -fopenmp
+    QMAKE_LFLAGS += -fopenmp
+    # Homebrew GCC fournit libgomp et g++-<ver> lie généralement correctement sans -lgomp
+    # Si nécessaire, vous pouvez ajouter explicitement le chemin vers libgomp :
+    # LIBS += -L/opt/homebrew/lib/gcc/<ver> -lgomp
+} else {
+    message("QMAKE_CXX does not look like Homebrew GCC; set QMAKE_CXX/QMAKE_CC to g++-15 if you want GCC")
+}
+# Active OpenMP Windows  MSVC
+#QMAKE_CXXFLAGS += -openmp
+#QMAKE_LFLAGS += -openmp
+
+#########################################
+# Eigen
+#########################################
+DEFINES += EIGEN_NO_DEBUG
+# ✅ Active la parallélisation Eigen, ne fonctionne que si OpenMP activé
+DEFINES += EIGEN_USE_THREADS
 
 #########################################
 # Doxygen
@@ -271,7 +332,6 @@ CONFIG += doxygen
 #########################################
 # DEFINES
 #########################################
-
 DEFINES += _USE_MATH_DEFINES
 
 # Activate this to use FFT kernel method on histograms

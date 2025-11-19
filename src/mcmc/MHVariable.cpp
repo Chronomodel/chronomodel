@@ -196,41 +196,6 @@ bool MHVariable::try_update(const double x, const double rate)
  * @param rate The acceptance rate, typically the ratio pi(try_value)/pi(current_value).
  * @return bool True if the new value is accepted, false otherwise.
  */
-/* bool MHVariable::test_update(const double current_value, const double try_value, const double rate) {
-    // Ensure mLastAccepts does not exceed its capacity
-    if (mLastAccepts.size() >= mLastAcceptsLength) {
-        mLastAccepts.erase(mLastAccepts.begin());
-    }
-
-    if (rate >= 1.0) {
-        // Accept unconditionally
-        mX = try_value;
-        mLastAccepts.push_back(true);
-        return true;
-    }
-
-    if (rate < 0.0) {
-        // Reject outright
-        mX = current_value;
-        mLastAccepts.push_back(false);
-        return false;
-    }
-
-    // For rate between 0.0 and 1.0, perform a Metropolis-Hastings accept/reject step
-    const double random_number = Generator::randomUniform();
-
-    if (random_number <= rate) {
-        mX = try_value;
-        mLastAccepts.push_back(true);
-        return true;
-
-    } else {
-        mX = current_value;
-        mLastAccepts.push_back(false);
-        return false;
-    }
-}
-*/
 bool MHVariable::test_update(const double current_value, const double try_value, const double rate) {
     // Ensure mLastAccepts does not exceed its capacity
     if (mLastAccepts.size() >= mLastAcceptsLength) {

@@ -1616,13 +1616,26 @@ QPixmap Date::generateCalibThumb(const StudyPeriodSettings& settings)
 
 
         QPixmap thumb(size);
+        // Vérification de la création réussie de QPixmap
+        if (thumb.isNull()) {
+            qDebug() << "[Date::generateCalibThumb] Failed to create QPixmap!";
+            return QPixmap(); // Gestion d'erreur
+        }
+
+        // Remplissage du QPixmap avec une couleur transparente
+        thumb.fill(Qt::transparent);
+
         QPainter p;
-        p.begin(&thumb);
-        //p.setRenderHint(QPainter::SmoothPixmapTransform);//don't work on pixmap
-        graph.showInfos(false);
-        graph.repaint();
+        if (!p.begin(&thumb)) {
+            qDebug() << "[Date::generateCalibThumb] Failed to begin QPainter!";
+            return QPixmap(); // Gestion d'erreur
+        }
+
+        //graph.repaint();
         graph.render(&p);
         p.end();
+
+        graph.showInfos(false);
 
         return thumb;
 
