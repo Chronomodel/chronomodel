@@ -1605,20 +1605,20 @@ void Event::updateW()
 void Event::updateS02()
 {
     try {
-        const double logVMin = -100.;
-        const double logVMax = 100.;
+        const double logVMin = -100.0;
+        const double logVMax = 100.0;
 
         const double logV2 = Generator::gaussByBoxMuller(log10(mS02Theta.mX) , mS02Theta.mSigmaMH);
-        const double V2 = pow(10., logV2);
+        const double V2 = pow(10.0, logV2);
 
-        double rapport  = -1.; // Force reject
+        double rapport  = -1.0; // Force reject
         if (logV2 >= logVMin && logV2 <= logVMax) {
 
-            const double current_h = h_S02(mS02Theta.mX);
+            const double current_h = h_S02(mS02Theta.mX); // h_S02() comporte le jacobien!
 
             const double try_h = h_S02(V2);
 
-            rapport = (try_h / current_h) ; // (V2 / mS02Theta.mX) ; // (V2 / V1) est le jacobien!
+            rapport = (try_h / current_h);
 
         }
 #ifdef DEBUG
@@ -1628,9 +1628,9 @@ void Event::updateS02()
 #endif
 
         mS02Theta.try_update(V2, rapport);
-        //qDebug()<<"SO2 ="<< mS02Theta.mX<<" rapport = "<<rapport;
+
     }  catch (...) {
-        qWarning() <<"[Event::updateS02] mW = 0";
+        qWarning() << "[Event::updateS02] mW = 0";
     }
 
 }
@@ -1663,14 +1663,48 @@ double Event::h_S02(const double S02)
 
     //const double beta = 1.004680139*(1 - exp(- 0.0000847244 * pow(sqrt_S02_harmonique, 2.373548593)));
 
-    double h = exp(- mBetaS02 / S02) / S02;
-    //qDebug()<<"mBetaS02="<<mName<< mBetaS02<<S02;
+   /* double h = exp(- mBetaS02 / S02) / S02;
 
     for (auto& d : mDates) {
         h *= pow((S02/(S02 + pow(d.mSigmaTi.mX, 2))), 2.0);
     }
    return std::move(h / pow(S02, mDates.size()));
+*/
 
+ //--
+   const double S02_squared = S02 * S02;
+   // 1. Initialisation simplifiée de h
+   double h = exp(-mBetaS02 / S02);
 
+   // 2. Précalcul du terme de division final pour l'inclure dans la boucle
+   // L'expression finale est : h * (1 / (S02 * S02)^N)
+   // On initie h = exp(-mBetaS02 / S02) * (1 / S02) * (1 / S02)^(N)
+   // On peut inclure (1/S02) dans la boucle pour simplifier l'étape de post-calcul
+
+   // On utilise S02_inv pour la division finale
+   const double S02_inv = 1.0 / S02;
+   h *= S02_inv; // h = exp(...) / S02
+
+   for (auto& d : mDates) {
+       // 3. Calcul de la variance individuelle au carré une seule fois
+       const double sigmaTi_squared = d.mSigmaTi.mX * d.mSigmaTi.mX;
+
+       // 4. Simplification : le terme (S02/(S02 + sigma^2))^2 est équivalent à :
+       // (S02 * S02) / ((S02 + sigma^2) * (S02 + sigma^2))
+
+       // Calcul du dénominateur (S02 + sigma^2)^2
+       const double denominator_sum = S02 + sigmaTi_squared;
+       const double denominator_squared = denominator_sum * denominator_sum;
+
+       // Multiplication par le terme complet (S02^2 / denominator_squared)
+       h *= S02_squared / denominator_squared;
+
+       // 5. Ajout de la division finale (1 / S02^N) en multipliant par 1/S02
+       // à chaque itération (1 / S02)^N = (1 / S02) * (1 / S02) ... N fois
+       h *= S02_inv;
+   }
+
+   // 6. Pas de post-calcul nécessaire.
+   return h;
 }
 
