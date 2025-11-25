@@ -91,7 +91,7 @@ public:
     inline void setListAxisVisible(QList<bool> &list) { mListAxisVisible = list;};
 
     void updateLayout();
-    void forceRefresh();
+    //void forceRefresh();
 
     inline qreal graphHeight() const {return mGraphHeight;}
     void setGraphHeight(int height);

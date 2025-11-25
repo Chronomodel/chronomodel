@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -72,14 +72,15 @@ GraphView::GraphView(QWidget* parent):
     mXAxisMode(eAllTicks),
     mYAxisMode(eAllTicks),
     mOverflowArrowMode(eNone),
+    mUpdateTimer(new QTimer(this)),
     mAutoAdjustYScale(false),
     mShowInfos(false),
     mBackgroundColor(Qt::white),
     mThickness(1),
     mOpacity(100),
     mCanControlOpacity(false),
-    mTipX(0.),
-    mTipY(0.),
+    mTipX(0.0),
+    mTipY(0.0),
     mTipComment(""),
     mTipWidth(110.),
     mTipHeight(40.),
@@ -89,6 +90,7 @@ GraphView::GraphView(QWidget* parent):
     mZones(),
     mUnitFunctionX(nullptr),
     mUnitFunctionY(nullptr)
+
 {
     mAxisToolX.mIsHorizontal = true;
     mAxisToolX.mShowArrow = true;
@@ -104,10 +106,15 @@ GraphView::GraphView(QWidget* parent):
     setMouseTracking(true);
     setSizePolicy(QSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred));
 
-    setRangeY(0., 1.);
+    setRangeY(0.0, 1.0);
     resetNothingMessage();
 
-    connect(this, &GraphView::signalCurvesThickness, this, &GraphView::updateCurvesThickness);
+    //connect(this, &GraphView::signalCurvesThickness, this, &GraphView::updateCurvesThickness);
+
+    connect(mUpdateTimer, &QTimer::timeout, this, &GraphView::autoUpdate);
+    mUpdateTimer->setSingleShot(true); // Ne s'exécute qu'une fois
+
+    mLastFastPaint.start();
 
 }
 
@@ -167,7 +174,7 @@ GraphView::GraphView(const GraphView& graph, QWidget *parent):
     setRangeY(0., 1.);
     resetNothingMessage();
 
-    connect(this, &GraphView::signalCurvesThickness, this, &GraphView::updateCurvesThickness);
+    //connect(this, &GraphView::signalCurvesThickness, this, &GraphView::updateCurvesThickness);
 
     mCurves = graph.mCurves;
     mZones = graph.mZones;
@@ -336,10 +343,10 @@ void GraphView::zoomX(const type_data min, const type_data max)
         mCurrentMinX = min;
         mCurrentMaxX = max;
 
-        mAxisToolX.updateValues(width(), 10., min, max);
+        mAxisToolX.updateValues(width(), 10.0, min, max);
         
         adjustYScale();
-        repaintGraph(true);
+        repaintGraph();
 
     }
 
@@ -347,14 +354,14 @@ void GraphView::zoomX(const type_data min, const type_data max)
 
 void GraphView::changeXScaleDivision (const Scale& sc)
 {
-    setXScaleDivision(sc);
-    repaintGraph(true);
+    changeXScaleDivision(sc.mark, sc.tip);
 }
 
 void GraphView::changeXScaleDivision (const double& major, const int& minor)
 {
     setXScaleDivision(major, minor);
-    repaintGraph(true);
+    repaintGraph();
+    update();
 }
 
 /* ------------------------------------------------------
@@ -467,15 +474,15 @@ void GraphView::autoAdjustYScale(bool active)
 void GraphView::setGraphFont(const QFont& font)
 {
     setFont(font);
-    repaintGraph(true);
+    repaintGraph();
 }
 /**
- * @brief GraphView::setGraphsThickness throw signal to update thickness
+ * @brief GraphView::setCurvesThickness, set mThickness without repaint
  * @param value
  */
-void GraphView::setGraphsThickness(int value)
+void GraphView::setCurvesThickness(int value)
 {
-    emit signalCurvesThickness(value);
+    mThickness = value;
 }
 
 /**
@@ -485,13 +492,18 @@ void GraphView::setGraphsThickness(int value)
 void GraphView::updateCurvesThickness(int value)
 {
     mThickness = value;
-    repaintGraph(true);
+    repaintGraph();
 }
 
 void GraphView::setCurvesOpacity(int value)
 {
     mOpacity = value;
-    repaintGraph(true);
+}
+
+void GraphView::updateCurvesOpacity(int value)
+{
+    mOpacity = value;
+    repaintGraph();
 }
 
 void GraphView::setCanControlOpacity(bool can)
@@ -532,7 +544,12 @@ void GraphView::removeCurve(const QString& name)
 void GraphView::removeAllCurves()
 {
     mCurves.clear();
-    repaintGraph(false);
+    mZones.clear();
+    mVectorCache = QPicture();
+    mCacheValid = false;
+    mRasterCache = QPixmap();
+    mIsScrolling = false;
+
 }
 
 void GraphView::reserveCurves(const int size)
@@ -546,9 +563,32 @@ void GraphView::setCurveVisible(const QString& name, const bool visible)
         if (c.mName == name && c.mVisible != visible) {
             c.mVisible = visible;
         } });
-
+    repaintGraph();
 }
 
+void GraphView::setCurveVisible(const QStringList& names, const bool visible)
+{
+    std::ranges::for_each(mCurves, [&names, visible](auto& c) {
+        const bool shouldBeVisible = names.contains(c.mName) ? visible : false;
+        if (c.mVisible != shouldBeVisible) {
+            c.mVisible = shouldBeVisible;
+        }
+    });
+    repaintGraph();
+}
+
+void GraphView::setCurveVisible(std::initializer_list<const char*> names, const bool visible)
+{
+    std::ranges::for_each(mCurves, [&names, visible](auto& c) {
+        const bool shouldBeVisible = std::ranges::any_of(names, [&c](const char* name) {
+            return c.mName == name;
+        }) ? visible : false;
+        if (c.mVisible != shouldBeVisible) {
+            c.mVisible = shouldBeVisible;
+        }
+    });
+    repaintGraph();
+}
 GraphCurve* GraphView::getCurve(const QString& name)
 {
     QList<GraphCurve>::Iterator result = std::ranges::find_if(mCurves.begin(), mCurves.end(), [name](auto c) {return c.mName == name;});
@@ -569,12 +609,6 @@ void GraphView::add_zone(const GraphZone& zone)
 {
     mZones.append(zone);
 }
-
-void GraphView::remove_all_zones()
-{
-    mZones.clear();
-}
-
 
 void GraphView::set_points_visible(const QString& name, const bool visible)
 {
@@ -683,7 +717,7 @@ void GraphView::resizeEvent(QResizeEvent* )
     if (width() == 0 || height() == 0)
         return;
 
-    repaintGraph(true);
+    repaintGraph();
 }
 
 void GraphView::updateGraphSize(qreal w, qreal h)
@@ -694,152 +728,245 @@ void GraphView::updateGraphSize(qreal w, qreal h)
      mBottomSpacer = 0.04 * h;
 #endif
 
-    mGraphWidth = std::max(0., w - mMarginLeft - mMarginRight);
-    mGraphHeight = std::max(0., h - mMarginTop - mMarginBottom - mBottomSpacer);
+    mGraphWidth = std::max(0.0, w - mMarginLeft - mMarginRight);
+    mGraphHeight = std::max(0.0, h - mMarginTop - mMarginBottom - mBottomSpacer);
     mAxisToolX.updateValues(int (mGraphWidth), int (mStepMinWidth), mCurrentMinX, mCurrentMaxX);
     mAxisToolY.updateValues(int (mGraphHeight), 12, mMinY, mMaxY);
 }
 
-void GraphView::repaintGraph(const bool aAlsoPaintBackground)
+void GraphView::repaintGraph()
 {
-    (void) aAlsoPaintBackground;
-  /*  if (aAlsoPaintBackground) {
-        mBufferBack = QPixmap();
-    } */
-    update();
-}
+    if ((width() <= 0) || (height() <= 0))
+        return;
 
-void GraphView::paintEvent(QPaintEvent* )
-{
+    updateGraphSize(width(), height());
+
+    if ((mGraphWidth <= 0) || (mGraphHeight <= 0))
+        return;
+
+    // 1. Dessiner en vectoriel
+    mVectorCache = QPicture();
+    QRect rect = QRect(0, 0, mGraphWidth, mGraphHeight);
+    mVectorCache.setBoundingRect(rect); // IMPORTANT : définir la zone avant de dessiner
 
     /* ----------------------------------------------------
      *  Nothing to draw !
      * ----------------------------------------------------*/
     if (mCurves.size() == 0 && mZones.size() == 0 && refPoints.size() == 0) {
-        QPainter p(this);
+        QPainter p(&mVectorCache);
         p.setFont(font());
         p.fillRect(0, 0, width(), height(), mBackgroundColor);
         p.setPen(QColor(100, 100, 100));
         p.drawText(0, 0, width(), height(), Qt::AlignCenter, mNothingMessage);
+        p.end();
 
-        return;
+    } else {
+        paintToDevice(&mVectorCache);
+        mVectorCache.setBoundingRect(rect); // Confirmer la zone
     }
 
-    updateGraphSize(width(), height());
-    if ((mGraphWidth <= 0) || (mGraphHeight <= 0))
-        return;
+    // 2. Créer le cache raster haute résolution
+    updateRasterCache();
+    mCacheValid = false;
+    return;
 
-  //  mBufferBack = QPixmap();
-    paintToDevice(this);
+}
+
+
+void GraphView::updateRasterCache()
+{
+#ifdef DEBUG
+    const qreal dpr = devicePixelRatioF();// /5000.0;
+#else
+    const qreal dpr = devicePixelRatioF();
+#endif
+    mRasterCache = QPixmap(size() * dpr);
+    mRasterCache.setDevicePixelRatio(dpr);
+    mRasterCache.fill(Qt::transparent);
+
+    QPainter p(&mRasterCache);
+    p.drawPicture(0, 0, mVectorCache);
+}
+
+void GraphView::drawTooltip()
+{
+    QPainterPath tipPath;
+    if (mTipRect.width() < 2) {
+        mTipRect.setLeft(20);
+        mTipRect.setTop(20);
+        mTipRect.setWidth(20);
+        mTipRect.setHeight(20);
+    }
+
+    tipPath.addRoundedRect(mTipRect, 5, 5);
+
+    QFont font;
+    font.setPointSizeF(pointSize(10));
 
     QPainter p(this);
     p.setRenderHints(QPainter::Antialiasing);
+    p.setFont(font);
 
-    /* ----------------------------------------------------
-     *  Tool Tip (above all) Draw horizontal and vertical red line
-     * ----------------------------------------------------*/
-    if (mTipVisible && (!mTipXLab.isEmpty() || !mTipYLab.isEmpty())) {
-        QPainterPath tipPath;
-        if (mTipRect.width() < 2) {
-            mTipRect.setLeft(20);
-            mTipRect.setTop(20);
+    p.fillPath(tipPath, QColor(0, 0, 0, 180));
+    p.setPen(Qt::black);
+    p.drawPath(tipPath);
+    p.setPen(Qt::white);
 
-            mTipRect.setWidth(20);
-            mTipRect.setHeight(20);
+    if (!mTipXLab.isEmpty() && !mTipYLab.isEmpty()) {
+        if (mTipComment.isEmpty()) {
+            if (mUnitFunctionX)
+                p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()*0.5),
+                           Qt::AlignCenter, mTipXLab + stringForLocal(mUnitFunctionX(mTipX)));
+            else
+                p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2),
+                           Qt::AlignCenter, mTipXLab + stringForLocal(mTipX));
+
+            if (mUnitFunctionY)
+                p.drawText(mTipRect.adjusted(0, mTipRect.height()*0.5, 0, 0),
+                           Qt::AlignCenter, mTipYLab + stringForLocal(mUnitFunctionY(mTipY)));
+            else
+                p.drawText(mTipRect.adjusted(0, mTipRect.height()*0.5, 0, 0),
+                           Qt::AlignCenter, mTipYLab + stringForLocal(mTipY));
+
+        } else {
+            if (mUnitFunctionX)
+                p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()*0.666),
+                           Qt::AlignCenter, mTipXLab + stringForLocal(mUnitFunctionX(mTipX)));
+            else
+                p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()*0.666),
+                           Qt::AlignCenter, mTipXLab + stringForLocal(mTipX));
+
+            if (mUnitFunctionY)
+                p.drawText(mTipRect.adjusted(0, mTipRect.height()*0.333, 0, -mTipRect.height()*1./3.),
+                           Qt::AlignCenter, mTipYLab + stringForLocal(mUnitFunctionY(mTipY)));
+            else
+                p.drawText(mTipRect.adjusted(0, mTipRect.height()*0.333, 0, -mTipRect.height()*1./3.),
+                           Qt::AlignCenter, mTipYLab + stringForLocal(mTipY));
+
+            p.drawText(mTipRect.adjusted(0, mTipRect.height()*0.666, 0, 0),
+                       Qt::AlignCenter, " ⇨ " + mTipComment);
         }
 
-        tipPath.addRoundedRect(mTipRect, 5, 5);
-
-        QFont font;
-        font.setPointSizeF(pointSize(10));
-
-        QPainter p(this);
-        p.setRenderHints(QPainter::Antialiasing);
-        p.setFont(font);
-
-        p.fillPath(tipPath, QColor(0, 0, 0, 180));
-        p.setPen(Qt::black);
-        p.drawPath(tipPath);
-        p.setPen(Qt::white);
-
-        if (!mTipXLab.isEmpty() && !mTipYLab.isEmpty()) {
-            if (mTipComment.isEmpty()) {
-                if (mUnitFunctionX)
-                    p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + stringForLocal(mUnitFunctionX(mTipX)));
-                else
-                    p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + stringForLocal(mTipX));
-                if (mUnitFunctionY)
-                    p.drawText(mTipRect.adjusted(0, mTipRect.height()/2., 0, 0), Qt::AlignCenter, mTipYLab + stringForLocal(mUnitFunctionY(mTipY)));
-                else
-                    p.drawText(mTipRect.adjusted(0, mTipRect.height()/2., 0, 0), Qt::AlignCenter, mTipYLab + stringForLocal(mTipY));
-
-            } else {
-                if (mUnitFunctionX)
-                    p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()*2./3.), Qt::AlignCenter, mTipXLab + stringForLocal(mUnitFunctionX(mTipX)));
-                else
-                    p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()*2./3.), Qt::AlignCenter, mTipXLab + stringForLocal(mTipX));
-
-                if (mUnitFunctionY)
-                    p.drawText(mTipRect.adjusted(0, mTipRect.height()*1./3., 0, -mTipRect.height()*1./3.), Qt::AlignCenter, mTipYLab + stringForLocal(mUnitFunctionY(mTipY)));
-                else
-                    p.drawText(mTipRect.adjusted(0, mTipRect.height()*1./3., 0, -mTipRect.height()*1./3.), Qt::AlignCenter, mTipYLab + stringForLocal(mTipY));
-
-                p.drawText(mTipRect.adjusted(0, mTipRect.height()*2./3., 0, 0), Qt::AlignCenter, " ⇨ " + mTipComment);
-
-            }
-
-        } else if (!mTipXLab.isEmpty()) {
-            if (mTipComment.isEmpty()) {
-                if (mUnitFunctionX)
-                    p.drawText(mTipRect, Qt::AlignCenter, mTipXLab + stringForLocal(mUnitFunctionX(mTipX)));
-                else
-                    p.drawText(mTipRect, Qt::AlignCenter, mTipXLab + stringForLocal(mTipX));
-
-            } else {
-                if (mUnitFunctionX)
-                    p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + stringForLocal(mUnitFunctionX(mTipX)));
-                else
-                    p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2), Qt::AlignCenter, mTipXLab + stringForLocal(mTipX));
-
-                p.drawText(mTipRect.adjusted(0, mTipRect.height()/2., 0, 0), Qt::AlignCenter, " ⇨ " + mTipComment);
-            }
-        } else if (!mTipYLab.isEmpty()) {
-            if (mUnitFunctionY)
-                p.drawText(mTipRect, Qt::AlignCenter, mTipYLab + stringForLocal(mUnitFunctionY(mTipY)));
+    } else if (!mTipXLab.isEmpty()) {
+        if (mTipComment.isEmpty()) {
+            if (mUnitFunctionX)
+                p.drawText(mTipRect, Qt::AlignCenter,
+                           mTipXLab + stringForLocal(mUnitFunctionX(mTipX)));
             else
-                p.drawText(mTipRect, Qt::AlignCenter, mTipYLab + stringForLocal(mTipY));
-       }
+                p.drawText(mTipRect, Qt::AlignCenter,
+                           mTipXLab + stringForLocal(mTipX));
+
+        } else {
+            if (mUnitFunctionX)
+                p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()*0.5),
+                           Qt::AlignCenter, mTipXLab + stringForLocal(mUnitFunctionX(mTipX)));
+            else
+                p.drawText(mTipRect.adjusted(0, 0, 0, -mTipRect.height()/2),
+                           Qt::AlignCenter, mTipXLab + stringForLocal(mTipX));
+
+            p.drawText(mTipRect.adjusted(0, mTipRect.height()*0.5, 0, 0),
+                       Qt::AlignCenter, " ⇨ " + mTipComment);
+        }
+
+    } else if (!mTipYLab.isEmpty()) {
+        if (mUnitFunctionY)
+            p.drawText(mTipRect, Qt::AlignCenter,
+                       mTipYLab + stringForLocal(mUnitFunctionY(mTipY)));
+        else
+            p.drawText(mTipRect, Qt::AlignCenter,
+                       mTipYLab + stringForLocal(mTipY));
     }
 }
 
+
+void GraphView::paintEvent(QPaintEvent *)
+{
+    const qint64 sinceLastFast = mLastFastPaint.elapsed();
+
+    // Entrée en mode scroll
+    if (sinceLastFast < 100) {
+        if (!mIsScrolling) {
+            mIsScrolling = true;
+            mCacheValid = false;
+           // qDebug() << "[GraphView::paintEvent] -> Passage en MODE SCROLL (sinceLastFast =" << sinceLastFast << "ms)";
+        }
+    }
+    // Retour au mode qualité
+    else if (mIsScrolling && sinceLastFast > 200) {
+        mIsScrolling = false;
+        mCacheValid = false;
+       // qDebug() << "[GraphView::paintEvent] -> Retour en MODE QUALITE (sinceLastFast =" << sinceLastFast << "ms)";
+    }
+
+    // Log du temps entre deux paint events
+    //qDebug() << "[GraphView::paintEvent] paintEvent: sinceLastFast =" << sinceLastFast << "ms, scrolling =" << mIsScrolling;
+
+    // Met à jour le marqueur de temps à chaque paint
+    mLastFastPaint.restart();
+
+    QPainter painter(this);
+
+    if (mIsScrolling) {
+        // Mode scroll : affichage rapide via cache raster
+        if (!mCacheValid) {
+            //qDebug() << "[GraphView::paintEvent ] Régénération du cache RASTER";
+            mRasterCache = QPixmap(size());
+            mRasterCache.fill(Qt::transparent);
+
+            QPainter cachePainter(&mRasterCache);
+            cachePainter.setRenderHint(QPainter::Antialiasing);
+            cachePainter.drawPicture(0, 0, mVectorCache);
+            mCacheValid = true;
+        }
+        painter.drawPixmap(0, 0, mRasterCache);
+        mUpdateTimer->start(500); // Démarrer le timer de mise à jour
+    } else {
+        // Mode qualité : dessin vectoriel
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.drawPicture(0, 0, mVectorCache);
+        mUpdateTimer->stop(); // Arrêter le timer si on sort du mode scroll
+    }
+
+    painter.end();
+
+    // Tooltip par-dessus
+    if (mTipVisible && (!mTipXLab.isEmpty() || !mTipYLab.isEmpty()))
+        drawTooltip();
+}
 
 /**
  * @brief Draw graphics
  */
 void GraphView::paintToDevice(QPaintDevice* device)
 {
-    QPainter p(device);
-    p.setFont(this->font());
-
-    p.setRenderHints(QPainter::Antialiasing);
+    QPainter painter(device);
+    if (!painter.isActive()) {
+        qDebug() << "[GraphView::paintToDevice] device not active!";
+        return; // Gestion d'erreur
+    }
+    const QRect rect = QRect(0, 0, mGraphWidth, mGraphHeight);
+    painter.setFont(this->font());
+    painter.setViewport(rect);  // Définir le viewport
+    painter.setRenderHints(QPainter::Antialiasing);
 
     /* ----------------------- Background ----------------------*/
 
-    p.fillRect(rect(), mBackgroundColor);
+    painter.fillRect(this->rect(), mBackgroundColor);
 
-    QFont font = p.font();
+    QFont font = painter.font();
 
     /* ----------------------------------------------------
      *  Horizontal axis
      * ----------------------------------------------------*/
-     QPen pen = QPen(Qt::black, 1);
-     pen.setWidth(pen.width() * mThickness);
-     p.setPen(pen);
-     if (!mLegendX.isEmpty() && mXAxisValues) {
-          QRectF tr(mMarginLeft, mGraphHeight + mMarginTop - mMarginBottom, mGraphWidth, mMarginBottom);
-          p.setPen(Qt::black);
-          p.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, mLegendX);
-     }
+    QPen pen = QPen(Qt::black);//, 1);
+
+    if (!mLegendX.isEmpty() && mXAxisValues) {
+        QRectF tr(mMarginLeft, mGraphHeight + mMarginTop - mMarginBottom, mGraphWidth, mMarginBottom);
+        painter.setPen(Qt::black);
+        painter.drawText(tr, Qt::AlignRight | Qt::AlignVCenter, mLegendX);
+    }
+    pen.setWidth(pen.width() * mThickness);
+    painter.setPen(pen);
 
     mAxisToolX.mShowArrow = mXAxisArrow;
     mAxisToolX.mShowSubs = mXAxisTicks;
@@ -847,7 +974,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
     mAxisToolX.mShowText = mXAxisValues;
 
     mAxisToolX.updateValues(int (mGraphWidth), int (mStepMinWidth), mCurrentMinX, mCurrentMaxX);
-    mAxisToolX.paint(p, QRectF(mMarginLeft, mMarginTop + mGraphHeight , mGraphWidth , mMarginBottom), -1.,mUnitFunctionX);
+    mAxisToolX.paint(painter, QRectF(mMarginLeft, mMarginTop + mGraphHeight , mGraphWidth , mMarginBottom), -1.,mUnitFunctionX);
 
     /* ----------------------------------------------------
      *  Vertical axis
@@ -867,7 +994,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
         */
 
         mAxisToolY.updateValues(int (mGraphHeight), int (mStepMinWidth), mMinY, mMaxY);
-        mAxisToolY.paint(p, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), -1., mUnitFunctionY);
+        mAxisToolY.paint(painter, QRectF(0, mMarginTop, mMarginLeft, mGraphHeight), -1., mUnitFunctionY);
 
      }
 
@@ -881,17 +1008,17 @@ void GraphView::paintToDevice(QPaintDevice* device)
                 mGraphHeight);
 
         if (r.width()>1) {
-            p.save();
-            p.setClipRect(r);
+            painter.save();
+            painter.setClipRect(r);
 
-            p.fillRect(r, zone.mColor);
-            p.setPen(zone.mColor.darker());
-            QFont fontZone = p.font();
+            painter.fillRect(r, zone.mColor);
+            painter.setPen(zone.mColor.darker());
+            QFont fontZone = painter.font();
             fontZone.setWeight(QFont::Black);
             fontZone.setPointSizeF(pointSize(20));
-            p.setFont(fontZone);
-            p.drawText(r, Qt::AlignCenter | Qt::TextWordWrap, zone.mText);
-            p.restore();
+            painter.setFont(fontZone);
+            painter.drawText(r, Qt::AlignCenter | Qt::TextWordWrap, zone.mText);
+            painter.restore();
         }
     }
 
@@ -906,7 +1033,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
 
          if (mOverflowArrowMode == eBothOverflow || mOverflowArrowMode == eUnderMin) {
 
-             type_data maxData = - std::numeric_limits<type_data>::infinity();
+             type_data maxData = - std::numeric_limits<type_data>::max();
              for (auto& curve : mCurves)
                  if (curve.mVisible && curve.mData.size()>0)
                     maxData = std::max(maxData, curve.mData.lastKey());
@@ -927,14 +1054,14 @@ void GraphView::paintToDevice(QPaintDevice* device)
                  QLinearGradient linearGradientL(xl - arrowSize, yo, xl, yo);
                          linearGradientL.setColorAt(0, gradColDark );
                          linearGradientL.setColorAt(1, gradColLigth );
-                 p.setBrush(linearGradientL);
-                 p.setPen(Qt::NoPen);
-                 p.drawPolygon(LeftTriangle);
+                 painter.setBrush(linearGradientL);
+                 painter.setPen(Qt::NoPen);
+                 painter.drawPolygon(LeftTriangle);
              }
 
          }
          if (mOverflowArrowMode == eBothOverflow || mOverflowArrowMode == eOverMax) {
-             type_data minData = std::numeric_limits<type_data>::infinity();;
+             type_data minData = std::numeric_limits<type_data>::max();;
 
              for (auto& curve : mCurves) {
                  if (curve.mVisible && curve.mData.size() > 0)
@@ -958,10 +1085,10 @@ void GraphView::paintToDevice(QPaintDevice* device)
                          linearGradientR.setColorAt(0, gradColLigth );
                          linearGradientR.setColorAt(1, gradColDark);
 
-                 p.setBrush(linearGradientR);
-                 p.setPen(Qt::NoPen);
+                 painter.setBrush(linearGradientR);
+                 painter.setPen(Qt::NoPen);
 
-                 p.drawPolygon(RigthTriangle);
+                 painter.drawPolygon(RigthTriangle);
              }
          }
 
@@ -972,7 +1099,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
     /* ----------------------------------------------------
      *  Curves
      * ----------------------------------------------------*/
-      drawCurves(p);
+    drawCurves(painter);
 
 
     /* ----------------------------------------------------
@@ -982,17 +1109,24 @@ void GraphView::paintToDevice(QPaintDevice* device)
 
     if (mShowInfos) {
         QFontMetrics fm (font);
-        p.setFont(font);
-        p.setPen(Painting::borderDark);
+        painter.setFont(font);
+        painter.setPen(Painting::borderDark);
         int y = 0;
         int lineH (fm.height());
         for (const QString& info : std::as_const(mInfos)) {
-            p.drawText(int (1.2 * mMarginLeft), int (mMarginTop  + y), int (mGraphWidth - 1.2*mMarginLeft -mMarginRight), lineH, Qt::AlignLeft | Qt::AlignBottom, info);
+            painter.drawText(int (1.2 * mMarginLeft), int (mMarginTop  + y), int (mGraphWidth - 1.2*mMarginLeft -mMarginRight), lineH, Qt::AlignLeft | Qt::AlignBottom, info);
             y += lineH;
         }
 
     }
-    p.end();
+    painter.end();
+}
+
+// Implémentation de la méthode d'update
+void GraphView::autoUpdate()
+{
+    qDebug() << "[GraphView::autoUpdate] -> Retour en MODE QUALITE";
+    update(); // Demande une mise à jour de l'affichage
 }
 
 QPainterPath GraphView::makePath (const QMap<double, double>& map, const bool showBorder) const
@@ -1337,7 +1471,25 @@ void GraphView::drawCurves(QPainter& painter)
 
                     std::vector<type_data> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
 
+                    //auto [lightData, indices] = downsampleLTTBWithIndices(subData, mGraphWidth*3);
+
+
+
+                    // répartition uniforme
+                    const auto n = mGraphWidth;
+                    const auto m = subData.size();
                     std::vector<type_data> lightData;
+                    if (m > n ) {
+                        for (size_t i = 0; i < n; ++i) {
+                            size_t idx = i * (m - 1) / (n - 1);
+                            lightData.push_back(subData[idx]);
+                        }
+                    } else {
+                        lightData = subData;
+                    }
+
+                     const type_data dataStep = type_data(subData.size()) / type_data(n);
+                    /*std::vector<type_data> lightData;
                     const type_data dataStep = type_data(subData.size()) / type_data(mGraphWidth);
                     if (dataStep > 1) {
                         for (int i = 0; i < mGraphWidth; ++i) {
@@ -1348,6 +1500,11 @@ void GraphView::drawCurves(QPainter& painter)
                     } else
                         lightData = subData;
 
+                    bool isFirst = true;
+
+                    for (size_t i = 0; i<lightData.size(); ++i) {
+*/
+                   // qDebug() <<" indices.size" <<indices.size() << "ligthdata.size" <<lightData.size();
                     bool isFirst = true;
 
                     for (size_t i = 0; i<lightData.size(); ++i) {
@@ -2228,8 +2385,8 @@ void GraphView::exportCurrentDensities(const QString& defaultPath, const QLocale
         QStringList list;
 
         list << " X Axis";
-        type_data xMin = std::numeric_limits<type_data>::infinity();;
-        type_data xMax = std::numeric_limits<type_data>::infinity();;
+        type_data xMin = std::numeric_limits<type_data>::max();;
+        type_data xMax = std::numeric_limits<type_data>::max();;
 
         for (const GraphCurve& curve : std::as_const(mCurves)) {
             if (!curve.mData.empty() &&
@@ -2430,8 +2587,8 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
         list << "G";
         list << "G sup 95";
         list << "G inf 95"; */
-        double xMin = std::numeric_limits<double>::infinity();
-        double xMax = - std::numeric_limits<double>::infinity();
+        double xMin = std::numeric_limits<double>::max();
+        double xMax = - std::numeric_limits<double>::max();
 
         for (const GraphCurve& curve : std::as_const(mCurves)) {
             if ((curve.isDensityCurve()||curve.isFunction()) && curve.mVisible) {
@@ -2591,8 +2748,8 @@ void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale 
             list << "err G";
         }
 
-        type_data xMin = std::numeric_limits<type_data>::infinity();
-        type_data xMax = std::numeric_limits<type_data>::infinity();
+        type_data xMin = std::numeric_limits<type_data>::max();
+        type_data xMax = std::numeric_limits<type_data>::max();
 
         QMap <type_data, type_data> G, G_Sup;
         if (isHPD) {
@@ -2936,7 +3093,7 @@ qreal GraphTitle::height()
 void GraphTitle::paintEvent(QPaintEvent*)
 {
     QPainter p(this);
-    const qreal w = parentWidget()->width();
+    const qreal w = width();//parentWidget()->width();
 
     if (!mTitle.text().isEmpty()) {
 
@@ -2997,9 +3154,8 @@ void GraphTitle::paintEvent(QPaintEvent*)
 
 }
 
-void GraphTitle::repaintGraph(const bool aAlsoPaintBackground)
+void GraphTitle::repaintGraph()
 {
-    (void) aAlsoPaintBackground;
     update();
 }
 

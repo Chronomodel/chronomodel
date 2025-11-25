@@ -44,10 +44,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 int ColoredBar::mWidth = 15;
 
-ColoredBar::ColoredBar(QWidget *parent) : QWidget(parent),
+ColoredBar::ColoredBar(QWidget *parent) :
+    QWidget(parent),
     mColor (Qt::green)
 {
-
 }
 
 ColoredBar::~ColoredBar()
@@ -86,7 +86,7 @@ MultiCalibrationDrawing::MultiCalibrationDrawing(QWidget* parent):
 
 MultiCalibrationDrawing::~MultiCalibrationDrawing()
 {
-    for (auto g : mListCalibGraph) {
+    for (auto&& g : mListCalibGraph) {
         delete g;
         g = nullptr;
     }
@@ -162,6 +162,7 @@ void MultiCalibrationDrawing::mouseMoveEvent(QMouseEvent* e)
     */
 }
 
+/*
 void MultiCalibrationDrawing::updateLayout()
 {
     const bool withBar = !mListEventsColor.isEmpty();
@@ -170,55 +171,58 @@ void MultiCalibrationDrawing::updateLayout()
     QFontMetrics fm (font());
     const bool axisVisible = (mGraphHeight >= mHeightForVisibleAxis);
 
-    int y = 0;
+    int ay = 0;
     int graphNo = 0;
     int barNo = 0;
-    const int graphShift = 5; // the same name and the same value as MultiCalibrationView::exportFullImage()
+    constexpr int graphShift = 5; // the same name and the same value as MultiCalibrationView::exportFullImage()
 
+    const qreal ax = withBar ? barWidth + graphShift : graphShift;
+    const qreal aw = std::max(0.0, width() - ax);
+
+    qreal ah = mGraphHeight;
+std::cout<< "new layout ay=" << ay << std::endl;
     for (auto&& graphAbstract: mListCalibGraph) {
 
         GraphView* graph = dynamic_cast<GraphView*>(graphAbstract);
         GraphTitle* graphTitle = dynamic_cast<GraphTitle*>(graphAbstract);
 
+        // --- Ajustement de la barre : hauteur différente selon axe visible ---
+        if (withBar && barNo < mListBar.size()) {
+            int barHeight = withAxis ? ah - marginBottom : ah;
+            barHeight = std::max(0, barHeight);
+
+            const QRect newGeom(graphShift, ay, barWidth, barHeight);
+            if (mListBar[barNo]->geometry() != newGeom)
+                mListBar[barNo]->setGeometry(newGeom);
+
+            if (!mListBar[barNo]->isVisible())
+                mListBar[barNo]->setVisible(true);
+
+            ++barNo;
+        }
+
         if (graphTitle) {
-            /*if (graphTitle->isTitle() && newTitle) {
-                y += graphTitle->height() /2.;
-                newTitle = false;
-            }*/
-            graphTitle->setGeometry(barWidth + graphShift, y, std::max(0, width() - barWidth - 2*graphShift), graphTitle->height() );
+
+            graphTitle->setGeometry(ax, ay, aw, graphTitle->height() );
             graphTitle->setVisible(true);
 
-            if (withBar) {
-                mListBar[barNo]->setGeometry(graphShift, y, barWidth, graphTitle->height());
-                mListBar[barNo]->setVisible(true);
-                ++barNo;
-            }
-
-            y += graphTitle->height();// + (graphTitle->isTitle()? 2: 0);
+            ay += graphTitle->height();// + (graphTitle->isTitle()? 2: 0);
+            std::cout<< "add title ay=" << ay << std::endl;
 
         } else if (graph) {
            // newTitle = true;
-            const int marginBottom = (axisVisible && mListAxisVisible[graphNo] ? int (fm.ascent() * 2.2) : int (fm.height()/2));
-            if (withBar) {
-                /* Si il y a des bars, il doit y avoir autant de bar que de graph et de title,
-                 * La bar est plus courte pour les graphs qui ont un axe visible
-                 */
-                if (axisVisible && mListAxisVisible[graphNo])
-                    mListBar[barNo]->setGeometry(graphShift, y, barWidth, mGraphHeight - marginBottom);
-                else
-                    mListBar[barNo]->setGeometry(graphShift, y, barWidth, mGraphHeight);
+            const bool withAxis = axisVisible && mListAxisVisible[graphNo];
+            const int marginBottom = withAxis ? int (fm.ascent() * 2.2) : int (fm.height()/2);
+//withAxis ? mGraphHeight - marginBottom : mGraphHeight;
 
-                mListBar[barNo]->setVisible(true);
-                ++barNo;
-            }
 
             graph->showXAxisValues(axisVisible && mListAxisVisible[graphNo]);
 
             if (!graph->has_curves() && !graph->has_points()) {
                 graph->showInfos(true);
                 graph->setNothingMessage( graph->getInfo(' ')  + " -> Not computable" );
-                graph->setGeometry(barWidth + graphShift, y, std::max(0, width() - barWidth - graphShift), mGraphHeight);
-                graph->setVisible(true);
+                //graph->setGeometry(ax, ay, aw , ah);
+                //graph->setVisible(true);
 
             } else {
                 graph->showXAxisSubTicks(true);
@@ -234,19 +238,132 @@ void MultiCalibrationDrawing::updateLayout()
                 graph->setTipXLab("t");
                 graph->setMarginBottom(marginBottom);
 
-                graph->setGeometry(barWidth + graphShift, y, std::max(0, width() - barWidth - 2*graphShift), mGraphHeight );
-                graph->setVisible(true);
+               // graph->setGeometry(ax, ay, aw, ah );
+               // graph->setGeometry(barWidth + graphShift, y, std::max(0, width() - barWidth - 2*graphShift), mGraphHeight );
+               // graph->setVisible(true);
             }
-            y += mGraphHeight;
+
+            const QRect graphGeom(ax, ay, aw, ah);
+            if (graph->geometry() != graphGeom)
+                graph->setGeometry(graphGeom);
+
+            if (!graph->isVisible())
+                graph->setVisible(true);
+
+
+            ay += ah;//mGraphHeight;
+            std::cout<< "add graph ay=" << ay << std::endl;
             ++graphNo;
         }
 
     }
 
-    mGraphWidget->resize(width(), y); // Don't use setGeometry() only resize()
+    mGraphWidget->resize(width(), ay); // Don't use setGeometry() only resize()
 
     if (mMouseOverCurve)
-        mMarkerX->resize( mMarkerX->thickness(), y);
+        mMarkerX->resize( mMarkerX->thickness(), ay);
+    else
+        hideMarker();
+
+    forceRefresh();
+}
+*/
+void MultiCalibrationDrawing::updateLayout()
+{
+    const bool withBar = !mListEventsColor.isEmpty();
+    const int barWidth = withBar ? ColoredBar::mWidth : 0;
+
+    QFontMetrics fm(font());
+    const bool axisVisible = (mGraphHeight >= mHeightForVisibleAxis);
+
+    int ay = 0;
+    int graphNo = 0;
+    int barNo = 0;
+    constexpr int graphShift = 5; // same as MultiCalibrationView::exportFullImage()
+
+    const int ax = withBar ? barWidth + graphShift : graphShift;
+    const int aw = std::max(0, width() - ax);
+
+    for (auto&& graphAbstract : mListCalibGraph) {
+
+        if (auto* graphTitle = dynamic_cast<GraphTitle*>(graphAbstract)) {
+            // --- Titre ---
+            if (withBar && barNo < mListBar.size()) {
+                mListBar[barNo]->setGeometry(graphShift, ay, barWidth, graphTitle->height());
+                // ne pas rappeler setVisible si déjà visible
+                if (!mListBar[barNo]->isVisible())
+                    mListBar[barNo]->setVisible(true);
+
+                ++barNo;
+            }
+
+            graphTitle->setGeometry(ax, ay, aw, graphTitle->height());
+            ay += graphTitle->height();
+        }
+
+        else if (auto* graph = dynamic_cast<GraphView*>(graphAbstract)) {
+            // --- Graphe ---
+            const bool withAxis = axisVisible && mListAxisVisible[graphNo];
+            const int marginBottom = withAxis ? int(fm.ascent() * 2.2) : 0;
+            const int ah = mGraphHeight;
+
+            // --- Ajustement de la barre : hauteur différente selon axe visible ---
+            if (withBar && barNo < mListBar.size()) {
+                int barHeight = withAxis ? ah - marginBottom : ah;
+                barHeight = std::max(0, barHeight);
+
+                const QRect newGeom(graphShift, ay, barWidth, barHeight);
+                if (mListBar[barNo]->geometry() != newGeom)
+                    mListBar[barNo]->setGeometry(newGeom);
+
+                if (!mListBar[barNo]->isVisible())
+                    mListBar[barNo]->setVisible(true);
+
+                ++barNo;
+            }
+
+            // --- Configuration du graphe ---
+            graph->showXAxisValues(withAxis);
+
+            if (!graph->has_curves() && !graph->has_points()) {
+                graph->showInfos(true);
+                graph->setNothingMessage(graph->getInfo(' ') + " -> Not computable");
+            } else {
+                graph->showXAxisSubTicks(true);
+
+                if (graph->getCurve("Calibration"))
+                    graph->setOverArrow(GraphView::eBothOverflow);
+                else
+                    graph->setOverArrow(GraphView::eNone);
+
+                graph->setFont(font());
+                graph->setTipXLab("t");
+                graph->setMarginBottom(marginBottom);
+            }
+
+            const QRect graphGeom(ax, ay, aw, ah);
+            if (graph->geometry() != graphGeom)
+                graph->setGeometry(graphGeom);
+
+            if (!graph->isVisible())
+                graph->setVisible(true);
+            ay += ah;
+            ++graphNo;
+
+        }
+    }
+
+    // --- Masquer les barres inutilisées ---
+    for (int i = barNo; i < mListBar.size(); ++i) {
+        if (mListBar[i]->isVisible())
+            mListBar[i]->setVisible(false);
+    }
+
+    // --- Ajustement final du widget principal ---
+    mGraphWidget->resize(width(), ay);
+
+    if (mMouseOverCurve)
+        mMarkerX->resize(mMarkerX->thickness(), ay);
     else
         hideMarker();
 
@@ -281,27 +398,3 @@ void MultiCalibrationDrawing::setGraphHeight(int height)
 }
 
 
-void MultiCalibrationDrawing::forceRefresh()
-{
-    const bool axisVisible = (mGraphHeight >= mHeightForVisibleAxis);
-    const int marginBottom = (axisVisible ? int (fontMetrics().ascent() * 2.2) : int (fontMetrics().ascent() * 0.5));
-
-    int y = 0;
-    int i = 0;
-
-    const auto graphList = getGraphViewList();
-    for (auto&& graph: graphList) {
-        mListBar[i]->setGeometry(5, y, ColoredBar::mWidth, mGraphHeight - marginBottom);
-
-         if (!graph->has_curves()) {
-            QLabel noCalib (tr("No Calibration"), this);
-            noCalib.setGeometry(ColoredBar::mWidth +5, y, std::max(0, width() - ColoredBar::mWidth - fontMetrics().horizontalAdvance(noCalib.text())), mGraphHeight);
-
-         } else {
-             graph->showXAxisValues(axisVisible);
-             graph->forceRefresh();
-         }
-         y += mGraphHeight;
-         ++i;
-    }
-}

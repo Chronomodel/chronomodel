@@ -54,13 +54,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QFileInfo>
 #include <QPainterPath>
 #include <QStaticText>
+#include <QPicture>
+#include <QElapsedTimer>
+#include <QTimer>
 
 class GraphView: public GraphViewAbstract
 {
     Q_OBJECT
 
-    Q_PROPERTY(int thickness MEMBER mThickness READ getGraphsThickness WRITE setGraphsThickness NOTIFY signalCurvesThickness);
-    Q_PROPERTY(QColor backgroundColor MEMBER mBackgroundColor READ getBackgroundColor WRITE setBackgroundColor);
 public:
 
     enum AxisMode
@@ -129,10 +130,13 @@ public:
    // Rendering getRendering();
     void setGraphFont(const QFont& font);
 
-    void setGraphsThickness(int value);
+    void setCurvesThickness(int value);
+    void updateCurvesThickness(int value);
     int getGraphsThickness()const {return mThickness;};
 
     void setCurvesOpacity(int value);
+    void updateCurvesOpacity(int value);
+
     void setCanControlOpacity(bool can);
 
     // Manage Curves
@@ -145,6 +149,9 @@ public:
     void reserveCurves(const int size);
     void squeezeCurves() {mCurves.squeeze();};
     void setCurveVisible(const QString& name, const bool visible);
+    void setCurveVisible(const QStringList& names, const bool visible);
+    void setCurveVisible(std::initializer_list<const char*> names, const bool visible);
+
     GraphCurve* getCurve(const QString& name);
     const QList<GraphCurve>& getCurves() const;
     int numCurves() const;
@@ -157,7 +164,6 @@ public:
     void set_points_visible(const QString &name, const bool visible);
 
     void add_zone(const GraphZone& zone);
-    void remove_all_zones();
 
     // Set value formatting functions
     void setFormatFunctX(DateConversion f);
@@ -172,31 +178,31 @@ public:
     // Paint
 
     void paintToDevice(QPaintDevice* device);
-    void forceRefresh() {repaintGraph(true);}
+    void forceRefresh() {repaintGraph();}
     // Save
 
-    bool saveAsSVG(const QString& fileName, const QString& svgTitle, const QString& svgDescrition, const bool withVersion, const int versionHeight=20);
+    bool saveAsSVG(const QString& fileName, const QString& svgTitle, const QString& svgDescrition, const bool withVersion, const int versionHeight = 20);
 
     // ToolTips
 
     void setTipXLab(const QString& lab);
     void setTipYLab(const QString& lab);
 
-signals:
-    void signalCurvesThickness(int value);
-
 public slots:
-    void updateCurvesThickness(int value);
+
     void zoomX(const type_data min, const type_data max);
 
-    void exportCurrentDensities(const QString& defaultPath, const QLocale& locale, const QString& csvSep, double step = 1.) const;
+    void exportCurrentDensities(const QString& defaultPath, const QLocale& locale, const QString& csvSep, double step = 1.0) const;
     void exportCurrentVectorCurves(const QString& defaultPath, const QLocale& locale, const QString& csvSep, bool writeInRows, int offset = 0) const;
 
-    void exportCurrentCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step = 1., QString graph_title = "") const;
+    void exportCurrentCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step = 1.0, QString graph_title = "") const;
     void exportReferenceCurves(const QString& defaultPath, const QLocale locale = QLocale::English, const QString& csvSep = ",", double step = 1.0, QString filename = "", const double threshold = 95.0, bool isHPD = false) const;
 
     void changeXScaleDivision (const Scale& sc);
     void changeXScaleDivision (const double& major, const int& minor);
+
+
+
 
 protected:
     void adaptMarginBottom();
@@ -211,13 +217,18 @@ protected:
     void drawShape(const GraphCurve& curve, QPainter& painter);
     void drawDensity(const GraphCurve& curve, QPainter& painter);
 
-    void resizeEvent(QResizeEvent*);
+    void resizeEvent(QResizeEvent*) override;
 
-    void paintEvent(QPaintEvent*);
-    void repaintGraph(const bool aAlsoPaintBackground);
-    void enterEvent(QEnterEvent* e);
-    void leaveEvent(QEvent* e);
-    void mouseMoveEvent(QMouseEvent* e);
+    void paintEvent(QPaintEvent*) override;
+    void repaintGraph() override;
+    void updateRasterCache();
+    void drawTooltip();
+
+    void enterEvent(QEnterEvent* e) override;
+    void leaveEvent(QEvent* e) override;
+    void mouseMoveEvent(QMouseEvent* e) override;
+
+    void autoUpdate(); // Méthode d'update
 
 protected:
 
@@ -241,7 +252,13 @@ protected:
     AxisMode mYAxisMode;
     OverflowDataArrowMode mOverflowArrowMode;
 
-   // Rendering mRendering;
+    QPicture mVectorCache;      // Cache vectoriel (qualité)
+    QPixmap mRasterCache;       // Cache raster (performance)
+
+    QElapsedTimer mLastFastPaint;
+    bool mIsScrolling = false;
+    bool mCacheValid = false;  // Indique si mRasterCache est à jour
+    QTimer* mUpdateTimer; // Timer pour la mise à jour automatique
 
     bool mAutoAdjustYScale;
 
@@ -315,14 +332,14 @@ public:
     explicit GraphTitle(QString title, QString commentTitle, QString subTitle, QWidget* parent = nullptr);
 
     void paintEvent(QPaintEvent*);
-    void repaintGraph(const bool aAlsoPaintBackground);
+    void repaintGraph();
 
     void setTitle(const QString& title) {mTitle.setText(title);};
     void setSubTitle(const QString& subTitle) {mSubTitle.setText(subTitle);};
     void setBackGroundColor(const QColor& color) {mBackgroundColor = color;};
     void setTitleBarColor(const QColor& color) {mTitleBarColor = color;};
 
-    void setTitleHeight(const qreal h) {mTitleHeight = h;; mAutoAdjustTitleHeight = false;};
+    void setTitleHeight(const qreal h) {mTitleHeight = h; mAutoAdjustTitleHeight = false;};
     qreal titleHeight() {return mTitleHeight;};
 
     void setSubTitleHeight(const qreal h) {mSubTitleHeight = h; mAutoAdjustSubTitleHeight = false;};

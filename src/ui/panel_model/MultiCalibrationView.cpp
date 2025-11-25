@@ -344,6 +344,7 @@ void MultiCalibrationView::applyAppSettings()
 
 }
 
+/*
 void MultiCalibrationView::updateLayout()
 {
     auto project = getProject_ptr();
@@ -423,46 +424,45 @@ void MultiCalibrationView::updateLayout()
     mHPDLab->setGeometry(xShift, yPosBottomBar0, labelWidth, textHeight);
     mHPDEdit->setGeometry(xShift, yPosBottomBar1, editWidth, textHeight);
 
-//GraphViewResults::mHeightForVisibleAxis = 4 * AppSettings::heigthUnit();
     if (mStatClipBut->isChecked()) {
-        mStatArea->show();
+        mStatArea->setVisible(true);
         mStatArea->setGeometry(0, 0, graphWidth, yPosBottomBar0);
 
         if (mDrawing)
-            mDrawing->hide();
+            mDrawing->setVisible(false);
 
         mColorClipBut->setEnabled(false);
         mScatterClipBut->setEnabled(false);
         mFitClipBut->setEnabled(false);
 
     } else if (mFitClipBut->isChecked() && curveModel) {
-        mStatArea->hide();
+        mStatArea->setVisible(false);
 
         mDrawing->setGeometry(0, 0, graphWidth, yPosBottomBar0);
         mDrawing->updateLayout();
-        mDrawing->show();
+        mDrawing->setVisible(true);
 
         mColorClipBut->setEnabled(true);
         mStatClipBut->setEnabled(false);
         mScatterClipBut->setEnabled(true);
 
     } else if (mScatterClipBut->isChecked()) {
-        mStatArea->hide();
+        mStatArea->setVisible(false);
 
         mDrawing->setGeometry(0, 0, graphWidth, yPosBottomBar0);
         mDrawing->updateLayout();
-        mDrawing->show();
+        mDrawing->setVisible(true);
 
         mColorClipBut->setEnabled(true);
         mStatClipBut->setEnabled(false);
         mFitClipBut->setEnabled(true);
 
-    } else {
-        mStatArea->hide();
+    } else { // multi-plot
+        mStatArea->setVisible(false);
 
         mDrawing->setGeometry(0, 0, graphWidth, yPosBottomBar0);
         mDrawing->updateLayout();
-        mDrawing->show();
+        mDrawing->setVisible(true);
 
         mStatClipBut->setEnabled(true);
         mScatterClipBut->setEnabled(true);
@@ -472,7 +472,115 @@ void MultiCalibrationView::updateLayout()
     }
 
 }
+*/
+void MultiCalibrationView::updateLayout()
+{
+    auto project = getProject_ptr();
+    const bool curveModel = project && project->isCurve();
 
+    const int graphWidth = std::max(0, width() - mButtonWidth);
+    const int margin = static_cast<int>(0.1 * mButtonWidth);
+    const int xm = graphWidth + margin;
+
+    const int textHeight = static_cast<int>(1.2 * (fontMetrics().ascent() + fontMetrics().descent()));
+    const int verticalSpacer = static_cast<int>(0.3 * AppSettings::heigthUnit());
+
+    // --- Boutons à droite ---
+    int y = 0;
+    auto setButton = [&](QWidget* w) {
+        if (!w) return;
+        w->setGeometry(graphWidth, y, mButtonWidth, mButtonHeigth);
+        y += w->height() + 5;
+    };
+
+    setButton(mImageSaveBut);
+    setButton(mImageClipBut);
+    setButton(mStatClipBut);
+    setButton(mScatterClipBut);
+
+    mFitClipBut->setVisible(curveModel);
+    if (curveModel) setButton(mFitClipBut);
+
+    setButton(mExportResults);
+    setButton(mColorClipBut);
+
+    // --- Hauteur de graphe ---
+    mGraphHeightLab->setGeometry(graphWidth, y, mButtonWidth, textHeight);
+    y += mGraphHeightLab->height();
+    mGraphHeightEdit->setGeometry(xm, y, mButtonWidth - 2 * margin, textHeight);
+    y += mGraphHeightEdit->height() + verticalSpacer;
+
+    // --- Barre du bas ---
+    const int yPosBottomBar0 = height() - 2 * textHeight - 12;
+    const int yPosBottomBar1 = yPosBottomBar0 + textHeight + 2;
+
+    mYZoom->setGeometry(graphWidth, y, mButtonWidth, yPosBottomBar0 - y);
+
+    const qreal labelWidth = std::min(fontMetrics().horizontalAdvance("-1000000"), width() / 5);
+    const qreal marginBottom = (width() - 5.0 * labelWidth) / 6.0;
+    const qreal editWidth = labelWidth;
+
+    struct Field {
+        QLabel* label;
+        QLineEdit* edit;
+    };
+
+    std::array<Field, 5> fields = {{
+        {mStartLab, mStartEdit},
+        {mEndLab, mEndEdit},
+        {mMajorScaleLab, mMajorScaleEdit},
+        {mMinorScaleLab, mMinorScaleEdit},
+        {mHPDLab, mHPDEdit}
+    }};
+
+    qreal x = marginBottom;
+    for (int i = 0; i < static_cast<int>(fields.size()); ++i) {
+        auto& f = fields[i];
+        f.label->setGeometry(x, yPosBottomBar0, labelWidth, textHeight);
+        f.edit->setGeometry(x, yPosBottomBar1, editWidth, textHeight);
+        x += labelWidth + marginBottom;
+    }
+
+    // Valeurs dynamiques
+    mMajorScaleEdit->setText(QLocale().toString(mMajorScale));
+    mMinorScaleEdit->setText(QLocale().toString(mMinorScale));
+
+    // --- Zone principale ---
+    auto showDrawing = [&](bool visible) {
+        if (mDrawing) {
+            mDrawing->setGeometry(0, 0, graphWidth, yPosBottomBar0);
+            mDrawing->setVisible(visible);
+            if (visible) mDrawing->updateLayout();
+        }
+    };
+
+    auto enableButtons = [&](bool stat, bool scatter, bool fit, bool color) {
+        mStatClipBut->setEnabled(stat);
+        mScatterClipBut->setEnabled(scatter);
+        mFitClipBut->setEnabled(fit);
+        mColorClipBut->setEnabled(color);
+    };
+
+    if (mStatClipBut->isChecked()) {
+        mStatArea->setVisible(true);
+        mStatArea->setGeometry(0, 0, graphWidth, yPosBottomBar0);
+        showDrawing(false);
+        enableButtons(true, false, false, false);
+    }
+    else {
+        mStatArea->setVisible(false);
+        showDrawing(true);
+
+        if (mFitClipBut->isChecked() && curveModel)
+            enableButtons(false, true, false, true);
+        else if (mScatterClipBut->isChecked())
+            enableButtons(false, true, true, true);
+        else
+            enableButtons(true, true, true, true);
+    }
+}
+
+/*
 void MultiCalibrationView::updateGraphList()
 {
 
@@ -523,6 +631,57 @@ void MultiCalibrationView::updateGraphList()
         updateScroll();
     }
 
+}
+*/
+void MultiCalibrationView::updateGraphList()
+{
+    // --- Mode statistique ---
+    if (mStatClipBut->isChecked()) {
+        if (mDrawing) mDrawing->setVisible(false);
+        mStatArea->setVisible(true);
+        showStat();
+        updateLayout();
+        return;
+    }
+
+    // --- Récupération de l'état du projet ---
+    const QJsonObject* state = getState_ptr();
+    mSettings = StudyPeriodSettings::fromJson(state->value(STATE_SETTINGS).toObject());
+
+    // --- Nettoyage de l'ancien dessin ---
+    if (mDrawing) {
+        delete mDrawing;
+        mDrawing = nullptr;
+    }
+
+    // --- Création du nouveau dessin selon le mode ---
+    const bool scatter = mScatterClipBut->isChecked();
+    const bool fit = mFitClipBut->isChecked();
+
+    if (scatter)
+        mDrawing = scatterPlot(mThreshold);
+    else if (fit)
+        mDrawing = fitPlot(mThreshold);
+    else
+        mDrawing = multiCalibrationPlot(mThreshold);
+
+    // --- Calcul de la hauteur du graphe ---
+    const double baseHeight = 8.0 * AppSettings::heigthUnit();
+    const double prop = mYZoom->getProp();
+    const bool tall = scatter || fit;
+    mHeightForVisibleAxis = baseHeight;
+    mGraphHeight = prop * baseHeight * (tall ? 6.0 : 2.0);  // 3*prop*origin*2 → 6*prop*heigthUnit
+
+    // --- Configuration du dessin ---
+    mDrawing->setGraphHeight(mGraphHeight);
+    mDrawing->setVisible(true);
+    mDrawing->show();
+
+    mStatArea->setVisible(false);
+
+    // --- Layout et scroll ---
+    updateLayout();
+    updateScroll();
 }
 
 MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double thres)
@@ -674,13 +833,13 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                 const QString eventName (ev.value(STATE_NAME).toString());
 
                 listAxisVisible.append(true);
+
+                colorList.append(event_color);
                 if (&ev != preEvent) {
                     graphList.append(new GraphTitle(tr("Event : %1 ").arg(eventName), curveDescription, d.getQStringName(), this));
-                    colorList.append(event_color);
 
                 } else {
                     graphList.append(new GraphTitle("", d.getQStringName(), this));
-                    colorList.append(event_color);
 
                     listAxisVisible[listAxisVisible.size()-2] = false;
                 }
@@ -693,7 +852,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                     //const QMap<type_data, type_data> &subData = getMapDataInRange(calibCurve.mData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
                     QList<QPair<double, QPair<double, double> > > intervals;
-                    QMap<type_data, type_data> hpd (create_HPD_by_dichotomy(subData, intervals, thres));
+                    QMap<type_data, type_data> hpd = stdMap_to_QMap(create_HPD_by_dichotomy(subData, intervals, thres));
 
                     GraphCurve hpdCurve;
                     hpdCurve.mName = "Calibration HPD";
@@ -857,7 +1016,8 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
             graph1->setRangeX(mTminDisplay, mTmaxDisplay);
             graph1->setCurrentX(mTminDisplay, mTmaxDisplay);
-            graph1->changeXScaleDivision(mMajorScale, mMinorScale);
+            //graph1->changeXScaleDivision(mMajorScale, mMinorScale);
+            graph1->setXScaleDivision(mMajorScale, mMinorScale);
             graph1->setOverArrow(GraphView::eNone);
             graph1->setTipXLab("t");
 
@@ -1255,8 +1415,8 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
             if (processType == CurveSettings::eProcess_None) {
                 graph1->autoAdjustYScale(false);
-                double Ymin = +INFINITY;
-                double Ymax = -INFINITY;
+                double Ymin = +std::numeric_limits<double>::max();
+                double Ymax = -std::numeric_limits<double>::max();
                 for (const auto &ptX : curveDataPointsX) {
                     Ymin = std::min(Ymin, ptX.Ymin);
                     Ymax = std::max(Ymax, ptX.Ymax);
@@ -2149,16 +2309,20 @@ void MultiCalibrationView::updateHPDGraphs(const QString &thres)
     else
         return;
 
+    const bool scatter = mScatterClipBut->isChecked();
+    const bool fit = mFitClipBut->isChecked();
+
     if (mStatClipBut ->isChecked()) {
         showStat();
+        return;
 
-    } else if (mScatterClipBut->isChecked()) {
+    } else if (scatter) {
         delete mDrawing;
         mDrawing = scatterPlot(mThreshold);
         updateGraphsZoom(); // update Y scale
         updateLayout();
 
-    } else if (mFitClipBut->isChecked()) {
+    } else if (fit) {
         delete mDrawing;
         mDrawing = fitPlot(mThreshold);
         updateGraphsZoom(); // update Y scale
@@ -2166,29 +2330,33 @@ void MultiCalibrationView::updateHPDGraphs(const QString &thres)
 
     } else {
         QList<GraphView*> graphList = mDrawing->getGraphViewList();
-        GraphCurve* calibCurve (nullptr);
-        GraphCurve* hpdCurve (nullptr);
-        for (GraphView* gr : graphList) {
+        GraphCurve* calibCurve = nullptr;
+        GraphCurve* hpdCurve = nullptr;
+
+        for (auto it = graphList.begin(); it != graphList.end(); ++it) {
+            GraphView* gr = *it;
             calibCurve = gr->getCurve("Calibration");
-            // there is curve named "Calibration" in a Bound
+
+            // Vérifie s'il existe une courbe nommée "Calibration" dans un Bound
             if (calibCurve) {
-                // hpd is calculate only on the study Period
+                // hpd est calculé uniquement sur la période d'étude
                 QMap<type_data, type_data> subData = calibCurve->mData;
                 subData = getMapDataInRange(subData, mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
                 QList<QPair<double, QPair<double, double> > > formated_intervals;
-                const QMap<double, double> &hpd = QMap<double, double>(create_HPD_by_dichotomy(subData, formated_intervals, mThreshold));
+                const QMap<double, double> hpd = stdMap_to_QMap(create_HPD_by_dichotomy(subData, formated_intervals, mThreshold));
 
                 hpdCurve = gr->getCurve("Calibration HPD");
                 hpdCurve->mData = hpd;
 
                 gr->forceRefresh();
+                gr->update();
             }
         }
-        calibCurve = nullptr;
-        hpdCurve = nullptr;
-    }
 
+
+    }
+    //
 
 }
 
@@ -2384,12 +2552,12 @@ void MultiCalibrationView::updateGraphsZoom()
                 }
 
                 if (yMax == 0.)
-                    yMax = 1;
+                    yMax = 1.0;
 
                 gr->setRangeY(0., yMax);
             }
 
-           if (gr->has_points()) {
+            if (gr->has_points()) {
                 if (gr->autoAdjustY()) {
                     double yMin = gr->refPoints.at(0).Ymin;
                     double yMax = gr->refPoints.at(0).Ymax;
@@ -2412,6 +2580,7 @@ void MultiCalibrationView::updateGraphsZoom()
                     }
 
                     gr->setRangeY(yMin, yMax);
+
                 }
             }
 
@@ -2420,7 +2589,7 @@ void MultiCalibrationView::updateGraphsZoom()
             // ------------------------------------------------------------
             //  Show zones if calibrated data are outside study period
             // ------------------------------------------------------------
-            gr->remove_all_zones();
+
             if (mTminDisplay < mSettings.getTminFormated()) {
                 GraphZone zone;
                 zone.mXStart = mTminDisplay;
@@ -2429,6 +2598,7 @@ void MultiCalibrationView::updateGraphsZoom()
                 zone.mColor.setAlpha(75);
                 zone.mText = tr("Outside study period");
                 gr->add_zone(zone);
+
             }
             if (mTmaxDisplay > mSettings.getTmaxFormated()) {
                 GraphZone zone;
@@ -2438,18 +2608,22 @@ void MultiCalibrationView::updateGraphsZoom()
                 zone.mColor.setAlpha(75);
                 zone.mText = tr("Outside study period");
                 gr->add_zone(zone);
+
             }
 
             calibCurve = nullptr;
+            gr->update();
         }
     }
 
     if ((mScatterClipBut->isChecked() || mFitClipBut->isChecked()) && is_curve)
         mMarginLeft = 1.5 * maxYLength + 10;
     else
-        mMarginLeft = 1.3 * fm.horizontalAdvance(stringForGraph(mTminDisplay))/2. + 10;
+        mMarginLeft = 1.3 * fm.horizontalAdvance(stringForGraph(mTminDisplay))/2.0 + 10;
 
-    for (GraphViewAbstract* gr : *mDrawing->getGraphList()) {
+    for (auto it = mDrawing->getGraphList()->begin(); it != mDrawing->getGraphList()->end(); ++it) {
+        GraphViewAbstract* gr = *it;
+
         GraphView* gv = dynamic_cast<GraphView*>(gr);
         GraphTitle* gt = dynamic_cast<GraphTitle*>(gr);
 
@@ -2459,15 +2633,16 @@ void MultiCalibrationView::updateGraphsZoom()
                 gv->setMarginLeft(mMarginLeft);
             }
             gv->forceRefresh();
+            gv->update();
 
         } else if (gt) {
             gt->setMarginRight(mMarginRight);
             gt->setMarginLeft(mMarginLeft);
-            gt->repaintGraph(true);
+            gt->repaintGraph();
+            gt->update();
         }
-        gv = nullptr;
-        gt = nullptr;
     }
+
 
 }
 
@@ -2484,6 +2659,7 @@ void MultiCalibrationView::exportImage()
     mDrawing->showMarker();
 }
 
+/*
 void MultiCalibrationView::exportFullImage()
 {
     bool printAxis = (mGraphHeight < mHeightForVisibleAxis);
@@ -2491,7 +2667,7 @@ void MultiCalibrationView::exportFullImage()
 
     QWidget* widgetExport = mDrawing->getGraphWidget();
 
-    int minDeltaPix (3); //same value as GraphView::mStepMinWidth
+    int minDeltaPix = 3; //same value as GraphView::mStepMinWidth
     widgetExport->setFont(mDrawing->font());
 
 
@@ -2499,16 +2675,16 @@ void MultiCalibrationView::exportFullImage()
 
     AxisWidget* axisWidget = nullptr;
     QLabel* axisLegend = nullptr;
-   // int axeHeight (int (font().pointSize() * 2.2));
-    int axeHeight (int ( fmAxe.ascent() * 2.2));
-    int legendHeight ( int (1.5 * (fmAxe.descent() + fmAxe.ascent())));
+
+    int axeHeight = int ( fmAxe.ascent() * 2.2);
+    int legendHeight = int (1.5 * (fmAxe.descent() + fmAxe.ascent()));
 
     if (printAxis) {
         widgetExport->resize(widgetExport->width(), widgetExport->height() + axeHeight + legendHeight);
 
-        DateConversion f = nullptr; //DateUtils::convertToAppSettingsFormat;
+        DateConversion f = nullptr;
 
-        const int graphShift (5); // the same name and the same value as MultiCalibrationDrawing::updateLayout()
+        constexpr int graphShift = 5; // the same name and the same value as MultiCalibrationDrawing::updateLayout()
         axisWidget = new AxisWidget(f, widgetExport);
         axisWidget->setFont(mDrawing->font());
         axisWidget->mMarginLeft = mMarginLeft;
@@ -2517,7 +2693,6 @@ void MultiCalibrationView::exportFullImage()
         //qDebug()<<"multiCal Export"<<mMajorScale << mMinorScale;
         axisWidget->setScaleDivision(mMajorScale, mMinorScale);
         axisWidget->updateValues(int (widgetExport->width() - axisWidget->mMarginLeft - axisWidget->mMarginRight -ColoredBar::mWidth - graphShift), minDeltaPix, mTminDisplay, mTmaxDisplay);
-
 
         //axisWidget->mShowText = true;
         axisWidget->setAutoFillBackground(true);
@@ -2567,6 +2742,78 @@ void MultiCalibrationView::exportFullImage()
 
     if (fileInfo.isFile())
         MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
+
+    updateLayout();
+}
+*/
+
+void MultiCalibrationView::exportFullImage()
+{
+    const bool printAxis = (mGraphHeight < mHeightForVisibleAxis);
+    QWidget* widgetExport = mDrawing->getGraphWidget();
+    widgetExport->setFont(mDrawing->font());
+
+    const QFontMetricsF fmAxe(widgetExport->font());
+    const int minDeltaPix = 3; // same as GraphView::mStepMinWidth
+    const int axeHeight = int(fmAxe.ascent() * 2.2);
+    const int legendHeight = int(1.5 * (fmAxe.ascent() + fmAxe.descent()));
+    constexpr int graphShift = 5; // same as MultiCalibrationDrawing::updateLayout()
+
+    AxisWidget* axisWidget = nullptr;
+    QLabel* axisLegend = nullptr;
+
+    // --- Préparation de l'espace supplémentaire si un axe doit être affiché ---
+    const int extraHeight = printAxis ? axeHeight + legendHeight : legendHeight;
+    widgetExport->resize(widgetExport->width(), widgetExport->height() + extraHeight);
+
+    // --- Création optionnelle de l’axe ---
+    if (printAxis) {
+        axisWidget = new AxisWidget(nullptr, widgetExport);
+        axisWidget->setFont(widgetExport->font());
+        axisWidget->mMarginLeft = mMarginLeft;
+        axisWidget->mMarginRight = mMarginRight;
+        axisWidget->setScaleDivision(mMajorScale, mMinorScale);
+        axisWidget->updateValues(
+            int(widgetExport->width() - axisWidget->mMarginLeft - axisWidget->mMarginRight - ColoredBar::mWidth - graphShift),
+            minDeltaPix, mTminDisplay, mTmaxDisplay);
+
+        axisWidget->mShowSubs = axisWidget->mShowSubSubs = axisWidget->mShowArrow = axisWidget->mShowText = true;
+        axisWidget->setAutoFillBackground(true);
+        axisWidget->setGeometry(ColoredBar::mWidth + graphShift,
+                                widgetExport->height() - axeHeight,
+                                widgetExport->width() - ColoredBar::mWidth - graphShift,
+                                axeHeight);
+        axisWidget->raise();
+        axisWidget->show();
+
+        // --- Légende de l’axe ---
+        axisLegend = new QLabel(DateUtils::getAppSettingsFormatStr(), widgetExport);
+        axisLegend->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        axisLegend->setGeometry(0,
+                                widgetExport->height() - axeHeight - legendHeight,
+                                widgetExport->width() - 10,
+                                legendHeight);
+        axisLegend->raise();
+        axisLegend->show();
+    }
+
+    // --- Export de l’image ---
+    const QFileInfo fileInfo = saveWidgetAsImage(
+        widgetExport,
+        QRect(0, 0, widgetExport->width(), widgetExport->height()),
+        tr("Save graph image as..."),
+        MainWindow::getInstance()->getCurrentPath());
+
+    // --- Nettoyage propre ---
+    if (axisWidget) delete axisWidget;
+    if (axisLegend) delete axisLegend;
+
+    widgetExport->resize(widgetExport->width(), widgetExport->height() - extraHeight);
+
+    // --- Mise à jour du chemin courant ---
+    if (fileInfo.isFile())
+        MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
+
     updateLayout();
 }
 

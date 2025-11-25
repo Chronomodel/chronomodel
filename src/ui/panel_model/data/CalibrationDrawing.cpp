@@ -114,7 +114,7 @@ void CalibrationDrawing::setRefGraph(GraphViewRefAbstract* refGraph)
         if (mRefGraphView->mGraph) {
             mRefGraphView->mGraph->setMouseTracking(true);
             mRefGraphView->mGraph->setTipXLab("t Ref");
-            mRefGraphView->update();
+            mRefGraphView->mGraph->forceRefresh();
         }
     }
     setMouseTracking(true);
@@ -126,6 +126,8 @@ void CalibrationDrawing::setCalibGraph(GraphView* calibGraph)
     mCalibGraph->setParent(this);
     mCalibGraph->setMouseTracking(true);
     mCalibGraph->setTipXLab("t Calib");
+    mCalibGraph->forceRefresh();
+    mCalibGraph->update();
 }
 
 void CalibrationDrawing::paintEvent(QPaintEvent* e)

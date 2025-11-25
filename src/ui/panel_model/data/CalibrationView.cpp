@@ -278,7 +278,9 @@ void CalibrationView::setDate(const Date& d)
 
         mDrawing->setRefGraph( mRefGraphView);
         mDrawing->updateLayout();
-        update();
+
+        //updateScroll();
+       // update();
     }
     catch(QString error) {
         QMessageBox message(QMessageBox::Critical,
@@ -294,12 +296,13 @@ void CalibrationView::setDate(const Date& d)
 void CalibrationView::updateGraphs()
 {
     mCalibGraph->removeAllCurves();
-    mCalibGraph->remove_all_zones();
 
     if (!mDate.isNull()) {
         mCalibGraph->setRangeX (mTminDisplay, mTmaxDisplay);
         mCalibGraph->setCurrentX (mTminDisplay, mTmaxDisplay);
-        mCalibGraph->changeXScaleDivision (mMajorScale, mMinorScale);
+
+        mCalibGraph->setXScaleDivision (mMajorScale, mMinorScale);
+       // mCalibGraph->changeXScaleDivision (mMajorScale, mMinorScale); // do repaintGraph
 
         // ------------------------------------------------------------
         //  Show zones if calibrated data are outside study period
@@ -454,7 +457,7 @@ void CalibrationView::updateGraphs()
 
         if (mRefGraphView) {
             mRefGraphView->setParent(mDrawing);
-            mRefGraphView->setVisible(true);
+
 
             mRefGraphView->setFormatFunctX(DateUtils::convertFromAppSettingsFormat); // must be before setDate, because setDate use it
             StudyPeriodSettings tmpSettings;
@@ -462,12 +465,13 @@ void CalibrationView::updateGraphs()
             const double minDisplayInRaw = DateUtils::convertFromAppSettingsFormat(mTminDisplay);
             tmpSettings.mTmax = qMax(minDisplayInRaw, maxDisplayInRaw);
             tmpSettings.mTmin = qMin(minDisplayInRaw, maxDisplayInRaw);
-            tmpSettings.mStep = 1.;
+            tmpSettings.mStep = 1.0;
             mRefGraphView->setDate(mDate, tmpSettings);
 
             mRefGraphView->zoomX(mTminDisplay, mTmaxDisplay);
             mRefGraphView->changeXScaleDivision(mMajorScale, mMinorScale);
 
+            mRefGraphView->setVisible(true);
         }
         mDrawing->setRefGraph(mRefGraphView);
 
@@ -507,11 +511,6 @@ void CalibrationView::updateGraphs()
     updateLayout();
 }
 
-void CalibrationView::updateZoom()
-{
-    updateScroll();
-}
-
 void CalibrationView::updateScaleX()
 {
     QString str = mMajorScaleEdit->text();
@@ -539,11 +538,11 @@ void CalibrationView::updateScaleX()
 
     str = mMinorScaleEdit->text();
 
-    textSize = fontMetrics().horizontalAdvance(str)  + fontMetrics().horizontalAdvance("0");
+    textSize = fontMetrics().horizontalAdvance(str) + fontMetrics().horizontalAdvance("0");
     if (textSize > mMinorScaleEdit->width()) {
         QFont adaptedFont (font());
         const qreal fontRate = textSize / mMinorScaleEdit->width();
-        const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
+        const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.0);
         adaptedFont.setPointSizeF(ptSiz);
         mMinorScaleEdit->setFont(adaptedFont);
 
@@ -554,11 +553,11 @@ void CalibrationView::updateScaleX()
 
     if (isNumber && aNumber >= 1) {
         mMinorScale =  int (aNumber);
-        mCalibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
+        mCalibGraph->changeXScaleDivision(mMajorScale, mMinorScale); // do repaintGraph
         if (mRefGraphView)
             mRefGraphView->changeXScaleDivision(mMajorScale, mMinorScale);
     }
-
+    updateGraphs();
 }
 
 void CalibrationView::updateScroll()

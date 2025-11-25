@@ -366,9 +366,9 @@ AxisWidget::AxisWidget(DateConversion funct, QWidget* parent):
 
 void AxisWidget::paintEvent(QPaintEvent*)
 {
-    QPainter p(this);
-    p.setFont(this->font());
-    paint(p, QRectF( mMarginLeft, 0, width() - mMarginLeft - mMarginRight, height()), 7., mFormatFunct);
+    QPainter painter(this);
+    painter.setFont(this->font());
+    paint(painter, QRectF( mMarginLeft, 0, width() - mMarginLeft - mMarginRight, height()), 7., mFormatFunct);
 }
 
 /**

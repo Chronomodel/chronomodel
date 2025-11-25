@@ -97,7 +97,7 @@ public:
     void setMargins(const qreal aMarginLeft, const qreal aMarginRight, const qreal aMarginTop, const qreal aMarginBottom);
 
 protected:
-	virtual void repaintGraph(const bool aAlsoPaintBackground) = 0;
+    virtual void repaintGraph() = 0;
 
     virtual qreal getXForValue(const type_data aValue, const bool aConstainResult = true) const;
     virtual type_data getValueForX(const qreal x, const bool aConstainResult = true) const;
