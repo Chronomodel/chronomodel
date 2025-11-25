@@ -245,7 +245,7 @@ void ProjectView::applyFilesSettings(std::shared_ptr<ModelCurve> &model)
     const StudyPeriodSettings s = StudyPeriodSettings::fromJson(state.value(STATE_SETTINGS).toObject());
     const bool calibrate = mModelView->findCalibrateMissing();
     if (calibrate)
-        mModelView->calibrateAll(s);
+        mModelView->calibrateAll(s); //do pushProjectState
 
     applySettings(model);
 }

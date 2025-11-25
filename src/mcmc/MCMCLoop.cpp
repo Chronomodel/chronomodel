@@ -360,7 +360,7 @@ QString MCMCLoop::initialize_time()
                             date.mSigmaTi.mX = 1.0E-6; // Add control the 2015/06/15 with PhL
                             //log += line(date.mName + textBold("Sigma indiv. <=1E-6 set to 1E-6"));
                         }
-                        date.mSigmaTi.mSigmaMH = 1.0;//1.27;  //1.;
+                        date.mSigmaTi.mSigmaMH = 1.0;
 
                         date.mSigmaTi.mLastAccepts.clear();
                         date.mSigmaTi.accept_update(date.mSigmaTi.mX);
@@ -377,19 +377,15 @@ QString MCMCLoop::initialize_time()
 
                     const double sqrt_S02_harmonique = sqrt(uEvent->mDates.size() / s02_sum);
                     uEvent->mBetaS02 = 1.004680139*(1 - exp(- 0.0000847244 * pow(sqrt_S02_harmonique, 2.373548593)));
-#ifdef CODE_KOMLAN \
+#ifdef CODE_KOMLAN
                     // new code
                     //uEvent->mS02Theta.mX = 1.0 / Generator::gammaDistribution(1., uEvent->mBetaS02);
                     uEvent->mS02Theta.accept_update(1.0 / Generator::gammaDistribution(1., uEvent->mBetaS02));
 
 #else
-                    //uEvent->mS02Theta.mX = uEvent->mDates.size() / s02_sum;
                     uEvent->mS02Theta.accept_update(uEvent->mDates.size() / s02_sum);
 
 #endif
-
-
-
 
 
                     // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)

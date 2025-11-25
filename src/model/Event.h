@@ -43,15 +43,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Date.h"
 #include "CurveSettings.h"
 
-
 #include <QColor>
 #include <QJsonObject>
+#include <vector>
 
 class Model;
 class Phase;
 class EventConstraint;
 
-#define NotS02_BAYESIAN
+
 
 class Event: std::enable_shared_from_this<Event>
 {
@@ -247,7 +247,7 @@ std::vector<T> get_vector(Func fun, const std::vector<std::shared_ptr<Event>> &e
 
 template <typename T, typename Func>
 Eigen::Matrix<T, Eigen::Dynamic, 1>
-get_ColumnVectorLD(Func fun, const std::vector<std::shared_ptr<Event>>& events)
+get_ColumnVector(Func fun, const std::vector<std::shared_ptr<Event>>& events)
 {
     Eigen::Matrix<T, Eigen::Dynamic, 1> result(events.size());
 

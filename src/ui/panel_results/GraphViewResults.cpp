@@ -408,17 +408,29 @@ void GraphViewResults::setGraphsFont(const QFont& font)
     //mStatArea->setFontFamily(font.family());
     //mStatArea->setFontPointSize(font.pointSizeF());
     mGraph->setFont(font);
-    updateLayout();
+    mGraph->forceRefresh();
+    //updateLayout();
+    //update();
 }
 
-void GraphViewResults::setGraphsThickness(int value)
+void GraphViewResults::setCurvesThickness(int value)
 {
-    mGraph->setGraphsThickness(value);
+    mGraph->setCurvesThickness(value);
 }
 
-void GraphViewResults::setGraphsOpacity(int value)
+void GraphViewResults::updateCurvesThickness(int value)
+{
+    mGraph->updateCurvesThickness(value);
+}
+
+void GraphViewResults::setCurvesOpacity(int value)
 {
     mGraph->setCurvesOpacity(value);
+}
+
+void GraphViewResults::updateCurvesOpacity(int value)
+{
+    mGraph->updateCurvesOpacity(value);
 }
 
 void GraphViewResults::resizeEvent(QResizeEvent*)
@@ -541,7 +553,7 @@ void GraphViewResults::generateTraceCurves(const std::vector<ChainSpecs> &chains
 
         curve.mType = GraphCurve::eVectorData;
         curve.mName = prefix + "Trace " + QString::number(i);
-        const auto &v = variable->fullTraceForChain(chains, i);
+        const auto v = variable->fullTraceForChain(chains, i);
         curve.mDataVector = std::vector(v.begin(), v.end());
         curve.mPen.setColor(Painting::chainColors.at(i));
         mGraph->add_curve(curve);
@@ -564,6 +576,45 @@ void GraphViewResults::generateTraceCurves(const std::vector<ChainSpecs> &chains
     }
 }
 
+void GraphViewResults::generateLogTraceCurves(const std::vector<ChainSpecs> &chains,
+                                           MetropolisVariable* variable,
+                                           const QString& name)
+{
+    QString prefix = name.isEmpty() ? name : name + " ";
+    mGraph->reserveCurves(4*chains.size());
+    for (size_t i = 0; i < chains.size(); ++i) {
+        GraphCurve curve;
+
+        curve.mType = GraphCurve::eVectorData;
+        curve.mName = prefix + "Trace " + QString::number(i);
+        const auto v = variable->fullTraceForChain(chains, i);
+        // Appliquer log10 à chaque valeur
+        curve.mDataVector.reserve(v.size());
+        for (const auto& value : v) {
+            curve.mDataVector.push_back(std::log10(value));
+        }
+
+        curve.mPen.setColor(Painting::chainColors.at(i));
+        mGraph->add_curve(curve);
+
+        const Quartiles &quartiles = variable->mChainsResults.at(i).traceAnalysis.quartiles;
+
+        QColor colBorder = QColor(Qt::darkBlue).darker(100);
+        colBorder.setAlpha(100);
+        QColor colMediane = QColor(Qt::darkBlue).darker(120);
+        colMediane.setAlpha(100);
+
+        // Appliquer log10 aux quartiles aussi
+        const GraphCurve &curveQ3 = horizontalLine(std::log10(quartiles.Q3), prefix + "Q3 " + QString::number(i), colBorder);
+        mGraph->add_curve(curveQ3);
+
+        const GraphCurve &curveQ2 = horizontalLine(std::log10(quartiles.Q2), prefix + "Q2 " + QString::number(i), colMediane);
+        mGraph->add_curve(curveQ2);
+
+        const GraphCurve &curveQ1 = horizontalLine(std::log10(quartiles.Q1), prefix + "Q1 " + QString::number(i), colBorder);
+        mGraph->add_curve(curveQ1);
+    }
+}
 
 void GraphViewResults::generateAcceptCurves(const std::vector<ChainSpecs> &chains, MHVariable* variable)
 {
@@ -614,7 +665,7 @@ void GraphViewResults::generateCorrelCurves(const std::vector<ChainSpecs> &chain
 void GraphViewResults::graph_reset()
 {
     mGraph->removeAllCurves();
-    mGraph->remove_all_zones();
+
     mGraph->squeezeCurves();
     mGraph->showInfos(false);
     mGraph->clearInfos();
@@ -643,10 +694,10 @@ void GraphViewResults::graph_density()
     // ------------------------------------------------------------
     //  Add zones outside study period
     // ------------------------------------------------------------
-    const GraphZone zoneMin (-INFINITY, mSettings.getTminFormated());
+    const GraphZone zoneMin (-std::numeric_limits<double>::max(), mSettings.getTminFormated());
     mGraph->add_zone(zoneMin);
 
-    const GraphZone zoneMax (mSettings.getTmaxFormated(), INFINITY);
+    const GraphZone zoneMax (mSettings.getTmaxFormated(), std::numeric_limits<double>::max());
     mGraph->add_zone(zoneMax);
 
 }
@@ -679,7 +730,7 @@ void GraphViewResults::graph_acceptation()
     mGraph->setYAxisMode(GraphView::eMinMaxHidden );
 
     mGraph->autoAdjustYScale(false);
-    mGraph->setRangeY(0, 100); // do repaintGraph() !!
+    mGraph->setRangeY(0, 100);
 }
 
 void GraphViewResults::graph_correlation()
@@ -695,4 +746,5 @@ void GraphViewResults::graph_correlation()
     mGraph->setRangeY(-1, 1);
     mGraph->setXScaleDivision(10, 10);
 }
+
 

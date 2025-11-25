@@ -71,60 +71,6 @@ void PluginUniformRefView::setDate(const Date& date, const StudyPeriodSettings& 
     
     if (date.mOrigin == Date::eSingleDate) { // not a combination
         // nothing to do
-        /*
-        double tminDisplay;
-        double tmaxDisplay;
-
-        const double t1 = DateUtils::convertToAppSettingsFormat(mTminDisplay);
-        const double t2 = DateUtils::convertToAppSettingsFormat(mTmaxDisplay);
-
-        if (!date.isNull() && date.mIsValid) {
-            const double t3 = date.getFormatedTminCalib();
-            const double t4 = date.getFormatedTmaxCalib();
-
-            tminDisplay = qMin(t1,qMin(t2,t3));
-            tmaxDisplay = qMax(t1,qMax(t2,t4));
-
-        } else {
-            tminDisplay = qMin(t1, t2);
-            tmaxDisplay = qMax(t1, t2);
-        }
-
-        mGraph->setRangeX(tminDisplay, tmaxDisplay);
-        mGraph->setCurrentX(tminDisplay, tmaxDisplay);
-
-        mGraph->removeAllCurves();
-        mGraph->remove_all_zones();
-        mGraph->clearInfos();
-        mGraph->showInfos(true);
-        mGraph->setFormatFunctX(nullptr);
-
-        // ----------------------------------------------
-        //  Reference curve
-        // ----------------------------------------------
-        GraphCurve curve;
-        curve.mName = "Reference";
-        curve.mPen.setColor(Painting::mainColorDark);
-
-        GraphCurve gCurve;
-        gCurve.mName = date.getQStringName();
-
-        QColor curveColor(QColor(100, 50, 140) );
-        gCurve.mPen.setColor(curveColor);
-
-        curveColor.setAlpha(50);
-        gCurve.mBrush = curveColor;
-
-        gCurve.mIsRectFromZero = true;
-
-        QMap<double, double> calib = normalize_map(getMapDataInRange(date.getFormatedCalibMap(), tminDisplay, tmaxDisplay));
-
-        gCurve.mData = calib;
-
-        mGraph->add_curve(gCurve);
-        mGraph->setRangeX(tminDisplay, tmaxDisplay);
-        mGraph->setCurrentX(tminDisplay, tmaxDisplay);
-        */
 
         // Y scale and RangeY are define in graphView::zommX()
 

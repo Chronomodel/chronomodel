@@ -213,9 +213,9 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
          */
         else if (variableList.contains(eSigma)) {
             graph_density();
+            mGraph->removeAllCurves(); // delete default zones made by graph_density()
             mGraph->mLegendX = "";
-            mGraph->remove_all_zones(); // delete default zones made by graph_density()
-            //mGraph->setOverArrow(GraphView::eNone);
+            mGraph->setOverArrow(GraphView::eNone);
             mTitle = tr("Individual Std : %1").arg(mDate->getQStringName());
 
             //  Post Distrib All Chains
@@ -263,12 +263,11 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
         graph_trace();
 
         if (variableList.contains(eDataTi) && mDate->mTi.mSamplerProposal!= MHVariable::eFixe) {
-            //mTitle = tr("Data : %1").arg(mDate->getQStringName()); // default title
             generateTraceCurves(mChains, &mDate->mTi);
 
         } else if (variableList.contains(eSigma) && mDate->mSigmaTi.mSamplerProposal!= MHVariable::eFixe) {
-                mTitle = tr("Individual Std : %1").arg(mDate->getQStringName());
-                generateTraceCurves(mChains, &mDate->mSigmaTi);
+                mTitle = tr("Individual Log10(Std) : %1").arg(mDate->getQStringName());
+                generateLogTraceCurves(mChains, &mDate->mSigmaTi);
         }
 
     }
@@ -334,7 +333,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
          */
         if (variableList.contains(eDataTi)) {
 
-            const bool showCalib = variableList.contains(eDataCalibrate);
+            /*const bool showCalib = variableList.contains(eDataCalibrate);
             const bool showWiggle = variableList.contains(eDataWiggle);
             mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
             mGraph->setCurveVisible("Wiggle Post Distrib All Chains", mShowAllChains && showWiggle);
@@ -345,8 +344,42 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
             for (int i = 0; i<mShowChainList.size(); ++i) {
                 mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
                 mGraph->setCurveVisible("Wiggle Post Distrib Chain " + QString::number(i), mShowChainList[i] && showWiggle);
+            }*/
+            //---
+            const bool showCalib = variableList.contains(eDataCalibrate);
+            const bool showWiggle = variableList.contains(eDataWiggle);
+            const bool showCredibility = mShowVariableList.contains(eCredibility);
+
+            QStringList curvesToShow;
+
+            if (mShowAllChains) {
+                curvesToShow << "Post Distrib All Chains" << "HPD All Chains";
+                if (showWiggle) {
+                    curvesToShow << "Wiggle Post Distrib All Chains";
+                }
+                if (showCredibility) {
+                    curvesToShow << "Credibility All Chains";
+                }
             }
 
+            if (showCalib) {
+                curvesToShow << "Calibration";
+                if (showWiggle) {
+                    curvesToShow << "Wiggle Calibration";
+                }
+            }
+
+            // Ajouter les chaînes individuelles
+            for (int i = 0; i < mShowChainList.size(); ++i) {
+                if (mShowChainList[i]) {
+                    curvesToShow << QString("Post Distrib Chain %1").arg(i);
+                    if (showWiggle) {
+                        curvesToShow << QString("Wiggle Post Distrib Chain %1").arg(i);
+                    }
+                }
+            }
+
+            mGraph->setCurveVisible(curvesToShow, true);
         }
         /* ------------------------------------------------
          *  Possible Curves :
@@ -356,15 +389,33 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
          * ------------------------------------------------
          */
         else if (variableList.contains(eSigma)) {
-            mGraph->setCurveVisible("Post Distrib all Chains", mShowAllChains);
+            /*mGraph->setCurveVisible("Post Distrib all Chains", mShowAllChains);
             for (int i = 0; i<mShowChainList.size(); ++i) {
                 mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
                 mGraph->setCurveVisible("Wiggle Post Distrib Chain " + QString::number(i), mShowChainList[i]);
             }
 
             mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
-            mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
+            mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));*/
 
+            QStringList curvesToShow;
+
+            if (mShowAllChains) {
+                curvesToShow << "Post Distrib all Chains" << "HPD All Chains";
+                if (mShowVariableList.contains(eCredibility)) {
+                    curvesToShow << "Credibility All Chains";
+                }
+            }
+
+            // Ajouter les chaînes individuelles
+            for (int i = 0; i < mShowChainList.size(); ++i) {
+                if (mShowChainList[i]) {
+                    curvesToShow << QString("Post Distrib Chain %1").arg(i)
+                    << QString("Wiggle Post Distrib Chain %1").arg(i);
+                }
+            }
+
+            mGraph->setCurveVisible(curvesToShow, true);
             mGraph->setTipXLab(tr("sigma"));
 
         }
@@ -379,13 +430,22 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
      * ------------------------------------------------
      */
     else if (mCurrentTypeGraph == eTrace) {
-        for (int i = 0; i<mShowChainList.size(); ++i) {
+        /*for (int i = 0; i<mShowChainList.size(); ++i) {
             mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList.at(i));
             mGraph->setCurveVisible("Q1 " + QString::number(i), mShowChainList.at(i));
             mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList.at(i));
             mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList.at(i));
+        }*/
+        QStringList curvesToShow;
+        for (int j = 0; j < mShowChainList.size(); ++j) {
+            if (mShowChainList.at(j)) {
+                curvesToShow << QString("Trace %1").arg(j);
+                curvesToShow << QString("Q1 %1").arg(j);
+                curvesToShow << QString("Q2 %1").arg(j);
+                curvesToShow << QString("Q3 %1").arg(j);
+            }
         }
-
+        mGraph->setCurveVisible(curvesToShow, true);
     }
     /* -----------------------Third tab : Acceptance rate.-------------------------
      *  Possible curves (could be for theta or sigma):
@@ -407,12 +467,23 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
      * ------------------------------------------------
      */
     else if (mCurrentTypeGraph == eCorrel) {
-        for (int i = 0; i<mShowChainList.size(); ++i) {
+        /*for (int i = 0; i<mShowChainList.size(); ++i) {
             mGraph->setCurveVisible("Correl " + QString::number(i), mShowChainList.at(i));
             mGraph->setCurveVisible("Correl Limit Lower " + QString::number(i), mShowChainList.at(i));
             mGraph->setCurveVisible("Correl Limit Upper " + QString::number(i), mShowChainList.at(i));
+        }*/
+        QStringList curvesToShow;
+        for (int j = 0; j < mShowChainList.size(); ++j) {
+            if (mShowChainList.at(j)) {
+                curvesToShow << QString("Correl %1").arg(j);
+                curvesToShow << QString("Correl Limit Lower %1").arg(j);
+                curvesToShow << QString("Correl Limit Upper %1").arg(j);
+            }
         }
+        mGraph->setCurveVisible(curvesToShow, true);
 
     }
    update();
 }
+
+

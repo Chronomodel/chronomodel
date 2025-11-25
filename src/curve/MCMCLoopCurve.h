@@ -66,8 +66,8 @@ protected:
     //t_prob current_ln_h_YWI_2, current_ln_h_YWI_3, current_ln_h_YWI_1_2, current_h_theta, current_h_lambda, current_h_VG;
     t_prob current_ln_h_YWI_3, current_h_theta, current_h_lambda, current_h_VG;
 
-    SplineMatricesLD current_splineMatricesLD, current_matriceWI_LD;
-    SplineMatricesD current_splineMatricesD, current_matriceWI_D;
+    SplineMatricesLD current_splineMatrices_LD, current_matriceWI_LD;
+    SplineMatricesD current_splineMatrices_D, current_matriceWI_D;
 
     SplineResults current_spline;
     std::vector<t_reduceTime> current_vecH;
@@ -83,8 +83,8 @@ protected:
     t_prob try_ln_h_YWI_3;
 
     std::vector<t_reduceTime> try_vecH;
-    SplineMatricesLD try_splineMatricesLD;
-    SplineMatricesD try_splineMatricesD;
+    SplineMatricesLD try_splineMatrices_LD;
+    SplineMatricesD try_splineMatrices_D;
 
     std::pair<MatrixLD, DiagonalMatrixLD> try_decomp_QTQ_LD;
     std::pair<MatrixLD, DiagonalMatrixLD> try_decomp_matB_LD;

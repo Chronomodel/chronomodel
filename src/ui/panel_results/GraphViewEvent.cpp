@@ -54,7 +54,6 @@ GraphViewEvent::GraphViewEvent(QWidget *parent):
 
 GraphViewEvent::~GraphViewEvent()
 {
-    //mEvent = nullptr;
 }
 
 void GraphViewEvent::setEvent(std::shared_ptr<Event> event)
@@ -146,6 +145,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
                 GraphCurve curveLineBound;
                 curveLineBound.mName = "Post Distrib All Chains";
                 curveLineBound.mPen.setColor(color);
+                curveLineBound.mBrush.setStyle(Qt::NoBrush);
                 curveLineBound.mType = GraphCurve::eHorizontalSections;
                 qreal tLower = bound->formatedFixedValue();
                 qreal tUpper = tLower;
@@ -156,7 +156,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
                 for (size_t i = 0; i < mChains.size(); ++i) {
                     curveLineBound.mName = "Post Distrib Chain " + QString::number(i);
                     curveLineBound.mPen.setColor(Painting::chainColors.at(i));
-
+                    curveLineBound.mBrush.setStyle(Qt::NoBrush);
                     mGraph->add_curve(curveLineBound);
                 }
 
@@ -215,8 +215,9 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
          */
         else if (mCurrentVariableList.contains(eSigma)) {
             graph_density();
+            mGraph->removeAllCurves(); // delete default zones made by graph_density()
+            mGraph->setOverArrow(GraphView::eNone);
             mGraph->mLegendX = "";
-            mGraph->remove_all_zones(); // delete default zones made by graph_density()
 
             mGraph->setBackgroundColor(QColor(230, 230, 230));
 
@@ -241,7 +242,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
 
         else if (mCurrentVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
             GraphViewResults::graph_density();
-            mGraph->remove_all_zones(); // delete default zones made by graph_density()
+            mGraph->removeAllCurves(); // delete default zones made by graph_density()
 
             mGraph->setOverArrow(GraphView::eNone);
             mGraph->mLegendX = "";
@@ -274,7 +275,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
 
         else if (mCurrentVariableList.contains(eVg)) {
             GraphViewResults::graph_density();
-            mGraph->remove_all_zones(); // delete default zones made by graph_density()
+            mGraph->removeAllCurves(); // delete default zones made by graph_density()
 
             mGraph->setOverArrow(GraphView::eNone);
             mGraph->mLegendX = "";
@@ -296,7 +297,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
             mGraph->add_curve(curveHPD);
 
             /* ------------------------------------
-             *  Theta Credibility
+             *  Vg Credibility
              * ------------------------------------
              */
             const GraphCurve &curveCred = topLineSection(mEvent->mVg.mFormatedCredibility,
@@ -317,10 +318,12 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
             generateTraceCurves(mChains, &(mEvent->mTheta));
 
         } else if (mCurrentVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
-            generateTraceCurves(mChains, &(mEvent->mS02Theta));
+            mTitle = tr("Log10(Event Shrinkage) : %1").arg(mEvent->getQStringName());
+            generateLogTraceCurves(mChains, &(mEvent->mS02Theta));
 
         } else if (mCurrentVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal != MHVariable::eFixe) {
-            generateTraceCurves(mChains, &(mEvent->mVg));
+            mTitle = tr("Log10(Std gi) : %1").arg(mEvent->getQStringName());
+            generateLogTraceCurves(mChains, &(mEvent->mVg));
         }
     }
     // ----------------------------------------------------------------------
@@ -369,7 +372,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 {
     Q_ASSERT(mEvent);
     GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showVariableList);
-
+    QStringList curvesToShow;
 
     /* --------------------First tab : Posterior distrib----------------------------
      * ------------------------------------------------*/
@@ -385,12 +388,23 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
          */
         if (mCurrentVariableList.contains(eThetaEvent)) {
 
-            mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
-            mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
-            mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
+            //QStringList curvesToShow;
 
-            for (int i = 0; i < mShowChainList.size(); ++i)
-                mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList.at(i));
+            if (mShowAllChains) {
+                curvesToShow << "Post Distrib All Chains" << "HPD All Chains";
+                if (mShowVariableList.contains(eCredibility))
+                   curvesToShow << "Credibility All Chains";
+
+            }
+
+            // Ajouter les chaînes individuelles
+            for (int i = 0; i < mShowChainList.size(); ++i) {
+                if (mShowChainList.at(i))
+                    curvesToShow << QString("Post Distrib Chain %1").arg(i);
+
+            }
+
+            //mGraph->setCurveVisible(curvesToShow, true);
 
         }
         /* ------------------------------------------------
@@ -402,37 +416,55 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
          * ------------------------------------------------
          */
         else if (mCurrentVariableList.contains(eSigma)) {
+                //QStringList curvesToShow;
                 for (int i = 0; i < (int)mEvent->mDates.size(); ++i) {
-                    mGraph->setCurveVisible("Post Distrib Date " + QString::number(i) + " All Chains", mShowAllChains);
-                    mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
+                    if (mShowAllChains) {
+                        curvesToShow << QString("Post Distrib Date %1 All Chains").arg(i);
+
+                        if (mShowVariableList.contains(eCredibility))
+                            curvesToShow << "Credibility All Chains";
+                    }
                     for (int j = 0; j < mShowChainList.size(); ++j)
-                        mGraph->setCurveVisible("Post Distrib Date " + QString::number(i) + " Chain " + QString::number(j), mShowChainList.at(j));
+                        if (mShowChainList.at(j))
+                            curvesToShow << QString("Post Distrib Date %1 Chain %2").arg(i).arg(j);
 
                 }
+                //mGraph->setCurveVisible(curvesToShow, true);
                 mGraph->setTipXLab(tr("Sigma"));
 
         }
         
         else if (mCurrentVariableList.contains(eS02) ) {
-                mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
-                mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
-                mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
-                for (int j = 0; j < mShowChainList.size(); ++j) {
-                    mGraph->setCurveVisible("Post Distrib Chain " + QString::number(j), mShowChainList.at(j));
-                }
+            //QStringList curvesToShow;
+            if (mShowAllChains) {
+                curvesToShow << "Post Distrib All Chains" << "HPD All Chains";
+                if (mShowVariableList.contains(eCredibility))
+                    curvesToShow << "Credibility All Chains";
 
-                mGraph->setTipXLab(tr("Event Shrinkage"));
+            }
+            for (int j = 0; j < mShowChainList.size(); ++j) {
+                if (mShowChainList.at(j))
+                    curvesToShow << QString("Post Distrib Chain %1").arg(j);
+
+            }
+            //mGraph->setCurveVisible(curvesToShow, true);
+            mGraph->setTipXLab(tr("Event Shrinkage"));
 
 
         }
         else if (mCurrentVariableList.contains(eVg)) {
-                mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
-                mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
-                mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
-                for (int j = 0; j < mShowChainList.size(); ++j) {
-                    mGraph->setCurveVisible("Post Distrib Chain " + QString::number(j), mShowChainList.at(j));
-                }
 
+                //QStringList curvesToShow;
+                if (mShowAllChains) {
+                    curvesToShow << "Post Distrib All Chains" << "HPD All Chains";
+                    if (mShowVariableList.contains(eCredibility))
+                        curvesToShow << "Credibility All Chains";
+                }
+                for (int j = 0; j < mShowChainList.size(); ++j) {
+                    if (mShowChainList.at(j))
+                        curvesToShow << QString("Post Distrib Chain %1").arg(j);
+                }
+                //mGraph->setCurveVisible(curvesToShow, true);
                 mGraph->setTipXLab(tr("Std gi"));
 
 
@@ -452,13 +484,16 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 ( mCurrentVariableList.contains(eThetaEvent) && mEvent->mTheta.mSamplerProposal != MHVariable::eFixe) )) {
              // We visualize only one chain (radio button)
 
-            for (int i = 0; i < mShowChainList.size(); ++i) {
-                mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList.at(i));
-                mGraph->setCurveVisible("Q1 " + QString::number(i), mShowChainList.at(i));
-                mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList.at(i));
-                mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList.at(i));
+            //QStringList curvesToShow;
+            for (int j = 0; j < mShowChainList.size(); ++j) {
+                if (mShowChainList.at(j)) {
+                    curvesToShow << QString("Trace %1").arg(j);
+                    curvesToShow << QString("Q1 %1").arg(j);
+                    curvesToShow << QString("Q2 %1").arg(j);
+                    curvesToShow << QString("Q3 %1").arg(j);
+                }
             }
-
+            //mGraph->setCurveVisible(curvesToShow, true);
     }
 
     /* ----------------------Third tab : Acceptance rate--------------------------
@@ -470,9 +505,15 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
               ( (mCurrentVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal != MHVariable::eFixe ) ||
               (mCurrentVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != MHVariable::eFixe ) ||
               ( mCurrentVariableList.contains(eThetaEvent) && mEvent->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss))) {
-                mGraph->setCurveVisible("Accept Target", true);
-                for (int i = 0; i < mShowChainList.size(); ++i)
-                    mGraph->setCurveVisible("Accept " + QString::number(i), mShowChainList.at(i));
+
+               // QStringList curvesToShow;
+                curvesToShow << "Accept Target";
+                for (int j = 0; j < mShowChainList.size(); ++j) {
+                    if (mShowChainList.at(j)) {
+                        curvesToShow << QString("Accept %1").arg(j);
+                    }
+                }
+                //mGraph->setCurveVisible(curvesToShow, true);
 
     }
     /* ----------------------fourth tab : Autocorrelation--------------------------
@@ -485,13 +526,20 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
               ( (mCurrentVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal != MHVariable::eFixe ) ||
                 (mCurrentVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != MHVariable::eFixe ) ||
                 ( mCurrentVariableList.contains(eThetaEvent) && mEvent->mTheta.mSamplerProposal != MHVariable::eFixe))) {
-                for (int i = 0; i < mShowChainList.size(); ++i) {
-                    mGraph->setCurveVisible("Correl " + QString::number(i), mShowChainList.at(i));
-                    mGraph->setCurveVisible("Correl Limit Lower " + QString::number(i), mShowChainList.at(i));
-                    mGraph->setCurveVisible("Correl Limit Upper " + QString::number(i), mShowChainList.at(i));
+
+                //QStringList curvesToShow;
+                for (int j = 0; j < mShowChainList.size(); ++j) {
+                    if (mShowChainList.at(j)) {
+                        curvesToShow << QString("Correl %1").arg(j);
+                        curvesToShow << QString("Correl Limit Lower %1").arg(j);
+                        curvesToShow << QString("Correl Limit Upper %1").arg(j);
+                    }
                 }
+                //mGraph->setCurveVisible(curvesToShow, true);
 
     }
 
+
+    mGraph->setCurveVisible(curvesToShow, true);
     repaint();
 }

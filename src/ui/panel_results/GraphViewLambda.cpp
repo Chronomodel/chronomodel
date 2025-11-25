@@ -72,7 +72,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
     GraphViewResults::generateCurves(typeGraph, variableList);
     
     mGraph->removeAllCurves();
-    mGraph->remove_all_zones();
+
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
     mGraph->setOverArrow(GraphView::eNone);
@@ -204,21 +204,35 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
     if (mCurrentTypeGraph == ePostDistrib)  {
         mGraph->setTipYLab("");
         
-        mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
+        /*mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
         mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
         mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
 
         for (unsigned i = 0; i<mShowChainList.size(); ++i) {
             mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList.at(i));
+        }*/
+
+        QStringList curvesToShow;
+
+        if (mShowAllChains) {
+            curvesToShow << "Post Distrib All Chains" << "HPD All Chains";
+            if (mShowVariableList.contains(eCredibility))
+                curvesToShow << "Credibility All Chains";
+
         }
-        
+
+        // Ajouter les chaînes individuelles
+        for (int i = 0; i < mShowChainList.size(); ++i) {
+            if (mShowChainList.at(i))
+                curvesToShow << QString("Post Distrib Chain %1").arg(i);
+
+        }
+
+        mGraph->setCurveVisible(curvesToShow, true);
+
+
         mGraph->setTipXLab(tr("Log10 Smoothing"));
 
-        /*mGraph->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
-        mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
-
-        mGraph->setYAxisMode(GraphView::eHidden);
-*/
         mGraph->showInfos(false);
         mGraph->clearInfos();
     }
@@ -231,12 +245,23 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
      * ------------------------------------------------
      */
     else if (mCurrentTypeGraph == eTrace)  {
-        for (unsigned i = 0; i<mShowChainList.size(); ++i) {
+        /*for (unsigned i = 0; i < mShowChainList.size(); ++i) {
             mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList.at(i));
             mGraph->setCurveVisible("Q1 " + QString::number(i), mShowChainList.at(i));
             mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList.at(i));
             mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList.at(i));
+        }*/
+
+        QStringList curvesToShow;
+        for (int j = 0; j < mShowChainList.size(); ++j) {
+            if (mShowChainList.at(j)) {
+                curvesToShow << QString("Trace %1").arg(j);
+                curvesToShow << QString("Q1 %1").arg(j);
+                curvesToShow << QString("Q2 %1").arg(j);
+                curvesToShow << QString("Q3 %1").arg(j);
+            }
         }
+        mGraph->setCurveVisible(curvesToShow, true);
 
         mGraph->setTipXLab(tr("Iteration"));
         mGraph->setTipYLab(tr("Log10 Smoothing"));
@@ -254,9 +279,17 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
      * ------------------------------------------------ */
     else if (mCurrentTypeGraph == eAccept) {
 
-        mGraph->setCurveVisible("Accept Target", true);
+        /*mGraph->setCurveVisible("Accept Target", true);
         for (int i=0; i<mShowChainList.size(); ++i)
-            mGraph->setCurveVisible("Accept " + QString::number(i), mShowChainList.at(i));
+            mGraph->setCurveVisible("Accept " + QString::number(i), mShowChainList.at(i));*/
+        QStringList curvesToShow;
+        curvesToShow << "Accept Target";
+        for (int j = 0; j < mShowChainList.size(); ++j) {
+            if (mShowChainList.at(j)) {
+                curvesToShow << QString("Accept %1").arg(j);
+            }
+        }
+        mGraph->setCurveVisible(curvesToShow, true);
 
         mGraph->setTipXLab(tr("Iteration"));
         mGraph->setTipYLab(tr("Rate"));
@@ -267,8 +300,8 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
         mGraph->setYAxisMode(GraphView::eMinMax );
         mGraph->showInfos(false);
         mGraph->clearInfos();
-        mGraph->autoAdjustYScale(false); // do  repaintGraph()
-        mGraph->setRangeY(0, 100); // do repaintGraph() !!
+        mGraph->autoAdjustYScale(false);
+        mGraph->setRangeY(0, 100);
     }
 
 
@@ -279,11 +312,21 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
        *  - Correl Limit Upper i
        * ------------------------------------------------   */
       else if (mCurrentTypeGraph == eCorrel) {
-          for (int i=0; i<mShowChainList.size(); ++i) {
+          /*for (int i=0; i<mShowChainList.size(); ++i) {
               mGraph->setCurveVisible("Correl " + QString::number(i), mShowChainList.at(i));
               mGraph->setCurveVisible("Correl Limit Lower " + QString::number(i), mShowChainList.at(i));
               mGraph->setCurveVisible("Correl Limit Upper " + QString::number(i), mShowChainList.at(i));
+          }*/
+          QStringList curvesToShow;
+          for (int j = 0; j < mShowChainList.size(); ++j) {
+              if (mShowChainList.at(j)) {
+                  curvesToShow << QString("Correl %1").arg(j);
+                  curvesToShow << QString("Correl Limit Lower %1").arg(j);
+                  curvesToShow << QString("Correl Limit Upper %1").arg(j);
+              }
           }
+          mGraph->setCurveVisible(curvesToShow, true);
+
           mGraph->setTipXLab("h");
           mGraph->setTipYLab(tr("Value"));
 

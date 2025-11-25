@@ -98,7 +98,7 @@ void Plugin14CRefView::setDate(const Date &date, const StudyPeriodSettings& sett
          mGraph->setCurrentX(tminDisplay_formated_effective, tmaxDisplay_formated_effective);
 
          mGraph->removeAllCurves();
-         mGraph->remove_all_zones();
+
          mGraph->clearInfos();
          mGraph->showInfos(true);
          mGraph->setFormatFunctX(nullptr);

@@ -10,7 +10,7 @@
 
 clear
 
-VERSION=3.3.0
+VERSION=3.3.5_EM2
 QT_BIN_PATH=/Users/dufresne/Qt/Tools/QtInstallerFramework/4.10/bin
 
 # _________________________
@@ -25,7 +25,7 @@ echo "➡️  2 - Copy the ChronoModel BUNDLE "
 
 # make -j12 in /Users/dufresne/ChronoModel-SoftWare/build-Chronomodel-Qt_6_7_2_for_macOS-Release
 
-RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_9_1_for_macOS-Release/build/release/
+RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_10_0_for_macOS-Release/build/release/
 
 BUNDLE="$RELEASE_PATH"chronomodel.app
 

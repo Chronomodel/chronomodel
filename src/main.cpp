@@ -128,7 +128,8 @@ int main(int argc, char *argv[])
     if (nCores == 0) nCores = 1;
 
     // 2️⃣ Choix du nombre optimal de threads : max 80% des cœurs
-    int optimalThreads = std::max(1, static_cast<int>(nCores * 0.8));
+    //int optimalThreads = std::max(1, static_cast<int>(nCores * 0.8));
+    int optimalThreads = std::max(1, static_cast<int>(nCores * 0.2));
 
 #ifdef _OPENMP
     omp_set_num_threads(optimalThreads);

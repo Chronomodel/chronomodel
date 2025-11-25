@@ -601,8 +601,6 @@ void ModelView::adaptStudyPeriodButton(const double& min, const double& max)
     //const int topButtonHeight =  int ( 1.3 * fontMetrics().height());//  1 * AppSettings::heigthUnit());
     const QString studyStr = tr("STUDY PERIOD") + QString(" [ %1 ; %2 ] BC/AD").arg(QLocale().toString(min), QLocale().toString(max));;
     mButModifyPeriod->setText(studyStr);
-    //mButModifyPeriod->setIconOnly(false);
-    //mButModifyPeriod ->setGeometry((mTopWrapper->width() - fontMetrics().boundingRect(mButModifyPeriod->text()).width()) /2 - 2*mMargin, (mTopWrapper->height() - topButtonHeight)/2, fontMetrics().boundingRect(mButModifyPeriod->text()).width() + 4*mMargin, topButtonHeight );
 
 }
 
@@ -679,9 +677,8 @@ bool ModelView::findCalibrateMissing()
 void ModelView::calibrateAll(StudyPeriodSettings newS)
 {
     auto project = getProject_ptr();
-    const QJsonObject state = project->state();
 
-    QJsonArray Qevents = state.value(STATE_EVENTS).toArray();
+    QJsonArray Qevents = project->state().value(STATE_EVENTS).toArray();
 
     /* If the Events Scene isEmpty (i.e. when the project is created)
     * There is no date to calibrate
@@ -744,8 +741,18 @@ void ModelView::modifyPeriod()
     if (dialog.exec() == QDialog::Accepted) {
         const StudyPeriodSettings newS = dialog.getSettings();
         if (s != newS) {
-            ModelView::calibrateAll(newS);
 
+            QJsonArray eventsArray = state.value(STATE_EVENTS).toArray();
+
+            /* If the Events Scene isEmpty (i.e. when the project is created)
+             * There is no date to calibrate
+            */
+            if (eventsArray.empty()) {
+                project -> setSettings(newS); //do pushProjectState
+
+            } else {
+                ModelView::calibrateAll(newS); //do pushProjectState
+            }
             mMultiCalibrationView->mSettings = newS;
             mMultiCalibrationView->applyAppSettings();
 
@@ -755,7 +762,7 @@ void ModelView::modifyPeriod()
             mCalibrationView->initScale(xScale);
             //  mCalibrationView->applyStudyPeriod();
 
-            //project -> setSettings(newS); //do pushProjectState //done in ModelView::calibrateAll(newS);??
+
             MainWindow::getInstance()->setResultsEnabled(false);
             MainWindow::getInstance()->setLogEnabled(false);
         }

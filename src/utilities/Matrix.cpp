@@ -43,10 +43,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <iostream>
 #include <vector>
 
-ColumnVectorLD stdVectorToColumnVector(const std::vector<double>& vec)
+ColumnVectorD stdVectorToColumnVector(const std::vector<double>& vec)
 {
-    std::vector<t_matrix> v (vec.begin(), vec.end());
-    return Eigen::Map<const ColumnVectorLD>(v.data(), v.size());
+    std::vector<double> v (vec.begin(), vec.end());
+    return Eigen::Map<const ColumnVectorD>(v.data(), v.size());
 }
 
 ColumnVectorLD stdVectorToColumnVector(const std::vector<t_matrix>& vec)
@@ -75,13 +75,13 @@ std::vector<t_matrix> eigenToStdVector(const RowVectorLD& vec)
     return std::vector<t_matrix>(vec.data(), vec.data() + vec.size());
 }
 
-#pragma mark Matrix2Do
+#pragma mark MatrixlDo
 // Opérateur d'addition
-Matrix2Do Matrix2Do::operator+(const Matrix2Do& other) const {
+MatrixlDo MatrixlDo::operator+(const MatrixlDo& other) const {
     if (n != other.n || m != other.m) {
         throw std::invalid_argument("Dimensions mismatch for addition");
     }
-    Matrix2Do result(n, m);
+    MatrixlDo result(n, m);
     for (size_t i = 0; i < n; i++) {
         result.data[i] = data[i] + other.data[i];
     }
@@ -89,11 +89,11 @@ Matrix2Do Matrix2Do::operator+(const Matrix2Do& other) const {
 }
 
 // Opérateur de soustraction
-Matrix2Do Matrix2Do::operator-(const Matrix2Do& other) const {
+MatrixlDo MatrixlDo::operator-(const MatrixlDo& other) const {
     if (n != other.n || m != other.m) {
         throw std::invalid_argument("Dimensions mismatch for addition");
     }
-    Matrix2Do result(n, m);
+    MatrixlDo result(n, m);
     for (size_t i = 0; i < n; i++) {
         result.data[i] = data[i] - other.data[i];
     }
@@ -103,12 +103,12 @@ Matrix2Do Matrix2Do::operator-(const Matrix2Do& other) const {
 // Opérateur de multiplication matricielle
 
 
-Matrix2Do Matrix2Do::operator*(const Matrix2Do& other) const {
+MatrixlDo MatrixlDo::operator*(const MatrixlDo& other) const {
     if (m != other.n) {
         throw std::invalid_argument("Dimensions mismatch for multiplication");
     }
 
-    Matrix2Do result(n, other.m);
+    MatrixlDo result(n, other.m);
 
     for (size_t i = 0; i < n; i++) {
         for (size_t j = 0; j < other.m; j++) {
@@ -124,8 +124,8 @@ Matrix2Do Matrix2Do::operator*(const Matrix2Do& other) const {
 
 
 // Opérateur de multiplication par un scalaire
-Matrix2Do Matrix2Do::operator*(t_matrix scalar) const {
-    Matrix2Do result(n, m);
+MatrixlDo MatrixlDo::operator*(t_matrix scalar) const {
+    MatrixlDo result(n, m);
     for (size_t i = 0; i < n; i++) {
         result.data[i] = data[i] * scalar;
     }
@@ -133,7 +133,7 @@ Matrix2Do Matrix2Do::operator*(t_matrix scalar) const {
 }
 
 // Opérateur de multiplication par un vecteur
-std::valarray<t_matrix> Matrix2Do::operator*(const std::valarray<t_matrix>& vec) const {
+std::valarray<t_matrix> MatrixlDo::operator*(const std::valarray<t_matrix>& vec) const {
     if (m != vec.size()) {
         throw std::invalid_argument("Dimensions mismatch for vector multiplication");
     }
@@ -148,7 +148,7 @@ std::valarray<t_matrix> Matrix2Do::operator*(const std::valarray<t_matrix>& vec)
     return result;
 }
 
-std::vector<t_matrix> Matrix2Do::operator*(const std::vector<t_matrix>& vec) const {
+std::vector<t_matrix> MatrixlDo::operator*(const std::vector<t_matrix>& vec) const {
     if (m != vec.size()) {
         throw std::invalid_argument("Dimensions mismatch for vector multiplication");
     }
@@ -165,23 +165,23 @@ std::vector<t_matrix> Matrix2Do::operator*(const std::vector<t_matrix>& vec) con
 
 
 // Surcharge de l'opérateur d'itération pour permettre l'utilisation de boucles range-based
-std::valarray<t_matrix>* Matrix2Do::begin() {
+std::valarray<t_matrix>* MatrixlDo::begin() {
     return std::begin(data);
 }
 
-std::valarray<t_matrix>* Matrix2Do::end() {
+std::valarray<t_matrix>* MatrixlDo::end() {
     return std::end(data);
 }
 
 // Surcharge de l'opérateur unaire pour permettre l'inversion des signes
-Matrix2Do Matrix2Do::operator-() const {
-    Matrix2Do result(*this);
+MatrixlDo MatrixlDo::operator-() const {
+    MatrixlDo result(*this);
     for (auto&& r_i : result)
         r_i *= -1.;
     return result;
 }
 // Méthode d'affichage
-void Matrix2Do::showMatrix(const std::string& str) const {
+void MatrixlDo::showMatrix(const std::string& str) const {
     std::cout << str << std::endl;
     for (size_t i = 0; i < n; i++) {
         for (size_t j = 0; j < m; j++) {
@@ -191,7 +191,7 @@ void Matrix2Do::showMatrix(const std::string& str) const {
     }
 }
 // Méthode pour échanger deux lignes
-void Matrix2Do::swapRows(int i, int j) {
+void MatrixlDo::swapRows(int i, int j) {
     if (i != j) {
         std::swap(data[i], data[j]);
     }
@@ -199,8 +199,8 @@ void Matrix2Do::swapRows(int i, int j) {
 /**
      * @brief Transpose the matrix
      */
-Matrix2Do Matrix2Do::transpose() const {
-    Matrix2Do result(n, n);
+MatrixlDo MatrixlDo::transpose() const {
+    MatrixlDo result(n, n);
     for (size_t i = 0; i < n; ++i) {
         for (size_t j = 0; j < n; ++j) {
             result[j][i] = data[i][j];
@@ -211,12 +211,12 @@ Matrix2Do Matrix2Do::transpose() const {
 }
 
 // Méthode pour inverser la matrice
-Matrix2Do Matrix2Do::inverse() const {
+MatrixlDo MatrixlDo::inverse() const {
     if (n != m) {
         throw std::invalid_argument("L'inversion n'est définie que pour les matrices carrées.");
     }
-    Matrix2Do augmented(*this);
-    Matrix2Do result(n, true); // Matrice identité
+    MatrixlDo augmented(*this);
+    MatrixlDo result(n, true); // Matrice identité
 
     // Élimination de Gauss-Jordan
     for (size_t i = 0; i < n; i++) {
@@ -237,7 +237,7 @@ Matrix2Do Matrix2Do::inverse() const {
         // Vérifier que le pivot n'est pas zéro
         if (std::abs(augmented[i][i]) < 1e-15) {
             std::cerr << "Erreur: matrice singulière à la ligne " << i << std::endl;
-            return Matrix2Do(n, m); // Retourne une matrice vide
+            return MatrixlDo(n, m); // Retourne une matrice vide
         }
 
         // Normaliser la ligne du pivot
@@ -671,18 +671,18 @@ void BandedMatrix::computeLU(BandedMatrix& L, BandedMatrix& U) const {
 #pragma mark OPERATEURS D ADDITION
 
 /**
- * @brief Addition Matrix2Do + BandedMatrix
+ * @brief Addition MatrixlDo + BandedMatrix
  * @param lhs Matrice pleine
  * @param rhs Matrice bande
- * @return Matrix2Do Résultat de l'addition sous forme de matrice pleine
+ * @return MatrixlDo Résultat de l'addition sous forme de matrice pleine
  */
-Matrix2Do operator+(const Matrix2Do& lhs, const BandedMatrix& rhs)
+MatrixlDo operator+(const MatrixlDo& lhs, const BandedMatrix& rhs)
 {
     if (lhs.rows() != rhs.rows()|| lhs.cols() != rhs.cols()) {
-        throw std::invalid_argument("Matrix2Do dimensions mismatch for addition");
+        throw std::invalid_argument("MatrixlDo dimensions mismatch for addition");
     }
 
-    Matrix2Do result(lhs.rows(), lhs.cols());
+    MatrixlDo result(lhs.rows(), lhs.cols());
 
     for (size_t i = 0; i < lhs.rows(); ++i) {
         for (size_t j = 0; j < lhs.cols(); ++j) {
@@ -705,25 +705,25 @@ Matrix2Do operator+(const Matrix2Do& lhs, const BandedMatrix& rhs)
     return result;
 }
 
-Matrix2Do operator+(const BandedMatrix& lhs, const Matrix2Do& rhs)
+MatrixlDo operator+(const BandedMatrix& lhs, const MatrixlDo& rhs)
 {
     return rhs + lhs; // Commutativité de l'addition
 }
 #pragma mark OPÉRATEURS DE SOUSTRACTION
 
 /**
- * @brief Soustraction Matrix2Do - BandedMatrix
+ * @brief Soustraction MatrixlDo - BandedMatrix
  * @param lhs Matrice pleine
  * @param rhs Matrice bande
- * @return Matrix2Do Résultat de la soustraction sous forme de matrice pleine
+ * @return MatrixlDo Résultat de la soustraction sous forme de matrice pleine
  */
-Matrix2Do operator-(const Matrix2Do& lhs, const BandedMatrix& rhs)
+MatrixlDo operator-(const MatrixlDo& lhs, const BandedMatrix& rhs)
 {
     if (lhs.rows() != rhs.rows()|| lhs.cols() != rhs.cols()) {
-        throw std::invalid_argument("Matrix2Doo dimensions mismatch for addition");
+        throw std::invalid_argument("MatrixlDoo dimensions mismatch for addition");
     }
 
-    Matrix2Do result(lhs.rows(), lhs.cols());
+    MatrixlDo result(lhs.rows(), lhs.cols());
 
     for (size_t i = 0; i < lhs.rows(); ++i) {
         for (size_t j = 0; j < lhs.cols(); ++j) {
@@ -747,21 +747,21 @@ Matrix2Do operator-(const Matrix2Do& lhs, const BandedMatrix& rhs)
 }
 
 /**
- * @brief Soustraction BandedMatrix - Matrix2Do
+ * @brief Soustraction BandedMatrix - MatrixlDo
  * @param lhs Matrice bande (n × m)
  * @param rhs Matrice pleine (n × m)
- * @return Matrix2Do Résultat de la soustraction sous forme de matrice pleine (n × m)
+ * @return MatrixlDo Résultat de la soustraction sous forme de matrice pleine (n × m)
  */
-Matrix2Do operator-(const BandedMatrix& lhs, const Matrix2Do& rhs)
+MatrixlDo operator-(const BandedMatrix& lhs, const MatrixlDo& rhs)
 {
     if (rhs.rows() != lhs.rows() || rhs.cols() != lhs.cols()) {
-        throw std::invalid_argument("Matrix dimensions mismatch in BandedMatrix - Matrix2Do");
+        throw std::invalid_argument("Matrix dimensions mismatch in BandedMatrix - MatrixlDo");
     }
 
     size_t n = lhs.rows();
     size_t m = lhs.cols();
 
-    Matrix2Do result (n, m);  // initialisation avec des zéros
+    MatrixlDo result (n, m);  // initialisation avec des zéros
 
     for (size_t i = 0; i < n; ++i) {
         for (size_t j = 0; j < m; ++j) {
@@ -783,19 +783,19 @@ Matrix2Do operator-(const BandedMatrix& lhs, const Matrix2Do& rhs)
 #pragma mark OPÉRATEURS DE MULTIPLICATION
 
 /**
- * @brief Multiplication Matrix2Do * BandedMatrix
+ * @brief Multiplication MatrixlDo * BandedMatrix
  * @param lhs Matrice pleine
  * @param rhs Matrice bande
- * @return Matrix2Do Résultat de la multiplication sous forme de matrice pleine
+ * @return MatrixlDo Résultat de la multiplication sous forme de matrice pleine
  */
-Matrix2Do operator*(const Matrix2Do& lhs, const BandedMatrix& rhs)
+MatrixlDo operator*(const MatrixlDo& lhs, const BandedMatrix& rhs)
 {
     if (lhs.rows() != rhs.cols()|| lhs.cols() != rhs.rows()) {
-        throw std::invalid_argument("Matrix2Do dimensions mismatch for addition");
+        throw std::invalid_argument("MatrixlDo dimensions mismatch for addition");
     }
     size_t n = lhs.rows();
     size_t m = rhs.cols(); // à controler ici
-    Matrix2Do result(n, m);
+    MatrixlDo result(n, m);
 
 
     for (size_t i = 0; i < n; ++i) {
@@ -826,12 +826,12 @@ Matrix2Do operator*(const Matrix2Do& lhs, const BandedMatrix& rhs)
 }
 
 /**
- * @brief Multiplication BandedMatrix * Matrix2Do
+ * @brief Multiplication BandedMatrix * MatrixlDo
  * @param lhs Matrice bande (n × m)
  * @param rhs Matrice pleine (m × p)
- * @return Matrix2Do Résultat de la multiplication sous forme de matrice pleine (n × p)
+ * @return MatrixlDo Résultat de la multiplication sous forme de matrice pleine (n × p)
  */
-Matrix2Do operator*(const BandedMatrix& lhs, const Matrix2Do& rhs) {
+MatrixlDo operator*(const BandedMatrix& lhs, const MatrixlDo& rhs) {
     if (lhs.cols() != rhs.rows()) {
         throw std::invalid_argument("Matrix dimensions mismatch: lhs.cols() must equal rhs.rows()");
     }
@@ -840,7 +840,7 @@ Matrix2Do operator*(const BandedMatrix& lhs, const Matrix2Do& rhs) {
     size_t m = lhs.cols();   // nombre de colonnes de la matrice bande (et de lignes de rhs)
     size_t p = rhs.cols();   // nombre de colonnes du résultat
 
-    Matrix2Do result (n, p);
+    MatrixlDo result (n, p);
 
     for (size_t i = 0; i < n; ++i) {
         // Parcours des colonnes dans la bande de i
@@ -865,15 +865,15 @@ Matrix2Do operator*(const BandedMatrix& lhs, const Matrix2Do& rhs) {
 // =====================================================
 
 /**
- * @brief Addition avec assignation Matrix2Do += BandedMatrix
+ * @brief Addition avec assignation MatrixlDo += BandedMatrix
  * @param lhs Matrice pleine (modifiée)
  * @param rhs Matrice bande
- * @return Matrix2Do& Référence vers la matrice modifiée
+ * @return MatrixlDo& Référence vers la matrice modifiée
  */
-Matrix2Do& operator+=(Matrix2Do& lhs, const BandedMatrix& rhs)
+MatrixlDo& operator+=(MatrixlDo& lhs, const BandedMatrix& rhs)
 {
     if (rhs.rows() != lhs.rows()|| rhs.cols() != lhs.cols()) {
-        throw std::invalid_argument("Matrix2Do dimensions mismatch for addition");
+        throw std::invalid_argument("MatrixlDo dimensions mismatch for addition");
     }
 
     size_t n = rhs.rows();
@@ -897,15 +897,15 @@ Matrix2Do& operator+=(Matrix2Do& lhs, const BandedMatrix& rhs)
 }
 
 /**
- * @brief Soustraction avec assignation Matrix2Do -= BandedMatrix
+ * @brief Soustraction avec assignation MatrixlDo -= BandedMatrix
  * @param lhs Matrice pleine (modifiée)
  * @param rhs Matrice bande
- * @return Matrix2Do& Référence vers la matrice modifiée
+ * @return MatrixlDo& Référence vers la matrice modifiée
  */
-Matrix2Do& operator-=(Matrix2Do& lhs, const BandedMatrix& rhs)
+MatrixlDo& operator-=(MatrixlDo& lhs, const BandedMatrix& rhs)
 {
     if (rhs.rows() != lhs.rows()|| rhs.cols() != lhs.cols()) {
-        throw std::invalid_argument("Matrix2Do dimensions mismatch for addition");
+        throw std::invalid_argument("MatrixlDo dimensions mismatch for addition");
     }
 
     size_t n = rhs.rows();
@@ -929,12 +929,12 @@ Matrix2Do& operator-=(Matrix2Do& lhs, const BandedMatrix& rhs)
 }
 
 /**
- * @brief Multiplication avec assignation Matrix2Do *= BandedMatrix
+ * @brief Multiplication avec assignation MatrixlDo *= BandedMatrix
  * @param lhs Matrice pleine (modifiée)
  * @param rhs Matrice bande
- * @return Matrix2Do& Référence vers la matrice modifiée
+ * @return MatrixlDo& Référence vers la matrice modifiée
  */
-Matrix2Do& operator*=(Matrix2Do& lhs, const BandedMatrix& rhs)
+MatrixlDo& operator*=(MatrixlDo& lhs, const BandedMatrix& rhs)
 {
     lhs = lhs * rhs; // Utilise l'opérateur * déjà défini
     return lhs;
@@ -944,13 +944,13 @@ Matrix2Do& operator*=(Matrix2Do& lhs, const BandedMatrix& rhs)
 // =====================================================
 
 /**
- * @brief Convertit une BandedMatrix en Matrix2Do
+ * @brief Convertit une BandedMatrix en MatrixlDo
  * @param banded Matrice bande à convertir
- * @return Matrix2Do Matrice pleine équivalente
+ * @return MatrixlDo Matrice pleine équivalente
  */
-Matrix2Do toMatrix2Do(const BandedMatrix& banded)
+MatrixlDo toMatrixlDo(const BandedMatrix& banded)
 {
-    Matrix2Do result(banded.rows(), banded.cols());
+    MatrixlDo result(banded.rows(), banded.cols());
 
     for (size_t i = 0; i < banded.rows(); ++i) {
         for (size_t j = 0; j < banded.cols(); ++j) {
@@ -971,13 +971,13 @@ Matrix2Do toMatrix2Do(const BandedMatrix& banded)
 }
 
 /**
- * @brief Convertit une Matrix2Do en BandedMatrix (si possible)
+ * @brief Convertit une MatrixlDo en BandedMatrix (si possible)
  * @param matrix Matrice pleine à convertir
  * @param bandWidth Largeur de bande désirée
  * @return BandedMatrix Matrice bande équivalente
  * @throws std::invalid_argument Si la matrice ne peut pas être représentée avec la largeur de bande donnée
  */
-BandedMatrix toBandedMatrix(const Matrix2Do& matrix, size_t bandWidth)
+BandedMatrix toBandedMatrix(const MatrixlDo& matrix, size_t bandWidth)
 {
     BandedMatrix result(matrix.rows(), matrix.cols(), bandWidth);
 
@@ -990,7 +990,7 @@ BandedMatrix toBandedMatrix(const Matrix2Do& matrix, size_t bandWidth)
                 static_cast<int>(bandWidth)) {
                 result.at(i, j) = matrix[i][j];
             } else if (std::abs(matrix[i][j]) > tolerance) {
-                throw std::invalid_argument("Matrix2Do cannot be represented as banded matrix with given bandwidth");
+                throw std::invalid_argument("MatrixlDo cannot be represented as banded matrix with given bandwidth");
             }
         }
     }
@@ -1047,7 +1047,13 @@ QDataStream &operator>>( QDataStream &stream, CurveMap &map )
 
 }
 */
-void showMatrix(const Matrix2D& m, const std::string& str)
+void showMatrix(const MatrixD& m, const std::string& str)
+{
+    std::cout << str << "\n";
+    std::cout << m << std::endl;
+}
+
+void showMatrix(const MatrixLD& m, const std::string& str)
 {
     std::cout << str << "\n";
     std::cout << m << std::endl;
@@ -1093,12 +1099,12 @@ void showVector(const std::vector<double> &m, const std::string& str)
 /**
  * @brief Factorise la matrice R
  */
-void SparseQuadraticFormSolver::factorize(const SparseMatrixLD& R)
+void SparseQuadraticFormSolver::factorize(const SparseMatrixD& R)
 {
     R_template_ = R; // Garder une copie pour les dimensions
 
     const auto n_center = R.rows() - 2 * shift_;
-    SparseMatrixLD R_center = R.block(shift_, shift_, n_center, n_center);
+    SparseMatrixD R_center = R.block(shift_, shift_, n_center, n_center);
 
     solver_.compute(R_center); // effectue la factorisation LDLT
 #ifdef DEBUG
@@ -1113,14 +1119,14 @@ void SparseQuadraticFormSolver::factorize(const SparseMatrixLD& R)
 /**
  * @brief Calcule R^(-1) * Q^T
  */
-SparseMatrixLD SparseQuadraticFormSolver::compute_Rinv_QT(const SparseMatrixLD& Q)
+SparseMatrixD SparseQuadraticFormSolver::compute_Rinv_QT(const SparseMatrixD &Q)
 {
 #ifdef DEBUG
     if (!is_factorized_) {
         throw std::runtime_error("[SparseQuadraticFormSolver] Matrix must be factorized first");
     }
 #endif
-    SparseMatrixLD QT = Q.transpose();
+    SparseMatrixD QT = Q.transpose();
     return solve_with_padding(QT);
 
 }
@@ -1128,19 +1134,19 @@ SparseMatrixLD SparseQuadraticFormSolver::compute_Rinv_QT(const SparseMatrixLD& 
 /**
  * @brief Calcule Q * R^(-1) * Q^T (forme quadratique complète)
  */
-SparseMatrixLD SparseQuadraticFormSolver::compute_Q_Rinv_QT(const SparseMatrixLD& Q)
+SparseMatrixD SparseQuadraticFormSolver::compute_Q_Rinv_QT(const SparseMatrixD& Q)
 {
-    SparseMatrixLD R_inv_QT = compute_Rinv_QT(Q);
+    SparseMatrixD R_inv_QT = compute_Rinv_QT(Q);
     return Q * R_inv_QT;
 }
 
 /**
  * @brief Calcule les deux produits efficacement
   */
-std::pair<SparseMatrixLD, SparseMatrixLD> SparseQuadraticFormSolver::compute_both_products(const SparseMatrixLD& Q)
+std::pair<SparseMatrixD, SparseMatrixD> SparseQuadraticFormSolver::compute_both_products(const SparseMatrixD& Q)
 {
-    SparseMatrixLD R_inv_QT = compute_Rinv_QT(Q);
-    SparseMatrixLD Q_Rinv_QT = Q * R_inv_QT;
+    SparseMatrixD R_inv_QT = compute_Rinv_QT(Q);
+    SparseMatrixD Q_Rinv_QT = Q * R_inv_QT;
 
     return std::make_pair(R_inv_QT, Q_Rinv_QT);
 }
@@ -1148,25 +1154,25 @@ std::pair<SparseMatrixLD, SparseMatrixLD> SparseQuadraticFormSolver::compute_bot
 /**
  * @brief Résout R * X = B avec gestion du padding
  */
-SparseMatrixLD SparseQuadraticFormSolver::solve_with_padding(const SparseMatrixLD& B)
+SparseMatrixD SparseQuadraticFormSolver::solve_with_padding(const SparseMatrixD& B)
 {
     const auto n_center = R_template_.rows() - 2 * shift_;
-    SparseMatrixLD B_relevant = B.block(shift_, 0, n_center, B.cols());
+    SparseMatrixD B_relevant = B.block(shift_, 0, n_center, B.cols());
 
-    Matrix2D B_dense = Matrix2D(B_relevant);
-    Matrix2D solutions = solver_.solve(B_dense);
+    MatrixD B_dense = MatrixD(B_relevant);
+    MatrixD solutions = solver_.solve(B_dense);
 
     if (solver_.info() != Eigen::Success) {
         throw std::runtime_error("[SparseQuadraticFormSolver] LDLT solve failed");
     }
 
-    SparseMatrixLD result(R_template_.rows(), B.cols());
-    std::vector<Eigen::Triplet<t_matrix>> triplets;
+    SparseMatrixD result(R_template_.rows(), B.cols());
+    std::vector<Eigen::Triplet<double>> triplets;
 
     const double tolerance = 1e-12;
     for (int i = 0; i < solutions.rows(); ++i) {
         for (int j = 0; j < solutions.cols(); ++j) {
-            const t_matrix value = static_cast<t_matrix>(solutions(i, j));
+            const double value = static_cast<double>(solutions(i, j));
             if (std::abs(value) > tolerance) {
                 triplets.emplace_back(i + shift_, j, value);
             }

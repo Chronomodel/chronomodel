@@ -96,7 +96,7 @@ void PluginDensityRefView::setDate(const Date& date, const StudyPeriodSettings& 
         mGraph->setCurrentX(tminDisplay, tmaxDisplay);
 
         mGraph->removeAllCurves();
-        mGraph->remove_all_zones();
+
         mGraph->clearInfos();
         mGraph->showInfos(true);
         mGraph->setFormatFunctX(nullptr);

@@ -196,7 +196,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mDataSigmaRadio = new RadioButton(tr("Std ti"));
     mDataSigmaRadio->setFixedHeight(h_Radio);
 #ifdef S02_BAYESIAN
-    mS02Radio = new RadioButton(tr("Event Shrinkage"));
+    mS02Radio = new RadioButton(tr("Shrinkage Param."));
     mS02Radio->setFixedHeight(h_Radio);
 #endif
     mEventVGRadio = new RadioButton(tr("Std gi"));
@@ -1227,8 +1227,8 @@ void ResultsView::initModel()
         const auto &gx = model->mPosteriorMeanG.gx;
         const auto minmax_Y = gx.mapG.minMaxY();
 
-        double minY = +INFINITY;
-        double maxY = -INFINITY;
+        double minY = +std::numeric_limits<double>::max();
+        double maxY = -std::numeric_limits<double>::max();
         minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, std::shared_ptr<Event> e) {return std::min(e->mXIncDepth, x);});
         maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, std::shared_ptr<Event> e) {return std::max(e->mXIncDepth, x);});
         int i = 0;
@@ -1254,8 +1254,8 @@ void ResultsView::initModel()
             const auto &gy = model->mPosteriorMeanG.gy;
             const auto minmax_Y = gy.mapG.minMaxY();
 
-            minY = +INFINITY;
-            maxY = -INFINITY;
+            minY = +std::numeric_limits<double>::max();
+            maxY = -std::numeric_limits<double>::max();
             minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, std::shared_ptr<Event> e) {return std::min(e->mYDec, x);});
             maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, std::shared_ptr<Event> e) {return std::max(e->mYDec, x);});
             int i = 0;
@@ -1279,8 +1279,8 @@ void ResultsView::initModel()
                 const auto &gz = model->mPosteriorMeanG.gz;
                 const auto minmax_Y = gz.mapG.minMaxY();
 
-                minY = +INFINITY;
-                maxY = -INFINITY;
+                minY = +std::numeric_limits<double>::max();
+                maxY = -std::numeric_limits<double>::max();
                 minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, std::shared_ptr<Event> e) {return std::min(e->mZField, x);});
                 maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, std::shared_ptr<Event> e) {return std::max(e->mZField, x);});
                 int i = 0;
@@ -1468,7 +1468,18 @@ void ResultsView::applyGraphTypeTab()
 {
     mCurrentTypeGraph = (GraphViewResults::graph_t) mGraphTypeTabs->currentIndex();
 
+    //createGraphs();
+
     updateOptionsWidget();
+    if (mGraphListTab->currentName() == tr("Events")) {
+        createByEventsGraphs();
+
+    } else if (mGraphListTab->currentName() == tr("Phases")) {
+        createByPhasesGraphs();
+
+    } else if (mGraphListTab->currentName() == tr("Curves")) {
+        createByCurveGraph();
+    }
     generateCurves();
     updateLayout();
 }
@@ -3153,8 +3164,6 @@ void ResultsView::generateCurves()
     updateGraphsMinMax();
     updateScales(); // contient updateCurvesToShow pour les courbes
 
-    //updateCurvesToShow();
-
 }
 
 void ResultsView::updateGraphsMinMax()
@@ -3270,7 +3279,7 @@ void ResultsView::updateCurvesToShow()
     // --------------------------------------------------------
     //  Options for "Curves"
     // --------------------------------------------------------
-    if ((mGraphListTab->currentName() == tr("Curves")) && !mLambdaRadio->isChecked()) { // && !mS02VgRadio->isChecked()) {
+    if ((mGraphListTab->currentName() == tr("Curves")) && !mLambdaRadio->isChecked()) {
 
         if (mCurveGRadio->isChecked()) {
             showVariableList.append(GraphViewResults::eG);
@@ -4024,13 +4033,18 @@ void ResultsView::updateEventsOptions(qreal& optionWidgetHeight, bool isPostDist
 void ResultsView::updatePhasesOptions(qreal &optionWidgetHeight)
 {
     mOptionsLayout->addWidget(mPhasesGroup);
-    mGraphTypeTabs->setTabVisible(1, true);
-    mGraphTypeTabs->setTabVisible(2, true);
-    mGraphTypeTabs->setTabVisible(3, true);
+    const bool show_histo = mBeginEndRadio->isChecked() || mDurationRadio->isChecked();
+    mGraphTypeTabs->setTabVisible(1, show_histo);
 
-    mEventsGroup->hide();
-    mPhasesGroup->show();
-    mCurvesGroup->hide();
+    const bool show_accept = mBeginEndRadio->isChecked();
+    mGraphTypeTabs->setTabVisible(2, show_accept);
+
+    const bool show_correl = mBeginEndRadio->isChecked();
+    mGraphTypeTabs->setTabVisible(3, show_correl);
+
+    mEventsGroup->setVisible(false);
+    mPhasesGroup->setVisible(true);
+    mCurvesGroup->setVisible(false);
 
     qreal totalH = 0;
     QVBoxLayout* phaseLayout = new QVBoxLayout();
@@ -5118,8 +5132,8 @@ void ResultsView::findOptimalX()
         vec = &model->mPosteriorMeanG.gx.vecG;
         const std::vector<double>* vecVar = &model->mPosteriorMeanG.gx.vecVarG;
 
-        double minY = +INFINITY;
-        double maxY = -INFINITY;
+        double minY = +std::numeric_limits<double>::max();
+        double maxY = -std::numeric_limits<double>::max();
         minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, std::shared_ptr<Event> e) {return std::min(e->mXIncDepth, x);});
         maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, std::shared_ptr<Event> e) {return std::max(e->mXIncDepth, x);});
         int i = 0;
@@ -5167,8 +5181,8 @@ void ResultsView::findOptimalY()
         vec = &model->mPosteriorMeanG.gy.vecG;
         const std::vector<double>* vecVar = &model->mPosteriorMeanG.gy.vecVarG;
 
-        double minY = +INFINITY;
-        double maxY = -INFINITY;
+        double minY = +std::numeric_limits<double>::max();
+        double maxY = -std::numeric_limits<double>::max();
         minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, std::shared_ptr<Event> e) {return std::min(e->mYDec, x);});
         maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, std::shared_ptr<Event> e) {return std::max(e->mYDec, x);});
         int i = 0;
@@ -5213,8 +5227,8 @@ void ResultsView::findOptimalZ()
         vec = &model->mPosteriorMeanG.gz.vecG;
         const std::vector<double>* vecVar = &model->mPosteriorMeanG.gz.vecVarG;
 
-        double minY = +INFINITY;
-        double maxY = -INFINITY;
+        double minY = +std::numeric_limits<double>::max();
+        double maxY = -std::numeric_limits<double>::max();
         minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, std::shared_ptr<Event> e) {return std::min(e->mZField, x);});
         maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, std::shared_ptr<Event> e) {return std::max(e->mZField, x);});
         int i = 0;
@@ -5347,10 +5361,12 @@ void ResultsView::applyFont()
         const QList<GraphViewResults*> &graphs = allGraphs();
         for (const auto& graph : graphs) {
             graph->setGraphsFont(font);
+            graph->update();
         }
 
         mFontBut->setText(font.family() + ", " + font.styleName() + ", " +QString::number(font.pointSizeF()));
         mFontBut->setFont(font);
+
     }
 }
 
@@ -5358,8 +5374,9 @@ void ResultsView::applyThickness(int value)
 {
     const QList<GraphViewResults*>& graphs = allGraphs();
     for (const auto& graph : graphs) {
-        graph->setGraphsThickness(value);
+        graph->updateCurvesThickness(value);
     }
+    generateCurves();//updateGraphsLayout();
 }
 
 void ResultsView::applyOpacity(int value)
@@ -5367,8 +5384,9 @@ void ResultsView::applyOpacity(int value)
     const int opValue = value * 10;
     const QList<GraphViewResults*> &graphs = allGraphs();
     for (const auto& graph : graphs) {
-        graph->setGraphsOpacity(opValue);
+        graph->setCurvesOpacity(opValue);
     }
+    generateCurves();
 }
 
 
@@ -5378,9 +5396,10 @@ void ResultsView::setGraphicOption(GraphViewResults& graph)
     graph.setSettings(model->mSettings);
     graph.setMCMCSettings(model->mMCMCSettings, model->mChains);
     graph.setGraphsFont(mFontBut->font());
-    graph.setGraphsThickness(mThicknessCombo->currentIndex());
-    graph.changeXScaleDivision(mMajorScale, mMinorCountScale);
-    graph.setGraphsOpacity(mOpacityCombo->currentIndex()*10);
+    graph.setCurvesThickness(mThicknessCombo->currentIndex());
+    graph.setCurvesOpacity(mOpacityCombo->currentIndex()*10);
+
+    graph.changeXScaleDivision(mMajorScale, mMinorCountScale);  
     graph.setMarginLeft(mMarginLeft);
     graph.setMarginRight(mMarginRight);
 

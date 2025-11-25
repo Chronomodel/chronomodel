@@ -84,7 +84,7 @@ QString MCMCLoopChrono::calibrate()
 
         dates.reserve(nbDates);*/
 
-        for (std::shared_ptr<Event> ev : events) {
+        for (std::shared_ptr<Event>& ev : events) {
             unsigned long num_dates = ev->mDates.size();
             for (unsigned long j = 0; j<num_dates; ++j) {
                 Date* date = &ev->mDates[j];
@@ -156,7 +156,7 @@ bool MCMCLoopChrono::update_v3()
     //
     //  B - Update theta Events
     // --------------------------------------------------------------
-    for (auto&& event : mModel->mEvents) {
+    for (std::shared_ptr<Event> &event : mModel->mEvents) {
 
         event->updateTheta(tminPeriod, tmaxPeriod); // update ti dates and theta
 

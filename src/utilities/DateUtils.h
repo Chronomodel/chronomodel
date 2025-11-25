@@ -43,6 +43,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QString>
 #include <QMap>
 
+#include <map>
+
 typedef double (*DateConversion)(const double &);
 
 class DateUtils

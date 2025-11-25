@@ -60,7 +60,6 @@ public:
     virtual void generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList);
     void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, const QList<variable_t>& showVariableList, const Scale scale);
 
-
 private:
     PosteriorMeanGComposante mComposanteG;
     QList<PosteriorMeanGComposante> mComposanteGChains;

@@ -103,14 +103,7 @@ void EventItem::remove_dateItems()
 {
     QList<QGraphicsItem*> dateItems = childItems();
     const auto dateItemsSize = dateItems.size() - 1;
-    /*for (auto j = dateItemsSize; j >= 0; --j) {
-        if (mScene->getItemsList().contains(dateItems.first()))
-            mScene->removeItem(dateItems.first());
 
-        delete dateItems.first();
-        dateItems.removeFirst();
-
-    }*/
     for (auto j = dateItemsSize; j >= 0; --j) {
         auto d = dateItems.at(j);
         if (mScene->getItemsList().contains(d))

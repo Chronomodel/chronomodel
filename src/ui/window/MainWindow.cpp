@@ -1040,12 +1040,12 @@ void MainWindow::rebuildExportCurve()
         PosteriorMeanGComposante clearCompo;
         clearCompo.mapG = CurveMap (YGrid, XGrid); // Attention invesion ->explicit CurveMap(unsigned row, unsigned col)
         clearCompo.mapG.setRangeX(curveModel->mSettings.mTmin, curveModel->mSettings.mTmax);
-        clearCompo.mapG.setMinValue(+INFINITY);
+        clearCompo.mapG.setMinValue(+std::numeric_limits<double>::max());
         clearCompo.mapG.setMaxValue(0);
 
         clearCompo.mapGP = CurveMap (YGrid, XGrid); // Attention invesion ->explicit CurveMap(unsigned row, unsigned col)
         clearCompo.mapGP.setRangeX(curveModel->mSettings.mTmin, curveModel->mSettings.mTmax);
-        clearCompo.mapGP.setMinValue(+INFINITY);
+        clearCompo.mapGP.setMinValue(+std::numeric_limits<double>::max());
         clearCompo.mapGP.setMaxValue(0);
 
         clearCompo.vecG = std::vector<double> (XGrid);

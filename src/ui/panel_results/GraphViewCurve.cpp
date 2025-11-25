@@ -74,7 +74,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
 {
     GraphViewResults::generateCurves(typeGraph, variableList);
     mGraph->removeAllCurves();
-    mGraph->remove_all_zones();
+
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
     mGraph->setOverArrow(GraphView::eBothOverflow);
@@ -234,12 +234,13 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
         type_data Ymin_map = curveMap.mMap.minY();
         type_data Ymax_map = curveMap.mMap.maxY();
         type_data step_map_Y = (Ymax_map - Ymin_map) / (curveMap.mMap.row() -1);
-
+        // les temps de la map sont déjà convertis avant
         type_data tmin_map = curveMap.mMap.minX();
         type_data tmax_map = curveMap.mMap.maxX();
         type_data step_map_t = (tmax_map - tmin_map) / (curveMap.mMap.column() -1);
         for (unsigned c = 0; c < curveMap.mMap.column() ; c++) {
-            const double t = DateUtils::convertToAppSettingsFormat(c * step_map_t + tmin_map);
+            //const double t = DateUtils::convertToAppSettingsFormat(c * step_map_t + tmin_map);
+            const double t = c * step_map_t + tmin_map;
             auto val_inf = min_indices[c] * step_map_Y + Ymin_map;
             auto val_sup = max_indices[c] * step_map_Y + Ymin_map;
             curveHPDMid_Data.insert(t, (val_sup + val_inf) / 2.0);
@@ -479,10 +480,10 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
      *   Add zones outside study period
      * ------------------------------------------------------------*/
 
-    const GraphZone zoneMin (-INFINITY, mSettings.getTminFormated());
+    const GraphZone zoneMin (-std::numeric_limits<double>::max(), mSettings.getTminFormated());
     mGraph->add_zone(zoneMin);
 
-    const GraphZone zoneMax (mSettings.getTmaxFormated(), INFINITY);
+    const GraphZone zoneMax (mSettings.getTmaxFormated(), std::numeric_limits<double>::max());
     mGraph->add_zone(zoneMax);
 
     mGraph->setTipXLab(tr("t"));
@@ -510,33 +511,62 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
         mGraph->setYScaleDivision(scale);
     }
 
-    mGraph->setCurveVisible("Map", mShowAllChains && (showG||showGP) && showMap);
-   // mGraph->setCurveVisible("Hpd_Map", mShowAllChains && (showG||showGP) && showMap);
-
-    mGraph->setCurveVisible("G", mShowAllChains && showGError);
-    mGraph->setCurveVisible("G Env", mShowAllChains && showGError && showG);
-
-    mGraph->setCurveVisible("HPD Mid", mShowAllChains && showGHpd);
-    mGraph->setCurveVisible("HPD Env", mShowAllChains && showGHpd);
-
+    // set_points_visible ne fait pas repainGraph, il vaut mieux le faire avant setCurveVisible qui fait repaintGraph
     mGraph->set_points_visible("Events Points", showEventsPoints);
     mGraph->set_points_visible("Data Points", showDataPoints);
-    mGraph->setCurveVisible("G Prime", mShowAllChains && showGP);
-    mGraph->setCurveVisible("G Prime Zero", showGP);
 
-    mGraph->setCurveVisible("G Second", mShowAllChains && showGS);
-    
-    for (int i = 0; i < mShowChainList.size(); ++i) {
+    QStringList curvesToShow;
 
-        mGraph->setCurveVisible(QString("Map Chain ") + QString::number(i), mShowChainList.at(i) && showMap);
-
-        mGraph->setCurveVisible(QString("G Chain ") + QString::number(i), mShowChainList.at(i) && showG);
-        mGraph->setCurveVisible(QString("G Env Chain ") + QString::number(i), mShowChainList.at(i) && showGError && showG);
-
-        mGraph->setCurveVisible(QString("G Prime Chain ") + QString::number(i), mShowChainList.at(i) && showGP);
-
-        mGraph->setCurveVisible(QString("G Second Chain ") + QString::number(i), mShowChainList.at(i) && showGS);
+    if (mShowAllChains) {
+        if (showG || showGP) {
+            if (showMap) {
+                curvesToShow << "Map";
+            }
+        }
+        if (showGError) {
+            curvesToShow << "G";
+            if (showG) {
+                curvesToShow << "G Env";
+            }
+        }
+        if (showGHpd) {
+            curvesToShow << "HPD Mid" << "HPD Env";
+        }
+        if (showGP) {
+            curvesToShow << "G Prime";
+            curvesToShow << "G Prime Zero";
+        }
+        if (showGS) {
+            curvesToShow << "G Second";
+        }
     }
+
+
+    // Ajouter les chaînes individuelles
+    for (int i = 0; i < mShowChainList.size(); ++i) {
+        if (mShowChainList.at(i)) {
+            if (showMap) {
+                curvesToShow << QString("Map Chain %1").arg(i);
+            }
+            if (showG) {
+                curvesToShow << QString("G Chain %1").arg(i);
+                if (showGError) {
+                    curvesToShow << QString("G Env Chain %1").arg(i);
+                }
+            }
+            if (showGP) {
+                curvesToShow << QString("G Prime Chain %1").arg(i);
+            }
+            if (showGS) {
+                curvesToShow << QString("G Second Chain %1").arg(i);
+            }
+        }
+    }
+
+    mGraph->setCurveVisible(curvesToShow, true);
+
+
+
 
 }
 
@@ -721,7 +751,7 @@ inline double gaussianKernel(double u) noexcept {
  */
 inline double loocv_fast(const std::map<double,double>& data, double h) noexcept {
     const int n = static_cast<int>(data.size());
-    if (n <= 1) return std::numeric_limits<double>::infinity();
+    if (n <= 1) return std::numeric_limits<double>::max();
 
     std::vector<double> yhat(n, 0.0);
     std::vector<double> Hdiag(n, 0.0);
@@ -779,6 +809,7 @@ inline double loocv_fast(const std::map<double,double>& data, double h) noexcept
  *
  * Attention : nécessite que loocv_fast(const std::map<double,double>&, double) soit défini.
  */
+// useless
 double find_best_bandwidth_map(const std::map<double,double>& data,
                                double h_min = -1.0, double h_max = -1.0,
                                int coarse_steps = 20, int max_iter = 40,
@@ -791,7 +822,7 @@ double find_best_bandwidth_map(const std::map<double,double>& data,
     double x_prev = data.begin()->first;
     double x_first = x_prev;
     double x_last = x_prev;
-    double dx_min = std::numeric_limits<double>::infinity();
+    double dx_min = std::numeric_limits<double>::max();
     double sumx = x_prev, sumx2 = x_prev*x_prev;
     size_t n = 1;
     for (auto it = std::next(data.begin()); it != data.end(); ++it, ++n) {
@@ -829,7 +860,7 @@ double find_best_bandwidth_map(const std::map<double,double>& data,
 
     auto eval = [&](double h)->double {
         // clamp h
-        if (!(h > 0.0)) return std::numeric_limits<double>::infinity();
+        if (!(h > 0.0)) return std::numeric_limits<double>::max();
         auto it = cache.find(h);
         if (it != cache.end()) return it->second;
         double v = loocv_fast(data, h); // <- ta fonction optimisée
@@ -839,7 +870,7 @@ double find_best_bandwidth_map(const std::map<double,double>& data,
 
     // 1) coarse log-grid scan
     double best_h = h_min;
-    double best_score = std::numeric_limits<double>::infinity();
+    double best_score = std::numeric_limits<double>::max();
     const double log_hmin = std::log(h_min);
     const double log_hmax = std::log(h_max);
     for (int i = 0; i < coarse_steps; ++i) {

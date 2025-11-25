@@ -58,30 +58,25 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtDebug>
 
 
-/**
- * @class CurveMap
- * @brief Représente une carte 2D de données numériques avec gestion des axes X/Y.
- *
- * Les données sont stockées dans une `std::valarray<double>` de taille `_row * _column`,
- * indexées selon `data[column * _row + row]`. L'accès se fait via `operator()` ou `at()`.
- */
-
-
-
-
 using t_reduceTime = double;
 using t_matrix = long double;
 
 using t_prob = double;
 
 using namespace Eigen;
-using  Matrix2D = Matrix<t_matrix, Dynamic, Dynamic>;
-using DiagonalMatrixLD = DiagonalMatrix<t_matrix, Dynamic, Dynamic>;
-using ColumnVectorLD = Eigen::Matrix<t_matrix, Eigen::Dynamic, 1>;
-using RowVectorLD = Eigen::Matrix<t_matrix, 1, Eigen::Dynamic>;
-using SparseMatrixLD = Eigen::SparseMatrix<t_matrix> ;
+using MatrixLD = Matrix<long double, Dynamic, Dynamic>;
+using DiagonalMatrixLD = DiagonalMatrix<long double, Dynamic, Dynamic>;
+using ColumnVectorLD = Eigen::Matrix<long double, Eigen::Dynamic, 1>;
+using RowVectorLD = Eigen::Matrix<long double, 1, Eigen::Dynamic>;
+using SparseMatrixLD = Eigen::SparseMatrix<long double> ;
 
-ColumnVectorLD stdVectorToColumnVector(const std::vector<double>& vec);
+using MatrixD = Matrix<double, Dynamic, Dynamic>;
+using DiagonalMatrixD = DiagonalMatrix<double, Dynamic, Dynamic>;
+using ColumnVectorD = Eigen::Matrix<double, Eigen::Dynamic, 1>;
+using RowVectorD = Eigen::Matrix<double, 1, Eigen::Dynamic>;
+using SparseMatrixD = Eigen::SparseMatrix<double> ;
+
+ColumnVectorD stdVectorToColumnVector(const std::vector<double>& vec);
 ColumnVectorLD stdVectorToColumnVector(const std::vector<t_matrix>& vec);
 std::vector<t_matrix> eigenToStdVector(const ColumnVectorLD& vec);
 
@@ -90,12 +85,13 @@ RowVectorLD stdVectorToRowVector(const std::vector<t_matrix>& vec);
 std::vector<t_matrix> eigenToStdVector(const RowVectorLD& vec);
 
 
+/**
+ * @brief CurveMap optimisée pour l'accès et l'écriture haute performance
 
-/**
- * @brief CurveMap optimisée pour l'accès et l'écriture haute performance
- */
-/**
- * @brief CurveMap optimisée pour l'accès et l'écriture haute performance
+ * @brief Représente une carte 2D de données numériques avec gestion des axes X/Y.
+ *
+ * Les données sont stockées dans une `std::vector<double>>` de taille `_row * _column`,
+ * indexées selon `data[column * _row + row]`. L'accès se fait via `operator()` ou `at()`.
  */
 class CurveMap
 {
@@ -705,10 +701,10 @@ private:
     }
 };
 #endif
-//typedef std::valarray<std::valarray<t_matrix>> Matrix2D;
+//typedef std::valarray<std::valarray<t_matrix>> MatrixLD;
 
 
-class Matrix2Do {
+class MatrixlDo {
 private:
     std::valarray<std::valarray<t_matrix>> data;
     size_t n;
@@ -716,13 +712,13 @@ private:
 
 public:
     // Constructeur par defaut
-    Matrix2Do() : data(std::valarray<t_matrix>(0), 0), n(0), m(0) {}
+    MatrixlDo() : data(std::valarray<t_matrix>(0), 0), n(0), m(0) {}
 
     // Constructeur pour une matrice de dimensions n x m
-    Matrix2Do(size_t rows, size_t cols) : data(std::valarray<t_matrix>(0.0L, cols), rows), n(rows), m(cols) {}
+    MatrixlDo(size_t rows, size_t cols) : data(std::valarray<t_matrix>(0.0L, cols), rows), n(rows), m(cols) {}
 
     // Constructeur pour une matrice identité (carrée)
-    Matrix2Do(size_t size, bool identity) : data(std::valarray<t_matrix>(0.0L, size), size), n(size), m(size) {
+    MatrixlDo(size_t size, bool identity) : data(std::valarray<t_matrix>(0.0L, size), size), n(size), m(size) {
         if (identity) {
             for (size_t i = 0; i < size; ++i) {
                 data[i][i] = 1.0L;
@@ -731,11 +727,11 @@ public:
     }
 
     // Destructeur : inutile de faire quoi que ce soit, le compilateur s'en charge
-    virtual ~Matrix2Do() = default;
+    virtual ~MatrixlDo() = default;
 
 
-    static Matrix2D initMatrix2D(size_t rows, size_t cols) {
-        return Matrix2D(rows, cols);
+    static MatrixLD initMatrixlD(size_t rows, size_t cols) {
+        return MatrixLD(rows, cols);
     }
 
     // Accesseurs
@@ -745,13 +741,13 @@ public:
     size_t cols() const { return m; }
 
     // Opérateur d'addition
-    Matrix2Do operator+(const Matrix2Do& other) const;
+    MatrixlDo operator+(const MatrixlDo& other) const;
     // Opérateur de soustraction
-    Matrix2Do operator-(const Matrix2Do& other) const;
+    MatrixlDo operator-(const MatrixlDo& other) const;
     // Opérateur de multiplication matricielle
-    Matrix2Do operator*(const Matrix2Do& other) const;
+    MatrixlDo operator*(const MatrixlDo& other) const;
     // Opérateur de multiplication par un scalaire
-    Matrix2Do operator*(t_matrix scalar) const;
+    MatrixlDo operator*(t_matrix scalar) const;
 
     // Opérateur de multiplication par un vecteur
     std::valarray<t_matrix> operator*(const std::valarray<t_matrix>& vec) const;
@@ -764,7 +760,7 @@ public:
     std::valarray<t_matrix>* end();
 
     // Surcharge de l'opérateur unaire pour permettre l'inversion des signes
-    Matrix2Do operator-() const;
+    MatrixlDo operator-() const;
     // Méthode d'affichage
     void showMatrix(const std::string& str = "") const;
     // Méthode pour échanger deux lignes
@@ -772,10 +768,10 @@ public:
     /**
      * @brief Transpose the matrix
      */
-    Matrix2Do transpose() const;
+    MatrixlDo transpose() const;
 
     // Méthode pour inverser la matrice
-    Matrix2Do inverse() const;
+    MatrixlDo inverse() const;
 };
 
 
@@ -786,7 +782,9 @@ QDataStream &operator>>( QDataStream& stream, CurveMap& map );
 
 void showVector(const std::vector<t_matrix>& m, const std::string& str = "");
 void showVector(const std::vector<double>& m, const std::string& str = "");
-void showMatrix(const Matrix2D& m, const std::string& str = "");
+
+void showMatrix(const MatrixD& m, const std::string& str);
+void showMatrix(const MatrixLD& m, const std::string& str = "");
 void showMatrix(const DiagonalMatrixLD& d, const std::string& str = "");
 /**
  * @class BandedMatrix
@@ -1089,12 +1087,12 @@ BandedMatrix operator*(long double scalar, const BandedMatrix& matrix);
 #pragma mark Sparse Functions
  class SparseQuadraticFormSolver {
  private:
-     Eigen::SimplicialLDLT<SparseMatrixLD> solver_;
+     Eigen::SimplicialLDLT<SparseMatrixD> solver_;
      long shift_;
 #ifdef DEBUG
      bool is_factorized_;
 #endif
-     SparseMatrixLD R_template_;
+     SparseMatrixD R_template_;
 
  public:
 #ifdef DEBUG
@@ -1108,29 +1106,29 @@ BandedMatrix operator*(long double scalar, const BandedMatrix& matrix);
      /**
      * @brief Factorise la matrice R
      */
-     void factorize(const SparseMatrixLD& R);
+     void factorize(const SparseMatrixD& R);
 
      /**
      * @brief Calcule R^(-1) * Q^T
      */
-     SparseMatrixLD compute_Rinv_QT(const SparseMatrixLD& Q);
+     SparseMatrixD compute_Rinv_QT(const SparseMatrixD& Q);
 
      /**
      * @brief Calcule Q * R^(-1) * Q^T (forme quadratique complète)
      */
-     SparseMatrixLD compute_Q_Rinv_QT(const SparseMatrixLD& Q);
+     SparseMatrixD compute_Q_Rinv_QT(const SparseMatrixD& Q);
 
      /**
      * @brief Calcule les deux produits efficacement
      */
-     std::pair<SparseMatrixLD, SparseMatrixLD>
-     compute_both_products(const SparseMatrixLD& Q);
+     std::pair<SparseMatrixD, SparseMatrixD>
+     compute_both_products(const SparseMatrixD& Q);
 
  private:
      /**
      * @brief Résout R * X = B avec gestion du padding
      */
-     SparseMatrixLD solve_with_padding(const SparseMatrixLD& B);
+     SparseMatrixD solve_with_padding(const SparseMatrixD& B);
 
  };
 

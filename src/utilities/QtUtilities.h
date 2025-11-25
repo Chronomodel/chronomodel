@@ -73,6 +73,7 @@ QString QListIntToQString(const QList<int>& intList, const QString& separator = 
 QString StdVectorIntToQString(const std::vector<int>& intList, const QString& separator = ",");
 QString QListUnsignedToQString(const QList<unsigned>& intList, const QString& separator = ",");
 
+QMap<double, double> stdMap_to_QMap(const std::map<double, double>& stdMap);
 
 QString double_to_str(const long double value);
 QString long_double_to_str(const long double value);
@@ -388,5 +389,8 @@ void load_container_nullable(QDataStream& stream, std::shared_ptr<std::vector<do
 std::shared_ptr<Project> getProject_ptr();
 std::shared_ptr<ModelCurve> getModel_ptr();
 QJsonObject* getState_ptr();
+
+std::pair<std::vector<double>, std::vector<size_t>> downsampleLTTBWithIndices(
+    const std::vector<double>& data, size_t n);
 
 #endif

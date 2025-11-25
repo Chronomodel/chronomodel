@@ -133,8 +133,8 @@ protected:
     bool hasSelectedGraphs();
     
     void updateGraphsMinMax();
-    double getGraphsMax(const QList<GraphViewResults*>& graphs, const QString& title, double maxFloor = -INFINITY);
-    double getGraphsMin(const QList<GraphViewResults*>& graphs, const QString& title, double minCeil = INFINITY);
+    double getGraphsMax(const QList<GraphViewResults*>& graphs, const QString& title, double maxFloor = -std::numeric_limits<double>::max());
+    double getGraphsMin(const QList<GraphViewResults*>& graphs, const QString& title, double minCeil = std::numeric_limits<double>::max());
 
     
     // ------------------------------------
@@ -182,6 +182,7 @@ protected:
 
     inline bool isCurve();
     void createOptionsWidget();
+
 
 public slots:
 

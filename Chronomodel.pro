@@ -107,7 +107,7 @@ QMAKE_CXXFLAGS += -std=c++20
 
 # --- Flag pour activer/désactiver OpenMP ---
 # Ajouter dans Qt Creator : CONFIG += use_openmp
-CONFIG -= use_openmp
+CONFIG += use_openmp
 contains(CONFIG, use_openmp) {
     message("✅ OpenMP enabled")
     OPENMP_ENABLED = 1

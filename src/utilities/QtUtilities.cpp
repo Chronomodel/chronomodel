@@ -294,9 +294,12 @@ std::vector<int> QStringToStdVectorInt(const QString &listStr, const QString &se
     std::vector<int> result;
     if (!listStr.isEmpty()) {
         QStringList list = listStr.split(separator);
-        for (const auto& str : list)
-            result.push_back(str.toInt());
+        //for (const auto& str : list)
+          //  result.push_back(str.toInt());
+        result.reserve(list.size()); // Réserve de l'espace pour éviter des réallocations
 
+        std::transform(list.begin(), list.end(), std::back_inserter(result),
+                       [](const QString& str) { return str.toInt(); }); // Utilisation de lambda pour conversion
     }
     return result;
 }
@@ -307,9 +310,12 @@ QList<int> QStringToQListInt(const QString &listStr, const QString &separator)
     QList<int> result;
     if (!listStr.isEmpty()) {
         QStringList list = listStr.split(separator);
-        for (const auto& str : list)
-            result.push_back(str.toInt());
+        //for (const auto& str : list)
+          //  result.push_back(str.toInt());
+        result.reserve(list.size()); // Réserve de l'espace pour éviter des réallocations
 
+        std::transform(list.begin(), list.end(), std::back_inserter(result),
+                       [](const QString& str) { return str.toInt(); }); // Utilisation de lambda pour conversion
     }
     return result;
 }
@@ -380,6 +386,18 @@ QString QListUnsignedToQString(const QList<unsigned> &intList, const QString &se
     QStringList list = QListUnsignedToQStringList(intList);
     return list.join(separator);
 }
+
+
+// Fonction pour convertir std::map en QMap
+QMap<double, double> stdMap_to_QMap(const std::map<double, double>& stdMap)
+{
+    QMap<double, double> qMap;
+    for (const auto& pair : stdMap) {
+        qMap.insert(pair.first, pair.second);
+    }
+    return qMap; // Retourne le QMap construit
+}
+
 
 QString double_to_str(const double value)
 {
@@ -661,126 +679,6 @@ QColor randomColor()
 }
 
 
-/*
-std::map<double, double> getMapDataInRange(const std::map<double, double> &data, const double subMin, const  double subMax)
-{
-    if (data.empty()) {
-        return {};
-    }
-
-    if (data.size() == 1) {
-        if (data.begin()->first>=subMin && data.begin()->first<= subMax) {
-            return data;
-        }
-        else
-            return std::map<double, double> ();
-    }
-
-
-    double tBeforeSubMin (0);
-    double vBeforeSubMin (0);
-    bool pointBeforeSubMin =false;
-    double tAfterSubMax (0);
-    double vAfterSubMax (0);
-    bool pointAfterSubMax =false;
-    const double min = data.begin()->first;
-    const double max = data.crbegin()->first;// .lastKey();
-    if (subMin != min || subMax != max) {
-        std::map<double, double> subData;
-        subData.clear();
-        std::map<double, double>::const_iterator iter(data.begin());
-        while (iter != std::prev(data.end(), 2)) { //.hasNext()) {
-            std::advance(iter, 1);
-            double valueT = iter->first;
-            if (valueT >= subMin && valueT <= subMax)
-                subData.emplace(valueT, iter->second);
-
-            else if (valueT<subMin) {
-                pointBeforeSubMin = true;
-                tBeforeSubMin = valueT;
-                vBeforeSubMin = iter->second;
-            }
-            else if ( valueT>subMax && !pointAfterSubMax ){
-                pointAfterSubMax = true;
-                tAfterSubMax = valueT;
-                vAfterSubMax = iter->second;
-            }
-        }
-        // Correct the QMap, with addition of value on the extremum tmin and tmax
-        if (subData.size() > 0) {
-            if (pointBeforeSubMin && subData.find(subMin) == subData.cend()) {
-                double subDataFirst = subData.begin()->second;
-                subData[subMin] = interpolate( subMin, tBeforeSubMin, subData.begin()->first, vBeforeSubMin, subDataFirst );
-            }
-            if (pointAfterSubMax && subData.find(subMax) == subData.cend()) {
-                double subDataLast = subData.crbegin()->second;
-                subData[subMax] = interpolate( subMax, subData.crbegin()->first, tAfterSubMax, subDataLast, vAfterSubMax );
-            }
-
-        } else if (data.size() == 2 && data.begin()->first <= subMin && data.crbegin()->first >= subMax) {
-            subData.emplace(subMin, data.begin()->second);
-            subData.emplace(subMax, data.crbegin()->second);
-
-        } else if (data.begin()->first<=subMin && data.crbegin()->first>=subMax) {
-            subData[subMin] =  interpolateValueInStdMap(subMin, data);
-            subData[subMax] =  interpolateValueInStdMap(subMax, data);
-
-        }
-        return subData;
-    }
-    else {
-        return data;
-    }
-}
-*/
-
-/*
-std::map<double, double> getMapDataInRange(const std::map<double, double>& data, const double subMin, const double subMax) {
-    if (data.empty()) {
-        return {};
-    }
-
-    std::map<double, double> subData;
-
-    // Vérifiez si subMin et subMax sont en dehors des limites de data
-    if (subMin > data.rbegin()->first || subMax < data.begin()->first) {
-        return subData; // Retourne une map vide
-    }
-
-    // Itération sur les éléments de la map
-    for (auto iter = data.begin(); iter != data.end(); ++iter) {
-        double valueT = iter->first;
-
-        if (valueT >= subMin && valueT <= subMax) {
-            subData.emplace(valueT, iter->second);
-        } else if (valueT < subMin) {
-            // Enregistrez le point avant subMin
-            if (iter != std::prev(data.end())) {
-                double tBeforeSubMin = valueT;
-                double vBeforeSubMin = iter->second;
-                if (subData.empty()) {
-                    subData[subMin] = interpolate(subMin, tBeforeSubMin, std::next(iter)->first, vBeforeSubMin, std::next(iter)->second);
-                }
-            }
-        } else if (valueT > subMax) {
-            // Enregistrez le point après subMax
-            if (subData.empty()) {
-                double tAfterSubMax = valueT;
-                double vAfterSubMax = iter->second;
-                subData[subMax] = interpolate(subMax, std::prev(iter)->first, tAfterSubMax, std::prev(iter)->second, vAfterSubMax);
-            }
-            break; // Pas besoin de continuer si nous avons dépassé subMax
-        }
-    }
-
-    // Si subData est vide et que data a exactement deux éléments
-    if (subData.empty() && data.size() == 2) {
-        subData.emplace(data.begin()->first, data.begin()->second);
-        subData.emplace(data.rbegin()->first, data.rbegin()->second);
-    }
-
-    return subData;
-}*/
 std::map<double,double> getMapDataInRange(const std::map<double,double>& data, double subMin, double subMax) {
     std::map<double,double> subData;
     if (data.empty() || subMin > subMax) return subData;
@@ -1256,4 +1154,127 @@ QJsonObject* getState_ptr()
 {
     auto project = getProject_ptr();
     return project ? &project->mState : nullptr;
+}
+
+
+/**
+ * Structure pour représenter un point temporel avec la fonction suivante downsampleLTTB
+ */
+struct Point {
+    double x; // temps ou index
+    double y; // valeur
+
+    Point(double x = 0, double y = 0) : x(x), y(y) {}
+};
+
+/**
+ * LTTB (Largest Triangle Three Buckets)
+ * Algorithme optimal pour réduire un signal temporel
+ * Préserve la forme visuelle du signal de manière intelligente
+ * Signal original : ___/\___/\/\/\___
+                        ↑    ↑↑↑↑↑
+
+ * LTTB sélectionne :  ___/\___/\/\/\___
+                          •  • •••••• •
+                     (plus de points où ça varie)
+
+ * Uniforme aurait :   ___/\___/\/\/\___
+                       •   •   •   •   •
+                     (peut manquer les pics)
+ * @param data Vecteur original de m valeurs
+ * @param n Nombre de points souhaités en sortie (doit être >= 3)
+ * @return Vecteur réduit de taille exactement n
+ * Version combinée : retourne les valeurs ET les indices
+ * @return pair<valeurs, indices> des points sélectionnés
+ * S. Steinarsson, "Downsampling time series for visual representation,"
+M.S. thesis, Faculty of Physical Sciences, University of Iceland,
+Reykjavik, Iceland, 2013.
+
+
+## Citation format APA :
+
+Steinarsson, S. (2013). Downsampling time series for visual representation
+[Master's thesis, University of Iceland].
+ */
+std::pair<std::vector<double>, std::vector<size_t>> downsampleLTTBWithIndices(
+    const std::vector<double>& data, size_t n)
+{
+
+    size_t m = data.size();
+
+    if (m == 0) return {{}, {}};
+    if (n >= m) {
+        std::vector<size_t> indices(m);
+        for (size_t i = 0; i < m; ++i) indices[i] = i;
+        return {data, indices};
+    }
+    if (n < 3) throw std::invalid_argument("n doit être >= 3 pour LTTB");
+
+    std::vector<double> values;
+    std::vector<size_t> indices;
+    values.reserve(n);
+    indices.reserve(n);
+
+    std::vector<Point> points(m);
+    for (size_t i = 0; i < m; ++i) {
+        points[i] = Point(static_cast<double>(i), data[i]);
+    }
+
+    // Premier point
+    values.push_back(points[0].y);
+    indices.push_back(0);
+
+    double bucketSize = static_cast<double>(m - 2) / (n - 2);
+    size_t pointIndex = 0;
+
+    for (size_t bucket = 0; bucket < n - 2; ++bucket) {
+        double bucketStart = bucket * bucketSize + 1;
+        double bucketEnd = (bucket + 1) * bucketSize + 1;
+
+        size_t rangeStart = static_cast<size_t>(bucketStart);
+        size_t rangeEnd = static_cast<size_t>(bucketEnd);
+        if (rangeEnd > m) rangeEnd = m;
+
+        double avgX = 0, avgY = 0;
+        size_t nextBucketStart = rangeEnd;
+        size_t nextBucketEnd = static_cast<size_t>((bucket + 2) * bucketSize + 1);
+        if (nextBucketEnd > m) nextBucketEnd = m;
+        if (bucket == n - 3) nextBucketEnd = m;
+
+        size_t avgCount = nextBucketEnd - nextBucketStart;
+        for (size_t i = nextBucketStart; i < nextBucketEnd; ++i) {
+            avgX += points[i].x;
+            avgY += points[i].y;
+        }
+        if (avgCount > 0) {
+            avgX /= avgCount;
+            avgY /= avgCount;
+        }
+
+        double maxArea = -1;
+        size_t maxAreaIndex = rangeStart;
+        Point prev = points[pointIndex];
+
+        for (size_t i = rangeStart; i < rangeEnd; ++i) {
+            double area = std::abs(
+                              (prev.x - avgX) * (points[i].y - prev.y) -
+                              (prev.x - points[i].x) * (avgY - prev.y)
+                              ) * 0.5;
+
+            if (area > maxArea) {
+                maxArea = area;
+                maxAreaIndex = i;
+            }
+        }
+
+        values.push_back(points[maxAreaIndex].y);
+        indices.push_back(maxAreaIndex);
+        pointIndex = maxAreaIndex;
+    }
+
+    // Dernier point
+    values.push_back(points[m - 1].y);
+    indices.push_back(m - 1);
+
+    return {values, indices};
 }
