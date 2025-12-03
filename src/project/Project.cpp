@@ -2105,8 +2105,8 @@ void Project::resetMCMC()
 bool Project::studyPeriodIsValid()
 {
     const QJsonObject settings = mState.value(STATE_SETTINGS).toObject();
-    const int tmin = settings.value(STATE_SETTINGS_TMIN).toInt();
-    const int tmax = settings.value(STATE_SETTINGS_TMAX).toInt();
+    const double tmin = settings.value(STATE_SETTINGS_TMIN).toDouble();
+    const double tmax = settings.value(STATE_SETTINGS_TMAX).toDouble();
     if (tmin >= tmax)
         showStudyPeriodWarning();
 
