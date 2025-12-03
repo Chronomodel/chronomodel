@@ -177,7 +177,15 @@ public:
     };
     enum variable_t{
         eBeginEnd,
-        eThetaEvent, eS02,
+        eThetaEvent,
+
+#ifdef S02_BAYESIAN
+        eS02,
+#endif
+
+#ifdef KOMLAN
+        eS02Vg,
+#endif
         eDataTi, eDataCalibrate, eDataWiggle,
         eCredibility,
         eSigma ,
@@ -189,11 +197,12 @@ public:
         eError,
         eDuration,
 
-        eG, eGError, eGHpd, eMap, eGEventsPts, eGDatesPts,
-        eGP,
+        eG, eGGauss, eGHpd, eMap, eGEventsPts, eGDatesPts,
+        eGP, eGPGauss, eGPHpd, eGPMap,
         eGS,
+
         eLambda
-        // ,eS02Vg
+
     };
 
 

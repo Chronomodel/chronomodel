@@ -348,8 +348,14 @@ private:
     CheckBox* mDataCalibCheck;
     CheckBox* mWiggleCheck;
     RadioButton* mDataSigmaRadio;
+
 #ifdef S02_BAYESIAN
     RadioButton* mS02Radio;
+
+#ifdef KOMLAN
+    RadioButton* mS02VgRadio;
+#endif
+
 #endif
     RadioButton* mEventVGRadio;
 
@@ -383,13 +389,14 @@ private:
     CheckBox* mCurveDataPointsCheck;
     CheckBox* mCurveStatCheck;
 
+    CheckBox* mCurveGPGaussCheck;
+    CheckBox* mCurveGPHpdCheck;
+    CheckBox* mCurveGPMapCheck;
     // ---------------------------------------------------------------------
     // Tabs : Display / Distrib. Options
     // ---------------------------------------------------------------------
     QWidget* mDisplayGroup;
     Tabs* mDisplayDistribTab;
-
-    //QWidget* mDisplayWidget;
 
 
     QWidget* mDistribGroup;

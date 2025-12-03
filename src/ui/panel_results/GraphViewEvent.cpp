@@ -84,11 +84,13 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
     const QColor color = mEvent->mColor;
 
     QString resultsHTML = tr("Nothing to Display");
-
+#ifdef S02_BAYESIAN
     if (mCurrentVariableList.contains(eS02)) {
         resultsHTML = ModelUtilities::EventS02ResultsHTML(mEvent);
 
-    } else if (mCurrentVariableList.contains(eVg)) {
+    } else
+#endif
+        if (mCurrentVariableList.contains(eVg)) {
         resultsHTML = ModelUtilities::VgResultsHTML(mEvent);
 
     } else if (mCurrentVariableList.contains(eThetaEvent)) {
@@ -115,10 +117,10 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
             mTitle = ((mEvent->type() == Event::eBound) ? tr("Bound") : tr("Std Compilation")) + " : " + mEvent->getQStringName();
         else
             mTitle = ((mEvent->type()==Event::eBound) ? tr("Bound") : tr("Event")) + " : " + mEvent->getQStringName();
-
+#ifdef S02_BAYESIAN
     } else if (mCurrentVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
         mTitle = tr("Event Shrinkage") + " : " + mEvent->getQStringName();
-
+#endif
     } else if (mCurrentVariableList.contains(eVg)) {
         mTitle = tr("Std gi") + " : " + mEvent->getQStringName();
     }
@@ -239,7 +241,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
                 ++i;
             }
         }
-
+#ifdef S02_BAYESIAN
         else if (mCurrentVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
             GraphViewResults::graph_density();
             mGraph->removeAllCurves(); // delete default zones made by graph_density()
@@ -272,7 +274,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
                                                          color);
             mGraph->add_curve(curveCred);
         }
-
+#endif
         else if (mCurrentVariableList.contains(eVg)) {
             GraphViewResults::graph_density();
             mGraph->removeAllCurves(); // delete default zones made by graph_density()
@@ -316,11 +318,11 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
 
         if (mCurrentVariableList.contains(eThetaEvent) && mEvent->mTheta.mSamplerProposal != MHVariable::eFixe) {
             generateTraceCurves(mChains, &(mEvent->mTheta));
-
+#ifdef S02_BAYESIAN
         } else if (mCurrentVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
             mTitle = tr("Log10(Event Shrinkage) : %1").arg(mEvent->getQStringName());
             generateLogTraceCurves(mChains, &(mEvent->mS02Theta));
-
+#endif
         } else if (mCurrentVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal != MHVariable::eFixe) {
             mTitle = tr("Log10(Std gi) : %1").arg(mEvent->getQStringName());
             generateLogTraceCurves(mChains, &(mEvent->mVg));
@@ -338,10 +340,10 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
             } else {
                 mGraph->setNothingMessage(tr("100 %"));
             }
-
+#ifdef S02_BAYESIAN
         } else if (mCurrentVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
             generateAcceptCurves(mChains, &(mEvent->mS02Theta));
-
+#endif
         } else if (mCurrentVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal != MHVariable::eFixe) {
             generateAcceptCurves(mChains, &(mEvent->mVg));
         }
@@ -352,11 +354,13 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
     // ----------------------------------------------------------------------
     else if ( typeGraph == eCorrel ) {
         GraphViewResults::graph_correlation();
-
+#ifdef S02_BAYESIAN
         if (mCurrentVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal!= MHVariable::eFixe) {
             generateCorrelCurves(mChains, &(mEvent->mS02Theta));
 
-        } else if (mCurrentVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal!= MHVariable::eFixe) {
+        } else
+#endif
+        if (mCurrentVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal!= MHVariable::eFixe) {
             generateCorrelCurves(mChains, &(mEvent->mVg));
 
         } else if (mCurrentVariableList.contains(eThetaEvent) && mEvent->mTheta.mSamplerProposal!= MHVariable::eFixe) {
@@ -433,7 +437,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                 mGraph->setTipXLab(tr("Sigma"));
 
         }
-        
+#ifdef S02_BAYESIAN
         else if (mCurrentVariableList.contains(eS02) ) {
             //QStringList curvesToShow;
             if (mShowAllChains) {
@@ -452,6 +456,7 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
 
         }
+#endif
         else if (mCurrentVariableList.contains(eVg)) {
 
                 //QStringList curvesToShow;
@@ -480,7 +485,9 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      * ------------------------------------------------  */
     else if ( (mCurrentTypeGraph == eTrace) &&
               ( (mCurrentVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal != MHVariable::eFixe ) ||
+#ifdef S02_BAYESIAN
               (mCurrentVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != MHVariable::eFixe ) ||
+#endif
                 ( mCurrentVariableList.contains(eThetaEvent) && mEvent->mTheta.mSamplerProposal != MHVariable::eFixe) )) {
              // We visualize only one chain (radio button)
 
@@ -503,7 +510,9 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      * ------------------------------------------------  */
     else if ( (mCurrentTypeGraph == eAccept) &&
               ( (mCurrentVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal != MHVariable::eFixe ) ||
+#ifdef S02_BAYESIAN
               (mCurrentVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != MHVariable::eFixe ) ||
+#endif
               ( mCurrentVariableList.contains(eThetaEvent) && mEvent->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss))) {
 
                // QStringList curvesToShow;
@@ -524,7 +533,9 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      * ------------------------------------------------   */
     else if ( (mCurrentTypeGraph == eCorrel) &&
               ( (mCurrentVariableList.contains(eVg) && mEvent->mVg.mSamplerProposal != MHVariable::eFixe ) ||
+#ifdef S02_BAYESIAN
                 (mCurrentVariableList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != MHVariable::eFixe ) ||
+#endif
                 ( mCurrentVariableList.contains(eThetaEvent) && mEvent->mTheta.mSamplerProposal != MHVariable::eFixe))) {
 
                 //QStringList curvesToShow;

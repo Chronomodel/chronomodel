@@ -39,13 +39,16 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ResultsView.h"
 
-
 #include "GraphView.h"
 #include "GraphViewDate.h"
 #include "GraphViewEvent.h"
+#include "GraphViewPhase.h"
 #include "GraphViewLambda.h"
 #include "GraphViewCurve.h"
-#include "GraphViewPhase.h"
+
+#ifdef KOMLAN
+ #include "GraphViewS02Vg.h"
+#endif
 
 #include "ProjectView.h"
 
@@ -198,7 +201,15 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
 #ifdef S02_BAYESIAN
     mS02Radio = new RadioButton(tr("Shrinkage Param."));
     mS02Radio->setFixedHeight(h_Radio);
+
+#ifdef KOMLAN
+    mS02VgRadio = new RadioButton(tr("S02 Vg Param."));
+    mS02VgRadio->setFixedHeight(h_Radio);
 #endif
+
+#endif
+
+
     mEventVGRadio = new RadioButton(tr("Std gi"));
     mEventVGRadio->setFixedHeight(h_Radio);
 
@@ -218,9 +229,14 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     resultsGroupLayout->setSpacing(15);
     resultsGroupLayout->addWidget(mEventThetaRadio);
     resultsGroupLayout->addWidget(mDataSigmaRadio);
+
 #ifdef S02_BAYESIAN
     resultsGroupLayout->addWidget(mS02Radio);
+ #ifdef KOMLAN
+    resultsGroupLayout->addWidget(mS02VgRadio);
+ #endif
 #endif
+
     resultsGroupLayout->addWidget(mEventVGRadio);
 
     resultsGroupLayout->addWidget(mEventsDatesUnfoldCheck);
@@ -321,9 +337,23 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mCurveEventsPointsCheck->setFixedHeight(h_Check);
     mCurveEventsPointsCheck->setChecked(false);
 
-    mCurveGPRadio = new RadioButton(tr("Speed of Change (Derivative)"), mCurvesGroup);
+    // G Prime Button
+    mCurveGPRadio = new RadioButton(tr("Speed of Change (Derivative) (at %1% Level)").arg(threshold_str), mCurvesGroup);
     mCurveGPRadio->setFixedHeight(h_Radio);
-    
+
+    mCurveGPGaussCheck = new CheckBox(tr("Gauss Envelope"), mCurvesGroup);
+    mCurveGPGaussCheck->setFixedHeight(h_Check);
+    mCurveGPGaussCheck->setChecked(true);
+
+    mCurveGPHpdCheck = new CheckBox(tr("HPD Envelope"), mCurvesGroup);
+    mCurveGPHpdCheck->setFixedHeight(h_Check);
+    mCurveGPHpdCheck->setChecked(true);
+
+    mCurveGPMapCheck = new CheckBox(tr("Density Plot"), mCurvesGroup);
+    mCurveGPMapCheck->setFixedHeight(h_Check);
+    mCurveGPMapCheck->setChecked(true);
+
+    // G second Derivative Button
     mCurveGSRadio = new RadioButton(tr("Acceleration"), mCurvesGroup);
     mCurveGSRadio->setFixedHeight(h_Radio);
     
@@ -361,6 +391,10 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     connect(mEventThetaRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
 #ifdef S02_BAYESIAN
     connect(mS02Radio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
+#ifdef KOMLAN
+    connect(mS02VgRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
+#endif
+
 #endif
     connect(mEventsDatesUnfoldCheck, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
 
@@ -396,6 +430,10 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     connect(mCurveMapCheck, &CheckBox::clicked, this,  &ResultsView::updateCurvesToShow);
     connect(mCurveEventsPointsCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     connect(mCurveDataPointsCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+
+    connect(mCurveGPGaussCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mCurveGPHpdCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mCurveGPMapCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
 
     // -----------------------------------------------------------------
     //  Graph List tab (has to be created after mResultsGroup and mTempoGroup)
@@ -1399,12 +1437,6 @@ void ResultsView::updateLayout()
     mPhasesScrollArea->setGeometry(graphScrollGeometry);
     mCurvesScrollArea->setGeometry(graphScrollGeometry);
 
-   /* if (mGraphListTab->currentIndex() == 2 )
-        GraphViewResults::mHeightForVisibleAxis = 20 * AppSettings::heigthUnit() / mByCurvesGraphs.size();
-    else
-        GraphViewResults::mHeightForVisibleAxis = 4 * AppSettings::heigthUnit() ;
-    mGraphHeight = GraphViewResults::mHeightForVisibleAxis;
-*/
     updateGraphsLayout();
     updateMarkerGeometry(mMarker->pos().x());
 }
@@ -1554,11 +1586,14 @@ void ResultsView::updateMainVariable()
 
         } else if (mDataSigmaRadio->isChecked()) {
             mMainVariable = GraphViewResults::eSigma;
+
 #ifdef S02_BAYESIAN
         } else if (mS02Radio->isChecked()) {
             mMainVariable = GraphViewResults::eS02;
+
+
 #endif
-        }else if (mEventVGRadio->isChecked()) {
+        } else if (mEventVGRadio->isChecked()) {
             mMainVariable = GraphViewResults::eVg;
         }
 
@@ -1611,11 +1646,14 @@ void ResultsView::updateMainVariable()
 
         if (mLambdaRadio->isChecked()) {
             mMainVariable = GraphViewResults::eLambda;
-
+#ifdef KOMLAN
+        } else if (mS02VgRadio->isChecked()) {
+            mMainVariable = GraphViewResults::eS02Vg;
+#endif
         } else if (mCurveGRadio->isChecked()) {
             mMainVariable = GraphViewResults::eG;
             if (mCurveErrorCheck->isChecked())
-                mCurrentVariableList.append(GraphViewResults::eGError);
+                mCurrentVariableList.append(GraphViewResults::eGGauss);
 
             if (mCurveHpdCheck->isChecked())
                 mCurrentVariableList.append(GraphViewResults::eGHpd);
@@ -1632,8 +1670,14 @@ void ResultsView::updateMainVariable()
         } else if (mCurveGPRadio->isChecked()) {
             mMainVariable = GraphViewResults::eGP;
 
-            if (mCurveMapCheck->isChecked())
-                mCurrentVariableList.append(GraphViewResults::eMap);
+            if (mCurveGPHpdCheck->isChecked())
+                mCurrentVariableList.append(GraphViewResults::eGPHpd);
+
+            if (mCurveGPMapCheck->isChecked())
+                mCurrentVariableList.append(GraphViewResults::eGPMap);
+
+            if (mCurveGPGaussCheck->isChecked())
+                mCurrentVariableList.append(GraphViewResults::eGP);
 
 
         } else if (mCurveGSRadio->isChecked()) {
@@ -1903,7 +1947,10 @@ void ResultsView::updateTotalGraphs()
     } else if (mGraphListTab->currentName() == tr("Curves")) {
         if (mLambdaRadio->isChecked()) {
             ++totalGraphs;
-
+#ifdef KOMLAN
+        } else if (mS02VgRadio->isChecked()) {
+                ++totalGraphs;
+#endif
         } else {
             if (!model->mEvents.empty() && isCurve()) {
                 ++totalGraphs;
@@ -2061,6 +2108,10 @@ void ResultsView::createByCurveGraph()
     if (model == nullptr) {
         return;
     }
+    // Quantile normal pour 1 - alpha/2
+    // 95% envelope  https://en.wikipedia.org/wiki/1.96
+    const double threshold = QLocale().toDouble( mThresholdEdit->text());
+    const double z_score = zScore(1.0 - threshold * 0.01); // Pour 95% z = 1.96
     // ----------------------------------------------------------------------
     // Show all events unless at least one is selected
     // ----------------------------------------------------------------------
@@ -2081,7 +2132,22 @@ void ResultsView::createByCurveGraph()
         mByCurvesGraphs.append(graphAlpha);
         connect(graphAlpha, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
 
-    } else {
+    }
+#ifdef KOMLAN
+    else if (mS02VgRadio->isChecked())  {
+        GraphViewS02Vg* graphS02Vg = new GraphViewS02Vg(mCurvesWidget);
+        setGraphicOption(*graphS02Vg);
+
+        graphS02Vg->setTitle(tr("S02Vg"));
+
+        mByCurvesGraphs.append(graphS02Vg);
+        connect(graphS02Vg, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
+
+    }
+#endif
+
+
+    else {
         const bool displayY = model->displayY();
         const bool displayZ = model->displayZ();
 
@@ -2108,36 +2174,36 @@ void ResultsView::createByCurveGraph()
                     switch (model->mCurveSettings.mProcessType) {
                     case CurveSettings::eProcess_Inclination :
                         verr = event->mS_XA95Depth / 2.448;
-                        pt_Ymin = event->mXIncDepth - 1.96*verr;
-                        pt_Ymax = event->mXIncDepth + 1.96*verr;
+                        pt_Ymin = event->mXIncDepth - z_score * verr;
+                        pt_Ymax = event->mXIncDepth + z_score * verr;
                         break;
                     case CurveSettings::eProcess_Declination :
                         verr = (event->mS_XA95Depth/2.448) / cos(event->mXIncDepth * M_PI /180.);
-                        pt_Ymin = event->mYDec - 1.96*verr;
-                        pt_Ymax = event->mYDec + 1.96*verr;
+                        pt_Ymin = event->mYDec - z_score * verr;
+                        pt_Ymax = event->mYDec + z_score * verr;
                         break;
                     case CurveSettings::eProcess_Field :
-                        pt_Ymin = event->mZField - 1.96*event->mS_ZField;
-                        pt_Ymax = event->mZField + 1.96*event->mS_ZField;
+                        pt_Ymin = event->mZField - z_score * event->mS_ZField;
+                        pt_Ymax = event->mZField + z_score * event->mS_ZField;
                         break;
                     case CurveSettings::eProcess_Depth :
-                        pt_Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
-                        pt_Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
+                        pt_Ymin = event->mXIncDepth - z_score * event->mS_XA95Depth;
+                        pt_Ymax = event->mXIncDepth + z_score * event->mS_XA95Depth;
                         break;
 
                     case CurveSettings::eProcess_3D:
                     case CurveSettings::eProcess_2D:
                     case CurveSettings::eProcess_Univariate :
                     case CurveSettings::eProcess_Unknwon_Dec:
-                        pt_Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
-                        pt_Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
+                        pt_Ymin = event->mXIncDepth - z_score * event->mS_XA95Depth;
+                        pt_Ymax = event->mXIncDepth + z_score * event->mS_XA95Depth;
                         break;
 
                     case CurveSettings::eProcess_Spherical:
                     case CurveSettings::eProcess_Vector:
                         verr = event->mS_XA95Depth / 2.448;
-                        pt_Ymin = event->mXIncDepth - 1.96*verr;
-                        pt_Ymax = event->mXIncDepth + 1.96*verr;
+                        pt_Ymin = event->mXIncDepth - z_score * verr;
+                        pt_Ymax = event->mXIncDepth + z_score * verr;
                         break;
 
                     case CurveSettings::eProcess_None:
@@ -2366,16 +2432,16 @@ void ResultsView::createByCurveGraph()
 
                                 if ( model->mCurveSettings.mProcessType == CurveSettings::eProcess_3D ||
                                     model->mCurveSettings.mProcessType == CurveSettings::eProcess_2D ) {
-                                    dataPts[iDataPts].Ymin = event->mYDec - 1.96*event->mS_Y;
-                                    dataPts[iDataPts].Ymax = event->mYDec + 1.96*event->mS_Y;
+                                    dataPts[iDataPts].Ymin = event->mYDec - z_score * event->mS_Y;
+                                    dataPts[iDataPts].Ymax = event->mYDec + z_score * event->mS_Y;
 
                                 } else if ( model->mCurveSettings.mProcessType == CurveSettings::eProcess_Unknwon_Dec ) {
-                                    dataPts[iDataPts].Ymin = event->mZField - 1.96*event->mS_ZField;
-                                    dataPts[iDataPts].Ymax = event->mZField + 1.96*event->mS_ZField;
+                                    dataPts[iDataPts].Ymin = event->mZField - z_score * event->mS_ZField;
+                                    dataPts[iDataPts].Ymax = event->mZField + z_score * event->mS_ZField;
 
                                 } else {
-                                    dataPts[iDataPts].Ymin = event-> mYDec - 1.96*(event->mS_XA95Depth/2.448) / cos(event->mXIncDepth * M_PI /180.);
-                                    dataPts[iDataPts].Ymax = event-> mYDec + 1.96*(event->mS_XA95Depth /2.448)/ cos(event->mXIncDepth * M_PI /180.);
+                                    dataPts[iDataPts].Ymin = event-> mYDec - z_score * (event->mS_XA95Depth/2.448) / cos(event->mXIncDepth * M_PI /180.);
+                                    dataPts[iDataPts].Ymax = event-> mYDec + z_score * (event->mS_XA95Depth /2.448)/ cos(event->mXIncDepth * M_PI /180.);
                                 }
                                 iDataPts++;
                             }
@@ -2427,8 +2493,8 @@ void ResultsView::createByCurveGraph()
                         }
 
                         for (int j = 0 ; j< dataPerEvent[i]; j++) {
-                            dataPts[iDataPts].Ymin = event->mZField - 1.96*event->mS_ZField;
-                            dataPts[iDataPts].Ymax = event->mZField + 1.96*event->mS_ZField;
+                            dataPts[iDataPts].Ymin = event->mZField - z_score * event->mS_ZField;
+                            dataPts[iDataPts].Ymax = event->mZField + z_score * event->mS_ZField;
                             iDataPts++;
                         }
                         ++i;
@@ -2454,7 +2520,8 @@ void ResultsView::updateCurveEventsPointX()
     if (model == nullptr) {
         return;
     }
-
+    const double threshold = mThresholdEdit->text().toDouble();
+    const double z_score = zScore(1.0 - threshold * 0.01); // Pour 95% z = 1.96
     // ----------------------------------------------------------------------
     // Show all events unless at least one is selected
     // ----------------------------------------------------------------------
@@ -2480,36 +2547,36 @@ void ResultsView::updateCurveEventsPointX()
                 switch (model->mCurveSettings.mProcessType) {
                 case CurveSettings::eProcess_Inclination :
                     verr = event->mS_XA95Depth / 2.448;
-                    pt_Ymin = event->mXIncDepth - 1.96*verr;
-                    pt_Ymax = event->mXIncDepth + 1.96*verr;
+                    pt_Ymin = event->mXIncDepth - z_score * verr;
+                    pt_Ymax = event->mXIncDepth + z_score * verr;
                     break;
                 case CurveSettings::eProcess_Declination :
                     verr = (event->mS_XA95Depth/2.448) / cos(event->mXIncDepth * M_PI /180.);
-                    pt_Ymin = event->mYDec - 1.96*verr;
-                    pt_Ymax = event->mYDec + 1.96*verr;
+                    pt_Ymin = event->mYDec - z_score * verr;
+                    pt_Ymax = event->mYDec + z_score * verr;
                     break;
                 case CurveSettings::eProcess_Field :
-                    pt_Ymin = event->mZField - 1.96*event->mS_ZField;
-                    pt_Ymax = event->mZField + 1.96*event->mS_ZField;
+                    pt_Ymin = event->mZField - z_score * event->mS_ZField;
+                    pt_Ymax = event->mZField + z_score * event->mS_ZField;
                     break;
                 case CurveSettings::eProcess_Depth :
-                    pt_Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
-                    pt_Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
+                    pt_Ymin = event->mXIncDepth - z_score * event->mS_XA95Depth;
+                    pt_Ymax = event->mXIncDepth + z_score * event->mS_XA95Depth;
                     break;
 
                 case CurveSettings::eProcess_3D:
                 case CurveSettings::eProcess_2D:
                 case CurveSettings::eProcess_Univariate :
                 case CurveSettings::eProcess_Unknwon_Dec:
-                    pt_Ymin = event->mXIncDepth - 1.96*event->mS_XA95Depth;
-                    pt_Ymax = event->mXIncDepth + 1.96*event->mS_XA95Depth;
+                    pt_Ymin = event->mXIncDepth - z_score * event->mS_XA95Depth;
+                    pt_Ymax = event->mXIncDepth + z_score * event->mS_XA95Depth;
                     break;
 
                 case CurveSettings::eProcess_Spherical:
                 case CurveSettings::eProcess_Vector:
                     verr = event->mS_XA95Depth / 2.448;
-                    pt_Ymin = event->mXIncDepth - 1.96*verr;
-                    pt_Ymax = event->mXIncDepth + 1.96*verr;
+                    pt_Ymin = event->mXIncDepth - z_score * verr;
+                    pt_Ymax = event->mXIncDepth + z_score * verr;
                     break;
 
                 case CurveSettings::eProcess_None:
@@ -2858,8 +2925,8 @@ void ResultsView::updateCurveEventsPointY()
                 }
             }
         }
-        dynamic_cast<GraphViewCurve*>(mByCurvesGraphs[0])->setEventsPoints(eventsPts);
-        dynamic_cast<GraphViewCurve*>(mByCurvesGraphs[0])->setDataPoints(dataPts);
+        dynamic_cast<GraphViewCurve*>(mByCurvesGraphs[1])->setEventsPoints(eventsPts);
+        dynamic_cast<GraphViewCurve*>(mByCurvesGraphs[1])->setDataPoints(dataPts);
     // End of ref point creation
     }
 }
@@ -3066,8 +3133,8 @@ void ResultsView::updateCurveEventsPointZ()
                 }
             }
         }
-        dynamic_cast<GraphViewCurve*>(mByCurvesGraphs[0])->setEventsPoints(eventsPts);
-        dynamic_cast<GraphViewCurve*>(mByCurvesGraphs[0])->setDataPoints(dataPts);
+        dynamic_cast<GraphViewCurve*>(mByCurvesGraphs[2])->setEventsPoints(eventsPts);
+        dynamic_cast<GraphViewCurve*>(mByCurvesGraphs[2])->setDataPoints(dataPts);
     // End of ref point creation
     }
 }
@@ -3172,8 +3239,14 @@ void ResultsView::updateGraphsMinMax()
     QList<GraphViewResults*> listGraphs = currentGraphs(false);
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
 
-        if (mMainVariable == GraphViewResults::eDuration ||
-            mMainVariable == GraphViewResults::eS02
+        if (mMainVariable == GraphViewResults::eDuration
+#ifdef S02_BAYESIAN
+            || mMainVariable == GraphViewResults::eS02
+#endif
+
+#ifdef KOMLAN
+            || mMainVariable == GraphViewResults::eS02Vg
+#endif
             ) {
             mResultMinT = 0.;
             mResultMaxT = getGraphsMax(listGraphs, "Post Distrib", 0.0);
@@ -3279,13 +3352,18 @@ void ResultsView::updateCurvesToShow()
     // --------------------------------------------------------
     //  Options for "Curves"
     // --------------------------------------------------------
-    if ((mGraphListTab->currentName() == tr("Curves")) && !mLambdaRadio->isChecked()) {
+    if ((mGraphListTab->currentName() == tr("Curves"))
+            && !mLambdaRadio->isChecked()
+#ifdef KOMLAN
+            && !mS02VgRadio->isChecked()
+#endif
+            ) {
 
         if (mCurveGRadio->isChecked()) {
             showVariableList.append(GraphViewResults::eG);
 
             if (mCurveErrorCheck->isChecked())
-                showVariableList.append(GraphViewResults::eGError);
+                showVariableList.append(GraphViewResults::eGGauss);
 
             if (mCurveHpdCheck->isChecked())
                 showVariableList.append(GraphViewResults::eGHpd);
@@ -3302,8 +3380,15 @@ void ResultsView::updateCurvesToShow()
         if (mCurveGPRadio->isChecked()) {
             showVariableList.append(GraphViewResults::eGP);
 
-            if (mCurveMapCheck->isChecked())
-                showVariableList.append(GraphViewResults::eMap);
+            if (mCurveGPGaussCheck->isChecked())
+                showVariableList.append(GraphViewResults::eGPGauss);
+
+            if (mCurveGPHpdCheck->isChecked())
+                showVariableList.append(GraphViewResults::eGPHpd);
+
+            if (mCurveGPMapCheck->isChecked())
+                showVariableList.append(GraphViewResults::eGPMap);
+
 
         }
 
@@ -3376,6 +3461,14 @@ void ResultsView::updateCurvesToShow()
             showVariableList.append(GraphViewResults::eCredibility);
         showVariableList.append(GraphViewResults::eLambda);
 
+#ifdef KOMLAN
+    }  else if ((mGraphListTab->currentName() == tr("Curves")) && mS02VgRadio->isChecked()) {
+            if (mCredibilityCheck->isChecked())
+                showVariableList.append(GraphViewResults::eCredibility);
+            showVariableList.append(GraphViewResults::eS02Vg);
+
+#endif
+
     } else if (mGraphListTab->currentName() == tr("Events")) {
         if (mCredibilityCheck->isChecked())
             showVariableList.append(GraphViewResults::eCredibility);
@@ -3406,6 +3499,7 @@ void ResultsView::updateCurvesToShow()
             showVariableList.append(GraphViewResults::eS02);
         }
 #endif
+
     }
     else if (mGraphListTab->currentName() == tr("Phases")) {
         if (mBeginEndRadio->isChecked()) {
@@ -3595,10 +3689,16 @@ void ResultsView::updateScales()
         mRuler->setFormatFunctX(nullptr);
 
     } else if (mCurrentTypeGraph == GraphViewResults::ePostDistrib &&
-               ( mMainVariable == GraphViewResults::eSigma ||
-                 mMainVariable == GraphViewResults::eS02 ||
-                 mMainVariable == GraphViewResults::eVg ||
-                 mMainVariable == GraphViewResults::eDuration) ) {
+               ( mMainVariable == GraphViewResults::eSigma
+#ifdef S02_BAYESIAN
+                || mMainVariable == GraphViewResults::eS02
+#endif
+
+#ifdef KOMLAN
+                || mMainVariable == GraphViewResults::eS02Vg
+#endif
+                || mMainVariable == GraphViewResults::eVg
+                || mMainVariable == GraphViewResults::eDuration) ) {
 
                 // The X zoom uses a log scale on the spin box and can be controlled by the linear slider
                 mTimeSlider->setRange(-100, 100);
@@ -3846,6 +3946,10 @@ void ResultsView::createOptionsWidget()
 #ifdef S02_BAYESIAN
         eventGroupLayout->addWidget(mS02Radio);
         qreal totalH =  4*h;
+ #ifdef KOMLAN
+        eventGroupLayout->addWidget(mS02VgRadio);
+        totalH =  5*h;
+ #endif
 #else
         qreal totalH =  3*h;
 #endif
@@ -3990,9 +4094,11 @@ void ResultsView::updateEventsOptions(qreal& optionWidgetHeight, bool isPostDist
 
     add(mEventThetaRadio);
     add(mDataSigmaRadio);
+
 #ifdef S02_BAYESIAN
     add(mS02Radio);
 #endif
+
     if (isCurve()) {
         add(mEventVGRadio);
 
@@ -4115,10 +4221,16 @@ void ResultsView::updatePhasesOptions(qreal &optionWidgetHeight)
 
 void ResultsView::updateCurvesOptions(qreal &optionWidgetHeight)
 {
+
+#ifdef KOMLAN
+    mGraphTypeTabs->setTabVisible(1, mLambdaRadio->isChecked() || mS02VgRadio->isChecked()); // history plot
+    mGraphTypeTabs->setTabVisible(2, mLambdaRadio->isChecked() || mS02VgRadio->isChecked()); // acceptance Rate
+    mGraphTypeTabs->setTabVisible(3, mLambdaRadio->isChecked() || mS02VgRadio->isChecked()); // auto- correlation
+#else
     mGraphTypeTabs->setTabVisible(1, mLambdaRadio->isChecked()); // history plot
     mGraphTypeTabs->setTabVisible(2, mLambdaRadio->isChecked()); // acceptance Rate
     mGraphTypeTabs->setTabVisible(3, mLambdaRadio->isChecked()); // auto- correlation
-
+#endif
     mEventsGroup->hide();
     mPhasesGroup->hide();
     mCurvesGroup->show();
@@ -4170,8 +4282,38 @@ void ResultsView::updateCurvesOptions(qreal &optionWidgetHeight)
     }
 
     add(mCurveGPRadio);
+    if (mCurveGPRadio->isChecked()) {
+
+        mCurveGPHpdCheck->show();
+        mCurveGPMapCheck->show();
+        mCurveGPGaussCheck->show();
+
+        QVBoxLayout* GLayout = new QVBoxLayout();
+        GLayout->setContentsMargins(15, 0, 0, 0);
+        GLayout->setSpacing(10);
+        GLayout->addWidget(mCurveGPHpdCheck, Qt::AlignLeft);
+        GLayout->addWidget(mCurveGPMapCheck, Qt::AlignLeft);
+        GLayout->addWidget(mCurveGPGaussCheck, Qt::AlignLeft);
+
+        curveLayout->addLayout(GLayout);
+
+        addTotalHeight(totalH, mCurveGPHpdCheck);
+        addTotalHeight(totalH, mCurveGPMapCheck);
+        addTotalHeight(totalH, mCurveGPGaussCheck) ;
+
+        totalH += GLayout->spacing() * 4;
+
+    } else {
+        mCurveGPHpdCheck->hide();
+        mCurveGPMapCheck->hide();
+        mCurveGPGaussCheck->hide();
+
+    }
     add(mCurveGSRadio);
     add(mLambdaRadio);
+#ifdef KOMLAN
+    add(mS02VgRadio);
+#endif
     add(mCurveStatCheck);
 
     totalH += curveLayout->contentsMargins().top() + curveLayout->contentsMargins().bottom();
@@ -4946,6 +5088,9 @@ void ResultsView::applyRuler(const double min, const double max)
         if (mCurrentTypeGraph == GraphViewResults::ePostDistrib &&
             (mMainVariable == GraphViewResults::eSigma ||
              mMainVariable == GraphViewResults::eDuration ||
+#ifdef KOMLAN
+             mMainVariable == GraphViewResults::eS02Vg ||
+#endif
              mMainVariable == GraphViewResults::eVg ) ) {
                 mResultCurrentMinT = std::max(min, mResultMinT);
                 mResultCurrentMaxT = max;
@@ -4969,7 +5114,13 @@ void ResultsView::applyStudyPeriod()
 
     } else if ( mMainVariable == GraphViewResults::eSigma ||
                 mMainVariable == GraphViewResults::eDuration ||
+#ifdef S02_BAYESIAN
                 mMainVariable == GraphViewResults::eS02  ||
+#endif
+
+#ifdef KOMLAN
+                mMainVariable == GraphViewResults::eS02Vg  ||
+#endif
                 mMainVariable == GraphViewResults::eVg ) {
         mResultCurrentMinT = 0.;
         mResultCurrentMaxT = mResultMaxT;
@@ -5436,16 +5587,18 @@ void ResultsView::applyBandwidth()
 void ResultsView::applyThreshold()
 {
     if (mThresholdEdit->hasAcceptableInput()) {
-        const double hpd = QLocale().toDouble(mThresholdEdit->text());
+        const double threshold = QLocale().toDouble(mThresholdEdit->text());
 
-        mHpdThreshold = hpd;
+        mHpdThreshold = threshold;
         auto threshold_str = stringForLocal(mHpdThreshold) + "%";
         mCurveGRadio->setText(tr("Curve (at %1% Level)").arg(threshold_str));
 
-        getModel_ptr()->setThreshold(hpd);
-
+        getModel_ptr()->setThreshold(threshold);
+#pragma mark TODO
         if (isCurve()) {
             updateCurveEventsPointX();
+            //updateCurveEventsPointY(); //todo
+            //updateCurveEventsPointZ();
         }
         generateCurves();
     }
@@ -6017,10 +6170,15 @@ GraphViewResults::variable_t ResultsView::getMainVariable() const
 
     if (mCurrentVariableList.contains(GraphViewResults::eThetaEvent))
         return GraphViewResults::eThetaEvent;
-
+#ifdef S02_BAYESIAN
     else if (mCurrentVariableList.contains(GraphViewResults::eS02))
         return GraphViewResults::eS02;
+#endif
 
+#ifdef KOMLAN
+    else if (mCurrentVariableList.contains(GraphViewResults::eS02Vg))
+        return GraphViewResults::eS02Vg;
+#endif
     else if (mCurrentVariableList.contains(GraphViewResults::eSigma))
         return GraphViewResults::eSigma;
 

@@ -366,7 +366,7 @@ void GraphViewResults::saveGraphData(double threshold) const
         else return;
 
     } else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eGP)) {
-        mGraph->exportCurrentCurves( MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep, mTitle);
+        mGraph->exportCurrentCurves( MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  0, mTitle);
 
     }    // All visible curves are saved in the same file, the credibility bar is not save
     else if (mCurrentTypeGraph == ePostDistrib && !mShowVariableList.contains(eG))

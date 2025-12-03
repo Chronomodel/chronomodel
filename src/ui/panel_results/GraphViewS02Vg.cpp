@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2022
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -37,7 +37,7 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#include "GraphViewLambda.h"
+#include "GraphViewS02Vg.h"
 #include "GraphView.h"
 #include "Painting.h"
 #include "ModelUtilities.h"
@@ -45,18 +45,18 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QtWidgets>
 
-GraphViewLambda::GraphViewLambda(QWidget* parent):
+GraphViewS02Vg::GraphViewS02Vg(QWidget* parent):
     GraphViewResults(parent)
 {
     setMainColor(Painting::borderDark);
     mGraph->setBackgroundColor(QColor(210, 210, 210));
 }
 
-GraphViewLambda::~GraphViewLambda()
+GraphViewS02Vg::~GraphViewS02Vg()
 {
 }
 
-void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList)
+void GraphViewS02Vg::generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList)
 {
     auto model = getModel_ptr();
     GraphViewResults::generateCurves(typeGraph, variableList);
@@ -74,14 +74,14 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
 
     QColor color = Qt::blue;
 
-    const QString resultsHTML = ModelUtilities::lambdaResultsHTML(model);
+    const QString resultsHTML = ModelUtilities::S02VgResultsHTML(model);
     setNumericalResults(resultsHTML);
-
+#ifdef KOMLAN
     // ------------------------------------------------
     //  First tab : Posterior distrib
     // ------------------------------------------------
     if (typeGraph == ePostDistrib) {
-        mGraph->mLegendX = "Log10";
+        mGraph->mLegendX = "S02Vg";
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(nullptr);
         mGraph->setBackgroundColor(QColor(230, 230, 230));
@@ -97,13 +97,13 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
 
 
 
-        mTitle = tr("Smoothing");
+        mTitle = tr("S02Vg");
 
         // ------------------------------------
         //  Post distrib All Chains
         // ------------------------------------
 
-        const GraphCurve &curvePostDistrib = densityCurve(model->mLambdaSpline.fullHisto(),
+        const GraphCurve &curvePostDistrib = densityCurve(model->mS02Vg.fullHisto(),
                                                           "Post Distrib All Chains",
                                                           color);
 
@@ -112,7 +112,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
         // ------------------------------------
         //  HPD All Chains
         // ------------------------------------
-        const GraphCurve &curveHPD = HPDCurve(model->mLambdaSpline.mFormatedHPD, "HPD All Chains", color);
+        const GraphCurve &curveHPD = HPDCurve(model->mS02Vg.mFormatedHPD, "HPD All Chains", color);
         mGraph->add_curve(curveHPD);
 
         // ------------------------------------
@@ -120,7 +120,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
         // ------------------------------------
 
         for (size_t i=0; i<mChains.size(); ++i)  {
-            const GraphCurve &curvePostDistribChain = densityCurve(model->mLambdaSpline.histoForChain(i),
+            const GraphCurve &curvePostDistribChain = densityCurve(model->mS02Vg.histoForChain(i),
                                                                    "Post Distrib Chain " + QString::number(i),
                                                                    Painting::chainColors.at(i),
                                                                    Qt::SolidLine,
@@ -132,7 +132,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
         // ------------------------------------
         //  Theta Credibility
         // ------------------------------------
-        const GraphCurve &curveCred = topLineSection(model->mLambdaSpline.mFormatedCredibility,
+        const GraphCurve &curveCred = topLineSection(model->mS02Vg.mFormatedCredibility,
                                                      "Credibility All Chains",
                                                      color);
         mGraph->add_curve(curveCred);
@@ -144,12 +144,14 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
     // -------------------------------------------------
     else if (typeGraph == eTrace) {
         mGraph->mLegendX = "Iterations";
-        mGraph->setTipYLab("Smoothing");
+        mGraph->setTipYLab("Log10 S02Vg");
         mGraph->setFormatFunctX(nullptr);
-        mTitle = tr("Smoothing Trace");
-        if (model->mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
-            generateTraceCurves(mChains, &(model->mLambdaSpline));
+        mTitle = tr("S02Vg Trace");
+
+        if (model->mS02Vg.mSamplerProposal != MHVariable::eFixe)
+            generateLogTraceCurves(mChains, &(model->mS02Vg));
         else
+
             mGraph->resetNothingMessage();
     }
     // -------------------------------------------------
@@ -159,10 +161,12 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
         mGraph->mLegendX = "Iterations";
         mGraph->setTipYLab("Rate");
         mGraph->setFormatFunctX(nullptr);
-        mTitle = tr("Smoothing Acceptation");
-        if (model->mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
-            generateAcceptCurves(mChains, &(model->mLambdaSpline));
+        mTitle = tr("S02Vg Acceptation");
+#ifdef KOMLAN
+        if (model->mS02Vg.mSamplerProposal != MHVariable::eFixe)
+            generateAcceptCurves(mChains, &(model->mS02Vg));
         else
+#endif
             mGraph->resetNothingMessage();
     }
 
@@ -172,35 +176,32 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
     else if (typeGraph == eCorrel) {
         mGraph->mLegendX = "";
         mGraph->setFormatFunctX(nullptr);
-        mTitle = tr("Smoothing Autocorrelation");
-        if (model->mLambdaSpline.mSamplerProposal != MHVariable::eFixe) {
-            generateCorrelCurves(mChains, &(model->mLambdaSpline));
+        mTitle = tr("S02Vg Autocorrelation");
+
+        if (model->mS02Vg.mSamplerProposal != MHVariable::eFixe) {
+            generateCorrelCurves(mChains, &(model->mS02Vg));
             mGraph->setXScaleDivision(10, 10);
         }
         else
             mGraph->resetNothingMessage();
 
     } else  {
-        mTitle = tr("Smoothing");
+        mTitle = tr("S02Vg");
         mGraph->resetNothingMessage();
     }
+#endif
+        mTitle = tr("S02Vg");
+        mGraph->resetNothingMessage();
+
 }
 
-void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t> &variableList)
+void GraphViewS02Vg::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t> &variableList)
 {
-
+#ifdef KOMLAN
     GraphViewResults::updateCurvesToShow(showAllChains, showChainList, variableList);
 
     if (mCurrentTypeGraph == ePostDistrib)  {
         mGraph->setTipYLab("");
-        
-        /*mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
-        mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
-        mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
-
-        for (unsigned i = 0; i<mShowChainList.size(); ++i) {
-            mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList.at(i));
-        }*/
 
         QStringList curvesToShow;
 
@@ -221,7 +222,7 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
         mGraph->setCurveVisible(curvesToShow, true);
 
 
-        mGraph->setTipXLab(tr("Log10 Smoothing"));
+        mGraph->setTipXLab(tr("S02Vg"));
 
         mGraph->showInfos(false);
         mGraph->clearInfos();
@@ -235,12 +236,6 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
      * ------------------------------------------------
      */
     else if (mCurrentTypeGraph == eTrace)  {
-        /*for (unsigned i = 0; i < mShowChainList.size(); ++i) {
-            mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Q1 " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList.at(i));
-        }*/
 
         QStringList curvesToShow;
         for (int j = 0; j < mShowChainList.size(); ++j) {
@@ -254,7 +249,7 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
         mGraph->setCurveVisible(curvesToShow, true);
 
         mGraph->setTipXLab(tr("Iteration"));
-        mGraph->setTipYLab(tr("Log10 Smoothing"));
+        mGraph->setTipYLab(tr("Log10(S02Vg)"));
 
         mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
         mGraph->setYAxisSupport(AxisTool::AxisSupport::eMin_Max);
@@ -269,9 +264,6 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
      * ------------------------------------------------ */
     else if (mCurrentTypeGraph == eAccept) {
 
-        /*mGraph->setCurveVisible("Accept Target", true);
-        for (int i=0; i<mShowChainList.size(); ++i)
-            mGraph->setCurveVisible("Accept " + QString::number(i), mShowChainList.at(i));*/
         QStringList curvesToShow;
         curvesToShow << "Accept Target";
         for (int j = 0; j < mShowChainList.size(); ++j) {
@@ -302,11 +294,7 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
        *  - Correl Limit Upper i
        * ------------------------------------------------   */
       else if (mCurrentTypeGraph == eCorrel) {
-          /*for (int i=0; i<mShowChainList.size(); ++i) {
-              mGraph->setCurveVisible("Correl " + QString::number(i), mShowChainList.at(i));
-              mGraph->setCurveVisible("Correl Limit Lower " + QString::number(i), mShowChainList.at(i));
-              mGraph->setCurveVisible("Correl Limit Upper " + QString::number(i), mShowChainList.at(i));
-          }*/
+
           QStringList curvesToShow;
           for (int j = 0; j < mShowChainList.size(); ++j) {
               if (mShowChainList.at(j)) {
@@ -331,4 +319,5 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
       }
 
       repaint();
+#endif
 }
