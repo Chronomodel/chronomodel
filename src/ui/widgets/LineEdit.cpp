@@ -38,59 +38,109 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "LineEdit.h"
-
 #include <QFont>
 #include <QGuiApplication>
+#include <QLocale>
+#include <QResizeEvent>
 
-LineEdit::LineEdit(QWidget* parent):
-    QLineEdit(parent),
+LineEdit::LineEdit(QWidget* parent)
+    : QLineEdit(parent),
     mAdjustText(true)
 {
-    setParent(parent);
-    setPalette(parent->palette());
-
     setAlignment(Qt::AlignHCenter);
 
-    if (parentWidget()) {
-        setFont(parentWidget()->font());
-    }
+    // Police de base du widget ou du parent
+    if (parentWidget())
+        mBaseFont = parentWidget()->font();
+    else
+        mBaseFont = font();
+
+    setFont(mBaseFont);
+
+    // Appliquer un style une seule fois (bord arrondi)
+    setStyleSheet("QLineEdit { border-radius: 5px; }");
+
+    // Ajustement automatique du texte à chaque modification
+    connect(this, &QLineEdit::textChanged, this, &LineEdit::adjustFont);
 }
+
+LineEdit::~LineEdit() = default;
 
 void LineEdit::resetText(double value)
 {
     QLineEdit::blockSignals(true);
-    //QString text = QLocale().toString(value, 'g', std::numeric_limits<double>::digits10 + 1); // Définit la précision au maximum de digits possibles pour un double
+    static const QLocale locale;
     QString text;
 
-    if (value == 0.0) {
-        // Pour 0 On force la notation décimale avec 3 décimales en utilisant la locale
-        text = QLocale().toString(0.0, 'f', 3);
+    if (value == 0.0)
+        text = locale.toString(0.0, 'f', 3);
+    else if (std::abs(value) < 0.01)
+        text = locale.toString(value, 'e', 3);
+    else
+        text = locale.toString(value, 'f', 3);
 
-    } else if (std::abs(value) < 1.0) {
-        // Notation scientifique avec 3 décimales en utilisant la locale
-        text = QLocale().toString(value, 'e', 3);
-    } else {
-        // Notation décimale avec 3 décimales en utilisant la locale
-        text = QLocale().toString(value, 'f', 3);
-    }
     QLineEdit::setText(text);
     QLineEdit::blockSignals(false);
-};
+
+    adjustFont();
+}
 
 void LineEdit::resetText(const QString& text)
 {
     QLineEdit::blockSignals(true);
     QLineEdit::setText(text);
     QLineEdit::blockSignals(false);
-};
 
-void LineEdit::setVisible(bool visible)
-{
-    QWidget::setVisible(visible);
+    adjustFont();
 }
+
+void LineEdit::setAdjustText(bool enable)
+{
+    mAdjustText = enable;
+    if (enable) adjustFont();
+}
+
+void LineEdit::adjustFont()
+{
+    if (!mAdjustText || text().isEmpty() || width() <= 0 || height() <= 0)
+        return;
+
+    QFont ft = mBaseFont; // toujours partir de la police originale
+    QFontMetrics fm(ft);
+
+    const int textWidth  = fm.horizontalAdvance(text());
+    const int textHeight = fm.height();
+    const int availWidth = width() - 4;   // marge interne
+    const int availHeight= height() - 4;  // marge interne
+
+    if (textWidth > availWidth || textHeight > availHeight) {
+        qreal xFactor = static_cast<qreal>(textWidth) / availWidth;
+        qreal yFactor = static_cast<qreal>(textHeight) / availHeight;
+        qreal factor = std::max(xFactor, yFactor);
+
+        ft.setPointSizeF(ft.pointSizeF() / factor);
+    }
+
+    QLineEdit::setFont(ft); // applique la police calculée
+}
+
+void LineEdit::resizeEvent(QResizeEvent* event)
+{
+    QLineEdit::resizeEvent(event);
+    adjustFont(); // ajuste la police automatiquement à chaque redimensionnement
+}
+
+void LineEdit::setFont(const QFont &font)
+{
+    mBaseFont = font;        // mettre à jour la police de référence
+    QLineEdit::setFont(font); // appliquer au widget
+    adjustFont();             // ajuster immédiatement si nécessaire
+}
+
 void LineEdit::show()
 {
     QWidget::show();
+    adjustFont();
 }
 
 void LineEdit::hide()
@@ -98,58 +148,10 @@ void LineEdit::hide()
     QWidget::hide();
 }
 
-
-void LineEdit::setAdjustText(bool ad)
+void LineEdit::setVisible(bool visible)
 {
-    mAdjustText = ad;
+    QWidget::setVisible(visible);
+    if (visible)
+        adjustFont(); // ajuste la police quand le widget devient visible
 }
 
-void LineEdit::adjustFont()
-{
-    if (!text().isEmpty() && mAdjustText) {
-        const QFontMetrics fm (qApp->font());
-        const QRect textRect = fm.boundingRect(text());
-        const qreal wR = width() - 10;
-
-        QFont ft = qApp->font();
-        if (wR>0) {
-            const qreal xfactor = (textRect.width() > wR) ? textRect.width()/wR : 1;
-            const qreal yfactor = (height() && (textRect.height() > height())) ? textRect.height()/height() : 1;
-            const qreal factor = (xfactor > yfactor) ? xfactor : yfactor;
-
-            ft.setPointSizeF(ft.pointSizeF()/factor);
-
-        } else {
-            ft.setPointSizeF(1);
-
-        }
-        setFont(ft);
-
-    }
-}
-
-void LineEdit::resizeEvent(QResizeEvent* e)
-{
-    (void) e;
-    adjustFont();
-}
-
-void LineEdit::setFont(const QFont& font)
-{
-#ifdef Q_OS_MAC
-    QString styleSh = "QLineEdit { border-radius: 5px; font: "+ QString::number(font.pointSize()) + "px ;font-family: "+font.family() + ";}";
-    QLineEdit::setStyleSheet(styleSh);
-#elif defined(Q_OS_WIN)
-    QWidget::setStyleSheet("QLineEdit { border-radius: 5px;}");
-    QLineEdit::setFont(font);
-#else
-    QString styleSh = "QLineEdit { border-radius: 5px; font: "+ QString::number(font.pointSize()) + "px ;font-family: "+font.family() + ";}";
-    QLineEdit::setStyleSheet(styleSh);
-#endif
-
-}
-
-LineEdit::~LineEdit()
-{
-
-}

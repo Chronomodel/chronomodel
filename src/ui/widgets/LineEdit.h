@@ -66,6 +66,7 @@ private:
     void adjustFont();
 
     bool mAdjustText;
+    QFont mBaseFont;
 
 protected:
     void resizeEvent(QResizeEvent* e);
