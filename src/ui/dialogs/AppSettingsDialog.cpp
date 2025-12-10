@@ -44,6 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QPushButton>
 
+
 AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QDialog(parent, flags)
 {
     setWindowTitle(tr("Application Settings"));
@@ -52,6 +53,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     mApplyButton = new QDialogButtonBox(QDialogButtonBox::Apply);
     connect(mApplyButton, &QDialogButtonBox::clicked, this, &AppSettingsDialog::buttonClicked);
 
+    mMapPalette = ColorPalette::TemperatureSoftDensity;
     // -----------------------------
     //  General View
     // -----------------------------
@@ -78,6 +80,116 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     mIconSize->setRange(1, 5);
     mIconSize->setSingleStep(1);
 
+    mMapPaletteLab = new QLabel(tr("Density Map Color Palette"), this);
+    mMapPaletteCombo = new QComboBox(this);
+
+    mMapPaletteCombo->addItem(
+        "Temperature (default)",
+        QVariant::fromValue(ColorPalette::TemperatureSoftDensity)
+        );
+    mMapPaletteCombo->addItem(
+        "Black & White higth Contrast",
+        QVariant::fromValue(ColorPalette::BlackWhite)
+        );
+    mMapPaletteCombo->addItem(
+        "Greys",
+        QVariant::fromValue(ColorPalette::Greys)
+        );
+    mMapPaletteCombo->addItem(
+        "Pressure",
+        QVariant::fromValue(ColorPalette::Pressure)
+        );
+    mMapPaletteCombo->addItem(
+        "Elevation",
+        QVariant::fromValue(ColorPalette::Elevation)
+        );
+    mMapPaletteCombo->addItem(
+        "Blues",
+        QVariant::fromValue(ColorPalette::Blues)
+        );
+
+    mMapPaletteCombo->addItem(
+        "pH Scale",
+        QVariant::fromValue(ColorPalette::pHScale)
+        );
+
+    /* Palette Matplotlib
+     *  https://matplotlib.org/stable/users/explain/colors/colormaps.html
+     * Matplotlib et toutes ses colormaps ( magma, inferno, plasma, viridis, cividis…) sont sous :
+     * BSD 3-Clause License
+     * (Licence de logiciel libre permissive)
+     * https://matplotlib.org/stable/users/license.html
+     */
+
+    // Variation de densité
+    mMapPaletteCombo->addItem(
+        "Magma (Viridis A)",
+        QVariant::fromValue(ColorPalette::Magma10Density)
+        );
+    mMapPaletteCombo->addItem(
+        "Inferno (Viridis B)",
+        QVariant::fromValue(ColorPalette::Inferno10Density)
+        );
+    mMapPaletteCombo->addItem(
+        "Plasma (Viridis C)",
+        QVariant::fromValue(ColorPalette::Plasma10Density)
+        );
+    //Palette perceptuellement uniforme pour daltoniens (jaune → bleu).
+    mMapPaletteCombo->addItem(
+        "Viridis (D)",
+        QVariant::fromValue(ColorPalette::Viridis10Density)
+        );
+    mMapPaletteCombo->addItem(
+        "Cividis (Viridis E)",
+        QVariant::fromValue(ColorPalette::Cividis10Density)
+        );
+
+    // Palette native
+    mMapPaletteCombo->addItem(
+        "Magma Higth Contrast (Viridis A)",
+        QVariant::fromValue(ColorPalette::Magma10)
+        );
+    mMapPaletteCombo->addItem(
+        "Inferno Higth Contrast (Viridis B)",
+        QVariant::fromValue(ColorPalette::Inferno10)
+        );
+    mMapPaletteCombo->addItem(
+        "Plasma Higth Contrast (Viridis C)",
+        QVariant::fromValue(ColorPalette::Plasma10)
+        );
+    //Palette perceptuellement uniforme pour daltoniens (jaune → bleu).
+    mMapPaletteCombo->addItem(
+        "Viridis Higth Contrast (D)",
+        QVariant::fromValue(ColorPalette::Viridis10)
+        );
+    mMapPaletteCombo->addItem(
+        "Cividis Higth Contrast (Viridis E)",
+        QVariant::fromValue(ColorPalette::Cividis10)
+        );
+
+    mMapPaletteCombo->addItem(
+        "Spectral",
+        QVariant::fromValue(ColorPalette::Spectral10Density)
+        );
+    //Palette perceptuellement uniforme pour daltoniens (jaune → bleu).
+    mMapPaletteCombo->addItem(
+        "Coolwarm",
+        QVariant::fromValue(ColorPalette::Coolwarm10Density)
+        );
+    mMapPaletteCombo->addItem(
+        "bwr",
+        QVariant::fromValue(ColorPalette::Bwr10Density)
+        );
+
+    mMapPaletteCombo->addItem(
+        "Rainbow",
+        QVariant::fromValue(ColorPalette::Gist_rainbow14Density)
+        );
+    mMapPaletteCombo->addItem(
+        "Rainbow Higth Contrast",
+        QVariant::fromValue(ColorPalette::Gist_rainbow14)
+        );
+    // --------------------
     mAutoSaveLab = new QLabel(tr("Auto Save Project"), this);
     mAutoSaveCheck = new QCheckBox(this);
     mAutoSaveDelayLab = new QLabel(tr("Auto Save Interval (in minutes)"), this);
@@ -95,7 +207,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     mCSVDecSepCombo->addItem(", (comma)", QVariant(","));
     mCSVDecSepCombo->addItem(". (dot)", QVariant("."));
 
-    if (QLocale::system().language()==QLocale::French) {
+    if (QLocale::system().language() == QLocale::French) {
         mCSVCellSepEdit->setText(";");
         mCSVDecSepCombo->setCurrentIndex(0);
 
@@ -129,7 +241,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     mFormatDateLab = new QLabel(tr("Time Scale"), this);
     mFormatDateLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mFormatDate = new QComboBox(this);
-    for (int i=0; i<6; ++i) // until 8 to use Age Ma and ka
+    for (int i = 0; i < 8; ++i) // until 8 to use Age Ma and ka ; default 6
         mFormatDate->addItem(DateUtils::dateFormatToString(DateUtils::FormatDate (i)));
 
     mFormatDate->setCurrentIndex(1);
@@ -137,7 +249,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
 
     mPrecisionLab = new QLabel(tr("Decimal Precision"), this);
     mPrecision = new QSpinBox(this);
-    mPrecision->setRange(0, 6);
+    mPrecision->setRange(0, 10);
     mPrecision->setSingleStep(1);
 
     connect(mAutoSaveCheck, &QCheckBox::toggled, mAutoSaveDelayEdit, &QLineEdit::setEnabled);
@@ -156,6 +268,9 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
 
     grid->addWidget(mIconSizeLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mIconSize, row, 1);
+
+    grid->addWidget(mMapPaletteLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mMapPaletteCombo, row, 1);
 
     QFrame* line1 = new QFrame();
     line1->setFrameShape(QFrame::HLine);
@@ -299,6 +414,8 @@ void AppSettingsDialog::setSettings()
     //mCountryCombo->setCurrentText(QLocale::countryToString(settings.mCountry)); // keep in memory
     mIconSize->setValue(AppSettings::mIconSize);
 
+    mMapPaletteCombo->setCurrentIndex(mMapPaletteCombo->findData(QVariant::fromValue(AppSettings::mMapPalette)));
+
     mAutoSaveCheck->setChecked(AppSettings::mAutoSave);
     mAutoSaveDelayEdit->setText(QString::number(AppSettings::mAutoSaveDelay / 60));
     mAutoSaveDelayEdit->setEnabled(AppSettings::mAutoSave);
@@ -316,6 +433,7 @@ void AppSettingsDialog::setSettings()
     mImageQuality->setValue(AppSettings::mImageQuality);
     mFormatDate->setCurrentIndex(int (AppSettings::mFormatDate));
     mPrecision->setValue(AppSettings::mPrecision);
+
  }
 
 void AppSettingsDialog::getSettings()
@@ -328,6 +446,10 @@ void AppSettingsDialog::getSettings()
 #endif
 
     AppSettings::mIconSize = mIconSize->value();
+
+    mMapPalette = mMapPaletteCombo->currentData().value<ColorPalette>();
+    AppSettings::mMapPalette = mMapPalette;
+
     AppSettings::mAutoSave = mAutoSaveCheck->isChecked();
     AppSettings::mAutoSaveDelay = mAutoSaveDelayEdit->text().toInt() * 60;
     AppSettings::mCSVCellSeparator = mCSVCellSepEdit->text();
@@ -338,6 +460,7 @@ void AppSettingsDialog::getSettings()
     AppSettings::mImageQuality = mImageQuality->value();
     AppSettings::mFormatDate = DateUtils::FormatDate (mFormatDate->currentIndex());
     AppSettings::mPrecision = mPrecision->value();
+
 }
 
 void AppSettingsDialog::changeSettings()
@@ -374,6 +497,7 @@ void AppSettingsDialog::buttonClicked(QAbstractButton*)
 void AppSettingsDialog::restore()
 {
     mIconSize->setValue(APP_SETTINGS_DEFAULT_ICON_SIZE);
+    mMapPaletteCombo->setCurrentIndex(0);
 
     mLanguageCombo->setCurrentText(QLocale::languageToString(QLocale::system().language()));
 
@@ -395,5 +519,6 @@ void AppSettingsDialog::restore()
     mImageQuality->setValue(APP_SETTINGS_DEFAULT_IMAGE_QUALITY);
     mFormatDate->setCurrentIndex(int (APP_SETTINGS_DEFAULT_FORMATDATE));
     mPrecision->setValue(APP_SETTINGS_DEFAULT_PRECISION);
+
 
 }

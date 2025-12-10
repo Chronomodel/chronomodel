@@ -1278,3 +1278,86 @@ std::pair<std::vector<double>, std::vector<size_t>> downsampleLTTBWithIndices(
 
     return {values, indices};
 }
+
+void densityMap_2_thresholdIndices_optimized(const CurveMap& densityMap,
+                                        double threshold,
+                                        std::vector<int>& min_indices,
+                                        std::vector<int>& max_indices)
+{
+    const size_t numRows = densityMap.row();
+    const size_t numCols = densityMap.column();
+
+    min_indices.assign(numCols, -1);
+    max_indices.assign(numCols, -1);
+
+    for (unsigned c = 0; c < numCols; ++c) {
+        std::vector<double> prob(numRows);
+        double total_prob = 0.0;
+
+        // Extraire les probabilités pour cette colonne
+        for (unsigned r = 0; r < numRows; ++r) {
+            prob[r] = densityMap(c, r);
+            total_prob += prob[r];
+        }
+
+        if (total_prob <= 0) continue;  // Pas de données
+
+        // Calculer le seuil absolu à atteindre
+        const double threshold_absolute = threshold / 100.0 * total_prob;
+
+        // Trier par probabilité décroissante
+        std::vector<size_t> indices(numRows);
+        std::iota(indices.begin(), indices.end(), 0);
+        std::sort(indices.begin(), indices.end(), [&](size_t i, size_t j) {
+            return prob[i] > prob[j];
+        });
+
+        // Traitement par groupes de valeurs identiques
+
+        std::vector<bool> above_threshold(numRows, false);
+        double cumulative = 0.0;
+        size_t i = 0;
+        double val = prob[indices[0]]; // correspond à la densité max
+
+        // Si la valeur initiale est 0, pas de données dans cette colonne
+        if (val <= 0) continue;
+
+        while (i < indices.size() && val > 0) {
+            val = prob[indices[i]];
+
+            if (val > 0 && cumulative <= threshold_absolute) {
+
+                double group_sum = val;
+                above_threshold[indices[i]] = true;
+                size_t j = i + 1;
+                // Regrouper TOUTES les valeurs identiques
+                while (j < indices.size() && prob[indices[j]] == val) {
+                    group_sum += prob[indices[j]];
+                    above_threshold[indices[j]] = true;
+                    ++j;
+                }
+
+                // Mettre à jour la somme cumulative avec tout le groupe
+                cumulative += group_sum;
+
+                i = j;
+
+            } else {
+                break;
+            }
+        }
+
+        // Trouver les indices min et max parmi ceux qui dépassent le seuil
+        for (unsigned r = 0; r < numRows; ++r) {
+            if (above_threshold[r]) {
+                if (min_indices[c] == -1 || r < static_cast<unsigned>(min_indices[c])) {
+                    min_indices[c] = static_cast<int>(r);
+                }
+                if (max_indices[c] == -1 || r > static_cast<unsigned>(max_indices[c])) {
+                    max_indices[c] = static_cast<int>(r);
+                }
+            }
+        }
+        //qDebug() << " colonne = " <<c << " min_indices[c]= " << min_indices[c] << " max_indices= " << max_indices[c];
+    }
+}

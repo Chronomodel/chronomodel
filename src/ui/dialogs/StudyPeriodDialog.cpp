@@ -49,14 +49,19 @@ StudyPeriodDialog::StudyPeriodDialog(QWidget* parent, Qt::WindowFlags flags):QDi
     mButW(80),
     mButH(25)
 {
+    setFont(qApp->font());
+    qDebug() << "study " <<font();
    setWindowTitle(tr("Study Period Settings"));
 
     // -----------
    mMinLab = new QLabel(tr("Start (BC/AD)"), this);
    mMinEdit = new LineEdit(this);
+   mMinEdit->setMinimumHeight(mButH);
 
    mMaxLab = new QLabel(tr("End (BC/AD)"), this);
    mMaxEdit = new LineEdit(this);
+   mMaxEdit->setMinimumHeight(mButH);
+
 
    QGridLayout* grid = new QGridLayout();
    grid->setContentsMargins(0, 0, 0, 0);
@@ -70,7 +75,7 @@ StudyPeriodDialog::StudyPeriodDialog(QWidget* parent, Qt::WindowFlags flags):QDi
    // ----------
 
     mAdvancedCheck = new QCheckBox(tr("Advanced"));
-    mAdvancedWidget = new QGroupBox();
+    mAdvancedWidget = new QGroupBox(this);
     mAdvancedWidget->setCheckable(false);
     mAdvancedWidget->setVisible(false);
     mAdvancedWidget->setFlat(true);
@@ -85,7 +90,7 @@ StudyPeriodDialog::StudyPeriodDialog(QWidget* parent, Qt::WindowFlags flags):QDi
     mStepSpin -> setSingleStep(0.001);
     mStepSpin -> setDecimals(4);
 
-    QGridLayout* advGrid = new QGridLayout();
+    QGridLayout* advGrid = new QGridLayout(this);
     advGrid->setContentsMargins(0, 0, 0, 0);
     advGrid->addWidget(mForcedLab, 0, 0, Qt::AlignRight | Qt::AlignVCenter);
     advGrid->addWidget(mForcedCheck, 0, 1, Qt::AlignLeft | Qt::AlignVCenter);
@@ -93,7 +98,6 @@ StudyPeriodDialog::StudyPeriodDialog(QWidget* parent, Qt::WindowFlags flags):QDi
     advGrid->addWidget(mStepSpin, 1, 1, Qt::AlignLeft | Qt::AlignVCenter);
 
     connect(mForcedCheck, &QCheckBox::toggled, mStepSpin, &QDoubleSpinBox::setEnabled);
-    //connect(mForcedCheck, &QCheckBox::toggled, this, &StudyPeriodDialog::showMessageStepForced);
 
     mAdvancedWidget->setLayout(advGrid);
 
@@ -103,10 +107,10 @@ StudyPeriodDialog::StudyPeriodDialog(QWidget* parent, Qt::WindowFlags flags):QDi
     connect(mButtonBox, &QDialogButtonBox::accepted, this, &StudyPeriodDialog::accept);
     connect(mButtonBox, &QDialogButtonBox::rejected, this, &StudyPeriodDialog::reject);
 
-    mLayout = new QVBoxLayout();
+    mLayout = new QVBoxLayout(this);
     mLayout->addLayout(grid);
 
-    QFrame* line1 = new QFrame();
+    QFrame* line1 = new QFrame(this);
     line1->setFrameShape(QFrame::HLine);
     line1->setFrameShadow(QFrame::Sunken);
     mLayout->addWidget(line1);
@@ -131,11 +135,18 @@ void StudyPeriodDialog::setSettings(const StudyPeriodSettings& s)
 {
     mMinEdit->setText(QLocale().toString(s.mTmin));
     mMaxEdit->setText(QLocale().toString(s.mTmax));
-    //const double suggested = s.getStep(s.mTmin, s.mTmax);
-    // mForcedCheck -> setText(tr("(suggested/default value = %1 )").arg(QString::number(suggested) ) );
+
+    const double suggested = s.getStep(s.mTmin, s.mTmax);
+    mForcedCheck -> setText(tr("(suggested/default value = %1 )").arg(QString::number(suggested) ) );
+
     mForcedCheck -> setChecked(s.mStepForced);
     mStepSpin -> setEnabled(s.mStepForced);
-    mStepSpin -> setValue(s.mStep);
+    if (s.mStepForced) {
+        mStepSpin -> setValue(s.mStep);
+
+    } else {
+        mStepSpin -> setValue(suggested);
+    }
 
     mAdvancedCheck->setChecked(s.mStepForced);
     connect(mForcedCheck, &QCheckBox::toggled, this, &StudyPeriodDialog::showMessageStepForced);

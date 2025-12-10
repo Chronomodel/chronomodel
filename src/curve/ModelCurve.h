@@ -59,9 +59,12 @@ public:
     MHVariable mLambdaSpline;
     double mC_lambda;
 
-  //  MHVariable mS02Vg;
+#ifdef KOMLAN
+    MHVariable mS02Vg;
+    double mSO2Vg_beta; // used for updated
+#else
     double mS02Vg;
-    double mSO2_beta; // used for updated
+#endif
 
     MCMCSpline mSpline; // valeurs courrantes de la spline
 
@@ -169,12 +172,18 @@ public:
 
     // same as void GraphView::exportReferenceCurves()
     void exportMeanGComposanteToReferenceCurves(const PosteriorMeanGComposante pMeanCompoXYZ, const QString &defaultPath, QLocale csvLocale, const QString &csvSep) const;
+    void exportMeanGPComposanteToReferenceCurves(const PosteriorMeanGComposante pMeanCompoXYZ, const QString &defaultPath, QLocale csvLocale, const QString &csvSep) const;
+
+    void exportHpdGComposanteToReferenceCurves(const PosteriorMeanGComposante pMeanCompoXYZ, const QString &defaultPath, QLocale csvLocale, const QString &csvSep) const;
+    void exportHpdGPComposanteToReferenceCurves(const PosteriorMeanGComposante pMeanCompoXYZ, const QString &defaultPath, QLocale csvLocale, const QString &csvSep) const;
+
 
     std::vector<MCMCSpline> fullRunSplineTrace(const std::vector<ChainSpecs> &chains);
     std::vector<MCMCSpline> runSplineTraceForChain(const std::vector<ChainSpecs>& chains, const size_t index);
 
 public slots:
     void saveMapToFile(QFile *file, const QString csvSep, const CurveMap &map);
+
 
 
 #pragma mark Loop

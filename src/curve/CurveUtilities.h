@@ -158,9 +158,13 @@ QDataStream &operator>>( QDataStream& stream, MCMCSpline& spline );
 typedef struct PosteriorMeanGComposante
 {
     std::vector<double> vecG;
-    std::vector<double> vecGP;
-    std::vector<double> vecGS;
     std::vector<double> vecVarG;
+
+    std::vector<double> vecGP;
+    std::vector<double> vecVarGP;
+
+    std::vector<double> vecGS;
+
     // inter spline error
     std::vector<double> vecVarianceG;
     // intra spline error
@@ -171,9 +175,12 @@ typedef struct PosteriorMeanGComposante
     CurveMap mapGP;
     void clear() {
         vecG.clear();
-        vecGP.clear();
-        vecGS.clear();
         vecVarG.clear();
+
+        vecGP.clear();
+        vecVarGP.clear();
+        vecGS.clear();
+
         vecVarianceG.clear();
         vecVarErrG.clear();
         mapG.clear();
@@ -181,24 +188,30 @@ typedef struct PosteriorMeanGComposante
     }
     void shrink_to_fit() {
         vecG.shrink_to_fit();
-        vecGP.shrink_to_fit();
-        vecGS.shrink_to_fit();
         vecVarG.shrink_to_fit();
+        vecGP.shrink_to_fit();
+        vecVarGP.shrink_to_fit();
+        vecGS.shrink_to_fit();
+
         vecVarianceG.shrink_to_fit();
         vecVarErrG.shrink_to_fit();
     }
     void clear_and_shrink() {
         vecG.clear();
-        vecGP.clear();
-        vecGS.clear();
         vecVarG.clear();
+        vecGP.clear();
+        vecVarGP.clear();
+        vecGS.clear();
+
         vecVarianceG.clear();
         vecVarErrG.clear();
 
         vecG.shrink_to_fit();
-        vecGP.shrink_to_fit();
-        vecGS.shrink_to_fit();
         vecVarG.shrink_to_fit();
+        vecGP.shrink_to_fit();
+        vecVarGP.shrink_to_fit();
+        vecGS.shrink_to_fit();
+
         vecVarianceG.shrink_to_fit();
         vecVarErrG.shrink_to_fit();
 

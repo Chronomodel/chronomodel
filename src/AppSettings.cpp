@@ -59,7 +59,6 @@ QLocale::Language AppSettings::mLanguage;
 #endif
 
 
-
 bool AppSettings::mAutoSave;
 int AppSettings::mAutoSaveDelay;
 bool AppSettings::mShowHelp;
@@ -82,6 +81,8 @@ QPoint AppSettings::mLastPosition;
 
 bool AppSettings::mIsSaved;
 
+ColorPalette AppSettings::mMapPalette;
+
 AppSettings::AppSettings()
 {
     QLocale newLoc(QLocale::system());
@@ -99,67 +100,28 @@ AppSettings::AppSettings()
     AppSettings::widthUnit();
     AppSettings::heigthUnit();
 
-    if (newLoc.decimalPoint()==',') {
-        AppSettings:: mCSVCellSeparator=";";
-        AppSettings::mCSVDecSeparator=",";
+    if (newLoc.decimalPoint() == ',') {
+        AppSettings::mCSVCellSeparator = ";";
+        AppSettings::mCSVDecSeparator = ",";
+
     } else {
-        AppSettings::mCSVCellSeparator=",";
-        AppSettings::mCSVDecSeparator=".";
+        AppSettings::mCSVCellSeparator = ",";
+        AppSettings::mCSVDecSeparator = ".";
     }
+    AppSettings::mMapPalette = ColorPalette::TemperatureSoftDensity;
 }
-
-/*
-AppSettings::AppSettings(const AppSettings& s)
-{
-    copyFrom(s);
-}
-*/
-/*
- *
-AppSettings& AppSettings::operator=(const AppSettings& s)
-{
-    copyFrom(s);
-    return *this;
-}
-*/
-
-/*
- * On macOS and iOS, if the file format is NativeFormat, these files are used by default:
-
-    $HOME/Library/Preferences/com.chronomodel.http:  www.ChronoModel.plist
-    $HOME/Library/Preferences/CNRS.chronomodel.plist
-    $HOME/Library/Preferences/com.yourcompany.chronomodel.plist
-
-/Users/dufresne/Library/Preferences/com.chronomodel.http:  www.ChronoModel.plist
-
-    $HOME/Library/Preferences/fr.CNRS.chronomodel.plist
-
-    /Library/Preferences/com.MySoft.Star Runner.plist
-    /Library/Preferences/com.MySoft.plist
-
-On Windows, NativeFormat settings are stored in the following registry paths:
-
-    HKEY_CURRENT_USER\Software\MySoft\Star Runner
-    HKEY_CURRENT_USER\Software\MySoft\OrganizationDefaults
-    HKEY_LOCAL_MACHINE\Software\MySoft\Star Runner
-    HKEY_LOCAL_MACHINE\Software\MySoft\OrganizationDefaults
-
- *
- */
-
 
 void AppSettings::readSettings()
 {
-
     QSettings settings;
- //qDebug()<< settings.fileName();
- QFile file(settings.fileName());
+
+    QFile file(settings.fileName());
 
 #ifdef DEBUG
  if (file.exists())
-     qDebug()<< settings.fileName() <<"exist";
+     qDebug() << settings.fileName() << "exist";
 else
-       qDebug()<< settings.fileName() <<"n exist pas";
+       qDebug() << settings.fileName() << "n exist pas";
 #endif
 
     settings.beginGroup("MainWindow");
@@ -195,6 +157,10 @@ else
         AppSettings::mLastDir = "";
         AppSettings::mLastFile = "";
     }
+
+    int palette = settings.value(APP_SETTINGS_STR_MAPCOLOR, APP_SETTINGS_DEFAULT_MAPCOLOR).toInt();
+    AppSettings::mMapPalette = static_cast<ColorPalette>(palette);
+
     settings.endGroup();
 
 }
@@ -209,6 +175,11 @@ void AppSettings::writeSettings()
 
     settings.beginGroup("AppSettings");
     settings.setValue(APP_SETTINGS_STR_ICON_SIZE, AppSettings::mIconSize);
+    //APP_SETTINGS_DEFAULT_MAPCOLOR
+    int palette = static_cast<int>(AppSettings::mMapPalette);
+    settings.setValue(APP_SETTINGS_STR_MAPCOLOR, palette);
+
+
     settings.setValue(APP_SETTINGS_STR_AUTO_SAVE, AppSettings::mAutoSave);
     settings.setValue(APP_SETTINGS_STR_AUTO_SAVE_DELAY_SEC, AppSettings::mAutoSaveDelay);
 

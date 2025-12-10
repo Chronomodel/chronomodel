@@ -94,7 +94,7 @@ MainWindow::MainWindow(QWidget* parent):
     mUndoDock->setAllowedAreas(Qt::RightDockWidgetArea);
     addDockWidget(Qt::RightDockWidgetArea, mUndoDock);
 #ifdef DEBUG
-    mUndoDock->setVisible(true); // toggle to see the undo-list
+    mUndoDock->setVisible(false); // toggle to see the undo-list
 #else
     mUndoDock->setVisible(false);
 #endif
@@ -1049,9 +1049,12 @@ void MainWindow::rebuildExportCurve()
         clearCompo.mapGP.setMaxValue(0);
 
         clearCompo.vecG = std::vector<double> (XGrid);
-        clearCompo.vecGP = std::vector<double> (XGrid);
-        clearCompo.vecGS = std::vector<double> (XGrid);
         clearCompo.vecVarG = std::vector<double> (XGrid);
+        clearCompo.vecGP = std::vector<double> (XGrid);
+        clearCompo.vecVarGP = std::vector<double> (XGrid);
+
+        clearCompo.vecGS = std::vector<double> (XGrid);
+
         clearCompo.vecVarianceG = std::vector<double> (XGrid);
         clearCompo.vecVarErrG = std::vector<double> (XGrid);
 

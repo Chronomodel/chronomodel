@@ -67,13 +67,13 @@ RebuildCurveDialog::RebuildCurveDialog(QStringList list, std::vector< std::pair<
     positiveValidator->setBottom(10);
     positiveValidator->setRange(10, 5000);
 
-    XStepEdit = new LineEdit(this);
+    XStepEdit = new QLineEdit(this);
     XStepEdit->setValidator(positiveValidator);
     XStepEdit->setPlaceholderText(tr("From 10 to 5000"));
     XStepEdit->setText(QString::number(mapSize.first));
     connect(XStepEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::setOkEnabled);
 
-    YStepEdit = new LineEdit(this);
+    YStepEdit = new QLineEdit(this);
     YStepEdit->setValidator(positiveValidator);
     YStepEdit->setPlaceholderText(tr("From 10 to 5000"));
     YStepEdit->setText(QString::number(mapSize.second));

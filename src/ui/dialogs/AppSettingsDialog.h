@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -41,7 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define APPSETTINGSDIALOG_H
 
 #include <QDialog>
-
+#include <Painting.h>
 
 class QCheckBox;
 class QLabel;
@@ -59,7 +59,6 @@ class Label;
 class LineEdit;
 class Button;
 
-
 class AppSettingsDialog: public QDialog
 {
     Q_OBJECT
@@ -71,13 +70,13 @@ public:
     void getSettings();
 
     bool filesChanged;
+    ColorPalette mMapPalette;
 
 private slots:
     void changeSettings();
     void buttonClicked(QAbstractButton*);
     void needCalibration();
     void restore();
-   // void fontButtonClicked();
 
 signals:
     void settingsChanged();
@@ -102,6 +101,10 @@ private:
    // QComboBox* mCountryCombo;
     QLabel *mIconSizeLab;
     QSpinBox *mIconSize;
+
+    QLabel* mMapPaletteLab;
+    QComboBox* mMapPaletteCombo;
+
 
     QLabel* mAutoSaveLab;
     QCheckBox* mAutoSaveCheck;

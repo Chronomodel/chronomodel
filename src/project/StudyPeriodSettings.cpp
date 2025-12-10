@@ -49,9 +49,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <cmath>
 
 StudyPeriodSettings::StudyPeriodSettings():
-    mTmin(0.),
-    mTmax(0.),
-    mStep(1.),
+    mTmin(0.0),
+    mTmax(0.0),
+    mStep(1.0),
     mStepForced(false)
 {
 
@@ -112,8 +112,7 @@ StudyPeriodSettings::~StudyPeriodSettings()
 StudyPeriodSettings StudyPeriodSettings::fromJson(const QJsonObject& json)
 {
     StudyPeriodSettings settings;
-    //settings.mTmin = json.contains(STATE_SETTINGS_TMIN) ? json.value(STATE_SETTINGS_TMIN).toInt() : STATE_SETTINGS_TMIN_DEF;
-    //settings.mTmax = json.contains(STATE_SETTINGS_TMAX) ? json.value(STATE_SETTINGS_TMAX).toInt() : STATE_SETTINGS_TMAX_DEF;
+
     settings.mTmin = json.contains(STATE_SETTINGS_TMIN) ? json.value(STATE_SETTINGS_TMIN).toDouble() : STATE_SETTINGS_TMIN_DEF;
     settings.mTmax = json.contains(STATE_SETTINGS_TMAX) ? json.value(STATE_SETTINGS_TMAX).toDouble() : STATE_SETTINGS_TMAX_DEF;
 
@@ -126,8 +125,7 @@ StudyPeriodSettings StudyPeriodSettings::fromJson(const QJsonObject& json)
 QJsonObject StudyPeriodSettings::toJson() const
 {
     QJsonObject settings;
-    //settings[STATE_SETTINGS_TMIN] = int (floor(mTmin));
-    //settings[STATE_SETTINGS_TMAX] = int (ceil(mTmax));
+
     settings[STATE_SETTINGS_TMIN] = mTmin;
     settings[STATE_SETTINGS_TMAX] = mTmax;
     settings[STATE_SETTINGS_STEP] = mStep;
@@ -136,29 +134,63 @@ QJsonObject StudyPeriodSettings::toJson() const
     return settings;
 }
 
+/* old code
 double StudyPeriodSettings::getStep(const double tmin, const double tmax)
 {
     const double diff (tmax - tmin);
-    const double linearUntil (52000.);
+    constexpr double linearUntil  = 52000.0;
 
     if (diff <= linearUntil)
-        return 1.;
+        return 1.0;
 
     else {
-        const double maxPts (52000.); //must be upper than linearUntil
+        constexpr double maxPts = 52000.0; //must be upper than linearUntil
         const double lambda = - log((maxPts - linearUntil)/maxPts) / linearUntil;
-        const double nbPts = maxPts * (1. - exp(-lambda * diff));
+        const double nbPts = maxPts * (1.0 - exp(-lambda * diff));
 
         return diff / nbPts;
     }
 }
+*/
+
+double StudyPeriodSettings::getStep(double tmin, double tmax)
+{
+    double diff = tmax - tmin;
+    double stepBrut = diff / 1000.0;
+
+    // --- Calcul de la puissance de 10 inférieure à stepBrut ---
+    double power = 1.0;
+    if (stepBrut >= 1.0) {
+        while (power * 10.0 <= stepBrut) power *= 10.0;
+    } else {
+        while (power * 0.1 >= stepBrut) power *= 0.1;
+    }
+
+    // --- Normalisation ---
+    double scaled = stepBrut / power;
+    double rounded;
+    if      (scaled <= 1.0) rounded = 1.0;
+    else if (scaled <= 2.0) rounded = 2.0;
+    else if (scaled <= 5.0) rounded = 5.0;
+    else                    rounded = 10.0;
+
+    return rounded * power;
+}
+
+double StudyPeriodSettings::step() const
+{
+    if (mStepForced) {
+        return mStep;
+    } else
+        return getStep(mTmin, mTmax);
+}
 
 double StudyPeriodSettings::getTminFormated() const
 {
-   return qMin(DateUtils::convertToAppSettingsFormat(mTmin), DateUtils::convertToAppSettingsFormat(mTmax));
+   return std::min(DateUtils::convertToAppSettingsFormat(mTmin), DateUtils::convertToAppSettingsFormat(mTmax));
 }
 
 double StudyPeriodSettings::getTmaxFormated() const
 {
-    return qMax(DateUtils::convertToAppSettingsFormat(mTmin), DateUtils::convertToAppSettingsFormat(mTmax));
+    return std::max(DateUtils::convertToAppSettingsFormat(mTmin), DateUtils::convertToAppSettingsFormat(mTmax));
 }

@@ -356,8 +356,8 @@ void GraphViewResults::saveGraphData(double threshold) const
 
         messageBox.exec();
         if (messageBox.clickedButton() == referenceButton) {
-            mGraph->exportReferenceCurves( MainWindow::getInstance()->getCurrentPath(), QLocale::English, ",",  mSettings.mStep,"" ,threshold, false);
-            mGraph->exportReferenceCurves( MainWindow::getInstance()->getCurrentPath(), QLocale::English, ",",  mSettings.mStep,"" ,threshold, true);
+            mGraph->exportReferenceCurves( MainWindow::getInstance()->getCurrentPath(), QLocale::English, ",",  mSettings.mStep, "" ,threshold, false);
+            mGraph->exportReferenceCurves( MainWindow::getInstance()->getCurrentPath(), QLocale::English, ",",  mSettings.mStep, "" ,threshold, true);
         }
 
         else if (messageBox.clickedButton() == dataButton) { // Export raw Data, the step is not 1 is map.column()
@@ -405,12 +405,10 @@ void GraphViewResults::setGraphsFont(const QFont& font)
 {
     // Recalcule mTopShift based on the new font, and position the graph according :
     mGraphFont = font;
-    //mStatArea->setFontFamily(font.family());
-    //mStatArea->setFontPointSize(font.pointSizeF());
+
     mGraph->setFont(font);
     mGraph->forceRefresh();
-    //updateLayout();
-    //update();
+
 }
 
 void GraphViewResults::setCurvesThickness(int value)

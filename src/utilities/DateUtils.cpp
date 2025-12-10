@@ -116,7 +116,7 @@ QString DateUtils::dateFormatToString(const FormatDate format)
 {
     switch (format) {
         case eCalBP:
-            return "Age Cal. BP";
+            return "Age Cal. BP"; // "Before Present"
             break;
         case eCalB2K:
             return "Age Cal. B2K";
@@ -128,16 +128,16 @@ QString DateUtils::dateFormatToString(const FormatDate format)
             return "Date Cal. B2K";
             break;
         case eBCAD:
-            return "BC/AD";
+            return "BC/AD"; // "Before Christ" "Anno Domini"
             break;
         case eBCECE:
-            return "BCE/CE";
+            return "BCE/CE"; // "Before Common Era" "Common Era"
             break;
         case eKa:
-            return "Age Ka";
+            return "Age Ka"; // "Kiloannum"
             break;
         case eMa:
-            return "Age Ma";
+            return "Age Ma"; // "Megaannum"
             break;
         case eNumeric:
         default:

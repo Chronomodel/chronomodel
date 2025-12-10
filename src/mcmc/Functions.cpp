@@ -3877,7 +3877,7 @@ MatrixD robust_LLt(const MatrixD& matrix)
         throw std::invalid_argument("[Function::robust_LLt] Matrix must be square");
     }
 #endif
-    // Phase 1 : Calcul de LDL^T
+    // Phase 1 : Calcul de LL^T
     const size_t n = matrix.rows();
 
     if (n<100) {
@@ -3886,6 +3886,7 @@ MatrixD robust_LLt(const MatrixD& matrix)
         Eigen::LLT<MatrixD> llt(matrix);
 
         if (llt.info() == Eigen::Success) {
+            //std::cout << " direct llt" << std::endl;
             return llt.matrixL();
         }
 
@@ -3893,8 +3894,6 @@ MatrixD robust_LLt(const MatrixD& matrix)
         Eigen::LDLT<MatrixD> ldlt(matrix);
 
         if (ldlt.info() == Eigen::Success) {
-            // return MatrixD::Zero(matrix.rows(), matrix.cols());
-
 
             MatrixD L = ldlt.matrixL();
             Eigen::VectorXd D = ldlt.vectorD();

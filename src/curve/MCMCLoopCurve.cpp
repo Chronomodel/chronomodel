@@ -2391,10 +2391,30 @@ QString MCMCLoopCurve::initialize_335()
         }
 
         // ----------------------------------------------------------------
-        // Curve init S02 Vg = Var_residual_spline // inutile mS02Vg n'est plus Bayesien
+        // Curve init S02 Vg = Var_residual_spline // inutile mS02Vg si plus Bayesien; sauf cas KOMLAN
         // ----------------------------------------------------------------
-        mModel->mS02Vg = Var_residual_spline;
 
+#ifdef KOMLAN
+        const double s_harmonique = std::accumulate(mModel->mEvents.begin(), mModel->mEvents.end(), 0., [](double s0, auto e) { return s0 + 1./pow(e->mSy, 2.);});
+        const double mean_harmonique = sqrt((double)mModel->mEvents.size()/ s_harmonique);
+
+        double mean = sqrt( (Var_residual_spline + pow(mean_harmonique, 2)) /2 );
+        std::cout << "init mean " << mean << " mean_harmonique=" << mean_harmonique << " Var_residual_spline=" << Var_residual_spline << std::endl;
+        const double beta = 1.004680139 * (1 - exp(- 0.0000847244 * pow(mean, 2.373548593)));
+        mModel->mSO2Vg_beta = beta;//std::max(1E-10, beta);
+        std::cout << "init beta " << beta << std::endl;
+
+
+        const double S02Vg = 1.0 / Generator::gammaDistribution(1.0, beta);
+
+        mModel->mS02Vg.mLastAccepts.clear();
+        mModel->mS02Vg.accept_update(S02Vg);
+        mModel->mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+        mModel->mS02Vg.mSigmaMH = 1.0;
+
+#else
+        mModel->mS02Vg = Var_residual_spline;// <- code d'origine
+#endif
         /* ----------------------------------------------------------------
          * The W of the events depend only on their VG
          * During the update, we need W for the calculations of theta, VG and Lambda Spline update
@@ -2517,7 +2537,7 @@ QString MCMCLoopCurve::initialize_335()
     SplineMatricesD matricesWI = prepare_calcul_spline_WI_D(current_vecH);
     MCMCSpline try_spline;
     SplineMatricesD try_spline_matrices;
-
+    MatrixD K;
     try {
         if (mCurveSettings.mLambdaSplineType == CurveSettings::eModeFixed) {
             mModel->mLambdaSpline.mX = mCurveSettings.mLambdaSpline;
@@ -2545,6 +2565,8 @@ QString MCMCLoopCurve::initialize_335()
 
                 DiagonalMatrixD W_1 (mModel->mEvents.size()) ; // correspond à 1.0/mW
                 std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), W_1.diagonal().begin(), [](std::shared_ptr<Event> ev){return 1.0/ ev->mW;});// {return (ev->mSy*ev->mSy + ev->mVg.mX;});
+
+                // K = Q * R_1QT;
 
                 bool depth_OK = true;
 
@@ -2579,12 +2601,16 @@ QString MCMCLoopCurve::initialize_335()
         }
         mModel->mLambdaSpline.mSigmaMH = 1.0; // default = 1.0
 
+#ifdef KOMLAN
+        auto trK = K.trace();
+        mModel->mC_lambda = (mModel->mEvents.size()-2.0) / trK;
+#else
         /**
         * C = frac{n - 2.0}{11.24 * n^{4.0659}}
         */
         mModel->mC_lambda = (mModel->mEvents.size()-2.0) / (11.24 * std::pow(mModel->mEvents.size(), 4.0659)); // hypothese: les thetas sont répartis uniformement
         mModel->mC_lambda /= var_Y;
-
+#endif
 
 
     }  catch (...) {
@@ -2642,12 +2668,14 @@ QString MCMCLoopCurve::initialize_335()
         clearCompo.mapGP.setMaxValue(0);
 
         clearCompo.vecG = std::vector<double> (nbPoint); // column
-        clearCompo.vecGP = std::vector<double> (nbPoint);
-        clearCompo.vecGS = std::vector<double> (nbPoint);
         clearCompo.vecVarG = std::vector<double> (nbPoint);
+        clearCompo.vecGP = std::vector<double> (nbPoint);
+        clearCompo.vecVarGP = std::vector<double> (nbPoint);
+        clearCompo.vecGS = std::vector<double> (nbPoint);
+
         clearCompo.vecVarianceG = std::vector<double> (nbPoint);
 
-       clearCompo.vecVarErrG = std::vector<double> (0); //std::vector<double> (nbPoint);
+       clearCompo.vecVarErrG = std::vector<double> (0);
 
         PosteriorMeanG clearMeanG;
         clearMeanG.gx = clearCompo;
@@ -2892,7 +2920,7 @@ bool MCMCLoopCurve::update_335()
                             if (!ordered) {
                                 orderEventsByThetaReduced(mModel->mEvents); // On réordonne les Events suivant les thetas Réduits croissants
 
-                                // Les vecteurs positions Gx, Gy et Gz doivent suivre l'ordre des thétas
+                                // Les vecteurs positions Y, Gx, Gy et Gz doivent suivre l'ordre des thétas
                                 if (mModel->compute_XYZ) {
                                     const ColumnVectorD& x_vec = get_ColumnVector<double>(get_Yx, mModel->mEvents);
                                     const ColumnVectorD& y_vec = get_ColumnVector<double>(get_Yy, mModel->mEvents);
@@ -3007,7 +3035,8 @@ bool MCMCLoopCurve::update_335()
                                 // Pour l'itération suivante : toutes les matrices doivent suivre l'ordre des thetas
 
                                 current_vecH = std::move(try_vecH);
-                                current_K = std::move(try_K);
+                                current_K = std::move(try_K);                             
+
                                 current_R_1QT = std::move(try_R_1QT);
                                 current_R = std::move(try_R);
                                 current_Q = std::move(try_Q);
@@ -3048,7 +3077,10 @@ bool MCMCLoopCurve::update_335()
                     std::for_each(PAR event->mPhases.begin(), event->mPhases.end(), [this] (std::shared_ptr<Phase> p) {p->update_AlphaBeta (tminPeriod, tmaxPeriod);});
 
                 } // End of loop initListEvents
-
+#ifdef KOMLAN
+                auto trK = current_K.trace();
+                mModel->mC_lambda = (mModel->mEvents.size()-2.0) / trK;
+#endif
 
             } else { // Pas bayésien : on sauvegarde la valeur constante dans la trace
                 for (std::shared_ptr<Event>& event : initListEvents) {
@@ -3080,18 +3112,19 @@ bool MCMCLoopCurve::update_335()
         }
 
         // --------------------------------------------------------------
-        //  D - Update S02 - à faire dans la version 4 ici EDM1
+        //  D - Update S02 - à faire dans la version 4 ou EDM2
         // --------------------------------------------------------------
 #ifdef S02_BAYESIAN
+        if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
+            try {
+                for (std::shared_ptr<Event> &event : initListEvents) {
+                    event->updateS02();
 
-       try {
-            for (std::shared_ptr<Event> &event : initListEvents) {
-                event->updateS02();
+                }
+            }  catch (...) {
+                qDebug() << "MCMCLoopCurve::update S02 : Caught Exception!\n";
 
             }
-        }  catch (...) {
-            qDebug() << "MCMCLoopCurve::update S02 : Caught Exception!\n";
-
         }
 #endif
 
@@ -3112,8 +3145,9 @@ bool MCMCLoopCurve::update_335()
                 /* --------------------------------------------------------------
                 * F - Update mS02Vg, tau in Komlan thesis
                 * -------------------------------------------------------------- */
-
+#pragma mark update mModel->mS02Vg
                 try {
+
                     if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
                             const std::vector<double>& vec_t = get_vector<double>(get_Theta, mModel->mEvents);
 
@@ -3121,7 +3155,30 @@ bool MCMCLoopCurve::update_335()
 
                     }
 
-                    mModel->mS02Vg = Var_residual_spline;
+#ifdef KOMLAN
+
+                    const double logMin = -10.;
+                    const double logMax = +20.;
+                    // On stocke l'ancienne valeur :
+                    const double  current_value = mModel->mS02Vg.mX;
+
+                    const double try_value_log = Generator::gaussByBoxMuller(log10(mModel->mS02Vg.mX), mModel->mS02Vg.mSigmaMH);
+                    const double try_value = pow(10., try_value_log);
+
+                    if (try_value_log >= logMin && try_value_log <= logMax) {
+                        rate = h_S02_Vg_K(mModel->mEvents, current_value, try_value); // prend en compte le cas individuel et non-individuel, le jacobien est déjà dans la formule
+
+                        mModel->mS02Vg.try_update(try_value, rate);
+
+                    } else {
+                        rate = -1.0;
+                        mModel->mS02Vg.reject_update();
+                    }
+
+#else
+                    mModel->mS02Vg = Var_residual_spline;// <- code d'origine
+
+#endif
 
                 } catch (std::exception& e) {
                     std::cout<< "[MCMCLoopCurve::update_335] S02 Vg : exception caught: " << e.what() << std::endl;
@@ -3182,7 +3239,17 @@ bool MCMCLoopCurve::update_335()
                                     event->updateW();
 
                                     // conditionnel du au shrinkage, à enlever si echantillonnage avec le shrinkageUniforme
-                                    auto rate_h_vg = h_VG_Event(try_value, mModel->mS02Vg) / h_VG_Event(current_value, mModel->mS02Vg);
+#ifdef KOMLAN
+                                    auto rate_h_vg = h_VG_Event(try_value, mModel->mS02Vg.mX) / h_VG_Event(current_value, mModel->mS02Vg.mX);
+
+#else
+                                    //auto rate_h_vg0 = h_VG_Event(try_value, mModel->mS02Vg) / h_VG_Event(current_value, mModel->mS02Vg);
+                                    // calcul direct
+                                    auto r_vg = (mModel->mS02Vg + current_value) / (mModel->mS02Vg + try_value);
+                                    //auto r_vg = 1.0 + (current_value - try_value) / (mModel->mS02Vg + try_value); // peut aussi s'écrire comme ca
+                                    auto rate_h_vg = r_vg * r_vg;
+
+#endif
 
                                     // Inverse des Poids
 
@@ -3220,9 +3287,6 @@ bool MCMCLoopCurve::update_335()
 
                                     event->mVg.test_update(current_value, try_value, rate);
                                     event->updateW();
-
-
-                                     //   event->mVg.mX = current_value;// déjà fait dans le test_update
 
 
                                 } else {
@@ -3265,10 +3329,13 @@ bool MCMCLoopCurve::update_335()
 
                             // rapport des a priori du proposal=shrinkage, si echantillonnage avec le shrinkageUniforme() rate_h_vg = 1
                             try_value = pow(10., try_value_log);
-
+#ifdef KOMLAN
+                            try_h_VG = h_VG_Event(try_value, mModel->mS02Vg.mX) ;
+                            current_h_VG = h_VG_Event(current_value, mModel->mS02Vg.mX);
+#else
                             try_h_VG = h_VG_Event(try_value, mModel->mS02Vg) ;
                             current_h_VG = h_VG_Event(current_value, mModel->mS02Vg);
-
+#endif
                             // multiplier par le Jacobien, du à l'échantillonnage en log10
                             auto rate_h_vg = (try_h_VG * try_value) / (current_h_VG * current_value);
 
@@ -4360,7 +4427,7 @@ QString MCMCLoopCurve::initialize_401()
 
 // MCMC Multi-sampling gaussian
 #pragma mark Version KOMLAN
-#if VERSION_MAJOR == KOMLAN
+#if VERSION_MAJOR == KOMLAN_old
 QString MCMCLoopCurve::initialize_Komlan()
 {
 #ifdef DEBUG
@@ -4923,7 +4990,12 @@ QString MCMCLoopCurve::initialize_interpolate()
     // ----------------------------------------------------------------
     // Curve init S02 Vg
     // ----------------------------------------------------------------
+#ifdef KOMLAN
+    mModel->mS02Vg.mX = 0;
+#else
     mModel->mS02Vg = 0;
+#endif
+
 
     if (mModel->compute_X_only) {
         std::vector<double> vecY (mModel->mEvents.size());
@@ -4984,9 +5056,11 @@ QString MCMCLoopCurve::initialize_interpolate()
         clearCompo.mapGP.setMaxValue(0);
 
         clearCompo.vecG = std::vector<double> (nbPoint); // column
-        clearCompo.vecGP = std::vector<double> (nbPoint);
-        clearCompo.vecGS = std::vector<double> (nbPoint);
         clearCompo.vecVarG = std::vector<double> (nbPoint);
+        clearCompo.vecGP = std::vector<double> (nbPoint);
+        clearCompo.vecVarGP = std::vector<double> (nbPoint);
+        clearCompo.vecGS = std::vector<double> (nbPoint);
+
         clearCompo.vecVarianceG = std::vector<double> (nbPoint);
         clearCompo.vecVarErrG = std::vector<double> (nbPoint);
 
@@ -5938,7 +6012,7 @@ bool MCMCLoopCurve::update_400()
  * @brief MCMCLoopCurve::update_Komlan, valable uniquement en univariate
  * @return
  */
-#if VERSION_MAJOR == KOMLAN
+#if VERSION_MAJOR == KOMLAN_old
 bool MCMCLoopCurve::update_Komlan()
 {
     try {
@@ -6579,6 +6653,12 @@ bool MCMCLoopCurve::adapt(const int batchIndex)
 
     }
 
+#ifdef KOMLAN
+    //--------------------- Adapt Sigma MH de mModel->mS02_Vg -----------------------------------------
+    if (mModel->mS02Vg.mSamplerProposal == MHVariable::eMHAdaptGauss)
+        noAdapt &= mModel->mS02Vg.adapt(taux_min, taux_max, delta);
+#endif
+
     //--------------------- Adapt Sigma MH de Lambda Spline -----------------------------------------
     if (mModel->mLambdaSpline.mSamplerProposal == MHVariable::eMHAdaptGauss)
         noAdapt &= mModel->mLambdaSpline.adapt(taux_min, taux_max, delta);
@@ -6622,9 +6702,18 @@ void MCMCLoopCurve::memo()
     std::for_each(mModel->mPhases.begin(), mModel->mPhases.end(), [](std::shared_ptr<Phase> p) {p->memoAll();} );
 
     /* --------------------------------------------------------------
-     *  D -  Memo S02 Vg - not yet Bayesian
+     *  D -  Memo S02 Vg - not yet Bayesian, yes if KOMLAN
      * -------------------------------------------------------------- */
+#ifdef KOMLAN
 
+    if (mModel->mS02Vg.mSamplerProposal != MHVariable::eFixe) {
+        // On stocke la racine de VG, qui est une variance pour afficher l'écart-type
+        //double memoS02Vg = sqrt(mModel->mS02Vg.mX);
+        mModel->mS02Vg.memo();//&memoS02Vg);
+        mModel->mS02Vg.saveCurrentAcceptRate();
+    }
+
+#endif
     /* --------------------------------------------------------------
      *  E -  Memo Vg
      * -------------------------------------------------------------- */
@@ -6658,7 +6747,12 @@ void MCMCLoopCurve::memo()
         double minY_GP_X = 0., minY_GP_Y = 0., minY_GP_Z = 0.;
         double maxY_GP_X = 0., maxY_GP_Y = 0., maxY_GP_Z = 0.;
 
-        minY_GP_X = meanG->gx.mapGP.minY();
+        if (mModel->mCurveSettings.mProcessType == CurveSettings::eProcess_Depth) {
+            minY_GP_X = mModel->mCurveSettings.mThreshold;
+
+        } else {
+            minY_GP_X = meanG->gx.mapGP.minY();
+        }
         maxY_GP_X = meanG->gx.mapGP.maxY();
 
         if (mModel->compute_Y) {
@@ -6711,7 +6805,9 @@ void MCMCLoopCurve::memo()
             for (int idxT = 0; idxT < nbPtsX ; ++idxT) {
                 t = (double)idxT * stepT + mModel->mSettings.mTmin ;
                 valeurs_G_VarG_GP_GS(t, mModel->mSpline.splineX, gx_the, varGx, gpx, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
-                minY_GP_X = std::min(gpx, minY_GP_X);
+                if (mModel->mCurveSettings.mProcessType != CurveSettings::eProcess_Depth) { // Pour la profondeur on garde: minY_GP_X = mModel->mCurveSettings.mThreshold;
+                    minY_GP_X = std::min(gpx, minY_GP_X);
+                }
                 maxY_GP_X = std::max(gpx, maxY_GP_X);
 
                 if (mModel->compute_Y) {
@@ -6731,7 +6827,10 @@ void MCMCLoopCurve::memo()
 
 
         if (mChainIndex == 0 ) {// do not change the Y range between several chain
-            minY_GP_X = std::min(minY_GP_X, meanG->gx.mapGP.minY());
+            if (mModel->mCurveSettings.mProcessType != CurveSettings::eProcess_Depth) { // Pour la profondeur on garde: minY_GP_X = mModel->mCurveSettings.mThreshold;
+                minY_GP_X = std::min(gpx, minY_GP_X);
+            }
+            //minY_GP_X = std::min(minY_GP_X, meanG->gx.mapGP.minY());
             maxY_GP_X = std::max(maxY_GP_X, meanG->gx.mapGP.maxY());
             meanG->gx.mapGP.setRangeY(minY_GP_X, maxY_GP_X);
 
@@ -7013,12 +7112,16 @@ void MCMCLoopCurve::finalize()
         QString warning;
     };
 
+    // ----------------------------------------
+    // A - Suppression des traces correspondant au courbe non positives
+    // ----------------------------------------
+
     // 1) Phase d'analyse (lecture seule) : parcourir en reverse pour reproduire la logique
     std::vector<RemovalInfo> removals;
     removals.reserve(mLoopChains.size());
 
     int back_position = static_cast<int>(mModel->mLambdaSpline.mRawTrace->size());
-    size_t reverse_i = 0; // counter like in original code (i used in message)
+    size_t reverse_i = 0;
 
     for (auto it = mLoopChains.rbegin(); it != mLoopChains.rend(); ++it, ++reverse_i) {
         const auto &chain = *it;
@@ -7088,6 +7191,9 @@ void MCMCLoopCurve::finalize()
 
         // For convenience, take references/pointers to commonly used containers
         auto &lambda = mModel->mLambdaSpline;
+#ifdef KOMLAN
+        auto &S02Vg = mModel->mS02Vg;
+#endif
         auto &posteriorByChain = mModel->mPosteriorMeanGByChain;
         auto &events = mModel->mEvents;
 
@@ -7113,7 +7219,14 @@ void MCMCLoopCurve::finalize()
                 if (lambda.mHistoryAcceptRateMH) safe_erase_range(*lambda.mHistoryAcceptRateMH, front, back);
                 safe_erase_index(lambda.mNbValuesAccepted, idx);
             }
-
+#ifdef KOMLAN
+            // 3) erase global traces (lambda)
+            if (S02Vg.mSamplerProposal != MHVariable::eFixe) {
+                if (S02Vg.mRawTrace) safe_erase_range(*S02Vg.mRawTrace, front, back);
+                if (S02Vg.mHistoryAcceptRateMH) safe_erase_range(*S02Vg.mHistoryAcceptRateMH, front, back);
+                safe_erase_index(S02Vg.mNbValuesAccepted, idx);
+            }
+#endif
             // 4) events
             for (const auto &ev : events) {
                 if (ev->mTheta.mSamplerProposal != MHVariable::eFixe) {
@@ -7156,8 +7269,9 @@ void MCMCLoopCurve::finalize()
         throw mAbortedReason;
     }
 
-
-    // Copy remaining chains into model
+    // ----------------------------------------
+    // B - Copy remaining chains into model
+    // ----------------------------------------
     mModel->mChains = mLoopChains;
 
     // Compute correlations & densities (unchanged)
@@ -7166,7 +7280,7 @@ void MCMCLoopCurve::finalize()
     mModel->initDensities();
 
     // ----------------------------------------
-    // Curve specific : compute min_values
+    // C - Curve specific : compute min_values
     // ----------------------------------------
     auto compute_min_in_map = [](auto &mapContainer) {
         // assume mapContainer.data is a container
@@ -7507,6 +7621,7 @@ t_prob MCMCLoopCurve::h_S02_Vg(const std::vector<std::shared_ptr<Event>> &events
  * @param try_S02 Proposed new value for the S02 variance parameter
  * @return t_prob The calculated h value
  */
+ /*
 t_prob MCMCLoopCurve::h_S02_Vg_K(const std::vector<std::shared_ptr<Event>>& events, const double S02_Vg, const double try_S02) const
 {
     // Constantes et pré-calculs
@@ -7557,6 +7672,43 @@ t_prob MCMCLoopCurve::h_S02_Vg_K(const std::vector<std::shared_ptr<Event>>& even
 
     return prior * prod_h_Vg;
 }
+*/
+#ifdef KOMLAN
+t_prob MCMCLoopCurve::h_S02_Vg_K(const std::vector<std::shared_ptr<Event>>& events, const double S02_Vg, const double try_Vg)
+{
+
+    const int a = 1;
+
+    double prod_h_Vg = 1.;
+    if (mCurveSettings.mVarianceType == CurveSettings::eModeBayesian) {
+        for (auto& e : events) {
+            prod_h_Vg *= (exp((a + 1)*log((S02_Vg + e->mVg.mX) / (try_Vg + e->mVg.mX))) * (try_Vg / S02_Vg)) ;
+        }
+
+    } else {
+        prod_h_Vg = (exp((a + 1)*log((S02_Vg + events[0]->mVg.mX) / (try_Vg + events[0]->mVg.mX))) * (try_Vg / S02_Vg));
+    }
+
+    /*const double s_harmonique = std::accumulate(initListEvents.begin(), initListEvents.end(), 0., [] (double s0, auto e){return s0 + 1. / pow(e->mSy, 2.);});
+
+    const double ecart = sqrt(events.size() / s_harmonique) ;
+*/
+    const int alpha = 1;
+
+    //const double beta =  1.004680139*(1 - exp(- 0.0000847244 * pow(ecart, 2.373548593)));
+
+    const t_prob beta = static_cast<t_prob>(mModel->mSO2Vg_beta);
+
+    const double prior1 = exp((alpha + 1)*log(S02_Vg / try_Vg)) * exp(-beta * ((S02_Vg - try_Vg) / (try_Vg * S02_Vg)))   ;
+
+    const double prior = prior1 * prod_h_Vg;
+
+    return prior ;
+
+}
+#endif
+
+
 /**
  * @brief Calculates the acceptance rate for S02_Vg parameter in MCMC sampling
  *
@@ -9288,7 +9440,7 @@ std::vector<double> MCMCLoopCurve::sampling_spline (std::vector<std::shared_ptr<
 
     return X;
 }
-
+#ifdef KOMLAN
 double MCMCLoopCurve::h_S02_Vg_K_old(const std::vector<std::shared_ptr<Event>> events, double S02_Vg, double try_Vg)
 {
     constexpr int alp = 1;
@@ -9314,6 +9466,7 @@ double MCMCLoopCurve::h_S02_Vg_K_old(const std::vector<std::shared_ptr<Event>> e
     }
     return prior * prod_h_Vg;
 }
+#endif
 
 std::vector<t_matrix> MCMCLoopCurve::multiMatByVectCol0(const MatrixLD& KKK, const std::vector<t_matrix>& gg)
 {
@@ -9472,19 +9625,13 @@ ColumnVectorLD MCMCLoopCurve::multinormal_sampling (const ColumnVectorLD& mu, co
     return f;
 }
 
+// utiliser dans v3.3.5
 ColumnVectorD MCMCLoopCurve::multinormal_sampling (const ColumnVectorD& mu, const MatrixD& A)
 {
     size_t N = mu.size();
-//Chronometer t1 (" robust_LLt");
+
     const MatrixD L = robust_LLt(A);
 
-//t1.display();
-
-/*Chronometer t2 ("Robust_SVD");
-    const MatrixD Vroot = robust_SVD(A);
-t2.display()
-*/
-    // Vroot : cette matrice n’est pas triangulaire, c'est normal
     // Cov(Lz) = L*Cov(z)*LT = L*I*LT = L*LT = V
     // Donc la distribution de fx est correcte quelle que soit la "forme" de L.
     // L’essentiel : L*LT doit être la covariance souhaitée.
@@ -9493,9 +9640,12 @@ t2.display()
     ColumnVectorD z (N);
     for (size_t i = 0; i< N; i++)
         z.data()[i] = Generator::gaussByBoxMuller(0.0, 1.0);
-
+#ifdef KOMLAN
     auto Lz = L * z;
-    //auto Lz = Vroot * z;
+    //auto Lz = L.transpose() * z; // ne pas transposer, donne de mauvais résultat
+#else
+    auto Lz = L * z;
+#endif
 
     ColumnVectorD f = mu + Lz;
 

@@ -142,7 +142,7 @@ protected:
 
     void test_depth(std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const SplineMatricesLD &matrices, const double lambda, double &rate, bool &ok);
 
-#if VERSION_MAJOR == KOMLAN
+#if VERSION_MAJOR == KOMLAN_old
     QString initialize_Komlan();
     bool update_Komlan();
 #endif
@@ -178,7 +178,10 @@ private:
      t_prob h_VG_Event(const double Vg, const double S02_Vg) const;
 
      t_prob h_S02_Vg(const std::vector<std::shared_ptr<Event> > &events, double S02_Vg) const;
+#ifdef KOMLAN
      double h_S02_Vg_K_old(const std::vector<std::shared_ptr<Event> > events, double S02_Vg, double try_Vg);
+     t_prob h_S02_Vg_K(const std::vector<std::shared_ptr<Event>>& events, const double S02_Vg, const double try_Vg);
+#endif
 
      t_prob rate_h_S02_Vg_test(const std::vector<std::shared_ptr<Event>> &events, double S02_Vg, double try_S02) const;
      t_prob rate_h_S02_Vg(const std::vector<std::shared_ptr<Event> > &pointEvents, double S02_Vg, double try_S02) const;

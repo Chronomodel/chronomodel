@@ -196,9 +196,10 @@ void Ruler::setCurrent(const double min, const double max)
         double curMinAtMaxScroll = mMax - (mMax - mMin) * (pageStep / range);
         double value = scrollRange * (mCurrentMin - mMin) / (curMinAtMaxScroll - mMin);
 
+        blockSignals(true);
         mScrollBar->setPageStep(int(pageStep));
         mScrollBar->setRange(0, int(scrollRange));
-        blockSignals(true);
+
         mScrollBar->setValue(int(value));
         blockSignals(false);
     }

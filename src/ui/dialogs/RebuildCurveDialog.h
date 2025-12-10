@@ -104,25 +104,25 @@ private:
     QLineEdit* lineEdit;
     QDialogButtonBox* buttonBox;
 
-    LineEdit* XStepEdit;
-    LineEdit* YStepEdit;
+    QLineEdit* XStepEdit;
+    QLineEdit* YStepEdit;
 
     QStringList mCompoList;
 
     // 3 composantes possibles
     QLineEdit* Y1minEdit;
     bool Y1MinOK = true;
-    QLineEdit *Y1maxEdit;
+    QLineEdit* Y1maxEdit;
     bool Y1MaxOK = true;
 
     QLineEdit* Y2minEdit;
     bool Y2MinOK = true;
-    QLineEdit *Y2maxEdit;
+    QLineEdit* Y2maxEdit;
     bool Y2MaxOK = true;
 
     QLineEdit* Y3minEdit;
     bool Y3MinOK = true;
-    QLineEdit *Y3maxEdit;
+    QLineEdit* Y3maxEdit;
     bool Y3MaxOK = true;
 
     // 3 derrivées possibles

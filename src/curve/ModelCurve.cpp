@@ -59,8 +59,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 ModelCurve::ModelCurve():
     Model(),
     mLambdaSpline(),
+
+#ifdef KOMLAN
+    mSO2Vg_beta(0),
+#else
     mS02Vg(0),
-    mSO2_beta(0),
+#endif
+
     compute_Y(false),
     compute_XYZ(false),
     compute_X_only(false)
@@ -69,14 +74,24 @@ ModelCurve::ModelCurve():
     mLambdaSpline.mSupport = MetropolisVariable::eR;
     mLambdaSpline.mFormat = DateUtils::eNumeric;
     mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
+
+#ifdef KOMLAN
+    mS02Vg.setName(std::string("S02 on Vg of Curve"));
+    mS02Vg.mSupport = MetropolisVariable::eRp;
+    mS02Vg.mFormat = DateUtils::eNumeric;
+    mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+#endif
 
 }
 
 ModelCurve::ModelCurve(const QJsonObject& json):
     Model(json),
     mLambdaSpline(),
+#ifdef KOMLAN
+    mSO2Vg_beta(0),
+#else
     mS02Vg(0),
-    mSO2_beta(0),
+#endif
     compute_Y(false),
     compute_XYZ(false),
     compute_X_only(false)
@@ -86,6 +101,12 @@ ModelCurve::ModelCurve(const QJsonObject& json):
     mLambdaSpline.mFormat = DateUtils::eNumeric;
     mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
+#ifdef KOMLAN
+    mS02Vg.setName(std::string("S02 on Vg of Curve"));
+    mS02Vg.mSupport = MetropolisVariable::eRp;
+    mS02Vg.mFormat = DateUtils::eNumeric;
+    mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+#endif
     settings_from_Json(json);
 
 }
@@ -555,7 +576,7 @@ void ModelCurve::saveMapToFile(QFile *file, const QString csvSep, const CurveMap
     if (isDateFormat) {
         output << "Y / Date"<< csvSep;
         for (unsigned c = 0; c < map.column(); ++c)  {
-            output << stringForCSV(DateUtils::convertToAppSettingsFormat(map.minX() + c * stepX)) << csvSep;
+            output << stringForCSV(DateUtils::convertToAppSettingsFormat(map.minX() + c * stepX), true) << csvSep;
         }
         output << "\r";
 
@@ -570,7 +591,7 @@ void ModelCurve::saveMapToFile(QFile *file, const QString csvSep, const CurveMap
     } else {
         output << "Y / Age"<< csvSep;
         for (int c = map.column() - 1; c >-1; --c)  {
-            output << stringForCSV(DateUtils::convertToAppSettingsFormat(map.minX() + c * stepX)) << csvSep;
+            output << stringForCSV(DateUtils::convertToAppSettingsFormat(map.minX() + c * stepX), true) << csvSep;
         }
         output << "\r";
 
@@ -595,6 +616,10 @@ void ModelCurve::updateFormatSettings()
             event->mVg.setFormat(DateUtils::eNumeric);
 
         mLambdaSpline.setFormat(DateUtils::eNumeric);
+
+#ifdef KOMLAN
+        mS02Vg.setFormat(DateUtils::eNumeric);
+#endif
     }
 }
 
@@ -629,6 +654,11 @@ void ModelCurve::generatePosteriorDensities(const std::vector<ChainSpecs> &chain
         }
 
         mLambdaSpline.generateHistos(chains, fftLen, bandwidth);
+
+#ifdef KOMLAN
+        if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
+            mS02Vg.generateHistos(chains, fftLen, bandwidth);
+#endif
     }
 
 }
@@ -648,6 +678,10 @@ void ModelCurve::generateCorrelations(const std::vector<ChainSpecs> &chains)
 
         if (mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
             mLambdaSpline.generateCorrelations(chains);
+#ifdef KOMLAN
+        if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
+            mS02Vg.generateCorrelations(chains);
+#endif
 
     }
 #ifdef DEBUG
@@ -666,7 +700,10 @@ void ModelCurve::generateNumericalResults(const std::vector<ChainSpecs> &chains)
         }
         if (mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
             mLambdaSpline.generateNumericalResults(chains);
-
+#ifdef KOMLAN
+        if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
+            mS02Vg.generateNumericalResults(chains);
+#endif
     }
 }
 
@@ -679,6 +716,10 @@ void ModelCurve::clearThreshold()
             event->mVg.mThresholdUsed = -1.0;
 
         mLambdaSpline.mThresholdUsed = -1.0;
+
+#ifdef KOMLAN
+        mS02Vg.mThresholdUsed = -1.0;
+#endif
     }
 }
 
@@ -697,6 +738,11 @@ void ModelCurve::generateCredibility(const double thresh)
                 event->mVg.generateCredibility(mChains, thresh);
         }
         mLambdaSpline.generateCredibility(mChains, thresh);
+
+#ifdef KOMLAN
+        if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
+            mS02Vg.generateCredibility(mChains, thresh);
+#endif
 
     }
 #ifdef DEBUG
@@ -718,6 +764,10 @@ void ModelCurve::generateHPD(const double thresh)
 
         if (mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
             mLambdaSpline.generateHPD(thresh);
+#ifdef KOMLAN
+        if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
+            mS02Vg.generateHPD(thresh);
+#endif
 
     }
 }
@@ -734,6 +784,9 @@ void ModelCurve::remove_smoothed_densities()
 
         mLambdaSpline.remove_smoothed_densities();
 
+#ifdef KOMLAN
+        mS02Vg.remove_smoothed_densities();
+#endif
     }
 }
 
@@ -751,6 +804,11 @@ void ModelCurve::clearCredibilityAndHPD()
         mLambdaSpline.mFormatedHPD.clear();
         mLambdaSpline.mFormatedCredibility = std::pair<double, double>(1, -1);
 
+#ifdef KOMLAN
+        mS02Vg.mFormatedHPD.clear();
+        mS02Vg.mFormatedCredibility = std::pair<double, double>(1, -1);
+#endif
+
     }
 }
 
@@ -762,6 +820,11 @@ void ModelCurve::clearTraces()
 
     if (getProject_ptr()->isCurve()) {
         mLambdaSpline.clear();
+
+#ifdef KOMLAN
+        mS02Vg.clear();
+#endif
+
         mPosteriorMeanG.clear();
         for (auto &pbc : mPosteriorMeanGByChain) {
             pbc.clear();
@@ -789,6 +852,11 @@ void ModelCurve::shrink_to_fit() noexcept
 
     if (getProject_ptr()->isCurve()) {
         mLambdaSpline.shrink_to_fit();
+
+#ifdef KOMLAN
+        mS02Vg.shrink_to_fit();
+#endif
+
         for (auto &pbc : mPosteriorMeanGByChain) {
             pbc.shrink_to_fit();
         }
@@ -811,6 +879,9 @@ void ModelCurve::clear_and_shrink() noexcept
     Model::clear_and_shrink();
     if (getProject_ptr()->isCurve()) {
         mLambdaSpline.clear_and_shrink();
+#ifdef KOMLAN
+        mS02Vg.clear_and_shrink();
+#endif
         mPosteriorMeanG.clear_and_shrink();
         for (auto &pbc : mPosteriorMeanGByChain) {
             pbc.clear_and_shrink();
@@ -841,6 +912,9 @@ void ModelCurve::setThresholdToAllModel(const double threshold)
             event->mVg.mThresholdUsed = mThreshold;
 
         mLambdaSpline.mThresholdUsed = mThreshold;
+#ifdef KOMLAN
+        mS02Vg.mThresholdUsed = mThreshold;
+#endif
     }
 }
 
@@ -850,27 +924,31 @@ void ModelCurve::memo_accept(const unsigned i_chain)
     Model::memo_accept(i_chain);
 
     if (getProject_ptr()->isCurve()) {
-    /* --------------------------------------------------------------
-     *  D -  Memo S02 Vg - not Bayesian
-     * -------------------------------------------------------------- */
+        /* --------------------------------------------------------------
+         *  D -  Memo S02 Vg - not Bayesian
+         * -------------------------------------------------------------- */
 
-    /* --------------------------------------------------------------
-     *  E -  Memo Vg
-     * -------------------------------------------------------------- */
-    for (auto&& event : mEvents) {
-        if (event->mVg.mSamplerProposal != MHVariable::eFixe) {
-            event->mVg.memo_accept(i_chain);
+        /* --------------------------------------------------------------
+         *  E -  Memo Vg
+         * -------------------------------------------------------------- */
+        for (auto&& event : mEvents) {
+            if (event->mVg.mSamplerProposal != MHVariable::eFixe) {
+                event->mVg.memo_accept(i_chain);
+            }
         }
-    }
 
-    /* --------------------------------------------------------------
-     * F - Memo Lambda
-     * -------------------------------------------------------------- */
-    // On stocke le log10 de Lambda Spline pour afficher les résultats a posteriori
-    if (mLambdaSpline.mSamplerProposal != MHVariable::eFixe) {
-        mLambdaSpline.memo_accept(i_chain);
-    }
-
+        /* --------------------------------------------------------------
+         * F - Memo Lambda
+         * -------------------------------------------------------------- */
+        // On stocke le log10 de Lambda Spline pour afficher les résultats a posteriori
+        if (mLambdaSpline.mSamplerProposal != MHVariable::eFixe) {
+            mLambdaSpline.memo_accept(i_chain);
+        }
+#ifdef KOMLAN
+        if (mS02Vg.mSamplerProposal != MHVariable::eFixe) {
+            mS02Vg.memo_accept(i_chain);
+        }
+#endif
     }
 }
 
@@ -895,15 +973,23 @@ void ModelCurve::initVariablesForChain()
         //event->mVg.clear();
         //event->mVg.reserve(initReserve);
         event->mVg.mNbValuesAccepted.resize(mChains.size());
-        //event->mVg.mLastAccepts.reserve(acceptBufferLen);
+
+        event->mVg.mLastAccepts.reserve(acceptBufferLen);
         event->mVg.mLastAcceptsLength = acceptBufferLen;
     }
 
     //mLambdaSpline.clear();
     //mLambdaSpline.reserve(initReserve);
     mLambdaSpline.mNbValuesAccepted.resize(mChains.size());
-    //mLambdaSpline.mLastAccepts.reserve(acceptBufferLen);
+
+    mLambdaSpline.mLastAccepts.reserve(acceptBufferLen);
     mLambdaSpline.mLastAcceptsLength = acceptBufferLen;
+
+#ifdef KOMLAN
+    mS02Vg.mNbValuesAccepted.resize(mChains.size());
+    mS02Vg.mLastAccepts.reserve(acceptBufferLen);
+    mS02Vg.mLastAcceptsLength = acceptBufferLen;
+#endif
 
 
     // Ré-initialisation du stockage des splines
@@ -1071,16 +1157,21 @@ void ModelCurve::valeurs_G_varG_on_i(const MCMCSplineComposante &spline, double 
  * @param csvSep
  * @param step
  */
-void ModelCurve::exportMeanGComposanteToReferenceCurves(const PosteriorMeanGComposante pMeanCompoXYZ, const QString& defaultPath, QLocale csvLocale, const QString& csvSep) const
+void ModelCurve::exportMeanGComposanteToReferenceCurves(const PosteriorMeanGComposante pMeanCompoXYZ, const QString& defaultPath, QLocale Locale, const QString& csvSep) const
 {
     QString filter = QObject::tr("CSV (*.csv)");
-    QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
-                                                    QObject::tr("Save Ref. Curve as..."),
-                                                    defaultPath,
-                                                    filter);
-    QFile file(filename);
+    QString str = defaultPath;
+    if (defaultPath == "") {
+        QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                        QObject::tr("Save Ref. Curve as..."),
+                                                        defaultPath,
+                                                        filter);
+        str = filename;
+
+    }
+    QFile file(str);
     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-        qDebug()<<"ModelCurve::exportMeanGComposanteToReferenceCurves";
+        qDebug()<<"[ModelCurve::exportMeanGComposanteToReferenceCurves]";
 
         QList<QStringList> rows;
         QStringList list;
@@ -1088,10 +1179,11 @@ void ModelCurve::exportMeanGComposanteToReferenceCurves(const PosteriorMeanGComp
         list << "X Axis";
         list << "G";
         list << "err G";
-        double xMin = mSettings.mTmin;
-        double xMax = mSettings.mTmax;
 
-        const double step = (xMax - xMin)/(pMeanCompoXYZ.vecG.size() - 1);
+
+        QLocale csvLocale (Locale);
+        csvLocale.setNumberOptions(QLocale::OmitGroupSeparator);
+
 
         rows<<list;
         //rows.reserve(pMeanCompoXYZ.vecG.size());
@@ -1099,21 +1191,345 @@ void ModelCurve::exportMeanGComposanteToReferenceCurves(const PosteriorMeanGComp
         // 3 - Create Row, with each curve
         //  Create data in row
 
-        csvLocale.setNumberOptions(QLocale::OmitGroupSeparator);
-        for (unsigned long i = 0; i < pMeanCompoXYZ.vecG.size(); ++i) {
-            const double x = i*step + xMin;
+
+        QMap<type_data, type_data> G_mu ;
+        QMap<type_data, type_data> G_sigma ;
+        const double stepG = (pMeanCompoXYZ.mapG.maxX() - pMeanCompoXYZ.mapG.minX()) / (pMeanCompoXYZ.mapG.column() -1);
+        const double tminG = pMeanCompoXYZ.mapG.minX();
+
+        // Création des maps pour interpolation sur t, vecG et vecVarG ont la taille de la mapG
+        for (size_t idx = 0; idx < pMeanCompoXYZ.vecG.size() ; ++idx) {
+
+            const double t = idx * stepG + tminG;
+
+            G_mu.insert(t, pMeanCompoXYZ.vecG[idx]);
+
+            G_sigma.insert(t, sqrt(pMeanCompoXYZ.vecVarG[idx]));
+
+        }
+
+
+        // Sauvegarde par valeur de step, tmin et tmax sont en BC/AD
+        double xMin = mSettings.mTmin;
+        double xMax = mSettings.mTmax;
+        double step = mSettings.step();
+        int nbData = (xMax - xMin)/ step;
+        for (int i = nbData; i >= 0; --i) {
+            const auto t = (type_data)(i)*step + xMin;
+
             list.clear();
 
-            list << csvLocale.toString(x);
-            // Il doit y avoir au moins trois courbes G, GSup, Ginf et nous exportons G et ErrG
-            const double xi = pMeanCompoXYZ.vecG[i]; // G
-            const double var_xi =  pMeanCompoXYZ.vecVarG[i];
-            list<<csvLocale.toString(xi, 'g', 15);
-            list<<csvLocale.toString(sqrt(var_xi), 'g', 15);
+            list << csvLocale.toString(t);
+
+            const type_data xi = interpolateValueInQMap(t, G_mu);
+            const type_data err_xi = interpolateValueInQMap(t, G_sigma);
+            list << csvLocale.toString(xi, 'g', 15);
+            list << csvLocale.toString(err_xi, 'g', 15);
 
             rows<<list;
         }
+        // 4 - Save Qlist
 
+        QTextStream output(&file);
+        const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
+        const QString projectName = QObject::tr("Project filename : %1").arg(MainWindow::getInstance()->getNameProject());
+
+        output << "# "+ version + "\r";
+        output << "# "+ projectName + "\r";
+        output << "# BC/AD \r";//DateUtils::getAppSettingsFormatStr() + "\r";
+
+        for (auto& row : rows) {
+            output << row.join(csvSep);
+            output << "\r";
+        }
+        file.close();
+    }
+
+}
+
+
+void ModelCurve::exportMeanGPComposanteToReferenceCurves(const PosteriorMeanGComposante pMeanCompoXYZ, const QString& defaultPath, QLocale Locale, const QString& csvSep) const
+{
+    QString filter = QObject::tr("CSV (*.csv)");
+    QString str = defaultPath;
+    if (defaultPath == "") {
+        QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                    QObject::tr("Save Ref. Curve as..."),
+                                                    defaultPath,
+                                                    filter);
+        str = filename;
+
+    }
+    QFile file(str);
+    if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+        qDebug()<<"[ModelCurve::exportMeanGComposanteToReferenceCurves]";
+
+        QList<QStringList> rows;
+        QStringList list;
+        // 1 -Create the header
+        list << "X Axis";
+        list << "GP";
+        list << "err GP";
+
+
+        QLocale csvLocale (Locale);
+        csvLocale.setNumberOptions(QLocale::OmitGroupSeparator);
+
+
+        rows<<list;
+        //rows.reserve(pMeanCompoXYZ.vecG.size());
+
+        // 3 - Create Row, with each curve
+        //  Create data in row
+
+        QMap<type_data, type_data> G_mu ;
+        QMap<type_data, type_data> G_sigma ;
+        const double stepG = (pMeanCompoXYZ.mapGP.maxX() - pMeanCompoXYZ.mapGP.minX()) / (pMeanCompoXYZ.mapGP.column() -1);
+        const double tminG = pMeanCompoXYZ.mapGP.minX();
+
+        // Création des maps pourinterpolation sur t
+        for (size_t idx = 0; idx < pMeanCompoXYZ.vecGP.size() ; ++idx) {
+
+            const double t = idx * stepG + tminG;
+
+            G_mu.insert(t, pMeanCompoXYZ.vecGP[idx]);
+
+            G_sigma.insert(t, sqrt(pMeanCompoXYZ.vecVarGP[idx]));
+
+        }
+
+
+        // Sauvegarde par valeur de step de 1, tmin et tmax sont en BC/AD
+        double xMin = mSettings.mTmin;
+        double xMax = mSettings.mTmax;
+        double step = mSettings.step();
+        int nbData = (xMax - xMin)/ step;
+        for (int i = nbData; i >= 0; --i) {
+            const auto t = (type_data)(i)*step + xMin;
+
+            list.clear();
+
+            list << csvLocale.toString(t);
+
+            const type_data xi = interpolateValueInQMap(t, G_mu); // G
+            const type_data err_xi = interpolateValueInQMap(t, G_sigma);
+            list << csvLocale.toString(xi, 'g', 15);
+            list << csvLocale.toString(err_xi, 'g', 15);
+
+            rows<<list;
+        }
+        // 4 - Save Qlist
+
+        QTextStream output(&file);
+        const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
+        const QString projectName = QObject::tr("Project filename : %1").arg(MainWindow::getInstance()->getNameProject());
+
+        output << "# "+ version + "\r";
+        output << "# "+ projectName + "\r";
+        output << "# BC/AD \r";//DateUtils::getAppSettingsFormatStr() + "\r";
+
+        for (auto& row : rows) {
+            output << row.join(csvSep);
+            output << "\r";
+        }
+        file.close();
+    }
+
+}
+
+// Attention : Cette fonction crée une courbe hpd avec la valeur du seuil utilisée dans la fenêtre results et la convertie en courbe avec une erreur à 1 sigma
+void ModelCurve::exportHpdGComposanteToReferenceCurves(const PosteriorMeanGComposante pMeanCompoXYZ, const QString& defaultPath, QLocale Locale, const QString& csvSep) const
+{
+    QString filter = QObject::tr("CSV (*.csv)");
+    QString str = defaultPath;
+    if (defaultPath == "") {
+        QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                        QObject::tr("Save Ref. Curve as..."),
+                                                        defaultPath,
+                                                        filter);
+        str = filename;
+
+    }
+    QFile file(str);
+    if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+        qDebug() << "[ModelCurve::exportHpdGComposanteToReferenceCurves] save " << str;
+
+        QList<QStringList> rows;
+        QStringList list;
+        // 1 -Create the header
+        list << "t Axis";
+        list << "HPD";
+        list << "err HPD";
+
+
+        QLocale csvLocale (Locale);
+        csvLocale.setNumberOptions(QLocale::OmitGroupSeparator);
+
+
+        rows<<list;
+
+        // 3 - Create Row, with each curve
+        //  Create data in row
+        //double threshold = getModel_ptr()->mThreshold;
+        // Create HPD Env --------
+
+        const auto& map = pMeanCompoXYZ.mapG;
+
+        std::vector<int> min_indices, max_indices;
+        densityMap_2_thresholdIndices_optimized(map, mThreshold, min_indices, max_indices);
+
+        QMap<type_data, type_data> curveHPDMid_Data ;
+        QMap<type_data, type_data> curveHPDSup_Data ;
+        //QMap<type_data, type_data> curveHPDInf_Data ;
+        type_data Ymin_map = map.minY();
+        type_data Ymax_map = map.maxY();
+        type_data step_map_Y = (Ymax_map - Ymin_map) / (map.row() -1);
+        // les temps de la map sont déjà convertis avant
+        type_data tmin_map = map.minX();
+        type_data tmax_map = map.maxX();
+        type_data step_map_t = (tmax_map - tmin_map) / (map.column() -1);
+        for (unsigned c = 0; c < map.column() ; c++) {
+
+            const double t = c * step_map_t + tmin_map;
+            auto val_inf = min_indices[c] * step_map_Y + Ymin_map;
+            auto val_sup = max_indices[c] * step_map_Y + Ymin_map;
+            curveHPDMid_Data.insert(t, (val_sup + val_inf) / 2.0);
+            //curveHPDInf_Data.insert(t, val_inf);
+            curveHPDSup_Data.insert(t, val_sup);
+        }
+
+        auto hbwd = 0.005 * map.column();
+        curveHPDMid_Data = gaussian_filter_simple(curveHPDMid_Data, hbwd);
+        //curveHPDInf_Data = gaussian_filter_simple(curveHPDInf_Data, hbwd);
+        curveHPDSup_Data = gaussian_filter_simple(curveHPDSup_Data, hbwd);
+
+        const double z_score = zScore(1.0 - mThreshold/100.0); // Pour 95% z=1.96
+        // Sauvegarde par valeur de step de 1, tmin et tmax sont en BC/AD
+        double xMin = mSettings.mTmin;
+        double xMax = mSettings.mTmax;
+        double step = mSettings.step();
+        int nbData = (xMax - xMin)/ step;
+        for (int i = nbData; i >= 0; --i) {
+            const auto t = (type_data)(i)*step + xMin;
+            //const auto t = DateUtils::convertFromAppSettingsFormat(x);
+            list.clear();
+
+            list << csvLocale.toString(t);
+            // Il doit y avoir au moins trois courbes G, GSup, Ginf et nous exportons G et ErrG
+            const type_data xi = interpolateValueInQMap(t, curveHPDMid_Data); // G
+            const type_data err_xi = interpolateValueInQMap(t, curveHPDSup_Data); // GSup
+            list << csvLocale.toString(xi, 'g', 15);
+            list << csvLocale.toString((err_xi - xi) / z_score, 'g', 15); // normalisation à 1 sigma
+
+            rows<<list;
+        }
+        // 4 - Save Qlist
+
+        QTextStream output(&file);
+        const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
+        const QString projectName = QObject::tr("Project filename : %1").arg(MainWindow::getInstance()->getNameProject());
+
+        output << "# "+ version + "\r";
+        output << "# "+ projectName + "\r";
+        output << "# BC/AD \r";
+
+        for (auto& row : rows) {
+            output << row.join(csvSep);
+            output << "\r";
+        }
+        file.close();
+    }
+
+}
+
+// Attention : Cette fonction crée une courbe hpd avec la valeur du seuil utilisée dans la fenêtre results et la convertie en courbe avec une erreur à 1 sigma
+void ModelCurve::exportHpdGPComposanteToReferenceCurves(const PosteriorMeanGComposante pMeanCompoXYZ, const QString& defaultPath, QLocale Locale, const QString& csvSep) const
+{
+    QString filter = QObject::tr("CSV (*.csv)");
+    QString str = defaultPath;
+    if (defaultPath == "") {
+        QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
+                                                        QObject::tr("Save Ref. Curve as..."),
+                                                        defaultPath,
+                                                        filter);
+        str = filename;
+
+    }
+    QFile file(str);
+    if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+        qDebug()<<"ModelCurve::exportHpdGPComposanteToReferenceCurves";
+
+        QList<QStringList> rows;
+        QStringList list;
+        // 1 -Create the header
+        list << "t Axis";
+        list << "HPX";
+        list << "err HPD";
+
+
+        QLocale csvLocale (Locale);
+        csvLocale.setNumberOptions(QLocale::OmitGroupSeparator);
+
+
+        rows<<list;
+        //rows.reserve(pMeanCompoXYZ.vecG.size());
+
+        // 3 - Create Row, with each curve
+        //  Create data in row
+        //double threshold = getModel_ptr()->mThreshold;
+        // Create HPD Env --------
+
+        const auto& map = pMeanCompoXYZ.mapGP;
+
+        std::vector<int> min_indices, max_indices;
+        densityMap_2_thresholdIndices_optimized(map, mThreshold, min_indices, max_indices);
+
+        QMap<type_data, type_data> curveHPDMid_Data ;
+        QMap<type_data, type_data> curveHPDSup_Data ;
+        //QMap<type_data, type_data> curveHPDInf_Data ;
+        type_data Ymin_map = map.minY();
+        type_data Ymax_map = map.maxY();
+        type_data step_map_Y = (Ymax_map - Ymin_map) / (map.row() -1);
+        // les temps de la map sont déjà convertis avant
+        type_data tmin_map = map.minX();
+        type_data tmax_map = map.maxX();
+        type_data step_map_t = (tmax_map - tmin_map) / (map.column() -1);
+        for (unsigned c = 0; c < map.column() ; c++) {
+
+            const double t = c * step_map_t + tmin_map;
+            auto val_inf = min_indices[c] * step_map_Y + Ymin_map;
+            auto val_sup = max_indices[c] * step_map_Y + Ymin_map;
+            curveHPDMid_Data.insert(t, (val_sup + val_inf) / 2.0);
+            //curveHPDInf_Data.insert(t, val_inf);
+            curveHPDSup_Data.insert(t, val_sup);
+        }
+
+        //auto hbwd = 0.02 * curveMap.mMap.column();
+        auto hbwd = 0.005 * map.column();
+        curveHPDMid_Data = gaussian_filter_simple(curveHPDMid_Data, hbwd);
+        //curveHPDInf_Data = gaussian_filter_simple(curveHPDInf_Data, hbwd);
+        curveHPDSup_Data = gaussian_filter_simple(curveHPDSup_Data, hbwd);
+
+        const double z_score = zScore(1.0 - mThreshold/100.0); // Pour 95% z=1.96
+        // Sauvegarde par valeur de step de 1, tmin et tmax sont en BC/AD
+        double xMin = mSettings.mTmin;
+        double xMax = mSettings.mTmax;
+        double step = mSettings.step();
+        int nbData = (xMax - xMin)/ step;
+        for (int i = nbData; i >= 0; --i) {
+            const auto t = (type_data)(i)*step + xMin;
+            //const auto t = DateUtils::convertFromAppSettingsFormat(x);
+            list.clear();
+
+            list << csvLocale.toString(t);
+            // Il doit y avoir au moins trois courbes G, GSup, Ginf et nous exportons G et ErrG
+            const type_data xi = interpolateValueInQMap(t, curveHPDMid_Data); // G
+            const type_data err_xi = interpolateValueInQMap(t, curveHPDSup_Data); // GSup
+            list << csvLocale.toString(xi, 'g', 15);
+            list << csvLocale.toString((err_xi - xi) / z_score, 'g', 15); // normalisation à 1 sigma
+
+            rows<<list;
+        }
         // 4 - Save Qlist
 
         QTextStream output(&file);
@@ -1369,7 +1785,7 @@ void ModelCurve::memo_PosteriorG_XYZ(PosteriorMeanG &postG, const MCMCSpline &sp
         /* il faut utiliser un pas de grille et le coefficient dans la grille dans l'intervalle [a,b] pour N(mu, sigma) est égale à la différence 1/2*(erf((b-mu)/(sigma*sqrt(2)) - erf((a-mu)/(sigma*sqrt(2))
          * https://en.wikipedia.org/wiki/Error_function
          */
-        //idxYErrMin = std::clamp( int((gx - k*stdMap_X - ymin_X) / stepY_X), 0, nbPtsY_X - 1);
+        //idxYErrMin = std::clamp( int((gx - k*stdMap_X - ymin_X) / stepY_X + 0.5), 0, nbPtsY_X - 1);
         idxYErrMin = floor((gx - k*stdMap_X - ymin_X)/stepY_X + 0.5);
         if (idxYErrMin < 0) {
             idxYErrMin = 0;
@@ -1457,7 +1873,7 @@ void ModelCurve::memo_PosteriorG_XYZ(PosteriorMeanG &postG, const MCMCSpline &sp
 
         }
 
-        double idx_GP_Y = std::clamp( int((gpy - ymin_GP_Y) / step_GP_Y), 0, nbPtsY_GP_Y - 1);
+        int idx_GP_Y = std::clamp( int((gpy - ymin_GP_Y) / step_GP_Y + 0.5), 0, nbPtsY_GP_Y - 1);
         ++curveMap_GP_Y(idx_t, idx_GP_Y);
         curveMap_GP_Y.setMaxValue(std::max(curveMap_GP_Y.maxValue(), curveMap_GP_Y(idx_t, idx_GP_Y)));
 
@@ -1516,8 +1932,8 @@ void ModelCurve::memo_PosteriorG_XYZ(PosteriorMeanG &postG, const MCMCSpline &sp
                 }
 
             }
-            //double idx_GP_Z = std::clamp( int((gpz - ymin_GP_Z) / step_GP_Z), 0, nbPtsY_GP_Z - 1);
-            double idx_GP_Z = floor((gpz - ymin_GP_Z)/step_GP_Z + 0.5);
+            double idx_GP_Z = std::clamp( floor((gpz - ymin_GP_Z) / step_GP_Z + 0.5), 0.0, nbPtsY_GP_Z - 1.0);
+            //double idx_GP_Z = floor((gpz - ymin_GP_Z)/step_GP_Z + 0.5);
             if (idxYErrMax < 0) {
                 idxYErrMax = 0;
             } else if (idxYErrMax > nbPtsY_GP_Z - 1) {
@@ -2359,6 +2775,10 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
     double* vecVarG_YDec = postG.gy.vecVarG.data();
     double* vecVarG_ZF = postG.gz.vecVarG.data();
 
+    double* vecVarGP_XInc = postG.gx.vecVarGP.data();
+    double* vecVarGP_YDec = postG.gy.vecVarGP.data();
+    double* vecVarGP_ZF = postG.gz.vecVarGP.data();
+
     double t;
     double gx, gpx, gsx;
     double gy, gpy, gsy;
@@ -2407,18 +2827,25 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
 
 
         // -- Calcul Mean on XInc
-        {
-
-            vecGP_XInc[idx_t] +=  (gpx - vecGP_XInc[idx_t])/n;
+        {            
             vecGS_XInc[idx_t] +=  (gsx - vecGS_XInc[idx_t])/n;
 
-            // Version numériquement plus stable
-            double delta = gx - vecG_XInc[idx_t]; // = (g - prevMeanG_ZF)
+            //vecGP_XInc[idx_t] +=  (gpx - vecGP_XInc[idx_t])/n;
+            // Version numériquement plus stable pour var_GX
+            double delta = gx - vecG_XInc[idx_t]; // = (g - prevMeanG)
 
             vecG_XInc[idx_t] += delta / n;
             double delta2 = gx - vecG_XInc[idx_t];
 
             vecVarG_XInc[idx_t] = vecVarG_XInc[idx_t] * (n-1) + delta * delta2;
+
+            // Version pour var_GPX
+            double deltaP = gpx - vecGP_XInc[idx_t]; // = (g - prevMeanG)
+
+            vecGP_XInc[idx_t] += deltaP / n;
+            double delta2P = gpx - vecGP_XInc[idx_t];
+
+            vecVarGP_XInc[idx_t] = vecVarGP_XInc[idx_t] * (n-1) + deltaP * delta2P;
 
             // -- Calcul map on XInc ymin_XInc
 
@@ -2449,17 +2876,26 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
 
             // -- Calcul Mean on YDec
 
-            vecGP_YDec[idx_t] +=  (gpy - vecGP_YDec[idx_t])/n;
+
             vecGS_YDec[idx_t] +=  (gsy - vecGS_YDec[idx_t])/n;
             // erreur inter spline
             //*itVecVarianceG_YDec +=  (gy - prevMeanG_YDec)*(gy - *itVecG_YDec);
 
-            // Version numériquement plus stable
+
+            // Version numériquement plus stable var GY
             delta = gy - vecG_YDec[idx_t]; // = (g - prevMeanG_ZF)
             vecG_YDec[idx_t] += delta / n;
             delta2 = gy - vecG_YDec[idx_t];
 
             vecVarG_YDec[idx_t] = vecVarG_YDec[idx_t] * (n-1) + delta * delta2;
+
+            // vecGP_YDec[idx_t] +=  (gpy - vecGP_YDec[idx_t])/n;
+            // Version numériquement plus stable var GPY
+            deltaP = gpy - vecGP_YDec[idx_t]; // = (g - prevMeanG_ZF)
+            vecGP_YDec[idx_t] += deltaP / n;
+            delta2P = gpy - vecGP_YDec[idx_t];
+
+            vecVarGP_YDec[idx_t] = vecVarGP_YDec[idx_t] * (n-1) + deltaP * delta2P;
 
         }
 
@@ -2495,7 +2931,7 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
         if (compute_XYZ) {
 
             // -- Calcul Mean on ZF
-            vecGP_ZF[idx_t] +=  (gpz - vecGP_ZF[idx_t])/n;
+
             vecGS_ZF[idx_t] +=  (gsz - vecGS_ZF[idx_t])/n;
 
             // Version numériquement plus stable
@@ -2504,6 +2940,14 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
             double delta2 = gz - vecG_ZF[idx_t];
 
             vecVarG_ZF[idx_t] = vecVarG_ZF[idx_t] * (n-1) + delta * delta2;
+
+            // vecGP_ZF[idx_t] +=  (gpz - vecGP_ZF[idx_t])/n;
+            // Version var GP Z
+            double deltaP = gpz - vecGP_ZF[idx_t]; // = (g - prevMeanG_ZF)
+            vecGP_ZF[idx_t] += deltaP / n;
+            double delta2P = gpz - vecGP_ZF[idx_t];
+
+            vecVarGP_ZF[idx_t] = vecVarGP_ZF[idx_t] * (n-1) + deltaP * delta2P;
 
             // -- Calcul map on ZF
 
@@ -2541,6 +2985,10 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
         vecVarG_XInc[i] = vecVarG_XInc[i] / n;
         vecVarG_YDec[i] = vecVarG_YDec[i] / n;
         vecVarG_ZF[i] = vecVarG_ZF[i] / n;
+
+        vecVarGP_XInc[i] = vecVarGP_XInc[i] / n;
+        vecVarGP_YDec[i] = vecVarGP_YDec[i] / n;
+        vecVarGP_ZF[i] = vecVarGP_ZF[i] / n;
     }
 
 }
@@ -2565,6 +3013,7 @@ void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, const MCM
     // 2 - Variables temporaires
     // référence sur variables globales
     std::vector<double>& vecVarG = postGCompo.vecVarG;
+    std::vector<double>& vecVarGP = postGCompo.vecVarGP;
 
     //Pointeur sur tableau
     std::vector<double>::iterator itVecG = postGCompo.vecG.begin();
@@ -2572,6 +3021,7 @@ void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, const MCM
     std::vector<double>::iterator itVecGS = postGCompo.vecGS.begin();
 
     std::vector<double>::iterator itVecVarG = vecVarG.begin();
+    std::vector<double>::iterator itVecVarGP = vecVarGP.begin();
 
     double t, g, gp, gs;
     g = 0.0;
@@ -2588,20 +3038,28 @@ void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, const MCM
 
         valeurs_G_GP_GS(t, splineComposante, g, gp, gs, i0, mSettings.mTmin, mSettings.mTmax);
 
-        *itVecGP +=  (gp - *itVecGP) / n;
+
         *itVecGS +=  (gs - *itVecGS) / n;
         //if (idx_t == 100)
           //  std::cout << " g =" << g;
-        // Version numériquement plus stable
+        // Version stable de var G
         double delta = g - *itVecG; // = (g - prevMeanG)
         *itVecG += delta / n;
         double delta2 = g - *itVecG;
         *itVecVarG = *itVecVarG * (n-1) + delta * delta2;
 
+        //*itVecGP +=  (gp - *itVecGP) / n;
+        // Version stable de var GP
+        double deltaP = gp - *itVecGP; // = (g - prevMeanG)
+        *itVecGP += deltaP / n;
+        double delta2P = gp - *itVecGP;
+        *itVecVarGP = *itVecVarGP * (n-1) + deltaP * delta2P;
+
         ++itVecG;
         ++itVecGP;
         ++itVecGS;
         ++itVecVarG;
+        ++itVecVarGP;
 
 
         // -- calcul map
@@ -2635,6 +3093,9 @@ void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, const MCM
     }
 
     std::transform(vecVarG.begin(), vecVarG.end(), vecVarG.begin(),
+                   [n](double var) { return var / n; });
+
+    std::transform(vecVarGP.begin(), vecVarGP.end(), vecVarGP.begin(),
                    [n](double var) { return var / n; });
     //std::cout << " memo G Gmean =" << postGCompo.vecG.at(100) << " var = " << vecVarG.at(100) << std::endl;
 }

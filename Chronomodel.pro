@@ -107,7 +107,7 @@ QMAKE_CXXFLAGS += -std=c++20
 
 # --- Flag pour activer/désactiver OpenMP ---
 # Ajouter dans Qt Creator : CONFIG += use_openmp
-CONFIG += use_openmp
+CONFIG -= use_openmp
 contains(CONFIG, use_openmp) {
     message("✅ OpenMP enabled")
     OPENMP_ENABLED = 1
@@ -801,6 +801,7 @@ HEADERS += src/MainController.h \
     src/ui/panel_model/MultiCalibrationView.h \
     src/ui/panel_model/MultiCalibrationDrawing.h \
     src/ui/panel_model/MultiplotColorDialog.h \
+    src/ui/panel_results/GraphViewS02Vg.h \
     src/utilities/Matrix.h \
     src/version.h
 HEADERS += src/AppSettings.h
@@ -977,6 +978,7 @@ SOURCES += src/AppSettings.cpp \
     src/ui/panel_model/MultiCalibrationView.cpp \
     src/ui/panel_model/MultiCalibrationDrawing.cpp \
     src/ui/panel_model/MultiplotColorDialog.cpp \
+    src/ui/panel_results/GraphViewS02Vg.cpp \
     src/utilities/Matrix.cpp
 SOURCES += src/ChronoApp.cpp
 SOURCES += src/main.cpp

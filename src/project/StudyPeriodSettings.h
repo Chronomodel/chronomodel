@@ -65,6 +65,7 @@ public:
     QJsonObject toJson() const;
 
     static double getStep(const double tmin, const double tmax);
+    double step() const;
 
     double getTminFormated() const;
     double getTmaxFormated() const ;

@@ -53,6 +53,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QFileDialog>
 #include <QApplication>
 #include <QSvgGenerator>
+#include <regex>
 
 class StudyPeriodSettings;
 
@@ -2566,8 +2567,11 @@ void GraphView::exportCurrentCurves(const QString& defaultPath, const QLocale lo
     if (graph_title != "")
         graph_title += "_";
 
+    // Remplace les espaces par un souligné
+    const std::string str_title = std::regex_replace(graph_title.toStdString(), std::regex(" "), "_");
+
     const QString fiName = MainWindow::getInstance()->getNameProject();
-    const QString defaultFilename = defaultPath + "/"+ fiName.mid(0, fiName.size()-4) +"_"+ graph_title +"graph_data.csv";
+    const QString defaultFilename = defaultPath + "/"+ fiName.mid(0, fiName.size()-4) + "_" + QString::fromStdString(str_title) + "graph_data.csv";
 
     const QString filename = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                     tr("Save graph data as..."),
@@ -2754,24 +2758,24 @@ void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale 
         QMap <type_data, type_data> G, G_Sup;
         if (isHPD) {
             for (const GraphCurve& curve : std::as_const(mCurves)) {
-                if (curve.mName == "HPD Mid") {
+                if (curve.mName == "G HPD Mid") {
                     G = curve.mData;
                     xMin = G.firstKey();
                     xMax = G.lastKey();
 
-                } else if (curve.mName == "HPD Env") {
+                } else if (curve.mName == "G HPD Env") {
                     G_Sup = curve.mShape.second;
                 }
 
             }
         } else {
             for (const GraphCurve& curve : std::as_const(mCurves)) {
-                if (curve.mName == "G") {
+                if (curve.mName == "G Mean") {
                     G = curve.mData;
                     xMin = G.firstKey();
                     xMax = G.lastKey();
 
-                } else if (curve.mName == "G Env") {
+                } else if (curve.mName == "G Gauss Env") {
                     G_Sup = curve.mShape.second;
                 }
             }

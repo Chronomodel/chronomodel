@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2025
 
 Authors :
 	Philippe LANOS
@@ -41,12 +41,14 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define APPSETTINGS_H
 
 #include "DateUtils.h"
+#include "Painting.h"
 
 #include <qsystemdetection.h>
 #include <QFont>
 #include <QLocale>
 
 #define APP_SETTINGS_DEFAULT_ICON_SIZE 3
+#define APP_SETTINGS_DEFAULT_MAPCOLOR 9
 
 #define APP_SETTINGS_DEFAULT_AUTO_SAVE true
 #define APP_SETTINGS_DEFAULT_AUTO_SAVE_DELAY_SEC 300
@@ -64,6 +66,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define APP_SETTINGS_STR_LANGUAGE "language"
 #define APP_SETTINGS_STR_COUNTRY "country"
 #define APP_SETTINGS_STR_ICON_SIZE "icon_size"
+#define APP_SETTINGS_STR_MAPCOLOR "map_palette"
 
 #define APP_SETTINGS_STR_AUTO_SAVE "auto_save_enabled"
 #define APP_SETTINGS_STR_AUTO_SAVE_DELAY_SEC "auto_save_delay"
@@ -122,6 +125,8 @@ public:
     static QPoint mLastPosition;
 
     static bool mIsSaved;
+
+    static ColorPalette mMapPalette;
 
 private:
     static int mWidthUnit;

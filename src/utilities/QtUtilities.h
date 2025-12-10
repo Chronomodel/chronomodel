@@ -393,4 +393,9 @@ QJsonObject* getState_ptr();
 std::pair<std::vector<double>, std::vector<size_t>> downsampleLTTBWithIndices(
     const std::vector<double>& data, size_t n);
 
+void densityMap_2_thresholdIndices_optimized(const CurveMap& densityMap,
+                                             double threshold,
+                                             std::vector<int>& min_indices,
+                                             std::vector<int>& max_indices);
+
 #endif

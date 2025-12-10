@@ -44,6 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "DateUtils.h"
 #include "ModelUtilities.h"
 #include "QtUtilities.h"
+#include "AppSettings.h"
 #include "Painting.h"
 
 
@@ -150,7 +151,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
 
         curveMap.mType = GraphCurve::eMapData;
         curveMap.mMap = mComposanteG.mapG;
-        curveMap.setPalette(ColorPalette::TemperatureSoftDensity);
+        curveMap.setPalette(AppSettings::mMapPalette);
 
         const double tminFormated = DateUtils::convertToAppSettingsFormat(mComposanteG.mapG.minX());
         const double tmaxFormated = DateUtils::convertToAppSettingsFormat(mComposanteG.mapG.maxX());
@@ -296,7 +297,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
             }
         }
 
-        const GraphCurve curveMean = FunctionCurve(G_Data, "G mean", Painting::mainColorDark ); // This is the name of the columns when exporting the graphs
+        const GraphCurve curveMean = FunctionCurve(G_Data, "G Mean", Painting::mainColorDark ); // This is the name of the columns when exporting the graphs
 
         const GraphCurve &curveGaussEnv = shapeCurve(curveGInf_Data, curveGSup_Data, "G Gauss Env",
                                          Painting::mainColorDark, Qt::CustomDashLine, Qt::NoBrush);
@@ -312,13 +313,13 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
         QColor envColor_i;
         for (int i = 0; i<mComposanteGChains.size(); ++i) {
 
-            const GraphCurve &curveG_i = FunctionCurve(curveG_Data_i[i], "G Chain " + QString::number(i),
+            const GraphCurve &curveG_i = FunctionCurve(curveG_Data_i[i], "G Mean Chain " + QString::number(i),
                                                Painting::chainColors[i]);
             mGraph->add_curve(curveG_i);
 
             envColor_i  = Painting::chainColors[i];
             envColor_i.setAlpha(30);
-            const GraphCurve &curveGEnv_i = shapeCurve(curveGInf_Data_i[i], curveGSup_Data_i[i], "G Env Chain " + QString::number(i),
+            const GraphCurve &curveGEnv_i = shapeCurve(curveGInf_Data_i[i], curveGSup_Data_i[i], "G Gauss Env Chain " + QString::number(i),
                                              Painting::chainColors[i], Qt::CustomDashLine, envColor_i);
             mGraph->add_curve(curveGEnv_i);
 
@@ -343,7 +344,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
 
         curveMap.mType = GraphCurve::eMapData;
         curveMap.mMap = mComposanteG.mapGP;
-        curveMap.setPalette(ColorPalette::TemperatureSoftDensity);
+        curveMap.setPalette(AppSettings::mMapPalette);// ColorPalette::TemperatureSoftDensity);
 
         const double tminFormated = DateUtils::convertToAppSettingsFormat(mComposanteG.mapGP.minX());
         const double tmaxFormated = DateUtils::convertToAppSettingsFormat(mComposanteG.mapGP.maxX());
@@ -639,7 +640,7 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
                 }
                 if (showGGauss) {
                     curvesToShow << QString("G Mean Chain %1").arg(i);
-                    curvesToShow << QString("G Env Chain %1").arg(i);
+                    curvesToShow << QString("G Gauss Env Chain %1").arg(i);
                 }
             }
             if (showGP) {
@@ -744,6 +745,7 @@ CurveMap GraphViewCurve::densityMap_2_hpdMap (const CurveMap& densityMap, int nb
  * @param min_indices Vecteur de sortie pour les indices minimum
  * @param max_indices Vecteur de sortie pour les indices maximum
  */
+/*
 void GraphViewCurve::densityMap_2_thresholdIndices_optimized(const CurveMap& densityMap,
                                              double threshold,
                                              std::vector<int>& min_indices,
@@ -825,6 +827,7 @@ void GraphViewCurve::densityMap_2_thresholdIndices_optimized(const CurveMap& den
         //qDebug() << " colonne = " <<c << " min_indices[c]= " << min_indices[c] << " max_indices= " << max_indices[c];
     }
 }
+*/
 
 inline double gaussianKernel(double u) noexcept {
     return std::exp(-0.5 * u * u) / std::sqrt(2.0 * M_PI);

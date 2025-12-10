@@ -304,57 +304,42 @@ void drawCheckBoxBox(QPainter& painter, const QRectF& rect, Qt::CheckState state
 const std::vector<ColorStop>& ColorStops::getStops(ColorPalette palette)
 {
     static const std::vector<ColorStop> BWStops = {
-        {0.0, QColor(0, 0, 0)},       // Noir
-        {1.0, QColor(255, 255, 255)}  // Blanc
+        {0.0, QColor(0, 0, 0, alpha_higthContrast)},       // Noir
+        {1.0, QColor(255, 255, 255, alpha_higthContrast)}  // Blanc
     };
 
-    static const std::vector<ColorStop> WBStops = {
-        {0.0, QColor(255, 255, 255)},  // Blanc
-        {1.0, QColor(0, 0, 0)}       // Noir
+    static const std::vector<ColorStop> GreysStops = {
+        {0.0, QColor(255, 255, 255, alpha_higthContrast)},  // Blanc
+        {1.0, QColor(0, 0, 0, alpha_higthContrast)}       // Noir
     };
 
     static const std::vector<ColorStop> pressureStops = {
-        {0.0, QColor(0, 0, 139)}, // Bleu foncé
-        {0.5, QColor(173, 216, 230)}, // Bleu claire
-        {1.0, QColor(255, 0, 0)} // Rouge
+        {0.0, QColor(0, 0, 139, alpha_higthContrast)}, // Bleu foncé
+        {0.5, QColor(173, 216, 230, alpha_higthContrast)}, // Bleu claire
+        {1.0, QColor(255, 0, 0, alpha_higthContrast)} // Rouge
     };
 
     static const std::vector<ColorStop> elevationStops = {
-        {0.0, QColor(0, 100, 0)},     // Vert foncé (basses altitudes)
-        {0.5, QColor(255, 255, 0)},   // Jaune (altitudes moyennes)
-        {1.0, QColor(255, 255, 255)}  // Blanc (hautes altitudes)
+        {0.0, QColor(0, 100, 0, alpha_higthContrast)},     // Vert foncé (basses altitudes)
+        {0.5, QColor(255, 255, 0, alpha_higthContrast)},   // Jaune (altitudes moyennes)
+        {1.0, QColor(255, 255, 255, alpha_higthContrast)}  // Blanc (hautes altitudes)
     };
 
     // couleurs harmonieuses "Blues" de ColorBrewer //https://colorbrewer2.org/
     static const std::vector<ColorStop> BluesStops = {
-        {0.0, QColor(8, 48, 107)},     // dark blue
-        {0.25, QColor(33, 113, 181)}, // medium dark blue
-        {0.5, QColor(189, 215, 231)},// light blue
-        {0.75, QColor(189, 215, 231)},// light blue
-        {1.0, QColor(247, 247, 247)}  // almost white
+        {0.0, QColor(8, 48, 107, alpha_higthContrast)},     // dark blue
+        {0.25, QColor(33, 113, 181, alpha_higthContrast)}, // medium dark blue
+        {0.5, QColor(189, 215, 231, alpha_higthContrast)},// light blue
+        {0.75, QColor(189, 215, 231, alpha_higthContrast)},// light blue
+        {1.0, QColor(247, 247, 247, alpha_higthContrast)}  // almost white
     };
 
-    // "Inferno" (Matplotlib / Scientific colormaps)
-    static const std::vector<ColorStop> infernoStops = {
-        {0.0, QColor(0, 0, 4)},          // almost black
-        {0.25, QColor(153, 28, 59)},     // deep burgundy
-        {0.5, QColor(240, 96, 60)},      // deep orange
-        {0.75, QColor(254, 204, 92)},    // golden yellow
-        {1.0, QColor(252, 255, 164)}     // pale yellow
-    };
-    static const std::vector<ColorStop> infernoDensityStops = {
-        {0.0, QColor(0, 0, 4, 0)},          // almost black
-        {0.25, QColor(153, 28, 59, 63)},     // deep burgundy
-        {0.5, QColor(240, 96, 60, 127)},      // deep orange
-        {0.75, QColor(254, 204, 92, 191)},    // golden yellow
-        {1.0, QColor(252, 255, 164, 255)}     // pale yellow
-    };
     static const std::vector<ColorStop> geophyStops = {
-        {0.0, QColor(161, 203, 148)}, // light green
-        {0.25, QColor(189, 215, 231)}, // light blue
-        {0.5, QColor(252, 255, 164)},     // pale yellow
-        {0.75, QColor(254, 204, 92)},    // golden yellow
-        {1.0, QColor(240, 96, 60)}      // deep orange
+        {0.0, QColor(161, 203, 148, alpha_higthContrast)}, // light green
+        {0.25, QColor(189, 215, 231, alpha_higthContrast)}, // light blue
+        {0.5, QColor(252, 255, 164, alpha_higthContrast)},     // pale yellow
+        {0.75, QColor(254, 204, 92, alpha_higthContrast)},    // golden yellow
+        {1.0, QColor(240, 96, 60, alpha_higthContrast)}      // deep orange
     };
     static const std::vector<ColorStop> geophyDensityStops = {
         {0.0, QColor(161, 203, 148, 0)}, // light green
@@ -364,21 +349,21 @@ const std::vector<ColorStop>& ColorStops::getStops(ColorPalette palette)
         {1.0, QColor(240, 96, 60, 255)}      // deep orange
     };
     static const std::vector<ColorStop> temperatureStops = {
-        {0.0, QColor(0, 0, 255)},     // Bleu froid (très basse température)
-        {0.25, QColor(100, 149, 237)}, // Bleu clair
-        {0.5, QColor(255, 255, 255)},  // Blanc (température neutre)
-        {0.75, QColor(255, 165, 0)},   // Orange
-        {1.0, QColor(255, 0, 0)}       // Rouge chaud (très haute température)
+        {0.0, QColor(0, 0, 255, alpha_higthContrast)},     // Bleu froid (très basse température)
+        {0.25, QColor(100, 149, 237, alpha_higthContrast)}, // Bleu clair
+        {0.5, QColor(255, 255, 255, alpha_higthContrast)},  // Blanc (température neutre)
+        {0.75, QColor(255, 165, 0, alpha_higthContrast)},   // Orange
+        {1.0, QColor(255, 0, 0, alpha_higthContrast)}       // Rouge chaud (très haute température)
     };
 
     static const std::vector<ColorStop> temperatureSoftStops = {
-        {0.0, QColor(0, 0, 255)},     // Bleu foncé
-        {0.2, QColor(100, 149, 237)}, // Bleu clair
-        {0.4, QColor(173, 216, 230)}, // Bleu très clair
-        {0.5, QColor(255, 255, 255)}, // Blanc
-        {0.6, QColor(255, 165, 0)},   // Orange
-        {0.8, QColor(255, 69, 0)},    // Orange foncé
-        {1.0, QColor(255, 0, 0)}      // Rouge vif
+        {0.0, QColor(0, 0, 255, alpha_higthContrast)},     // Bleu foncé
+        {0.2, QColor(100, 149, 237, alpha_higthContrast)}, // Bleu clair
+        {0.4, QColor(173, 216, 230, alpha_higthContrast)}, // Bleu très clair
+        {0.5, QColor(255, 255, 255, alpha_higthContrast)}, // Blanc
+        {0.6, QColor(255, 165, 0, alpha_higthContrast)},   // Orange
+        {0.8, QColor(255, 69, 0, alpha_higthContrast)},    // Orange foncé
+        {1.0, QColor(255, 0, 0, alpha_higthContrast)}      // Rouge vif
     };
     static const std::vector<ColorStop> temperatureSoftDensityStops = {
         {0.0, QColor(0, 0, 255, 0)},     // Bleu foncé
@@ -392,11 +377,11 @@ const std::vector<ColorStop>& ColorStops::getStops(ColorPalette palette)
         {1.0, QColor(255, 0, 0, 255)}      // Rouge vif
     };
     static const std::vector<ColorStop> temperatureScienceStops = {
-        {0.0, QColor(0, 0, 139, 120)},     // Bleu marine (très froid)
-        {0.25, QColor(65, 105, 225, 120)}, // Bleu royal
-        {0.5, QColor(135, 206, 235, 120)}, // Bleu ciel
-        {0.75, QColor(255, 140, 0, 120)},  // Orange foncé
-        {1.0, QColor(139, 0, 0, 120)}      // Rouge bordeaux (extrêmement chaud)
+        {0.0, QColor(0, 0, 139, alpha_higthContrast)},     // Bleu marine (très froid)
+        {0.25, QColor(65, 105, 225, alpha_higthContrast)}, // Bleu royal
+        {0.5, QColor(135, 206, 235, alpha_higthContrast)}, // Bleu ciel
+        {0.75, QColor(255, 140, 0, alpha_higthContrast)},  // Orange foncé
+        {1.0, QColor(139, 0, 0, alpha_higthContrast)}      // Rouge bordeaux (extrêmement chaud)
     };
     static const std::vector<ColorStop> probabilityDensityStops = {
         {0.0, QColor(240, 248, 255, 0)},     // Blanc bleuté transparent
@@ -407,41 +392,270 @@ const std::vector<ColorStop>& ColorStops::getStops(ColorPalette palette)
     };
 
     static const std::vector<ColorStop> pHScaleStops = {
-        {0.0/ 14.0, QColor(255, 0, 0, 125)},        // pH 0 - Rouge (acide fort)
-        {1.0/ 14.0, QColor(255, 64, 0, 125)},       // pH 1 - Rouge orangé
-        {2.0/ 14.0, QColor(255, 128, 0, 125)},      // pH 2 - Orange
-        {3.0/ 14.0, QColor(255, 191, 0, 125)},      // pH 3 - Jaune orangé
-        {4.0/ 14.0, QColor(255, 255, 0, 125)},      // pH 4 - Jaune
-        {5.0/ 14.0, QColor(191, 255, 0, 125)},      // pH 5 - Vert jaunâtre
-        {6.0/ 14.0, QColor(128, 255, 0, 125)},      // pH 6 - Vert clair
-        {7.0/ 14.0, QColor(0, 255, 0, 125)},        // pH 7 - Vert (neutre)
-        {8.0/ 14.0, QColor(0, 191, 255, 125)},      // pH 8 - Cyan
-        {9.0/ 14.0, QColor(0, 128, 255, 125)},      // pH 9 - Bleu clair
-        {10.0/ 14.0, QColor(0, 64, 255, 125)},      // pH 10 - Bleu
-        {11.0/ 14.0, QColor(0, 0, 255, 125)},       // pH 11 - Bleu foncé
-        {12.0/ 14.0, QColor(64, 0, 255, 125)},      // pH 12 - Violet
-        {13.0/ 14.0, QColor(128, 0, 255, 125)},     // pH 13 - Violet clair
-        {14.0/ 14.0, QColor(255, 0, 255, 125)}      // pH 14 - Magenta (basique fort)
+        {0.0/ 14.0, QColor(255, 0, 0, alpha_higthContrast)},        // pH 0 - Rouge (acide fort)
+        {1.0/ 14.0, QColor(255, 64, 0, alpha_higthContrast)},       // pH 1 - Rouge orangé
+        {2.0/ 14.0, QColor(255, 128, 0, alpha_higthContrast)},      // pH 2 - Orange
+        {3.0/ 14.0, QColor(255, 191, 0, alpha_higthContrast)},      // pH 3 - Jaune orangé
+        {4.0/ 14.0, QColor(255, 255, 0, alpha_higthContrast)},      // pH 4 - Jaune
+        {5.0/ 14.0, QColor(191, 255, 0, alpha_higthContrast)},      // pH 5 - Vert jaunâtre
+        {6.0/ 14.0, QColor(128, 255, 0, alpha_higthContrast)},      // pH 6 - Vert clair
+        {7.0/ 14.0, QColor(0, 255, 0, alpha_higthContrast)},        // pH 7 - Vert (neutre)
+        {8.0/ 14.0, QColor(0, 191, 255, alpha_higthContrast)},      // pH 8 - Cyan
+        {9.0/ 14.0, QColor(0, 128, 255, alpha_higthContrast)},      // pH 9 - Bleu clair
+        {10.0/ 14.0, QColor(0, 64, 255, alpha_higthContrast)},      // pH 10 - Bleu
+        {11.0/ 14.0, QColor(0, 0, 255, alpha_higthContrast)},       // pH 11 - Bleu foncé
+        {12.0/ 14.0, QColor(64, 0, 255, alpha_higthContrast)},      // pH 12 - Violet
+        {13.0/ 14.0, QColor(128, 0, 255, alpha_higthContrast)},     // pH 13 - Violet clair
+        {14.0/ 14.0, QColor(255, 0, 255, alpha_higthContrast)}      // pH 14 - Magenta (basique fort)
     };
+
     static const std::vector<ColorStop> RHStops = {
-        {0.0, QColor(141, 90, 44)},  // marron-terre
-        {0.5, QColor(254, 254, 193)}, // jaune pale
-        {1.0, QColor(71, 121, 124)}  // bleu foncé
+        {0.0, QColor(141, 90, 44, alpha_higthContrast)},  // marron-terre
+        {0.5, QColor(254, 254, 193, alpha_higthContrast)}, // jaune pale
+        {1.0, QColor(71, 121, 124, alpha_higthContrast)}  // bleu foncé
     };
     static const std::vector<ColorStop> RHDensityStops = {
         {0.0, QColor(141, 90, 44, 0)},  // marron-terre
         {0.5, QColor(254, 254, 193, 127)}, // jaune pale
         {1.0, QColor(71, 121, 124, 255)}  // bleu foncé
     };
+
+    // "Inferno" (Matplotlib / Scientific colormaps)
+    static const std::vector<ColorStop> infernoStops = {
+        {0.0, QColor(0, 0, 4, alpha_higthContrast)},          // almost black
+        {0.25, QColor(153, 28, 59, alpha_higthContrast)},     // deep burgundy
+        {0.5, QColor(240, 96, 60, alpha_higthContrast)},      // deep orange
+        {0.75, QColor(254, 204, 92, alpha_higthContrast)},    // golden yellow
+        {1.0, QColor(252, 255, 164, alpha_higthContrast)}     // pale yellow
+    };
+    static const std::vector<ColorStop> infernoDensityStops = {
+        {0.0, QColor(0, 0, 4, 0)},          // almost black
+        {0.25, QColor(153, 28, 59, 63)},     // deep burgundy
+        {0.5, QColor(240, 96, 60, 127)},      // deep orange
+        {0.75, QColor(254, 204, 92, 191)},    // golden yellow
+        {1.0, QColor(252, 255, 164, 255)}     // pale yellow
+    };
+
+    // Palette Viridis
+    static const std::vector<ColorStop> magma10 = {
+        {0.0, QColor(  0,  0,  4, alpha_higthContrast)},
+        {0.1, QColor( 28, 16, 68, alpha_higthContrast)},
+        {0.2, QColor( 79, 18,123, alpha_higthContrast)},
+        {0.3, QColor(129, 37,129, alpha_higthContrast)},
+        {0.4, QColor(181, 54,122, alpha_higthContrast)},
+        {0.5, QColor(229, 80,100, alpha_higthContrast)},
+        {0.6, QColor(251,135, 97, alpha_higthContrast)},
+        {0.7, QColor(254,194,135, alpha_higthContrast)},
+        {0.8, QColor(253,236,178, alpha_higthContrast)},
+        {0.9, QColor(251,254,214, alpha_higthContrast)},
+        {1.0, QColor(252,253,253, alpha_higthContrast)}
+    };
+    static const std::vector<ColorStop> inferno10 = {
+        {0.0, QColor(  0,  0,  4, alpha_higthContrast)},
+        {0.1, QColor( 31, 12, 72, alpha_higthContrast)},
+        {0.2, QColor( 85, 15,109, alpha_higthContrast)},
+        {0.3, QColor(136, 34,106, alpha_higthContrast)},
+        {0.4, QColor(186, 54, 85, alpha_higthContrast)},
+        {0.5, QColor(227, 89, 51, alpha_higthContrast)},
+        {0.6, QColor(249,140, 10, alpha_higthContrast)},
+        {0.7, QColor(253,186, 45, alpha_higthContrast)},
+        {0.8, QColor(253,224,124, alpha_higthContrast)},
+        {0.9, QColor(253,245,185, alpha_higthContrast)},
+        {1.0, QColor(252,255,233, alpha_higthContrast)}
+    };
+
+    static const std::vector<ColorStop> plasma10 = {
+        {0.0, QColor( 13,  8,135, alpha_higthContrast)},
+        {0.1, QColor( 63,  3,168, alpha_higthContrast)},
+        {0.2, QColor(110,  1,179, alpha_higthContrast)},
+        {0.3, QColor(158, 23,176, alpha_higthContrast)},
+        {0.4, QColor(203, 54,155, alpha_higthContrast)},
+        {0.5, QColor(238, 93,120, alpha_higthContrast)},
+        {0.6, QColor(254,141, 82, alpha_higthContrast)},
+        {0.7, QColor(252,191, 55, alpha_higthContrast)},
+        {0.8, QColor(234,231, 44, alpha_higthContrast)},
+        {0.9, QColor(195,254, 62, alpha_higthContrast)},
+        {1.0, QColor(240,249, 33, alpha_higthContrast)}
+    };
+    static const std::vector<ColorStop> cividis10 = {
+        {0.0, QColor(  0, 32, 76, alpha_higthContrast)},
+        {0.1, QColor( 25, 46,102, alpha_higthContrast)},
+        {0.2, QColor( 44, 60,124, alpha_higthContrast)},
+        {0.3, QColor( 63, 75,136, alpha_higthContrast)},
+        {0.4, QColor( 85, 90,140, alpha_higthContrast)},
+        {0.5, QColor(110,105,138, alpha_higthContrast)},
+        {0.6, QColor(137,121,130, alpha_higthContrast)},
+        {0.7, QColor(165,137,115, alpha_higthContrast)},
+        {0.8, QColor(194,152, 93, alpha_higthContrast)},
+        {0.9, QColor(223,167, 59, alpha_higthContrast)},
+        {1.0, QColor(250,181,  0, alpha_higthContrast)}
+    };
+    static const std::vector<ColorStop> viridis10 = {
+        {0.0, QColor( 68,   1,  84, alpha_higthContrast)},
+        {0.1, QColor( 72,  40, 120, alpha_higthContrast)},
+        {0.2, QColor( 62,  74, 137, alpha_higthContrast)},
+        {0.3, QColor( 49, 104, 142, alpha_higthContrast)},
+        {0.4, QColor( 38, 130, 142, alpha_higthContrast)},
+        {0.5, QColor( 31, 158, 137, alpha_higthContrast)},
+        {0.6, QColor( 53, 183, 121, alpha_higthContrast)},
+        {0.7, QColor(110, 206,  88, alpha_higthContrast)},
+        {0.8, QColor(181, 222,  43, alpha_higthContrast)},
+        {0.9, QColor(253, 231,  37, alpha_higthContrast)},
+        {1.0, QColor(253, 231,  36, alpha_higthContrast)}
+    };
+    // versio avec variation de alpha-densité
+    static const std::vector<ColorStop> magma10density = {
+        {0.0, QColor(  0,  0,   4,  10)},
+        {0.1, QColor( 28, 16,  68,  34)},
+        {0.2, QColor( 79, 18, 123,  59)},
+        {0.3, QColor(129, 37, 129,  84)},
+        {0.4, QColor(181, 54, 122, 108)},
+        {0.5, QColor(229, 80, 100, 133)},
+        {0.6, QColor(251,135,  97, 158)},
+        {0.7, QColor(254,194, 135, 183)},
+        {0.8, QColor(253,236, 178, 207)},
+        {0.9, QColor(251,254, 214, 232)},
+        {1.0, QColor(252,253, 253, 255)}
+    };
+    static const std::vector<ColorStop> inferno10density = {
+        {0.0, QColor(  0,  0,   4,  10)},
+        {0.1, QColor( 31, 12,  72,  34)},
+        {0.2, QColor( 85, 15, 109,  59)},
+        {0.3, QColor(136, 34, 106,  84)},
+        {0.4, QColor(186, 54,  85, 108)},
+        {0.5, QColor(227, 89,  51, 133)},
+        {0.6, QColor(249,140,  10, 158)},
+        {0.7, QColor(253,186,  45, 183)},
+        {0.8, QColor(253,224, 124, 207)},
+        {0.9, QColor(253,245, 185, 232)},
+        {1.0, QColor(252,255, 233, 255)}
+    };
+    static const std::vector<ColorStop> plasma10density = {
+        {0.0, QColor( 13,  8, 135,  10)},
+        {0.1, QColor( 63,  3, 168,  34)},
+        {0.2, QColor(110,  1, 179,  59)},
+        {0.3, QColor(158, 23, 176,  84)},
+        {0.4, QColor(203, 54, 155, 108)},
+        {0.5, QColor(238, 93, 120, 133)},
+        {0.6, QColor(254,141,  82, 158)},
+        {0.7, QColor(252,191,  55, 183)},
+        {0.8, QColor(234,231,  44, 207)},
+        {0.9, QColor(195,254,  62, 232)},
+        {1.0, QColor(240,249,  33, 255)}
+    };
+    static const std::vector<ColorStop> viridis10density = {
+        {0.0, QColor( 68,   1,  84,  10)},
+        {0.1, QColor( 72,  40, 120,  34)},
+        {0.2, QColor( 62,  74, 137,  59)},
+        {0.3, QColor( 49, 104, 142,  84)},
+        {0.4, QColor( 38, 130, 142, 108)},
+        {0.5, QColor( 31, 158, 137, 133)},
+        {0.6, QColor( 53, 183, 121, 158)},
+        {0.7, QColor(110, 206,  88, 183)},
+        {0.8, QColor(181, 222,  43, 207)},
+        {0.9, QColor(253, 231,  37, 232)},
+        {1.0, QColor(253, 231,  36, 255)}
+    };
+    static const std::vector<ColorStop> cividis10density = {
+        {0.0, QColor(  0, 32,  76,  10)},
+        {0.1, QColor( 25, 46, 102,  34)},
+        {0.2, QColor( 44, 60, 124,  59)},
+        {0.3, QColor( 63, 75, 136,  84)},
+        {0.4, QColor( 85, 90, 140, 108)},
+        {0.5, QColor(110,105, 138, 133)},
+        {0.6, QColor(137,121, 130, 158)},
+        {0.7, QColor(165,137, 115, 183)},
+        {0.8, QColor(194,152,  93, 207)},
+        {0.9, QColor(223,167,  59, 232)},
+        {1.0, QColor(250,181,   0, 255)}
+    };
+
+    // Diverging
+    static const std::vector<ColorStop> spectral10density = {
+        {0.0, QColor(158,   1,  66,  10)},
+        {0.1, QColor(213,  62,  79,  34)},
+        {0.2, QColor(244, 109,  67,  58)},
+        {0.3, QColor(253, 174,  97,  83)},
+        {0.4, QColor(254, 224, 139, 107)},
+        {0.5, QColor(255, 255, 191, 131)},
+        {0.6, QColor(230, 245, 152, 156)},
+        {0.7, QColor(171, 221, 164, 180)},
+        {0.8, QColor(102, 194, 165, 204)},
+        {0.9, QColor( 50, 136, 189, 229)},
+        {1.0, QColor( 94,  79, 162, 255)}
+    };
+    static const std::vector<ColorStop> coolwarm10density = {
+        {0.0, QColor( 59,  76, 192,  10)},
+        {0.1, QColor( 68,  90, 204,  34)},
+        {0.2, QColor( 77, 104, 215,  58)},
+        {0.3, QColor( 87, 117, 225,  83)},
+        {0.4, QColor(120, 150, 237, 107)},
+        {0.5, QColor(181, 180, 180, 131)}, // point neutre
+        {0.6, QColor(220, 143, 110, 156)},
+        {0.7, QColor(231, 125,  88, 180)},
+        {0.8, QColor(222,  96,  57, 204)},
+        {0.9, QColor(204,  71,  37, 229)},
+        {1.0, QColor(180,   4,  38, 255)}
+    };
+    static const std::vector<ColorStop> bwr10density = {
+        {0.0, QColor(  0,   0, 255,  10)},
+        {0.1, QColor( 51,  51, 255,  34)},
+        {0.2, QColor(102, 102, 255,  58)},
+        {0.3, QColor(153, 153, 255,  83)},
+        {0.4, QColor(204, 204, 255, 107)},
+        {0.5, QColor(255, 255, 255, 131)}, // blanc au centre
+        {0.6, QColor(255, 204, 204, 156)},
+        {0.7, QColor(255, 153, 153, 180)},
+        {0.8, QColor(255, 102, 102, 204)},
+        {0.9, QColor(255,  51,  51, 229)},
+        {1.0, QColor(255,   0,   0, 255)}
+    };
+
+    // Miscellaneous
+
+    static const std::vector<ColorStop> gist_rainbow14 = {
+        {0.0,  QColor( 63,   0, 255, alpha_higthContrast)},
+        {0.083, QColor(  0,  63, 255, alpha_higthContrast)},
+        {0.167, QColor(  0, 127, 255, alpha_higthContrast)},
+        {0.25,  QColor(  0, 191, 255, alpha_higthContrast)},
+        {0.333, QColor(  0, 255, 191, alpha_higthContrast)},
+        {0.417, QColor(  0, 255, 127, alpha_higthContrast)},
+        {0.5,   QColor(  0, 255,  63, alpha_higthContrast)},
+        {0.583, QColor( 63, 255,   0, alpha_higthContrast)},
+        {0.667, QColor(127, 255,   0, alpha_higthContrast)},
+        {0.75,  QColor(191, 255,   0, alpha_higthContrast)},
+        {0.833, QColor(255, 191,   0, alpha_higthContrast)},
+        {0.917, QColor(255, 127,   0, alpha_higthContrast)},
+        {1.0,   QColor(255,   0,   0, alpha_higthContrast)}
+    };
+
+    static const std::vector<ColorStop> gist_rainbow14density = {
+        {0.0,  QColor( 63,   0, 255, 10)},
+        {0.083, QColor(  0,  63, 255, 30)},
+        {0.167, QColor(  0, 127, 255, 51)},
+        {0.25,  QColor(  0, 191, 255, 71)},
+        {0.333, QColor(  0, 255, 191, 92)},
+        {0.417, QColor(  0, 255, 127, 112)},
+        {0.5,   QColor(  0, 255,  63, 133)},
+        {0.583, QColor( 63, 255,   0, 153)},
+        {0.667, QColor(127, 255,   0, 174)},
+        {0.75,  QColor(191, 255,   0, 194)},
+        {0.833, QColor(255, 191,   0, 215)},
+        {0.917, QColor(255, 127,   0, 235)},
+        {1.0,   QColor(255,   0,   0, 255)}
+    };
+
+
+
+
     switch (palette) {
 
     case ColorPalette::BlackWhite: return BWStops;
-    case ColorPalette::WhiteBlack: return WBStops;
+    case ColorPalette::Greys: return GreysStops;
     case ColorPalette::Pressure: return pressureStops;
     case ColorPalette::Elevation: return elevationStops;
     case ColorPalette::Blues: return BluesStops;
-    case ColorPalette::Inferno: return infernoStops;
-    case ColorPalette::InfernoDensity: return infernoDensityStops;
+
 
     case ColorPalette::Geophy: return geophyStops;
     case ColorPalette::GeophyDensity: return geophyDensityStops;
@@ -456,7 +670,27 @@ const std::vector<ColorStop>& ColorStops::getStops(ColorPalette palette)
     case ColorPalette::RH: return  RHStops;
     case ColorPalette::RHDensity: return  RHDensityStops;
 
-    default: return BWStops;
+    // Palette Viridis
+    case ColorPalette::Magma10: return magma10; // A
+    case ColorPalette::Inferno10: return inferno10; // B
+    case ColorPalette::Plasma10: return plasma10; // C
+    case ColorPalette::Viridis10: return viridis10; // D
+    case ColorPalette::Cividis10: return cividis10; // E
+
+    // Palette Viridis avec variation d'alpha
+    case ColorPalette::Magma10Density: return magma10density; // A
+    case ColorPalette::Inferno10Density: return inferno10density; // B
+    case ColorPalette::Plasma10Density: return plasma10density; // C
+    case ColorPalette::Viridis10Density: return viridis10density; // D
+    case ColorPalette::Cividis10Density: return cividis10density; // E
+
+    case ColorPalette::Spectral10Density: return spectral10density;
+    case ColorPalette::Coolwarm10Density: return coolwarm10density;
+    case ColorPalette::Bwr10Density: return bwr10density;
+
+    case ColorPalette::Gist_rainbow14: return gist_rainbow14;
+    case ColorPalette::Gist_rainbow14Density: return gist_rainbow14density;
+    default: return temperatureSoftDensityStops;
     }
 }
 

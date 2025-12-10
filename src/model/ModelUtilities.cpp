@@ -522,27 +522,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
             }
 
             // Recherche indice de l'event dans la liste de spline, car les events sont réordonnés
-           /* size_t thetaIdx = 0;
-            const MCMCSpline& spline =  model->mSpline;
-            for (; thetaIdx < model->mEvents.size(); thetaIdx++) {
-                if ( spline.splineX.vecThetaReduced.at(thetaIdx) == event->mThetaReduced)
-                    break;
-            }
 
-
-            if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Univariate) {
-                HTMLText += line(textGreen(QObject::tr(" - G : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
-
-            } else if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Depth) {
-                HTMLText += line(textGreen(QObject::tr(" - Depth : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
-
-            } else {
-                HTMLText += line(textGreen(QObject::tr(" - Gx : %1").arg(stringForLocal(spline.splineX.vecG.at(thetaIdx)))));
-                if (spline.splineY.vecG.size() != 0)
-                    HTMLText += line(textGreen(QObject::tr(" - Gy : %1").arg(stringForLocal(spline.splineY.vecG.at(thetaIdx)))));
-                if (spline.splineZ.vecG.size() != 0)
-                    HTMLText += line(textGreen(QObject::tr(" - Gz : %1").arg(stringForLocal(spline.splineZ.vecG.at(thetaIdx)))));
-            }*/
 
             const auto& sX = model->mSpline.splineX.vecThetaReduced;
             auto it = std::find(sX.begin(), sX.end(), event->mThetaReduced);
@@ -662,9 +642,12 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
                HTMLText +=  line(textGreen(QObject::tr(" - Sigma_MH on Smoothing : %1").arg(stringForLocal(model->mLambdaSpline.mSigmaMH))));
             }
         }
+//Var_residual_spline
+        HTMLText +=  line(textGreen(QObject::tr("Variance Shrinkage on the Curve : %1").arg(QLocale().toString(model->mS02Vg, 'G', 2))));
+        HTMLText += "<br>";
 
-        //HTMLText += "<br>";
         //HTMLText +=  line(textGreen(QObject::tr("Curve beta parameter : %1").arg(QLocale().toString(model->mSO2_beta, 'G', 2))));
+        //HTMLText += "<br>";
     }
 
     return HTMLText;
@@ -869,7 +852,7 @@ QString ModelUtilities::phaseResultsHTML(const std::shared_ptr<Phase> p)
     text += line(textBold(textOrange(QObject::tr("End (posterior distrib.)"))));
     text += line(textOrange(p->mBeta.resultsString("", DateUtils::getAppSettingsFormatStr())));
 
-    if (p->mTimeRange != std::pair<double, double>(- INFINITY, +INFINITY)) {
+    if (p->mTimeRange != std::pair<double, double>(- std::numeric_limits<double>::max(), +std::numeric_limits<double>::max())) {
         text += "<br>";
         // we suppose it's the same mThreshohdUsed than alpha
         const QString result = QObject::tr("Phase Time Range") + QString(" ( %1 %) : [ %2 ; %3 ]").arg(stringForLocal(p->mAlpha.mThresholdUsed),
@@ -1066,13 +1049,31 @@ QString ModelUtilities::lambdaResultsHTML(const std::shared_ptr<ModelCurve> mode
         text = line(textBold(textGreen(QObject::tr("Smoothing"))));
         text += line(textGreen(QObject::tr("Interpolation Fixed value : %1").arg(QString::number(0))));
 
-    }else {
+    } else {
         text = line(textBold(textGreen(QObject::tr("Stat. on the log10 of Smoothing"))));
         text += line(textGreen(model->mLambdaSpline.resultsString("", nullptr)));
     }
     return text;
 }
+QString ModelUtilities::S02VgResultsHTML(const std::shared_ptr<ModelCurve> model)
+{
+    QString text;
+#ifdef KOMLAN
+    if (model->mS02Vg.mSamplerProposal == MHVariable::eFixe ) {
+        text = line(textBold(textGreen(QObject::tr("S02Vg"))));
+        text += line(textGreen(QObject::tr("Fixed value : 10E%1").arg(QString::number( model->mS02Vg.mRawTrace->at(0)))));
 
+    } else {
+        text = line(textBold(textGreen(QObject::tr("Stat. on the sqrt of S02Vg"))));
+        text += line(textGreen(model->mS02Vg.resultsString("", nullptr)));
+    }
+#else
+    text = line(textBold(textGreen(QObject::tr("S02Vg"))));
+    text += line(textGreen(QObject::tr("Fixed value : 10E%1").arg(QString::number( model->mS02Vg))));
+
+#endif
+    return text;
+}
 /**
  * @brief HPDOutsideSudyPeriod
  * @param hpd, the hpd must be send with the good date format

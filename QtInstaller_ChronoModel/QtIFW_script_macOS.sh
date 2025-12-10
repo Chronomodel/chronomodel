@@ -10,7 +10,7 @@
 
 clear
 
-VERSION=3.3.5_EM2
+VERSION=3.3.6_EDM2
 QT_BIN_PATH=/Users/dufresne/Qt/Tools/QtInstallerFramework/4.10/bin
 
 # _________________________
@@ -47,7 +47,7 @@ echo "➡️  3 - Executing binarycreator"
 
 DATE_FILE=$(date '+%Y%m%d')
 
-INSTALLER=ChronoModel_v${VERSION}_Qt6.9.1_macOS12_${DATE_FILE}_Installer
+INSTALLER=ChronoModel_v${VERSION}_Qt6.10.0_macOS12_${DATE_FILE}_Installer
 
 echo "➡️  4 - Created file : " $INSTALLER
 ${QT_BIN_PATH}/binarycreator --offline-only -c installer-config/config.xml -p installer-packages-macOS $INSTALLER

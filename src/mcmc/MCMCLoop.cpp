@@ -61,7 +61,7 @@ MCMCLoop::MCMCLoop(std::shared_ptr<ModelCurve> model):
     mChainIndex (0),
     mState (eBurning)
 {
-    mModel = model;//.lock();
+    mModel = model;
     mAbortedReason = QString();
 #ifdef _WIN32
     DWORD process_id =GetCurrentProcessId();
@@ -76,9 +76,6 @@ MCMCLoop::MCMCLoop(std::shared_ptr<ModelCurve> model):
 
 MCMCLoop::~MCMCLoop()
 {
-    //mModel.reset();
-    //mProjectLock->mLoop = nullptr;
-    //mProject = nullptr;
 }
 
 void MCMCLoop::setMCMCSettings(const MCMCSettings &s)
@@ -376,6 +373,8 @@ QString MCMCLoop::initialize_time()
                     uEvent->mS02Theta.mLastAccepts.clear();
 
                     const double sqrt_S02_harmonique = sqrt(uEvent->mDates.size() / s02_sum);
+
+
                     uEvent->mBetaS02 = 1.004680139*(1 - exp(- 0.0000847244 * pow(sqrt_S02_harmonique, 2.373548593)));
 #ifdef CODE_KOMLAN
                     // new code
@@ -755,26 +754,6 @@ void MCMCLoop::run()
                     return;
                 }
 
-
-                // ---test
-/*
-                const auto& test_spline = mModel->mSpline;
-                for (auto event : mModel->mEvents) {
-
-                    auto it = std::find(test_spline.splineX.vecThetaReduced.begin(), test_spline.splineX.vecThetaReduced.end(), event->mThetaReduced);
-                    if (it != test_spline.splineX.vecThetaReduced.end()) {
-                        size_t thetaIdx = std::distance(test_spline.splineX.vecThetaReduced.begin(), it);
-                        qDebug()<<"[MCMCLoop] memo adapt" <<thetaIdx;
-
-                    }             else {
-                        qDebug()<<"[MCMCLoop] errror";
-                    }
-                }
-*/
-                // -- fin test
-
-
-
                 memo();
                 ++chain.mBatchIterIndex;
                 ++chain.mTotalIter;
@@ -908,7 +887,7 @@ void MCMCLoop::run()
     SetThreadExecutionState(ES_CONTINUOUS);
 #endif
     try {
-        this->finalize();
+        finalize();
 
     } catch (QString error) {
         mAbortedReason = error;
