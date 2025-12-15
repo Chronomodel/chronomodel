@@ -54,7 +54,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <stdlib.h>
 #include <thread>
 
-#include <eigen_3.4.0/Eigen/Core>
+#include <eigen-3.4.1/Eigen/Core>
 
 // STDC FENV_ACCESS ON // not supported with Clang
 

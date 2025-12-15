@@ -68,3 +68,4 @@ QtInstaller_ChronoModel/QtIFW_script_macOS_old.sh
 /.qtc_clangd
 linux_make_old.sh
 buildCM.sh
+/src/eigen_3.4.0

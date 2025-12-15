@@ -60,7 +60,7 @@ AboutDialog::AboutDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
 #endif
 
     QFile htmlFile(path + "ABOUT.html");
-    htmlFile.open(QIODevice::ReadOnly);
+    (void) htmlFile.open(QIODevice::ReadOnly);
 
     mText = new QTextEdit();
     mText->setTextInteractionFlags(Qt::TextBrowserInteraction);

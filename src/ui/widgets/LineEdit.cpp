@@ -110,8 +110,8 @@ void LineEdit::adjustFont()
 
     const int textWidth  = fm.horizontalAdvance(text());
     const int textHeight = fm.height();
-    const int availWidth = width() - 4;   // marge interne
-    const int availHeight= height() - 4;  // marge interne
+    const int availWidth = width() - 2;   // marge interne
+    const int availHeight= height() - 2;  // marge interne
 
     if (textWidth > availWidth || textHeight > availHeight) {
         qreal xFactor = static_cast<qreal>(textWidth) / availWidth;

@@ -997,7 +997,7 @@ void save_container_nullable(QDataStream& stream, const std::shared_ptr<std::vec
     stream << isNull;
 
     if (!isNull) {
-        save_container(stream, data);  // Appel à la version normale
+        save_container(stream, *data); // ✔️ correct
     }
 }
 
@@ -1124,19 +1124,20 @@ void load_container_nullable(QDataStream& stream, std::shared_ptr<std::vector<do
 
     if (isNull) {
         data = nullptr;  // Définit le pointeur comme null si le flag est vrai
+        return;
+    }
+
+    // Si ce n'est pas null, crée ou réinitialise le pointeur
+    if (!data) {
+        data = std::make_shared<std::vector<double>>();
     }
     else {
-        // Si ce n'est pas null, crée ou réinitialise le pointeur
-        if (!data) {
-            data = std::make_shared<std::vector<double>>();
-        }
-        else {
-            data->clear();  // Nettoie le conteneur existant avant de charger
-        }
-
-        // Charge les données dans le conteneur
-        load_container(stream, *data);
+        data->clear();  // Nettoie le conteneur existant avant de charger
     }
+
+    // Charge les données dans le conteneur
+    load_container(stream, *data);
+
 }
 
 std::shared_ptr<Project> getProject_ptr()

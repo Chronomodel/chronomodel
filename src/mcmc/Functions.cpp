@@ -1019,7 +1019,7 @@ Quartiles quartilesForRepartition(const std::vector<double> &repartition, const 
 std::pair<double, double> credibilityForTrace(const QList<double> &trace, double thresh, double& exactThresholdResult, const  QString description)
 {
     (void) description;
-    std::pair<double, double> credibility(0.,0.);
+    std::pair<double, double> credibility(0.0, 0.0);
     exactThresholdResult = 0.;
     size_t n = trace.size();
 
@@ -1035,7 +1035,7 @@ std::pair<double, double> credibilityForTrace(const QList<double> &trace, double
         QList<double> sorted (trace);
         std::sort(sorted.begin(),sorted.end());
 
-        const size_t numToRemove = (size_t)floor(n * (1. - threshold / 100.));
+        const size_t numToRemove = (size_t)floor(n * (1.0 - threshold / 100.0));
         exactThresholdResult = ((double)n - (double)numToRemove) / (double)n;
 
         double lmin = 0.;
@@ -1065,8 +1065,8 @@ std::pair<double, double> credibilityForTrace(const QList<double> &trace, double
 std::pair<double, double> credibilityForTrace(const std::vector<double> &trace, double thresh, double& exactThresholdResult, const QString description)
 {
     (void) description;
-    std::pair<double, double> credibility(0.,0.);
-    exactThresholdResult = 0.;
+    std::pair<double, double> credibility(0.0, 0.0);
+    exactThresholdResult = 0.0;
     const size_t n = trace.size();
     if (n == 1) {
         credibility.first = trace[0];
@@ -1079,7 +1079,7 @@ std::pair<double, double> credibilityForTrace(const std::vector<double> &trace, 
         std::vector<double> sorted (trace);
         std::sort(sorted.begin(),sorted.end());
 
-        size_t numToRemove = (size_t)floor(n * (1. - threshold / 100.));
+        size_t numToRemove = (size_t)floor(n * (1.0 - threshold / 100.0));
         exactThresholdResult = ((double)n - (double)numToRemove) / (double)n;
 
         double lmin (0.);
@@ -1101,8 +1101,8 @@ std::pair<double, double> credibilityForTrace(const std::vector<double> &trace, 
         exactThresholdResult = 1;
         //return QPair<double, double>();
     }
-    //else
-        return credibility;
+
+    return credibility;
 }
 
 // Used in generateTempo for credibility

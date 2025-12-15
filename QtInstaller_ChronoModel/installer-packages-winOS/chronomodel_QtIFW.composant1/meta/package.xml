@@ -2,11 +2,11 @@
 <Package>
     <DisplayName>ChronoModel</DisplayName>
     <Description>Chronological model software computation</Description>
-    <Version>3.2.7</Version>
-    <ReleaseDate>2024-02-06</ReleaseDate>
+    <Version>3.3.6</Version>
+    <ReleaseDate>2025-12-10</ReleaseDate>
     <Default>true</Default>
     <Script>installscript.qs</Script>
     <Licenses>
-        <License name="CeCILL FREE SOFTWARE LICENSE AGREEMENT Version 2.1 dated 2013-06-21" file="Licence_CeCILL_V2.1-en.html"/>
+        <License name="GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007" file="gpl-3.0-standalone.html"/>
     </Licenses>
 </Package>

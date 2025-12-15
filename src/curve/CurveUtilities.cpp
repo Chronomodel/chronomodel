@@ -47,9 +47,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #endif
 #endif
 
-#include <eigen_3.4.0/Eigen/Dense>
-#include <eigen_3.4.0/Eigen/OrderingMethods>
-#include "eigen_3.4.0/Eigen/src/Core/DiagonalMatrix.h"
+#include <eigen-3.4.1/Eigen/Dense>
+#include <eigen-3.4.1/Eigen/OrderingMethods>
+#include <eigen-3.4.1/Eigen/src/Core/DiagonalMatrix.h>
 
 #include <algorithm>
 #include <iostream>
@@ -4155,7 +4155,7 @@ std::pair<MCMCSpline, std::pair<double, double>> do_spline_composante(const std:
     }
 
 
-    int n_components = Y_mat.cols();
+    //int n_components = Y_mat.cols();
 
     long long j = 0;
     DiagonalMatrixD W_1 (vec_X_err.size());
@@ -5406,12 +5406,12 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam& sv, const 
 
         if (gcv_m > 0 && gcv_m < best_gcv) {
             best_gcv = gcv_m;
-            best_lambda_gcv = lambda;
+           // best_lambda_gcv = lambda;
         }
 
         if (cv_m > 0 && cv_m < best_cv) {
             best_cv = cv_m;
-            best_lambda_cv = lambda;
+          //  best_lambda_cv = lambda;
         }
 
         //long double reml = restricted_likelihood(vec_X, test_matrices, vecH, lambda);

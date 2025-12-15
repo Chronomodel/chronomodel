@@ -89,7 +89,7 @@ public:
     {
         //std::cout << "[ModelCurve::restoreFromFile] entering";
         QList<QString> compatible_version_335;
-        compatible_version_335 << "3.3.5";
+        compatible_version_335 << "3.3.5" << "3.3.6";
 
         QList<QString> compatible_version_330;
         compatible_version_330 << "3.3.0" << "3.3.1";
@@ -108,7 +108,10 @@ public:
         else if (compatible_version_328.contains(res_file_version))
             return loadFromStream_v328(in);
 
-        else return false;
+        else {
+            std::cout << "[ModelCurve::loadFromStream] 📚 version not compatible " << res_file_version.toStdString();
+            return false;
+        }
     };
 
     bool loadFromStream_v323(QDataStream *in);

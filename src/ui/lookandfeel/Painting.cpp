@@ -420,7 +420,13 @@ const std::vector<ColorStop>& ColorStops::getStops(ColorPalette palette)
         {1.0, QColor(71, 121, 124, 255)}  // bleu foncé
     };
 
-    // "Inferno" (Matplotlib / Scientific colormaps)
+    /* Palette Matplotlib
+     *  https://matplotlib.org/stable/users/explain/colors/colormaps.html
+     * Matplotlib et toutes ses colormaps ( magma, inferno, plasma, viridis, cividis…) sont sous :
+     * BSD 3-Clause License
+     * (Licence de logiciel libre permissive)
+     * https://matplotlib.org/stable/users/license.html
+     */
     static const std::vector<ColorStop> infernoStops = {
         {0.0, QColor(0, 0, 4, alpha_higthContrast)},          // almost black
         {0.25, QColor(153, 28, 59, alpha_higthContrast)},     // deep burgundy

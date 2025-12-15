@@ -10,7 +10,7 @@
 
 clear
 
-VERSION=3.3.6_EDM2
+VERSION=3.3.6
 QT_BIN_PATH=/Users/dufresne/Qt/Tools/QtInstallerFramework/4.10/bin
 
 # _________________________

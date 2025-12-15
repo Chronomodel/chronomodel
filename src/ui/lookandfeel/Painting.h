@@ -44,7 +44,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QColor>
 #include <QPainter>
 #include <QIcon>
-//#include <QtWidgets>
 
 
 #define CURVE_COLOR_TEXT QColor(77, 37, 121)

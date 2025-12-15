@@ -758,6 +758,7 @@ bool Project::load(const QString &path, bool force)
     }  // Le fichier principal est automatiquement fermé ici
 
     // -------------------- CHARGEMENT DU FICHIER DE CALIBRATION (.cal) --------------------
+#pragma mark loading *.CAL
     bool hasCalibration = false;
     {
         QString caliPath = path + ".cal";
@@ -949,9 +950,10 @@ bool Project::load(const QString &path, bool force)
             hasCalibration = false;
         }
     }  // Le fichier de calibration est automatiquement fermé ici
+#pragma mark loading *.RES
 
     // -------------------- CHARGEMENT DU FICHIER DE RÉSULTATS (.res) --------------------
-    //bool hasResults = false;
+
     if (hasCalibration) {
 
         QString dataPath = path + ".res";

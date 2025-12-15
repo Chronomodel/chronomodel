@@ -1111,9 +1111,7 @@ void Model::setBandwidth(const double bandwidth)
 {  
     if (mBandwidth != bandwidth) {
         updateDensities(mFFTLength, bandwidth, mThreshold);
-        mBandwidth = bandwidth;
-
-       // emit newCalculus();
+       // mBandwidth = bandwidth; // done in updateDensities
     }
 }
 
@@ -1121,7 +1119,6 @@ void Model::setFFTLength(int FFTLength)
 {
     if (mFFTLength != FFTLength) {
         updateDensities(FFTLength, mBandwidth, mThreshold);
-        //emit newCalculus();
     }
 }
 
@@ -1130,8 +1127,6 @@ void Model::setHActivity(const double h, const double rangePercent)
    if (!mPhases.empty()) {
         generateActivity(mFFTLength, h, mThreshold, rangePercent);
         mHActivity = h;
-
-       // emit newCalculus();
     }
 
 }
@@ -1142,14 +1137,14 @@ void Model::setHActivity(const double h, const double rangePercent)
 void Model::setThreshold(const double threshold)
 {
     if (mThreshold != threshold) {
-
-        generateCredibility(threshold);
+        updateDensities(mFFTLength, mBandwidth, threshold);
+        /*generateCredibility(threshold);
         generateHPD(threshold);
 
         generateActivity(mFFTLength, mHActivity, threshold);
-        setThresholdToAllModel(threshold);
 
-        //emit newCalculus();
+        setThresholdToAllModel(threshold);*/
+
     }
 }
 
@@ -1286,7 +1281,7 @@ void Model::initNodeEvents()
  */
 void Model::initDensities()
 {
-    mHActivity = std::max(1., abs(mSettings.mTmax - mSettings.mTmin) / 100.);
+    mHActivity = std::max(1.0, abs(mSettings.mTmax - mSettings.mTmin) / 100.0);
     clearThreshold();
     // memo the new value of the Threshold inside all the part of the model: phases, events and dates
     updateDensities(mFFTLength, mBandwidth, 95.);
@@ -1299,13 +1294,13 @@ void Model::updateDensities(int fftLen, double bandwidth, double threshold)
 
     if (getProject_ptr()->mLoop)
         emit getProject_ptr()->mLoop->setMessage(QObject::tr("Computing posterior distributions and numerical results"));
-    generateCredibility(threshold);
 
-    updateFormatSettings(); // update formatedCredibility and formatedTrace
+    updateFormatSettings(); // update mFormat for formatedCredibility and formatedTrace
 
     generatePosteriorDensities(mChains, fftLen, bandwidth);
 
     generateHPD(threshold);
+    generateCredibility(threshold);
 
     // memo the new value of the Threshold inside all the part of the model: phases, events and dates
     setThresholdToAllModel(threshold);
@@ -1452,61 +1447,10 @@ void Model::generateCredibility(const double thresh)
     QElapsedTimer t;
     t.start();
 #endif
-    if (mThreshold == thresh)
-        return;
+   // if (mThreshold == thresh) // False if FFTW bandwidth, we must redo Credibility
+   //     return;
 
 
-#ifdef USE_THREAD
-    std::thread thEvents ([this] (double thresh)
-    {
-        for (const auto& event : mEvents) {
-             if (event->type() != Event::eBound) {
-                event->mTheta.generateCredibility(mChains, thresh);
-
-                for (auto&& date : event->mDates )  {
-                    date.mTi.generateCredibility(mChains, thresh);
-                    date.mSigmaTi.generateCredibility(mChains, thresh);
-                }
-            }
-
-        }
-    } , thresh);
-
-    std::thread thPhases ([this] (double thresh)
-    {
-        for (const auto& phase :mPhases) {
-            // if there is only one Event in the phase, there is no Duration
-            phase->mAlpha.generateCredibility(mChains, thresh); // in formated Date
-            phase->mBeta.generateCredibility(mChains, thresh);
-            //  pPhase->mTau.generateCredibility(mChains, thresh);
-            phase->mDuration.generateCredibility(mChains, thresh);
-            // TimeRange in Raw Date
-            phase->mTimeRange = timeRangeFromTraces( phase->mAlpha.fullRunRawTrace(mChains),
-                                                     phase->mBeta.fullRunRawTrace(mChains), thresh, "Time Range for Phase : " + phase->mName);
-            phase->mValueStack["TimeRange Threshold"] = TValueStack("TimeRange Threshold", thresh);
-        }
-    } , thresh);
-
-    std::thread thPhasesConst ([this] (double thresh)
-    {
-        for (const auto& phaseConstraint : mPhaseConstraints) {
-
-            Phase* phaseFrom = phaseConstraint->mPhaseFrom;
-            Phase* phaseTo  = phaseConstraint->mPhaseTo;
-
-            phaseConstraint->mGapRange = gapRangeFromTraces(phaseFrom->mBeta.fullRunRawTrace(mChains),
-                                                            phaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Gap Range : "+ phaseFrom->mName+ " to "+ phaseTo->mName);
-
-            phaseConstraint->mTransitionRange = transitionRangeFromTraces(phaseFrom->mBeta.fullRunRawTrace(mChains),
-                                                                          phaseTo->mAlpha.fullRunRawTrace(mChains), thresh, "Transition Range : "+ phaseFrom->mName+ " to "+ phaseTo->mName);
-
-        }
-    } , thresh);
-
-    thEvents.join();
-    thPhases.join();
-    thPhasesConst.join();
-#else
     for (const auto& ev : mEvents) {
         if (ev->type() != Event::eBound)//(ev->mTheta.mSamplerProposal != MHVariable::eFixe)
             ev->mTheta.generateCredibility(mChains, thresh);
@@ -1527,10 +1471,10 @@ void Model::generateCredibility(const double thresh)
         // If there is only one Event in the phase, there is no Duration
         phase->mAlpha.generateCredibility(mChains, thresh);
         phase->mBeta.generateCredibility(mChains, thresh);
-        //  pPhase->mTau.generateCredibility(mChains, thresh);
+        //  phase->mTau.generateCredibility(mChains, thresh);
         phase->mDuration.generateCredibility(mChains, thresh);
         phase->mTimeRange = timeRangeFromTraces( phase->mAlpha.fullRunRawTrace(mChains),
-                                                  phase->mBeta.fullRunRawTrace(mChains), thresh, "Time Range for Phase : " + phase->getQStringName());
+                                                phase->mBeta.fullRunRawTrace(mChains), thresh, "Time Range for Phase : " + phase->getQStringName());
     }
 
 
@@ -1547,7 +1491,6 @@ void Model::generateCredibility(const double thresh)
 
     }
 
-#endif
 
 #ifdef DEBUG
     qDebug() <<  "[Model::generateCredibility] done in " + DHMS(t.elapsed());

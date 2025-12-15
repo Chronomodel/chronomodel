@@ -245,6 +245,7 @@ void MetropolisVariable::clear()
     mChainsResults.clear();
     mRawCredibility = std::pair<double, double>(1, -1);
     mFormatedCredibility = std::pair<double, double>(1, -1);
+    mExactCredibilityThreshold = 0.0;
 
 }
 
@@ -285,6 +286,7 @@ void MetropolisVariable::clear_and_shrink() noexcept
 
     mRawCredibility = std::pair<double, double>(1, -1);
     mFormatedCredibility = std::pair<double, double>(1, -1);
+    mExactCredibilityThreshold = 0.0;
 }
 
 
@@ -307,6 +309,7 @@ void MetropolisVariable::remove_smoothed_densities()
 
     mRawCredibility = std::pair<double, double>(1, -1);
     mFormatedCredibility = std::pair<double, double>(1, -1);
+    mExactCredibilityThreshold = 0.0;
 
 }
 
@@ -369,45 +372,7 @@ void MetropolisVariable::updateFormatedCredibility(const DateUtils::FormatDate f
  @param[in] dataSrc is the trace, with for example one million data
  @remarks Produce a density with the area equal to 1. The smoothing is done with Hsilvermann method.
  **/
-/*
-void MetropolisVariable::generateBufferForHisto(double *input, const QList<double> &dataSrc, const int numPts, const double a, const double b)
-{
-    // Work with "double" precision here !
-    // Otherwise, "denum" can be very large and lead to infinity contribs!
 
-    const double delta = (b - a) / (numPts - 1);
-
-    const double denum = dataSrc.size();
-
-    for (int i=0; i<numPts; ++i)
-        input[i]= 0.;
-
-    QList<double>::const_iterator iter = dataSrc.cbegin();
-    for (; iter != dataSrc.cend(); ++iter) {
-        const double t = *iter;
-
-        const double idx = (t - a) / delta;
-        const double idx_under = std::clamp(floor(idx), 0., numPts-1.);
-        const double idx_upper = std::clamp(idx_under + 1., 0., numPts-1.);
-
-        const double contrib_under = (idx_upper - idx) / denum;
-        const double contrib_upper = (idx - idx_under) / denum;
-#ifdef DEBUG
-        if (std::isinf(contrib_under) || std::isinf(contrib_upper))
-            qDebug() << "FFT input : infinity contrib!";
-
-        if (idx_under < 0 || idx_under >= numPts || idx_upper < 0 || idx_upper > numPts)
-            qDebug() << "FFT input : Wrong index";
-#endif
-        if (idx_under < numPts)
-            input[(int)idx_under] += contrib_under;
-
-        if (idx_upper < numPts) // This is to handle the case when matching the last point index !
-            input[(int)idx_upper] += contrib_upper;
-    }
-
-}
-*/
 void MetropolisVariable::generateBufferForHisto(double *input, const std::vector<double> &dataSrc, const int numPts, const double a, const double b)
 {
     // Work with "double" precision here !
@@ -679,10 +644,10 @@ void MetropolisVariable::generateHPD(const double threshold)
 
 void MetropolisVariable::generateCredibility(const std::vector<ChainSpecs> &chains, double threshold)
 {
-    if (mRawTrace==nullptr || mRawTrace->size() == 0)  {
+    if (mRawTrace == nullptr || mRawTrace->size() == 0)  {
         mRawCredibility = std::pair<double, double>(1, -1);
 
-    } else if (mThresholdUsed != threshold) {
+    } else if (mThresholdUsed != threshold || mExactCredibilityThreshold == 0.0) {
         mRawCredibility = credibilityForTrace(fullRunRawTrace(chains), threshold, mExactCredibilityThreshold);//, "Compute credibility for "+getName());
     }
     updateFormatedCredibility(mFormat);
@@ -694,10 +659,6 @@ void MetropolisVariable::generateCorrelations(const std::vector<ChainSpecs> &cha
     const int hmax = 40;
     if (!mCorrelations.empty())
         mCorrelations.clear();
-
-    //mCorrelations = std::vector<std::vector<double>>(chains.size(), std::vector<double>(40, 1.)); // test
-    //return;
-
 
     //mCorrelations.reserve(chains.size());
     //Chronometer ch ("[MetropolisVariable::generateCorrelations]");
@@ -728,7 +689,7 @@ void MetropolisVariable::generateNumericalResults(const std::vector<ChainSpecs> 
     // Results for individual chains
     mChainsResults.clear();
 
-    for (size_t i = 0; i<mChainsHistos.size(); ++i) {
+    for (size_t i = 0; i < mChainsHistos.size(); ++i) {
         DensityAnalysis result;
         result.funcAnalysis = analyseFunction(mChainsHistos.at(i)); // useless
         result.traceAnalysis = traceStatistic(runFormatedTraceForChain(chains, i)); // only to compute quartiles
@@ -985,12 +946,13 @@ void MetropolisVariable::save_stream_v330(QDataStream& stream) const
             throw std::runtime_error("Invalid date format");
         }
         stream << formatDate;
+
         if (stream.status() != QDataStream::Ok) {
             throw std::runtime_error("Failed to write date format");
         }
 
         // Écriture du trace brut
-        //save_shared_ptr(mRawTrace, stream);
+
         save_container_nullable(stream, mRawTrace);
         if (stream.status() != QDataStream::Ok) {
             throw std::runtime_error("Failed to write raw trace");
@@ -1103,6 +1065,7 @@ void MetropolisVariable::load_stream_v330(QDataStream& stream)
             throw std::runtime_error("Invalid date format");
         }
 
+
         // Read raw trace
         load_container_nullable(stream, mRawTrace);
 
@@ -1114,8 +1077,7 @@ void MetropolisVariable::load_stream_v330(QDataStream& stream)
         std::cout << "[MetropolisVariable::load_stream_v330] Error: "
                  << e.what()
                   << " ; stream.status()=" << stream.status()<< std::endl;
-        // Error handling policy based on your requirements
-        // You can choose to throw, reset, or ignore
+
     }
 }
 

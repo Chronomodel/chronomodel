@@ -44,7 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <vector>
 #include <QDataStream>
-#include <eigen_3.4.0/Eigen/Dense>
+#include <eigen-3.4.1/Eigen/Dense>
 
 
 

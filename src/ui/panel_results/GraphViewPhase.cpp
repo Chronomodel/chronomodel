@@ -375,7 +375,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
     if (mCurrentTypeGraph == ePostDistrib) {
 
         if (mCurrentVariableList.contains(eBeginEnd)) {
-            const bool showCredibility = mShowVariableList.contains(eCredibility);
+            //const bool showCredibility = mShowVariableList.contains(eCredibility);
 
             /*mGraph->setCurveVisible("Post Distrib Begin All Chains", mShowAllChains);
             mGraph->setCurveVisible("Post Distrib End All Chains", mShowAllChains);

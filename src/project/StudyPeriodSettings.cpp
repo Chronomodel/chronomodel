@@ -156,6 +156,10 @@ double StudyPeriodSettings::getStep(const double tmin, const double tmax)
 double StudyPeriodSettings::getStep(double tmin, double tmax)
 {
     double diff = tmax - tmin;
+
+    if (diff <= 0)
+        return 0.0;
+
     double stepBrut = diff / 1000.0;
 
     // --- Calcul de la puissance de 10 inférieure à stepBrut ---

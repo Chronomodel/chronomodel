@@ -113,13 +113,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
         QVariant::fromValue(ColorPalette::pHScale)
         );
 
-    /* Palette Matplotlib
-     *  https://matplotlib.org/stable/users/explain/colors/colormaps.html
-     * Matplotlib et toutes ses colormaps ( magma, inferno, plasma, viridis, cividis…) sont sous :
-     * BSD 3-Clause License
-     * (Licence de logiciel libre permissive)
-     * https://matplotlib.org/stable/users/license.html
-     */
+
 
     // Variation de densité
     mMapPaletteCombo->addItem(
