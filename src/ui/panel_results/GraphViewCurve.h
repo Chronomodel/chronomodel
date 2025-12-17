@@ -56,6 +56,9 @@ public:
 
     inline void setEventsPoints(const QList<CurveRefPts>& rfPts) { mEventsPoints = rfPts;};
     inline void setDataPoints(const QList<CurveRefPts>& rfPts) { mDataPoints = rfPts;};
+
+    inline QList<CurveRefPts> eventsPoints() const { return mEventsPoints;};
+    inline QList<CurveRefPts> dataPoints() const { return mDataPoints;};
     
     virtual void generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList);
     void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, const QList<variable_t>& showVariableList, const Scale scale);
@@ -68,10 +71,6 @@ private:
     QList<CurveRefPts> mDataPoints;
 
     CurveMap densityMap_2_hpdMap (const CurveMap& densityMap, int nb_iter);
-  /*  void densityMap_2_thresholdIndices_optimized(const CurveMap& densityMap,
-                                            double threshold,
-                                            std::vector<int>& min_indices,
-                                            std::vector<int>& max_indices); */
 
 };
 

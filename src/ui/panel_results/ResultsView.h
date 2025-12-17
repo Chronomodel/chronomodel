@@ -120,12 +120,12 @@ protected:
 
     void createByAlphaGraph();
     void createByCurveGraph();
+
     // this function is usefull to update the hpd on the ref point of graph while threshold change
     void updateCurveEventsPointX();
-    /* TODO We have just the date to update
-    void updateCurveEventsPointY();
-    void updateCurveEventsPointZ();
-*/
+    void updateCurveEventsPointXY();
+    void updateCurveEventsPointXYZ();
+
     
     void deleteAllGraphsInList(QList<GraphViewResults*>& list);
     QList<GraphViewResults*> allGraphs();

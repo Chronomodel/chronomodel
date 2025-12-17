@@ -3108,7 +3108,7 @@ std::vector<t_matrix> do_vec_G(const SplineMatricesLD& matrices, const std::vect
             const t_matrix g = vec_Y[i] - ldt;
 
             if (std::isnan(g)) {
-                vec_G[i] = +INFINITY;
+                vec_G[i] = +std::numeric_limits<t_matrix>::max();
             } else {
                 vec_G[i] = g;
             }
@@ -3140,7 +3140,7 @@ std::vector<double> do_vec_G(const SplineMatricesD& matrices, const std::vector<
             const double g = vec_Y[i] - ldt;
 
             if (std::isnan(g)) {
-                vec_G[i] = +INFINITY;
+                vec_G[i] = +std::numeric_limits<t_matrix>::max();
             } else {
                 vec_G[i] = g;
             }

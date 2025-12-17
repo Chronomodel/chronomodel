@@ -220,7 +220,7 @@ bool MCMCLoopChrono::update_v4()
 
 
 
-    //--------------------- Update Phases -set mAlpha and mBeta they coud be used by the Event in the other Phase ----------------------------------------
+       //--------------------- Update Phases -set mAlpha and mBeta they coud be used by the Event in the other Phase ----------------------------------------
         /* --------------------------------------------------------------
          * C.1 - Update Alpha, Beta & Duration Phases
          * -------------------------------------------------------------- */
@@ -261,7 +261,7 @@ bool MCMCLoopChrono::adapt(const int batchIndex) //original code
 
     //--------------------- Adapt -----------------------------------------
 
-    const double delta = (batchIndex < 10000) ? 0.01 : (1. / sqrt(batchIndex));
+    const double delta = (batchIndex < 10000) ? 0.01 : (1.0 / sqrt(batchIndex));
 
     for (const auto& event : mModel->mEvents) {
        for (auto& date : event->mDates) {
@@ -280,9 +280,10 @@ bool MCMCLoopChrono::adapt(const int batchIndex) //original code
        if ((event->mType != Event::eBound) && ( event->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss) )
            noAdapt = event->mTheta.adapt(taux_min, taux_max, delta) && noAdapt;
 
+#ifdef S02_BAYESIAN
        if ( event->mS02Theta.mSamplerProposal == MHVariable::eMHAdaptGauss)
             noAdapt = event->mS02Theta.adapt(taux_min, taux_max, delta) && noAdapt;
-
+#endif
     }
 
 
@@ -310,7 +311,6 @@ void MCMCLoopChrono::memo()
             if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
                 double memoS02 = sqrt(event->mS02Theta.mX);
                 event->mS02Theta.memo(&memoS02);
-                //event->mS02Theta.memo();
                 event->mS02Theta.saveCurrentAcceptRate();
             }
 

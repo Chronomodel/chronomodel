@@ -703,16 +703,13 @@ void MainWindow::disconnectProject()
 
     disconnect(mRunAction, &QAction::triggered, mProject.get(), &Project::run);
 
-
 }
 
 void MainWindow::closeProject()
 {
-   if (mProject) {
-       mProject->askToSave(tr("Save current project as...")); // Saver if anserd is Yes
-        /*if ( mProject->askToSave(tr("Save current project as...")) == true)
-             mProject->saveProjectToFile(); */
+    if (mProject && mProject->mState !=  Project::emptyState() && AppSettings::mIsSaved == false) {
 
+        mProject->askToSave(tr("Save current project as..."));
         mUndoStack->clear();
 
         mProject->initState(CLOSE_PROJECT_REASON);
@@ -732,12 +729,11 @@ void MainWindow::closeProject()
         mViewResultsAction->setEnabled(false);
         if (mProjectView->mResultsView)
             mProjectView->mResultsView->clearResults();
-        //delete mProjectView->mResultsView;
+
         mProject->clear_and_shrink_model();
         mProject->clear_calibCurves();
         mProject.reset();
         updateWindowTitle();
-
 
 
    } else // if there is no project, we suppose it means to close the programm
@@ -756,7 +752,8 @@ void MainWindow::saveProjectAs()
 
 void MainWindow::updateWindowTitle()
 {
-    const QString saved_sign = AppSettings::mIsSaved ?  " ✓ " : QString(" ● ");
+    // const QString saved_sign = AppSettings::mIsSaved ?  " ✓ " : QString(" ● ");
+    const QString saved_sign = AppSettings::mIsSaved ?  QString::fromUtf8(" ✔ ") : QString::fromUtf8(" 🔥 ");
 
 #ifdef DEBUG
     #ifdef Q_OS_WIN
@@ -895,7 +892,6 @@ void MainWindow::updateAppSettings()
         mProject->setAppSettingsAutoSave();
         mProjectView->updateMultiCalibrationAndEventProperties();
         mProjectView->applySettings(mProject->mModel);
-
     }
     writeSettings();
 }
@@ -903,25 +899,17 @@ void MainWindow::updateAppSettings()
 void MainWindow::openManual()
 {
     QDesktopServices::openUrl(QUrl("https://chronomodel.com/storage/medias/83_chronomodel_v32_user_manual_2024_05_13_min.pdf", QUrl::TolerantMode));
-
 }
 
 void MainWindow::showHelp(bool show)
 {
-    /*
-    if (show)
-        QWhatsThis::enterWhatsThisMode();
-    else
-        QWhatsThis::leaveWhatsThisMode();*/
-
     AppSettings::mShowHelp = show;
     mProjectView->showHelp(show);
-
 }
 
 void MainWindow::openWebsite()
 {
-    QDesktopServices::openUrl(QUrl("http://chronomodel.com", QUrl::TolerantMode));
+    QDesktopServices::openUrl(QUrl("https://chronomodel.com", QUrl::TolerantMode));
 }
 
 void MainWindow::setFont(const QFont &font)
@@ -957,12 +945,10 @@ void MainWindow::selectAllEvents() {
         mProject->selectAllEvents();
         mProjectView->eventsAreSelected();
     }
-
 }
 
 void MainWindow::selectEventInSelectedPhases() {
-    if (mProject)
-        if (mProject->selectEventsFromSelectedPhases())
+    if (mProject && mProject->selectEventsFromSelectedPhases())
             mProjectView->eventsAreSelected();
 }
 
@@ -972,7 +958,7 @@ void MainWindow::selectEventWithString()
         bool ok;
         const QString text = QInputDialog::getText(this, tr("Find events containing the text"),
                                               tr("Text to search"), QLineEdit::Normal, QString(), &ok);
-         if (ok && !text.isEmpty())
+        if (ok && !text.isEmpty())
             if (mProject->selectedEventsWithString(text) )
                 mProjectView->eventsAreSelected();
     }
@@ -1505,8 +1491,6 @@ void MainWindow::mcmcFinished()
 
     // Tell the views to update
     mProjectView->initResults();
-
-
 
 }
 
