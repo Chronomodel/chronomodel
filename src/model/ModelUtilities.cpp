@@ -855,9 +855,10 @@ QString ModelUtilities::phaseResultsHTML(const std::shared_ptr<Phase> p)
     if (p->mTimeRange != std::pair<double, double>(- std::numeric_limits<double>::max(), +std::numeric_limits<double>::max())) {
         text += "<br>";
         // we suppose it's the same mThreshohdUsed than alpha
-        const QString result = QObject::tr("Phase Time Range") + QString(" ( %1 %) : [ %2 ; %3 ]").arg(stringForLocal(p->mAlpha.mThresholdUsed),
+        const QString result = QObject::tr("Phase Time Range") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(p->mAlpha.mThresholdUsed),
                                                                                             stringForLocal(p->getFormatedTimeRange().first),
-                                                                                            stringForLocal(p->getFormatedTimeRange().second));
+                                                                                            stringForLocal(p->getFormatedTimeRange().second),
+                                                                                                       DateUtils::getAppSettingsFormatStr());
         text += line(textBold(textOrange(result)));
     }
 
