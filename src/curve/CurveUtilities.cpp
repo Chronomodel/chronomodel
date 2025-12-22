@@ -47,9 +47,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #endif
 #endif
 
-#include <eigen-3.4.1/Eigen/Dense>
-#include <eigen-3.4.1/Eigen/OrderingMethods>
-#include <eigen-3.4.1/Eigen/src/Core/DiagonalMatrix.h>
+#include <Eigen/Dense>
+#include <Eigen/Core>
 
 #include <algorithm>
 #include <iostream>

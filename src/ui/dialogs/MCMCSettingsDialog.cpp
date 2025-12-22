@@ -318,8 +318,7 @@ void MCMCSettingsDialog::updateLayout()
 
 
    // Bottom Info
-    //const int margingLeft = (width()/2 - mSeedsLabel->width() - mSeedsEdit->width() - mMarginW)/2;
-    //mSeedsLabel->move(margingLeft, height() - 5 * mMarginH - mButH - mLineH);
+
     mSeedsLabel->move(2 * mMarginW, height() - 5 * mMarginH - mButH - mLineH);
     mSeedsEdit->move(mSeedsLabel->x() + mSeedsLabel->width() + mMarginW, mSeedsLabel->y());
     const int margingRight = (width()/2 -mLevelLabel->width() - mLevelEdit->width() - mMarginW)/2;
@@ -454,5 +453,5 @@ void MCMCSettingsDialog::setQuickTest()
     mNumIterEdit->setText(QLocale().toString(100));
     mDownSamplingEdit->setText(QLocale().toString(1));
 
-    mLevelEdit->setText(QLocale().toString(0.99));
+    mLevelEdit->setText(QLocale().toString(MCMC_MIXING_DEFAULT));
 }

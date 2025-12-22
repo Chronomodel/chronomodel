@@ -50,9 +50,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <stdexcept>
 #include <utility>
 
-#include <eigen-3.4.1/Eigen/Dense>
-#include <eigen-3.4.1/Eigen/src/Core/DiagonalMatrix.h>
-#include <eigen-3.4.1/Eigen/Sparse>
+#include <Eigen/Dense>
+#include <Eigen/src/Core/DiagonalMatrix.h>
+#include <Eigen/Sparse>
 
 #include <QDataStream>
 #include <QtDebug>

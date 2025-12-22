@@ -1511,7 +1511,7 @@ void Event::updateTheta_v4(const double tmin, const double tmax, const double ra
     //  On est en "wiggle" si au moins une des mesures a un delta > 0.
     // -------------------------------------------------------------------------------------------------
     // tirage de theta
-    const double mu = 1;
+    const double mu = 1.0;
     const double u = Generator::randomUniform();
     double sum_p = 0.;
     double sum_t = 0.;
@@ -1519,16 +1519,15 @@ void Event::updateTheta_v4(const double tmin, const double tmax, const double ra
     for (auto&& date: mDates) {
         const double variance  = pow(date.mSigmaTi.mX, 2.);
         sum_t += (date.mTi.mX + date.mDelta) / variance;
-        sum_p += 1. / variance;
+        sum_p += 1.0 / variance;
     }
     const double ti_avg = sum_t / sum_p;
-    const double sigma = 1. / sqrt(sum_p);
+    const double sigma = 1.0 / sqrt(sum_p);
 
     double theta_try ;
     if (u > mu) { // Q1
         const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), mMixingCalibrations->mRepartition);
         theta_try  = mMixingCalibrations->mTmin + idx * mMixingCalibrations->mStep;
-
 
     } else { //Q2
         theta_try = Generator::gaussByDoubleExp(ti_avg, sigma, min, max);

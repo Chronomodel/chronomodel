@@ -127,17 +127,18 @@ int main(int argc, char *argv[])
     unsigned int nCores = std::thread::hardware_concurrency();
     if (nCores == 0) nCores = 1;
 
+#ifdef _OPENMP
     // 2️⃣ Choix du nombre optimal de threads : max 80% des cœurs
     //int optimalThreads = std::max(1, static_cast<int>(nCores * 0.8));
-    int optimalThreads = std::max(1, static_cast<int>(nCores * 0.2));
+    //int optimalThreads = std::max(1, static_cast<int>(nCores * 0.2));
+    int optimalThreads = omp_get_max_threads();
 
-#ifdef _OPENMP
-    omp_set_num_threads(optimalThreads);
-    std::cout << "OpenMP threads set to: " << omp_get_max_threads() << "\n";
-#endif
+    //omp_set_num_threads(optimalThreads);
+    std::cout << "OpenMP threads set to: " << optimalThreads << "\n";
 
     Eigen::setNbThreads(optimalThreads);
     Eigen::initParallel();
+#endif
 
     std::cout << "[main::Eigen] Threading info:\n";
     std::cout << "  - Logical Threads detected by hardware: " << nCores << "\n";

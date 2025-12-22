@@ -520,19 +520,6 @@ std::vector<double> autocorrelation_schoolbook(const std::vector<double> &trace,
     mean_variance_Knuth(trace, mean, variance);
     variance *= static_cast<double>(n);
 
-    /*
-     std::vector<double> results;
-    results.push_back(1.); // force the first to exactly 1.
-    double sH = 0.;
-    for (int h = 1; h <= hmax; ++h) {
-        sH = 0.;
-        std::vector<double>::const_iterator iter_H = trace.cbegin() + h;
-        for (std::vector<double>::const_iterator iter = trace.cbegin(); iter != trace.cbegin() + (n-h); ++iter)
-            sH += (*iter - mean) * (*iter_H++ - mean);
-
-        results.push_back(sH / variance);
-    }
-    */
     // Optimisation, moins d’accès mémoire et pas de reallocations
     std::vector<double> results(hmax + 1);
     // pré-centrer la série
@@ -541,12 +528,16 @@ std::vector<double> autocorrelation_schoolbook(const std::vector<double> &trace,
         centered[i] = trace[i] - mean;
 
     results[0] = 1.0; // corr(0) = 1
+    // Parallélisation potentielle
+#pragma omp parallel for
+
     for (int h = 1; h <= hmax; ++h) {
         double sH = 0.0;
         for (size_t i = 0; i < n - h; ++i)
             sH += centered[i] * centered[i + h];
         results[h] = sH / variance;
     }
+
     return results;
 
 }
