@@ -25,7 +25,7 @@ echo "➡️  2 - Copy the ChronoModel BUNDLE "
 
 # make -j12 in /Users/dufresne/ChronoModel-SoftWare/build-Chronomodel-Qt_6_7_2_for_macOS-Release
 
-RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_10_0_for_macOS-Release/build/release/
+RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_10_1_for_macOS-Release/build/release/
 
 BUNDLE="$RELEASE_PATH"chronomodel.app
 
@@ -47,7 +47,7 @@ echo "➡️  3 - Executing binarycreator"
 
 DATE_FILE=$(date '+%Y%m%d')
 
-INSTALLER=ChronoModel_v${VERSION}_Qt6.10.0_macOS12_${DATE_FILE}_Installer
+INSTALLER=ChronoModel_v${VERSION}_Qt6.10.1_macOS12_${DATE_FILE}_Installer
 
 echo "➡️  4 - Created file : " $INSTALLER
 ${QT_BIN_PATH}/binarycreator --offline-only -c installer-config/config.xml -p installer-packages-macOS $INSTALLER

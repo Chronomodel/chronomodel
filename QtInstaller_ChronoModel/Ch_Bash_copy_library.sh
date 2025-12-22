@@ -9,27 +9,26 @@
 
 clear
 # -------------------------------------------------------
-echo "$ 0.0 Création des fichiers linguistiques "
+echo "➡️  [1] Création des fichiers linguistiques "
 # -------------------------------------------------------
 # -------------------------------------------------------
 #	Vérifier que le chemin de Qt est bien celui de la machine
 # -------------------------------------------------------
 ROOT_PATH=$(dirname $0)
 
-
-QT_BIN_PATH=/Users/dufresne/Qt/6.7.3/macos/bin
-QT_LIB_PATH=/Users/dufresne/Qt/6.7.3/macos/lib
-QT_PLUGINS_PATH=/Users/dufresne/Qt/6.7.3/macos/plugins
-VERSION=3.3.0
+QT_BIN_PATH=/Users/dufresne/Qt/6.10.1/macos/bin
+QT_LIB_PATH=/Users/dufresne/Qt/6.10.1/macos/lib
+QT_PLUGINS_PATH=/Users/dufresne/Qt/6.10.1/macos/plugins
+VERSION=3.3.6
 
 ${QT_BIN_PATH}/lupdate /Users/dufresne/ChronoModel-SoftWare/chronomodel/Chronomodel_bash.pro
 ${QT_BIN_PATH}/lrelease /Users/dufresne/ChronoModel-SoftWare/chronomodel/Chronomodel_bash.pro
 
 # _________________________
-echo "$  1 Script copie qt librairie "
+echo "➡️  [2] Script copie qt librairie "
 
-
-RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_7_3_for_macOS-Release/build/release/
+#RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_7_3_for_macOS-Release/build/release/
+RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_10_1_for_macOS-Release/build/release/
 
 BUNDLE="$RELEASE_PATH"chronomodel_bash.app
 echo "copie dans le BUNDLE $BUNDLE"
@@ -86,14 +85,14 @@ echo "copie dans le BUNDLE $BUNDLE"
 #cp -R "$QT_PLUGINS_PATH"/styles/*.dylib "$BUNDLE"/Contents/PlugIns/styles/
 
 
-echo "$ 2 Execution de macdeployqt"
+echo "➡️  [3] Execution de macdeployqt"
 #${QT_BIN_PATH}/macdeployqt $BUNDLE
 
 
 # Le Finder ne détecte généralement pas immédiatement le changement d'icône.
 # Copiez le paquet dans un autre dossier pour qu’il enregistre la nouvelle icône
 
-echo "$ 3 Insertion de la version dans Info.plist "
+echo "➡️  [4] Insertion de la version dans Info.plist "
 # https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html
 
 PLIST=${BUNDLE}/Contents/Info.plist
@@ -111,5 +110,7 @@ PLIST=${BUNDLE}/Contents/Info.plist
 /usr/libexec/Plistbuddy -c "Add :CFBundleDocumentTypes:0:CFBundleTypeIconFile string Chronomodel_Bash.icns" "$PLIST"
 /usr/libexec/Plistbuddy -c "Add :CFBundleDocumentTypes:0:CFBundleTypeName string Chronomodel Project" "$PLIST"
 
-echo "$ 0.4.1 $PLIST final"
+echo "➡️  [3] $PLIST final"
 /usr/libexec/PlistBuddy -x -c "Print" "$PLIST"
+
+echo "✅"
