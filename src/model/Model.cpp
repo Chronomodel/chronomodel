@@ -126,7 +126,7 @@ Model::Model(const QJsonObject& json):
         QJsonArray events = json.value(STATE_EVENTS).toArray();
         mNumberOfEvents = (int) events.size();
 
-        for (const auto event : events) {
+        for (const auto& event : events) {
             const QJsonObject& eventObj = event.toObject();
 
             if (eventObj.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
@@ -399,7 +399,7 @@ void Model::fromJson(const QJsonObject& json)
         QJsonArray events = json.value(STATE_EVENTS).toArray();
         mNumberOfEvents = (int) events.size();
 
-        for (auto ev : events) {
+        for (const auto&& ev : events) {
             const QJsonObject JSONevent = ev.toObject();
 
             if (JSONevent.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
