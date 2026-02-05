@@ -42,10 +42,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QtWidgets>
 
-ChronoApp::ChronoApp(int& argc, char** argv):QApplication(argc, argv)
+ChronoApp::ChronoApp(int& argc, char** argv) : QApplication(argc, argv)
 {
 #ifdef DEBUG
-    std::cout<<"start ChronoApp"<<"\n";
+    std::cout << "start ChronoApp" << std::endl;
 #endif
 }
 
@@ -59,23 +59,26 @@ ChronoApp::~ChronoApp()
 bool ChronoApp::event(QEvent* e)
 {
 
-    /*QFileOpenEvent* foe = dynamic_cast<QFileOpenEvent*>(e);
-    if(foe)
-    {
-        QDesktopServices::openUrl(QUrl("http://www.chronomodel.fr", QUrl::TolerantMode));
-        return true;
-    }*/
     if (e->type() == QEvent::FileOpen) {
-        QString path = static_cast<QFileOpenEvent*>(e)->file();
+        QFileOpenEvent* foe = static_cast<QFileOpenEvent*>(e);
+        QString path = foe->file();
+
 #ifdef DEBUG
-        std::cout<<"in ChronoApp::event path = "<< path.toStdString();
+        std::cout<<"in ChronoApp::event path = "<< path.toStdString() << std::endl;
 #endif
         MainWindow* w = MainWindow::getInstance();
 
-        w->readSettings(path);
+        if (w) {
+            w->readSettings(path);
+        } else {
+            qCritical() << "MainWindow instance is null in ChronoApp::event";
+        }
 
-        w = nullptr;
+        // Retourner true pour indiquer que l'événement a été traité
+        return true;
 
     }
+
+    // Appele la méthode de base pour les autres événements
     return QGuiApplication::event(e);
 }
