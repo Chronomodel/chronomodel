@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -69,7 +69,7 @@ void Painting::init()
     chainColors.append(QColor(26, 93, 75)); // dark-green
     chainColors.append(QColor(40, 33, 133)); // dark-blue
 
-    for (int i = 0; i<200; ++i)
+    for (int i = 0; i<210; ++i)
         chainColors.append(randomColor());
 }
 
