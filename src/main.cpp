@@ -58,7 +58,23 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 // STDC FENV_ACCESS ON // not supported with Clang
 
-
+/**
+ * @brief Gestionnaire de messages personnalisé pour l'application.
+ *
+ * Ce gestionnaire de messages est utilisé pour capturer et logger tous les messages de journalisation
+ * générés par l'application Qt. Les messages sont formatés avec la date et l'heure actuelles et sont
+ * écrits dans un fichier nommé `LogFile.log`.
+ *
+ * Les types de messages capturés sont :
+ * - QtDebugMsg : Messages de débogage.
+ * - QtWarningMsg : Messages d'avertissement.
+ * - QtCriticalMsg : Messages critiques.
+ * - QtFatalMsg : Messages fataux qui provoquent la terminaison de l'application.
+ *
+ * @param type Type de message (QtDebugMsg, QtWarningMsg, QtCriticalMsg, QtFatalMsg).
+ * @param context Contexte du message (fichier, ligne, fonction, etc.). Non utilisé dans cette implémentation.
+ * @param msg Message de journalisation à logger.
+ */
 void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
     Q_UNUSED(context);
@@ -84,15 +100,24 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
             return ;
     }
 
-    QFile outFile("LogFile.log");
-    if (outFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
+        QFile outFile("LogFile.log");
+        if (!outFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
+            // Gérer l'erreur d'ouverture du fichier
+            std::cerr << "Failed to open LogFile.log for writing: " << outFile.errorString().toStdString() << std::endl;
+            return;
+        }
+
         QTextStream textStream(&outFile);
         textStream << txt << Qt::endl;
-    }
+
+        if (type == QtFatalMsg) {
+            exit(EXIT_FAILURE);
+        }
 }
 
 int main(int argc, char *argv[])
 {
+    qInstallMessageHandler(customMessageHandler);
 
     // Macros détaillées possibles (définies si vectorisation spécifique présente)
 #if defined(EIGEN_VECTORIZE_SSE)
@@ -163,57 +188,59 @@ int main(int argc, char *argv[])
 
     ChronoApp a(argc, argv);
 
-    a.setApplicationName("ChronoModel");
-#ifdef DEBUG
-    const QString application_name = "ChronoModel v" + version.toString() +  " DEBUG Mode ";
-    qDebug() << "[main] VERSION_STRING (macro):" << VERSION_STRING << application_name;
-#else
-    const QString application_name = "ChronoModel v" + version.toString();
-#endif
-    a.setApplicationDisplayName(application_name); // sous windows correspond au nom affiché
-    a.setApplicationVersion(version.toString());  // must match value in Chronomodel.pro
-    a.setOrganizationDomain("https://www.chronomodel.com");
-    a.setOrganizationName("CNRS");
-    a.setWindowIcon(QIcon(":chronomodel.png"));
+    try {
 
-    qDebug() << "ApplicationVersion:" << a.applicationVersion()
-             << "Qt compile-time:" << QT_VERSION_STR
-             << "Qt runtime:" << qVersion();
+        a.setApplicationName("ChronoModel");
+#ifdef DEBUG
+        const QString application_name = "ChronoModel v" + version.toString() +  " DEBUG Mode ";
+        qDebug() << "[main] VERSION_STRING (macro):" << VERSION_STRING << application_name;
+#else
+        const QString application_name = "ChronoModel v" + version.toString();
+#endif
+        a.setApplicationDisplayName(application_name); // sous windows correspond au nom affiché
+        a.setApplicationVersion(version.toString());  // must match value in Chronomodel.pro
+        a.setOrganizationDomain("https://www.chronomodel.com");
+        a.setOrganizationName("CNRS");
+        a.setWindowIcon(QIcon(":chronomodel.png"));
+
+        qDebug() << "ApplicationVersion:" << a.applicationVersion()
+                 << "Qt compile-time:" << QT_VERSION_STR
+                 << "Qt runtime:" << qVersion();
 
 #ifdef Q_OS_MAC
-    a.setStyle("macos");
+        a.setStyle("macos");
 #else
-    a.setStyle("fusion");// "windows", "windowsvista", "fusion", or "macos"
+        a.setStyle("fusion");// "windows", "windowsvista", "fusion", or "macos"
 #endif
 
-    QFontInfo F_info(a.font());
+        QFontInfo F_info(a.font());
 
-    //specify a new font. This happens, for instance, on macOS and iOS, where the system UI fonts are not accessible to the user
-    if (QFontDatabase::isPrivateFamily(F_info.family()))
-        a.setFont(QFont("Arial", F_info.pixelSize()));
+        //specify a new font. This happens, for instance, on macOS and iOS, where the system UI fonts are not accessible to the user
+        if (QFontDatabase::isPrivateFamily(F_info.family()))
+            a.setFont(QFont("Arial", F_info.pixelSize()));
 
 
-    QString filePath = "";
-    for (int i = 0; i < argc; ++i) {
-        QString arg(argv[i]);
-        if (arg.contains(".chr", Qt::CaseInsensitive))
-            filePath = arg;
-    }
-    
-    QLocale::Language newLanguage = QLocale::system().language();
+        QString filePath = "";
+        for (int i = 0; i < argc; ++i) {
+            QString arg(argv[i]);
+            if (arg.contains(".chr", Qt::CaseInsensitive))
+                filePath = arg;
+        }
+
+        QLocale::Language newLanguage = QLocale::system().language();
 #if QT_DEPRECATED_SINCE(6, 6)
-    QLocale::Territory newCountry = QLocale::system().territory();
+        QLocale::Territory newCountry = QLocale::system().territory();
 #else
-    QLocale::Country newCountry= QLocale::system().country();
+        QLocale::Country newCountry= QLocale::system().country();
 #endif
 
-    QLocale locale = QLocale(newLanguage, newCountry);
-    
-    locale.setNumberOptions(QLocale::OmitGroupSeparator);
-    QLocale::setDefault(locale);
+        QLocale locale = QLocale(newLanguage, newCountry);
 
-  //  qApp->setFont(QApplication::font("QMenu"));
-/*
+        locale.setNumberOptions(QLocale::OmitGroupSeparator);
+        QLocale::setDefault(locale);
+
+        //  qApp->setFont(QApplication::font("QMenu"));
+        /*
     QTranslator qtTranslator;
     qtTranslator.load("qt_" + QLocale::system().name(), QLibraryInfo::path(QLibraryInfo::TranslationsPath));
     a.installTranslator(&qtTranslator);
@@ -224,16 +251,24 @@ int main(int argc, char *argv[])
         a.installTranslator(&translator);
     }
 */
-    //qInstallMessageHandler(customMessageHandler);
-#ifdef DEBUG
-   // std::cout<<"in main filePath ="<<filePath.toStdString()<<"\t";
-#endif
-    MainController* c = new MainController(filePath);
-    (void) c;
 
-    a.exec();
-    
-    delete c;
+#ifdef DEBUG
+        // std::cout<<"in main filePath ="<<filePath.toStdString()<<"\t";
+#endif
+        MainController* c = new MainController(filePath);
+        (void) c;
+
+        int result = a.exec();
+        delete c;
+        return result;
+
+    } catch (const std::exception& e) {
+        // Logger l'exception critique
+        qCritical() << "Standard exception caught:" << e.what();
+    } catch (...) {
+        // Logger une exception inconnue
+        qCritical() << "Unknown exception caught";
+    }
     
     return 0;
 
