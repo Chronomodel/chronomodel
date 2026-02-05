@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------
 
-#Copyright or © or Copr. CNRS	2014 - 2025
+#Copyright or © or Copr. CNRS	2014 - 2026
 
 #Authors :
 #	Philippe LANOS
@@ -166,8 +166,11 @@ macx {
 # ======================================================
 CONFIG(release, debug|release) {
     # ---- Options générales (valide partout) ----
-    QMAKE_CXXFLAGS += -O3 -funroll-loops -ffast-math
-    QMAKE_CFLAGS   += -O3 -funroll-loops -ffast-math
+    #QMAKE_CXXFLAGS += -O3 -funroll-loops -ffast-math // dangereux pour eigen désactive isfinite
+    #QMAKE_CFLAGS   += -O3 -funroll-loops -ffast-math
+
+   QMAKE_CXXFLAGS += -O3 -funroll-loops
+   QMAKE_CFLAGS   += -O3 -funroll-loops
 
     # ---- Linux / MinGW (x86_64 générique optimisé) ----
     unix:!macx {
@@ -196,7 +199,7 @@ CONFIG(release, debug|release) {
 
     # ---- Windows (MSVC) ----
     win32-msvc* {
-        QMAKE_CXXFLAGS += /O2 /fp:fast
+        QMAKE_CXXFLAGS += /O2 /fp:precise
     }
 
     # ---- Windows (MinGW) ----
