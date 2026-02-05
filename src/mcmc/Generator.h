@@ -142,6 +142,8 @@ public:
     static int randomUniformInt(const int min = 0, const int max = 1);
 
     static double gaussByDoubleExp(const double mean, const double sigma, const double min, const double max) ;
+    static double truncatedNormal(const double mu, const double sigma, double low, double high);
+
     static double gaussByBoxMuller(const double mean, const double sigma);
     //static double shrinkage (const double variance, const double shrinkage); // obsolete; à controler
 
@@ -158,6 +160,7 @@ public:
     static double shrinkageUniforme(const double shrinkage);
     static double gammaDistribution(const double alpha, const double beta);
     static double exponentialeDistribution(const double meanexp);
+    static double normalDistribution(const double mu, const double sigma);
 
 private:
     

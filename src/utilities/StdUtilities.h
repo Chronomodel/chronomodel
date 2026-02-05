@@ -740,4 +740,7 @@ std::vector<size_t> argsort(const std::vector<T>& v) {
     return indices;
 }
 
+double erfcInv_approx(double x);
+double normInv(double p);
+
 #endif

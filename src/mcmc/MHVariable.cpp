@@ -235,35 +235,6 @@ bool MHVariable::test_update(const double current_value, const double try_value,
     mLastAccepts.push_back(accepted);
 
     return accepted;
-    /*
-    if (rate >= 1.0) {
-        // Accept unconditionally
-        mX = try_value;
-        mLastAccepts.push_back(true);
-        return true;
-    }
-
-    if (rate < 0.0) {
-        // Reject outright
-        mX = current_value;
-        mLastAccepts.push_back(false);
-        return false;
-    }
-
-    // For rate between 0.0 and 1.0, perform a Metropolis-Hastings accept/reject step
-    const double random_number = Generator::randomUniform();
-
-    if (random_number <= rate) {
-        mX = try_value;
-        mLastAccepts.push_back(true);
-        return true;
-
-    } else {
-        mX = current_value;
-        mLastAccepts.push_back(false);
-        return false;
-    }
-*/
 }
 /**
  * @brief MHVariable::accept_update force setting mX with the value of x.
@@ -298,7 +269,7 @@ void MHVariable::reject_update()
  * @param coef_max value [0; 1], default 0.46
  * @return bool if no adaptation needed
  */
-bool MHVariable::adapt (const double coef_min, const double coef_max, const double delta)
+/*bool MHVariable::adapt (const double coef_min, const double coef_max, const double delta)
 {
     bool noAdapted = true;
     const double acceptRate = getCurrentAcceptRate();
@@ -309,6 +280,99 @@ bool MHVariable::adapt (const double coef_min, const double coef_max, const doub
         //qDebug()<<"[MHVariable::adapt] "<<this->getName();
     }
     return noAdapted;
+}*/
+
+/*bool MHVariable::adapt(double coef_min, double coef_max,
+                       double delta, double sigma_min, double sigma_max)
+{
+    bool stillAdapted = true;                     // true → pas besoin d’ajustement
+    const double acceptRate = getCurrentAcceptRate();   // taux d’acceptation sur la fenêtre courante
+
+    if (acceptRate <= coef_min || acceptRate >= coef_max) {
+        // on doit changer l’échelle
+        const double sign = (acceptRate <= coef_min) ? -1.0 : 1.0;
+        // mise à jour multiplicative sur le log10
+        mSigmaMH *= std::pow(10.0, sign * delta);
+
+        // on impose les bornes (containment)
+        if (mSigmaMH < sigma_min) mSigmaMH = sigma_min;
+        if (mSigmaMH > sigma_max) mSigmaMH = sigma_max;
+
+        stillAdapted = false;                    // adaptation a eu lieu
+    }
+    return stillAdapted;
+}*/
+
+// ---------------------------------------------------------------
+// 2.  Méthode d'adaptation d'une variable MH (mise à jour du sigma)
+// ---------------------------------------------------------------
+/**
+ * @brief Adaptation du paramètre de proposition Metropolis–Hastings
+ *        par approximation stochastique de type Robbins–Monro.
+ *
+ * Cette fonction ajuste dynamiquement l'écart-type de la loi de proposition
+ * (`mSigmaMH`) afin de maintenir le taux d'acceptation de Metropolis–Hastings
+ * dans un intervalle cible donné.
+ *
+ * L'adaptation repose sur un schéma de Robbins–Monro avec pas décroissant :
+ * \f[
+ *   \gamma_t = \frac{c}{(t + t_0)^\kappa}
+ * \f]
+ * et une mise à jour multiplicative sur l'échelle logarithmique de \f$\sigma\f$ :
+ * \f[
+ *   \log(\sigma_{t+1}) = \log(\sigma_t) \pm \gamma_t
+ * \f]
+ *
+ * L'algorithme inclut :
+ * - une fenêtre d'acceptation cible [coef_min, coef_max],
+ * - une condition de compacité (containment) garantissant
+ *   l'ergodicité de la chaîne adaptative,
+ * - une décroissance du pas d'apprentissage assurant
+ *   la diminution de l'adaptation au cours du temps.
+ *
+ * Cette approche est conforme aux cadres théoriques de l'Adaptive MCMC
+ * (Haario et al., Andrieu & Moulines).
+ *
+ * @param coef_min Taux d'acceptation minimal acceptable.
+ * @param coef_max Taux d'acceptation maximal acceptable.
+ * @param batchIndex Indice de batch courant (temps discret de l'adaptation).
+ * @param sigma_min Borne inférieure autorisée pour \f$\sigma\f$.
+ * @param sigma_max Borne supérieure autorisée pour \f$\sigma\f$.
+ * @param c Constante de pas de Robbins–Monro (amplitude de l'adaptation).
+ * @param kappa Exposant de décroissance du pas (\f$0.5 < \kappa \le 1\f$).
+ * @param t0 Décalage temporel pour stabiliser les premières itérations.
+ *
+ * @return true si aucune adaptation n'a été nécessaire (taux dans l'intervalle cible),
+ *         false si le paramètre de proposition a été ajusté.
+ */
+
+bool MHVariable::adapt(double coef_min, double coef_max,
+                       size_t batchIndex,
+                       double sigma_min, double sigma_max,
+                       double c, double kappa, double t0 )
+{
+    // pas d'apprentissage qui décroit (Robbins‑Monro)
+    const double gamma_t = c / std::pow(static_cast<double>(batchIndex) + t0, kappa);
+
+    const double acceptRate = getCurrentAcceptRate(); // fenêtre glissante
+
+    bool stillAdapted = true; // true → aucune adaptation nécessaire
+
+    if (acceptRate <= coef_min || acceptRate >= coef_max) {
+        const double sign = (acceptRate <= coef_min) ? -1.0 : 1.0;
+        // mise à jour multiplicative sur le log10
+        mSigmaMH *= std::pow(10.0, sign * gamma_t);
+
+        /** 4️⃣ Containment ✔️ (condition clé en Adaptive MCMC)
+        C’est la condition de compacité (Andrieu & Moulines, 2006)
+        indispensable pour garantir l’ergodicité de la chaîne adaptative.
+        */
+        if (mSigmaMH < sigma_min) mSigmaMH = sigma_min;
+        if (mSigmaMH > sigma_max) mSigmaMH = sigma_max;
+
+        stillAdapted = false; // on a effectivement adapté
+    }
+    return stillAdapted;
 }
 
 void MHVariable::clear()

@@ -853,7 +853,7 @@ void EventsScene::updateStateSelectionFromItem()
                 // sendUpdateProject(tr("item moved"), false, true);
 
             } else
-                sendUpdateProject(tr("events selection"), false, false);//  bool notify = true, bool storeUndoCommand = false
+                sendUpdateProject(tr("Events selection"), false, false);//  bool notify = true, bool storeUndoCommand = false
 
             // refresh the show and hide Event in the phases Scenes
            if (nbOfSelectedEvent == 0)

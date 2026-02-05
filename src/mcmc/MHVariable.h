@@ -109,7 +109,15 @@ public:
     void accept_update(const double x);
     void reject_update();
 
-    bool adapt (const double coef_min = 0.42, const double coef_max = 0.46, const double delta = 0.01);
+    //bool adapt (const double coef_min = 0.42, const double coef_max = 0.46, const double delta = 0.01);
+
+   // bool adapt(const double coef_min = 0.42, const double coef_max = 0.46, double delta = 0.01, double sigma_min = 1e-4, double sigma_max = 10.0);
+
+
+    bool adapt(double coef_min = 0.42, const double coef_max = 0.46,
+                           size_t batchIndex = 100,
+                           double sigma_min = 1e-4, double sigma_max = 10.0,
+                           double c = 0.5, double kappa = 0.6, double t0 = 10.0);
 
     inline bool accept_buffer_full() {return mLastAccepts.size() == mLastAcceptsLength;};
     inline void memo_accept(const unsigned i_chain) {if (accept_buffer_full() && mLastAccepts.back()) ++mNbValuesAccepted[i_chain];}

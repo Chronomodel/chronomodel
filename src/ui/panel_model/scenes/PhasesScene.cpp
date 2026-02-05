@@ -534,7 +534,7 @@ void PhasesScene::updateStateSelectionFromItem()
         blockSignals(false);
 
         if (modified ) {
-           sendUpdateProject(tr("Phases selection"), true, false);
+           sendUpdateProject(tr("Phases selection"), false, false);
 
             // refresh the thumbs in the Events scene
             if (!oneSelection) {// selectedItems().size() == 0) {

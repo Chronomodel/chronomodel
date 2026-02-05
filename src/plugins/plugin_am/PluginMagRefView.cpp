@@ -445,12 +445,12 @@ RefCurve PluginMagRefView::combine_curve_ID(double incl,  double decl, const dou
 
         for (int iter = 0; iter < nb_iter; ++iter) {
             // random sampling around the point to be dated
-            const double xID = Generator::gaussByBoxMuller(0, s0xy);
-            const double yID = Generator::gaussByBoxMuller(0, s0xy);
+            const double xID = Generator::normalDistribution(0, s0xy);
+            const double yID = Generator::normalDistribution(0, s0xy);
 
             // Calculation for ref point
-            const double xID1 = Generator::gaussByBoxMuller(0, s0xy);
-            const double yID1 = Generator::gaussByBoxMuller(0, s0xy);
+            const double xID1 = Generator::normalDistribution(0, s0xy);
+            const double yID1 = Generator::normalDistribution(0, s0xy);
 
             const double d0 = sqrt(pow(xID-xID1 ,2) + pow(yID-yID1 ,2)) / rad;
             ++iter_date;
@@ -458,8 +458,8 @@ RefCurve PluginMagRefView::combine_curve_ID(double incl,  double decl, const dou
             mean_date = previousMean_date + (d0 - previousMean_date) / iter_date;
 
             // random sampling around the point on the curve
-            const double xID_t = Generator::gaussByBoxMuller(x_t, Sxy_t);
-            const double yID_t = Generator::gaussByBoxMuller(y_t, Sxy_t);
+            const double xID_t = Generator::normalDistribution(x_t, Sxy_t);
+            const double yID_t = Generator::normalDistribution(y_t, Sxy_t);
 
             const double d = sqrt(pow(xID-xID_t ,2) + pow(yID-yID_t ,2)) / rad;
 
@@ -539,16 +539,16 @@ RefCurve PluginMagRefView::combine_curve_IF(double incl, const double alpha95, c
 
         for (int iter = 0; iter < nb_iter; ++iter) {
             // random sampling around the point to be dated
-            const double I = Generator::gaussByBoxMuller(incl, sI);
-            const double F = Generator::gaussByBoxMuller(field, error_f);
+            const double I = Generator::normalDistribution(incl, sI);
+            const double F = Generator::normalDistribution(field, error_f);
 
             // Calculation for ref point
-            const double I0 = Generator::gaussByBoxMuller(incl, sI);
-            const double F0 = Generator::gaussByBoxMuller(field, error_f);
+            const double I0 = Generator::normalDistribution(incl, sI);
+            const double F0 = Generator::normalDistribution(field, error_f);
 
             // random sampling around the point on the curve
-            const double I0_t = Generator::gaussByBoxMuller(I_t, sI_t);
-            const double F0_t = Generator::gaussByBoxMuller(F_t, sF_t);
+            const double I0_t = Generator::normalDistribution(I_t, sI_t);
+            const double F0_t = Generator::normalDistribution(F_t, sF_t);
 
 
             double p1 = 0;
@@ -655,19 +655,19 @@ RefCurve PluginMagRefView::combine_curve_IDF(double incl, double decl, const dou
         for (int iter = 0; iter < nb_iter; ++iter) {
 
             // random sampling around the point to be dated
-            const double I = Generator::gaussByBoxMuller(incl, sI);
-            const double D = Generator::gaussByBoxMuller(decl, sD);
-            const double F = Generator::gaussByBoxMuller(field, error_f);
+            const double I = Generator::normalDistribution(incl, sI);
+            const double D = Generator::normalDistribution(decl, sD);
+            const double F = Generator::normalDistribution(field, error_f);
 
             // Calculation for ref point
-            const double I0 = Generator::gaussByBoxMuller(incl, sI);
-            const double D0 = Generator::gaussByBoxMuller(decl, sD);
-            const double F0 = Generator::gaussByBoxMuller(field, error_f);
+            const double I0 = Generator::normalDistribution(incl, sI);
+            const double D0 = Generator::normalDistribution(decl, sD);
+            const double F0 = Generator::normalDistribution(field, error_f);
 
             // random sampling around the point on the curve
-            const double I0_t = Generator::gaussByBoxMuller(I_t, sI_t);
-            const double D0_t = Generator::gaussByBoxMuller(D_t, sD_t);
-            const double F0_t = Generator::gaussByBoxMuller(F_t, sF_t);
+            const double I0_t = Generator::normalDistribution(I_t, sI_t);
+            const double D0_t = Generator::normalDistribution(D_t, sD_t);
+            const double F0_t = Generator::normalDistribution(F_t, sF_t);
 
             double p = 0;
             double p1 = 0;

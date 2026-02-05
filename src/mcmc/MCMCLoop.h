@@ -45,6 +45,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ModelCurve.h"
 
 #include <QThread>
+#include <memory>
+#include <vector>
 
 #define ABORTED_BY_USER "Aborted by user"
 
@@ -55,7 +57,16 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define PAR
 #endif
 
-
+/**
+ * @class MCMCLoop
+ * @brief Classe principale pour l'exécution des simulations MCMC
+ *
+ * Cette classe gère l'ensemble du processus MCMC incluant :
+ * - Calibration des données
+ * - Initialisation SMC pour la sélection des graines
+ * - Exécution des chaînes MCMC (initialisation, burn-in, adaptation, acquisition)
+ * - Calcul des scores SMC pour l'évaluation des configurations
+ */
 class MCMCLoop : public QThread
 {
     Q_OBJECT
@@ -96,6 +107,7 @@ protected:
     virtual QString initialize() = 0;
 
     QString initialize_time();
+    double SMC_score();
     virtual bool update() = 0;
     virtual void memo() = 0;
     //virtual void memo_accept(const unsigned int i_chain) = 0;

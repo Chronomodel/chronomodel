@@ -197,8 +197,9 @@ public:
 
     void updateTheta_v3(const double tmin, const double tmax);
 
-    void updateTheta_v4(const double tmin, const double tmax, const double rate_theta = 1.);
     /*obsolete
+    void updateTheta_v4(const double tmin, const double tmax, const double rate_theta = 1.);
+
     void updateTheta_v41(const double tmin, const double tmax, const double rate_theta = 1.);
     void updateTheta_v42(const double tmin, const double tmax, const double rate_theta = 1.);
     */

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2025
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
     Philippe LANOS
@@ -766,7 +766,7 @@ bool MCMCLoopCurve::update_321()
                         //La partie h_YWI_3 = exp(ln_h_YWI_3) est placée dans le rapport MH
 
                         // On tire une nouvelle valeur :
-                        const double try_value = Generator::gaussByBoxMuller(current_value, event->mTheta.mSigmaMH);
+                        const double try_value = Generator::normalDistribution(current_value, event->mTheta.mSigmaMH);
 
                         if (try_value >= min && try_value <= max) {
                             // On force la mise à jour de la nouvelle valeur pour calculer h_new
@@ -878,7 +878,7 @@ bool MCMCLoopCurve::update_321()
             * -------------------------------------------------------------- */
             /*try {
                 if (mCurveSettings.mVarianceType != CurveSettings::eModeFixed ) {
-                    const double try_value_log = Generator::gaussByBoxMuller(log10(mModel->mS02Vg.mX), mModel->mS02Vg.mSigmaMH);
+                    const double try_value_log = Generator::normalDistribution(log10(mModel->mS02Vg.mX), mModel->mS02Vg.mSigmaMH);
                     const double try_value = pow(10, try_value_log);
 
                     if (try_value_log >= logMin && try_value_log <= logMax) {
@@ -907,7 +907,7 @@ bool MCMCLoopCurve::update_321()
 
                 // On tire une nouvelle valeur :
 
-                const double try_value_log = Generator::gaussByBoxMuller(log10(current_value), mModel->mS02Vg.mSigmaMH);
+                const double try_value_log = Generator::normalDistribution(log10(current_value), mModel->mS02Vg.mSigmaMH);
 
                 const double try_value = pow(10., try_value_log);
 
@@ -948,7 +948,7 @@ bool MCMCLoopCurve::update_321()
                     current_h_VG = h_VG_Event(event, mModel->mS02Vg.mX);
 
                     // On tire une nouvelle valeur :
-                    const double try_value_log = Generator::gaussByBoxMuller(log10(current_value), event->mVg.mSigmaMH);
+                    const double try_value_log = Generator::normalDistribution(log10(current_value), event->mVg.mSigmaMH);
                     const double try_value = pow(10., try_value_log);
 
                     if (try_value_log >= logMin && try_value_log <= logMax) {
@@ -1006,7 +1006,7 @@ bool MCMCLoopCurve::update_321()
 
                 // On tire une nouvelle valeur :
 
-                const double try_value_log = Generator::gaussByBoxMuller(log10(current_value), mModel->mEvents.at(0)->mVg.mSigmaMH);
+                const double try_value_log = Generator::normalDistribution(log10(current_value), mModel->mEvents.at(0)->mVg.mSigmaMH);
                 const double try_value = pow(10, try_value_log);
 
                 // Affectation temporaire pour évaluer la nouvelle proba
@@ -1094,8 +1094,8 @@ bool MCMCLoopCurve::update_321()
                     do {
 
                         // On tire une nouvelle valeur :
-                        try_value_log = Generator::gaussByBoxMuller(log10(current_value), mModel->mLambdaSpline.mSigmaMH);
-                        //try_value_log = Generator::gaussByDoubleExp(log10(current_value), mModel->mLambdaSpline.mSigmaMH, logMin, logMax); //nouveau code
+                        try_value_log = Generator::normalDistribution(log10(current_value), mModel->mLambdaSpline.mSigmaMH);
+                        //try_value_log = Generator::normalDistribution(log10(current_value), mModel->mLambdaSpline.mSigmaMH, logMin, logMax); //nouveau code
                         try_value = pow(10., try_value_log);
                         counter++;
                         if (try_value_log >= logMin && try_value_log <= logMax) {
@@ -1121,7 +1121,7 @@ bool MCMCLoopCurve::update_321()
                     const double current_value = mModel->mLambdaSpline.mX;
 
                     // On tire une nouvelle valeur :
-                    const double try_value_log = Generator::gaussByBoxMuller(log10(current_value), mModel->mLambdaSpline.mSigmaMH);
+                    const double try_value_log = Generator::normalDistribution(log10(current_value), mModel->mLambdaSpline.mSigmaMH);
 
                     const double try_value = pow(10., try_value_log);
 
@@ -1168,7 +1168,7 @@ bool MCMCLoopCurve::update_321()
                     const double current_value = mModel->mLambdaSpline.mX;
 
                     // On tire une nouvelle valeur :
-                    const double try_value_log = Generator::gaussByBoxMuller(log10(current_value), mModel->mLambdaSpline.mSigmaMH);
+                    const double try_value_log = Generator::normalDistribution(log10(current_value), mModel->mLambdaSpline.mSigmaMH);
 
                     const double try_value = pow(10., try_value_log);
 
@@ -1771,7 +1771,7 @@ bool MCMCLoopCurve::update_330()
                         current_h_theta = h_theta_Event(event); // utilise la valeur courante de mTheta.mX
 
                         // On tire une nouvelle valeur :
-                        const double try_value = Generator::gaussByBoxMuller(current_value, event->mTheta.mSigmaMH);
+                        const double try_value = Generator::normalDistribution(current_value, event->mTheta.mSigmaMH);
 
                         if (try_value >= min && try_value <= max) {
                             // On force la mise à jour de la nouvelle valeur pour calculer h_new
@@ -1976,7 +1976,7 @@ bool MCMCLoopCurve::update_330()
                         current_h_VG = h_VG_Event(current_value, mModel->mS02Vg);
 
                         // On tire une nouvelle valeur :
-                        const double try_value_log = Generator::gaussByBoxMuller(log10(current_value), event->mVg.mSigmaMH);
+                        const double try_value_log = Generator::normalDistribution(log10(current_value), event->mVg.mSigmaMH);
 
                         if (try_value_log >= logMin && try_value_log <= logMax) {
                             try_value = pow(10., try_value_log);
@@ -2054,7 +2054,7 @@ bool MCMCLoopCurve::update_330()
 
                 // On tire une nouvelle valeur :
 
-                const double try_value_log = Generator::gaussByBoxMuller(log10(current_value), mModel->mEvents[0]->mVg.mSigmaMH);
+                const double try_value_log = Generator::normalDistribution(log10(current_value), mModel->mEvents[0]->mVg.mSigmaMH);
 
 
                 if (try_value_log >= logMin && try_value_log <= logMax) {
@@ -2176,7 +2176,7 @@ bool MCMCLoopCurve::update_330()
                 const double current_value = mModel->mLambdaSpline.mX;
 
                 // On tire une nouvelle valeur :
-                const double try_value_log = Generator::gaussByBoxMuller(log10(current_value), mModel->mLambdaSpline.mSigmaMH);
+                const double try_value_log = Generator::normalDistribution(log10(current_value), mModel->mLambdaSpline.mSigmaMH);
                 const double try_value = pow(10., try_value_log);
 
 
@@ -2321,7 +2321,7 @@ QString MCMCLoopCurve::initialize_335()
     auto vect_ZField = get_vector<double>(get_ZField, mModel->mEvents);
     prepareEventsY(allEvents);
 
-    emit stepChanged(tr("Initializing G ..."), 0, (int)allEvents.size());
+    //emit stepChanged(tr("Initializing G ..."), 0, (int)allEvents.size());
     orderEventsByThetaReduced(mModel->mEvents);
     spreadEventsThetaReduced0(mModel->mEvents);
 
@@ -2423,12 +2423,12 @@ QString MCMCLoopCurve::initialize_335()
          * ---------------------------------------------------------------- */
 
 
-        int i = 0;
+        //int i = 0;
 
         if (mCurveSettings.mVarianceType == CurveSettings::eModeBayesian) {
 
             for (std::shared_ptr<Event>& e : mModel->mEvents) {
-                i++;
+                //i++;
 
                 e->mVg.mX = Var_residual_spline;
                 e->mVg.mLastAccepts.clear();
@@ -2448,11 +2448,11 @@ QString MCMCLoopCurve::initialize_335()
                 if (isInterruptionRequested())
                     return ABORTED_BY_USER;
 
-                emit stepProgressed(i);
+                //emit stepProgressed(i);
             }
 
             for (std::shared_ptr<Event>& e : mNodeEvent) {
-                i++;
+                //i++;
                 e->mVg.mX = 0.0;
                 e->mVg.mSamplerProposal = MHVariable::eFixe;
                 e->mVg.mLastAccepts.clear();
@@ -2471,7 +2471,7 @@ QString MCMCLoopCurve::initialize_335()
                 if (isInterruptionRequested())
                     return ABORTED_BY_USER;
 
-                emit stepProgressed(i);
+               // emit stepProgressed(i);
             }
 
 
@@ -2484,7 +2484,7 @@ QString MCMCLoopCurve::initialize_335()
 
             // Pas de Noeud dans le cas de Vg Global
             for (std::shared_ptr<Event> &e : allEvents) {
-                i++;
+                //i++;
                 if (mCurveSettings.mVarianceType == CurveSettings::eModeFixed) {
                     e->mVg.mX = mCurveSettings.mVarianceFixed;
                     e->mVg.mSamplerProposal = MHVariable::eFixe;
@@ -2516,7 +2516,7 @@ QString MCMCLoopCurve::initialize_335()
                 if (isInterruptionRequested())
                     return ABORTED_BY_USER;
 
-                emit stepProgressed(i);
+                //emit stepProgressed(i);
             }
         }
 
@@ -2529,6 +2529,7 @@ QString MCMCLoopCurve::initialize_335()
 
 
 
+#pragma mark initialize Lambda
 
     // ----------------------------------------------------------------
     //  F. Init Lambda Spline
@@ -2548,52 +2549,46 @@ QString MCMCLoopCurve::initialize_335()
         } else {
             if (mCurveSettings.mProcessType == CurveSettings::eProcess_Depth) {
                 // F.2 - test GPrime positive
+                /*
                 mModel->mLambdaSpline.mX = 1.0;
 
+                double try_value = 10;
 
-                double try_value = 10;//mModel->mLambdaSpline.mX;
+                int max_iterations = 100; // Limite maximale de tentatives
+                int iteration_count = 0;
+                */
+
                 SparseMatrixD R = calculMatR_D(current_vecH);// dim n-2 * n-2 //R est une matrice creuse symetrique padded
 
                 SparseMatrixD Q = calculMatQ_D(current_vecH); // matrice creuse
+                DiagonalMatrixD W_1 (mModel->mEvents.size()) ; // correspond à 1.0/mW
+
+                std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), W_1.diagonal().begin(), [](std::shared_ptr<Event> ev){return 1.0/ ev->mW;});// {return (ev->mSy*ev->mSy + ev->mVg.mX;});
+
+                SparseMatrixD Qt = Q.transpose();
+
+                // Memo des matrices
+                current_splineMatrices_D.diagWInv = W_1;
+                current_splineMatrices_D.matR = R;
+                current_splineMatrices_D.matQ = Q;
+                current_splineMatrices_D.matQTW_1Q = Q.transpose()* W_1* Q;
+                current_splineMatrices_D.matQTQ = Q.transpose() * Q;
+
 
                 SparseQuadraticFormSolver solver(1); // shift=1 notre padding
                 solver.factorize(R); // Factorisation une seule fois, crée le solver ldlt
 
                 MatrixD R_1QT = solver.compute_Rinv_QT(Q);
 
-                SparseMatrixD QT = Q.transpose();
+                initialize_spline_for_depth(mModel->mEvents, R, R_1QT, Q);
 
-                DiagonalMatrixD W_1 (mModel->mEvents.size()) ; // correspond à 1.0/mW
-                std::transform(mModel->mEvents.begin(), mModel->mEvents.end(), W_1.diagonal().begin(), [](std::shared_ptr<Event> ev){return 1.0/ ev->mW;});// {return (ev->mSy*ev->mSy + ev->mVg.mX;});
 
-                // K = Q * R_1QT;
-
-                bool depth_OK = true;
-
-                while (depth_OK == true && try_value> 10E-8) {
-
-                    try_value = try_value / 10;
-
-                    mModel->mLambdaSpline.mX = try_value;
-                    // try_spline = samplingSpline_multi_depth(mModel->mEvents, R, R_1QT, Q); // utilise mModel->mLambdaSpline.mX
-                    try_spline = samplingSpline_multi2(mModel->mEvents, R, R_1QT, Q); // utilise mModel->mLambdaSpline.mX
-
-                    depth_OK = hasPositiveGPrimePlusConst(try_spline.splineX, mModel->mSettings.mTmin, mModel->mSettings.mTmax, mCurveSettings.mThreshold);
-
-                }
-
-                try_spline_matrices.diagWInv = W_1;
-                try_spline_matrices.matR = R;
-                try_spline_matrices.matQ = Q;
-                try_spline_matrices.matQTW_1Q = QT* W_1* Q;
-                try_spline_matrices.matQTQ = QT * Q;
-
-                mModel->mLambdaSpline.mX = try_value * 10;
                 // std::cout << " lambda for depth = " << try_value*10 << " depth_OK = " << depth_OK  << std::endl;
 
 
-             } else
+            } else {
                 mModel->mLambdaSpline.mX = 1.0E-6; // default = 1E-6.
+            }
 
             mModel->mLambdaSpline.mLastAccepts.clear();
             mModel->mLambdaSpline.accept_update(mModel->mLambdaSpline.mX);
@@ -2626,8 +2621,9 @@ QString MCMCLoopCurve::initialize_335()
          *  Calcul de la spline g, g" pour chaque composante x y z
          *-------------------------------------------------------------- */
         if (mCurveSettings.mProcessType == CurveSettings::eProcess_Depth && mCurveSettings.mLambdaSplineType != CurveSettings::eModeFixed) {
-            current_splineMatrices_D = try_spline_matrices;
-            mModel->mSpline = try_spline;
+            // nothing to do all is done in initialize_spline_for_depth(); lamdba, matrice, Gx, gamma
+            //current_splineMatrices_D = try_spline_matrices;
+            //mModel->mSpline = try_spline;
 
         } else {
             current_splineMatrices_D = prepare_calcul_spline_D(mModel->mEvents, current_vecH);
@@ -2821,7 +2817,7 @@ bool MCMCLoopCurve::update_335()
         orderEventsByThetaReduced(mModel->mEvents);
         spreadEventsThetaReduced0(mModel->mEvents);
 
-        // Les vecteurs positions X, Y et Z sdoivent suivre l'ordre des thétas
+        // Les vecteurs positions X, Y et Z doivent suivre l'ordre des thétas
 
         // Construction de la matrice Y_mat des points, les positions (x, y, z) ne sont mis à jour
         // qu'à la fin
@@ -2894,11 +2890,27 @@ bool MCMCLoopCurve::update_335()
                         // On stocke l'ancienne valeur :
                         current_value = event->mTheta.mX;
 
+
+#define THETA_MH
+#ifdef THETA_MH
+                        // On tire une nouvelle valeur MH adaptatif :
                         current_h_theta = h_theta_Event(event);
+                        const double try_value = Generator::normalDistribution(current_value, event->mTheta.mSigmaMH);
+#else
+                        // tirage double exp
+                        double sum_p = 0.;
+                        double sum_t = 0.;
 
-                        // On tire une nouvelle valeur :
-                        const double try_value = Generator::gaussByBoxMuller(current_value, event->mTheta.mSigmaMH);
-
+                        for (auto&& date: event->mDates) {
+                            const double variance  = pow(date.mSigmaTi.mX, 2.);
+                            sum_t += (date.mTi.mX + date.mDelta) / variance;
+                            sum_p += 1. / variance;
+                        }
+                        const double theta_avg = sum_t / sum_p;
+                        const double sigma = 1. / sqrt(sum_p);
+                        const double try_value = Generator::gaussByDoubleExp(theta_avg, sigma, min, max);
+                        current_h_theta = 1.;
+#endif
 
                         // try_value ne peut pas être égale à min ou max,
                         // car dans ce cas, il y a un zéro dans vec_H
@@ -2910,7 +2922,7 @@ bool MCMCLoopCurve::update_335()
 
                             //auto try_Event = mModel->mEvents;
                             // On force la mise à jour de la nouvelle valeur pour calculer h_new
-                            // on test si l'ordre à changer:
+                            // on teste si l'ordre à changer:
                             const bool ordered = std::is_sorted(mModel->mEvents.begin(), mModel->mEvents.end(),
                                                                    [](const std::shared_ptr<Event> a, const std::shared_ptr<Event> b) {
                                                                        return a->mThetaReduced < b->mThetaReduced;
@@ -2962,8 +2974,11 @@ bool MCMCLoopCurve::update_335()
                             const std::vector<double>& try_vect_Theta = get_vector<double>(get_Theta, mModel->mEvents);
 
                             double try_var_Gasser = var_Gasser(try_vect_Theta, try_Y);
-
+#ifdef THETA_MH
                             try_h_theta = h_theta_Event(event);
+#else
+                            try_h_theta = 1.;
+#endif
                             try_vecH = calculVecH(mModel->mEvents);
 
                             auto [try_Q, try_R] = calculMatQR_D(try_vecH);
@@ -3061,7 +3076,6 @@ bool MCMCLoopCurve::update_335()
                         }
 
 
-
                     } else { // this is a bound, nothing to sample. Always the same value
                         event->updateTheta(tminPeriod, tmaxPeriod);
                     }
@@ -3077,10 +3091,7 @@ bool MCMCLoopCurve::update_335()
                     std::for_each(PAR event->mPhases.begin(), event->mPhases.end(), [this] (std::shared_ptr<Phase> p) {p->update_AlphaBeta (tminPeriod, tmaxPeriod);});
 
                 } // End of loop initListEvents
-#ifdef KOMLAN
-                auto trK = current_K.trace();
-                mModel->mC_lambda = (mModel->mEvents.size()-2.0) / trK;
-#endif
+
 
             } else { // Pas bayésien : on sauvegarde la valeur constante dans la trace
                 for (std::shared_ptr<Event>& event : initListEvents) {
@@ -3155,30 +3166,8 @@ bool MCMCLoopCurve::update_335()
 
                     }
 
-#ifdef KOMLAN
-
-                    const double logMin = -10.;
-                    const double logMax = +20.;
-                    // On stocke l'ancienne valeur :
-                    const double  current_value = mModel->mS02Vg.mX;
-
-                    const double try_value_log = Generator::gaussByBoxMuller(log10(mModel->mS02Vg.mX), mModel->mS02Vg.mSigmaMH);
-                    const double try_value = pow(10., try_value_log);
-
-                    if (try_value_log >= logMin && try_value_log <= logMax) {
-                        rate = h_S02_Vg_K(mModel->mEvents, current_value, try_value); // prend en compte le cas individuel et non-individuel, le jacobien est déjà dans la formule
-
-                        mModel->mS02Vg.try_update(try_value, rate);
-
-                    } else {
-                        rate = -1.0;
-                        mModel->mS02Vg.reject_update();
-                    }
-
-#else
                     mModel->mS02Vg = Var_residual_spline;// <- code d'origine
 
-#endif
 
                 } catch (std::exception& e) {
                     std::cout<< "[MCMCLoopCurve::update_335] S02 Vg : exception caught: " << e.what() << std::endl;
@@ -3208,7 +3197,7 @@ bool MCMCLoopCurve::update_335()
 
                                 //double try_value = Generator::shrinkageUniforme(mModel->mS02Vg.mX);
 
-                                const double try_value_log = Generator::gaussByBoxMuller(log10(current_value), event->mVg.mSigmaMH);
+                                const double try_value_log = Generator::normalDistribution(log10(current_value), event->mVg.mSigmaMH);
 
 
                                 t_prob rate = -1.0;
@@ -3238,18 +3227,10 @@ bool MCMCLoopCurve::update_335()
                                     event->mVg.mX = try_value;
                                     event->updateW();
 
-                                    // conditionnel du au shrinkage, à enlever si echantillonnage avec le shrinkageUniforme
-#ifdef KOMLAN
-                                    auto rate_h_vg = h_VG_Event(try_value, mModel->mS02Vg.mX) / h_VG_Event(current_value, mModel->mS02Vg.mX);
-
-#else
-                                    //auto rate_h_vg0 = h_VG_Event(try_value, mModel->mS02Vg) / h_VG_Event(current_value, mModel->mS02Vg);
                                     // calcul direct
                                     auto r_vg = (mModel->mS02Vg + current_value) / (mModel->mS02Vg + try_value);
                                     //auto r_vg = 1.0 + (current_value - try_value) / (mModel->mS02Vg + try_value); // peut aussi s'écrire comme ca
                                     auto rate_h_vg = r_vg * r_vg;
-
-#endif
 
                                     // Inverse des Poids
 
@@ -3319,23 +3300,19 @@ bool MCMCLoopCurve::update_335()
 
                         // Echantillonnage boxmuller
                         // On tire une nouvelle valeur :
-                        const double try_value_log = Generator::gaussByBoxMuller(log10(current_value), it->get()->mVg.mSigmaMH);
+                        const double try_value_log = Generator::normalDistribution(log10(current_value), it->get()->mVg.mSigmaMH);
 
                         if (try_value_log >= -20 && try_value_log <= 10) {
                             // Echantillonnage shrinkage
                             //try_value = Generator::shrinkageUniforme(mModel->mS02Vg.mX);
                             //auto rate_h_vg = 1 ;
 
-
                             // rapport des a priori du proposal=shrinkage, si echantillonnage avec le shrinkageUniforme() rate_h_vg = 1
                             try_value = pow(10., try_value_log);
-#ifdef KOMLAN
-                            try_h_VG = h_VG_Event(try_value, mModel->mS02Vg.mX) ;
-                            current_h_VG = h_VG_Event(current_value, mModel->mS02Vg.mX);
-#else
+
                             try_h_VG = h_VG_Event(try_value, mModel->mS02Vg) ;
                             current_h_VG = h_VG_Event(current_value, mModel->mS02Vg);
-#endif
+
                             // multiplier par le Jacobien, du à l'échantillonnage en log10
                             auto rate_h_vg = (try_h_VG * try_value) / (current_h_VG * current_value);
 
@@ -3349,12 +3326,12 @@ bool MCMCLoopCurve::update_335()
 
                                 h_current += -0.5 * pow( ev->mYx - ev->mGx, 2.0) * ev->mW;
 
-                                if (mModel->compute_Y){
+                                if (mModel->compute_Y) {
                                     h_current += -0.5 * pow( ev->mYy - ev->mGy, 2.0) * ev->mW;
                                     W_current *= ev->mW;
                                 }
 
-                                if (mModel->compute_XYZ){
+                                if (mModel->compute_XYZ) {
                                     h_current += -0.5 * pow( ev->mYz - ev->mGz, 2.0) * ev->mW;
                                     W_current *= ev->mW;
                                 }
@@ -3461,11 +3438,12 @@ bool MCMCLoopCurve::update_335()
             // On stocke l'ancienne valeur :
             current_value = mModel->mLambdaSpline.mX;
 
+
             if (mCurveSettings.mLambdaSplineType == CurveSettings::eModeBayesian) {
 
                 // les Events peuvent avoir changé d'ordre depuis la mise à jour des Thétas
                 // et il faut vérifier que current_G soit à jour depuis update theta
-                // produit fK*f^t et la trace de la matrice K
+                // produit f^t*K*f et la trace de la matrice K
                 double sum_quadratic = quadratic_form(current_K, current_G);
 
                 // On tire une nouvelle valeur :
@@ -3474,7 +3452,7 @@ bool MCMCLoopCurve::update_335()
                 constexpr double lambda_logMax = +10.0;
 
 
-                double try_value_log = Generator::gaussByBoxMuller(log10(current_value), mModel->mLambdaSpline.mSigmaMH);
+                double try_value_log = Generator::normalDistribution(log10(current_value), mModel->mLambdaSpline.mSigmaMH);
 
                 if (try_value_log >= lambda_logMin && try_value_log <= lambda_logMax ) {
 
@@ -3494,9 +3472,11 @@ bool MCMCLoopCurve::update_335()
                          * \f$ P(\lambda) = \frac{ \lambda^{\tfrac{1}{2}(n_{\text{points}} - 2)}} { \left( {c + \lambda} \right)^{\mu + 1}} \f$
                          */
                         rate = rate_h_lambda_X_335(current_value, try_value, n_points) ;
+                        // multiplier par le jacobien
+                        rate *= rate_try_ftKf * try_value / current_value;
+
+
                     }
-                    // multiplier par le jacobien
-                    rate *= rate_try_ftKf * try_value / current_value;
 
                     mModel->mLambdaSpline.test_update(current_value, try_value, rate);
 
@@ -3522,20 +3502,28 @@ bool MCMCLoopCurve::update_335()
 
 
         // --------------------------------------------------------------
-        //  F - update MCMCSpline mModel->mSpline
+        //  F - update G(x) in MCMCSpline mModel->mSpline
         // --------------------------------------------------------------
 
         //-------- Simulation gaussienne multivariées des splines f
+#define POSITIVECURVE
         // F.1- Calcul spline
 
         // Toutes les matrices doivent être à jours, aprés le passage dans update theta, et update VG met à jour event->mW
-        mModel->mSpline = samplingSpline_multi2(mModel->mEvents, current_R, current_R_1QT, current_Q); // utilise mModel->mLambdaSpline.mX et ev->mW et mets à jour lEvents[i]-> mGx = fx[i];
+        // mModel->mSpline = samplingSpline_multi2(mModel->mEvents, current_R, current_R_1QT, current_Q); // utilise mModel->mLambdaSpline.mX et ev->mW et mets à jour lEvents[i]-> mGx = fx[i];
 
         // F.2 - test GPrime positive
         if (mCurveSettings.mProcessType == CurveSettings::eProcess_Depth) {
+#ifdef POSITIVECURVE
+            mModel->mSpline = samplingSpline_multi_depth(mModel->mEvents, current_R, current_R_1QT, current_Q);
+#else
+            mModel->mSpline = samplingSpline_multi2(mModel->mEvents, current_R, current_R_1QT, current_Q);
+            //return hasPositiveGPrimePlusConst(mModel->mSpline.splineX, mModel->mSettings.mTmin, mModel->mSettings.mTmax, mCurveSettings.mThreshold); // si dy >mCurveSettings.mThreshold => pas de memo de la courbe
+#endif
             return hasPositiveGPrimePlusConst(mModel->mSpline.splineX, mModel->mSettings.mTmin, mModel->mSettings.mTmax, mCurveSettings.mThreshold); // si dy >mCurveSettings.mThreshold => pas de memo de la courbe
 
         } else {
+            mModel->mSpline = samplingSpline_multi2(mModel->mEvents, current_R, current_R_1QT, current_Q); // utilise mModel->mLambdaSpline.mX et ev->mW et mets à jour lEvents[i]-> mGx = fx[i];
             return true;
         }
 
@@ -5249,7 +5237,7 @@ bool MCMCLoopCurve::update_interpolate()
                         const double current_value = event->mTheta.mX;
                         current_h_theta = h_theta_Event(event);
 
-                        const double try_value = Generator::gaussByBoxMuller(current_value, event->mTheta.mSigmaMH);
+                        const double try_value = Generator::normalDistribution(current_value, event->mTheta.mSigmaMH);
 
                         if (try_value >= min && try_value <= max) {
                             // On force la mise à jour de la nouvelle valeur pour calculer h_new
@@ -5663,7 +5651,7 @@ bool MCMCLoopCurve::update_400()
                     // On stocke l'ancienne valeur :
                     const double  current_value = mModel->mS02Vg.mX;
 
-                    const double try_value_log = Generator::gaussByBoxMuller(log10(mModel->mS02Vg.mX), mModel->mS02Vg.mSigmaMH);
+                    const double try_value_log = Generator::normalDistribution(log10(mModel->mS02Vg.mX), mModel->mS02Vg.mSigmaMH);
                     const double try_value = pow(10., try_value_log);
 
                     if (try_value_log >= logMin && try_value_log <= logMax) {
@@ -5697,7 +5685,7 @@ bool MCMCLoopCurve::update_400()
                     current_h_VG = h_VG_Event(event, mModel->mS02Vg.mX);
 
                     // On tire une nouvelle valeur :
-                    const double try_value_log = Generator::gaussByBoxMuller(log10(current_value), event->mVg.mSigmaMH);
+                    const double try_value_log = Generator::normalDistribution(log10(current_value), event->mVg.mSigmaMH);
                     const double try_value = pow(10., try_value_log);
 
                     if (try_value_log >= logMin && try_value_log <= logMax) {
@@ -5753,7 +5741,7 @@ bool MCMCLoopCurve::update_400()
 
                     // On tire une nouvelle valeur :
 
-                    const double try_value_log = Generator::gaussByBoxMuller(log10(current_value), mModel->mEvents.at(0)->mVg.mSigmaMH);
+                    const double try_value_log = Generator::normalDistribution(log10(current_value), mModel->mEvents.at(0)->mVg.mSigmaMH);
                     const double try_value = pow(10, try_value_log);
 
                     // Affectation temporaire pour évaluer la nouvelle proba
@@ -5848,7 +5836,7 @@ bool MCMCLoopCurve::update_400()
                         do {
 
                             // On tire une nouvelle valeur :
-                            //try_value_log = Generator::gaussByBoxMuller(log10(current_value), mModel->mLambdaSpline.mSigmaMH);
+                            //try_value_log = Generator::normalDistribution(log10(current_value), mModel->mLambdaSpline.mSigmaMH);
                             try_value_log = Generator::gaussByDoubleExp(log10(current_value), mModel->mLambdaSpline.mSigmaMH, logMin, logMax); //nouveau code
                             try_value = pow(10., try_value_log);
 
@@ -5872,7 +5860,7 @@ bool MCMCLoopCurve::update_400()
 */
 
                         //  -- Ancien code
-                        try_value_log = Generator::gaussByBoxMuller(log10(current_value), mModel->mLambdaSpline.mSigmaMH);
+                        try_value_log = Generator::normalDistribution(log10(current_value), mModel->mLambdaSpline.mSigmaMH);
 
                         //try_value_log = Generator::gaussByDoubleExp(log10(current_value), mModel->mLambdaSpline.mSigmaMH, logMin, logMax);
                         try_value = pow(10., try_value_log);
@@ -5929,10 +5917,10 @@ bool MCMCLoopCurve::update_400()
                     current_h_lambda = h_lambda_321(current_splineMatricesLD, (int)mModel->mEvents.size(), current_value) ;
 
                     // On tire une nouvelle valeur :
-                     const double try_value_log = Generator::gaussByBoxMuller(log10(current_value), mModel->mLambdaSpline.mSigmaMH);
+                     const double try_value_log = Generator::normalDistribution(log10(current_value), mModel->mLambdaSpline.mSigmaMH);
                      const double try_value = pow(10., try_value_log);
 
-                    //const double try_value_log = Generator::gaussByBoxMuller(log2(current_value), mModel->mLambdaSpline.mSigmaMH); // pour test komlan
+                    //const double try_value_log = Generator::normalDistribution(log2(current_value), mModel->mLambdaSpline.mSigmaMH); // pour test komlan
                     //const double try_value = exp2(try_value_log);
 
                     if (try_value_log >= logMin && try_value_log <= logMax) {
@@ -6318,7 +6306,7 @@ bool MCMCLoopCurve::update_Komlan()
 
                         // On tire une nouvelle valeur :
 
-                        const double try_value_log = Generator::gaussByBoxMuller(log10(current_value), mModel->mS02Vg.mSigmaMH);
+                        const double try_value_log = Generator::normalDistribution(log10(current_value), mModel->mS02Vg.mSigmaMH);
 
                         try_value =pow(10., try_value_log);
 
@@ -6436,7 +6424,7 @@ bool MCMCLoopCurve::update_Komlan()
 
                         // On tire une nouvelle valeur :
 
-                        const double try_value_log = Generator::gaussByBoxMuller(log10(current_value), mModel->mEvents.at(0)->mVg.mSigmaMH);
+                        const double try_value_log = Generator::normalDistribution(log10(current_value), mModel->mEvents.at(0)->mVg.mSigmaMH);
                         try_value = pow(10., try_value_log);
 
                         // affectation temporaire pour evaluer la nouvelle proba
@@ -6614,18 +6602,28 @@ bool MCMCLoopCurve::update_Komlan()
 #endif
 
 
-
+/*
 bool MCMCLoopCurve::adapt(const int batchIndex)
 {
-    const double taux_min = 0.42;           // taux_min minimal rate of acceptation=42
-    const double taux_max = 0.46;           // taux_max maximal rate of acceptation=46
+    // Pour un Random‑Walk Metropolis en une dimension, la théorie (Roberts et al., 1997) montre que le taux optimal est ≈ 0.44
+    const double taux_min = 0.42;
+    const double taux_max = 0.46;
+
+    //
+    // En haute dimension (> 5), le taux optimal se rapproche de 0.23.
+    //    Si vous avez des vecteurs de grande dimension, il serait judicieux de réduire la fenêtre (ex. 0.20‑0.30).
+
+    //const double taux_min = 0.20;
+    //const double taux_max = 0.30;
+
 
     bool noAdapt = true;
 
     // --------------------- Adapt -----------------------------------------
-    const int sizeAdapt = 10000;
+    //const int sizeAdapt = 10000;
 
-    const double delta = (batchIndex < sizeAdapt) ? pow(sizeAdapt, -1/2.)  : pow(batchIndex, -1/2.);
+    //const double delta = (batchIndex < sizeAdapt) ? pow(sizeAdapt, -1/2.)  : pow(batchIndex, -1/2.);
+    const double delta = 0.5 * std::pow(static_cast<double>(batchIndex+1), -0.5);
 
     for (auto& event : mModel->mEvents) {
         for (auto& date : event->mDates) {
@@ -6653,19 +6651,65 @@ bool MCMCLoopCurve::adapt(const int batchIndex)
 
     }
 
-#ifdef KOMLAN
-    //--------------------- Adapt Sigma MH de mModel->mS02_Vg -----------------------------------------
-    if (mModel->mS02Vg.mSamplerProposal == MHVariable::eMHAdaptGauss)
-        noAdapt &= mModel->mS02Vg.adapt(taux_min, taux_max, delta);
-#endif
-
     //--------------------- Adapt Sigma MH de Lambda Spline -----------------------------------------
     if (mModel->mLambdaSpline.mSamplerProposal == MHVariable::eMHAdaptGauss)
         noAdapt &= mModel->mLambdaSpline.adapt(taux_min, taux_max, delta);
 
     return noAdapt;
 }
+*/
 
+// fonction qui suit le principe de Robbins et Monro en utilisant batchIndex
+bool MCMCLoopCurve::adapt(const int batchIndex)
+{
+    // Pour un Random‑Walk Metropolis en une dimension, la théorie (Roberts et al., 1997) montre que le taux optimal est ≈ 0.44
+    const double taux_min = 0.42;
+    const double taux_max = 0.46;
+
+    //
+    /* En haute dimension (> 5), le taux optimal se rapproche de 0.23.
+        Si vous avez des vecteurs de grande dimension, il serait judicieux de réduire la fenêtre (ex. 0.20‑0.30).
+    */
+    //const double taux_min = 0.20;
+    //const double taux_max = 0.30;
+
+
+    bool noAdapt = true;
+
+    // --------------------- Adapt -----------------------------------------
+
+    for (auto& event : mModel->mEvents) {
+        for (auto& date : event->mDates) {
+            //--------------------- Adapt Sigma MH de t_i -----------------------------------------
+            if (date.mTi.mSamplerProposal == MHVariable::eMHAdaptGauss)
+                noAdapt &= date.mTi.adapt(taux_min, taux_max, batchIndex);
+
+            //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
+            if (date.mSigmaTi.mSamplerProposal == MHVariable::eMHAdaptGauss)
+                noAdapt &= date.mSigmaTi.adapt(taux_min, taux_max, batchIndex);
+
+        }
+
+        //--------------------- Adapt Sigma MH de Theta Event -----------------------------------------
+        if ((event->mType != Event::eBound) && ( event->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss) )
+            noAdapt &= event->mTheta.adapt(taux_min, taux_max, batchIndex);
+
+
+        //--------------------- Adapt Sigma MH de VG  -----------------------------------------
+        if ((event->mPointType != Event::eNode) && ( event->mVg.mSamplerProposal == MHVariable::eMHAdaptGauss) )
+            noAdapt &= event->mVg.adapt(taux_min, taux_max, batchIndex);
+
+        if ( event->mS02Theta.mSamplerProposal == MHVariable::eMHAdaptGauss)
+             noAdapt = event->mS02Theta.adapt(taux_min, taux_max, batchIndex) && noAdapt;
+
+    }
+
+    //--------------------- Adapt Sigma MH de Lambda Spline -----------------------------------------
+    if (mModel->mLambdaSpline.mSamplerProposal == MHVariable::eMHAdaptGauss)
+        noAdapt &= mModel->mLambdaSpline.adapt(taux_min, taux_max, batchIndex);
+
+    return noAdapt;
+}
 
 void MCMCLoopCurve::memo()
 {
@@ -8019,21 +8063,23 @@ double MCMCLoopCurve::S02_Vg_Yz(std::vector<std::shared_ptr<Event>> &events, con
  * @brief Les calculs sont faits avec les dates (theta event, ti dates, delta, sigma) exprimées en années.
  * \f$  h(\theta) = \prod_{i,j}^{} \frac{1}{\sigma _{t_{ij}}^2} \exp\left(-\frac{1}{2} \left(\frac{\theta - \bar{t}}{\sigma _{t_{ij}}}\right) ^2 \right) \f$
  */
-// voir U-cmt_MCMC ligne 105 calcul_h
 double MCMCLoopCurve::h_theta_Event (const std::shared_ptr<Event> e)
 {
     if (e->mType == Event::eDefault) {
         double p = 0.0;
         double t_moy = 0.0;
-        double pi;
+
         for (auto& date : e->mDates) {
-            pi = 1.0 / pow(date.mSigmaTi.mX, 2.0);
+            double sigmaTiSquared = date.mSigmaTi.mX * date.mSigmaTi.mX;
+            double pi = 1.0 / sigmaTiSquared;
             p += pi;
             t_moy += (date.mTi.mX + date.mDelta) * pi;
         }
         t_moy /= p;
 
-        return exp(-0.5 * p * pow( e->mTheta.mX  - t_moy, 2.0));
+        double thetaMinusTmoy = e->mTheta.mX - t_moy;
+        return exp(-0.5 * p * thetaMinusTmoy * thetaMinusTmoy);
+        //return exp(-0.5 * p * pow( e->mTheta.mX  - t_moy, 2.0));
 
 
     } else {
@@ -8223,11 +8269,27 @@ void MCMCLoopCurve::spreadEventsThetaReduced0(std::vector<std::shared_ptr<Event>
 {
     std::vector<std::shared_ptr<Event>>::iterator itEvenFirst = sortedEvents.end();
     std::vector<std::shared_ptr<Event>>::iterator itEventLast = sortedEvents.end();
-    unsigned nbEgal = 0;
 
-    if (spreadSpan == 0.) {
-        spreadSpan = 1.E-8; //std::numeric_limits<double>::epsilon() * 1.E12;//1.E6;// epsilon = 1E-16
+    if (spreadSpan == 0.0) {
+        spreadSpan = 1.0E-8; //std::numeric_limits<double>::epsilon() * 1.E12;//1.E6;// epsilon = 1E-16
+       // spreadSpan = 1.0E-8; // ici test
     }
+
+    Eigen::VectorXd diffs(sortedEvents.size() - 1);
+
+    for (std::size_t i = 0; i < sortedEvents.size() - 1; ++i) {
+        double delta = std::abs(sortedEvents[i+1]->mThetaReduced - sortedEvents[i]->mThetaReduced);
+        diffs[i] = delta;
+    }
+
+    // Eigen fournit directement le minimum
+    double min_diff = diffs.minCoeff();
+
+
+    if (min_diff > spreadSpan)
+        return;
+
+    unsigned nbEgal = 0;
 
     // repère première egalité
     for (std::vector<std::shared_ptr<Event>>::iterator itEvent = sortedEvents.begin(); itEvent != sortedEvents.end() -1; itEvent++) {
@@ -9238,65 +9300,154 @@ MCMCSpline MCMCLoopCurve::samplingSpline_multi2(std::vector<std::shared_ptr<Even
     return spline;
 }
 
-MCMCSpline MCMCLoopCurve::samplingSpline_multi_depth(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixLD &R, const MatrixLD &R_1QT, const SparseMatrixLD& Q)
+MCMCSpline MCMCLoopCurve::samplingSpline_multi_depth(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixD &R, const MatrixD &R_1Qt, const SparseMatrixD& Q)
 {
-
     MCMCSpline spline;
 
-    const size_t n = lEvents.size() ;
+    const size_t n_points = lEvents.size() ;
     try {
 
-        DiagonalMatrixLD W_1 (lEvents.size()) ; // correspond à 1.0/mW
+        const auto lambda = mModel->mLambdaSpline.mX;
+        DiagonalMatrixD W_1 (lEvents.size()) ; // correspond à 1.0/mW
 
         std::transform(lEvents.begin(), lEvents.end(), W_1.diagonal().begin(), [](std::shared_ptr<Event> ev){return 1.0/ ev->mW;});// {return (ev->mSy*ev->mSy + ev->mVg.mX;});
 
-        auto B = R + mModel->mLambdaSpline.mX * Q.transpose() * W_1 * Q;
+        SparseMatrixD Qt = Q.transpose();
+        SparseMatrixD B = R + lambda * Qt * W_1 * Q; // B est une padded matrice
 
-        MatrixLD B_1 = inverse_padded_matrix(B);
+        // Remplacer : MatrixLD B_1 = inverse_padded_matrix(B);
+        // est plus stable que de calculer
+        // Oui, résoudre le système Bx = y est plus stable que d’inverser B pour obtenir x = B⁻¹y.
+        // C’est ce que recommandent toutes les bonnes pratiques numériques (y compris LAPACK, Eigen, NumPy, etc.).
+        //Eigen::LDLT<MatrixLD> solver(B);
 
-        /**
-         * Calcule A = I + (-lambda) * diag(W_1) * Q * B_1 * Q^t
-         */
+        // indices du sous-bloc utile (ici 1..n-2 si matrice n×n)
+        int first = 1;
+        int nsub  = B.rows() - 2;
 
-        DiagonalMatrixLD I (W_1.rows());
+        // Extraire le sous-bloc utile
+        SparseMatrixD Bsub = B.block(first, first, nsub, nsub);
+        SparseMatrixD Qtsub = Qt.middleRows(first, nsub);
+
+        // Factorisation creuse LDLT
+        Eigen::SimplicialLDLT<SparseMatrixD> solver; //  -> x = B_1 * y = B_1 * Qt
+        solver.compute(Bsub);
+
+        // Résolution
+        MatrixD B_1Qtsub = solver.solve(MatrixD(Qtsub));
+#ifdef DEBUG
+        if (solver.info() != Eigen::Success) {
+            std::cerr << "LDLT failed!" << std::endl;
+        }
+#endif
+        // Recomposer le résultat complet
+        MatrixD B_1Qt = MatrixD::Zero(B.rows(), Qt.cols());
+        B_1Qt.middleRows(first, nsub) = B_1Qtsub;
+
+        MatrixD QB_1Qt = Q * B_1Qt;
+
+        DiagonalMatrixD I (W_1.rows());
         I.setIdentity();
 
-        auto lambda_WQB = - mModel->mLambdaSpline.mX * W_1 * Q * B_1 * Q.transpose();
-        MatrixLD A = I.toDenseMatrix() + lambda_WQB; // identique à A
-
-        const MatrixLD WlambdaK_1 =  A * W_1 ;
+        /** Simulation de la fonction f
+         *   Σ = A * W_1
+         * Ancien Calcule L = Cholesky(Σ) (via LLᵀ)
+         * Nouveau Calcul Vroot via une SVD, plus stable
+         * Tire f = μ + L·z, avec z ~ 𝒩(0, I)
+         */
 
         // Calcul du vecteur moyen AY de la conditionnelle complète avec le valeur de Yx
 
-        ColumnVectorLD Yx = stdVectorToColumnVector(get_vector<t_matrix>(get_Yx, lEvents));
-        ColumnVectorLD mu_Yx = A * Yx;
 
+        /**
+        * Calcule A = I - λ * W_1 * Q * B_1 * Qᵀ * W_1
+        *
+        */
 
-        // simulation de la fonction f
-        ColumnVectorLD fx = multinormal_sampling_depth(mu_Yx, WlambdaK_1);
+        // matrice de projection (ou opérateur de lissage).
+        MatrixD A = I.toDenseMatrix() - lambda * W_1 * QB_1Qt; // forme classique
 
+        // Matrice de Covaiance
+        // Σ = A * W_1
+        const MatrixD V =  A * W_1 ;
 
-        for (size_t i = 0; i < n; i++) {
+        ColumnVectorD Yx = stdVectorToColumnVector(get_vector<double>(get_Yx, lEvents));
+
+        ColumnVectorD mu_Yx = A * Yx;
+
+        const ColumnVectorD& lastY =  get_ColumnVector<double>(get_Gx, mModel->mEvents); //(Warm Start)
+
+        const ColumnVectorD fx = multinormal_sampling_depth(mu_Yx, V, lastY);
+
+        //std::cout << fx << std::endl << std::endl;
+
+        for (size_t i = 0; i < n_points; i++) {
             lEvents[i]-> mGx = fx[i];
         }
-        // Calcul de la dérivée seconde de la fonction f
-        // f′′= B_1⋅Q⊤⋅Y
-
-        ColumnVectorLD vecGamma_L =  R_1QT * fx; // semble OK
-
-        // transtypage
-        std::vector<double> vecGamma = std::vector<double>(vecGamma_L.data(), vecGamma_L.data() + vecGamma_L.size());
+        ColumnVectorD vecGamma_x = R_1Qt * fx; // Condition spline directe
 
         // La sauvegarde de theta, f et f'
         MCMCSplineComposante splineX;
         splineX.vecThetaReduced = get_vector<t_reduceTime>(get_ThetaReduced, lEvents);
-        splineX.vecG = std::vector<double>(fx.data(), fx.data() + fx.size()); //fx;
-        splineX.vecGamma = vecGamma;
+        splineX.vecG = std::vector<double>(fx.data(), fx.data() + fx.size());
+        splineX.vecGamma = std::vector<double>(vecGamma_x.data(), vecGamma_x.data() + vecGamma_x.size());
 
-        splineX.vecVarG = std::vector<double>(n, 0.0);
+        splineX.vecVarG = std::vector<double>(n_points, 0.0);
 
         spline.splineX = std::move(splineX);
 
+/*
+        if (mModel->compute_Y) {
+
+            ColumnVectorD Yy = stdVectorToColumnVector(get_vector<double>(get_Yy, lEvents));
+            ColumnVectorD mu_Yy = A * Yy;
+
+            // simulation de la fonction f
+            const ColumnVectorD fy = multinormal_sampling(mu_Yy, V);
+
+            for (size_t i = 0; i < n_points; i++) {
+                lEvents[i]-> mGy = fy[i];
+            }
+
+            // Calcul de la dérivée seconde de la fonction f
+            ColumnVectorD vecGamma_y =  R_1Qt * fy;
+
+            // La sauvegarde de theta, f et f'
+            MCMCSplineComposante splineY;
+            splineY.vecThetaReduced = get_vector<t_reduceTime>(get_ThetaReduced, lEvents); ;
+            splineY.vecG = std::vector<double>(fy.data(), fy.data() + fy.size());
+            splineY.vecGamma = std::vector<double>(vecGamma_y.data(), vecGamma_y.data() + vecGamma_y.size());
+
+            splineY.vecVarG = std::vector<double>(n_points, 0.0);
+
+            spline.splineY  = std::move(splineY);
+        }
+        if (mModel->compute_XYZ) {
+
+            ColumnVectorD Yz = stdVectorToColumnVector(get_vector<double>(get_Yz, lEvents));
+            ColumnVectorD mu_Yz = A * Yz;
+
+            // simulation de la fonction f
+            const ColumnVectorD fz = multinormal_sampling(mu_Yz, V);
+
+            for (size_t i = 0; i < n_points; i++) {
+                lEvents[i]-> mGz = fz[i];
+            }
+
+            // Calcul de la dérivée seconde de la fonction f
+            ColumnVectorD vecGamma_z =  R_1Qt * fz;
+
+            // La sauvegarde de theta, f et f'
+            MCMCSplineComposante splineZ;
+            splineZ.vecThetaReduced = get_vector<t_reduceTime>(get_ThetaReduced, lEvents); ;
+            splineZ.vecG = std::vector<double>(fz.data(), fz.data() + fz.size()); //fz;
+            splineZ.vecGamma = std::vector<double>(vecGamma_z.data(), vecGamma_z.data() + vecGamma_z.size()); //vecGamma;
+
+            splineZ.vecVarG = std::vector<double>(n_points, 0.0);
+
+            spline.splineZ  = std::move(splineZ);
+        }
+*/
 
     } catch (...) {
         std::cout << "[MCMCLoopCurve::samplingSpline_multi_depth] error" << std::endl;
@@ -9304,55 +9455,150 @@ MCMCSpline MCMCLoopCurve::samplingSpline_multi_depth(std::vector<std::shared_ptr
     return spline;
 }
 
-std::vector<double> MCMCLoopCurve::splines_prior(const MatrixLD &KK, std::vector<double> &g, std::vector<double> &g_new)
+void MCMCLoopCurve::initialize_spline_for_depth(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixD &R, const MatrixD &R_1Qt, const SparseMatrixD& Q)
 {
+    MCMCSplineComposante splineX;
 
-    const double lambda = mModel->mLambdaSpline.mX ;
+    MCMCSplineComposante last_Valid_splineX;
+    const size_t n_points = lEvents.size() ;
+    try {
 
-    const auto& KKlambda = multiConstParMat0(KK, lambda);
+        DiagonalMatrixD W_1 = current_splineMatrices_D.diagWInv ; // correspond à 1.0/mW
 
-    int n = KK.rows();
+        SparseMatrixD Qt = current_splineMatrices_D.matQ.transpose();
 
-    // auto gi = g;
-    std::vector<double> prod ;
+        // init boucle lambda
+        double lambda = 1.0E10; // peut correspondre à des cas avec des theta très proches
 
-    for (int i = 0; i < n; i++) {
-        auto gi = g;
-        const double a = g_new[i];
-        gi[i] = a;
+        int max_iterations = 30; // Limite maximale de tentatives donne un lambda= 1E-30
+        int iteration_count = 0;
+        bool depth_OK = true;
+        double last_valid_lambda; // Stocke la dernière valeur valide
 
-        std::vector<double> g_new_g ;
+        DiagonalMatrixD I (W_1.rows());
+        I.setIdentity();
 
-        std::vector<double> gg ;
+        ColumnVectorD Yx = stdVectorToColumnVector(get_vector<double>(get_Yx, lEvents));
 
-        for (int j = 0; j < n; j++) {
-            g_new_g.push_back(gi[j] - g[j]);
+        // Ici dans la spline, on ne mets à jour que Gx et Gamma_X
+        splineX.vecThetaReduced = get_vector<t_reduceTime>(get_ThetaReduced, lEvents);
+        splineX.vecVarG = std::vector<double>(n_points, 0.0); // n'est plus utilisé
+        ColumnVectorD lastY =  get_ColumnVector<double>(get_Yx, mModel->mEvents); //(Warm Start)
 
-            gg.push_back(gi[j] + g[j]);
+        // début boucle lambda
+        while (depth_OK == true && iteration_count < max_iterations) {
+            // Sauvegarder la valeur actuelle avant de la diviser
+           // last_valid_lambda = lambda;
+            iteration_count++;
+
+            lambda = lambda / 10;
+
+            SparseMatrixD B = R + lambda * Qt * W_1 * Q; // B est une padded matrice
+
+            // Remplacer : MatrixLD B_1 = inverse_padded_matrix(B);
+            // est plus stable que de calculer
+            // Oui, résoudre le système Bx = y est plus stable que d’inverser B pour obtenir x = B⁻¹y.
+            // C’est ce que recommandent toutes les bonnes pratiques numériques (y compris LAPACK, Eigen, NumPy, etc.).
+            //Eigen::LDLT<MatrixLD> solver(B);
+
+            // indices du sous-bloc utile (ici 1..n-2 si matrice n×n)
+            int first = 1;
+            int nsub  = B.rows() - 2;
+
+            // Extraire le sous-bloc utile
+            SparseMatrixD Bsub = B.block(first, first, nsub, nsub);
+            SparseMatrixD Qtsub = Qt.middleRows(first, nsub);
+
+            // Factorisation creuse LDLT
+            Eigen::SimplicialLDLT<SparseMatrixD> solver; //  -> x = B_1 * y = B_1 * Qt
+            solver.compute(Bsub);
+
+            // Résolution
+            MatrixD B_1Qtsub = solver.solve(MatrixD(Qtsub));
+#ifdef DEBUG
+            if (solver.info() != Eigen::Success) {
+                std::cerr << "LDLT failed!" << std::endl;
+            }
+#endif
+            // Recomposer le résultat complet
+            MatrixD B_1Qt = MatrixD::Zero(B.rows(), Qt.cols());
+            B_1Qt.middleRows(first, nsub) = B_1Qtsub;
+
+            MatrixD QB_1Qt = Q * B_1Qt;
+
+            /**
+            * Calcule A = I - λ * W_1 * Q * B_1 * Qᵀ * W_1
+            *
+            */
+
+            // matrice de projection (ou opérateur de lissage).
+            MatrixD A = I.toDenseMatrix() - lambda * W_1 * QB_1Qt; // forme classique
+
+            // Matrice de Covariance
+            // Σ = A * W_1
+            const MatrixD V =  A * W_1 ;
+
+            // Calcul du vecteur moyen AY de la conditionnelle complète avec le valeur de Yx
+            ColumnVectorD mu_Yx = A * Yx;
+
+            /** Simulation de la fonction f
+            * Ancien Calcule L = Cholesky(Σ) (via LLᵀ)
+            * Nouveau Calcul Vroot via une SVD, plus stable
+            * Tire f = μ + L·z, avec z ~ 𝒩(0, I)
+            */
+            const ColumnVectorD fx = multinormal_sampling_depth(mu_Yx, V, lastY);
+
+            splineX.vecG = std::vector<double>(fx.data(), fx.data() + fx.size());
+
+           // lastY =  fx; //(Warm Start)
+
+            ColumnVectorD vecGamma_x = R_1Qt * fx; // Condition spline directe
+
+            splineX.vecGamma = std::vector<double>(vecGamma_x.data(), vecGamma_x.data() + vecGamma_x.size());
+
+            if (iteration_count == 1) { // On mémorise la première
+                // les splines matrice ne changengt pas
+                last_valid_lambda = lambda;
+                // memo de la spline
+                last_Valid_splineX = splineX;
+
+
+            } else {
+                // test positivité
+                depth_OK = hasPositiveGPrimePlusConst(splineX, mModel->mSettings.mTmin, mModel->mSettings.mTmax, mCurveSettings.mThreshold);
+                if (depth_OK) {
+                    last_valid_lambda = lambda;
+                    // memo de la spline
+                    last_Valid_splineX = splineX;
+                }
+            }
+        }
+        // fin boucle
+        bool positive_curve = !depth_OK && iteration_count>1;
+        std::cout << " lambda for depth = " << last_valid_lambda << " Positive curve : " << (positive_curve ? "✅ YES" : "❌ NO")  << std::endl;
+
+         // memo des Gx
+        for (size_t i = 0; i < n_points; i++) {
+            lEvents[i]->mGx = last_Valid_splineX.vecG[i];
         }
 
-        // auto  difK = multiMatByVectCol0(KKlambda, gg);
+        // memo de la spline
+        mModel->mSpline.splineX = last_Valid_splineX;
 
-        std::vector<double> PP ;
-
-        for(int k = 0; k < n; k++){
-
-            // PP.push_back(g_new_g[k]*difK[k]) ;
-
-            int u = Signe_Number(KKlambda(i, k)) * Signe_Number(g_new_g[i]) * Signe_Number(gg[k]);
-
-            PP.push_back(u * exp(log(abs(KKlambda(i, k))) + log(abs(g_new_g[i])) + log(abs(gg[k])))) ;
+#ifdef DEBUG
+        std::cout << "[MCMCLoopCurve::initialize_spline_for_depth] " << std::endl;
+        for (size_t i = 0; i < n_points; i++) {
+            std::cout << "Y= " << lEvents[i]->mYx << "\t Gx= "<< lEvents[i]->mGx << "\t theta= " << lEvents[i]->mTheta.mX << "\t theta_reduit= " << lEvents[i]->mThetaReduced << std::endl;
         }
+#endif
+        // Utiliser la dernière valeur valide trouvée
+        mModel->mLambdaSpline.mX = last_valid_lambda;
 
-        const double som = std::accumulate(PP.begin(), PP.end(), 0.);
-
-        prod.push_back(exp(-0.5*som));
+    } catch (...) {
+        std::cout << "[MCMCLoopCurve::initialize_spline_for_depth] error" << std::endl;
     }
-
-    return prod;
+    return;
 }
-
-
 
 double MCMCLoopCurve::Prior_F (const MatrixLD& K, const MatrixLD& K_new, const MCMCSpline &s,  const double lambdaSpline)
 {
@@ -9435,7 +9681,7 @@ std::vector<double> MCMCLoopCurve::sampling_spline (std::vector<std::shared_ptr<
 
     std::vector<double> X;
     for(int i = 0; i < n; i++){
-        X.push_back(Generator::gaussByBoxMuller(vecYx[i], sqrt(matrices.diagWInv.diagonal()[i])));
+        X.push_back(Generator::normalDistribution(vecYx[i], sqrt(matrices.diagWInv.diagonal()[i])));
     }
 
     return X;
@@ -9560,7 +9806,7 @@ std::vector<double> MCMCLoopCurve::multinormal_sampling(const std::vector<t_matr
 
     std::vector<double> fr;
     for (size_t i = 0; i< N; i++)
-        fr.push_back(Generator::gaussByBoxMuller(0.0, 1.0));
+        fr.push_back(Generator::normalDistribution(0.0, 1.0));
 
     const auto &Lfr = multiMatByVectCol0(L, fr);
 
@@ -9606,7 +9852,7 @@ ColumnVectorLD MCMCLoopCurve::multinormal_sampling (const ColumnVectorLD& mu, co
 
     ColumnVectorLD z (N);
     for (size_t i = 0; i< N; i++)
-        z.data()[i] = Generator::gaussByBoxMuller(0.0, 1.0);
+        z.data()[i] = Generator::normalDistribution(0.0, 1.0);
 
     //auto Lz = L * z;
     auto Lz = Vroot * z;
@@ -9639,13 +9885,10 @@ ColumnVectorD MCMCLoopCurve::multinormal_sampling (const ColumnVectorD& mu, cons
 
     ColumnVectorD z (N);
     for (size_t i = 0; i< N; i++)
-        z.data()[i] = Generator::gaussByBoxMuller(0.0, 1.0);
-#ifdef KOMLAN
+        z.data()[i] = Generator::normalDistribution(0.0, 1.0);
+
     auto Lz = L * z;
-    //auto Lz = L.transpose() * z; // ne pas transposer, donne de mauvais résultat
-#else
-    auto Lz = L * z;
-#endif
+
 
     ColumnVectorD f = mu + Lz;
 
@@ -9671,7 +9914,7 @@ ColumnVectorLD MCMCLoopCurve::multinormal_sampling2 (const ColumnVectorLD& Y, co
 
     ColumnVectorLD z (N);
     for (size_t i = 0; i< N; i++)
-        z.data()[i] = Generator::gaussByBoxMuller(0.0, 1.0);
+        z.data()[i] = Generator::normalDistribution(0.0, 1.0);
 
     auto Lz = L * z;
 
@@ -9690,107 +9933,22 @@ ColumnVectorLD MCMCLoopCurve::multinormal_sampling2 (const ColumnVectorLD& Y, co
 }
 
 
-/**
- * @brief Sample a vector y ~ N(mu, C) under the constraint y_1 < y_2 < ... < y_N
- *
- * This function uses the Hit-and-Run algorithm to sample from a multivariate
- * normal distribution with mean vector `mu` and covariance matrix `C`,
- * constrained such that the resulting sample is strictly increasing:
- *     y_1 < y_2 < ... < y_N
- *
- * The algorithm performs sampling in the standard normal space via the
- * transformation y = mu + L * z where L is the Cholesky decomposition of C,
- * and z ~ N(0, I). The ordering constraint becomes a set of linear inequalities
- * in z, and each step of Hit-and-Run moves in a random direction inside the
- * feasible region defined by those inequalities.
- *
- * @param mu        Mean vector of the target multivariate normal distribution.
- * @param C         Covariance matrix (must be symmetric positive definite).
- * @param max_iter  Number of Hit-and-Run iterations (default: 1000).
- * @return          A vector y such that y ~ N(mu, C) and y is strictly increasing.
- * @throws          std::runtime_error if the feasible region is empty or numerical issues occur.
- */
-ColumnVectorLD hit_and_run_ordered(
-    const ColumnVectorLD& mu,
-    const MatrixLD& C,
-    int max_iter = 1000)
+ColumnVectorD sampleOrderedNaive(const ColumnVectorD& mu,
+                                   const MatrixD& a)
 {
     const int N = mu.size();
-    MatrixLD L = robust_LLt(C);             ///< Cholesky decomposition: C = L * Lᵀ
-    ColumnVectorLD z = ColumnVectorLD::Zero(N); ///< Start in the standard space at the origin (mean = 0)
-
-
-    for (int iter = 0; iter < max_iter; ++iter) {
-        // Step 1: Generate a random direction vector d ~ N(0, I), then normalize
-        ColumnVectorLD d(N);
-        for (int i = 0; i < N; ++i)
-            d(i) = Generator::gaussByBoxMuller(0.0, 1.0);
-        d.normalize();  ///< Unit direction vector
-
-        // Step 2: Compute the feasible interval [a, b] along direction d
-        double a = -1e10, b = 1e10;
-
-        for (int i = 0; i < N - 1; ++i) {
-            // delta = L.row(i+1) - L.row(i), a row vector
-            RowVectorLD delta = L.row(i + 1) - L.row(i);
-
-            // Numerator of the inequality: delta · z + mu_i - mu_{i+1}
-            double num = mu(i) - mu(i + 1) + delta.dot(z);
-
-            // Denominator: delta · d
-            double denom = delta.dot(d);
-
-            // Avoid divide-by-zero or nearly zero denominators
-            if (std::abs(denom) < 1e-12) {
-                if (num >= 0.0)
-                    throw std::runtime_error("Infeasible constraint encountered (parallel direction)");
-                else
-                    continue; // Constraint always satisfied for this direction
-            }
-
-            // Compute constraint bound: delta · z + lambda * delta · d > mu_i - mu_{i+1}
-            double lambda_bound = -num / denom;
-            if (denom > 0)
-                b = std::min(b, lambda_bound);
-            else
-                a = std::max(a, lambda_bound);
-        }
-
-        if (a >= b)
-            throw std::runtime_error("Empty interval during Hit-and-Run step — no feasible move possible");
-
-        // Step 3: Sample lambda from standard normal truncated to [a, b]
-        double lambda;
-        do {
-            lambda = Generator::gaussByBoxMuller(0.0, 1.0);
-        } while (lambda < a || lambda > b);
-
-        // Step 4: Update the latent vector z ← z + λ·d
-        z = z + lambda * d;
-    }
-
-    // Step 5: Transform back to the target space: y = mu + L·z
-    return mu + L * z;
-}
-
-
-ColumnVectorLD MCMCLoopCurve::multinormal_sampling_depth(const ColumnVectorLD& mu, const MatrixLD& a)
-{
-    auto hr = hit_and_run_ordered (mu, a);
-    return hr;
-
-    const Eigen::Index N = mu.rows();
     const auto L = robust_LLt(a);
 
-    ColumnVectorLD fr(N), f;
+    ColumnVectorD fr(N), f;
     bool isIncreasing = false;
-    int counter = 0;
-    constexpr int MAX_ATTEMPTS = 100;
+    //int counter = 0;
+    //constexpr int MAX_ATTEMPTS = 100;
 
-    while (!isIncreasing && counter < MAX_ATTEMPTS) {
+    //while (!isIncreasing && counter < MAX_ATTEMPTS) { // casse la statistique
+    while (!isIncreasing ) {
         // Génère un vecteur gaussien standard
         for (Eigen::Index i = 0; i < N; ++i) {
-            fr(i) = Generator::gaussByBoxMuller(0.0, 1.0);
+            fr(i) = Generator::normalDistribution(0.0, 1.0);
         }
 
         // Transforme en vecteur corrélé
@@ -9805,19 +9963,231 @@ ColumnVectorLD MCMCLoopCurve::multinormal_sampling_depth(const ColumnVectorLD& m
             }
         }
 
-        ++counter;
+        //++counter;
     }
 
 #ifdef DEBUG
     // Optionnel : vérifier que la condition a été remplie
-    if (!isIncreasing) {
-        std::cout << "[multinormal_sampling_depth]: Failed to generate a strictly increasing sample after"
-                   << MAX_ATTEMPTS << "attempts." << std::endl;
+    //if (!isIncreasing) {
+      //  std::cout << "[multinormal_sampling_depth]: Failed to generate a strictly increasing sample after"
+        //           << MAX_ATTEMPTS << "attempts." << std::endl;
         // ici tu pourrais renvoyer une version triée ou lever une exception si nécessaire
-    }
+   // }
 #endif
 
     return f;
+}
+
+ColumnVectorD sampleOrderedThreads(const ColumnVectorD& mu,
+                                   const MatrixD& a,
+                                   unsigned int globalSeed,
+                                   int nThreadsPerBatch = 2)
+{
+    const int N = mu.size();
+    const auto L = robust_LLt(a);
+    ColumnVectorD result(N);
+    std::atomic<bool> found(false);
+
+    int batchId = 0;
+
+    while (!found.load()) {
+        std::vector<std::thread> threads;
+        threads.reserve(nThreadsPerBatch);
+
+        for (int t = 0; t < nThreadsPerBatch; ++t) {
+            threads.emplace_back([&, t, batchId]() {
+                ColumnVectorD fr(N), f(N);
+
+                // RNG par thread, reproductible
+                std::mt19937 rng(globalSeed + batchId * nThreadsPerBatch + t);
+                std::normal_distribution<double> gauss(0.0, 1.0);
+
+                while (!found.load()) {
+                    for (int i = 0; i < N; ++i) fr(i) = gauss(rng);
+                    f = mu + L * fr;
+
+                    bool increasing = true;
+                    for (int i = 0; i < N-1; ++i) {
+                        if (f(i) >= f(i+1)) {
+                            increasing = false;
+                            break;
+                        }
+                    }
+
+                    if (increasing) {
+                        if (!found.exchange(true)) {
+                            result = f; // seul le premier thread écrit
+                        }
+                        break; // stop thread
+                    }
+                }
+            });
+        }
+
+        // Attend que tous les threads terminent leur batch
+        for (auto& th : threads) th.join();
+        ++batchId;
+    }
+
+    return result;
+}
+// hit and run
+ColumnVectorD sampleOrderedOptimized(const ColumnVectorD& mu,
+                                     const MatrixD& C,
+                                     const ColumnVectorD& LastY,
+                                     int burnIn = 200)
+{
+    const int N = mu.size();
+
+    // 1. Cholesky (Obligatoire si C change)
+    // ---------- 1️⃣  Cholesky (avec jitter si besoin) ----------
+    MatrixD L;
+
+    Eigen::LLT<MatrixD> llt(C);
+    if (llt.info() != Eigen::Success) {
+        const double jitter = 1e-8;
+        MatrixD Creg = C + jitter * MatrixD::Identity(N,N);
+        llt.compute(Creg);
+        /*if (llt.info() != Eigen::Success) {
+            qWarning() << "C n'est toujours pas SPD après jitter.";
+            return ColumnVectorD();
+        }*/
+        // Fallback vers LDLT si la matrice n'est pas définie positive
+        if (llt.info() != Eigen::Success) {
+            Eigen::LDLT<MatrixD> ldlt(C);
+
+            if (ldlt.info() == Eigen::Success) {
+
+                L = ldlt.matrixL();
+                Eigen::VectorXd D = ldlt.vectorD();
+
+                // Convertir LDL^T → LL^T
+                for (Eigen::Index i = 0; i < D.size(); ++i) {
+                    L.col(i) *= (D(i) > 0) ? std::sqrt(D(i)) : 0.0;
+                }
+                //return L;
+            }
+        } else {
+            L = llt.matrixL();
+        }
+    } else {
+
+        L = llt.matrixL();
+    }
+
+
+    // ---------- 2️⃣  Warm‑start (projection) ----------
+    // On ne rejette rien, on crée un point valide en triant mu ou en ajustant
+    // on s'assure que lastY respecte les contraintes
+    // Votre vecteur est trié de force (ex: [10, 5, 20] devient [10, 10.00001, 20]).
+    //ColumnVectorD y = mu;
+    ColumnVectorD y = LastY; // (Warm Start), même si C a changer, on peut penser que l'ancien résultat n'est pas loin de la cible
+    bool was_valid = true;
+    for (int i = 1; i < N; ++i) {
+        if (y(i) <= y(i-1)) {
+            y(i) = y(i-1) + 1e-6;
+            was_valid = false;
+        }
+    }
+
+    // Choix adaptatif du burn-in
+    int currentBurnIn = was_valid ? 200 : 200;
+    // ---------- 3️⃣  Passage dans l'espace standard ----------
+    ColumnVectorD rhs = y - mu;               // = 0 si y == mu
+
+    ColumnVectorD z = L.triangularView<Eigen::Lower>().solve(rhs);
+
+    if (!z.allFinite()) { // depend option de compilation
+#ifdef DEBUG
+        std::cout << "[sampleOrderedOptimized] z became NaN → reset" << std::endl;
+#endif
+        z.setZero();
+
+    }
+
+    // ---------- 4️⃣  Pré‑calcul des contraintes ----------
+    const int M = N - 1;
+    MatrixD W(M, N);
+    ColumnVectorD v(M);
+    for (int i = 0; i < M; ++i) {
+        W.row(i) = L.row(i+1) - L.row(i);
+        v(i) = mu(i) - mu(i+1);
+    }
+    ColumnVectorD Wz = W * z; // O(N²) une fois
+
+
+    // ---------- 5️⃣  Boucle Hit‑and‑Run ----------
+    ColumnVectorD d(N), Wd(M);
+    constexpr double INF = std::numeric_limits<double>::infinity();
+
+    for (int iter = 0; iter < currentBurnIn + 1; ++iter) {
+        // Tirage d'une direction d via masterEngine pour reproductibilité
+
+        for(int i=0; i<N; ++i) d(i) = Generator::normalDistribution(0.0, 1.0);;
+        d.normalize();
+
+        Wd.noalias() = W * d;
+        double a = -INF, b = INF;
+        //double a = -1e150, b = 1e150;
+
+        /*for (int i = 0; i < N - 1; ++i) {
+            double den = Wd(i);
+            double num = v(i) - Wz(i);
+            if (den > 0)      a = std::max(a, num / den);
+            else  b = std::min(b, num / den);
+        }*/
+
+        constexpr double eps = 1e-12;
+        for (int i = 0; i < N - 1; ++i) {
+                    double den = Wd(i);
+                    double num = v(i) - Wz(i);
+                    if (std::abs(den) < eps) {
+                        if (num >= 0.0) { a = 1; b = 0; break; } // intervalle vide
+                    } else continue;
+
+                    if (den > 0)      a = std::max(a, num / den);
+                    else  b = std::min(b, num / den);
+
+                    double bound = num / den;
+                    if (!std::isfinite(bound)) continue;
+        }
+
+
+
+        if (a < b) {
+            double mu_lambda = -d.dot(z);  // ← signe « ‑ » correct
+            // truncatedNormal utilise ici Generator en interne
+            double lambda = Generator::truncatedNormal(mu_lambda, 1.0,
+                                                       a + mu_lambda ,
+                                                       b + mu_lambda);
+
+            z.noalias() += lambda * d;
+            Wz.noalias() += lambda * Wd; // Update O(N)
+        }
+    }
+    // ---------- 6️⃣  Retour à l'espace original ----------
+    return mu + L * z;
+}
+
+ColumnVectorD MCMCLoopCurve::multinormal_sampling_depth(const ColumnVectorD& mu, const MatrixD& a, const ColumnVectorD& lastY)
+{
+    const Eigen::Index N = mu.rows();
+    if (N > 5) {
+
+        auto hr = sampleOrderedOptimized(mu, a, lastY); //hit and run
+        return hr;
+
+    }
+
+   /* else if (N > 10) {
+        auto hr = sampleOrderedThreads(mu, a, 12 , 3);
+        return hr;
+
+    }*/
+    else {
+        return sampleOrderedNaive(mu, a);
+    }
+
 }
 
 
@@ -10072,3 +10442,327 @@ MatrixLD inverseMatSym_originKK(const MatrixLD &matrixLE,  const DiagonalMatrixL
 
     return matInv;
 }
+
+
+/* -----------------------------------------------------------------
+   Truncated normal sampler (standard deviation = 1, mean = mu)
+   ----------------------------------------------------------------- */
+/*double truncatedNormal(double mu, double a, double b)
+{
+    // CDF de la N(0,1)
+    auto Phi = [](double x) {
+        return 0.5 * std::erfc(-x / std::sqrt(2.0));
+    };
+    // Inverse de la CDF (erfc⁻¹) – on utilise la fonction de la STL
+    auto PhiInv = [](double p) {
+        return std::sqrt(2.0) * erfcInv_approx(2.0 * (1.0 - p));
+    };
+
+    double alpha = (a - mu);          // limites dans l’espace standard
+    double beta  = (b - mu);
+
+    double Phi_a = Phi(alpha);
+    double Phi_b = Phi(beta);
+
+    // Cas où l’intervalle est infini d’un côté
+    if (std::isinf(alpha)) Phi_a = 0.0;
+    if (std::isinf(beta )) Phi_b = 1.0;
+
+    //std::uniform_real_distribution<double> ud(Phi_a, Phi_b);
+    //double u = ud(Generator::normalDistribution(0.0, 1.0));
+    //double z = PhiInv(u);             // z ~ N(0,1) conditionnée
+    //return mu + z;                    // on ajoute la moyenne
+
+    double u = Generator::randomUniform(Phi_a, Phi_b);
+    double z = PhiInv(u);             // z ~ N(0,1) conditionnée
+    return mu + z;
+}
+
+double truncatedNormal(double mu, double a, double b)
+{
+    // Si l’intervalle est infini d’un côté, on le remplace par un très grand
+    // nombre afin d’éviter les overflow dans la distribution normale.
+    const double INF = 1e100;
+    if (std::isinf(a)) a = -INF;
+    if (std::isinf(b)) b =  INF;
+
+    // Si l’intervalle est vide, on renvoie mu (c’est un cas qui ne devrait
+    // jamais arriver, mais cela évite un boucle infinie).
+    if (a >= b) return mu;
+
+    double val;
+    int attempts = 0;
+    const int MAX_ATTEMPTS = 10000;   // garde‑en‑cas de mauvaise configuration
+
+    do {
+        val = Generator::normalDistribution(0.0, 1.0);
+        ++attempts;
+        if (attempts > MAX_ATTEMPTS) {
+            // on abandonne le rejet et on renvoie la moyenne ; cela ne
+            // corrompt pas la chaîne (le prochain pas sera tout de même valide).
+            return mu;
+        }
+    } while (val < a || val > b);
+
+    return val;
+}
+*/
+/**
+ * @brief Wrapper qui utilise Generator::gaussByDoubleExp pour
+ *        générer une normale tronquée N(mu,1) sur [a,b].
+ *
+ * @param mu   moyenne (μ_λ)
+ * @param a    borne inférieure (peut être -inf)
+ * @param b    borne supérieure (peut être +inf)
+ * @param rng  moteur aléatoire (pas utilisé directement, mais on le
+ *             passe à Generator pour qu’il utilise le même source).
+ * @return double  un échantillon λ.
+ */
+double truncatedNormal(double mu, double a, double b)
+{
+    if (!std::isfinite(mu) || !std::isfinite(a) || !std::isfinite(b)) {
+        qWarning() << "truncatedNormal: paramètre non fini"
+                   << "mu=" << mu << "a=" << a << "b=" << b;
+        return 0.0;
+    }
+    // -----------------------------------------------------------------
+    // 1️⃣ Gestion des bornes infinies
+    // -----------------------------------------------------------------
+    // gaussByDoubleExp ne sait pas gérer ±∞.  On remplace donc les
+    // infinies par un très grand nombre (≈ 1e100) qui est « pratiquement ∞».
+    const double INF = 1e100;
+    double min = a;
+    double max = b;
+    if (std::isinf(a)) min = -INF;
+    if (std::isinf(b)) max =  INF;
+
+    // -----------------------------------------------------------------
+    // 2️⃣ Cas où l’intervalle est vide (devrait déjà être filtré)
+    // -----------------------------------------------------------------
+    if (min >= max) {
+        // Retour de la moyenne – cela ne corrompt pas la chaîne,
+        // le prochain pas sera tout de même valide.
+        return mu;
+    }
+
+    // -----------------------------------------------------------------
+    // 3️⃣ Appel de la fonction existante
+    // -----------------------------------------------------------------
+    // sigma = 1.0 (variance = 1) – c’est exactement ce que l’on veut.
+    // La fonction lance des exceptions si le domaine est incohérent,
+    // on les laisse remonter.
+    return Generator::gaussByDoubleExp(mu, 1.0, min, max);
+}
+
+
+/* -----------------------------------------------------------------
+   Hit‑and‑Run → **un seul** vecteur colonne (taille = mu.size()).
+   ----------------------------------------------------------------- */
+/*
+inline ColumnVectorD sampleOrdered_one(const ColumnVectorD& mu,
+                                       const MatrixD& C,
+                                       int nIterPerSample,   // itérations entre deux enregistrements
+                                       int burnIn, // itérations à jeter avant le premier enregistrement
+                                       int thin)    // sous‑échantillonnage
+{
+    const int N = mu.size();
+
+    // -------------------------------------------------------------
+    // 1️⃣  Décomposition de Cholesky (C = L Lᵀ)
+    // -------------------------------------------------------------
+    Eigen::LLT<MatrixD> llt(C);
+
+    if (llt.info() != Eigen::Success) {
+        // ajoute un petit terme diagonal pour rendre la matrice SPD
+        const double jitter = 1e-8;
+        MatrixD Creg = C + jitter * MatrixD::Identity(N,N);
+        llt.compute(Creg);
+        if (llt.info() != Eigen::Success) {
+            qWarning() << "Even after jitter C is not SPD.";
+            return ColumnVectorD(); // vecteur vide → échec
+        }
+    }
+    const MatrixD L = llt.matrixL();
+
+    // -------------------------------------------------------------
+    // 2️⃣  Point de départ strictement croissant
+    // -------------------------------------------------------------
+    ColumnVectorD y = mu;
+    const double eps = 1e-8;
+    for (int i = 1; i < N; ++i)
+        if (y(i) <= y(i-1))
+            y(i) = y(i-1) + eps;   // garantit y₁ < … < y_N
+
+    // -------------------------------------------------------------
+    // 3️⃣  Passer dans l’espace standard : z = L⁻¹ (y‑mu)
+    // -------------------------------------------------------------
+    ColumnVectorD rhs = y - mu;               // = 0
+    if (!rhs.allFinite()) {
+        qWarning() << "rhs contains NaN/Inf → abort";
+        return ColumnVectorD();
+    }
+    ColumnVectorD z = L.triangularView<Eigen::Lower>().solve(rhs);
+    if (!z.allFinite()) {
+        qWarning() << "Solution z contains NaN/Inf → abort";
+        std::cerr << "L =\n" << L << "\n";
+        std::cerr << "rhs = " << rhs.transpose() << "\n";
+        return ColumnVectorD();
+    }
+    // -------------------------------------------------------------
+    // 4️⃣  Boucle principale (Hit‑and‑Run)
+    // -------------------------------------------------------------
+    int iter = 0;
+    int totalIter = 0;                     // compteur global (burn‑in + thinning)
+
+    while (true) {
+        // ---- nIterPerSample itérations de la chaîne ----
+        for (int inner = 0; inner < nIterPerSample; ++inner, ++iter) {
+            // ----- 5.1 Direction aléatoire (normale puis normalisation) -----
+            ColumnVectorD d(N);
+            for (int i = 0; i < N; ++i) d(i) = Generator::normalDistribution(0.0, 1.0);
+            d.normalize();                    // d devient unitaire (colonne)
+
+            // ----- 5.2 Bornes a et b pour λ -----
+            double a = -std::numeric_limits<double>::infinity();   // -∞
+            double b =  std::numeric_limits<double>::infinity();   // +∞
+
+            for (int i = 0; i < N-1; ++i) {
+                RowVectorD delta = L.row(i+1) - L.row(i);
+
+                double denom = delta.dot(d);                     // Δ_i·d
+
+                double num   = mu(i) - mu(i+1) - delta.dot(z);   // -(Δ_i·z) + (μ_i-μ_{i+1})
+
+                if (std::abs(denom) < 1e-12) {
+                    // Direction presque parallèle à la contrainte
+                    if (num >= 0.0) {
+                        a = 1.0;
+                        b = 0.0;
+                        break;
+                    } // intervalle vide
+                    else continue;                               // contrainte déjà satisfaite
+                }
+
+                double bound = num / denom;   // λ > bound si denom>0, λ < bound sinon
+                // 1️⃣  Vérifier que le résultat est fini
+                if (!std::isfinite(bound)) {
+                    qWarning("bound = %g (num=%g, denom=%g) → non fini, on ignore la contrainte i=%d",
+                             bound, num, denom, i);
+                    continue;               // on saute cette contrainte
+                }
+                if (denom > 0.0)
+                    a = std::max(a, bound);
+                else
+                    b = std::min(b, bound);
+            }
+
+            if (a >= b) continue;          // intervalle vide → on passe à la prochaine direction
+
+            // ----- 5.3 Tirage de λ (normale tronquée) -----
+            double mu_lambda = d.dot(z);   // moyenne de λ le long de la droite
+            //double lambda    = truncatedNormal(mu_lambda, a, b);
+            double lambda = truncatedNormal( 0.0,
+                                             a - mu_lambda,
+                                             b - mu_lambda
+                                             );
+
+            // ----- 5.4 Mise à jour du point latent -----
+            z += lambda * d;
+        }
+
+        ++totalIter;                       // on a fini nIterPerSample itérations
+
+        // ---- 5.5 Burn‑in / thinning ----
+        if (totalIter >= burnIn && ((totalIter - burnIn) % thin == 0)) {
+            // Transforme z → y = μ + L z  (colonne)
+            ColumnVectorD result = mu + L * z;
+            return result;                 // <-- un seul vecteur colonne
+        }
+    }
+}
+*/
+
+// ne fonctionne pas avec notre MCMC, puisque l'interet et de garder C constant
+inline ColumnVectorD sampleOrdered_one(const ColumnVectorD& mu,
+                                       const MatrixD& C,
+                                       int nIterPerSample,
+                                       int burnIn,
+                                       int thin)
+{
+    const int N = mu.size();
+
+    // 1. Cholesky (Nécessaire car C change)
+    Eigen::LLT<MatrixD> llt(C);
+    if (llt.info() != Eigen::Success) {
+        MatrixD Creg = C + 1e-8 * MatrixD::Identity(N, N);
+        llt.compute(Creg);
+        if (llt.info() != Eigen::Success) return ColumnVectorD();
+    }
+    const MatrixD L = llt.matrixL();
+
+    // 2. Point de départ z (espace standard)
+    // On part de y = mu ordonné, puis on résout Lz = y - mu
+    ColumnVectorD y = mu;
+    for (int i = 1; i < N; ++i) {
+        if (y(i) <= y(i-1)) y(i) = y(i-1) + 1e-7;
+    }
+    ColumnVectorD z = L.triangularView<Eigen::Lower>().solve(y - mu);
+
+    // 3. Pré-calcul des contraintes (W * z > v)
+    // W est la matrice de différence des lignes de L (N-1 x N)
+    // v est le vecteur de différence des éléments de mu (N-1)
+    MatrixD W(N - 1, N);
+    ColumnVectorD v(N - 1);
+    for (int i = 0; i < N - 1; ++i) {
+        W.row(i) = L.row(i+1) - L.row(i);
+        v(i) = mu(i) - mu(i+1);
+    }
+
+    // Wz est maintenu à jour incrémentalement pour éviter le produit matriciel O(N^2)
+    ColumnVectorD Wz = W * z;
+
+    // 4. Boucle de génération
+    int totalIter = burnIn + thin; // On boucle jusqu'à l'échantillon souhaité
+    for (int iter = 0; iter < totalIter; ++iter) {
+
+        for (int inner = 0; inner < nIterPerSample; ++inner) {
+            // Direction aléatoire vectorisée
+            ColumnVectorD d = ColumnVectorD::NullaryExpr(N, [&](){
+                return Generator::normalDistribution(0.0, 1.0);
+            });
+            d.normalize();
+
+            // Calcul vectorisé des bornes (Wd est O(N^2), mais Wz est déjà calculé)
+            ColumnVectorD Wd = W * d;
+
+            double a = -1e150;
+            double b = 1e150;
+
+            // Cette boucle est très simple et bien optimisée par le compilateur
+            for (int i = 0; i < N - 1; ++i) {
+                double den = Wd(i);
+                double num = v(i) - Wz(i);
+                if (std::abs(den) > 1e-13) {
+                    double bound = num / den;
+                    if (den > 0) a = std::max(a, bound);
+                    else        b = std::min(b, bound);
+                } else if (num > 0) { // Contrainte impossible
+                    a = 1; b = 0; break;
+                }
+            }
+
+            if (a < b) {
+                double mu_lambda = -d.dot(z);
+                double lambda = truncatedNormal(0.0, a - mu_lambda, b - mu_lambda);
+
+                // MISE À JOUR INCRÉMENTALE : O(N) au lieu de O(N^2)
+                z.noalias() += lambda * d;
+                Wz.noalias() += lambda * Wd;
+            }
+        }
+    }
+
+    // 5. Retour au domaine original : y = mu + Lz
+    return mu + L * z;
+}
+

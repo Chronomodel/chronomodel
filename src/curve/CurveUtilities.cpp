@@ -2587,7 +2587,7 @@ showVector(vec_varG2, "vec_varG2");
 }
 /**
  * @brief MCMCLoopCurve::currentSpline_WI. Lambda = 0
- * @param events must be ordered and spred
+ * @param events must be ordered and spread
  * @return
  */
 MCMCSpline currentSpline_WI (std::vector<std::shared_ptr<Event>> &events, bool doY, bool doZ, bool use_error)

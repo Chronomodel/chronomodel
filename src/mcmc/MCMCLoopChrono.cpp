@@ -247,21 +247,28 @@ bool MCMCLoopChrono::update_v4()
 }
 
 
-
+/*
 bool MCMCLoopChrono::adapt(const int batchIndex) //original code
 {
-/*  const double taux_min = 41.;          // taux_min minimal rate of acceptation=42
-    const double taux_max = 47.;           // taux_max maximal rate of acceptation=46
-*/
 
-    const double taux_min = 0.42;           // taux_min minimal rate of acceptation=42
-    const double taux_max = 0.46;           // taux_max maximal rate of acceptation=46
+    // Pour un Random‑Walk Metropolis en une dimension, la théorie (Roberts et al., 1997) montre que le taux optimal est ≈ 0.44
+    const double taux_min = 0.42;
+    const double taux_max = 0.46;
+
+    //
+    // En haute dimension (> 5), le taux optimal se rapproche de 0.23.
+    //   Si vous avez des vecteurs de grande dimension, il serait judicieux de réduire la fenêtre (ex. 0.20‑0.30).
+    //
+    //const double taux_min = 0.20;
+    //const double taux_max = 0.30;
 
     bool noAdapt = true;
 
     //--------------------- Adapt -----------------------------------------
 
-    const double delta = (batchIndex < 10000) ? 0.01 : (1.0 / sqrt(batchIndex));
+    //const double delta = (batchIndex < 10000) ? 0.01 : (1.0 / sqrt(batchIndex));
+
+    const double delta = 0.5 * std::pow(static_cast<double>(batchIndex+1), -0.5);
 
     for (const auto& event : mModel->mEvents) {
        for (auto& date : event->mDates) {
@@ -283,6 +290,53 @@ bool MCMCLoopChrono::adapt(const int batchIndex) //original code
 #ifdef S02_BAYESIAN
        if ( event->mS02Theta.mSamplerProposal == MHVariable::eMHAdaptGauss)
             noAdapt = event->mS02Theta.adapt(taux_min, taux_max, delta) && noAdapt;
+#endif
+    }
+
+
+    return noAdapt;
+}
+*/
+
+bool MCMCLoopChrono::adapt(const int batchIndex)
+{
+
+    // Pour un Random‑Walk Metropolis en une dimension, la théorie (Roberts et al., 1997) montre que le taux optimal est ≈ 0.44
+    const double taux_min = 0.42;
+    const double taux_max = 0.46;
+
+    //
+    /* En haute dimension (> 5), le taux optimal se rapproche de 0.23.
+        Si vous avez des vecteurs de grande dimension, il serait judicieux de réduire la fenêtre (ex. 0.20‑0.30).
+    */
+    //const double taux_min = 0.20;
+    //const double taux_max = 0.30;
+
+    bool noAdapt = true;
+
+    //--------------------- Adapt -----------------------------------------
+
+
+    for (const auto& event : mModel->mEvents) {
+        for (auto& date : event->mDates) {
+
+            //--------------------- Adapt Sigma MH de t_i -----------------------------------------
+            if (date.mTi.mSamplerProposal == MHVariable::eMHAdaptGauss)
+                noAdapt = date.mTi.adapt(taux_min, taux_max, batchIndex) && noAdapt;
+
+            //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
+            if (date.mSigmaTi.mSamplerProposal == MHVariable::eMHAdaptGauss)
+                noAdapt = date.mSigmaTi.adapt(taux_min, taux_max, batchIndex) && noAdapt;
+
+        }
+
+        //--------------------- Adapt Sigma MH de Theta Event -----------------------------------------
+        if ((event->mType != Event::eBound) && ( event->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss) )
+            noAdapt = event->mTheta.adapt(taux_min, taux_max, batchIndex) && noAdapt;
+
+#ifdef S02_BAYESIAN
+        if ( event->mS02Theta.mSamplerProposal == MHVariable::eMHAdaptGauss)
+            noAdapt = event->mS02Theta.adapt(taux_min, taux_max, batchIndex) && noAdapt;
 #endif
     }
 

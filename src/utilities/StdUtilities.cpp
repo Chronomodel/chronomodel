@@ -1010,7 +1010,6 @@ const std::map<double, double> create_HPD_by_dichotomy(const std::map<double, do
         if (interval_open) {
             current_interval.second = prev_it->first;
             current_intervals.append({total_area - area_total_since_prev_interval, current_interval});
-            area_total_since_prev_interval = total_area;
         }
 
         // Ajustement de la recherche dichotomique
@@ -1035,7 +1034,6 @@ const std::map<double, double> create_HPD_by_dichotomy(const std::map<double, do
         }
         // Stocker les derniers résultats à chaque itération
         final_intervals = current_intervals;
-        //final_total_area = total_area;
         final_current_threshold = current_threshold;
     }
 
@@ -1395,3 +1393,85 @@ std::chrono::microseconds Chronometer::eval()
 }
 
 
+double erfcInv_approx(double x)
+{
+    if (x <= 0.0) return std::numeric_limits<double>::max();  // +∞
+    if (x >= 2.0) return -std::numeric_limits<double>::max(); // -∞
+
+    // Transforme erfc⁻¹ en Φ⁻¹ (inverse de la loi normale standard)
+    //   Φ⁻¹(p) = √2 * erfc⁻¹(2(1‑p))
+    // Nous allons donc d’abord calculer Φ⁻¹(p) puis revenir à erfc⁻¹.
+    // Mais il est plus simple de travailler directement sur Φ⁻¹.
+
+    // p = 1 - x/2  ∈ (0,1)
+    double p = 1.0 - 0.5 * x;
+
+    // ---- 1. Approximation de Φ⁻¹(p) ----
+    // Si p < 0.5 on utilise la symétrie Φ⁻¹(p) = -Φ⁻¹(1‑p)
+    bool neg = false;
+    if (p < 0.5) {
+        p = 1.0 - p;
+        neg = true;
+    }
+
+    // Coefficients de la série (Abramowitz & Stegun, 26.2.23)
+    const double a0 =  2.50662823884;
+    const double a1 = -18.61500062529;
+    const double a2 =  41.39119773534;
+    const double a3 = -25.44106049637;
+
+    const double b0 = -8.47351093090;
+    const double b1 = 23.08336743743;
+    const double b2 = -21.06224101826;
+    const double b3 =  3.13082909833;
+
+    double t = std::sqrt(-2.0 * std::log(1.0 - p));   // t > 0
+
+    // Approximation de la forme  t - (a0 + a1 t + a2 t² + a3 t³) /
+    //                               (b0 + b1 t + b2 t² + b3 t³)
+    double numerator   = ((a3 * t + a2) * t + a1) * t + a0;
+    double denominator = ((b3 * t + b2) * t + b1) * t + b0;
+    double z = t - numerator / denominator;
+
+    if (neg) z = -z;          // on remet le signe si p était < 0.5
+
+    // ---- 2. Retour à erfc⁻¹ ----
+    // Φ⁻¹(p) = √2 * erfc⁻¹(2(1‑p))  ⇒  erfc⁻¹(x) = Φ⁻¹(1‑x/2) / √2
+    return z / std::sqrt(2.0);
+}
+
+/* -----------------------------------------------------------------
+   Inverse de la CDF normale standard Φ⁻¹(p) (p ∈ (0,1)).
+   On ré‑utilise la même approximation que ci‑dessus, mais on
+   évite le facteur √2 supplémentaire.
+   ----------------------------------------------------------------- */
+inline double normInv(double p)
+{
+    if (p <= 0.0) return -std::numeric_limits<double>::max();
+    if (p >= 1.0) return  std::numeric_limits<double>::max();
+
+    // Utilise la même logique que erfcInv, mais sans le facteur √2.
+    bool neg = false;
+    if (p < 0.5) {
+        p = 1.0 - p;
+        neg = true;
+    }
+
+    const double a0 =  2.50662823884;
+    const double a1 = -18.61500062529;
+    const double a2 =  41.39119773534;
+    const double a3 = -25.44106049637;
+
+    const double b0 = -8.47351093090;
+    const double b1 = 23.08336743743;
+    const double b2 = -21.06224101826;
+    const double b3 =  3.13082909833;
+
+    double t = std::sqrt(-2.0 * std::log(1.0 - p));
+
+    double numerator   = ((a3 * t + a2) * t + a1) * t + a0;
+    double denominator = ((b3 * t + b2) * t + b1) * t + b0;
+    double z = t - numerator / denominator;
+
+    return neg ? -z : z;
+}

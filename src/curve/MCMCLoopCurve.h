@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2025
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -47,6 +47,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ModelCurve.h"
 #include "Event.h"
 #include "version.h"
+#include "Generator.h"
 
 #include <vector>
 
@@ -166,8 +167,6 @@ private:
 #pragma mark Optimization
 
 
-
-
     t_prob h_lambda_321(const SplineMatricesLD &matrices, const int nb_noeuds, const  double lambdaSpline) ;
     t_prob h_lambda_330(const double lambdaSpline);
     t_prob h_theta (const QList<std::shared_ptr<Event>> &events) const;
@@ -230,7 +229,8 @@ private:
     MCMCSpline samplingSpline_multi2(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixLD &R, const MatrixLD &R_1Qt, const SparseMatrixLD &Q);
     MCMCSpline samplingSpline_multi2(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixD &R, const MatrixD &R_1Qt, const SparseMatrixD& Q);
 
-    MCMCSpline samplingSpline_multi_depth(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixLD &R, const MatrixLD &R_1QT, const SparseMatrixLD& Q);
+    MCMCSpline samplingSpline_multi_depth(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixD &R, const MatrixD &R_1Qt, const SparseMatrixD& Q);
+    void initialize_spline_for_depth(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixD &R, const MatrixD &R_1Qt, const SparseMatrixD& Q);
 
     std::vector<double> multinormal_sampling (const std::vector<t_matrix>& mu, const MatrixLD& a);
     ColumnVectorLD multinormal_sampling (const ColumnVectorLD& mu, const MatrixLD& A);
@@ -238,7 +238,7 @@ private:
 
     ColumnVectorLD multinormal_sampling2 (const ColumnVectorLD& Y, const MatrixLD& A_1, const DiagonalMatrixLD& w_1);
 
-    ColumnVectorLD multinormal_sampling_depth (const ColumnVectorLD& mu, const MatrixLD& a);
+    ColumnVectorD multinormal_sampling_depth (const ColumnVectorD& mu, const MatrixD& a, const ColumnVectorD &lastY);
 
     std::vector<double> splines_prior(const MatrixLD &KK, std::vector<double> &g, std::vector<double> &g_new);
 
@@ -258,6 +258,27 @@ private:
 
 };
 
+#pragma mark HitRunOrdered
+/* -----------------------------------------------------------------
+   Truncated normal sampler (standard deviation = 1, mean = mu)
+   ----------------------------------------------------------------- */
+double truncatedNormal(double mu, double a, double b);
 
 
+/* -----------------------------------------------------------------
+   Hit‑and‑Run pour la contrainte d’ordre strict.
+   Retourne `nSamples` vecteurs (chaque colonne = un échantillon).
+   ----------------------------------------------------------------- */
+MatrixD sampleOrdered(const RowVectorD& mu,
+                            const MatrixD& C,
+                            int nSamples,
+                            int nIterPerSample = 250,   // itérations entre deux échantillons
+                            int burnIn          = 1000, // itérations à jeter
+                            int thin            = 1) ;   // sous‑échantillonnage
+
+ColumnVectorD sampleOrdered_one(const ColumnVectorD& mu,
+                                       const MatrixD& C,
+                                       int nIterPerSample = 250,   // itérations entre deux enregistrements
+                                       int burnIn          = 1000, // itérations à jeter avant le premier enregistrement
+                                       int thin            = 1) ;
 #endif

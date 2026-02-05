@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2025
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -39,7 +39,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "Event.h"
 
-#include "CalibrationCurve.h"
 #include "Date.h"
 #include "Phase.h"
 
@@ -1196,8 +1195,8 @@ double Event::getThetaMinRecursive_v3(const double defaultValue, const std::vect
         // 2 - Si l'Event appartient à une phase, descendre les contraintes de phase en ajoutant les gamma
         double max_theta_phase_strati = defaultValue;
         if (!mPhases.empty()) {
-            for (const auto& phase : mPhases) {
-                for (auto bwd_phase : phase->mConstraintsPrevPhases) {
+            for (const auto& phase : mPhases) { // clazy:skip
+                for (const auto& bwd_phase : phase->mConstraintsPrevPhases) { // clazy:skip
                     max_theta_phase_strati = std::max(max_theta_phase_strati, bwd_phase->mPhaseFrom->init_max_theta(defaultValue) + bwd_phase->mGamma);
                 }
             }
@@ -1211,7 +1210,7 @@ double Event::getThetaMinRecursive_v3(const double defaultValue, const std::vect
             for (const auto& phase : mPhases) {
                 double th_max_phase = defaultValue;
                 if (phase->mTauType != Phase::eTauUnknown) {
-                    for (auto th_friend : phase->mEvents) {
+                    for (const auto& th_friend : phase->mEvents) { // clazy:skip
                         if (th_friend->mInitialized == true && th_friend.get() != this ) {
                             th_max_phase = std::max(th_max_phase, th_friend->mTheta.mX);
                         }
@@ -1268,8 +1267,13 @@ double Event::getThetaMaxRecursive_v3(const double defaultValue, const std::vect
         double min_theta_phase_strati = defaultValue;
         if (!mPhases.empty()) {
             for (const auto& phase : mPhases) {
-                for (auto fwd_phase : phase->mConstraintsNextPhases) {
-                    min_theta_phase_strati = std::min(min_theta_phase_strati, fwd_phase->mPhaseTo->init_min_theta(defaultValue) - fwd_phase->mGamma);
+                for (const auto& fwd_phase : phase->mConstraintsNextPhases) { // clazy:skip
+                    //min_theta_phase_strati = std::min(min_theta_phase_strati, fwd_phase->mPhaseTo->init_min_theta(defaultValue) - fwd_phase->mGamma);
+                    // aucune copie de shared_ptr n’est faite ici
+                    double candidate = fwd_phase->mPhaseTo->init_min_theta(defaultValue)
+                                       - fwd_phase->mGamma;
+                    min_theta_phase_strati = std::min(min_theta_phase_strati, candidate);
+
                 }
             }
         }
@@ -1281,7 +1285,7 @@ double Event::getThetaMaxRecursive_v3(const double defaultValue, const std::vect
             for (const auto& phase : mPhases) {
                 double th_min_phase = defaultValue;
                 if (phase->mTauType != Phase::eTauUnknown) {
-                    for (auto th_friend : phase->mEvents) {
+                    for (const auto& th_friend : phase->mEvents) { // clazy:skip
                         if (th_friend->mInitialized == true && th_friend.get() != this ) {
                             th_min_phase = std::min(th_min_phase, th_friend->mTheta.mX);
                         }
@@ -1458,7 +1462,7 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
             double theta;
             long long counter = 0.;
             do {
-                theta = Generator::gaussByBoxMuller(theta_avg, sigma);
+                theta = Generator::normalDistribution(theta_avg, sigma);
                 ++counter;
                 if (counter == 100000000)
                     throw QObject::tr("No MCMC solution could be found using event method %1 for event named %2 ( %3  trials done)").arg(MHVariable::getSamplerProposalText(mTheta.mSamplerProposal), getQStringName(), QString::number(counter));
@@ -1472,7 +1476,7 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
         case MHVariable::eMHAdaptGauss:
         {
             // MH: The only case where the acceptance rate makes sense, since we use sigma MH :
-            const double try_theta = Generator::gaussByBoxMuller(mTheta.mX, mTheta.mSigmaMH);
+            const double try_theta = Generator::normalDistribution(mTheta.mX, mTheta.mSigmaMH);
             double rapport = 0.0;
             if (try_theta >= min && try_theta <= max)
                 rapport = exp((-0.5/(sigma*sigma)) * (pow(try_theta - theta_avg, 2.) - pow(mTheta.mX - theta_avg, 2.)));
@@ -1489,7 +1493,7 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
 
 }
 
-
+/* obsolete
 void Event::updateTheta_v4(const double tmin, const double tmax, const double rate_theta)
 {
     double rapport;
@@ -1555,6 +1559,7 @@ void Event::updateTheta_v4(const double tmin, const double tmax, const double ra
     mTheta.try_update(theta_try, rapport * rate_theta);
     //qDebug() << "[Event::updateTheta_v4]-----------> Event update : " << getQStringName() << " : " << mTheta.mX << " between" << "[" << min << " ; " << max << "]";
 }
+*/
 
 void Event::generateHistos(const std::vector<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
@@ -1607,7 +1612,7 @@ void Event::updateS02()
         const double logVMin = -100.0;
         const double logVMax = 100.0;
 
-        const double logV2 = Generator::gaussByBoxMuller(log10(mS02Theta.mX) , mS02Theta.mSigmaMH);
+        const double logV2 = Generator::normalDistribution(log10(mS02Theta.mX) , mS02Theta.mSigmaMH);
         const double V2 = pow(10.0, logV2);
 
         double rapport  = -1.0; // Force reject

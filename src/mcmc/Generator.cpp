@@ -131,32 +131,48 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
 
     const long double x_min = (min - mean) / sigma;
     const long double x_max = (max - mean) / sigma;
+    double x;
+    // --- CAS 1 : Intervalle étroit ---
+    // Si l'intervalle est plus petit que 0.1 sigma, la densité est presque uniforme.
+    // On utilise un rejet sur l'uniforme, très efficace ici.
+    if ((x_max - x_min) < 0.1) {
+        while (true) {
+            x = x_min + (x_max - x_min) * randomUniform();
+            double u = randomUniform();
+            // On accepte avec la probabilité exp(-x²/2) / exp(-mode²/2)
+            // Pour être sûr, on utilise le point de l'intervalle le plus proche de 0
+            double mode = (x_min > 0) ? x_min : ((x_max < 0) ? x_max : 0.0);
+            if (std::log(u) <= 0.5 * (mode * mode - x * x)) {
+                return mean + x * sigma;
+            }
+        }
+    }
 
-    long double x = (x_max + x_min) / 2.0;// initialisation arbitraire, valeur écrasée ensuite
+    x = (x_max + x_min) / 2.0;// initialisation arbitraire, valeur écrasée ensuite
     //const long double sqrt_e = sqrtl(expl(1.0));
     const long double sqrt_e = 1.64872127070012814689;
     feclearexcept(FE_ALL_EXCEPT);
 
-    long double exp_x_min = 0.0;
-    long double exp_x_max = 0.0;
-    long double exp_minus_x_min = 0.0;
-    long double exp_minus_x_max = 0.0;
-    long double c = 0.0;
-    long double f0 = 0.0;
+    double exp_x_min = 0.0;
+    double exp_x_max = 0.0;
+    double exp_minus_x_min = 0.0;
+    double exp_minus_x_max = 0.0;
+    double c = 0.0;
+    double f0 = 0.0;
 
     if ((x_min < 0.) && (x_max > 0.)) {
-        exp_x_min = expl(x_min);
-        exp_minus_x_max = expl(-x_max);
+        exp_x_min = exp(x_min);
+        exp_minus_x_max = exp(-x_max);
         c = 1. - 0.5 * (exp_x_min + exp_minus_x_max);
         f0 = 0.5 * (1. - exp_x_min) / c;
     }
     else {
         if (x_min >= 0.) {
-            exp_minus_x_min = expl(-x_min);
-            exp_minus_x_max = expl(-x_max);
+            exp_minus_x_min = exp(-x_min);
+            exp_minus_x_max = exp(-x_max);
         } else {
-            exp_x_min = expl(x_min);
-            exp_x_max = expl(x_max);
+            exp_x_min = exp(x_min);
+            exp_x_max = exp(x_max);
         }
     }
 #ifdef DEBUG
@@ -184,20 +200,20 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
     const int limit = 100000;
 
     while (rap < ur && trials < limit) {
-        const long double u = (long double)randomUniform();
+        const double u = randomUniform();
 
         if (x_min < 0. && x_max > 0.) {
 
             if (u <= f0)
-                x = logl(exp_x_min + 2.0 * c * u);
+                x = log(exp_x_min + 2.0 * c * u);
             else
-                x = -logl(1. - 2.0*c*(u-f0));
+                x = -log(1.0 - 2.0*c*(u-f0));
 
         } else {
             if (x_min >= 0.)
-                x = -logl(exp_minus_x_min - u * (exp_minus_x_min - exp_minus_x_max));
+                x = -log(exp_minus_x_min - u * (exp_minus_x_min - exp_minus_x_max));
             else
-                x = logl(exp_x_min - u * (exp_x_min - exp_x_max));
+                x = log(exp_x_min - u * (exp_x_min - exp_x_max));
         }
 
         if (errno != 0) {
@@ -210,13 +226,13 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
         ur = randomUniform();
 
         if (x_min >= 1.)
-            rap = expl(0.5 * (x_min * x_min - x * x) + x - x_min);
+            rap = exp(0.5 * (x_min * x_min - x * x) + x - x_min);
 
         else if (x_max <= -1.)
-            rap = expl(0.5 * (x_max * x_max - x * x) + x_max - x);
+            rap = exp(0.5 * (x_max * x_max - x * x) + x_max - x);
 
         else
-            rap = expl(-0.5 * x * x + std::fabs(x)) / sqrt_e;
+            rap = exp(-0.5 * x * x + std::fabs(x)) / sqrt_e;
 
         ++trials;
     }
@@ -236,7 +252,81 @@ double Generator::gaussByDoubleExp(const double mean, const double sigma, const 
 
     }
 #endif
-    return (double)(mean + (x * sigma));
+    return mean + (x * sigma);
+}
+
+// Helper pour les queues (Exponentielle translatée)
+double sampleTail(double a, double b)
+{
+    double x;
+    while (true) {
+        double u = Generator::randomUniform();
+        // Échantillonnage d'une exponentielle tronquée sur [a, b]
+        x = a - std::log(1.0 - u * (1.0 - std::exp(-a * (b - a))));
+
+        double v = Generator::randomUniform();
+        // Rejet pour transformer l'exponentielle en Gaussienne
+        if (std::log(v) <= -0.5 * (x - a) * (x - a)) {
+            return x;
+        }
+    }
+}
+
+/**
+ * @brief Générateur de distribution normale tronquée hautement optimisé.
+ * * @details
+ * Implémente une stratégie de rejet hybride pour garantir un taux d'acceptation
+ * optimal (\f$ \approx 60-100\% \f$) même dans les cas critiques :
+ * - **Intervalle étroit :** Rejet sur distribution uniforme (évite le blocage).
+ * - **Queues de distribution :** Algorithme de Christian Robert (enveloppe exponentielle) 1995.
+ * - **Centre de masse :** Utilisation de la normale standard (Zigghurat).
+ * @param mu    Moyenne de la distribution originale.
+ * @param sigma Écart-type de la distribution originale.
+ * @param low   Borne inférieure de troncature.
+ * @param high  Borne supérieure de troncature.
+ *
+ * * @return double Valeur échantillonnée dans l'intervalle [low, high].
+ */
+double Generator::truncatedNormal(const double mu, const double sigma, double low, double high)
+{
+    // 1. Normalisation
+    const double a = (low - mu) / sigma;
+    const double b = (high - mu) / sigma;
+
+    double x;
+
+    // --- CAS 1 : Intervalle étroit ---
+    // Si l'intervalle est plus petit que 0.1 sigma, la densité est presque uniforme.
+    // On utilise un rejet sur l'uniforme, très efficace ici.
+    if ((b - a) < 0.1) {
+        while (true) {
+            x = a + (b - a) * randomUniform();
+            double u = randomUniform();
+            // On accepte avec la probabilité exp(-x²/2) / exp(-mode²/2)
+            // Pour être sûr, on utilise le point de l'intervalle le plus proche de 0
+            double mode = (a > 0) ? a : ((b < 0) ? b : 0.0);
+            if (std::log(u) <= 0.5 * (mode * mode - x * x)) {
+                return mu + x * sigma;
+            }
+        }
+    }
+
+    // --- CAS 2 : Queue de distribution (Robert, 1995) ---
+    if (a > 0.5) {
+        x = sampleTail(a, b);
+    }
+    else if (b < -0.5) {
+        x = -sampleTail(-b, -a);
+    }
+    // --- CAS 3 : Centre de la cloche (Rejet simple) ---
+    else {
+        std::normal_distribution<double> norm(0.0, 1.0);
+        do {
+            x = norm(sEngine);
+        } while (x < a || x > b);
+    }
+
+    return mu + x * sigma;
 }
 
 
@@ -255,10 +345,12 @@ double Generator::boxMuller()
     //checkFloatingPointException("boxMuller");
 }
 
-double Generator::gaussByBoxMuller(const double mean, const double sigma)
+/* ol code
+ double Generator::normalDistribution(const double mean, const double sigma)
 {
     return mean + boxMuller() * sigma;
 }
+*/
 
 // obsolete
 /*
@@ -306,3 +398,8 @@ double Generator::exponentialeDistribution(const double meanexp)
     return exponential(sEngine);
 }
 
+double Generator::normalDistribution(const double mu, const double sigma)
+{
+    std::normal_distribution<double> norm(mu, sigma);
+    return norm(sEngine);
+}

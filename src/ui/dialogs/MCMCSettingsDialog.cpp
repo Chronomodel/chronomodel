@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -80,15 +80,14 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent, const bool show_help):QD
     positiveValidator->setBottom(1);
 
     QIntValidator* chainsValidator = new QIntValidator(this);
-    chainsValidator->setRange(1, 10);
+    chainsValidator->setRange(1, 200);
 
     mNumProcLabel = new QLabel(tr("Number of chains"), this);
 
     mNumProcEdit = new LineEdit(this);
     mNumProcEdit->setFixedSize(mEditW, mButH);
     mNumProcEdit->setValidator(chainsValidator);
-    mNumProcEdit->setPlaceholderText(tr("From 1 to 10"));
-   // mNumProcEdit->setPalette(palette);
+    mNumProcEdit->setPlaceholderText(tr("From 1 to 200"));
 
     // Inside colored boxes
     // 1 - BURN-IN

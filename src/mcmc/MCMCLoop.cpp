@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -81,7 +81,7 @@ MCMCLoop::~MCMCLoop()
 void MCMCLoop::setMCMCSettings(const MCMCSettings &s)
 {
     mLoopChains.clear();
-    for (int i=0; i<s.mNumChains; ++i) {
+    for (int i = 0; i < s.mNumChains; ++i) {
         ChainSpecs chain;
 
         if (i < s.mSeeds.size())
@@ -134,15 +134,15 @@ QString MCMCLoop::initialize_time()
 #endif
     }
     // -------------------------- Init gamma ------------------------------
-    emit stepChanged(tr("Initializing Phase Gaps..."), 0, (int)phasesConstraints.size());
-    int i = 0;
+   // emit stepChanged(tr("Initializing Phase Gaps..."), 0, (int)phasesConstraints.size());
+    //int i = 0;
     try {
         for (auto&& phC : phasesConstraints) {
             phC->initGamma();
             if (isInterruptionRequested())
                 return ABORTED_BY_USER;
-            ++i;
-            emit stepProgressed(i);
+            //++i;
+            //emit stepProgressed(i);
         }
     }  catch (...) {
         qWarning() <<"Init Gamma ???";
@@ -151,16 +151,16 @@ QString MCMCLoop::initialize_time()
     }
 
     // -------------------------- Init tau -----------------------------------------
-    emit stepChanged(tr("Initializing Phase Durations..."), 0, (int)phases.size());
-    i = 0;
+    //emit stepChanged(tr("Initializing Phase Durations..."), 0, (int)phases.size());
+    //i = 0;
     try {
         for (auto&& ph : phases) {
             ph->initTau(tminPeriod, tmaxPeriod);
-            qDebug()<<"[MCMCLoop::initialize_time] " <<ph->getQStringName()<<" init Tau ="<<ph->mTau.mX;
+            qDebug() << "[MCMCLoop::initialize_time] " << ph->getQStringName() << " init Tau =" << ph->mTau.mX;
             if (isInterruptionRequested())
                 return ABORTED_BY_USER;
-            ++i;
-            emit stepProgressed(i);
+            //++i;
+            //emit stepProgressed(i);
         }
     }  catch (...) {
         qWarning() <<"Init Tau ???";
@@ -188,7 +188,7 @@ QString MCMCLoop::initialize_time()
         }
 
     }  catch (...) {
-        qWarning() <<"Init Bound ???";
+        qWarning() << "Init Bound ???";
         mAbortedReason = QString("Error in Init Bound ???");
         return mAbortedReason;
     }
@@ -198,7 +198,7 @@ QString MCMCLoop::initialize_time()
 
     std::vector<std::shared_ptr<Event>> unsortedEvents = ModelUtilities::unsortEvents(allEvents);
 
-    emit stepChanged(tr("Initializing Events..."), 0, (int)unsortedEvents.size());
+    //emit stepChanged(tr("Initializing Events..."), 0, (int)unsortedEvents.size());
     qDebug()<<"[MCMCLoop::initialize_time] mLoopChains seed = "<< mLoopChains[0].mSeed;
     try {
 
@@ -231,11 +231,11 @@ QString MCMCLoop::initialize_time()
         // On regarde les gamma entre les phases, pour initialiser les alpha et beta
         for (auto p : phases) {
             p->init_alpha_beta_phase(phases);
-            qDebug()<<"[MCMCLoop::initialize_time] " <<p->getQStringName()<<" init alpha ="<<p->mAlpha.mX<<" beta="<<p->mBeta.mX;
+            qDebug() << "[MCMCLoop::initialize_time] " << p->getQStringName() << " init alpha =" << p->mAlpha.mX << " beta=" << p->mBeta.mX;
         }
 
         //---------------
-        int i = 0;
+        // int i = 0;
         if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
 
             for (std::shared_ptr<Event> uEvent : unsortedEvents) {
@@ -248,7 +248,7 @@ QString MCMCLoop::initialize_time()
 
                     if (min > max) {
                         const int seed = mLoopChains.at(mChainIndex).mSeed;
-                        qDebug()<<QString("[MCMCLoop::initialize_time] Error Init for event : %1 : min = %2 : max = %3-------Seed = %4").arg(uEvent->getQStringName(), QString::number(min, 'f', 30), QString::number(max, 'f', 30), QString::number(seed));
+                        qDebug() << QString("[MCMCLoop::initialize_time] Error Init for event : %1 : min = %2 : max = %3-------Seed = %4").arg(uEvent->getQStringName(), QString::number(min, 'f', 30), QString::number(max, 'f', 30), QString::number(seed));
                         mAbortedReason = QString(tr("Error Init for event : %1 \n min = %2 \n max = %3 \n Seed = %4").arg(uEvent->getQStringName(), QString::number(min, 'f', 6), QString::number(max, 'f', 6), QString::number(seed)));
                         return mAbortedReason;
                     }
@@ -262,7 +262,7 @@ QString MCMCLoop::initialize_time()
 
                     if (max == min) {
                         try_theta = min;
-                        qDebug()<<QString("[MCMCLoop::initialize_time] Egality Init for event : %1 : min = %2 : max = %3-------Seed = %4").arg(uEvent->getQStringName(), QString::number(min, 'f', 30), QString::number(max, 'f', 30), QString::number(mLoopChains.at(mChainIndex).mSeed));
+                        qDebug() << QString("[MCMCLoop::initialize_time] Egality Init for event : %1 : min = %2 : max = %3-------Seed = %4").arg(uEvent->getQStringName(), QString::number(min, 'f', 30), QString::number(max, 'f', 30), QString::number(mLoopChains.at(mChainIndex).mSeed));
 
                     } else {
                         try_theta = sample_in_repartition(uEvent->mMixingCalibrations, min, max);
@@ -301,26 +301,42 @@ QString MCMCLoop::initialize_time()
 
 
                         const FunctionStat &data = analyseFunction(date.mCalibration->mMap);
-                        double sigma = double (data.std);
+                        double sigma = data.std;
 #ifdef DEBUG
                         if (sigma == 0.)
                             return "[MCMCLoop::initialize_time] sigma == 0";
 #endif
                         if (is_wiggle) {
-                            const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mWiggleCalibration->mRepartition);
+                            // On favorise les solutions pretes de theta de l'Event
+                            std::vector<double> repart_exp_theta (date.mWiggleCalibration->mVector.size());
+                            double sum_exp = 0.0;
+                            for ( size_t i = 0; i < date.mWiggleCalibration->mVector.size(); i++) {
+                                double exp_theta = dnorm(date.mWiggleCalibration->mTmin + i * date.mWiggleCalibration->mStep, uEvent->mTheta.mX, sigma);
+                                sum_exp += exp_theta * date.mWiggleCalibration->mVector[i];
+                                repart_exp_theta[i] = sum_exp;
+                            }
+                            const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(0, sum_exp), repart_exp_theta);
                             date.mTi.mX = date.mWiggleCalibration->mTmin + idx * date.mWiggleCalibration->mStep;
-                            // modif du 2021-06-16 pHd
+
 
                         } else if (!date.mCalibration->mRepartition.empty()) {
-                            const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(), date.mCalibration->mRepartition);
+                            // On favorise les solutions pretes de theta de l'Event
+                            std::vector<double> repart_exp_theta (date.mCalibration->mVector.size());
+                            double sum_exp = 0.0;
+                            for ( size_t i = 0; i < date.mCalibration->mVector.size(); i++) {
+                                double exp_theta = dnorm(date.mCalibration->mTmin + i * date.mCalibration->mStep, uEvent->mTheta.mX, sigma);
+                                sum_exp += exp_theta * date.mCalibration->mVector[i];
+                                repart_exp_theta[i] = sum_exp;
+                            }
+                            const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(0, sum_exp), repart_exp_theta);
+
                             date.mTi.mX = date.mCalibration->mTmin + idx * date.mCalibration->mStep;
-                            // modif du 2021-06-16 pHd
 
                         } else { // in the case of mRepartion curve is null, we must init ti outside the study period
                             // For instance we use a gaussian random sampling
                             sigma = tmaxPeriod - tminPeriod;
-                            qDebug()<<"[MCMCLoop::initialize_time] mRepartion curve is null for"<< date.getQStringName();
-                            const double u = Generator::gaussByBoxMuller(0., sigma);
+                            qDebug() << "[MCMCLoop::initialize_time] mRepartion curve is null for" << date.getQStringName();
+                            const double u = Generator::normalDistribution(0., sigma);
                             if (u<0)
                                 date.mTi.mX = tminPeriod + u;
                             else
@@ -386,12 +402,9 @@ QString MCMCLoop::initialize_time()
 
 #endif
 
-
                     // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
                     uEvent->mTheta.mSigmaMH = sqrt(uEvent->mS02Theta.mX);
                     uEvent->mAShrinkage = 1.;
-
-
 
 
                 }
@@ -399,11 +412,11 @@ QString MCMCLoop::initialize_time()
                 if (isInterruptionRequested())
                     return ABORTED_BY_USER;
 
-                emit stepProgressed(i++);
+                // emit stepProgressed(i++);
 
             }
 
-        } else {
+        } else { // theta fixe
             for (std::shared_ptr<Event> &uEvent : unsortedEvents) {
                 // ----------------------------------------------------------------
                 // Curve init Theta event :
@@ -469,21 +482,9 @@ QString MCMCLoop::initialize_time()
                 if (isInterruptionRequested())
                     return ABORTED_BY_USER;
 
-                emit stepProgressed(i++);
+                //emit stepProgressed(i++);
 
             }
-            // Check strati constraints , need alpha and beta Phase
-            /*for (Event* ev : mModel->mEvents) {
-                const double min = ev->getThetaMin(tminPeriod); // need alpha and beta Phase
-                const double max = ev->getThetaMax(tmaxPeriod);
-
-
-                qDebug() << QString("[MCMCLoop::initialize_time] Init for event theta fixed : %1 : min = %2 : max = %3  ->theta = %4 thetaRed = %5-------").arg(ev->mName, QString::number(min, 'f', 3), QString::number(max, 'f', 3), QString::number(ev->mTheta.mX, 'f', 3), QString::number(ev->mThetaReduced, 'f', 3));
-
-                if (min > max) {
-                    throw QObject::tr("Error for event theta fixed : %1 : min = %2 : max = %3").arg(ev->mName, QString::number(min), QString::number(max));
-                }
-            }*/
 
 
         }
@@ -496,9 +497,9 @@ QString MCMCLoop::initialize_time()
 
 
     // --------------------------- Init alpha and beta phases ----------------------
-    emit stepChanged(tr("Initializing Phases..."), 0, (int)phases.size());
+    // emit stepChanged(tr("Initializing Phases..."), 0, (int)phases.size());
     try {
-        i = 0;
+        //i = 0;
         for (auto&& phase : phases ) {
             phase->update_All(tminPeriod, tmaxPeriod);
             // tau is still initalize
@@ -518,7 +519,7 @@ QString MCMCLoop::initialize_time()
             if (isInterruptionRequested())
                 return ABORTED_BY_USER;
 
-            emit stepProgressed(++i);
+            // emit stepProgressed(++i);
         }
 
     }  catch (...) {
@@ -548,8 +549,140 @@ QString MCMCLoop::initialize_time()
 
     return QString();
 }
+/**
+ * @brief Calcule le score SMC pour une configuration donnée
+ *
+ * Le score SMC est une mesure de la qualité d'une configuration basée sur :
+ * - Les écarts entre les dates observées et prédites
+ * - L'ajustement de la courbe si applicable
+ *
+ * @return double Score SMC compris entre 10^(-15) et 1
+ *
+ * @details La fonction calcule un score probabiliste qui combine :
+ * - Les scores des dates : exp(-distance/tau) où tau est une estimation robuste
+ * - Le score de courbe : exp(-variance_résiduelle/variance_référence)
+ *
+ * Le score est borné pour éviter les valeurs extrêmes et garantir une
+ * distribution de poids cohérente pour le rééchantillonnage SMC.
+ *
+ * @note Le score est utilisé pour la sélection des meilleures graines
+ * lors de l'étape d'initialisation SMC.
+ *
+ * @mathematical_formula
+ * \[
+ * \text{SMC\_score} = \text{score}_{\text{dates}} \times \text{score}_{\text{curve}}
+ * \]
+ *
+ * Où :
+ * \[
+ * \text{score}_{\text{dates}} = \sum_{i=1}^{N_{\text{events}}} \begin{cases}
+ * 1 & \text{si } \text{event}_i \text{ n'est pas de type Default} \\
+ * \frac{1}{|D_i|} \sum_{d \in D_i} \exp\left(-\frac{\sigma_{ti,d}}{\tau}\right) & \text{sinon}
+ * \end{cases}
+ * \]
+ *
+ * \[
+ * \text{score}_{\text{curve}} = \exp\left(-\frac{\text{var}_{\text{residuel}}}{\text{var}_{\text{reference}}}\right)
+ * \]
+ *
+ * \[
+ * \text{SMC\_score} \in [0, 1]
+ * \]
+ *
+ * @pre Les événements doivent être initialisés avec des données valides
+ * @pre Les paramètres de variance doivent être positifs
+ * @post Le score est toujours dans l'intervalle [0, 1]
+ *
+ * @warning Les valeurs extrêmes de variance peuvent entraîner des scores très faibles
+ * @warning La médiane est utilisée pour une estimation robuste des paramètres
+ */
+double MCMCLoop::SMC_score()
+{
+    // Calcul de tau pour sigma ti
+    double tau = 1.0;
+    std::vector<double> sigmas;
+
+    for (const auto& ev : mModel->mEvents) {
+        if (ev->mType == Event::eDefault) {
+            for (const Date& date : ev->mDates) {
+                sigmas.push_back(date.mSigmaTi.mX);
+            }
+        }
+    }
+
+    if (!sigmas.empty()) {
+
+        std::nth_element(sigmas.begin(),
+                         sigmas.begin() + sigmas.size()/2,
+                         sigmas.end());
+
+        tau = sigmas[sigmas.size()/2];
+    }
+
+    double score = 0.0;
+
+    for (const auto& ev : mModel->mEvents) {
+
+        if (ev->mType != Event::eDefault) {
+            score += 1.0;
+            continue;
+        }
+
+        // Contribution des dates
+        double mean_date_score = 0.0;
+        for (const Date& date : ev->mDates) {
+            mean_date_score += std::exp(-date.mSigmaTi.mX / tau);
+        }
+        mean_date_score /= ev->mDates.size();
+
+        score += mean_date_score;
+
+    }
+
+    if (mModel->is_curve) {
+        // Calcul de var_reference
+        double var_reference = 0.0;
+        const auto& events = mModel->mEvents;
+
+        if (mModel->compute_X_only) {
+            var_reference = variance_Knuth(get_vector<double>(get_Yx, events));
+        } else if (mModel->compute_Y) {
+            var_reference = (variance_Knuth(get_vector<double>(get_Yx, events)) +
+                             variance_Knuth(get_vector<double>(get_Yy, events))) / 2.0;
+        } else {
+            var_reference = (variance_Knuth(get_vector<double>(get_Yx, events)) +
+                             variance_Knuth(get_vector<double>(get_Yy, events)) +
+                             variance_Knuth(get_vector<double>(get_Yz, events))) / 3.0;
+        }
+
+        // Vérification de la variance
+        if (var_reference <= 1e-15) {
+            var_reference = 1.0; // valeur par défaut
+        }
+
+        //
+        double var_residuel = 0;
 
 
+        for (const auto& ev : mModel->mEvents) {
+            if (ev->mPointType == Event::ePoint) {
+                var_residuel = ev->mVg.mX;
+                // On pourrait imaginer que var_reference soit ev->mInitialVariance
+                break;
+            }
+        }
+
+        // Le score de la courbe doit être entre 0 et 1
+        // On divise des m² par des m², le résultat est sans unité.
+        double curve_score = std::exp(-var_residuel / var_reference);
+
+        // Maintenant on peut combiner avec le score des dates (qui est aussi sans unité)
+        score *= curve_score;
+
+    }
+    return score;
+
+}
 
 
 void MCMCLoop::run()
@@ -573,13 +706,154 @@ void MCMCLoop::run()
     if (!mAbortedReason.isEmpty())
         return;
 
+    //----------------------- hybrid SMC Initialisation si plus de 5 chaines --------------------------------------
+    bool hybrid_SMC = mLoopChains.size() > 5;
+    // init chaines seed
+    if (hybrid_SMC) {
+        int N_particles = mLoopChains.size() * 10;
 
+        emit stepChanged(tr("Hybrid SMC initializing ..."), 0, N_particles);
+
+        mModel->mChains.resize(N_particles);
+        mModel->initVariablesForChain();
+
+        struct Particle {
+            int init_seed;   // θ1…θN
+            double weight;
+        };
+
+        // Génération des particules
+        std::vector<Particle> particles;
+        particles.reserve(N_particles);
+
+        for (int i = 0; i < N_particles; ++i) {
+
+            emit stepProgressed(i+1);
+
+            int seed = Generator::createSeed();
+
+            Generator::initGenerator(seed);
+            initialize();
+
+            Particle p{seed, SMC_score()};
+            particles.push_back(p);
+            std::cout << " seed : "<< seed << "; SMC score : " << p.weight << std::endl;
+
+
+        }
+
+        double sum_wi = std::accumulate(particles.begin(), particles.end(), 0.0,
+                                        [](double acc, const Particle& p) { return acc + p.weight; });
+
+#ifdef DEBUG
+        // Vérifications après le calcul des poids :
+        double max_weight = std::max_element(particles.begin(), particles.end(),
+                                             [](const Particle& a, const Particle& b) { return a.weight < b.weight; })->weight;
+
+        double min_weight = std::min_element(particles.begin(), particles.end(),
+                                             [](const Particle& a, const Particle& b) { return a.weight < b.weight; })->weight;
+
+        double avg_weight = sum_wi / N_particles;
+
+        std::cout << "Poids max : " << max_weight << std::endl;
+        std::cout << "Poids min : " << min_weight << std::endl;
+        std::cout << "Poids moyen : " << avg_weight << std::endl;
+        std::cout << "Ratio max/min : " << max_weight/min_weight << std::endl;
+
+        // Vérifier que le ratio n'est pas trop élevé (indiquant des problèmes de variance)
+        if (max_weight/min_weight > 1000) {
+            std::cout << "⚠️ Attention : grande variance des poids" << std::endl;
+        }
+#endif
+        // Normalisation des poids
+
+
+        for (auto& p : particles) p.weight /= sum_wi;
+
+        /*
+         * Vous avez commenté la condition sur l'ESS (Effective Sample Size).
+         * Ce que cela signifie : Dans un filtre SMC classique (pour suivre une trajectoire),
+         *  on ne rééchantillonne que si les poids sont trop déséquilibrés (ESS faible) pour éviter d'appauvrir la diversité.
+         * Dans votre cas (Initialisation MCMC) : Vous forcez le rééchantillonnage systématiquement.
+         * C'est logique pour votre usage. Votre but ici n'est pas de maintenir une distribution sur le long terme, mais de sélectionner les N meilleurs points de départ parmi un nuage de 10×N candidats.
+         * Vous faites une étape de sélection Darwinienne pure avant de lancer les MCMC. */
+
+        /* // calcul ESS
+         double sum_wi2 = 0.0;
+        for (int i = 0; i < N_particles; ++i)
+            sum_wi2 += particles[i].weight * particles[i].weight;
+
+        double ESS = 1.0 / sum_wi2;
+
+        std::cout << " ESS : "<< ESS << std::endl;
+        if (ESS  < 0.6 * N_particles)
+            particles = resample(particles);
+        */
+
+
+
+        // Construction CDF
+        std::vector<double> cdf(particles.size());
+        cdf[0] = particles[0].weight;
+        for (size_t i = 1; i < particles.size(); ++i) {
+            cdf[i] = cdf[i-1] + particles[i].weight;
+        }
+        cdf.back() = 1.0;  // 👈 CRUCIAL
+
+        // Tirages
+        int N_new = mLoopChains.size();
+
+        std::vector<Particle> new_particles;
+        new_particles.reserve(N_new);
+
+        // Rééchantillonnage systématique sécurisé
+        /** @ref Tille, Y., s. d. Theorie Des Sondages - 2E Ed. Dunod. ISBN 10:2100797956, Chap. 5.6 **/
+
+
+        double u0 = Generator::randomUniform() / N_new;
+        for (int n = 0; n < N_new; ++n) {
+            double u = u0 + n / (double)N_new;
+
+            // Par construction : u ∈ [u0, u0 + (N_new-1)/N_new]
+            //                    u ∈ [0, 1]
+
+            // Trouver l'index
+            auto it = std::lower_bound(cdf.begin(), cdf.end(), u);
+            size_t i = std::distance(cdf.begin(), it);
+            // Sécurité (ne devrait jamais être nécessaire)
+#ifdef DEBUG
+            if (i >= particles.size()) {
+                std::cerr << "⚠️  Erreur inattendue: i=" << i
+                          << ", u=" << u << ", cdf.back()=" << cdf.back() << std::endl;
+                i = particles.size() - 1;
+            }
+#endif
+            new_particles.push_back(particles[i]);
+        }
+
+
+
+        // Graines sélectionnées
+        for (int n = 0; n < N_new; ++n) {
+            mLoopChains[n].mSeed = new_particles[n].init_seed;
+        }
+        // initVariableForChain() reserve memory space
+        mModel->mChains.resize(N_new);
+        mModel->mPosteriorMeanGByChain.resize(N_new);
+
+        mModel->initVariablesForChain();
+
+    } else {
+
+        // initVariableForChain() reserve memory space
+        mModel->mChains.resize(mLoopChains.size());
+
+        mModel->initVariablesForChain();
+    }
 
     //----------------------- Chains --------------------------------------
 
-    // initVariableForChain() reserve memory space
 
-    mModel->initVariablesForChain();
 
     mModel->mLogInit += ModelUtilities::getMCMCSettingsLog(mModel);
 
@@ -590,19 +864,82 @@ void MCMCLoop::run()
     mModel->mLogInit += line(tr("List of used chain seeds (to be copied for re-use in MCMC Settings) : ") + seeds.join(";"));
 
 
-     // copie la liste des pointeurs, pour garder l'ordre initiale des Events;
-     // le mécanisme d'initialisation pour les courbes modifie cette liste, hors il faut la réablir pour les chaines suivantes
-     std::vector<std::shared_ptr<Event>> initListEvents (mModel->mEvents.size());
-     std::copy(mModel->mEvents.begin(), mModel->mEvents.end(), initListEvents.begin() );
+    // copie la liste des pointeurs, pour garder l'ordre initiale des Events;
+    // le mécanisme d'initialisation pour les courbes modifie cette liste, hors il faut la réablir pour les chaines suivantes
+    std::vector<std::shared_ptr<Event>> initListEvents (mModel->mEvents.size());
+    std::copy(mModel->mEvents.begin(), mModel->mEvents.end(), initListEvents.begin() );
 
-    unsigned estimatedTotalIter = (unsigned)((int)mLoopChains.size() *(mLoopChains.at(0).mIterPerBurn + mLoopChains.at(0).mIterPerBatch*mLoopChains.at(0).mMaxBatchs + mLoopChains.at(0).mIterPerAquisition));
+    QElapsedTimer globalTimer;
+    globalTimer.start();
+
+    qint64 lastUpdateTime = 0;
+
+    unsigned estimatedTotalIter = (unsigned)((int)mLoopChains.size() *(1 + mLoopChains.at(0).mIterPerBurn + mLoopChains.at(0).mIterPerBatch*mLoopChains.at(0).mMaxBatchs + mLoopChains.at(0).mIterPerAquisition));
     unsigned iterDone = 0;
+    std::vector<int> update_seed;
+    update_seed.reserve(mLoopChains.size());
+
+    // Création d'un scope limité pour used_seeds
+    if (hybrid_SMC) {
+        int master_seed = 123456; // Seed principal (paramètre utilisateur), pour assurer la reproductibilité
+        Generator::initGenerator(master_seed);
+
+        std::set<int> used_seeds;
+
+        for (mChainIndex = 0; mChainIndex < mLoopChains.size(); ++mChainIndex) {
+            int seed;
+            // Garantir que la graine est unique par rapport aux graines déjà utilisées
+            // Si les graines sont uniques, on les utilise pour l'initialisation et le reste du run
+            do {
+                seed = mLoopChains[mChainIndex].mSeed + Generator::randomUniformInt(0, 1000);
+            } while (used_seeds.find(seed) != used_seeds.end());
+
+            used_seeds.insert(seed);
+            update_seed.push_back(seed);
+        }
+
+    } else { // On garde le fonctionnement des versions précédentes de CM
+        for (auto& chain : chains())
+            update_seed.push_back(chain.mSeed);
+
+    }
+
+    auto updateTimeEstimate = [&](const QString& phaseName) {
+        qint64 now = globalTimer.elapsed();
+        if (now - lastUpdateTime > 1000 && iterDone > 10) {
+            double avgTimePerIter = now / (double)iterDone;
+            qint64 interTime = (qint64)(avgTimePerIter * (estimatedTotalIter - iterDone));
+
+            emit setMessage(tr("Chain %1 / %2").arg(
+                                QString::number(mChainIndex+1),
+                                QString::number(mLoopChains.size())) +
+                            " : " + phaseName + "\t ; Total Estimated time left " + DHMS(interTime));
+
+            lastUpdateTime = now;
+        }
+    };
+    auto updateTimeEstimateMessage = [&](const QString& phaseName) {
+        qint64 now = globalTimer.elapsed();
+        double avgTimePerIter = now / (double)iterDone;
+        qint64 interTime = (qint64)(avgTimePerIter * (estimatedTotalIter - iterDone));
+
+        emit setMessage(tr("Chain %1 / %2").arg(
+                            QString::number(mChainIndex+1),
+                            QString::number(mLoopChains.size())) +
+                        " : " + phaseName + "\t ; Total Estimated time left " + DHMS(interTime));
+
+        lastUpdateTime = now;
+
+    };
+
+
     for (mChainIndex = 0; mChainIndex < mLoopChains.size(); ++mChainIndex) {
 
         log += "<hr>";
 
         ChainSpecs& chain = mLoopChains[mChainIndex];
-        Generator::initGenerator(chain.mSeed);
+        // Utiliser le seed d'initialisation (sélectionné par SMC)
+        Generator::initGenerator(chain.mSeed); // 👈 Seed original
 
         //----------------------- Initialization --------------------------------------
 
@@ -612,12 +949,16 @@ void MCMCLoop::run()
         }
         mState = eInit;
 
-        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()))  + " : " + tr("Initializing MCMC"), 0, 0);
+        ++iterDone;
+        emit stepChanged(tr("Chain : %1 / %2").arg(QString::number(mChainIndex + 1), QString::number(mLoopChains.size()))  + " : " + tr("Initializing"), 0, estimatedTotalIter);
+
+        updateTimeEstimateMessage(tr("Initializing"));
 
         QElapsedTimer initTime;
         initTime.start();
         mAbortedReason = initialize();
 
+        //std::cout << "SMC score : " << SMC_score() <<std::endl;
         if (!mAbortedReason.isEmpty())
             return;
 
@@ -627,43 +968,26 @@ void MCMCLoop::run()
 
         mModel->mLogInit += "<hr>";
         mModel->mLogInit += line(textBold(tr("INIT CHAIN %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()))));
-        mModel->mLogInit += line("Seed : " + QString::number(chain.mSeed));
-        qDebug()<<" mLogInit Seed :  "<< QString::number(chain.mSeed);
+        mModel->mLogInit += line("Init Seed : " + QString::number(chain.mSeed)) + " SMC score :" + QString::number(SMC_score());
+        qDebug() << " mLogInit Seed :  " <<  QString::number(chain.mSeed);
 
         mModel->mLogInit += ModelUtilities:: modelStateDescriptionHTML(mModel);
-        /*
-// Save mLogInit for debug
-#ifdef DEBUG
-        mProject->mModel->mChains[mChainIndex].mInitElapsedTime = mChains[mChainIndex].mInitElapsedTime;// only to take the time
-        QString dirPath = "../../../../..";//QFileInfo(".").absolutePath() ;
-        QFile file(dirPath + "/Last_Project_Initialization_DEBUG.html");
 
-        const QString projectName = tr("Project filename : %1").arg(mProject->mName);
-        if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-            QTextStream output(&file);
-            output<<"<!DOCTYPE html>"<< Qt::endl;
-            output<<"<html>"<< Qt::endl;
-            output<<"<body>"<< Qt::endl;
-
-            output<<"<h2>"<< projectName+ "</h2>" << Qt::endl;
-            output<<"<hr>";
-            output<<mProject->mModel->getInitLog();
-
-            output<<"</body>"<< Qt::endl;
-            output<<"</html>"<< Qt::endl;
-        }
-        file.close();
-#endif
-*/
         //----------------------- Burnin --------------------------------------
+        //  Rejuvenation avant l'échantillonnage , pour éviter le risque d'avoir plusieurs fois la même graine d'initialisation
+        if (hybrid_SMC) {
+            qDebug() << " Update_seed :  " <<  QString::number(update_seed[mChainIndex]);
+            mModel->mLogInit += line("Hybrid SMC");
+            mModel->mLogInit += line("Update Seed : " + QString::number(update_seed[mChainIndex]));
+            Generator::initGenerator(update_seed[mChainIndex]); // 👈 Nouvelle graine pour MCMC ou graine identique à l'initialisation
+        }
+        updateTimeEstimateMessage(tr("Burn-in"));
 
-        emit stepChanged(tr("Chain : %1 / %2").arg(QString::number(mChainIndex + 1), QString::number(mLoopChains.size()))  + " : " + tr("Burn-in"), 0, chain.mIterPerBurn);
         mState = eBurning;
 
         QElapsedTimer burningTime;
         burningTime.start();
 
-        qint64 interTime = 0;
         while (chain.mBurnIterIndex < chain.mIterPerBurn) {
             if (isInterruptionRequested()) {
                 mAbortedReason = ABORTED_BY_USER;
@@ -672,29 +996,6 @@ void MCMCLoop::run()
 
             try {
                 update();
-
-
-                // ---test
-                /*
-                const auto& test_spline = mModel->mSpline.splineX;
-                const auto& test_events = mModel->mEvents;
-
-
-                for (auto event : test_events) {
-
-                    auto it = std::find(test_spline.vecThetaReduced.begin(), test_spline.vecThetaReduced.end(), event->mThetaReduced);
-                    if (it != test_spline.vecThetaReduced.end()) {
-                        size_t thetaIdx = std::distance(test_spline.vecThetaReduced.begin(), it);
-                        qDebug()<<"[MCMCLoop] burn-in" <<thetaIdx<< event->name();
-
-                    }             else {
-                        qDebug()<<"[MCMCLoop] burn-in errror" << event->name() << event->mThetaReduced;
-                    }
-                }
-*/
-                // -- fin test
-
-
 
 
 #ifdef _WIN32
@@ -712,18 +1013,17 @@ void MCMCLoop::run()
             ++chain.mTotalIter;
 
             ++iterDone;
-            interTime = burningTime.elapsed() * (double)(estimatedTotalIter - iterDone) / (double)chain.mBurnIterIndex;
-            emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()) + " : " + "Burn-in ; Total Estimated time left " + DHMS(interTime)));
 
-            emit stepProgressed(chain.mBurnIterIndex);
+            updateTimeEstimate("Burn-in");  // 👈
+
+            emit stepProgressed(iterDone);
         }
         chain.burnElapsedTime = burningTime.elapsed();
         burningTime.~QElapsedTimer();
 
         //----------------------- Adaptation --------------------------------------
-
-        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()))  + " : "  + "Adapting ; Total Estimated time left " + DHMS(interTime), 0, chain.mMaxBatchs * chain.mIterPerBatch);
-        emit stepProgressed(0);
+// ici il faut supprimer les valeurs dans mLastAccept, qui parasite le début de l'adaptation
+        updateTimeEstimateMessage(tr("Burn-in"));
         mState = eAdapting;
 
         QElapsedTimer adaptTime;
@@ -757,17 +1057,15 @@ void MCMCLoop::run()
                 memo();
                 ++chain.mBatchIterIndex;
                 ++chain.mTotalIter;
+                ++iterDone;
 
-                emit stepProgressed(chain.mBatchIndex * chain.mIterPerBatch + chain.mBatchIterIndex);
+                emit stepProgressed(iterDone);
                 qApp->processEvents(); //This function is especially useful if you have a long running operation and want to show its progress
             }
             ++chain.mBatchIndex;
 
-            iterDone += chain.mIterPerBatch;
-            interTime = adaptTime.elapsed() * (double)(estimatedTotalIter - iterDone)/ (double)(chain.mIterPerBatch*chain.mBatchIndex);
 
-            emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()) + " : " + "Adapting ; Total Estimated time left " + DHMS(interTime)));
-
+            updateTimeEstimate("Adapting");  // 👈
             //qDebug()<<"[MCMCLoop::run] mBatchIndex -------"<< chain.mBatchIndex<<" ------------";
             if (adapt(chain.mBatchIndex))
                     break;
@@ -776,10 +1074,6 @@ void MCMCLoop::run()
         }
         // Fix Total iteration if adaptation break before the end
         estimatedTotalIter -= (chain.mMaxBatchs-chain.mBatchIndex)*chain.mIterPerBatch;
-        interTime = adaptTime.elapsed() * (double)(estimatedTotalIter - iterDone)/ (double)(chain.mIterPerBatch*chain.mBatchIndex);
-
-        emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()) + " : " + "Adapting ; Total Estimated time left " + DHMS(interTime)));
-
 
         mModel->mLogAdapt += "<hr>";
         mModel->mLogAdapt += line(textBold(tr("ADAPTATION FOR CHAIN %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()))) );
@@ -798,19 +1092,21 @@ void MCMCLoop::run()
         chain.mAdaptElapsedTime = adaptTime.elapsed();
         adaptTime.~QElapsedTimer();
 
-        const bool refresh_process (chain.mAdaptElapsedTime == 10000); // force refresh progress loop bar if the model is complex
+        //const bool refresh_process (chain.mAdaptElapsedTime == 10000); // force refresh progress loop bar if the model is complex
         //----------------------- Aquisition --------------------------------------
 
-        emit stepChanged(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size())) + " : Aquisition ; Total Estimated time left " + DHMS(interTime), 0, chain.mIterPerAquisition);
-        emit stepProgressed(0);
+        updateTimeEstimateMessage(tr("Aquisition"));
         mState = eAquisition;
         QElapsedTimer aquisitionTime;
         aquisitionTime.start();
 
-        int thinningIdx = 1;
+        int thinningIdx = 0;
         int batchIdx = 1;
         int totalBacth = chain.mBatchIndex;
         bool OkToMemo;
+
+        int thinning_OkToMemo = 0; // compte le nombre entre chaque update = memo==true
+
         chain.mRealyAccepted = 0;
 
         while (chain.mAquisitionIterIndex < chain.mIterPerAquisition) {
@@ -820,10 +1116,14 @@ void MCMCLoop::run()
             }
             ++iterDone;
 
-
-
             try {
                 OkToMemo =  update();
+                thinningIdx++;
+                if (OkToMemo) {
+                    ++thinning_OkToMemo;
+                }
+
+
 #ifdef _WIN32
     SetThreadExecutionState( ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED); //https://learn.microsoft.com/fr-fr/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate?redirectedfrom=MSDN
 #endif
@@ -832,19 +1132,19 @@ void MCMCLoop::run()
                 return;
             }
 
-            if (thinningIdx == chain.mThinningInterval) {
+            if (thinningIdx == chain.mThinningInterval || thinning_OkToMemo >= chain.mThinningInterval ) {
 
-                thinningIdx = 1;
+                thinningIdx = 0;
 
                 if (OkToMemo) {
                     memo();
-                     ++chain.mRealyAccepted;
+                    thinning_OkToMemo = 0;
+
+                    ++chain.mRealyAccepted;
                 }
 
                 mModel->memo_accept(mChainIndex);
 
-            } else {
-                    thinningIdx++;
             }
 
             if (batchIdx == chain.mIterPerBatch) {
@@ -859,16 +1159,12 @@ void MCMCLoop::run()
             ++chain.mAquisitionIterIndex;
             ++chain.mTotalIter;
 
-            if (!(chain.mAquisitionIterIndex % chain.mIterPerBatch) || refresh_process) {
-
-                interTime = aquisitionTime.elapsed() * (double) (estimatedTotalIter - iterDone) / (double) chain.mAquisitionIterIndex;
-
-                emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()) + " : Aquisition ; Total Estimated time left " + DHMS(interTime)));
-                qApp->processEvents();
+            updateTimeEstimate("Acquisition");  // 👈
+            if (!(chain.mAquisitionIterIndex % chain.mIterPerBatch)) {
+              qApp->processEvents();
             }
 
-
-            emit stepProgressed(chain.mAquisitionIterIndex);
+            emit stepProgressed(iterDone);
         }
         chain.mAcquisitionElapsedTime = aquisitionTime.elapsed();
         aquisitionTime.~QElapsedTimer();
