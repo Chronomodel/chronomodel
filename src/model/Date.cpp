@@ -1750,7 +1750,7 @@ void Date::updateDelta(const double theta_mX)
 
             const double w = ( 1.0/(mSigmaTi.mX * mSigmaTi.mX) ) + ( 1.0/(mDeltaError * mDeltaError) );
             const double deltaAvg = (lambdai / (mSigmaTi.mX * mSigmaTi.mX) + mDeltaAverage / (mDeltaError * mDeltaError)) / w;
-            const double x = Generator::gaussByBoxMuller(0, 1);
+            const double x = Generator::normalDistribution(0, 1);
             const double delta = deltaAvg + x / sqrt(w);
 
             mDelta = delta;
@@ -1778,7 +1778,7 @@ void Date::updateSigmaJeffreys(const double theta_mX)
 
     double V2 (0.);
     do {
-        const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigmaTi.mSigmaMH);
+        const double logV2 = Generator::normalDistribution(log10(V1), mSigmaTi.mSigmaMH);
         V2 = pow(10, logV2);
 
     } while ((V2<a) || (V2>b));
@@ -1802,7 +1802,7 @@ void Date::updateSigmaShrinkage(const double theta_mX, const double S02Theta_mX,
     constexpr int logVMax = 100;
 
     const double V1 = mSigmaTi.mX * mSigmaTi.mX;
-    const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigmaTi.mSigmaMH);
+    const double logV2 = Generator::normalDistribution(log10(V1), mSigmaTi.mSigmaMH);
     const double V2 = pow(10, logV2);
 
     if (logV2 >= logVMin && logV2 <= logVMax) {
@@ -1816,10 +1816,6 @@ void Date::updateSigmaShrinkage(const double theta_mX, const double S02Theta_mX,
        mSigmaTi.reject_update();
  //       qDebug()<<"[TDate::updateSigma] x1 x2 rapport rejet";
     }
-
-
-
-
 }
 
 /*
@@ -1845,7 +1841,7 @@ void Date::updateSigmaShrinkage_K(const Event* event)
         const int logVMax = 100;
 
 
-        const double logV2 = Generator::gaussByBoxMuller(log10(V1), mSigmaTi.mSigmaMH);
+        const double logV2 = Generator::normalDistribution(log10(V1), mSigmaTi.mSigmaMH);
         V2 = pow(10, logV2);
 
         if (logV2 >= logVMin && logV2 <= logVMax) {
@@ -1873,7 +1869,7 @@ void Date::updateSigmaReParam(const Event *event)
     const double V1 = mSigmaTi.mX * mSigmaTi.mX;
   
     const double r1 = pow( (mTi.mX - (event->mTheta.mX - mDelta))/mSigmaTi.mX, 2);
-    const double r2 = Generator::gaussByBoxMuller(r1, mSigmaTi.mSigmaMH);
+    const double r2 = Generator::normalDistribution(r1, mSigmaTi.mSigmaMH);
     const double V2 = pow( (mTi.mX - (event->mTheta.mX - mDelta)), 2)/ r2;
 
     double rapport (0.);
@@ -2154,7 +2150,7 @@ CalibrationCurve generate_mixingCalibration(const std::vector<Date> &dates, cons
  */
 void Date::Prior(const double theta_mX)
 {
-    const double tiNew = Generator::gaussByBoxMuller(theta_mX - mDelta, mSigmaTi.mX);
+    const double tiNew = Generator::normalDistribution(theta_mX - mDelta, mSigmaTi.mX);
     const double rate = getLikelihood(tiNew) / getLikelihood(mTi.mX);
 
     mTi.try_update(tiNew, rate);
@@ -2167,7 +2163,7 @@ void Date::Prior(const double theta_mX)
  */
 void Date::PriorWithArg(const double theta_mX)
 {
-    const double tiNew = Generator::gaussByBoxMuller(theta_mX - mDelta, mSigmaTi.mX);
+    const double tiNew = Generator::normalDistribution(theta_mX - mDelta, mSigmaTi.mX);
 
     QPair<long double, long double> argOld, argNew;
 
@@ -2224,7 +2220,7 @@ void Date::Inversion(const double theta_mX)
         const double t0 = mTi.mX;
         const double s = (mSettings.mTmax - mSettings.mTmin) / 2.0;
 
-        tiNew = Generator::gaussByBoxMuller(t0, s);
+        tiNew = Generator::normalDistribution(t0, s);
     }
 
     const double rate_1 = getLikelihood(tiNew) / getLikelihood(mTi.mX);
@@ -2257,7 +2253,7 @@ void Date::InversionWithArg(const double theta_mX)
         const double t0 =(mSettings.mTmax + mSettings.mTmin) / 2.0;
         const double s = (mSettings.mTmax - mSettings.mTmin) / 2.0;
 
-        tiNew = Generator::gaussByBoxMuller(t0, s);
+        tiNew = Generator::normalDistribution(t0, s);
 
     }
 
@@ -2283,7 +2279,7 @@ void Date::InversionWithArg(const double theta_mX)
  */
 void Date::MHAdaptGauss(const double theta_mX)
 {
-    const double tiNew = Generator::gaussByBoxMuller(mTi.mX, mTi.mSigmaMH);
+    const double tiNew = Generator::normalDistribution(mTi.mX, mTi.mSigmaMH);
     double rate = getLikelihood(tiNew) / getLikelihood(mTi.mX);
     rate *= exp((-0.5/(mSigmaTi.mX * mSigmaTi.mX)) * (   pow(tiNew - (theta_mX - mDelta), 2)
                                                            - pow(mTi.mX - (theta_mX - mDelta), 2)
@@ -2300,7 +2296,7 @@ void Date::MHAdaptGauss(const double theta_mX)
  */
 void Date::MHAdaptGaussWithArg(const double theta_mX)//fMHSymGaussAdaptWithArg(Event *event)
 {
-    const double tiNew = Generator::gaussByBoxMuller(mTi.mX, mTi.mSigmaMH);
+    const double tiNew = Generator::normalDistribution(mTi.mX, mTi.mSigmaMH);
 
     QPair<long double, long double> argOld, argNew;
 
