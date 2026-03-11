@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -42,6 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MHVariable.h"
 #include "Date.h"
 #include "CurveSettings.h"
+#include "version.h"
 
 #include <QColor>
 #include <QJsonObject>
@@ -134,6 +135,21 @@ public:
     MHVariable mVg; // sigma G of the event (relative to G(t) that we are trying to estimate)
 
     std::shared_ptr<CalibrationCurve> mMixingCalibrations;
+#ifdef THETA_MIXING_KERNEL
+    // --- poids du mélange ---
+    double w1 = 0.33;
+    double w2 = 0.33;
+    double w3 = 0.34;
+
+    // --- statistiques adaptation ---
+    double acc1 = 0, acc2 = 0, acc3 = 0;
+    double prop1 = 0, prop2 = 0, prop3 = 0;
+
+    // --- paramètres adaptation ---
+    int burnin = 200000;
+    int adapt_interval = 100;
+    int iter_theta = 0;
+#endif
 
 #pragma mark Functions
 
@@ -159,10 +175,10 @@ public:
     static const Event fromJson(const QJsonObject& json);
     virtual QJsonObject toJson() const;
 
-    inline QString getQStringName() const {return QString::fromStdString(_name);}
-    inline std::string name() const {return _name;}
-    void setName(const std::string name) {_name = name;}
-    void setName(const QString name) {_name = name.toStdString();}
+    inline QString getQStringName() const {return QString::fromStdString(mName);}
+    inline std::string name() const {return mName;}
+    inline void setName(const std::string name) {mName = name;}
+    inline void setName(const QString name) {mName = name.toStdString();}
 
     inline Type type() const { return mType;}
     inline PointType pointType() const { return mPointType;}
@@ -190,16 +206,38 @@ public:
     double getThetaMinRecursive_v2(const double defaultValue, const std::vector<Event* > &startEvents = std::vector<Event*>());
     double getThetaMaxRecursive_v2(const double defaultValue, const std::vector<Event* > &startEvents = std::vector<Event*>());
 
-    double getThetaMinRecursive_v3(const double defaultValue, const std::vector<Event* > &startEvents = std::vector<Event*>());
-    double getThetaMaxRecursive_v3(const double defaultValue, const std::vector<Event* > &startEvents = std::vector<Event*>());
+    double getThetaMinRecursive_v3_old(const double defaultValue, const std::vector<Event* > &startEvents = std::vector<Event*>());
+    double getThetaMinRecursive_v3(double defaultValue, const std::vector<Event* > &startEvents = std::vector<Event*>());
 
+
+    double getThetaMaxRecursive_v3_old(const double defaultValue, const std::vector<Event* > &startEvents = std::vector<Event*>());
+    double getThetaMaxRecursive_v3(double defaultValue, const std::vector<Event* > &startEvents = std::vector<Event*>());
+
+#ifdef THETA_MIXING_KERNEL
+    virtual void updateTheta(const double tmin, const double tmax) {updateExpansionCollapse(tmin, tmax);};
+
+
+#else
     virtual void updateTheta(const double tmin, const double tmax) {updateTheta_v3(tmin, tmax);};
+#endif
 
     void updateTheta_v3(const double tmin, const double tmax);
 
-    /*obsolete
-    void updateTheta_v4(const double tmin, const double tmax, const double rate_theta = 1.);
 
+    void updateTheta_v4(const double tmin, const double tmax);
+
+    void updateTheta_v4_mixing(const double tmin, const double tmax, const double rate_theta = 1.0);
+
+    void updateTheta_v4_mixing0(const double tmin, const double tmax, const double rate_theta = 1.0);
+#ifdef THETA_MIXING_KERNEL
+    void updateTheta_v6(const double tmin, const double tmax); // with mixing kernel
+
+    void updateExpansionCollapse(const double tmin, const double tmax);
+#endif
+    void updateThetaAndTiSigma(const double tmin, const double tmax);// ne fonctionne pas
+
+    void moveVarianceExpansionCollapse(const double tmin, const double tmax, const double alpha = 0.7);
+/*obsolete
     void updateTheta_v41(const double tmin, const double tmax, const double rate_theta = 1.);
     void updateTheta_v42(const double tmin, const double tmax, const double rate_theta = 1.);
     */
@@ -213,8 +251,14 @@ public:
     void updateW();
 
 private:
-    std::string _name;
+    std::string mName;
 
+    double getThetaMinRecursive_v3_impl(double defaultValue,
+                                        std::unordered_set<Event*>& visited,
+                                        std::unordered_map<Event*, double>& memo);
+    double getThetaMaxRecursive_v3_impl(double defaultValue,
+                                        std::unordered_set<Event*>& visited,
+                                        std::unordered_map<Event*, double>& memo);
 };
 
 inline t_matrix get_XIncDepth(std::shared_ptr<Event> e) {return e->mXIncDepth;};
