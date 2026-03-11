@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -76,6 +76,8 @@ public:
     MHVariable mWiggle;
     double mDelta;
 
+    MHVariable mZi;// test reparametrisation
+
     int mId;
     std::string mUUID;
 
@@ -126,10 +128,10 @@ public:
     QJsonObject toJson() const;
 
 
-    inline QString getQStringName() const {return QString::fromStdString(_name);}
-    inline std::string name() const {return _name;}
-    void setName(const std::string name) {_name = name;}
-    void setName(const QString name) {_name = name.toStdString();}
+    inline QString getQStringName() const {return QString::fromStdString(mName);}
+    inline std::string name() const {return mName;}
+    void setName(const std::string name) {mName = name;}
+    void setName(const QString name) {mName = name.toStdString();}
 
 
     static Date fromCSV(const QStringList &dataStr, const QLocale& csvLocale, const StudyPeriodSettings settings);
@@ -190,8 +192,19 @@ public:
     void autoSetTiSampler(const bool bSet);
 
     void updateDelta(const double theta_mX);
+    void updateSigmaShrinkage0(const double theta_mX, const double S02Theta_mX, const double AShrinkage);
     void updateSigmaShrinkage(const double theta_mX, const double S02Theta_mX, const double AShrinkage);
-   // void updateSigmaShrinkage_K(const Event *event);
+    void updateSigmaShrinkage_K(const double theta_mX,
+                                const double S02Theta_mX,
+                                const double AShrinkage);
+
+    void updateTiSigma_block(const double theta_mX,
+                             const double S02Theta_mX,
+                             const double AShrinkage);
+    void updateTiSigma_block_theta_fixed(const double theta_j,
+                                               const double S02Theta_mX,
+                                               const double AShrinkage);
+
    // void updateSigma_v4(Event* event);
 
     void updateSigmaJeffreys(const double theta_mX);
@@ -222,7 +235,7 @@ protected:
 
 private:
 
-    std::string _name;
+    std::string mName;
     void moveFrom(Date&& other) noexcept;
 
 };
