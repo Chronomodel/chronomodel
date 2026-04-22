@@ -261,9 +261,8 @@ void AbstractScene::itemReleased(AbstractItem* item, QGraphicsSceneMouseEvent* e
                 mergeItems(item, colliding);
         } else {
             qDebug()<<"[AbstractScene::itemReleased] sendUpdateProject(Item moved)";
-            sendUpdateProject(tr("Item moved"), true, true);//  bool notify = true, bool storeUndoCommand = true
+            sendUpdateProject(Project::ReasonId::ItemMoved, true, true);//  bool notify = true, bool storeUndoCommand = true
         }
-
     }
 }
 

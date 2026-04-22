@@ -84,7 +84,7 @@ void PhaseItem::setPhase(const QJsonObject& phase)
     prepareGeometryChange();
     mData = phase;
 
-    setSelected(mData.value(STATE_IS_SELECTED).toBool() || mData.value(STATE_IS_CURRENT).toBool() );
+    setSelected(mData.value(STATE_IS_SELECTED).toBool());// || mData.value(STATE_IS_CURRENT).toBool() );
     setPos(mData.value(STATE_ITEM_X).toDouble(), mData.value(STATE_ITEM_Y).toDouble());
 
     // ----------------------------------------------------
@@ -134,39 +134,57 @@ void PhaseItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* e)
 
 void PhaseItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
+    // -------------------------------------------------
+    // 1️⃣ Gestion des contrôles visibles (insert / extract)
+    // -------------------------------------------------
     if (mControlsVisible) {
+        const QPointF p = e->pos();
 
-        if (insertRect().contains(e->pos())) {
-            //qDebug() << "[PhaseItem::mousePressEvent]-> insertRect clicked";
+        if (insertRect().contains(p)) {
             e->accept();
-            getProject_ptr()->updatePhaseEvents(mData.value(STATE_ID).toInt(), Project::InsertEventsToPhase);
-            return;
-
-        } else if (matLeastOneEventSelected && extractRect().contains(e->pos())) {
-            //qDebug() << "PhaseItem::mousePressEvent-> extractRect clicked";
-            e->accept();
-            getProject_ptr()->updatePhaseEvents(mData.value(STATE_ID).toInt(), Project::ExtractEventsFromPhase);
+            getProject_ptr()->updatePhaseEvents(
+                mData.value(STATE_ID).toInt(),
+                Project::InsertEventsToPhase);
             return;
         }
 
+        if (matLeastOneEventSelected && extractRect().contains(p)) {
+            e->accept();
+            getProject_ptr()->updatePhaseEvents(
+                mData.value(STATE_ID).toInt(),
+                Project::ExtractEventsFromPhase);
+            return;
+        }
     }
 
-  // overwrite AbstractItem::mousePressEvent(e);
+    // -------------------------------------------------
+    // 2️⃣ Cast sécurisé vers la scène spécifique
+    // -------------------------------------------------
+    PhasesScene* const itemScene = qobject_cast<PhasesScene*>(mScene);
+    if (!itemScene) {
+        // Pas la bonne scène → on laisse la classe de base gérer l’événement
+        QGraphicsObject::mousePressEvent(e);
+        return;
+    }
 
-    PhasesScene* itemScene = dynamic_cast<PhasesScene*>(mScene);
-
-    if (itemScene->selectedItems().size()<2) {
+    // -------------------------------------------------
+    // 3️⃣ Interaction avec la scène (sélection / flèche)
+    // -------------------------------------------------
+    if (itemScene->selectedItems().size() < 2) {
         if (!itemScene->itemClicked(this, e)) {
-            setZValue(2.);
-            QGraphicsItem::mousePressEvent(e);
-
-        } else
+            setZValue(2.0);                 // mettre l’item au premier plan
+        } else {
+            // on prépare la flèche temporaire
             itemScene->mTempArrow->setFrom(pos().x(), pos().y());
+        }
     }
-    itemScene = nullptr;
-    QGraphicsObject::mousePressEvent(e);
 
+    // -------------------------------------------------
+    // 4️⃣ Propagation de l’événement à la hiérarchie Qt
+    // -------------------------------------------------
+    QGraphicsObject::mousePressEvent(e);   // appel unique à la classe de base
 }
+
 
 void PhaseItem::redrawPhase()
 {
@@ -219,27 +237,27 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* , QWidg
 
     for (auto ev :allEvents) {
        const QJsonObject &event = ev.toObject();
-       const bool isSelected = ( event.value(STATE_IS_SELECTED).toBool() || event.value(STATE_IS_CURRENT).toBool() );
+        const bool isSelected = event.value(STATE_IS_SELECTED).toBool();//( event.value(STATE_IS_SELECTED).toBool() || event.value(STATE_IS_CURRENT).toBool() );
        mOneEventSelectedOnScene = (mOneEventSelectedOnScene || isSelected);
     }
     
     painter->setFont(font);
 
     QList< QPair<int, double>> sortedEvents;
-    for (int i=0; i<events.size(); ++i){
+    for (int i = 0; i < events.size(); ++i){
         sortedEvents.append(qMakePair(i, events.at(i).toObject().value(STATE_ITEM_Y).toDouble()));
     }
     std::sort(sortedEvents.begin(), sortedEvents.end(), sortEvents);
 
 
-   for (int j=0; j<sortedEvents.size(); ++j) {
+   for (int j = 0; j < sortedEvents.size(); ++j) {
        int i = sortedEvents[j].first;
        const QJsonObject &event = events.at(i).toObject();
        const QColor eventColor(event.value(STATE_COLOR_RED).toInt(),
                                event.value(STATE_COLOR_GREEN).toInt(),
                                event.value(STATE_COLOR_BLUE).toInt());
 
-       const bool isSelected = ( event.value(STATE_IS_SELECTED).toBool() || event.value(STATE_IS_CURRENT).toBool() );
+       const bool isSelected = event.value(STATE_IS_SELECTED).toBool();//( event.value(STATE_IS_SELECTED).toBool() || event.value(STATE_IS_CURRENT).toBool() );
        const bool isBound = event.value(STATE_EVENT_TYPE).toInt() == Event::eBound;
        if (j > 0)
            r.adjust(0, dy, 0, dy);

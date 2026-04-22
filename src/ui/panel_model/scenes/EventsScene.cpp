@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -81,8 +81,8 @@ EventsScene::~EventsScene()
 
 EventItem* EventsScene::findEventItemWithJsonId(const int id)
 {
-    for (auto it: mItems) {
-        EventItem* ev = static_cast<EventItem*>(it);
+    for (int i = 0; i < mItems.size(); ++i) {
+        EventItem* ev = dynamic_cast<EventItem*>(mItems[i]);
         const QJsonObject &evJson = ev->getData();
         if (evJson.value(STATE_ID) == id)
             return std::move(ev);
@@ -210,7 +210,7 @@ void EventsScene::showHelp(bool show)
 }
 
 
-void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool storeUndoCommand)
+void EventsScene::sendUpdateProject(const Project::ReasonId id, bool notify, bool storeUndoCommand)
 {
     qDebug()<<"[EventsScene::sendUpdateProject] start";
 
@@ -229,9 +229,9 @@ void EventsScene::sendUpdateProject(const QString& reason, bool notify, bool sto
     stateNext[STATE_EVENTS] = events;
 
     if (storeUndoCommand)
-        getProject_ptr()->pushProjectState(stateNext, reason, notify);
+        getProject_ptr()->pushProjectState(stateNext, id, notify);
     else
-        getProject_ptr()->sendUpdateState(stateNext, reason, notify);
+        getProject_ptr()->sendUpdateState(stateNext, id, notify);
 
 }
 void EventsScene::noHide()
@@ -252,7 +252,7 @@ void EventsScene::setShowAllThumbs(const bool show)
 
     // update EventItem GreyedOut according to the phase selection
     const auto& items = mItems;
-    for (auto* item : items) {
+    for (AbstractItem* item : items) {
         bool selectedPhase = false;
         QJsonArray phases = dynamic_cast<EventItem*>(item)->getPhases();
         for (auto it = phases.cbegin(); it != phases.cend(); ++it) {
@@ -262,7 +262,7 @@ void EventsScene::setShowAllThumbs(const bool show)
                 break;
             }
         }
-        auto* eventItem = dynamic_cast<EventItem*>(item);
+        EventItem* eventItem = dynamic_cast<EventItem*>(item);
         eventItem->setWithSelectedPhase(selectedPhase);
         eventItem->setGreyedOut(!(selectedPhase || show));
 
@@ -588,7 +588,6 @@ void EventsScene::updateSceneFromState()
             EventItem* oldItem = dynamic_cast<EventItem*> (absItem);
             const QJsonObject oldItem_data = oldItem->getData();
 
-            //oldItem->updateGreyedOut(); // very long
             // -------
             const QString eventPhasesIdsStr = oldItem_data.value(STATE_EVENT_PHASE_IDS).toString();
             const QStringList eventPhasesIds = eventPhasesIdsStr.split(",");
@@ -704,35 +703,38 @@ void EventsScene::updateSceneFromState()
 
         bool itemExists = false;
 
-        for (auto &mConstItem : mConstraintItems) {
-            const QJsonObject &constraintItem = mConstItem->data();
+        for (auto &arrowItem : mConstraintItems) {
+            const QJsonObject &arrowData = arrowItem->data();
 
-            if (constraintItem.value(STATE_ID).toInt() == constraint.value(STATE_ID).toInt()) {
+            if (arrowData.value(STATE_ID).toInt() == constraint.value(STATE_ID).toInt()) {
 
                 // in case of UNDO command check and update position
-                const int fromId = constraintItem.value(STATE_CONSTRAINT_BWD_ID).toInt();
-                const int toId = constraintItem.value(STATE_CONSTRAINT_FWD_ID).toInt();
-                EventItem* eventFrom = mConstItem->findEventItemWithJsonId(fromId);
-                EventItem* eventTo = mConstItem->findEventItemWithJsonId(toId);
+               /* Fait dans updatePosition
+                * const int fromId = arrowData.value(STATE_CONSTRAINT_BWD_ID).toInt();
+                const int toId = arrowData.value(STATE_CONSTRAINT_FWD_ID).toInt();
+                EventItem* eventFrom = arrowItem->findEventItemWithJsonId(fromId);
+                EventItem* eventTo = arrowItem->findEventItemWithJsonId(toId);
                 // control if all event still exist
                 if (eventFrom && eventTo)
-                    mConstItem->updatePosition();
+                */
+                arrowItem->updatePosition();
 
                 itemExists = true;
-                if (constraint != constraintItem) {
+
+                if (constraint != arrowData) {
                     // UPDATE ITEM
 #ifdef DEBUG
                     qDebug() << "[EventsScene::updateScene] Constraint updated : id = " << constraint.value(STATE_ID).toInt();
 #endif
-                    mConstItem->setData(constraint);
+                    arrowItem->setData(constraint);
                 }
             }
         }
         if (!itemExists) {
             // CREATE ITEM
-            ArrowItem* constraintItem = new ArrowItem(this, ArrowItem::eEvent, constraint);
-            mConstraintItems.append(constraintItem);
-            addItem(constraintItem);
+            ArrowItem* arrowItem = new ArrowItem(this, ArrowItem::eEvent, constraint);
+            mConstraintItems.append(arrowItem);
+            addItem(arrowItem);
 #ifdef DEBUG
             qDebug() << "[EventsScene::updateScene] Constraint created : id = " << constraint.value(STATE_ID).toInt();
 #endif
@@ -769,10 +771,10 @@ void EventsScene::clean()
     // ------------------------------------------------------
 
     mUpdatingItems = true;
-    for (auto item : mItems) {
-        EventItem* eventItem = dynamic_cast<EventItem*>(item);
-        if (eventItem)
-            delete eventItem;
+    for (int i=0; i<mItems.size(); ++i) {
+        EventItem* ev = dynamic_cast<EventItem*>(mItems[i]);
+        if (ev)
+            delete ev;
 
     }
     mItems.clear(); // Clear the container after deleting items
@@ -813,8 +815,8 @@ void EventsScene::updateStateSelectionFromItem()
         EventItem* curItem = currentEvent();
         QJsonObject currentEvent = QJsonObject();
 
-        for (const auto& pItem : mItems) {
-            auto item = dynamic_cast<EventItem*>(pItem);
+        for (AbstractItem *it : std::as_const(mItems)) {
+            auto item = dynamic_cast<EventItem*>(it);
 
             if (item) {
                 // without selected update
@@ -853,7 +855,7 @@ void EventsScene::updateStateSelectionFromItem()
                 // sendUpdateProject(tr("item moved"), false, true);
 
             } else
-                sendUpdateProject(tr("Events selection"), false, false);//  bool notify = true, bool storeUndoCommand = false
+                sendUpdateProject(Project::ReasonId::EventsSelection, false, false);//  bool notify = true, bool storeUndoCommand = false
 
             // refresh the show and hide Event in the phases Scenes
            if (nbOfSelectedEvent == 0)
@@ -905,19 +907,27 @@ AbstractItem* EventsScene::currentItem()
 
 EventItem* EventsScene::currentEvent() const
 {
-    QList<QGraphicsItem*> selItems = selectedItems();
+    QList<QGraphicsItem*> items = selectedItems();
+    if (items.size() > 0) {
+        EventItem* item = dynamic_cast<EventItem*>(items.at(0));
+        if (item)
+            return item;
+    }
+    return nullptr;
+
+   /* QList<QGraphicsItem*> selItems = selectedItems();
 
     if (selItems.size() == 0)
         return nullptr;
 
-    for (auto it : selItems) {
-        EventItem* tmpItem = dynamic_cast< EventItem*>(it);
+    for (AbstractItem *ev : std::as_const(mItems)) {
+        EventItem* tmpItem = dynamic_cast< EventItem*>(ev);
         if (tmpItem)
             return tmpItem;
 
-    }
+    }*/
 
-    return nullptr;
+    //return nullptr;
 }
 
 
@@ -1048,7 +1058,7 @@ EventItem* EventsScene::dateReleased(DateItem* dateItem)
             nextState[STATE_EVENTS] = events;
 
             hoveredEventItem->setMergeable(false);
-            getProject_ptr()->pushProjectState(nextState, DATE_MOVE_TO_EVENT_REASON, true); // used to disable ResultsView
+            getProject_ptr()->pushProjectState(nextState, Project::ReasonId::DateMoveToEvent, true); // used to disable ResultsView
 
             return hoveredEventItem;
 
@@ -1072,7 +1082,7 @@ void EventsScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 {
     Q_UNUSED(e);
 
-    // the difference with the AbstractScene is here we need the curentEvent, which can be a date selected
+    // the difference with the AbstractScene is here we need the currentEvent, which can be a date selected
     EventItem* current = currentEvent();
 
     EventItem* eventClicked = dynamic_cast< EventItem*>(item);
@@ -1507,7 +1517,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
                     QJsonObject constraint = c.toJson();
                     eventsConstraints.append(constraint);
                     state[STATE_EVENTS_CONSTRAINTS] = eventsConstraints;
-                    project->pushProjectState(state, "Event constraint created", true);
+                    project->pushProjectState(state, Project::ReasonId::EventConstraintCreated, true);
                 }
             }
 
@@ -1521,7 +1531,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
     } // for()
     delete progress;
     progress = nullptr;
-    project->pushProjectState(state, NEW_EVEN_BY_CSV_DRAG_REASON, true);
+    project->pushProjectState(state, Project::ReasonId::NewEventByCsvDrag, true);
 }
 
 QList<Date> EventsScene::decodeDataDrop_old(QGraphicsSceneDragDropEvent* e)

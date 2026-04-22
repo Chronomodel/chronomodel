@@ -52,7 +52,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QString>
 #include <QJsonObject>
 
-
+/*
 #define PROJECT_LOADED_REASON "Project Loaded"
 #define NEW_PROJECT_REASON "New Project"
 #define INSERT_PROJECT_REASON "Insert Project"
@@ -69,6 +69,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define NEW_EVEN_BY_CSV_DRAG_REASON "New Event by CSV drag"
 
 #define PROJECT_UNDO_REDO_REASON "Undo-Redo action"
+*/
 
 class Date;
 class Event;
@@ -99,34 +100,135 @@ private :
     bool mItemsIsMoved;
     bool mEventPropertiesChanged; // to refresh Event Properties View
 
-    QSet<QString> mReasonChangeStructure;
-    QSet<QString> mReasonChangeDesign;
-    QSet<QString> mReasonChangePosition;
-    QSet<QString> mReasonChangeEventProperties;
-
     bool mNoResults;
+
+    // -----------------------------------------------------------------
+    // 6️⃣  Méthodes d’initialisation (private)
+    // -----------------------------------------------------------------
+    //void initAutoSaveTimer();
+    //void initReasonSets();
+    void fillStructureReasons();
+    void fillDesignReasons();
+    void fillPositionReasons();
+    void fillEventPropertyReasons();
 
 public:
     Project();
     virtual ~Project();
+
+
+    // -----------------------------------------------------------------
+    // 1️⃣  Identifiants de raisons (enum class)
+    // -----------------------------------------------------------------
+    enum class ReasonId : int {
+        // ---- Project / Structure ----
+        NewProject,
+        CloseProject,
+        ProjectLoaded,
+        ProjectSettingsUpdated,
+        InsertProject,
+
+        DateCreated,
+        DateDeleted,
+        DateMoveToEvent,
+        DateUpdated,
+        DatesSplitted,
+        DatesCombined,
+        UpdateSelectedDataMethod,
+        DateRestored,
+        // ---- Event ----
+        NewEventByCsvDrag,
+        EventConstraintDeleted,
+        EventConstraintCreated,
+        EventConstraintUpdated,
+        EventsDeleted,
+        EventCreated,
+        BoundCreated,
+        EventMethodUpdated,
+        EventsRestored,
+        EventNodeUpdated,
+        UpdateSelectedEventMethod,
+        EventsMerged,
+        // ---- Phase ----
+        PhaseCreated,
+        PhasesDeleted,
+        PhaseUpdated,
+        PhaseConstraintCreated,
+        PhaseConstraintUpdated,
+        PhaseConstraintDeleted,
+        PhaseEventsUpdated,
+        PhasesMerged,
+        // ---- Curve / MCMC ----
+        CurveSettingsUpdated,
+        MCMCSettingsUpdated,
+        // ---- Curve parameters ----
+        EventXIncUpdated,
+        EventSXIncUpdated,
+        EventYDecUpdated,
+        EventSYUpdated,
+        EventZFUpdated,
+        EventSZFUpdated,
+        EventNodeParamUpdated,
+        // ---- Design (couleurs / noms) ----
+        DateNameUpdates,
+        DateColorUpdated,
+        EventColorUpdated,
+        EventNameUpdated,
+        PhaseColorUpdated,
+        PhaseNameUpdated,
+        PhasesSelection,
+        EventsSelection,
+        NoItemSelection,
+        // ---- Position ----
+        ItemMoved,
+        // ---- Event properties (subset) ----
+
+        MCMCSettingsRestoreDefault,
+        MCMCMethodReset,
+        ProjectUndoRedo,
+
+        TrashedDataDeleted,
+        TrashedEventDeleted
+    };
+    // -----------------------------------------------------------------
+    // 2️⃣  Types de containers
+    // -----------------------------------------------------------------
+    using ReasonSet = QSet<ReasonId>;
+    // -----------------------------------------------------------------
+    // 3️⃣  Méthodes publiques utiles
+    // -----------------------------------------------------------------
+    static QString reasonToString(ReasonId id);          // traduction
+    bool isStructureReason(ReasonId id) const { return mReasonChangeStructure.contains(id); }
+    bool isDesignReason(ReasonId id)    const { return mReasonChangeDesign.contains(id); }
+    bool isPositionReason(ReasonId id) const { return mReasonChangePosition.contains(id); }
+    bool isEventPropReason(ReasonId id) const { return mReasonChangeEventProperties.contains(id); }
+
+    // -----------------------------------------------------------------
+    // 5️⃣  Sets de raisons (stockés sous forme d’identifiants)
+    // -----------------------------------------------------------------
+    ReasonSet mReasonChangeStructure;
+    ReasonSet mReasonChangeDesign;
+    ReasonSet mReasonChangePosition;
+    ReasonSet mReasonChangeEventProperties;
+
 
     enum ActionOnModel {
         InsertEventsToPhase,
         ExtractEventsFromPhase,
     };
 
-    void initState(const QString& reason);
+    void initState();
 
     // This is the function to call when the project state is to be modified.
     // An undo command is created and a StateEvent is fired asynchronously.
     // The project state will be modified and the view notified (if required)
-    bool pushProjectState(const QJsonObject& state, const QString& reason, bool notify);
+    bool pushProjectState(const QJsonObject& state, const ReasonId id, bool notify);
     void checkStateModification(const QJsonObject& stateNew,const QJsonObject& stateOld);
     bool structureIsChanged();
     bool designIsChanged();
     // Sends a StateEvent asynchronously.
     // Called by "SetProjectState" undo/redo commands.
-    void sendUpdateState(const QJsonObject& state, const QString& reason, bool notify);
+    void sendUpdateState(const QJsonObject& state, const ReasonId id, bool notify);
 
     // Event handler for events of type "StateEvent".
     // Updates the project state by calling updateState() and send a notification (if required).
@@ -134,7 +236,7 @@ public:
 
     // Update the project state directly.
     // This is not async! so be careful when calling this from views with notify = true
-    void updateState(const QJsonObject& state, const QString& reason, bool notify);
+    void updateState(const QJsonObject& state, const Project::ReasonId id, bool notify);
 
 
     static QJsonObject emptyState();
@@ -172,9 +274,9 @@ public:
     // ---------------------------
     void restoreMCMCSettings();
 
-    void addEvent(QJsonObject event, const QString &reason);
+    void addEvent(QJsonObject event, const ReasonId id);
     int getUnusedEventId(const QJsonArray &events);
-    void updateEvent(const QJsonObject &event, const QString &reason);
+    void updateEvent(const QJsonObject &event, const ReasonId id);
     void mergeEvents(int eventFromId, int eventToId);
     void deleteSelectedTrashedEvents(const QList<int> &ids);
 

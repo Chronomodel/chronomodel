@@ -63,7 +63,7 @@ EventItem::EventItem(QGraphicsItem* parent):
     mNodeSkin(7.),
     mPhasesHeight(20)
 {
-
+    setFlag(QGraphicsItem::ItemIsSelectable, true);
 }
 
 EventItem::EventItem(EventsScene* scene, const QJsonObject& eventObj, const QJsonObject& StudyPeriodSettings, QGraphicsItem* parent):
@@ -76,7 +76,7 @@ EventItem::EventItem(EventsScene* scene, const QJsonObject& eventObj, const QJso
 {
     mEltsHeight =  DateItem::mTitleHeight +  DateItem::mEltsHeight ;
     mGreyedOut = false;
-
+    setFlag(QGraphicsItem::ItemIsSelectable, true);
     QFont font;
     font.setPixelSize(12);
 
@@ -122,22 +122,35 @@ void EventItem::remove_dateItems()
  */
 void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
-    EventsScene* itemScene = dynamic_cast<EventsScene*>(mScene);
+    // Cast sécurisé, on sort immédiatement si la scène n’est pas du bon type
+    EventsScene* const itemScene = qobject_cast<EventsScene*>(mScene);
+    if (!itemScene) {
+        // Pas la bonne scène → on laisse la classe de base gérer l’événement
+        QGraphicsObject::mousePressEvent(e);
+        return;
+    }
 
-    if ((this != itemScene->currentEvent()) && (!itemScene->mDrawingArrow) && (e->modifiers() != Qt::ControlModifier)) {
+    // 1️⃣ Gestion de la sélection
+    if ((this != itemScene->currentEvent()) &&
+        (!itemScene->mDrawingArrow) &&
+        (e->modifiers() != Qt::ControlModifier))
+    {
         itemScene->clearSelection();
     }
 
-    if (itemScene->selectedItems().size() < 2 ) {
+    // 2️⃣ Gestion du clic sur l’item
+    if (itemScene->selectedItems().size() < 2) {
         if (!itemScene->itemClicked(this, e))
-            setZValue(2.);
+            setZValue(2.0);
         else
             itemScene->mTempArrow->setFrom(pos().x(), pos().y());
     }
 
+    // 3️⃣ Propagation de l’événement aux classes de base
     QGraphicsObject::mousePressEvent(e);
-    itemScene = nullptr;
+
 }
+
 
 #pragma mark Event Managment
 
@@ -330,9 +343,9 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
     }
     event[STATE_EVENT_DATES] = dates;
 
-    project->updateEvent(event, QObject::tr("Dates added to event (CSV drag)"));
+    project->updateEvent(event, Project::ReasonId::DateCreated);// QObject::tr("Dates added to event (CSV drag)"));
     scene->updateStateSelectionFromItem();
-    scene->sendUpdateProject("Item selected", true, false); //  bool notify = true, bool storeUndoCommand = false
+    scene->sendUpdateProject(Project::ReasonId::EventsSelection, true, false); //  bool notify = true, bool storeUndoCommand = false
 }
 
 void EventItem::redrawEvent()

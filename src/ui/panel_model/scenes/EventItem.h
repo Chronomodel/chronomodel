@@ -79,7 +79,7 @@ public:
     void remove_dateItems();
     virtual void setGreyedOut(const bool greyedOut) override;
 
-    void setWithSelectedPhase(const bool selected) {mWithSelectedPhase = selected;}
+    inline void setWithSelectedPhase(const bool selected) {mWithSelectedPhase = selected;}
     inline bool withSelectedPhase() { return mWithSelectedPhase;}
 
     virtual void setEvent(const QJsonObject& event, const QJsonObject& StudyPeriodSettings);

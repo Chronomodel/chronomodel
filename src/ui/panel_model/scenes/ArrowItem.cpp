@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -40,51 +40,43 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ArrowItem.h"
 #include "EventItem.h"
 #include "EventKnownItem.h"
-#include "MainWindow.h"
 #include "PhaseItem.h"
 #include "StateKeys.h"
 
 #include <QtWidgets>
 
-#include <math.h>
+#include <cmath>
 
 
-ArrowItem::ArrowItem(AbstractScene* scene, TypeFrom type_from, const QJsonObject& constraint, QGraphicsItem* parent):QGraphicsItem(parent),
-    mTypeFrom(type_from),
-    mScene(scene),
-    mStart(0, 0),
-    mEnd(0., 0),
-    mBubbleWidth(10.),
-    mBubbleHeight(10.),
-    mEditing(false),
-    mShowDelete(false),
-    mGreyedOut(false)
+ArrowItem::ArrowItem(AbstractScene* scene,
+                     TypeFrom type_from,
+                     const QJsonObject& constraint,
+                     QGraphicsItem* parent)
+    : QGraphicsItem(parent)
+    , mTypeFrom(type_from)
+    , mScene(scene)
+    , mStart(0,0)
+    , mEnd(0,0)
+    , mBubbleWidth(10.)
+    , mBubbleHeight(10.)
+    , mEditing(false)
+    , mShowDelete(false)
+    , mGreyedOut(false)
 {
     setZValue(-1.);
     setAcceptHoverEvents(true);
     setFlags(QGraphicsItem::ItemIsSelectable |
-            QGraphicsItem::ItemIsFocusable |
-            QGraphicsItem::ItemSendsScenePositionChanges |
-            QGraphicsItem::ItemSendsGeometryChanges);
-
-    setData(constraint); // init position
-    //mData = constraint;
-   /* QGraphicsDropShadowEffect* shadow = new QGraphicsDropShadowEffect();
-    shadow->setColor(Qt::black);
-    shadow->setBlurRadius(30);
-    shadow->setOffset(3, 3);
-    setGraphicsEffect(shadow);*/
+             QGraphicsItem::ItemIsFocusable |
+             QGraphicsItem::ItemSendsScenePositionChanges |
+             QGraphicsItem::ItemSendsGeometryChanges);
+    setData(constraint);   // initialise la position
 }
 
-ArrowItem::~ArrowItem()
-{
-    mScene = nullptr;
-}
 
-QJsonObject& ArrowItem::data()
-{
-    return mData;
-}
+// Le destructeur par défaut suffit (pas de `deleteLater`)
+// ~ArrowItem() = default;   // déjà déclaré dans le header
+
+
 
 void ArrowItem::setData(const QJsonObject& c)
 {
@@ -94,13 +86,13 @@ void ArrowItem::setData(const QJsonObject& c)
 
 void ArrowItem::setFrom(const double x, const double y)
 {
-    prepareGeometryChange();
+   // prepareGeometryChange();
     mStart = QPointF(x, y);
 }
 
 void ArrowItem::setTo(const double x, const double y)
 {
-    prepareGeometryChange();
+    //prepareGeometryChange();
     mEnd = QPointF(x, y);
 }
 
@@ -114,12 +106,14 @@ void ArrowItem::updatePosition()
 {
     prepareGeometryChange();
 
-    const QJsonObject &state = MainWindow::getInstance()->getState();
+
 
     const int fromId = mData.value(STATE_CONSTRAINT_BWD_ID).toInt();
     const int toId = mData.value(STATE_CONSTRAINT_FWD_ID).toInt();
 
-    QJsonObject from;
+   /* Fait en dessous
+     const QJsonObject &state = MainWindow::getInstance()->getState();
+     QJsonObject from;
     QJsonObject to;
 
     if (mTypeFrom == eEvent) {
@@ -140,43 +134,38 @@ void ArrowItem::updatePosition()
             if (phase.value(STATE_ID).toInt() == toId)
                 to = phase;
         }
-    }
+    }*/
 
     if (mTypeFrom == eEvent) {
         EventItem* ev_from = findEventItemWithJsonId(fromId);
-        mStart = ev_from->pos();
-
         EventItem* ev_to = findEventItemWithJsonId(toId);
+        // control if all event still exist
+        if (!ev_from || !ev_to)
+            return;
+
+        mStart = ev_from->pos();
         mEnd = ev_to->pos();
 
         const double angle_rad = atan2( double(ev_from->y()  - ev_to->y() ) , double(ev_from->x()-ev_to->x()) );
-        //const double angle_deg = angle_rad * 180. / M_PI;
-        //qDebug()<<"[ArrowItem::updatePosition] theta from = "<<angle_deg;
-
         mStartContact = contactPos(angle_rad, ev_from);
 
         const double angle_rad2 = atan2( double(ev_to->y()  - ev_from->y() ) , double(ev_to->x()-ev_from->x()) );
-        //const double angle_deg2 = angle_rad2 * 180. / M_PI;
-        //qDebug()<<" theta contactpos to = "<<angle_deg2;
         mEndContact = contactPos(angle_rad2, ev_to);
 
     } else {
         PhaseItem* ph_from = findPhaseItemWithJsonId(fromId);
-        mStart = ph_from->pos();
-
         PhaseItem* ph_to = findPhaseItemWithJsonId(toId);
+
+        // control if all event still exist
+        if (!ph_from || !ph_to)
+            return;
+        mStart = ph_from->pos();
         mEnd = ph_to->pos();
 
         const double angle_rad = atan2( double(ph_from->y()  - ph_to->y() ) , double(ph_from->x()-ph_to->x()) );
-        // const double angle_deg = angle_rad * 180. / M_PI;
-        // qDebug()<<" theta contactpos from = "<<angle_deg;
         mStartContact = contactPos(angle_rad, ph_from);
 
-
-
         const double angle_rad2 = atan2( double(ph_to->y()  - ph_from->y() ) , double(ph_to->x()-ph_from->x()) );
-        //const double angle_deg2 = angle_rad2 * 180. / M_PI;
-        //qDebug()<<" theta contactpos to = "<<angle_deg2;
         mEndContact = contactPos(angle_rad2, ph_to);
     }
 
@@ -209,15 +198,7 @@ QPointF ArrowItem::contactPos(const double theta, AbstractItem* e)
         const double a2 = atan2(-item_height , item_width );
         const double a3 = atan2( -item_height , -item_width );
         const double a4 = atan2( item_height ,- item_width );
-#ifdef DEBUG
-        /* auto a11 = a1* 180. / M_PI;
-    auto a22 = a2* 180. / M_PI;
-    auto a33 = a3* 180. / M_PI;
-    auto a44 = a4* 180. / M_PI;
-    qDebug()<<"[ArrowItem::contactPos] "<<a11<<a22<<a33<<a44;
-    qDebug()<<"[ArrowItem::contactPos] theta "<<theta* 180. / M_PI;;
-*/
-#endif
+
 
         if (a3 <= theta && theta < a2) {
             xp = e->x() + item_height/tan(theta) /2.; // tan(theta) < 0
@@ -260,12 +241,11 @@ void ArrowItem::hoverMoveEvent(QGraphicsSceneHoverEvent* e)
 {
     //qDebug()<<"ArrowItem::hoverMoveEvent----->";
     QGraphicsItem::hoverMoveEvent(e);
-    prepareGeometryChange();
-
     const QRectF br = boundingRect();
 
     const bool shouldShowDelete = br.contains(e->pos());
     if (shouldShowDelete != mShowDelete) {
+        prepareGeometryChange();
         mShowDelete = shouldShowDelete;
         update();
     }
@@ -274,8 +254,9 @@ void ArrowItem::hoverMoveEvent(QGraphicsSceneHoverEvent* e)
 void ArrowItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* e)
 {
     QGraphicsItem::hoverLeaveEvent(e);
-    prepareGeometryChange();
+
     if (mShowDelete) {
+        prepareGeometryChange();
         mShowDelete = false;
         update();
     }
@@ -583,26 +564,37 @@ QString ArrowItem::getBubbleText() const
     return bubbleText;
 }
 
-EventItem* ArrowItem::findEventItemWithJsonId(const int id)
+EventItem* ArrowItem::findEventItemWithJsonId(const int id) const
 {
-    auto listItems = mScene->getItemsList();
-    for (const auto &it: listItems) {
-        EventItem* ev = static_cast<EventItem*>(it);
-        const QJsonObject &evJson = ev->getData();
-        if (evJson.value(STATE_ID) == id)
-            return ev;
-    }
-    return nullptr;
+    // 1️⃣  Grab a *reference* to the list – no copy is made.
+    const auto& items = mScene->getItemsList();
+    // 2️⃣  Use std::find_if for a short‑circuiting search.
+    auto it = std::find_if(std::begin(items), std::end(items),
+                           [id](QGraphicsItem* gi) -> bool
+                           {
+                               // 3️⃣  Safe Qt cast; if the item is not an EventItem we skip it.
+                               if (auto* ev = qgraphicsitem_cast<EventItem*>(gi))
+                                   return ev->getData()
+                                              .value(STATE_ID)
+                                              .toInt() == id;
+                               return false;
+                           });
+    // 4️⃣  Return the found pointer or nullptr.
+    return (it != std::end(items)) ? static_cast<EventItem*>(*it) : nullptr;
 }
 
-PhaseItem* ArrowItem::findPhaseItemWithJsonId(const int id)
+PhaseItem* ArrowItem::findPhaseItemWithJsonId(int id) const
 {
-    auto listItems = mScene->getItemsList();
-    for (const auto &it: listItems) {
-        PhaseItem* ph = static_cast<PhaseItem*>(it);
-        const QJsonObject &phJson = ph->getData();
-        if (phJson.value(STATE_ID) == id)
-            return ph;
-    }
-    return nullptr;
+    const auto& items = mScene->getItemsList();   // référence, pas de copie
+    auto it = std::find_if(std::begin(items), std::end(items),
+                           [id](QGraphicsItem* gi) -> bool
+                           {
+                               // Cast Qt‑safe : nullptr si ce n’est pas un PhaseItem.
+                               if (auto* ph = qgraphicsitem_cast<PhaseItem*>(gi))
+                                   return ph->getData()
+                                              .value(STATE_ID)
+                                              .toInt() == id;
+                               return false;
+                           });
+    return (it != std::end(items)) ? static_cast<PhaseItem*>(*it) : nullptr;
 }

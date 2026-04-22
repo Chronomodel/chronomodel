@@ -40,40 +40,69 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "SetProjectState.h"
 #include "Project.h"
 
-SetProjectState::SetProjectState(Project* project, const QJsonObject& prevState, const QJsonObject& nextState, const QString& reason):
+SetProjectState::SetProjectState(Project* project,
+                                 const QJsonObject& prevState,
+                                 const QJsonObject& nextState,
+                                 const Project::ReasonId id):
     mProject(project),
     mPrevState(prevState),
     mNextState(nextState),
-    mReason(reason)
+    mReason(id)
 {
-    // Activate this to show undo/redo actions title in the UndoStack list view
+    // Activate this to show undo/redo actions title in the UndoStack list view in MainWindows::mUndoDock
     // However, this will also display action names in the main toolbar undo/redo buttons,
     // Resizing them every time... (actually, this is the only reason to disable the line below!)
-    setText(mReason);
+    // Le texte affiché dans la pile d'undo/redo
+    if (mProject) {
+        setText(Project::reasonToString(mReason));
+    } else {
+        setText(QStringLiteral("Invalid command"));
+    }
 }
 
-SetProjectState::~SetProjectState()
-{
-    mProject = nullptr;
-}
 
 void SetProjectState::undo()
 {
-    qDebug() << "[SetProjectState::undo] reason = " << mReason;
+    if (!mProject) {
+        qWarning() << "[SetProjectState::undo] Project no longer exists – command ignored";
+        return;
+    }
+ //   qDebug() << "[SetProjectState::undo] reason = " << Project::reasonToString(mReason);
     mProject->mState = mPrevState;
-    emit mProject->currentEventChanged();
 
     emit mProject->projectStateChanged();
+    emit mProject->currentEventChanged();
+
 }
 
 
 // come from Project::pushProjectState() with the command MainWindow::getInstance()->getUndoStack()->push(command);
 void SetProjectState::redo()
 {
-    qDebug() << "[SetProjectState::redo] reason = " << mReason;
+    if (!mProject) {
+        qWarning() << "[SetProjectState::redo] Project no longer exists – command ignored";
+        return;
+    }
+  //  qDebug() << "[SetProjectState::redo] reason = " << Project::reasonToString(mReason);
     mProject->mState = mNextState;
     emit mProject->currentEventChanged();
 
     emit mProject->projectStateChanged();
 
 }
+
+/*
+bool SetProjectState::mergeWith(const QUndoCommand *other)
+{
+    // On ne fusionne que les commandes du même type et du même projet
+    const SetProjectState *o = static_cast<const SetProjectState*>(other);
+    if (o->mProject != mProject)
+        return false;
+    // On garde le premier état (mPrevState) et on remplace le second état
+    mNextState = o->mNextState;
+    mReason    = o->mReason;               // on met à jour le texte affiché
+    if (mProject)
+        setText(Project::reasonToString(mReason));
+    return true;   // la commande précédente devient obsolète
+}
+*/

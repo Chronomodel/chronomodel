@@ -39,10 +39,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "StateEvent.h"
 
-StateEvent::StateEvent(const QJsonObject& state, const QString& reason, bool notify):
+StateEvent::StateEvent(const QJsonObject& state, const Project::ReasonId id, bool notify):
     QEvent(QEvent::User),
     mState(state),
-    mReason(reason),
+    mReason(id),
     mNotify(notify)
 {
 
@@ -53,7 +53,7 @@ QJsonObject& StateEvent::state()
     return mState;
 }
 
-QString& StateEvent::reason()
+Project::ReasonId StateEvent::reason()
 {
     return mReason;
 }

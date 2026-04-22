@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -51,8 +51,9 @@ public:
     PhasesScene(QGraphicsView* view, QObject* parent = nullptr);
     virtual ~PhasesScene();
 
+    //void sendUpdateProject(const QString& reason, bool notify, bool async);
+    void sendUpdateProject(const Project::ReasonId id, bool notify, bool async);
 
-    void sendUpdateProject(const QString& reason, bool notify, bool async);
     PhaseItem* currentPhase() const;
      void createSceneFromState();
 
@@ -69,15 +70,18 @@ public slots:
     void noHide();
     void eventsSelected();
 
-   virtual  void deleteSelectedItems();
+   virtual void deleteSelectedItems();
 
 public:
+    bool itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);
+
     void itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);
-    void constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent*);
-    void constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent*);
-    bool itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent*);
 
     void itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent*);
+
+    void constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent*);
+    void constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent*);
+
 
     void adaptItemsForZoom(const double prop);
 

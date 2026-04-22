@@ -929,7 +929,7 @@ void ModelView::createEventKnownInPlace()
             events.append(json);
             stateNext[STATE_EVENTS] = events;
 
-            getProject_ptr()->pushProjectState(stateNext, "Bound created", true);
+            getProject_ptr()->pushProjectState(stateNext, Project::ReasonId::BoundCreated, true);
 
         }
         delete dialog;
@@ -971,7 +971,7 @@ void ModelView::createPhaseInPlace()
                 phases.append(phaseObj);
                 stateNext[STATE_PHASES] = phases;
 
-                getProject_ptr()->pushProjectState(stateNext, "Phase created", true);
+                getProject_ptr()->pushProjectState(stateNext, Project::ReasonId::PhaseCreated, true);
 
              } else {
                QMessageBox message(QMessageBox::Critical,
@@ -1163,8 +1163,9 @@ void ModelView::showMultiCalib()
 
         auto events = getProject_ptr()->mState.value(STATE_EVENTS).toArray();
         bool with_selected_event =false;
-        for (const auto&& ev : events) {
-            const QJsonObject jsonEv = ev.toObject();
+
+        for (qsizetype i = 0 ; i<events.size(); i++) {
+            const QJsonObject& jsonEv = events[i].toObject();
             if (jsonEv.value(STATE_IS_SELECTED).toBool()) {
                 with_selected_event = true;
                 break;

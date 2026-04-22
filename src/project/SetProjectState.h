@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -43,8 +43,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QUndoCommand>
 #include <QJsonObject>
 #include <QString>
+#include <QPointer>
 
-class Project;
+#include "Project.h"
 
 
 class SetProjectState: public QUndoCommand
@@ -53,16 +54,23 @@ public:
     SetProjectState(Project* project,
                     const QJsonObject& prevState,
                     const QJsonObject& nextState,
-                    const QString& reason);
-    virtual ~SetProjectState();
-    virtual void undo();
-    virtual void redo();
+                    const Project::ReasonId id);
+
+    ~SetProjectState() override = default;
+    // QUndoCommand interface
+    void undo() override;
+    void redo() override;
+
+    // Fusion de commandes consécutives du même type
+   // int  id() const override { return 0xBEEF; }          // identifiant de type
+   // bool mergeWith(const QUndoCommand *other) override;
 
 private:
+    //QPointer<Project> mProject;          // devient nullptr dès que le Project est delete‑d
     Project* mProject;
     QJsonObject mPrevState;
     QJsonObject mNextState;
-    QString mReason;
+    Project::ReasonId mReason;
 
 };
 

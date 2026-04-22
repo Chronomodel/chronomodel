@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -40,7 +40,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef ARROWITEM_H
 #define ARROWITEM_H
 
-#include <QObject>
+#pragma once
+
 #include <QGraphicsItem>
 #include <QJsonObject>
 
@@ -49,18 +50,22 @@ class AbstractItem;
 class EventItem;
 class PhaseItem;
 
-class ArrowItem: public QGraphicsItem
+/* ---------------------------------------------------------------------
+   ArrowItem représente une contrainte (flèche) entre deux items
+   (EventItem ou PhaseItem).
+   --------------------------------------------------------------------- */
+class ArrowItem : public QGraphicsItem
 {
-
-    Q_PROPERTY(QJsonObject mData READ data WRITE setData)
 public:
-    enum TypeFrom {
-        eEvent = 0,
-        ePhase = 1
-    };
+    enum TypeFrom { eEvent = 0, ePhase = 1 };
 
-    ArrowItem(AbstractScene* scene, TypeFrom type_from, const QJsonObject& constraint, QGraphicsItem* parent = nullptr);
-    virtual ~ArrowItem();
+
+    explicit ArrowItem(AbstractScene* scene,
+                       TypeFrom type_from,
+                       const QJsonObject& constraint,
+                       QGraphicsItem* parent = nullptr);
+
+    ~ArrowItem() override = default;   // QObject s’occupe de la destruction
 
     enum { Type = UserType + 1 };
 
@@ -69,11 +74,7 @@ public:
         // Enable the use of qgraphicsitem_cast with this item.
         return Type;
     };
-    void updatePosition();
-    void setFrom(const double x, const double y);
-    void setTo(const double x, const double y);
 
-    void setGreyedOut(bool greyedOut);
 
     QRectF boundingRect() const override;
     QPainterPath shape() const override;
@@ -81,39 +82,47 @@ public:
     QPointF contactPos(const double theta, AbstractItem *e);
 
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
+    // -----------------------------------------------------------------
+    //  Interaction
+    // -----------------------------------------------------------------
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e) override;
     void mousePressEvent(QGraphicsSceneMouseEvent* e) override;
     void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
     void hoverLeaveEvent(QGraphicsSceneHoverEvent* e) override;
+
+    // -----------------------------------------------------------------
+    //  API métier
+    // -----------------------------------------------------------------
+    void updatePosition();
+    void setFrom(const double x, const double y);
+    void setTo(const double x, const double y);
+    void setGreyedOut(bool greyedOut);
 
     QRectF getBubbleRect(const QString& text = QString()) const;
     QSizeF getBubbleSize(const QString& text = QString()) const;
     QString getBubbleText() const;
 
     void setData(const QJsonObject& c);
-    QJsonObject& data();
+    inline QJsonObject& data() { return mData; }
 
-    EventItem* findEventItemWithJsonId(const int id);
-    PhaseItem* findPhaseItemWithJsonId(const int id);
+    EventItem* findEventItemWithJsonId(const int id) const;
+    PhaseItem* findPhaseItemWithJsonId(const int id) const;
 
-public:
-    TypeFrom mTypeFrom;
+    // -----------------------------------------------------------------
+    //  Données publiques (pour un accès rapide depuis la scène)
+    // -----------------------------------------------------------------
+    TypeFrom    mTypeFrom;
     QJsonObject mData;
-    AbstractScene* mScene;
-
+    AbstractScene* mScene = nullptr;
     QPointF mStart;
     QPointF mEnd;
-
     QPointF mStartContact;
     QPointF mEndContact;
-
-    qreal mBubbleWidth;
-    qreal mBubbleHeight;
-
-    bool mEditing;
-    bool mShowDelete;
-
-    bool mGreyedOut;
+    qreal   mBubbleWidth  = 0;
+    qreal   mBubbleHeight = 0;
+    bool    mEditing   = false;
+    bool    mShowDelete = false;
+    bool    mGreyedOut = false;
 };
 
-#endif
+#endif // ARROWITEM_H

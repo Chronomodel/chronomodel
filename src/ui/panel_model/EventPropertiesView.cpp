@@ -544,7 +544,7 @@ const QJsonObject& EventPropertiesView::getEvent()
 void EventPropertiesView::updateEventName()
 {
     mEventObj[STATE_NAME] = mNameEdit->text();
-    MainWindow::getInstance()->updateEvent(mEventObj, tr("Event name updated"));
+    MainWindow::getInstance()->updateEvent(mEventObj, Project::ReasonId::EventNameUpdated);
 
 }
 
@@ -553,7 +553,7 @@ void EventPropertiesView::updateEventColor(const QColor &color)
     mEventObj[STATE_COLOR_RED] = color.red();
     mEventObj[STATE_COLOR_GREEN] = color.green();
     mEventObj[STATE_COLOR_BLUE] = color.blue();
-    MainWindow::getInstance()->updateEvent(mEventObj, tr("Event color updated"));
+    MainWindow::getInstance()->updateEvent(mEventObj, Project::ReasonId::EventColorUpdated);
 }
 
 void EventPropertiesView::updateEventSampler(int index)
@@ -575,7 +575,7 @@ void EventPropertiesView::updateEventSampler(int index)
     }
 
     mEventObj[STATE_EVENT_SAMPLER] = sp;
-    MainWindow::getInstance()->updateEvent(mEventObj, tr("Event method updated"));
+    MainWindow::getInstance()->updateEvent(mEventObj, Project::ReasonId::EventMethodUpdated);
 }
 
 // Event Known Properties
@@ -588,7 +588,7 @@ void EventPropertiesView::updateKnownFixed(const QString& text)
         return;
 
     mEventObj[STATE_EVENT_KNOWN_FIXED] = fixedValue;
-    MainWindow::getInstance()->updateEvent(mEventObj, tr("Bound fixed value updated"));
+    MainWindow::getInstance()->updateEvent(mEventObj, Project::ReasonId::BoundCreated);// tr("Bound fixed value updated"));
 
 }
 
@@ -596,7 +596,7 @@ void EventPropertiesView::updateKnownFixed(const QString& text)
 void EventPropertiesView::updateCurveNode(bool isNode)
 {
     mEventObj[STATE_EVENT_POINT_TYPE] = isNode? Event::PointType::eNode : Event::PointType::ePoint;
-    MainWindow::getInstance()->updateEvent(mEventObj, "Event Node updated");
+    MainWindow::getInstance()->updateEvent(mEventObj, Project::ReasonId::EventNodeUpdated);
 }
 
 void EventPropertiesView::updateEventXInc()
@@ -610,19 +610,19 @@ void EventPropertiesView::updateEventXInc()
     } else
         mEventObj[STATE_EVENT_X_INC_DEPTH] = QLocale().toDouble(mX_IncEdit->text());
 
-    MainWindow::getInstance()->updateEvent(mEventObj, "Event X-Inc updated");
+    MainWindow::getInstance()->updateEvent(mEventObj, Project::ReasonId::EventXIncUpdated);
 }
 
 void EventPropertiesView::updateEventYDec()
 {
     mEventObj[STATE_EVENT_Y_DEC] = QLocale().toDouble(mY_DecEdit->text());
-    MainWindow::getInstance()->updateEvent(mEventObj, "Event Y-Dec updated");
+    MainWindow::getInstance()->updateEvent(mEventObj, Project::ReasonId::EventYDecUpdated);
 }
 
 void EventPropertiesView::updateEventZF()
 {
     mEventObj[STATE_EVENT_Z_F] = QLocale().toDouble(mZ_IntEdit->text());
-    MainWindow::getInstance()->updateEvent(mEventObj, "Event Z-F updated");
+    MainWindow::getInstance()->updateEvent(mEventObj, Project::ReasonId::EventZFUpdated);
 }
 
 void EventPropertiesView::updateEventSXInc()
@@ -636,19 +636,19 @@ void EventPropertiesView::updateEventSXInc()
     } else
        mEventObj[STATE_EVENT_SX_ALPHA95_SDEPTH] = QLocale().toDouble(mS_X_IncEdit->text());
 
-    MainWindow::getInstance()->updateEvent(mEventObj, "Event S X-Inc updated");
+    MainWindow::getInstance()->updateEvent(mEventObj, Project::ReasonId::EventSXIncUpdated);
 }
 
 void EventPropertiesView::updateEventSYDec()
 {
     mEventObj[STATE_EVENT_SY] = QLocale().toDouble(mS_Y_Edit->text());
-    MainWindow::getInstance()->updateEvent(mEventObj, "Event S Y updated");
+    MainWindow::getInstance()->updateEvent(mEventObj, Project::ReasonId::EventSYUpdated);
 }
 
 void EventPropertiesView::updateEventSZF()
 {
     mEventObj[STATE_EVENT_SZ_SF] = QLocale().toDouble(mS_Z_IntEdit->text());
-    MainWindow::getInstance()->updateEvent(mEventObj, "Event S Z-F updated");
+    MainWindow::getInstance()->updateEvent(mEventObj, Project::ReasonId::EventSZFUpdated);
 }
 
 void EventPropertiesView::updateKnownGraph()

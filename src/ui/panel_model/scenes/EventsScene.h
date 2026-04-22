@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -61,7 +61,8 @@ public:
     EventsScene(QGraphicsView* view, QObject* parent = nullptr);
     virtual ~EventsScene();
 
-    void sendUpdateProject(const QString& reason, bool notify, bool async);
+    //void sendUpdateProject(const QString& reason, bool notify, bool async);
+    void sendUpdateProject(const Project::ReasonId id, bool notify, bool async);
 
     HelpWidget* getHelpView();
     void showHelp(bool show);
@@ -125,7 +126,7 @@ signals:
     void eventDoubleClicked(AbstractItem* item);
     void noSelection();
     void eventsAreSelected();
-    void eventsAreModified(const QString& reason, bool notify, bool storeUndoCommand);
+    void eventsAreModified(const Project::ReasonId id, bool notify, bool storeUndoCommand);
 
 private:
     HelpWidget* mHelpView;

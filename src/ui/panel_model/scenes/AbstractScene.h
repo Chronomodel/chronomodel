@@ -42,6 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 #include <QGraphicsScene>
+#include "Project.h"
 
 class AbstractItem;
 class ArrowItem;
@@ -88,7 +89,9 @@ public:
     virtual void itemMoved(AbstractItem* item, QPointF newPos, bool merging);
     virtual void itemReleased(AbstractItem* item, QGraphicsSceneMouseEvent* e);
 
-    virtual void sendUpdateProject(const QString& reason, bool notify, bool async) = 0;
+   // virtual void sendUpdateProject(const QString& reason, bool notify, bool async) = 0;
+    virtual void sendUpdateProject(const Project::ReasonId reason, bool notify, bool async) = 0;
+
 
     void updateConstraintsPos(AbstractItem* movedItem, const QPointF& newPos);
 
