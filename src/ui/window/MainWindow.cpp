@@ -994,7 +994,6 @@ void MainWindow::rebuildExportCurve()
 
     // Display Rebuild Window
 #ifdef WITHCURVEFILTER
-    //std::pair<double, double> minMaxPFilter (curveModel->mPosteriorMeanG.gx.mapGP.rangeY.first*10, curveModel->mPosteriorMeanG.gx.mapGP.rangeY.second*10);
     std::pair<double, double> minMaxPFilter (-INFINITY, +INFINITY);
 
     RebuildCurveDialog qDialog = RebuildCurveDialog(curveModel->getCurvesName(), &tabMinMax, &tabMinMaxGP, &minMaxPFilter, mapSizeXY);
@@ -1010,7 +1009,8 @@ void MainWindow::rebuildExportCurve()
         const int YGrid = newMapSizeXY.second;
         tabMinMax = qDialog.getYTabMinMax();
         tabMinMaxGP = qDialog.getYpTabMinMax();
-#ifdef DEBUG
+
+#ifdef WITHCURVEFILTER
         minMaxPFilter = qDialog.getYpMinMaxFilter();
 #endif
         // ____
@@ -1020,12 +1020,12 @@ void MainWindow::rebuildExportCurve()
         // init Posterior MeanG and map
 
         PosteriorMeanGComposante clearCompo;
-        clearCompo.mapG = CurveMap (YGrid, XGrid); // Attention invesion ->explicit CurveMap(unsigned row, unsigned col)
+        clearCompo.mapG = CurveMap (YGrid, XGrid); // Attention inversion ->explicit CurveMap(unsigned row, unsigned col)
         clearCompo.mapG.setRangeX(curveModel->mSettings.mTmin, curveModel->mSettings.mTmax);
         clearCompo.mapG.setMinValue(+std::numeric_limits<double>::max());
         clearCompo.mapG.setMaxValue(0);
 
-        clearCompo.mapGP = CurveMap (YGrid, XGrid); // Attention invesion ->explicit CurveMap(unsigned row, unsigned col)
+        clearCompo.mapGP = CurveMap (YGrid, XGrid); // Attention inversion ->explicit CurveMap(unsigned row, unsigned col)
         clearCompo.mapGP.setRangeX(curveModel->mSettings.mTmin, curveModel->mSettings.mTmax);
         clearCompo.mapGP.setMinValue(+std::numeric_limits<double>::max());
         clearCompo.mapGP.setMaxValue(0);
@@ -1056,27 +1056,27 @@ void MainWindow::rebuildExportCurve()
             }
         }
 
-        int totalIterAccepted = 1;
+        int totalIterDisplay = 1;
         if (!curveModel->compute_Y) {
             for (auto &splineXYZ : runTrace) {
 #ifdef WITHCURVEFILTER
 
-                curveModel->memo_PosteriorG_filtering(meanG.gx, splineXYZ.splineX, totalIterAccepted, minMaxPFilter );
+                curveModel->memo_PosteriorG_filtering(meanG.gx, splineXYZ.splineX, totalIterDisplay, minMaxPFilter );
 #else
-                curveModel->memo_PosteriorG(meanG.gx, splineXYZ.splineX,  totalIterAccepted );
+                curveModel->memo_PosteriorG(meanG.gx, splineXYZ.splineX,  totalIterDisplay );
 #endif
 
-                totalIterAccepted++;
+                totalIterDisplay++;
             }
 
         } else {
             for (auto &splineXYZ : runTrace) {
 #if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5
-                curveModel->memo_PosteriorG_3D_335(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted );
+                curveModel->memo_PosteriorG_3D_335(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterDisplay );
 #else
-                curveModel->memo_PosteriorG_3D(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted );
+                curveModel->memo_PosteriorG_3D(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterDisplay );
 #endif
-                totalIterAccepted++;
+                totalIterDisplay++;
             }
         }
 
@@ -1113,26 +1113,27 @@ void MainWindow::rebuildExportCurve()
                 }
             }
 
-            int totalIterAccepted = 1;
+            totalIterDisplay = 1;
             if (!curveModel->compute_Y) {
                 for (auto &splineXYZ : runTraceByChain) {
 
 #ifdef WITHCURVEFILTER
-                    curveModel->memo_PosteriorG_filtering(meanGByChain.gx, splineXYZ.splineX, totalIterAccepted, minMaxPFilter );
+                    curveModel->memo_PosteriorG_filtering(meanGByChain.gx, splineXYZ.splineX, totalIterDisplay, minMaxPFilter );
 #else
                     curveModel->memo_PosteriorG(meanGByChain.gx, splineXYZ.splineX, totalIterAccepted );
 #endif
-                    totalIterAccepted++;
+                    totalIterDisplay++;
                 }
+                curveModel->mChains[i].mIterDisplay = totalIterDisplay - 1;
 
             } else {
                 for (auto &splineXYZ : runTraceByChain) {
 #if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5
-                    curveModel->memo_PosteriorG_3D_335(meanGByChain, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted );
+                    curveModel->memo_PosteriorG_3D_335(meanGByChain, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterDisplay );
 #else
-                    curveModel->memo_PosteriorG_3D(meanGByChain, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterAccepted );
+                    curveModel->memo_PosteriorG_3D(meanGByChain, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterDisplay );
 #endif
-                    totalIterAccepted++;
+                    totalIterDisplay++;
                 }
             }
 

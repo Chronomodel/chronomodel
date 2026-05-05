@@ -67,6 +67,7 @@ struct ChainSpecs
     int mThinningInterval = MCMC_THINNING_INTERVAL_DEFAULT;
 
     int mRealyAccepted = 0;
+    int mIterDisplay = 0; // nombre d'iterations affihchées, peut changer après le filtre sur courbe
     double mMixingLevel = MCMC_MIXING_DEFAULT;
 
     qint64 mInitElapsedTime = 0;
