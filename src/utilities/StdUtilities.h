@@ -447,6 +447,7 @@ T vector_interpolate_idx_for_value(const T value, const Container<T> &vector, de
  * @return Un indice (type @p IndexT) où la valeur serait située.
  *         Si la valeur est hors du domaine, on renvoie 0 ou size‑1.
  */
+/*
 template <class Container,
          class ValueT = typename Container::value_type,
          class IndexT = double>
@@ -533,6 +534,97 @@ IndexT interpolate_index(const ValueT& value,
     // Calcul de l’indice réel (peut être non entier)
     const IndexT idx = static_cast<IndexT>(left) +
                        static_cast<IndexT>(t) * static_cast<IndexT>(right - left);
+
+    return idx;
+}
+*/
+
+template <class Container,
+         class ValueT = typename Container::value_type,
+         class IndexT = double>
+IndexT interpolate_index(const ValueT& value,
+                         const Container& data,
+                         std::size_t idxInfStart = 0,
+                         std::size_t idxSupStart = static_cast<std::size_t>(-1))
+{
+    static_assert(std::is_floating_point<ValueT>::value,
+                  "ValueT must be a floating‑point type");
+    static_assert(std::is_arithmetic<IndexT>::value,
+                  "IndexT must be an arithmetic type");
+
+    const std::size_t n = data.size();
+    assert(n > 0 && "Container must not be empty");
+
+    // -----------------------------------------------------------------
+    // Gestion des bornes du domaine
+    // -----------------------------------------------------------------
+    if (value <= data.front())
+        return static_cast<IndexT>(0);
+    if (value >= data.back())
+        return static_cast<IndexT>(n - 1);
+
+    // -----------------------------------------------------------------
+    // Initialisation des indices de recherche
+    // -----------------------------------------------------------------
+    std::size_t idxInf = idxInfStart;
+    std::size_t idxSup = (idxSupStart == static_cast<std::size_t>(-1))
+                             ? n - 1
+                             : idxSupStart;
+
+    // -----------------------------------------------------------------
+    // Recherche binaire (dichotomie)
+    // -----------------------------------------------------------------
+    while (idxSup - idxInf > 1) {
+        const std::size_t idxMid = idxInf + (idxSup - idxInf) / 2;
+        const ValueT      valMid = data[idxMid];
+
+        if (value < valMid) {
+            idxSup = idxMid;
+        } else if (value > valMid) {
+            idxInf = idxMid;
+        } else {                     // valeur exactement égale à valMid
+            idxInf = idxMid;
+            idxSup = idxMid;
+            break;
+        }
+    }
+
+    // -----------------------------------------------------------------
+    // Epsilon adapté à la précision du type flottant
+    // -----------------------------------------------------------------
+    const ValueT eps = std::numeric_limits<ValueT>::epsilon() *
+                       std::max<ValueT>({std::abs(value),
+                                         std::abs(data[idxInf]),
+                                         std::abs(data[idxSup])});
+
+    // -----------------------------------------------------------------
+    // Avancer idxInf jusqu'au bord droit de son plateau
+    // (la dichotomie peut laisser idxInf au milieu d'une zone plate)
+    // La dichotomie garantit déjà data[idxSup] > value, il n'y a donc
+    // pas besoin de corriger idxSup.
+    // -----------------------------------------------------------------
+    while (idxInf + 1 < idxSup &&
+           std::abs(data[idxInf + 1] - data[idxInf]) <= eps)
+        ++idxInf;
+
+    // -----------------------------------------------------------------
+    // Interpolation linéaire
+    // -----------------------------------------------------------------
+    const ValueT vL = data[idxInf];
+    const ValueT vR = data[idxSup];
+
+    // Sécurité : si les deux bornes sont identiques (plateau total)
+    // on renvoie le centre
+    if (std::abs(vR - vL) <= eps)
+        return static_cast<IndexT>(idxInf + idxSup) / static_cast<IndexT>(2);
+
+    // t ∈ [0,1] : position relative de value entre vL et vR
+    const ValueT t = (value - vL) / (vR - vL);
+
+    // Indice réel interpolé
+    const IndexT idx = static_cast<IndexT>(idxInf) +
+                       static_cast<IndexT>(t) *
+                           static_cast<IndexT>(idxSup - idxInf);
 
     return idx;
 }
@@ -1569,9 +1661,10 @@ static double iqr_vec(std::vector<double> x) {
 }
 
 inline double scale_factor(const std::vector<double>& x) {
-    double s  = std::sqrt(var_vec(x));
-    double iq = iqr_vec(x) / 1.349;
-    return std::min(s, iq);
+    const double s  = std::sqrt(var_vec(x));
+    const double iq = iqr_vec(x) / 1.349;
+    // Si IQR nul, on replie sur l'écart-type seul
+    return (iq > 0.0) ? std::min(s, iq) : s;
 }
 
 // ================================================================
@@ -1612,19 +1705,19 @@ inline double sj_equation(double h,
                           const std::vector<double>& x,
                           double alpha2,
                           double c1,
-                          int    M = 1024)          // ← ajout
+                          int    M = 1024)
 {
     const double h_pilot = alpha2 * std::pow(h, 5.0 / 7.0);
-
     if (h_pilot <= 0.0)
         return std::numeric_limits<double>::quiet_NaN();
 
-    const double denom = S4_fft(x, h_pilot, M);     // ← O(n log n)
+    const double denom    = S4_fft(x, h_pilot, M);
+    const double absDenom = std::abs(denom);
 
-    if (denom <= 0.0 || std::abs(denom) < 1e-15)
+    if (absDenom < 1e-15)
         return std::numeric_limits<double>::quiet_NaN();
 
-    return h - std::pow(c1 / denom, 0.2);
+    return h - std::pow(c1 / absDenom, 0.2);
 }
 
 // Bisection pour résoudre l'équation STE (comme uniroot dans R)

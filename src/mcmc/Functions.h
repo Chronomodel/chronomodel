@@ -87,6 +87,7 @@ struct TraceStat
     type_data max      = static_cast<type_data>(0.0);
     type_data mean     = static_cast<type_data>(0.0);
     type_data std      = static_cast<type_data>(0.0);
+    type_data bdw      = static_cast<type_data>(0.0);
     Quartiles quartiles{};
 };
 // ------------------------------------------------------------------

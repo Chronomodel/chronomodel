@@ -740,9 +740,12 @@ TraceStat traceStatistic(const std::vector<type_data> &trace)
         result.min = 0;
         result.max = 0;
 
+        result.bdw = 0;
+
         result.quartiles.Q1 = 0;
         result.quartiles.Q2 = 0;
         result.quartiles.Q3 = 0;
+
 #ifdef DEBUG
         std::cout << "[traceStatistic] trace is empty " << std::endl;
 #endif
@@ -757,6 +760,8 @@ TraceStat traceStatistic(const std::vector<type_data> &trace)
         result.min = v;
         result.max = v;
 
+        result.bdw = 0;
+
         result.quartiles.Q1 = v;
         result.quartiles.Q2 = v;
         result.quartiles.Q3 = v;
@@ -769,6 +774,17 @@ TraceStat traceStatistic(const std::vector<type_data> &trace)
     auto minMax = std::minmax_element(trace.begin(), trace.end());
     result.min = *minMax.first;
     result.max = *minMax.second;
+
+
+    // double h_sj_dpi = bw_SJ_dpi(dataSrc);   // rapide
+    double h_sj_ste = bw_SJ_ste(trace);   // plus précis
+    //h = h_sj_ste;
+    // std::cout << "SJ-DPI = " << h_sj_dpi << "\n";
+    //std::cout << "SJ-STE = " << h_sj_ste << "\n";
+    double coef_Si_equi = h_sj_ste / (result.std * pow(trace.size(), -0.2) );
+
+    //std::cout <<" (h_sj_ste) Bandwidth  = " << h_sj_ste<< " coef equivalent=" << coef_Si_equi  << '\n';
+    result.bdw = coef_Si_equi;
 
     result.quartiles = quartilesForTrace(trace);
     return result;
@@ -798,7 +814,7 @@ QString FunctionStatToString(const FunctionStat &analysis)
                                                                          stringForLocal(analysis.std)) + "<br>";
         result += QObject::tr("Q1 = %1  ;  Q2 = %2  ;  Q3 = %3").arg( stringForLocal(analysis.quartiles.Q1),
                                                                      stringForLocal(analysis.quartiles.Q2),
-                                                                     stringForLocal(analysis.quartiles.Q3));
+                                                                     stringForLocal(analysis.quartiles.Q3));//+ "<br>";
 
     }
 
@@ -822,6 +838,10 @@ QString densityAnalysisToString(const DensityAnalysis &analysis)
                                                                                stringForLocal(analysis.traceAnalysis.quartiles.Q3)) + "<br>";
         result += QObject::tr("min = %1  ;  max  = %2 ").arg( stringForLocal(analysis.traceAnalysis.min),
                                                              stringForLocal(analysis.traceAnalysis.max)) + "<br>";
+
+        result += QObject::tr("Sheather-Jones bandwidth = %1  ").arg( stringForLocal(analysis.traceAnalysis.bdw))+ "<br>";
+
+
         result += "<br><i>" + QObject::tr("Density Stat.") + "</i><br>";
     }
 

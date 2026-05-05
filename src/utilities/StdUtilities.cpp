@@ -1981,10 +1981,6 @@ double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter )
     const double g1 = 1.24 * sigma * std::pow((double)n, -1.0/7.0);
     const double g2 = 1.23 * sigma * std::pow((double)n, -1.0/9.0);
 
-    //const double t44 = S4(x, g1);
-    //const double t24 = S6(x, g2);
-
-
     const int M = chooseFFtSize(n);
     const double t44 = S4_fft(x, g1, M);
     const double t24 = S6_fft(x, g2, M);
@@ -1995,7 +1991,7 @@ double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter )
     const double alpha2 = 1.357 * std::pow(std::abs(t24 / t44), 1.0/7.0);
     const double c1     = 1.0 / (2.0 * std::sqrt(M_PI) * n);
 
-    auto eq = [&](double h) { return sj_equation(h, x, alpha2, c1); };
+    auto eq = [&](double h) { return sj_equation(h, x, alpha2, c1, M); };
 
     double lo = 0.1 * sigma * std::pow((double)n, -0.2);
     double hi = 2.0 * sigma * std::pow((double)n, -0.2);
@@ -2015,3 +2011,122 @@ double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter )
         return 0.9 * sigma * std::pow((double)n, -0.2);
     return result;
 }
+
+
+/*
+double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
+{
+    const std::size_t n  = x.size();
+    const double      nd = static_cast<double>(n);
+    const double sigma   = scale_factor(x);
+    const double h_ref   = 0.9 * sigma * std::pow(nd, -0.2);
+    const int    M       = chooseFFtSize(n);
+
+    // -----------------------------------------------------------------
+    // Pilotes initiaux (S4 et S6 lancés en parallèle)
+    // -----------------------------------------------------------------
+    double t44 = 0.0, t24 = 0.0;
+
+#pragma omp parallel sections
+    {
+#pragma omp section
+        { t44 = S4_fft(x, 1.24 * sigma * std::pow(nd, -1.0 / 7.0), M); }
+
+#pragma omp section
+        { t24 = S6_fft(x, 1.23 * sigma * std::pow(nd, -1.0 / 9.0), M); }
+    }
+
+    if (std::abs(t44) < 1e-15 || std::abs(t24) < 1e-15)
+        return h_ref;
+
+    const double alpha2 = 1.357 * std::pow(std::abs(t24 / t44), 1.0 / 7.0);
+    const double c1     = 1.0 / (2.0 * std::sqrt(M_PI) * nd);
+
+    auto eq = [&](double h) { return sj_equation(h, x, alpha2, c1, M); };
+
+    // -----------------------------------------------------------------
+    // Étape 1 : balayage grossier (10 points) — parallélisé
+    // -----------------------------------------------------------------
+    const double log_lo = std::log(1e-4 * h_ref);
+    const double log_hi = std::log(10.0 * h_ref);
+
+    constexpr int N_COARSE = 10;
+    std::array<double, N_COARSE + 1> cgrid, cevals;
+
+    for (int k = 0; k <= N_COARSE; k++)
+        cgrid[k] = std::exp(log_lo + k * (log_hi - log_lo) / N_COARSE);
+
+#pragma omp parallel for schedule(dynamic)
+    for (int k = 0; k <= N_COARSE; k++)
+        cevals[k] = eq(cgrid[k]);
+
+    // Collecter les intervalles suspects (changement de signe)
+    std::vector<std::pair<double,double>> coarse_brackets;
+    for (int k = 0; k < N_COARSE; k++) {
+        if (std::isnan(cevals[k]) || std::isnan(cevals[k + 1])) continue;
+        if (cevals[k] * cevals[k + 1] < 0.0)
+            coarse_brackets.push_back({cgrid[k], cgrid[k + 1]});
+    }
+
+    if (coarse_brackets.empty())
+        return h_ref;
+
+    // -----------------------------------------------------------------
+    // Étape 2 : raffinement local (10 points par intervalle suspect)
+    // -----------------------------------------------------------------
+    std::vector<std::pair<double,double>> fine_brackets;
+
+    for (auto& [a, b] : coarse_brackets) {
+        constexpr int N_FINE = 10;
+        std::array<double, N_FINE + 1> fgrid, fevals;
+
+        const double flog_lo = std::log(a);
+        const double flog_hi = std::log(b);
+
+        for (int k = 0; k <= N_FINE; k++)
+            fgrid[k] = std::exp(flog_lo + k * (flog_hi - flog_lo) / N_FINE);
+
+#pragma omp parallel for schedule(dynamic)
+        for (int k = 0; k <= N_FINE; k++)
+            fevals[k] = eq(fgrid[k]);
+
+        for (int k = 0; k < N_FINE; k++) {
+            if (std::isnan(fevals[k]) || std::isnan(fevals[k + 1])) continue;
+            if (fevals[k] * fevals[k + 1] < 0.0)
+                fine_brackets.push_back({fgrid[k], fgrid[k + 1]});
+        }
+    }
+
+    if (fine_brackets.empty())
+        return h_ref;
+
+    // -----------------------------------------------------------------
+    // Étape 3 : bissection sur chaque intervalle fin — parallélisée
+    // -----------------------------------------------------------------
+    const int nb = static_cast<int>(fine_brackets.size());
+    std::vector<double> roots(nb, std::numeric_limits<double>::quiet_NaN());
+
+#pragma omp parallel for schedule(dynamic)
+    for (int i = 0; i < nb; i++) {
+        const double root = bisect(eq, fine_brackets[i].first,
+                                   fine_brackets[i].second, tol, max_iter);
+        if (!std::isnan(root) && root > 0.0)
+            roots[i] = root;
+    }
+
+    // Sélection de la racine la plus proche de h_ref en log-scale
+    double best      = std::numeric_limits<double>::quiet_NaN();
+    double best_dist = std::numeric_limits<double>::max();
+
+    for (double root : roots) {
+        if (std::isnan(root)) continue;
+        const double dist = std::abs(std::log(root / h_ref));
+        if (dist < best_dist) {
+            best_dist = dist;
+            best      = root;
+        }
+    }
+
+    return std::isnan(best) ? h_ref : best;
+}
+*/

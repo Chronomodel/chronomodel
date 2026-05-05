@@ -996,7 +996,7 @@ QString ModelUtilities::curveResultsHTML(const std::shared_ptr<ModelCurve> model
     QString text;
 
     text += line( textBold(textGreen(QObject::tr("Curve"))) );
-    //text += "<br>";
+
     text += line(textGreen(QObject::tr(" - Number of Ref. points = %1").arg(model->mEvents.size())));
 
     if (model->mLambdaSpline.mSamplerProposal == MHVariable::eFixe  && model->mCurveSettings.mLambdaSplineType != CurveSettings::eInterpolation) {
@@ -1006,35 +1006,69 @@ QString ModelUtilities::curveResultsHTML(const std::shared_ptr<ModelCurve> model
         text += line(textGreen(QObject::tr("- Lambda Spline; Interpolation Fixed value = %1").arg(QString::number(0))));
 
     }else {
-        //text += line(textGreen(QObject::tr("- Mean of the log10 of Smoothing = %1").arg(stringForLocal(model->mLambdaSpline.mResults.funcAnalysis.mean))));
-        text += "<br>";
+         text += "<br>";
         text += lambdaResultsHTML(model);
     }
 
+    const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
+
     if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Depth) {
         text += "<br>" + line( textBold(textGreen(QObject::tr("Positive curves accepted with Threshold : %1").arg(stringForLocal(model->mCurveSettings.mThreshold)))));
-        const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
-        unsigned totalPositvIter = 0;
-        unsigned totalPequiredCurve = 0;
+        //const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
+        unsigned totalIterDisplay = 0;
+        unsigned totalRequiredCurve = 0;
         float rate;
 
         int i = 0;
         for (const auto &ch : model->mChains) {
-            const unsigned positvIter= ch.mRealyAccepted;
-            totalPositvIter += positvIter;
+            const unsigned iterDisplay= ch.mIterDisplay;
+            totalIterDisplay += iterDisplay;
             const unsigned requiredCurveChain = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
-            totalPequiredCurve += requiredCurveChain;
-            rate = (float)positvIter/(float)requiredCurve * 100.;
+            totalRequiredCurve += requiredCurveChain;
+            rate = (double)iterDisplay/(double)requiredCurve * 100.;
             text += line(textGreen(QObject::tr("- Accepted Curves for Chain %1 : %2 / %3 = %4 % ").
-                                  arg(QString::number(++i), QString::number(positvIter),
+                                  arg(QString::number(++i), QString::number(iterDisplay),
                                       QString::number(requiredCurve), stringForLocal(rate))) );
 
         }
-        rate  = (float)totalPositvIter/(float)totalPequiredCurve * 100.;
+        rate  = (double)totalIterDisplay/(double)totalRequiredCurve * 100.;
         text += line(textGreen( QObject::tr("- Accepted Curves for All Chain : %2 / %3 = %4 % ").
-                              arg(QString::number(totalPositvIter),
-                                  QString::number(totalPequiredCurve), stringForLocal(rate) ) ));
+                              arg(QString::number(totalIterDisplay),
+                                  QString::number(totalRequiredCurve), stringForLocal(rate) ) ));
+    } else {
+        // Vérifier si au moins une chaîne a mIterDisplay différent de mRealyAccepted
+        bool showDisplayInfo = false;
+        for (const auto &ch : model->mChains) {
+            if (ch.mIterDisplay != ch.mRealyAccepted) {
+                showDisplayInfo = true;
+                break;
+            }
+        }
+
+        if (showDisplayInfo){
+            unsigned totalIterDisplay = 0;
+            unsigned totalRequiredCurve = 0;
+            double rate;
+
+            int i = 0;
+            for (const auto &ch : model->mChains) {
+                const unsigned iterDisplay= ch.mIterDisplay;
+                totalIterDisplay += iterDisplay;
+                const unsigned requiredCurveChain = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
+                totalRequiredCurve += requiredCurveChain;
+                rate = (double)iterDisplay/(double)requiredCurve * 100.;
+                text += line(textGreen(QObject::tr("- Display Curves for Chain %1 : %2 / %3 = %4 % ").
+                                       arg(QString::number(++i), QString::number(iterDisplay),
+                                           QString::number(requiredCurve), stringForLocal(rate))) );
+
+            }
+            rate  = (double)totalIterDisplay/(double)totalRequiredCurve * 100.;
+            text += line(textGreen( QObject::tr("- Display Curves for All Chain : %2 / %3 = %4 % ").
+                                   arg(QString::number(totalIterDisplay),
+                                       QString::number(totalRequiredCurve), stringForLocal(rate) ) ));
+        }
     }
+
     text += "<hr>";
     return text;
 }
