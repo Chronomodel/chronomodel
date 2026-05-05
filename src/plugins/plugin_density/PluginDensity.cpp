@@ -65,7 +65,7 @@ PluginDensity::~PluginDensity()
 }
 
 // Likelihood
-long double PluginDensity::getLikelihood(const double t, const QJsonObject &data)
+long double PluginDensity::getLikelihood(const double t, const QJsonObject &data) const noexcept
 {
     const QString curveName = data.value(DATE_DENSITY_CURVE_STR).toString().toLower();
     if (mRefCurves.constFind(curveName) != mRefCurves.constEnd()) {
@@ -77,10 +77,10 @@ long double PluginDensity::getLikelihood(const double t, const QJsonObject &data
 
 }
 
-QPair<long double, long double> PluginDensity::getLikelihoodArg(const double t, const QJsonObject &data)
+std::pair<long double, long double> PluginDensity::getLikelihoodArg(const double t, const QJsonObject &data) const noexcept
 {
     const double value = getLikelihood(t, data);
-    return qMakePair(1., log(value));
+    return qMakePair(1.0L, log(value));
 }
     
 // Properties
@@ -148,7 +148,7 @@ QString PluginDensity::getDateDesc(const Date* date) const
 
 }
 
-QString PluginDensity::getDateRefCurveName(const Date* date)
+QString PluginDensity::getDateRefCurveName(const Date* date) const
 {
     Q_ASSERT(date);
     const QJsonObject &data = date->mData;
@@ -183,7 +183,7 @@ qsizetype PluginDensity::csvMinColumns() const{
  * No name; Density; New Data; gate [20 :: 40].csv;none
  * Density; Density; lognorm; lognorm(3 :: 2) _0to20 50pts.csv;none
  */
-QJsonObject PluginDensity::fromCSV(const QStringList &list, const QLocale &csvLocale)
+QJsonObject PluginDensity::fromCSV(const QStringList &list, const QLocale &csvLocale) const
 {
     (void) csvLocale;
     QJsonObject json;
@@ -290,41 +290,54 @@ RefCurve PluginDensity::loadRefFile(QFileInfo refFile)
         }
         curve.mMinStep = step;
 
-        curve.mDataMean = equal_areas(curve.mDataMean, 1.);
+        curve.mDataMean = equal_areas(curve.mDataMean, 1.0);
     }
 
-    curve.mDataMeanMin = 0.;
-    curve.mDataMeanMax = 0.;
+    curve.mDataMeanMin = 0.0;
+    curve.mDataMeanMax = 0.0;
 
-    curve.mDataErrorMin = 0.;
-    curve.mDataErrorMax = 0.;
+    curve.mDataErrorMin = 0.0;
+    curve.mDataErrorMax = 0.0;
 
-    curve.mDataSupMin = 0.;
-    curve.mDataSupMax = 0.;
+    curve.mDataSupMin = 0.0;
+    curve.mDataSupMax = 0.0;
 
-    curve.mDataInfMin = 0.;
-    curve.mDataInfMax = 0.;
+    curve.mDataInfMin = 0.0;
+    curve.mDataInfMax = 0.0;
 
     return curve;
 }
 
-double PluginDensity::getMinStepRefsCurve(const QJsonObject &data) const
+double PluginDensity::getMinStepRefsCurve(const QJsonObject &data)
 {
-    const QString ref_curve = data.value(DATE_DENSITY_CURVE_STR).toString().toLower();
+    const QString refCurve = data.value(DATE_DENSITY_CURVE_STR).toString().toLower();
 
-    if (mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
-        return mRefCurves.value(ref_curve).mMinStep;
+
+    // ----- 1️⃣  Retrieve curve (single lookup, cache) -----
+    const RefCurve* curve = nullptr;
+    if (cacheCurvePtr() && cacheCurveName() == refCurve) {
+        curve = cacheCurvePtr();                     // cache hit
 
     } else {
-        return INFINITY;
+        auto it = mRefCurves.constFind(refCurve);
+        if (it == mRefCurves.constEnd()) {
+            qDebug() << "PluginDensity::getMinStepRefsCurve() unknown curve" << refCurve;
+            return INFINITY;
+        }
+        curve = &it.value();                         // no copy
+        setCacheCurveName(refCurve);
+        setCacheCurvePtr(curve);
     }
+
+    return curve->mMinStep;
+
 }
 // Reference Values & Errors
 double PluginDensity::getRefValueAt(const QJsonObject &data, const double &t)
 {
     (void)  data;
     (void) t;
-    return 0.;
+    return 0.0;
 }
 
 double PluginDensity::getRefErrorAt(const QJsonObject &data, const double &t, const QString mode)

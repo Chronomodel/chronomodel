@@ -103,7 +103,8 @@ public:
     QList<QStringList> getStats(const QLocale locale, const int precision, const bool withDateFormat = false);
     QList<QStringList> getPhasesTraces(QLocale locale, const bool withDateFormat = false);
     QList<QStringList> getPhaseTrace(size_t phaseIdx, const QLocale locale, const bool withDateFormat = false);
-    QList<QStringList> getEventsTraces(const QLocale locale, const bool withDateFormat = false);
+    // liste des chaines des Events pendant la partie acquisition.
+    QList<QStringList> getEventsTraces(const QLocale& locale, const bool withDateFormat = false) const noexcept;
 
     inline QStringList getCurvesName () const {return mCurveName;}
     inline QStringList getCurvesLongName () const {return mCurveLongName;}
@@ -160,8 +161,12 @@ public:
 
     virtual void generateCredibility(const double threshold);
     virtual void generateHPD(const double threshold);
+
+
     // Trace and Posterior density needed for this :
-    virtual void generateNumericalResults(const std::vector<ChainSpecs>& chains);
+    //virtual void generateNumericalResults(const std::vector<ChainSpecs>& chains); // obsolete
+    virtual void generateDensityNumericalResults(const std::vector<ChainSpecs>& chains);
+    virtual void generateTraceNumericalResults(const std::vector<ChainSpecs>& chains);
 
     void generateTempo(const size_t gridLength);
 
@@ -177,14 +182,8 @@ public:
     bool hasSelectedPhases();
 
 #pragma mark Loop
-    virtual void memo_accept(const unsigned i_chain);
+   // virtual void memo_accepted_state(const unsigned i_chain);
     virtual void initVariablesForChain();
-
-
-
-
-#pragma mark curve variables
-
 
 
 

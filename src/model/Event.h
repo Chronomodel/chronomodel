@@ -214,36 +214,58 @@ public:
     double getThetaMaxRecursive_v3(double defaultValue, const std::vector<Event* > &startEvents = std::vector<Event*>());
 
 #ifdef THETA_MIXING_KERNEL
-    virtual void updateTheta(const double tmin, const double tmax) {updateExpansionCollapse(tmin, tmax);};
-
+    //virtual void updateTheta(const double tmin, const double tmax) {updateTheta_v6(tmin, tmax);};
+     virtual bool updateTheta(const double tmin, const double tmax) {return updateTheta_v6_mixing_kernel(tmin, tmax);};
+    //virtual void updateTheta(const double tmin, const double tmax) {updateExpansionCollapse(tmin, tmax);};
 
 #else
-    virtual void updateTheta(const double tmin, const double tmax) {updateTheta_v3(tmin, tmax);};
+    virtual void updateTheta(const double tmin, const double tmax) {updateThetaPriorCDE(tmin, tmax);};
 #endif
+
 
     void updateTheta_v3(const double tmin, const double tmax);
 
 
     void updateTheta_v4(const double tmin, const double tmax);
 
-    void updateTheta_v4_mixing(const double tmin, const double tmax, const double rate_theta = 1.0);
+    /* // test avec mélange de densités
+      void updateTheta_v4_mixing(const double tmin, const double tmax, const double rate_theta = 1.0);
+      void updateTheta_v4_mixing0(const double tmin, const double tmax, const double rate_theta = 1.0);
+    */
 
-    void updateTheta_v4_mixing0(const double tmin, const double tmax, const double rate_theta = 1.0);
 #ifdef THETA_MIXING_KERNEL
-    void updateTheta_v6(const double tmin, const double tmax); // with mixing kernel
-
-    void updateExpansionCollapse(const double tmin, const double tmax);
+   // void updateTheta_v6(const double tmin, const double tmax);
+    void updateTheta_v6_Nummelin(const double tmin, const double tmax);
+    bool updateTheta_v6_mixing_kernel(const double tmin, const double tmax); // with mixing kernel
 #endif
+    // tempering update
+
+    // with no MH, no rateMH memo
+    void applyTheta_v6_regenering_with_tempering(const double tmin, const double tmax, const double T);
+
+    // with MH test, no rateMH memo
+    void applyTheta_v6_MH_Tempering(const double tmin, const double tmax, const double T);
+
+    void applyThetaProposal_v3(const double tmin, const double tmax);
+
+    void applyThetaPriorCDE(const double tmin, const double tmax);
+    void updateThetaPriorCDE(const double tmin, const double tmax);
+
+    /*obsolete
     void updateThetaAndTiSigma(const double tmin, const double tmax);// ne fonctionne pas
 
     void moveVarianceExpansionCollapse(const double tmin, const double tmax, const double alpha = 0.7);
-/*obsolete
+
     void updateTheta_v41(const double tmin, const double tmax, const double rate_theta = 1.);
     void updateTheta_v42(const double tmin, const double tmax, const double rate_theta = 1.);
     */
 
 
-    void updateS02();
+    void updateS02Theta();
+
+    void applyS02Theta(); // sans historique,
+    void applyS02Theta(double T); // sans historique, avec Tempering possible
+
     double h_S02(const double S02);
 
     void generateHistos(const std::vector<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);

@@ -422,7 +422,7 @@ void CurveSettingsView::save()
     auto project = getProject_ptr();
     QJsonObject stateNext = project->mState;
     stateNext[STATE_CURVE] = getSettings().toJson();
-    project->pushProjectState(stateNext, CURVE_SETTINGS_UPDATED_REASON, true);
+    project->pushProjectState(stateNext, Project::ReasonId::CurveSettingsUpdated, true);
     emit newProcess(mProcessTypeInput->currentText());
 }
 

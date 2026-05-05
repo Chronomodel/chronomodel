@@ -73,11 +73,8 @@ public:
     const std::shared_ptr<Project>& getProject();
     QJsonObject &getState() const;
 
-    inline void updateEvent(const QJsonObject &event, const QString &reason) {mProject->updateEvent(event, reason);};
+    inline void updateEvent(const QJsonObject &event, const Project::ReasonId id) {mProject->updateEvent(event, id);};
     QUndoStack* getUndoStack();
-
-   // bool undo_action;
-   // bool redo_action;
 
     QString getCurrentPath() const;
     void setCurrentPath(const QString& path);

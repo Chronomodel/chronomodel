@@ -40,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "StdUtilities.h"
 #include "StateKeys.h"
-#include "MainWindow.h"
+
 #include "GraphView.h"
 #include "AppSettings.h"
 
@@ -310,8 +310,6 @@ QList<int> QStringToQListInt(const QString &listStr, const QString &separator)
     QList<int> result;
     if (!listStr.isEmpty()) {
         QStringList list = listStr.split(separator);
-        //for (const auto& str : list)
-          //  result.push_back(str.toInt());
         result.reserve(list.size()); // Réserve de l'espace pour éviter des réallocations
 
         std::transform(list.begin(), list.end(), std::back_inserter(result),
@@ -324,9 +322,9 @@ std::vector<unsigned> QStringToStdVectorUnsigned(const QString &listStr, const Q
 {
     std::vector<unsigned> result;
     if (!listStr.isEmpty()) {
-        QStringList list = listStr.split(separator);
-        for (const auto& str : list)
-            result.push_back(str.toInt());
+        const QStringList list = listStr.split(separator);
+        for (auto i = 0 ; i < list.size(); i++)
+            result.push_back(list[i].toInt());
 
     }
     return result;
@@ -336,9 +334,9 @@ QList<unsigned> QStringToQListUnsigned(const QString &listStr, const QString &se
 {
     QList<unsigned> result;
     if (!listStr.isEmpty()) {
-        QStringList list = listStr.split(separator);
-        for (const auto& str : list)
-            result.push_back(str.toInt());
+        const QStringList list = listStr.split(separator);
+        for (auto i = 0 ; i < list.size(); i++)
+            result.push_back(list[i].toInt());
 
     }
     return result;
@@ -1001,6 +999,41 @@ void save_container_nullable(QDataStream& stream, const std::shared_ptr<std::vec
     }
 }
 
+/**
+ * @brief Sauvegarde le contenu d'un std::deque<bool> dans un QDataStream.
+ *
+ * @param stream  Le flux de données où écrire.
+ * @param data    Le deque<bool> à sauvegarder (passé par référence const).
+ *
+ * @throws std::runtime_error en cas d’erreur d’écriture.
+ */
+void save_container(QDataStream& stream, const std::deque<bool>& data)
+{
+    // -----------------------------------------------------------------
+    // 1️⃣ Écrire la taille du conteneur (quint32 = 32 bits non signés)
+    // -----------------------------------------------------------------
+    quint32 size = static_cast<quint32>(data.size());
+    stream << size;
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[QtUtilities::save_container] erreur écriture taille"
+                 << stream.device()->errorString();
+        throw std::runtime_error("Error writing to stream (size)");
+    }
+    // -----------------------------------------------------------------
+    // 2️⃣ Parcourir le deque et écrire chaque booléen
+    // -----------------------------------------------------------------
+    for (quint32 i = 0; i < size; ++i) {
+        // operator[] de std::deque<bool> renvoie un proxy convertible en bool
+        bool v = data[i];
+        stream << v;               // QDataStream possède un overload pour bool
+        if (stream.status() != QDataStream::Ok) {
+            qDebug() << "[QtUtilities::save_container] erreur écriture élément"
+                     << i << stream.device()->errorString();
+            throw std::runtime_error("Error writing to stream (element)");
+        }
+    }
+}
+
 #pragma mark load_container
 // Spécialisation pour std::vector<long long>
 void load_container(QDataStream& stream, std::vector<long long>& data)
@@ -1116,6 +1149,24 @@ void load_container(QDataStream& stream, std::shared_ptr<std::vector<double>>& d
     }
 }
 
+void load_container(QDataStream& stream, std::deque<bool>& data)
+{
+    quint32 size = 0;
+    stream >> size;
+    if (stream.status() != QDataStream::Ok)
+        throw std::runtime_error("Error reading size");
+
+    data.clear();
+    data.resize(size);                 // alloue exactement `size` bits
+    for (quint32 i = 0; i < size; ++i) {
+        bool v = false;
+        stream >> v;
+        if (stream.status() != QDataStream::Ok)
+            throw std::runtime_error("Error reading element");
+        data[i] = v;                   // écriture directe dans le proxy
+    }
+}
+
 // Version avec support des pointeurs null (optionnelle)
 void load_container_nullable(QDataStream& stream, std::shared_ptr<std::vector<double>>& data)
 {
@@ -1140,22 +1191,7 @@ void load_container_nullable(QDataStream& stream, std::shared_ptr<std::vector<do
 
 }
 
-std::shared_ptr<Project> getProject_ptr()
-{
-    return MainWindow::getInstance()->getProject();
-}
 
-std::shared_ptr<ModelCurve> getModel_ptr()
-{
-    auto project = getProject_ptr();
-    return project ? project->mModel : nullptr;
-}
-
-QJsonObject* getState_ptr()
-{
-    auto project = getProject_ptr();
-    return project ? &project->mState : nullptr;
-}
 
 
 /**

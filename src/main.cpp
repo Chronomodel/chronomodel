@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2025
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -47,7 +47,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QFontDatabase>
 #include <QDateTime>
 #include <QFile>
+#include <QTextStream>
 #include <QVersionNumber>
+
 #include <iostream>
 #include <cmath>
 #include <fenv.h>
@@ -75,44 +77,67 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
  * @param context Contexte du message (fichier, ligne, fonction, etc.). Non utilisé dans cette implémentation.
  * @param msg Message de journalisation à logger.
  */
-void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+void customMessageHandler(QtMsgType type,
+                          const QMessageLogContext &context,
+                          const QString &msg)
 {
     Q_UNUSED(context);
-
-    QString dt = QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm:ss");
-    QString txt = QString("[%1] ").arg(dt);
-
-    switch (int(type)) {
-        case QtDebugMsg:
-            txt += QString("{Debug} \t\t %1").arg(msg);
-            break;
-        case QtWarningMsg:
-            txt += QString("{Warning} \t %1").arg(msg);
-            break;
-        case QtCriticalMsg:
-            txt += QString("{Critical} \t %1").arg(msg);
-            break;
-        case QtFatalMsg:
-            txt += QString("{Fatal} \t\t %1").arg(msg);
-            exit (EXIT_FAILURE);
-            break;
-        default:
-            return ;
+    // 1️⃣  Horodatage
+    const QString dt = QDateTime::currentDateTime()
+                           .toString(QStringLiteral("dd/MM/yyyy hh:mm:ss"));
+    QString txt = QStringLiteral("[%1] ").arg(dt);
+    // 2️⃣  Préfixe selon le niveau de gravité
+    switch (type) {
+    case QtDebugMsg:
+        txt += QStringLiteral("{Debug}   \t %1").arg(msg);
+        break;
+    case QtInfoMsg:          // Qt 5.5+ (si vous utilisez Qt 6, c’est toujours présent)
+        txt += QStringLiteral("{Info}    \t %1").arg(msg);
+        break;
+    case QtWarningMsg:
+        txt += QStringLiteral("{Warning} \t %1").arg(msg);
+        break;
+    case QtCriticalMsg:
+        txt += QStringLiteral("{Critical}\t %1").arg(msg);
+        break;
+    case QtFatalMsg:
+        txt += QStringLiteral("{Fatal}   \t %1").arg(msg);
+        break;
+    default:
+        // Aucun type connu → on ne loggue rien
+        return;
     }
+    // -----------------------------------------------------------------
+    // 3️⃣  Écriture sur la console (STDERR) – UTF‑8
+    // -----------------------------------------------------------------
+    // Méthode 1 : std::cerr + UTF‑8
+    std::cerr << "[customMessageHandler] : " << txt.toUtf8().constData() << std::endl;
 
-        QFile outFile("LogFile.log");
-        if (!outFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append)) {
-            // Gérer l'erreur d'ouverture du fichier
-            std::cerr << "Failed to open LogFile.log for writing: " << outFile.errorString().toStdString() << std::endl;
-            return;
-        }
-
-        QTextStream textStream(&outFile);
-        textStream << txt << Qt::endl;
-
-        if (type == QtFatalMsg) {
-            exit(EXIT_FAILURE);
-        }
+    // Méthode 2 (alternative) : QTextStream sur stderr
+    // QTextStream cerr(stderr);
+    // cerr << "[customMessageHandler] : " << txt << Qt::endl;
+    // -----------------------------------------------------------------
+    // 4️⃣  Écriture dans le fichier de log
+    // -----------------------------------------------------------------
+    static const QString logFileName = QStringLiteral("LogFile.log");
+    QFile outFile(logFileName);
+    if (outFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
+        QTextStream ts(&outFile);          // UTF‑8 par défaut sous Qt 6
+        ts << txt << Qt::endl;
+    } else {
+        // Si le fichier ne peut pas être ouvert, on le signale sur la console
+        std::cerr << "Failed to open " << logFileName.toStdString()
+                  << " for writing: " << outFile.errorString().toStdString()
+                  << std::endl;
+    }
+    // -----------------------------------------------------------------
+    // 5️⃣  Gestion du fatal
+    // -----------------------------------------------------------------
+    if (type == QtFatalMsg) {
+        // On force la sortie du processus après le flush du flux
+        std::cerr.flush();
+        std::abort();   // ou exit(EXIT_FAILURE);
+    }
 }
 
 int main(int argc, char *argv[])

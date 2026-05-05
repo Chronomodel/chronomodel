@@ -1503,6 +1503,10 @@ QDataStream &operator<<( QDataStream& stream, const PosteriorMeanGComposante& pM
     for (auto& v : pMGComposante.vecVarG)
         stream << (double)v;
 
+    stream << (quint32) pMGComposante.vecVarGP.size();// since v3.3.7
+    for (auto& v : pMGComposante.vecVarGP)
+        stream << (double)v;
+
     stream << pMGComposante.mapG;
 
     stream << pMGComposante.mapGP; // since v3.2.7
@@ -1522,10 +1526,6 @@ QDataStream &operator>>( QDataStream& stream, PosteriorMeanGComposante& pMGCompo
     pMGComposante.vecGP.resize(siz);
     std::generate_n(pMGComposante.vecGP.begin(), siz, [&stream, &v]{stream >> v; return v;});
 
-/*    stream >> siz;
-    pMGComposante.vecVarGP.resize(siz);
-    std::generate_n(pMGComposante.vecVarGP.begin(), siz, [&stream, &v]{stream >> v; return v;});
-*/
     stream >> siz;
     pMGComposante.vecGS.resize(siz);
     std::generate_n(pMGComposante.vecGS.begin(), siz, [&stream, &v]{stream >> v; return v;});
@@ -1534,9 +1534,20 @@ QDataStream &operator>>( QDataStream& stream, PosteriorMeanGComposante& pMGCompo
     pMGComposante.vecVarG.resize(siz);
     std::generate_n(pMGComposante.vecVarG.begin(), siz, [&stream, &v]{stream >> v; return v;});
 
+    if (res_file_version > "3.3.7") {
+        stream >> siz;
+        pMGComposante.vecVarGP.resize(siz);
+        std::generate_n(pMGComposante.vecVarGP.begin(), siz, [&stream, &v]{stream >> v; return v;});
+
+    } else {
+        pMGComposante.vecVarGP = std::vector<double>(pMGComposante.vecGP.begin(), pMGComposante.vecGP.end());
+    }
+
+
     stream >> pMGComposante.mapG;
     if (res_file_version > "3.2.6")
         stream >> pMGComposante.mapGP;
+
     return stream;
 }
 
@@ -4855,7 +4866,9 @@ t_matrix var_Gasser(const std::vector<t_matrix>& vec_t, const std::vector<t_matr
 
     // Utilisation de la sommation de Kahan pour améliorer la précision
     t_matrix sum = 0.0L;
+#ifndef _OPENMP
     t_matrix c = 0.0L; // Variable de compensation
+#endif
 
 #pragma omp parallel for reduction(+:sum) // Parallélisation si OpenMP est disponible
     for (size_t i = 1; i < N - 1; ++i) {
@@ -4870,6 +4883,7 @@ t_matrix var_Gasser(const std::vector<t_matrix>& vec_t, const std::vector<t_matr
 
 // Sommation de Kahan (si non parallélisé)
 #ifndef _OPENMP
+
         const t_matrix y = term - c;
         const t_matrix t = sum + y;
         c = (t - sum) - y;

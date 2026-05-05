@@ -38,6 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "StdUtilities.h"
+#include "Functions.h"
 
 #include <QtGlobal>
 
@@ -492,15 +493,6 @@ std::map<double, double> vector_to_map(const std::vector<double>& data, const do
         map.emplace(t, data[i]);
     }
 
-    /*else {
-        const size_t nbPts = std::min (1 + (size_t)round((max - min) / step), data.size()); // step is not usefull, it's must be data.size/(max-min+1)
-
-        for (size_t i = 0; i<nbPts; ++i) {
-            auto t = min + i * step;
-            map.emplace(t,  double (data.at(i)));
-
-        }
-    }*/
     return map;
 }
 
@@ -526,14 +518,8 @@ QMap<float, float> vector_to_map(const QList<float>& data, const float min, cons
     return map;
 }
 
-/**
- * @brief interpolate_value_from_curve Allows you to find the value associated with a time in a curve.
- * @param t Time for which we are looking for value
- * @param curve
- * @param curveTmin Time corresponding to index 0
- * @param curveTmax Time corresponding to index curve.size()-1
- * @return
- */
+
+/* old code
 double interpolate_value_from_curve(const double t, const QList<double> &curve,const double curveTmin, const double curveTmax)
 {
      // We need at least two points to interpolate
@@ -546,23 +532,25 @@ double interpolate_value_from_curve(const double t, const QList<double> &curve,c
 
     const double prop = (t - curveTmin) / (curveTmax - curveTmin);
     const double idx = prop * (curve.size() - 1); // tricky : if (tmax - tmin) = 2000, then calib size is 2001 !
-    const int idxUnder = (int)floor(idx);
-    const int idxUpper = (int)ceil(idx);//idxUnder + 1;
+    const double idxUnder = floor(idx);
+    const double idxUpper = ceil(idx);//idxUnder + 1;
 
     if (idxUnder == idxUpper) {
         return curve[idxUnder];
 
     } else if (curve[idxUnder] != 0. && curve[idxUpper] != 0.) {
         // Important for gate: no interpolation around gates
-        return interpolate( idx, (double)idxUnder, (double)idxUpper, curve[idxUnder], curve[idxUpper]);
+        return interpolate( idx, idxUnder, idxUpper, curve[(int)idxUnder], curve[(int)idxUpper]);
 
     } else {
-        return 0.;
+        return 0.0;
     }
 
-}
+}*/
 
-double interpolate_value_from_curve(const double x, const std::vector<double>& curve, const double Xmin, const double Xmax)
+
+
+/*double interpolate_value_from_curve(const double x, const std::vector<double>& curve, const double Xmin, const double Xmax)
 {
      // We need at least two points to interpolate
     if (curve.size() < 2 || x <= Xmin) {
@@ -589,7 +577,9 @@ double interpolate_value_from_curve(const double x, const std::vector<double>& c
         return 0.;
     }
 
-}
+}*/
+
+
 
 // Ne teste pas la limite debut fin density, on supose un pas régulier, utilisé avec create_HPD2()
 double surface_on_theta (std::map<double, double>::const_iterator iter_on_theta)
@@ -801,11 +791,13 @@ const std::map<double, double> create_HPD_mapping(const QMap<double, double> &de
         }
 
     }
+
 }
 
+/*
 const std::map<double, double> create_HPD_by_dichotomy(const QMap<double, double> &density, QList<QPair<double, QPair<double, double> > > &intervals_hpd, const double threshold)
 {
-    int nb_max_loop = 20;
+   int nb_max_loop = 20;
     std::map<double, double> result;
 
     if (density.size() < 2) { // in case of only one value (e.g. a bound fixed) or no value
@@ -908,7 +900,7 @@ const std::map<double, double> create_HPD_by_dichotomy(const QMap<double, double
     }
 
 
-}
+}*/
 
 const std::map<double, double> create_HPD_by_dichotomy(const std::map<double, double> &density, QList<QPair<double, QPair<double, double> > > &intervals_hpd, const double threshold)
 {
@@ -1049,14 +1041,6 @@ const std::map<double, double> create_HPD_by_dichotomy(const std::map<double, do
 
     return result_density;
 
-
-}
-
-
-
-double map_area(const QMap<double, double> &map)
-{
-    return map_area(map.toStdMap());
 }
 
 float map_area(const QMap<float, float> &map)
@@ -1474,4 +1458,560 @@ inline double normInv(double p)
     double z = t - numerator / denominator;
 
     return neg ? -z : z;
+}
+
+#pragma mark UCV
+
+/* -----------------------------------------------------------------
+   2.  Calcul du critère UCV pour une bande passante h donnée
+   ----------------------------------------------------------------- */
+double ucv_criterion(double h,
+                     const std::vector<double>& x,
+                     const std::size_t n)
+{
+    if (h <= 0.0) return std::numeric_limits<double>::infinity();
+
+    double sum_pairs = 0.0;
+
+#pragma omp parallel for reduction(+:sum_pairs) schedule(static)
+    for (std::size_t i = 0; i < n - 1; ++i) {
+        for (std::size_t j = i + 1; j < n; ++j) {
+            const double delta = ((x[i] - x[j]) / h) * ((x[i] - x[j]) / h);
+            sum_pairs += std::exp(-delta / 4.0) - std::sqrt(8.0) * std::exp(-delta / 2.0);
+        }
+    }
+
+    // formule exacte du code C de R :
+    // (0.5 + sum_pairs/n) / (n * h * sqrt(pi))
+    return (0.5 + sum_pairs / static_cast<double>(n))
+           / (static_cast<double>(n) * h * std::sqrt(M_PI));
+}
+
+/* -----------------------------------------------------------------
+   3.  Recherche du minimum de UCV(h) – Brent (sans dépendance externe)
+   ----------------------------------------------------------------- */
+double golden_minimize(const std::vector<double>& x,
+                      double a, double b,
+                      double tol,
+                      int max_iter)
+{
+    const std::size_t n = x.size();
+
+    auto f = [&](double h) { return ucv_criterion(h, x, n); };
+
+    const double phi = (std::sqrt(5.0) - 1.0) / 2.0;   // 0.618...
+    double c  = b - phi * (b - a);
+    double d  = a + phi * (b - a);
+    double fc = f(c);
+    double fd = f(d);
+
+    for (int iter = 0; iter < max_iter; ++iter) {
+        if (std::abs(b - a) < tol * (std::abs(c) + std::abs(d))) break;
+        if (fc < fd) {
+            b  = d;
+            d  = c;
+            fd = fc;
+            c  = b - phi * (b - a);
+            fc = f(c);
+        } else {
+            a  = c;
+            c  = d;
+            fc = fd;
+            d  = a + phi * (b - a);
+            fd = f(d);
+        }
+    }
+    return 0.5 * (a + b);
+}
+
+double brent_minimize(const std::vector<double>& x,
+                      double a, double b,
+                      double tol,
+                      int max_iter)
+{
+    const std::size_t n = x.size();
+    auto f = [&](double h) { return ucv_criterion(h, x, n); };
+
+    const double golden = (3.0 - std::sqrt(5.0)) / 2.0; // ≈ 0.3820
+
+    double xm = 0.5 * (a + b);
+    double v = xm, w = xm, x_cur = xm;
+    double fv = f(v), fw = fv, fx = fv;
+    double d = 0.0, e = 0.0;
+
+    for (int iter = 0; iter < max_iter; ++iter) {
+        xm = 0.5 * (a + b);
+        const double tol1 = tol * std::abs(x_cur) + 1e-10;
+        const double tol2 = 2.0 * tol1;
+
+        // critère d'arrêt
+        if (std::abs(x_cur - xm) <= tol2 - 0.5 * (b - a)) break;
+
+        bool do_golden = true;
+
+        // tentative d'interpolation parabolique
+        if (std::abs(e) > tol1) {
+            double r = (x_cur - w) * (fx - fv);
+            double q = (x_cur - v) * (fx - fw);
+            double p = (x_cur - v) * q - (x_cur - w) * r;
+            q = 2.0 * (q - r);
+            if (q > 0.0) p = -p; else q = -q;
+            r = e;
+            e = d;
+
+            // accepter la parabole seulement si elle tombe dans [a,b]
+            // et que le pas est suffisamment petit
+            if (std::abs(p) < std::abs(0.5 * q * r) &&
+                p > q * (a - x_cur) &&
+                p < q * (b - x_cur))
+            {
+                d = p / q;
+                double u = x_cur + d;
+                if ((u - a) < tol2 || (b - u) < tol2)
+                    d = (x_cur < xm) ? tol1 : -tol1;
+                do_golden = false;
+            }
+        }
+
+        // fallback golden section
+        if (do_golden) {
+            e = (x_cur < xm) ? b - x_cur : a - x_cur;
+            d = golden * e;
+        }
+
+        const double u = x_cur + (std::abs(d) >= tol1 ? d : (d > 0 ? tol1 : -tol1));
+        const double fu = f(u);
+
+        // mise à jour de l'encadrement
+        if (fu <= fx) {
+            if (u < x_cur) b = x_cur; else a = x_cur;
+            v = w; fv = fw;
+            w = x_cur; fw = fx;
+            x_cur = u; fx = fu;
+        } else {
+            if (u < x_cur) a = u; else b = u;
+            if (fu <= fw || w == x_cur) { v = w; fv = fw; w = u; fw = fu; }
+            else if (fu <= fv || v == x_cur || v == w) { v = u; fv = fu; }
+        }
+    }
+    return x_cur;
+}
+/* -----------------------------------------------------------------
+   4.  Interface publique : bw_ucv()
+   ----------------------------------------------------------------- */
+double bw_ucv(const std::vector<double>& data)
+{
+    if (data.empty())
+        throw std::invalid_argument("bw_ucv : le vecteur d'entrée est vide");
+    const std::size_t n = data.size();
+    // -----------------------------------------------------------------
+    // 4.1  Statistiques de base (moyenne, écart‑type) – utiles pour
+    //      choisir un intervalle de recherche raisonnable.
+    // -----------------------------------------------------------------
+    const double mean = std::accumulate(data.begin(), data.end(), 0.0) / static_cast<double>(n);
+    double var = 0.0;
+    for (double v : data) {
+        const double d = v - mean;
+        var += d * d;
+    }
+    var /= static_cast<double>(n - 1);
+    const double sigma = std::sqrt(var);
+    // -----------------------------------------------------------------
+    // 4.2  Point de départ : règle de Silverman (h_Silverman)
+    // -----------------------------------------------------------------
+    const double h_silver = 1.06 * sigma * std::pow(static_cast<double>(n), -0.2);
+    // -----------------------------------------------------------------
+    // 4.3  Définir un intervalle de recherche autour de h_silver.
+    //      R utilise typiquement [h/3 , 3*h] (voir le code source de R).
+    // -----------------------------------------------------------------
+    const double lower = std::max(1e-6, h_silver / 3.0);
+    const double upper = std::max(lower * 1.1, h_silver * 3.0); // on s’assure que upper>lower
+    // -----------------------------------------------------------------
+    // 4.4  Minimisation
+    // -----------------------------------------------------------------
+    const double h_opt = brent_minimize(data, lower, upper);
+    return h_opt;
+}
+
+/* -----------------------------------------------------------------
+   7.  Version naïve (pour vérification) – O(n²)
+   ----------------------------------------------------------------- */
+double bw_ucv_naive0(const std::vector<double>& data)
+{
+    const std::size_t n = data.size();
+    if (n == 0) throw std::invalid_argument("empty data");
+    // moyenne, sigma
+    const double mean = std::accumulate(data.begin(), data.end(), 0.0) / static_cast<double>(n);
+    double var = 0.0;
+    for (double v : data) var += (v - mean) * (v - mean);
+    var /= static_cast<double>(n - 1);
+    const double sigma = std::sqrt(var);
+    // règle de Silverman (point de départ)
+    const double h0 = 1.06 * sigma * std::pow(static_cast<double>(n), -0.2);
+    const double lower = std::max(1e-6, h0 / 3.0);
+    const double upper = std::max(lower * 1.1, h0 * 3.0);
+    // fonction UCV naïve
+    auto ucv = [&](double h) -> double {
+        const double inv_h = 1.0 / h;
+        double sum = 0.0;
+        for (std::size_t i = 0; i < n; ++i) {
+            for (std::size_t j = i + 1; j < n; ++j) {
+                const double u = (data[i] - data[j]) * inv_h;
+                const double k = gaussian_kernel(u);
+                sum += 2.0 * k;               // (i,j) et (j,i)
+            }
+        }
+        const double term1 = sum / (static_cast<double>(n) * static_cast<double>(n) * h);
+        const double term2 = 2.0 / (static_cast<double>(n) * h * std::sqrt(M_PI));
+        return term1 - term2;
+    };
+    // Brent (identique à la version FFT)
+    const double phi = (std::sqrt(5.0) - 1.0) / 2.0;
+    double a = lower, b = upper;
+    double c = b - phi * (b - a);
+    double d = a + phi * (b - a);
+    double fc = ucv(c);
+    double fd = ucv(d);
+    for (int iter = 0; iter < 100; ++iter) {
+        if (std::abs(b - a) < 1e-8 * (std::abs(c) + std::abs(d))) break;
+        if (fc < fd) {
+            b = d; d = c; fd = fc;
+            c = b - phi * (b - a);
+            fc = ucv(c);
+        } else {
+            a = c; c = d; fc = fd;
+            d = a + phi * (b - a);
+            fd = ucv(d);
+        }
+    }
+    return 0.5 * (a + b);
+}
+
+double bw_ucv_naive(const std::vector<double>& data)
+{
+    const std::size_t n = data.size();
+    if (n < 2)
+        throw std::invalid_argument("Need at least 2 points");
+
+    // --------- stats de base (comme R) ---------
+    const double mean =
+        std::accumulate(data.begin(), data.end(), 0.0) / n;
+
+    double var = 0.0;
+    for (double v : data)
+        var += (v - mean) * (v - mean);
+
+    var /= (n - 1); // ✔️ comme R
+    const double sigma = std::sqrt(var);
+
+    // --------- point de départ (Silverman) ---------
+    const double h0 = 1.06 * sigma * std::pow((double)n, -0.2);
+
+    const double lower = std::max(1e-6, h0 / 3.0);
+    const double upper = std::max(lower * 1.1, h0 * 3.0);
+
+    // --------- noyau gaussien EXACT ---------
+    auto K = [](double u) {
+        static const double inv_sqrt_2pi =
+            1.0 / std::sqrt(2.0 * M_PI);
+        return inv_sqrt_2pi * std::exp(-0.5 * u * u);
+    };
+
+    // --------- fonction UCV ---------
+    auto ucv = [&](double h) -> double {
+        if (h <= 0.0)
+            return std::numeric_limits<double>::infinity();
+
+        const double inv_h = 1.0 / h;
+        double sum = 0.0;
+
+        for (std::size_t i = 0; i < n; ++i) {
+            for (std::size_t j = i + 1; j < n; ++j) {
+
+                const double u = (data[i] - data[j]) * inv_h;
+
+                // ✔️ K_h
+                const double kh = K(u) * inv_h;
+
+                sum += 2.0 * kh;
+            }
+        }
+
+        // ✔️ normalisation R
+        const double term1 = sum / (n * (n - 1));
+
+        // ✔️ terme exact convolution gaussienne
+        const double term2 =
+            1.0 / (2.0 * std::sqrt(M_PI) * n * h);
+
+        return term1 - term2;
+    };
+
+    // --------- optimisation (golden section comme R) ---------
+    const double phi = (std::sqrt(5.0) - 1.0) / 2.0;
+
+    double a = lower;
+    double b = upper;
+
+    double c = b - phi * (b - a);
+    double d = a + phi * (b - a);
+
+    double fc = ucv(c);
+    double fd = ucv(d);
+
+    for (int iter = 0; iter < 100; ++iter) {
+        if (std::abs(b - a) < 1e-8 * (std::abs(c) + std::abs(d)))
+            break;
+
+        if (fc < fd) {
+            b = d;
+            d = c;
+            fd = fc;
+            c = b - phi * (b - a);
+            fc = ucv(c);
+        } else {
+            a = c;
+            c = d;
+            fc = fd;
+            d = a + phi * (b - a);
+            fd = ucv(d);
+        }
+    }
+
+    return 0.5 * (a + b);
+}
+/* -----------------------------------------------------------------
+   5.  Interface publique : bw_ucv_fft()
+   ----------------------------------------------------------------- */
+
+/* -----------------------------------------------------------------
+   4.  Recherche du minimum (Brent) – même principe que la version
+       O(n²) mais le critère est maintenant calculé via FFT.
+erreur, C’est une recherche dorée.(golden‑section)
+   ----------------------------------------------------------------- */
+double brent_minimize(const UCV_FFT& ucv,
+                      double a, double b,
+                      double tol ,
+                      int max_iter)
+{
+    const double phi = (std::sqrt(5.0) - 1.0) / 2.0;   // 0.618...
+    double c = b - phi * (b - a);
+    double d = a + phi * (b - a);
+    double fc = ucv(c);
+    double fd = ucv(d);
+    for (int iter = 0; iter < max_iter; ++iter) {
+        if (std::abs(b - a) < tol * (std::abs(c) + std::abs(d))) break;
+
+        if (fc < fd) {
+            b = d;
+            d = c;
+            fd = fc;
+            c = b - phi * (b - a);
+            fc = ucv(c);
+        } else {
+            a = c;
+            c = d;
+            fc = fd;
+            d = a + phi * (b - a);
+            fd = ucv(d);
+        }
+    }
+    return 0.5 * (a + b);
+}
+/* -----------------------------------------------------------------
+   5.  Interface publique : bw_ucv_fft()
+   ----------------------------------------------------------------- */
+double bw_ucv_fft(const std::vector<double>& data)
+{
+    if (data.empty())
+        throw std::invalid_argument("bw_ucv_fft : empty input");
+    const std::size_t n = data.size();
+    // ---- 6.1  Statistiques de base (moyenne, écart‑type) ----
+    const double mean = std::accumulate(data.begin(), data.end(), 0.0) / static_cast<double>(n);
+    double var = 0.0;
+    for (double v : data) {
+        const double d = v - mean;
+        var += d * d;
+    }
+    var /= static_cast<double>(n - 1);
+    const double sigma = std::sqrt(var);
+
+    // ---- 6.2  Point de départ : règle de Silverman (identique à R) ----
+    const double h_silver = 1.06 * sigma * std::pow(static_cast<double>(n), -0.2);
+
+    // ---- 6.3  Intervalle de recherche (h/3 , 3h) ----
+    const double lower = std::max(1e-6, h_silver / 10.0);
+    const double upper = std::max(lower * 1.1, h_silver * 3.0);
+    // ---- 6.4  Objet UCV (FFT) ----
+    const UCV_FFT ucv(data);
+    // ---- 6.5  Minimisation ----
+    const double h_opt = brent_minimize(ucv, lower, upper);
+    return h_opt;
+}
+
+#pragma mark perpl
+
+
+/*double ucv_score_gaussian(std::vector<double> x, double h)
+{
+
+    const int n = (int)x.size();
+    if (n < 2 || h <= 0.0)
+        return std::numeric_limits<double>::infinity();
+
+    const double inv_h = 1.0 / h;
+
+    double s1 = 0.0;
+    double s2 = 0.0;
+
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+
+            const double d = (x[i] - x[j]) * inv_h;
+
+            // convolution gaussienne
+            s1 += dnorm(d, 0, std::sqrt(2.0));
+
+            if (i != j) {
+                s2 += dnorm(d);
+            }
+        }
+    }
+
+    const double term1 =
+        s1 / (n * n * h * std::sqrt(2.0));
+
+    // 🔥 correction ici
+    const double term2 =
+       2* s2 / (n * (n - 1) * h);
+
+    return term1 - term2;
+}*/
+double ucv_score_gaussian(std::vector<double> x, double h)
+{
+    const int n = (int)x.size();
+    if (n < 2 || h <= 0.0)
+        return std::numeric_limits<double>::infinity();
+
+    double sum_pairs = 0.0;
+    for (int i = 0; i < n - 1; ++i) {
+        for (int j = i + 1; j < n; ++j) {
+            const double delta = ((x[i] - x[j]) / h) * ((x[i] - x[j]) / h);
+            sum_pairs += std::exp(-delta / 4.0) - std::sqrt(8.0) * std::exp(-delta / 2.0);
+        }
+    }
+
+    // (0.5 + sum_pairs/n) / (n * h * sqrt(pi))
+    return (0.5 + sum_pairs / n) / (n * h * std::sqrt(M_PI));
+}
+
+double bw_ucv_gaussian( std::vector<double> x,
+                       double hmin,
+                       double hmax,
+                       int grid)
+{
+    double best_h = hmin;
+    double best_score = std::numeric_limits<double>::infinity();
+
+    const double log_min = std::log(hmin);
+    const double log_max = std::log(hmax);
+
+    for (int k = 0; k < grid; ++k) {
+        double t = (grid == 1) ? 0.0 : (double)k / (grid - 1);
+        double h = std::exp(log_min + t * (log_max - log_min));
+
+        double score = ucv_score_gaussian(x, h);
+
+        if (score < best_score) {
+            best_score = score;
+            best_h = h;
+        }
+    }
+    return best_h;
+}
+
+double bw_SJ_dpi(const std::vector<double>& x) {
+    const int    n     = x.size();
+    const double sigma = scale_factor(x);   // min(sd, IQR/1.349)
+
+    // --- Étape 1 : bandwidths pilotes ---
+    // g1 : pilote pour estimer theta_44
+    // formule R : 1.24 * sigma * n^(-1/7)
+    const double g1 = 1.24 * sigma * std::pow((double)n, -1.0/7.0);
+
+    // g2 : pilote pour estimer theta_24
+    // formule R : 1.23 * sigma * n^(-1/9)
+    const double g2 = 1.23 * sigma * std::pow((double)n, -1.0/9.0);
+
+    // --- Étape 2 : estimation des fonctionnelles ---
+    const double t44 = S4(x, g1);   // ≈ theta_44
+    const double t24 = S6(x, g2);   // on utilise S6 pour theta_24...
+
+
+    if (std::abs(t44) < 1e-15 || t44 >= 0.0)
+        return 0.9 * sigma * std::pow((double)n, -0.2);
+
+    if (std::abs(t24) < 1e-15)
+        return 0.9 * sigma * std::pow((double)n, -0.2);
+
+    const double TD = -t44;   // toujours > 0 ici
+    const double SD =  t24;   // toujours défini ici
+
+
+    const double alpha2 = 1.357 * std::pow(std::abs(SD / TD), 1.0/7.0);
+
+    // theta_22(alpha2) estimé par S4
+    const double t22 = S4(x, alpha2);
+
+    if (t22 <= 0.0) {
+        return 0.9 * sigma * std::pow((double)n, -0.2);
+    }
+
+    // h_DPI = (1 / (2*sqrt(pi)*n*t22))^(1/5)
+    const double c1 = 1.0 / (2.0 * std::sqrt(M_PI) * n);
+    return std::pow(c1 / t22, 0.2);
+}
+
+
+double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter )
+{
+    const int    n     = x.size();
+    const double sigma = scale_factor(x);
+
+    const double g1 = 1.24 * sigma * std::pow((double)n, -1.0/7.0);
+    const double g2 = 1.23 * sigma * std::pow((double)n, -1.0/9.0);
+
+    //const double t44 = S4(x, g1);
+    //const double t24 = S6(x, g2);
+
+
+    const int M = chooseFFtSize(n);
+    const double t44 = S4_fft(x, g1, M);
+    const double t24 = S6_fft(x, g2, M);
+
+    if (std::abs(t44) < 1e-15 || std::abs(t24) < 1e-15)
+        return 0.9 * sigma * std::pow((double)n, -0.2);
+
+    const double alpha2 = 1.357 * std::pow(std::abs(t24 / t44), 1.0/7.0);
+    const double c1     = 1.0 / (2.0 * std::sqrt(M_PI) * n);
+
+    auto eq = [&](double h) { return sj_equation(h, x, alpha2, c1); };
+
+    double lo = 0.1 * sigma * std::pow((double)n, -0.2);
+    double hi = 2.0 * sigma * std::pow((double)n, -0.2);
+
+    bool found = false;
+    for (int k = 0; k < 20; k++) {
+        if (eq(lo) * eq(hi) < 0.0) { found = true; break; }
+        lo /= 1.2;
+        hi *= 1.2;
+    }
+    if (!found)
+        return 0.9 * sigma * std::pow((double)n, -0.2);
+
+    double result = bisect(eq, lo, hi, tol, max_iter);
+
+    if (std::isnan(result))
+        return 0.9 * sigma * std::pow((double)n, -0.2);
+    return result;
 }

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -40,6 +40,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef STDUTILITIES_H
 #define STDUTILITIES_H
 
+#pragma once
+
 #include <RefCurve.h>
 
 #include <chrono>
@@ -50,6 +52,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <algorithm>
 #include <math.h>
 #include <iterator>
+
+#include "fftw3.h" // pour UCV
 
 #include <QMap>
 #include <QList>
@@ -69,9 +73,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define M_SQRT2PI 2.5066282746310005024157652848110452530069867406099383166299235763 //sqrt(2*pi)
 #endif
 
+
+
+
 typedef QString (*FormatFunc)(const double, const bool forcePrecision);
 
-const double gammaActivity[] = {1.,-1.,0.00501257,0.0589032,0.140868,0.222072,0.294314,0.356635,0.410058,0.455966,0.495647,0.530184,0.560456,0.587174,
+const double gammaActivity[] = {1.0,-1.0,0.00501257,0.0589032,0.140868,0.222072,0.294314,0.356635,0.410058,0.455966,0.495647,0.530184,0.560456,0.587174,
                                 0.610905,0.632109,0.651162,0.668367,0.683976,0.698199,0.71121,0.723155,0.73416,0.744329,0.753754,0.762514,0.770675,0.778297,
                                 0.785431,0.792122,0.79841,0.804331,0.809914,0.81519,0.820181,0.82491,0.829398,0.833662,0.837718,0.841582,0.845267,0.848784,
                                 0.852146,0.855361,0.85844,0.861391,0.864222,0.866939,0.86955,0.87206,0.874476,0.876803,0.879045,0.881207,0.883293,0.885307,
@@ -114,20 +121,200 @@ QMap<double, double> vector_to_map(const QList<int> &data, const double min, con
 std::map<double, double> vector_to_map(const std::vector<double> &data, const double min, const double max, const double step);
 
 //There is also RefCurve::interpolate_mean()
-double interpolate_value_from_curve(const double t, const QList<double> &curve, const double curveTmin, const double curveTmax);
-double interpolate_value_from_curve(const double x, const std::vector<double> &curve, const double Xmin, const double Xmax);
+/**
+ * @brief Interpolates a value from a uniformly sampled curve, with
+ *        special handling for flat plateaus.
+ *
+ * The curve is assumed to be sampled uniformly between @p curveTmin
+ * (index 0) and @p curveTmax (index @c curve.size()‑1).  If the two
+ * neighbour points that surround the requested time have (almost) the
+ * same value, the function returns that value directly – no interpolation
+ * is performed across a plateau edge.
+ *
+ * @param t          Time for which the value is required.
+ * @param curve      Vector (or QList) containing the sampled values.
+ * @param curveTmin  Time that corresponds to curve[0].
+ * @param curveTmax  Time that corresponds to curve.back().
+ * @param eps        Tolerance used to decide whether two neighbour values
+ *                   belong to the same plateau (default = 1E‑12).
+ *
+ * @return Interpolated value, or the plateau value when appropriate.
+ */
+inline double interpolate_value_from_curve(double t,
+                                           const QList<double> &curve,
+                                           double curveTmin,
+                                           double curveTmax,
+                                           double eps = 1E-12) noexcept
+{
+    const std::size_t N = curve.size();
+    // --------------------------------------------------------------
+    // 1️⃣  Guard against degenerate input
+    // --------------------------------------------------------------
+    if (N < 2) return 0.0;
 
-double map_area(const QMap<double, double> &map);
+    // --------------------------------------------------------------
+    // 2️⃣  Fast handling of the two extremes
+    // --------------------------------------------------------------
+    if (t <= curveTmin) return curve.front();
+    if (t >= curveTmax) return curve.back();
+
+    // --------------------------------------------------------------
+    // 3️⃣  Compute the (floating‑point) index in the array
+    // --------------------------------------------------------------
+
+    const double step = (curveTmax - curveTmin) / static_cast<double>(N - 1);
+    const double idx  = (t - curveTmin) / step;          // idx ∈ [0, N‑1]
+
+    const std::size_t i = static_cast<std::size_t>(idx); // floor
+    const double frac   = idx - static_cast<double>(i);   // fractional part
+
+    // --------------------------------------------------------------
+    // 4️⃣ Retrieve the two neighbour values
+    // --------------------------------------------------------------
+    const double v0 = curve[i];
+    const double v1 = curve[i + 1];
+
+    // --------------------------------------------------------------
+    // 5️⃣ Plateau detection (values equal within eps)
+    // --------------------------------------------------------------
+    if (std::fabs(v0 - v1) <= eps) return v0;            // plateau
+
+    // --------------------------------------------------------------
+    // 6️⃣ Handle the “zero‑value” special case (if you really need it)
+    // --------------------------------------------------------------
+    if (v0 == 0.0 && v1 == 0.0) {
+        // Both are zero → the whole segment is effectively a zero plateau.
+        return 0.0;
+    }
+
+    // --------------------------------------------------------------
+    // 7️⃣ Exact hit → no interpolation needed
+    // --------------------------------------------------------------
+    // one side is zero, return the other
+    if (v0 == 0.0) return v1;
+    if (v1 == 0.0) return v0;
+
+    // --------------------------------------------------------------
+    // 8️⃣  Normal linear interpolation (no plateau)
+    // --------------------------------------------------------------
+    return v0 + frac * (v1 - v0);                        // linear interpolation
+}
+/**
+ * @brief Interpolates a value from a uniformly sampled curve.
+ *
+ * The curve is sampled uniformly between @p Xmin (index 0) and @p Xmax
+ * (index @c curve.size()‑1).  The function returns the value that
+ * corresponds to the requested abscissa @p x.
+ *
+ * Special handling:
+ *   • If @p x lies outside the interval, the nearest endpoint is returned.
+ *   • If the two neighbour points are (almost) equal, the plateau value
+ *     is returned – no interpolation is performed across a flat region.
+ *   • If the upper neighbour is exactly 0, the function returns 0 (the
+ *     original “gate” rule).  If only the lower neighbour is 0, the
+ *     non‑zero neighbour is returned.
+ *
+ * @param[in] x        The abscissa for which a value is required.
+ * @param[in] curve    Vector containing the sampled values (must contain
+ *                     at least two points).
+ * @param[in] Xmin     Abscissa that corresponds to @c curve[0].
+ * @param[in] Xmax     Abscissa that corresponds to @c curve.back().
+ * @param[in] eps      Tolerance used to decide whether two neighbour values
+ *                     belong to the same plateau (default = 1E‑12).
+ *
+ * @return Interpolated value (or the nearest endpoint / plateau value).
+ *
+ * @note The implementation is `inline` and `noexcept` and performs only
+ *       a single division, two memory accesses and one multiplication per call.
+ */
+inline double interpolate_value_from_curve(double x,
+                                           const std::vector<double>& curve,
+                                           double Xmin,
+                                           double Xmax,
+                                           double eps = 1E-12) noexcept
+{
+    const std::size_t N = curve.size();
+
+    // --------------------------------------------------------------
+    // 1️⃣  Guard against degenerate input
+    // --------------------------------------------------------------
+    if (N < 2) return 0.0;                 // should never happen – defensive
+
+    // --------------------------------------------------------------
+    // 2️⃣  Fast handling of the two extremes
+    // --------------------------------------------------------------
+    if (x <= Xmin) return curve.front();
+    if (x >= Xmax) return curve.back();
+
+    // --------------------------------------------------------------
+    // 3️⃣  Compute the step (distance between two consecutive samples)
+    // --------------------------------------------------------------
+    const double step = (Xmax - Xmin) / static_cast<double>(N - 1);
+
+    // --------------------------------------------------------------
+    // 4️⃣  Floating‑point index and its integer / fractional parts
+    // --------------------------------------------------------------
+    const double idxReal = (x - Xmin) / step;          // idx ∈ [0, N‑1]
+    const std::size_t i   = static_cast<std::size_t>(idxReal); // floor
+    const double frac     = idxReal - static_cast<double>(i);   // fractional part
+
+    // i is guaranteed to be < N‑1 because x < Xmax (handled above)
+    const double v0 = curve[i];
+    const double v1 = curve[i + 1];
+
+    // --------------------------------------------------------------
+    // 5️⃣  Plateau detection (values equal within eps)
+    // --------------------------------------------------------------
+    if (std::fabs(v0 - v1) <= eps) {
+        // Both points belong to the same flat region → return that value.
+        return v0;                     // v0 == v1 within tolerance
+    }
+
+    // --------------------------------------------------------------
+    // 6️⃣  Original “gate” rule – avoid interpolation when the upper
+    //     neighbour is exactly zero.
+    // --------------------------------------------------------------
+    if (v1 == 0.0) {
+        // Upper point is a gate → return 0 (the original behaviour).
+        return 0.0;
+    }
+
+    // If the lower point is zero but the upper one is not, we simply
+    // return the upper value – this is mathematically equivalent to a
+    // linear interpolation where one endpoint is zero.
+    if (v0 == 0.0) return v1;
+
+    // --------------------------------------------------------------
+    // 7️⃣  Normal linear interpolation (no plateau, both points non‑zero)
+    // --------------------------------------------------------------
+    return v0 + frac * (v1 - v0);
+}
+
+
+
 float map_area(const QMap<float, float> &map);
 double map_area(const QMap<int, double> &density);
+
 double map_area(const std::map<double, double> &map);
 
+inline double map_area(const QMap<double, double> &map)
+{
+    return map_area(map.toStdMap());
+}
+
 inline double surface_on_theta (std::map<double, double>::const_iterator iter_on_theta );
-const std::map<double, double> create_HPD2(const QMap<double, double> &density, const double threshold = 95.);
+
+const std::map<double, double> create_HPD2(const QMap<double, double> &density, const double threshold = 95.);// useless
+
 const std::map<double, double> create_HPD_mapping(const QMap<double, double> &density, std::map<double, double> &area_mapping, const double threshold = 95.);
 
-const std::map<double, double> create_HPD_by_dichotomy(const QMap<double, double> &density, QList<QPair<double, QPair<double, double> > > &intervals_hpd, const double threshold);
+//const std::map<double, double> create_HPD_by_dichotomy(const QMap<double, double> &density, QList<QPair<double, QPair<double, double> > > &intervals_hpd, const double threshold);
 const std::map<double, double> create_HPD_by_dichotomy(const std::map<double, double> &density, QList<QPair<double, QPair<double, double> > > &intervals_hpd, const double threshold);
+
+inline const std::map<double, double> create_HPD_by_dichotomy(const QMap<double, double> &density, QList<QPair<double, QPair<double, double> > > &intervals_hpd, const double threshold)
+{
+    return create_HPD_by_dichotomy(density.toStdMap(), intervals_hpd, threshold);
+}
 
 QList<double> vector_to_histo(const QList<double> &vector, const double tmin, const double tmax, const int nbPts);
 
@@ -150,6 +337,7 @@ inline V interpolate(const T& x, const T& x0, const T& x1, const V& y0, const V&
  * @brief This only works for strictly increasing functions!
  * @return interpolated index for a given value. If the value is smaller than all vector values, 0 is returned. If the value is greater than all vector values, (vector.size() - 1) is returned.
  */
+// remplacer par interpolate_index en dessous
 template <template<typename...> class Container, class T >
 T vector_interpolate_idx_for_value(const T value, const Container<T> &vector, decltype(vector.size()) idxInf = 0, decltype(vector.size()) idxSup = 0)
 {
@@ -166,7 +354,7 @@ T vector_interpolate_idx_for_value(const T value, const Container<T> &vector, de
 
     if (idxSup > idxInf) {
         do {
-            const decltype(vector.size()) idxMid = idxInf + decltype(vector.size()) (floor((idxSup - idxInf) / 2.));
+            const decltype(vector.size()) idxMid = idxInf + (idxSup - idxInf) / 2;
             const T valueMid = vector.at(idxMid);
 
             if (value < valueMid)
@@ -176,39 +364,46 @@ T vector_interpolate_idx_for_value(const T value, const Container<T> &vector, de
 
         } while (idxSup - idxInf > 1);
 
+        // Interpolation linéaire
         T valueInf = vector.at(idxInf);
         T valueSup = vector.at(idxSup);
 
-        // test si on a atteind la valeur
-        if (std::abs(valueInf - value) <= 10E-300) {
+        // Gestion des cas spéciaux avec tolérance numérique
+        const T epsilon = static_cast<T>(1e-300);
+
+        // test si on a atteind la valeur exacte
+        if (std::abs(valueInf - value) <= epsilon) {
             valueSup = value;
             idxSup = idxInf;
 
-        } else  if (std::abs(valueSup - value) <= 10E-300) {
+        } else  if (std::abs(valueSup - value) <= epsilon) {
             valueInf = value;
             idxInf = valueSup;
         }
 
         T idx;
-        if (std::abs(valueSup - valueInf) <= 10E-300) { // on recherche la taille du plateau, on élargie pour determiner le centre
-            while (idxInf>0 && std::abs(valueInf - vector.at(idxInf-1)) <= 10E-300) {
+        if (std::abs(valueSup - valueInf) <= epsilon) { // on recherche la taille du plateau, on élargie pour determiner le centre
+            // Élargir vers la gauche
+            while (idxInf>0 && std::abs(valueInf - vector.at(idxInf-1)) <= epsilon) {
                 idxInf -= 1;
                 valueInf = vector.at(idxInf);
             };
-            while (idxSup<vector.size()-1 && std::abs(valueSup- vector.at(idxSup+1)) <= 10E-300) {
+            // Élargir vers la droite
+            while (idxSup < vector.size()-1 && std::abs(valueSup - vector.at(idxSup+1)) <= epsilon) {
                 idxSup += 1;
                 valueSup = vector.at(idxSup);
             };
 
-            idx = (idxSup+idxInf)/2.;
+            idx = T((idxSup+idxInf)/2);
 
         } else {
             // On ressert l'intervale, une des bornes est sur le plateau
-            while (idxInf>0 && std::abs(valueInf - vector.at(idxInf+1)) <= 10E-300) {
+            while (idxInf>0 && std::abs(valueInf - vector.at(idxInf+1)) <= epsilon) {
                 idxInf += 1;
                 valueInf = vector.at(idxInf);
             };
-            while (idxSup<vector.size()-1 && std::abs(valueSup - vector.at(idxSup-1)) <= 10E-300) {
+            // Vérifier si la borne supérieure est sur un plateau
+            while (idxSup<vector.size()-1 && std::abs(valueSup - vector.at(idxSup-1)) <= epsilon) {
                 idxSup -= 1;
                 valueSup = vector.at(idxSup);
             };
@@ -219,9 +414,8 @@ T vector_interpolate_idx_for_value(const T value, const Container<T> &vector, de
             if (valueSup > valueInf)
                 prop = (value - valueInf) / (valueSup - valueInf);
 
-            idx =  prop * (idxSup-idxInf);
-            idx += T (idxInf);
-            //auto idx2 = interpolate(value, valueInf, valueSup, T(idxInf), T (idxSup));
+            idx =  idx = prop * T(idxSup - idxInf) + T(idxInf);
+
         }
         return idx;
 
@@ -230,6 +424,117 @@ T vector_interpolate_idx_for_value(const T value, const Container<T> &vector, de
     }
 
     return T (0);
+}
+
+
+/**
+ * @brief Interpolation linéaire d’un indice dans un tableau strictement croissant.
+ *
+ * La fonction accepte tout conteneur qui expose :
+ *   - size()
+ *   - front() / back()
+ *   - operator[](std::size_t)
+ *
+ * @tparam Container   Conteneur (QVector<T>, QList<T>, std::vector<T>, Eigen::VectorXd …)
+ * @tparam ValueT      Type des valeurs stockées (float, double, long double …)
+ * @tparam IndexT      Type du résultat (double, long double, float, std::size_t …)
+ *
+ * @param value        Valeur à interpoler.
+ * @param data         Conteneur de valeurs strictement croissantes.
+ * @param idxInfStart  Indice inférieur de départ (optionnel, 0 par défaut).
+ * @param idxSupStart  Indice supérieur de départ (optionnel, size‑1 par défaut).
+ *
+ * @return Un indice (type @p IndexT) où la valeur serait située.
+ *         Si la valeur est hors du domaine, on renvoie 0 ou size‑1.
+ */
+template <class Container,
+         class ValueT = typename Container::value_type,
+         class IndexT = double>
+IndexT interpolate_index(const ValueT& value,
+                         const Container& data,
+                         std::size_t idxInfStart = 0,
+                         std::size_t idxSupStart = static_cast<std::size_t>(-1))
+{
+    static_assert(std::is_floating_point<ValueT>::value,
+                  "ValueT must be a floating‑point type");
+    static_assert(std::is_arithmetic<IndexT>::value,
+                  "IndexT must be an arithmetic type");
+
+    const std::size_t n = data.size();
+    assert(n > 0 && "Container must not be empty");
+
+    // -----------------------------------------------------------------
+    // Gestion des bornes du domaine
+    // -----------------------------------------------------------------
+    if (value <= data.front())
+        return static_cast<IndexT>(0);
+    if (value >= data.back())
+        return static_cast<IndexT>(n - 1);
+
+    // -----------------------------------------------------------------
+    // Initialisation des indices de recherche
+    // -----------------------------------------------------------------
+    std::size_t idxInf = idxInfStart;
+    std::size_t idxSup = (idxSupStart == static_cast<std::size_t>(-1))
+                             ? n - 1
+                             : idxSupStart;
+
+    // -----------------------------------------------------------------
+    // Recherche binaire (dichotomie)
+    // -----------------------------------------------------------------
+    while (idxSup - idxInf > 1) {
+        const std::size_t idxMid = idxInf + (idxSup - idxInf) / 2;
+        const ValueT      valMid = data[idxMid];
+
+        if (value < valMid) {
+            idxSup = idxMid;
+        } else if (value > valMid) {
+            idxInf = idxMid;
+        } else {                     // valeur exactement égale à valMid
+            idxInf = idxMid;
+            idxSup = idxMid;
+            break;
+        }
+    }
+
+    // -----------------------------------------------------------------
+    // Gestion du plateau (valeurs identiques à cause de la précision)
+    // -----------------------------------------------------------------
+    // epsilon adapté à la précision du type flottant
+    const ValueT eps = std::numeric_limits<ValueT>::epsilon() *
+                       std::max<ValueT>({std::abs(value),
+                                         std::abs(data[idxInf]),
+                                         std::abs(data[idxSup])});
+
+    // Étendre à gauche tant que les valeurs sont « égales »
+    std::size_t left = idxInf;
+    while (left > 0 && std::abs(data[left] - data[left - 1]) <= eps)
+        --left;
+
+    // Étendre à droite tant que les valeurs sont « égales »
+    std::size_t right = idxSup;
+    while (right + 1 < n && std::abs(data[right] - data[right + 1]) <= eps)
+        ++right;
+
+    // Si tout le plateau couvre la zone recherchée, on renvoie son centre
+    if (std::abs(data[left] - data[right]) <= eps) {
+        return static_cast<IndexT>(left + right) / static_cast<IndexT>(2);
+    }
+
+    // -----------------------------------------------------------------
+    // Interpolation linéaire entre les bords du plateau
+    // -----------------------------------------------------------------
+    const ValueT vL = data[left];
+    const ValueT vR = data[right];
+
+    // t ∈ [0,1] représente la position relative de «value» entre vL et vR
+    const ValueT t = (value - vL) / (vR - vL);
+
+    // Calcul de l’indice réel (peut être non entier)
+    const IndexT idx = static_cast<IndexT>(left) +
+                       static_cast<IndexT>(t) * static_cast<IndexT>(right - left);
+
+    return idx;
 }
 
 template <typename T, typename U>
@@ -742,5 +1047,721 @@ std::vector<size_t> argsort(const std::vector<T>& v) {
 
 double erfcInv_approx(double x);
 double normInv(double p);
+
+#pragma mark UCV
+/* -----------------------------------------------------------------
+   1.  Fonction auxiliaire : noyau gaussien normalisé
+   ----------------------------------------------------------------- */
+inline double gaussian_kernel(double u) noexcept
+{
+    static constexpr double INV_SQRT_2PI = 0.3989422804014327; // 1/√(2π)
+    return INV_SQRT_2PI * std::exp(-0.5 * u * u);
+}
+double ucv_criterion(double h,
+                     const std::vector<double>& x,
+                     const std::size_t n);
+
+double golden_minimize(const std::vector<double>& x,
+                          double a, double b,
+                          double tol = 1e-8,
+                          int max_iter = 100);
+
+double brent_minimize(const std::vector<double>& x,
+                      double a, double b,
+                      double tol = 1e-8,
+                      int max_iter = 100);
+
+
+double bw_ucv(const std::vector<double>& data);
+
+double bw_ucv_naive(const std::vector<double>& data);
+
+#pragma mark UCV with FFTW
+
+/* Retourne la plus petite puissance de deux ≥ n */
+static std::size_t next_pow2(std::size_t n)
+{
+    std::size_t p = 1;
+    while (p < n) p <<= 1;
+    return p;
+}
+/* -----------------------------------------------------------------
+   2.  Construction de l’histogramme (empirical density)
+   ----------------------------------------------------------------- */
+struct Histogram
+{
+    std::vector<double> bins;   // nombre d’observations dans chaque bin
+    double               delta; // pas de la grille
+    double               xmin;  // origine (bord gauche du premier bin)
+    explicit Histogram(const std::vector<double>& data,
+                       std::size_t nbins = 0)
+    {
+        if (data.empty())
+            throw std::invalid_argument("Histogram: empty data");
+        const double data_min = *std::min_element(data.begin(), data.end());
+        const double data_max = *std::max_element(data.begin(), data.end());
+        const double range = data_max - data_min;
+
+        // Si toutes les valeurs sont identiques, on crée un petit intervalle artificiel
+        const double eps = std::numeric_limits<double>::epsilon();
+        const double effective_range = (range < eps) ? eps : range;
+        // Choix du pas de grille : on veut au moins 256 bins, mais pas plus de 2^14
+        const std::size_t min_bins = 256;
+        const std::size_t max_bins = 16384;
+        if (nbins == 0) {
+            nbins = static_cast<std::size_t>(std::ceil(effective_range));
+            nbins = std::max(min_bins, std::min(max_bins, nbins));
+        }
+        delta = effective_range / static_cast<double>(nbins);
+        xmin  = data_min - delta * 0.5;          // centre du premier bin = xmin + delta/2
+        bins.assign(nbins, 0.0);
+        for (double v : data) {
+            std::size_t idx = static_cast<std::size_t>(std::floor((v - xmin) / delta));
+            // protection contre les débordements numériques
+            if (idx >= nbins) idx = nbins - 1;
+            bins[idx] += 1.0;
+        }
+    }
+};
+
+/* -----------------------------------------------------------------
+   3.  Calcul du critère UCV à l’aide de la FFT
+   ----------------------------------------------------------------- */
+class UCV_FFT
+{
+public:
+    explicit UCV_FFT(const std::vector<double>& data)
+        : n_(data.size()),
+        hist_(data),
+        N_(next_pow2(2 * hist_.bins.size()))
+    {
+        const double delta = hist_.delta;
+
+        // ---------- Allocation ----------
+        in_   = (double*)fftw_malloc(sizeof(double) * N_);
+        out_  = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * (N_/2 + 1));
+        tmp_  = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * (N_/2 + 1));
+        prod_ = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * (N_/2 + 1));
+
+        // ---------- Histogramme NORMALISÉ (clé !) ----------
+        std::fill(in_, in_ + N_, 0.0);
+        for (std::size_t i = 0; i < hist_.bins.size(); ++i) {
+            in_[i] = hist_.bins[i] / delta;   // 🔥 correction majeure
+        }
+
+        // ---------- FFT histogramme ----------
+        plan_hist_ = fftw_plan_dft_r2c_1d((int)N_, in_, out_, FFTW_ESTIMATE);
+        fftw_execute(plan_hist_);
+
+        // ---------- constante correcte ----------
+        const_factor_ = 1.0 / (2.0 * n_ * std::sqrt(M_PI));
+    }
+
+    ~UCV_FFT()
+    {
+        fftw_destroy_plan(plan_hist_);
+        fftw_destroy_plan(plan_kernel_);
+        fftw_destroy_plan(plan_ifft_);
+        fftw_free(in_);
+        fftw_free(out_);
+        fftw_free(tmp_);
+        fftw_free(prod_);
+    }
+
+    double operator()(double h) const
+    {
+        if (h <= 0.0)
+            return std::numeric_limits<double>::infinity();
+
+        const double inv_h = 1.0 / h;
+        const double delta = hist_.delta;
+        const std::size_t nbins = hist_.bins.size();
+
+        // ---------- noyau discret ----------
+        std::fill(in_, in_ + N_, 0.0);
+
+        for (std::size_t k = 0; k < nbins; ++k) {
+            double u = (double)k * delta * inv_h;
+            in_[k] = (1.0 / h) * gaussian_kernel(u);
+        }
+
+        for (std::size_t k = 1; k < nbins; ++k) {
+            in_[N_ - k] = in_[k];
+        }
+
+        // ---------- FFT noyau ----------
+        plan_kernel_ = fftw_plan_dft_r2c_1d((int)N_, in_, tmp_, FFTW_ESTIMATE);
+        fftw_execute(plan_kernel_);
+
+        // ---------- produit fréquentiel ----------
+        for (std::size_t i = 0; i < N_/2 + 1; ++i) {
+            const double a = out_[i][0];
+            const double b = out_[i][1];
+            const double c = tmp_[i][0];
+            const double d = tmp_[i][1];
+
+            prod_[i][0] = a*c - b*d;
+            prod_[i][1] = a*d + b*c;
+        }
+
+        // ---------- IFFT ----------
+        plan_ifft_ = fftw_plan_dft_c2r_1d((int)N_, prod_, in_, FFTW_ESTIMATE);
+        fftw_execute(plan_ifft_);
+
+        const double scale = 1.0 / (double)N_;
+        for (std::size_t i = 0; i < N_; ++i)
+            in_[i] *= scale;
+
+        // ---------- somme ----------
+        double sum_all = 0.0;
+        for (std::size_t k = 0; k < nbins; ++k) {
+            sum_all += in_[k] * delta * delta;   // 🔥 correct
+        }
+
+        // ---------- retrait diagonale ----------
+        const double K0 = 1.0 / (h * std::sqrt(2.0 * M_PI));
+        const double sum_ij = sum_all - n_ * K0;
+
+        // ---------- UCV ----------
+        const double term1 = sum_ij / (n_ * (n_ - 1));
+        const double uc = term1 - const_factor_ / h;
+
+        return uc;
+    }
+
+private:
+    std::size_t n_;
+    Histogram hist_;
+    std::size_t N_;
+
+    double const_factor_;
+
+    double* in_;
+    fftw_complex* out_;
+    fftw_complex* tmp_;
+    fftw_complex* prod_;
+
+    mutable fftw_plan plan_hist_;
+    mutable fftw_plan plan_kernel_;
+    mutable fftw_plan plan_ifft_;
+};
+
+/* -----------------------------------------------------------------
+   4.  Recherche du minimum (Brent) – même principe que la version
+       O(n²) mais le critère est maintenant calculé via FFT.
+   ----------------------------------------------------------------- */
+
+double brent_minimize(const UCV_FFT& ucv,
+                      double a, double b,
+                      double tol = 1e-8,
+                      int max_iter = 100);
+
+double bw_ucv_fft(const std::vector<double>& data);
+
+
+static inline double phi(double z) {
+    static const double inv_sqrt_2pi = 0.39894228040143267794;
+    return inv_sqrt_2pi * std::exp(-0.5 * z * z);
+};
+
+double ucv_score_gaussian(std::vector<double> x, double h);
+double bw_ucv_gaussian(std::vector<double> x,
+                       double hmin,
+                       double hmax,
+                       int grid = 200);
+
+#pragma mark SJ
+
+// ================================================================
+//  Utilitaires
+// ================================================================
+
+static double mean_vec(const std::vector<double>& x) {
+    return std::accumulate(x.begin(), x.end(), 0.0) / x.size();
+}
+
+static double var_vec(const std::vector<double>& x) {
+    double m = mean_vec(x);
+    double s = 0.0;
+    for (double v : x) s += (v - m) * (v - m);
+    return s / (x.size() - 1);
+}
+
+// ================================================================
+//  Noyaux dérivés (convolutions gaussiennes)
+//  Reproduit exactement les formules de Sheather & Jones (1991)
+// ================================================================
+
+// phi^(r)(x) = r-ième dérivée de la densité normale standard
+// phi^(4)(x) = (x^4 - 6x^2 + 3) * phi(x)
+// phi^(6)(x) = (x^6 - 15x^4 + 45x^2 - 15) * phi(x)
+
+static double phi4(double x) {
+    double x2 = x * x;
+    return (x2*x2 - 6.0*x2 + 3.0) * std::exp(-0.5*x2) / std::sqrt(2.0*M_PI);
+}
+
+static double phi6(double x) {
+    double x2 = x * x;
+    return (x2*x2*x2 - 15.0*x2*x2 + 45.0*x2 - 15.0)
+           * std::exp(-0.5*x2) / std::sqrt(2.0*M_PI);
+}
+
+// ================================================================
+//  Estimateurs des fonctionnelles de densité
+//  S_r(h) = (1/n²) Σ_i Σ_j phi^(r)((x_i - x_j)/h) / h^(r+1)
+// ================================================================
+// fonction trop lente, préférer la version fft
+static double S4(const std::vector<double>& x, double h) {
+    int n = x.size();
+    double sum = 0.0;
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            sum += phi4((x[i] - x[j]) / h);
+    return sum / (static_cast<double>(n) * static_cast<double>(n) * std::pow(h, 5));
+}
+
+inline double S6(const std::vector<double>& x, double h) {
+    int n = x.size();
+    double sum = 0.0;
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            sum += phi6((x[i] - x[j]) / h);
+    return sum / (static_cast<double>(n) * static_cast<double>(n) * std::pow(h, 7));
+}
+
+// Règle pratique : M = première puissance de 2 >= max(1024, n/100)
+static int chooseFFtSize(int n) {
+    int M = 1024;
+    while (M < n / 100) M <<= 1;  // doublement jusqu'à n/100
+    return M;
+}
+
+/**
+ * @brief Estimates θ₄₄ = ∫ f⁽⁴⁾(x)² dx via FFT — O(n log n)
+ *
+ * @details
+ * Exploits the convolution theorem:
+ * @f[
+ *   \hat\theta_{44} = \frac{1}{n^2} \sum_i \sum_j \phi^{(4)}\!\left(\frac{x_i-x_j}{h}\right) h^{-5}
+ *                   = \frac{1}{n} \int \hat f_h^{(4)}(x)^2 \, dx
+ * @f]
+ * In the Fourier domain, with @f$ \hat\phi(\omega) = e^{-\omega^2/2} @f$:
+ * @f[
+ *   \hat\theta_{44} = \frac{1}{2\pi n^2}
+ *     \int_{-\infty}^{+\infty} \omega^4 \, e^{-\omega^2 h^2} \,
+ *     \left|\hat p(\omega)\right|^2 d\omega
+ * @f]
+ * where @f$ \hat p @f$ is the DFT of the binned data.
+ *
+ * @param x  Input sample.
+ * @param h  Pilot bandwidth.
+ * @param M  FFT grid size (default 1024, must be a power of 2).
+ * @return   Estimate of @f$ \hat\theta_{44} @f$.
+ */
+static double S4_fft(const std::vector<double>& x, double h, int M = 1024)
+{
+    const int    n   = static_cast<int>(x.size());
+    const double xmin = *std::min_element(x.begin(), x.end());
+    const double xmax = *std::max_element(x.begin(), x.end());
+
+    // ----------------------------------------------------------------
+    // 1. Grille régulière avec padding 4h de chaque côté
+    // ----------------------------------------------------------------
+    const double a     = xmin - 4.0 * h;
+    const double b     = xmax + 4.0 * h;
+    const double delta = (b - a) / static_cast<double>(M);   // pas de grille
+
+    // ----------------------------------------------------------------
+    // 2. Binning linéaire (linear binning) — O(n)
+    //    Chaque observation est répartie entre les deux bins voisins
+    //    proportionnellement à sa distance aux centres de bins.
+    // ----------------------------------------------------------------
+    std::unique_ptr<double[], decltype(&fftw_free)>
+        grid(static_cast<double*>(fftw_malloc(M * sizeof(double))), fftw_free);
+
+    std::fill(grid.get(), grid.get() + M, 0.0);
+
+    for (int i = 0; i < n; ++i) {
+        const double z   = (x[i] - a) / delta;   // position en unités de bins
+        const int    k   = static_cast<int>(std::floor(z));
+        const double frac = z - static_cast<double>(k);
+
+        if (k >= 0 && k < M - 1) {
+            grid[k]     += (1.0 - frac) / static_cast<double>(n);
+            grid[k + 1] +=        frac  / static_cast<double>(n);
+        } else if (k == M - 1) {
+            grid[k]     += (1.0 - frac) / static_cast<double>(n);
+        }
+    }
+
+    // ----------------------------------------------------------------
+    // 3. FFT forward : grid → spectrum
+    // ----------------------------------------------------------------
+    const int complexSize = M / 2 + 1;
+
+    std::unique_ptr<double[], decltype(&fftw_free)>
+        spectrum(static_cast<double*>(
+                     fftw_malloc(2 * complexSize * sizeof(double))), fftw_free);
+
+    fftw_plan plan_fwd = fftw_plan_dft_r2c_1d(
+        M, grid.get(),
+        reinterpret_cast<fftw_complex*>(spectrum.get()),
+        FFTW_ESTIMATE);
+
+    fftw_execute(plan_fwd);
+    fftw_destroy_plan(plan_fwd);
+
+    // ----------------------------------------------------------------
+    // 4. Intégration dans le domaine fréquentiel
+    //
+    //   θ₄₄ = (1 / 2π) × Σₖ ωₖ⁴ × exp(-ωₖ² h²) × |p̂(ωₖ)|² × Δω
+    //
+    //   avec ωₖ = 2πk / (M × delta)   (fréquence angulaire du bin k)
+    //   et   Δω = 2π / (M × delta)
+    //
+    //   Le facteur 1/fftLen² vient de la normalisation FFTW (non normalisée).
+    // ----------------------------------------------------------------
+    double sum = 0.0;
+    const double L    = static_cast<double>(M) * delta;  // longueur du domaine
+    const double dOmega = 2.0 * M_PI / L;                // pas fréquentiel
+    const double norm2  = static_cast<double>(M) * static_cast<double>(M); // correction FFTW
+
+    for (int k = 0; k < complexSize; ++k) {
+        const double omega  = static_cast<double>(k) * dOmega;
+        const double omega2 = omega * omega;
+        const double omega4 = omega2 * omega2;
+
+        // Module² de p̂(ωₖ), corrigé de la normalisation FFTW
+        const double re  = spectrum[2 * k]     / static_cast<double>(M);
+        const double im  = spectrum[2 * k + 1] / static_cast<double>(M);
+        const double mod2 = re * re + im * im;
+
+        // Filtre gaussien d'ordre 4
+        const double gauss = std::exp(-omega2 * h * h);
+
+        // Facteur 2 pour les fréquences négatives (sauf k=0 et k=M/2)
+        const double weight = (k == 0 || k == M / 2) ? 1.0 : 2.0;
+
+        sum += weight * omega4 * gauss * mod2;
+    }
+
+    // Normalisation finale : Δω / (2π)
+    return sum * dOmega / (2.0 * M_PI);
+}
+
+
+/**
+ * @brief Estimates θ₂₄ = ∫ f⁽⁶⁾(x)² dx via FFT — O(n log n)
+ *
+ * @details Identical to S4_fft() but uses @f$ \omega^6 @f$ in the integrand:
+ * @f[
+ *   \hat\theta_{24} = \frac{1}{2\pi n^2}
+ *     \int \omega^6 \, e^{-\omega^2 h^2} \left|\hat p(\omega)\right|^2 d\omega
+ * @f]
+ *
+ * @param x  Input sample.
+ * @param h  Pilot bandwidth (g₂).
+ * @param M  FFT grid size (default 1024, must be a power of 2).
+ * @return   Estimate of @f$ \hat\theta_{24} @f$.
+ */
+static double S6_fft(const std::vector<double>& x, double h, int M = 1024)
+{
+    const int    n    = static_cast<int>(x.size());
+    const double xmin = *std::min_element(x.begin(), x.end());
+    const double xmax = *std::max_element(x.begin(), x.end());
+
+    const double a     = xmin - 4.0 * h;
+    const double b     = xmax + 4.0 * h;
+    const double delta = (b - a) / static_cast<double>(M);
+
+    std::unique_ptr<double[], decltype(&fftw_free)>
+        grid(static_cast<double*>(fftw_malloc(M * sizeof(double))), fftw_free);
+
+    std::fill(grid.get(), grid.get() + M, 0.0);
+
+    for (int i = 0; i < n; ++i) {
+        const double z    = (x[i] - a) / delta;
+        const int    k    = static_cast<int>(std::floor(z));
+        const double frac = z - static_cast<double>(k);
+
+        if (k >= 0 && k < M - 1) {
+            grid[k]     += (1.0 - frac) / static_cast<double>(n);
+            grid[k + 1] +=        frac  / static_cast<double>(n);
+        } else if (k == M - 1) {
+            grid[k]     += (1.0 - frac) / static_cast<double>(n);
+        }
+    }
+
+    const int complexSize = M / 2 + 1;
+
+    std::unique_ptr<double[], decltype(&fftw_free)>
+        spectrum(static_cast<double*>(
+                     fftw_malloc(2 * complexSize * sizeof(double))), fftw_free);
+
+    fftw_plan plan_fwd = fftw_plan_dft_r2c_1d(
+        M, grid.get(),
+        reinterpret_cast<fftw_complex*>(spectrum.get()),
+        FFTW_ESTIMATE);
+
+    fftw_execute(plan_fwd);
+    fftw_destroy_plan(plan_fwd);
+
+    double sum = 0.0;
+    const double L       = static_cast<double>(M) * delta;
+    const double dOmega  = 2.0 * M_PI / L;
+
+    for (int k = 0; k < complexSize; ++k) {
+        const double omega  = static_cast<double>(k) * dOmega;
+        const double omega2 = omega * omega;
+        const double omega6 = omega2 * omega2 * omega2;   // ← ω⁶ ici
+
+        const double re   = spectrum[2 * k]     / static_cast<double>(M);
+        const double im   = spectrum[2 * k + 1] / static_cast<double>(M);
+        const double mod2 = re * re + im * im;
+
+        const double gauss  = std::exp(-omega2 * h * h);
+        const double weight = (k == 0 || k == M / 2) ? 1.0 : 2.0;
+
+        sum += weight * omega6 * gauss * mod2;
+    }
+
+    return sum * dOmega / (2.0 * M_PI);
+}
+
+// ================================================================
+//  Estimateurs de référence gaussiens (plug-in initial)
+//  Formules de Jones & Sheather (1991), eq. (15)-(16)
+// ================================================================
+/*
+// theta_22 pour une gaussienne de variance sigma²
+static double theta22_gauss(double sigma, int n) {
+    return 1.0 / (4.0 * std::sqrt(M_PI) * std::pow(sigma, 5) * n);
+}
+
+// theta_24 pour une gaussienne de variance sigma²
+static double theta24_gauss(double sigma, int n) {
+    return -3.0 / (8.0 * std::sqrt(M_PI) * std::pow(sigma, 7) * n);
+}
+
+// theta_44 pour une gaussienne de variance sigma²
+static double theta44_gauss(double sigma, int n) {
+    return 3.0 / (16.0 * std::sqrt(M_PI) * std::pow(sigma, 9) * n);
+}
+*/
+// ================================================================
+//  Bandwidths pilotes a et b (étape 1 de SJ)
+//  Reproduit R : scale = min(sd, IQR/1.349)
+// ================================================================
+
+static double iqr_vec(std::vector<double> x) {
+    std::sort(x.begin(), x.end());
+    int n = x.size();
+    // interpolation linéaire comme R
+    auto quantile = [&](double p) {
+        double h = (n - 1) * p;
+        int lo = (int)h;
+        int hi = lo + 1;
+        if (hi >= n) return x[n-1];
+        return x[lo] + (h - lo) * (x[hi] - x[lo]);
+    };
+    return quantile(0.75) - quantile(0.25);
+}
+
+inline double scale_factor(const std::vector<double>& x) {
+    double s  = std::sqrt(var_vec(x));
+    double iq = iqr_vec(x) / 1.349;
+    return std::min(s, iq);
+}
+
+// ================================================================
+//  Méthode SJ — Direct Plug-In (DPI)
+//  Reproduit bw.SJ(x, method="dpi") de R
+// ================================================================
+
+double bw_SJ_dpi(const std::vector<double>& x);
+// ================================================================
+//  Méthode SJ — Solve-The-Equation (STE)
+//  Reproduit bw.SJ(x, method="ste") de R  — plus précis que DPI
+// ================================================================
+
+// Équation à résoudre : h - (c1 / S4(x, alpha2 * h^(5/7)))^(1/5) = 0
+/**
+ * @brief Fixed-point equation for the Sheather-Jones STE bandwidth selector.
+ *
+ * @details Evaluates:
+ * @f[
+ *   f(h) = h - \left(\frac{c_1}{\hat\theta_{44}(\alpha_2 \cdot h^{5/7})}\right)^{1/5}
+ * @f]
+ * The STE bandwidth is the root of this equation, found by bisection in bw_SJ_ste().
+ *
+ * Returns NaN if the functional estimate is non-positive (degenerate case),
+ * which bisect() must handle explicitly.
+ *
+ * @param h       Current bandwidth candidate.
+ * @param x       Input data sample.
+ * @param alpha2  Intermediate scale factor (1.357 × |θ₂₄/θ₄₄|^(1/7)).
+ * @param c1      Normalisation constant (1 / (2√π × n)).
+ * @param M       FFT grid size for S4_fft (must be a power of 2).
+ *
+ * @return f(h) = h - (c1/θ̂₄₄)^(1/5), or NaN if θ̂₄₄ ≤ 0.
+ *
+ * @see bw_SJ_ste(), S4_fft(), bisect()
+ */
+inline double sj_equation(double h,
+                          const std::vector<double>& x,
+                          double alpha2,
+                          double c1,
+                          int    M = 1024)          // ← ajout
+{
+    const double h_pilot = alpha2 * std::pow(h, 5.0 / 7.0);
+
+    if (h_pilot <= 0.0)
+        return std::numeric_limits<double>::quiet_NaN();
+
+    const double denom = S4_fft(x, h_pilot, M);     // ← O(n log n)
+
+    if (denom <= 0.0 || std::abs(denom) < 1e-15)
+        return std::numeric_limits<double>::quiet_NaN();
+
+    return h - std::pow(c1 / denom, 0.2);
+}
+
+// Bisection pour résoudre l'équation STE (comme uniroot dans R)
+template <typename F>
+double bisect(F f, double a, double b, double tol, int max_iter)
+{
+    double fa = f(a);
+    double fb = f(b);
+
+    if (std::isnan(fa) || std::isnan(fb) || fa * fb > 0.0)
+        return std::numeric_limits<double>::quiet_NaN();
+
+    for (int i = 0; i < max_iter; ++i) {
+        const double m  = 0.5 * (a + b);
+        const double fm = f(m);
+
+        // Point dégénéré : S4_fft a échoué, on resserre prudemment
+        if (std::isnan(fm)) {
+            if (fa > 0.0) b = m;
+            else          a = m;
+            continue;
+        }
+
+        if (std::abs(b - a) < tol || std::abs(fm) < tol * 1e-3)
+            return m;
+
+        if (fa * fm < 0.0) { b = m; fb = fm; }
+        else               { a = m; fa = fm; }
+    }
+
+    return 0.5 * (a + b);
+}
+
+/**
+ * @brief Estimates the optimal KDE bandwidth using the Sheather-Jones
+ *        Solve-The-Equation (STE) plug-in method.
+ *
+ * @details
+ * Implements the Sheather-Jones STE selector as described in:
+ *
+ * > Sheather, S.J. & Jones, M.C. (1991).
+ * > *A reliable data-based bandwidth selection method for kernel density estimation.*
+ * > Journal of the Royal Statistical Society, Series B, **53**(3), 683–690.
+ *
+ * The algorithm proceeds in three stages:
+ *
+ * **1. Pilot bandwidths (plug-in stage)**
+ * Two pilot bandwidths are computed from the data scale factor σ:
+ * @f[
+ *   g_1 = 1.24 \, \sigma \, n^{-1/7}, \qquad
+ *   g_2 = 1.23 \, \sigma \, n^{-1/9}
+ * @f]
+ * These are used to estimate the functionals:
+ * @f[
+ *   \hat\theta_{44} = S_4(x, g_1), \qquad
+ *   \hat\theta_{24} = S_6(x, g_2)
+ * @f]
+ * where @f$ S_r @f$ denotes the empirical estimate of the @f$ r @f$-th
+ * derivative functional of the density, computed via @f$ \phi^{(r)} @f$.
+ *
+ * **2. Intermediate bandwidth α₂**
+ * @f[
+ *   \alpha_2 = 1.357
+ *     \left|\frac{\hat\theta_{24}}{\hat\theta_{44}}\right|^{1/7}
+ * @f]
+ *
+ * **3. Fixed-point equation (STE)**
+ * The final bandwidth @f$ h @f$ is the solution of:
+ * @f[
+ *   h = \left(\frac{c_1}{S_4(x,\, \alpha_2 \cdot h^{5/7})}\right)^{1/5},
+ *   \qquad c_1 = \frac{1}{2\sqrt{\pi}\, n}
+ * @f]
+ * solved by bisection over an interval automatically widened if necessary.
+ *
+ * **Fallback to Silverman's rule of thumb**
+ * @f[
+ *   h_{\text{Silverman}} = 0.9 \, \sigma \, n^{-1/5}
+ * @f]
+ * is returned when:
+ * - @f$ |\hat\theta_{44}| @f$ or @f$ |\hat\theta_{24}| @f$ is numerically zero,
+ * - no sign change is found in the bisection interval after 20 enlargement steps,
+ * - @c bisect() returns NaN.
+ *
+ * @note Complexity is dominated by @f$ S_4 @f$ and @f$ S_6 @f$,
+ *       each @f$ O(n^2) @f$. For large traces (@f$ n > 10^4 @f$),
+ *       consider a FFT-based implementation.
+ *
+ * @param x        Input data sample (run-part of the MCMC trace).
+ *                 Must contain at least 2 distinct values.
+ * @param tol      Convergence tolerance for the bisection solver.
+ *                 Defaults to @c 1e-6.
+ * @param max_iter Maximum number of bisection iterations.
+ *                 Defaults to @c 100.
+ *
+ * @return Optimal bandwidth @f$ h > 0 @f$ for Gaussian kernel density estimation,
+ *         or Silverman's fallback if the STE equation cannot be solved.
+ *
+ * @see S4(), S6(), bisect(), sj_equation(), scale_factor()
+ * @see Sheather & Jones (1991), JRSS-B 53(3):683–690.
+ */
+double bw_SJ_ste(const std::vector<double>& x,
+                 double tol      = 1e-6,
+                 int    max_iter = 100);
+
+#pragma mark tempering
+
+// a) Exponentiel décroit (α > 1)
+inline double schedule_exp_pow(double sigma, double T, double alpha = 2.0)
+{
+    return sigma * std::pow(alpha, T);          // sigma_T = sigma * α^T
+}
+// b) Exponentiel doux (k > 0)
+inline double schedule_exp(double sigma, double T, double k = 0.7)
+{
+    return sigma * std::exp(k * T);             // sigma_T = sigma * e^{kT}
+}
+// c) Linéaire (a > 0, b > 0)
+inline double schedule_linear(double sigma, double T,
+                              double a = 0.1, double b = 0.2)
+{
+    return sigma * (a + b * T);                 // sigma_T = sigma * (a + b·T)
+}
+// d) Inverse polynomial (c > 0)
+inline double schedule_inverse_poly(double sigma, double T,
+                                    double T_max, double c = 0.5)
+{
+    double factor = 1.0 / (1.0 + c * (T_max - T));
+    return sigma * factor;                      // sigma_T = sigma / (1 + c·ΔT)
+}
+// e) Puissance (p > 0)
+inline double schedule_power(double sigma, double T,
+                             double T_max, double p = 0.5)
+{
+    double ratio = T / T_max;                   // entre 0 et 1
+    return sigma * std::pow(ratio, p);          // sigma_T = sigma * (T/T_max)^p
+}
+
+
 
 #endif

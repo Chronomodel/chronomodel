@@ -556,7 +556,7 @@ void GraphViewResults::generateTraceCurves(const std::vector<ChainSpecs> &chains
         curve.mPen.setColor(Painting::chainColors.at(i));
         mGraph->add_curve(curve);
 
-        const Quartiles &quartiles = variable->mChainsResults.at(i).traceAnalysis.quartiles;
+        const Quartiles &quartiles = variable->mChainsResults[i].traceAnalysis.quartiles;
 
         QColor colBorder = QColor(Qt::darkBlue).darker(100);
         colBorder.setAlpha(100);
@@ -592,10 +592,10 @@ void GraphViewResults::generateLogTraceCurves(const std::vector<ChainSpecs> &cha
             curve.mDataVector.push_back(std::log10(value));
         }
 
-        curve.mPen.setColor(Painting::chainColors.at(i));
+        curve.mPen.setColor(Painting::chainColors[i]);
         mGraph->add_curve(curve);
 
-        const Quartiles &quartiles = variable->mChainsResults.at(i).traceAnalysis.quartiles;
+        const Quartiles &quartiles = variable->mChainsResults[i].traceAnalysis.quartiles;
 
         QColor colBorder = QColor(Qt::darkBlue).darker(100);
         colBorder.setAlpha(100);
@@ -645,7 +645,8 @@ void GraphViewResults::generateCorrelCurves(const std::vector<ChainSpecs> &chain
         mGraph->add_curve(curve);
 
         //to do, we only need the totalIter number?
-        const double n = variable->runRawTraceForChain(mChains, i).size();
+        //const double n = variable->runRawTraceForChain(mChains, i).size();
+        const double n = variable->acquiredTraceforChain(mChains, i).size();
         const double limit = 1.96 / sqrt(n);
 
         const GraphCurve &curveLimitLower = horizontalLine(-limit, "Correl Limit Lower " + QString::number(i),

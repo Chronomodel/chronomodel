@@ -94,7 +94,7 @@ MainWindow::MainWindow(QWidget* parent):
     mUndoDock->setAllowedAreas(Qt::RightDockWidgetArea);
     addDockWidget(Qt::RightDockWidgetArea, mUndoDock);
 #ifdef DEBUG
-    mUndoDock->setVisible(false); // toggle to see the undo-list
+    mUndoDock->setVisible(true); // toggle to see the undo-list
 #else
     mUndoDock->setVisible(false);
 #endif
@@ -239,15 +239,11 @@ void MainWindow::createActions()
     mUndoAction->setText(tr("Undo"));
     mUndoAction->setToolTip(tr("Undo"));
 
-   // connect(mUndoAction, &QAction::triggered, this, &MainWindow::toggleUndo);
-
     mRedoAction = mUndoStack->createRedoAction(this);
     mRedoAction->setShortcuts(QKeySequence::Redo);
     mRedoAction->setIcon(QIcon(":redo_p.png"));
     mRedoAction->setText(tr("Redo"));
     mRedoAction->setToolTip(tr("Redo"));
-
-   // connect(mRedoAction, &QAction::triggered, this, &MainWindow::toggleRedo);
 
     mUndoViewAction = mUndoDock->toggleViewAction();
     mUndoViewAction->setText(tr("Show Undo Stack"));
@@ -533,7 +529,7 @@ void MainWindow::newProject()
             /* Reset the project state and the MCMC Setting to the default value
              * and then send a notification to update the views : send desabled */
 
-            mProject->initState(NEW_PROJECT_REASON);// emit showStudyPeriodWarning();
+            mProject->initState();// emit showStudyPeriodWarning();
 
 
             activateInterface(true); // mProject doit exister
@@ -632,7 +628,7 @@ void MainWindow::openProject()
                 mProjectView->setProject();
             }
 
-            mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, true);
+            mProject->pushProjectState(mProject->mState, Project::ReasonId::ProjectLoaded, true);
 
             updateWindowTitle();
 
@@ -670,7 +666,7 @@ void MainWindow::insertProject()
         QJsonObject new_state;
         if (mProject->insert(path, new_state)) {
             mProjectView->setShowAllThumbs(true);
-            mProject->pushProjectState(new_state, INSERT_PROJECT_REASON, true);
+            mProject->pushProjectState(new_state, Project::ReasonId::InsertProject, true);
 
         }
 
@@ -712,7 +708,7 @@ void MainWindow::closeProject()
         mProject->askToSave(tr("Save current project as..."));
         mUndoStack->clear();
 
-        mProject->initState(CLOSE_PROJECT_REASON);
+        mProject->initState();
         mProject->mAutoSaveTimer->stop();
 
         AppSettings::mLastDir = QString();
@@ -761,6 +757,7 @@ void MainWindow::updateWindowTitle()
     #else
         const QString file_name = " DEBUG Mode " + (AppSettings::mLastFile.isEmpty() ?  "" : QString(" - ") + AppSettings::mLastFile  + saved_sign);
     #endif
+        std::cout << "MainWindow::updateWindowTitle] version " << VERSION_STRING << std::endl;
 #else
     const QString file_name = (AppSettings::mLastFile.isEmpty() ?  "" : QString(" - ") + AppSettings::mLastFile + saved_sign);
 #endif
@@ -769,7 +766,6 @@ void MainWindow::updateWindowTitle()
     setWindowTitle(file_name);
 
 #else
-    std::cout << "MainWindow::updateWindowTitle] version " << VERSION_STRING << std::endl;
     setWindowTitle(qApp->applicationName() + " v" + VERSION_STRING + " " + file_name);// see main.cpp for the application name
 #endif
 }
@@ -779,7 +775,7 @@ void MainWindow::updateWindowTitle()
  */
 void MainWindow::updateProject()
 {
-    qDebug()<<"[MainWindow::updateProject]";
+    qDebug() << "[MainWindow::updateProject]";
 
     if (mProject->structureIsChanged())
         noResult(); // performed by push() and Project::pushProjectState(), but necessary when using redo(), which uses Project::projectStateChanged()
@@ -997,7 +993,7 @@ void MainWindow::rebuildExportCurve()
     std::pair<unsigned, unsigned> mapSizeXY = std::pair<unsigned, unsigned> {curveModel->mPosteriorMeanG.gx.mapG.column(), curveModel->mPosteriorMeanG.gx.mapG.row()};
 
     // Display Rebuild Window
-#ifdef DEBUG
+#ifdef WITHCURVEFILTER
     //std::pair<double, double> minMaxPFilter (curveModel->mPosteriorMeanG.gx.mapGP.rangeY.first*10, curveModel->mPosteriorMeanG.gx.mapGP.rangeY.second*10);
     std::pair<double, double> minMaxPFilter (-INFINITY, +INFINITY);
 
@@ -1063,7 +1059,7 @@ void MainWindow::rebuildExportCurve()
         int totalIterAccepted = 1;
         if (!curveModel->compute_Y) {
             for (auto &splineXYZ : runTrace) {
-#ifdef DEBUG
+#ifdef WITHCURVEFILTER
 
                 curveModel->memo_PosteriorG_filtering(meanG.gx, splineXYZ.splineX, totalIterAccepted, minMaxPFilter );
 #else
@@ -1121,7 +1117,7 @@ void MainWindow::rebuildExportCurve()
             if (!curveModel->compute_Y) {
                 for (auto &splineXYZ : runTraceByChain) {
 
-#ifdef DEBUG
+#ifdef WITHCURVEFILTER
                     curveModel->memo_PosteriorG_filtering(meanGByChain.gx, splineXYZ.splineX, totalIterAccepted, minMaxPFilter );
 #else
                     curveModel->memo_PosteriorG(meanGByChain.gx, splineXYZ.splineX, totalIterAccepted );
@@ -1370,7 +1366,7 @@ void MainWindow::readSettings(const QString& defaultFilePath)
 
                 mProjectView->setProject();
 
-                mProject->pushProjectState(mProject->mState, PROJECT_LOADED_REASON, false); // notify false, sinon do updatProject and redo update()
+                mProject->pushProjectState(mProject->mState, Project::ReasonId::ProjectLoaded, false); // notify false, sinon do updatProject and redo update()
 
                 if (mProject->withResults()) {
                     mViewLogAction -> setEnabled(true);

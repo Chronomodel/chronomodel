@@ -689,24 +689,40 @@ void ModelCurve::generateCorrelations(const std::vector<ChainSpecs> &chains)
 #endif
 }
 
-void ModelCurve::generateNumericalResults(const std::vector<ChainSpecs> &chains)
+void ModelCurve::generateDensityNumericalResults(const std::vector<ChainSpecs> &chains)
 {
-    Model::generateNumericalResults(chains);
+    Model::generateDensityNumericalResults(chains);
 
     if (is_curve) {
         for (std::shared_ptr<Event>& event : mEvents) {
             if (event->mVg.mSamplerProposal != MHVariable::eFixe)
-                event->mVg.generateNumericalResults(chains);
+                event->mVg.generateDensityNumericalResults(chains);
         }
         if (mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
-            mLambdaSpline.generateNumericalResults(chains);
+            mLambdaSpline.generateDensityNumericalResults(chains);
 #ifdef KOMLAN
         if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
-            mS02Vg.generateNumericalResults(chains);
+            mS02Vg.generateDensityNumericalResults(chains);
 #endif
     }
 }
+void ModelCurve::generateTraceNumericalResults(const std::vector<ChainSpecs> &chains)
+{
+    Model::generateTraceNumericalResults(chains);
 
+    if (is_curve) {
+        for (std::shared_ptr<Event>& event : mEvents) {
+            if (event->mVg.mSamplerProposal != MHVariable::eFixe)
+                event->mVg.generateTraceNumericalResults(chains);
+        }
+        if (mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
+            mLambdaSpline.generateTraceNumericalResults(chains);
+#ifdef KOMLAN
+        if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
+            mS02Vg.generateTraceNumericalResults(chains);
+#endif
+    }
+}
 void ModelCurve::clearThreshold()
 {
     Model::clearThreshold();
@@ -919,38 +935,31 @@ void ModelCurve::setThresholdToAllModel(const double threshold)
 }
 
 #pragma mark Loop
-void ModelCurve::memo_accept(const unsigned i_chain)
+/*
+void ModelCurve::memo_accepted_state(const unsigned i_chain)
 {
-    Model::memo_accept(i_chain);
+    Model::memo_accepted_state(i_chain);
 
     if (getProject_ptr()->isCurve()) {
-        /* --------------------------------------------------------------
-         *  D -  Memo S02 Vg - not Bayesian
-         * -------------------------------------------------------------- */
 
-        /* --------------------------------------------------------------
-         *  E -  Memo Vg
-         * -------------------------------------------------------------- */
         for (auto&& event : mEvents) {
             if (event->mVg.mSamplerProposal != MHVariable::eFixe) {
-                event->mVg.memo_accept(i_chain);
+                event->mVg.memo_accepted_state(i_chain);
             }
         }
 
-        /* --------------------------------------------------------------
-         * F - Memo Lambda
-         * -------------------------------------------------------------- */
         // On stocke le log10 de Lambda Spline pour afficher les résultats a posteriori
         if (mLambdaSpline.mSamplerProposal != MHVariable::eFixe) {
-            mLambdaSpline.memo_accept(i_chain);
+            mLambdaSpline.memo_accepted_state(i_chain);
         }
 #ifdef KOMLAN
         if (mS02Vg.mSamplerProposal != MHVariable::eFixe) {
-            mS02Vg.memo_accept(i_chain);
+            mS02Vg.memo_accepted_state(i_chain);
         }
 #endif
     }
 }
+*/
 
 /**
  * Idem Chronomodel + initialisation des variables aléatoires VG (events) et Lambda Spline (global)
@@ -972,23 +981,23 @@ void ModelCurve::initVariablesForChain()
     for (std::shared_ptr<Event>& event : mEvents) {
         //event->mVg.clear();
         //event->mVg.reserve(initReserve);
-        event->mVg.mNbValuesAccepted.resize(mChains.size());
+        //event->mVg.mNbValuesAccepted.resize(mChains.size());
 
-        event->mVg.mLastAccepts.reserve(acceptBufferLen);
-        event->mVg.mLastAcceptsLength = acceptBufferLen;
+        //event->mVg.mLastMHAccepts.reserve(acceptBufferLen);
+        event->mVg.mLastMHAcceptsLength = acceptBufferLen;
     }
 
     //mLambdaSpline.clear();
     //mLambdaSpline.reserve(initReserve);
-    mLambdaSpline.mNbValuesAccepted.resize(mChains.size());
+    //mLambdaSpline.mNbValuesAccepted.resize(mChains.size());
 
-    mLambdaSpline.mLastAccepts.reserve(acceptBufferLen);
-    mLambdaSpline.mLastAcceptsLength = acceptBufferLen;
+    //mLambdaSpline.mLastMHAccepts.reserve(acceptBufferLen);
+    mLambdaSpline.mLastMHAcceptsLength = acceptBufferLen;
 
 #ifdef KOMLAN
     mS02Vg.mNbValuesAccepted.resize(mChains.size());
-    mS02Vg.mLastAccepts.reserve(acceptBufferLen);
-    mS02Vg.mLastAcceptsLength = acceptBufferLen;
+    mS02Vg.mLastMHAccepts.reserve(acceptBufferLen);
+    mS02Vg.mLastMHAcceptsLength = acceptBufferLen;
 #endif
 
 

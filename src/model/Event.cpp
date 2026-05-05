@@ -1706,10 +1706,14 @@ double Event::getThetaMax(double defaultValue)
     return result;
 }
 
+
+
+
 void Event::updateTheta_v3(const double tmin, const double tmax)
 {
     for (auto&& date : mDates )   {
         date.updateDate(mTheta.mX, mS02Theta.mX, mAShrinkage);
+
     }
 
     const double min = getThetaMin(tmin);
@@ -1725,20 +1729,20 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
     //  On est en "wiggle" si au moins une des mesures a un delta > 0.
     // -------------------------------------------------------------------------------------------------
 
-    double sum_p = 0.;
-    double sum_t = 0.;
+    double sum_p = 0.0;
+    double sum_t = 0.0;
 
     for (auto&& date: mDates) {
-        const double variance  = pow(date.mSigmaTi.mX, 2.);
+        const double variance  = pow(date.mSigmaTi.mX, 2);
         sum_t += (date.mTi.mX + date.mDelta) / variance;
-        sum_p += 1. / variance;
+        sum_p += 1.0 / variance;
     }
-    const double theta_avg = sum_t / sum_p;
-    const double sigma = 1. / sqrt(sum_p);
+    const double ti_avg = sum_t / sum_p;
+    const double sigma = 1.0 / sqrt(sum_p);
 
     if (min == max) {
-        const double theta = min;
-        mTheta.accept_update(theta);
+        double try_theta = min;
+        mTheta.accept_update(try_theta);
 
     } else {
         switch(mTheta.mSamplerProposal)
@@ -1746,8 +1750,8 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
         case MHVariable::eDoubleExp:
         {
             try {
-                const double theta = Generator::gaussByDoubleExp(theta_avg, sigma, min, max);
-                mTheta.accept_update(theta);
+                double try_theta = Generator::gaussByDoubleExp(ti_avg, sigma, min, max);
+                mTheta.accept_update(try_theta);
 
             }
             catch(QString error) {
@@ -1759,34 +1763,44 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
             // Event Prior
         case MHVariable::eBoxMuller:
         {
-            double theta;
+            /* double theta;
+
             long long counter = 0.;
             do {
-                theta = Generator::normalDistribution(theta_avg, sigma);
+                theta = Generator::normalDistribution(ti_avg, sigma);
                 ++counter;
                 if (counter == 100000000)
                     throw QObject::tr("No MCMC solution could be found using event method %1 for event named %2 ( %3  trials done)").arg(MHVariable::getSamplerProposalText(mTheta.mSamplerProposal), getQStringName(), QString::number(counter));
 
             } while(theta < min || theta > max);
+            */
 
-            mTheta.accept_update(theta);
+            double try_theta = Generator::truncatedNormal(ti_avg, sigma, min, max);
+            mTheta.accept_update(try_theta);
             break;
         }
 
         case MHVariable::eMHAdaptGauss:
         {
             // MH: The only case where the acceptance rate makes sense, since we use sigma MH :
-            const double try_theta = Generator::normalDistribution(mTheta.mX, mTheta.mSigmaMH);
+            double try_theta = Generator::normalDistribution(mTheta.mX, mTheta.mSigmaMH);
             double rate = 0.0;
             if (try_theta >= min && try_theta <= max) {
-                double diff1 = try_theta - theta_avg;
-                double diff2 = mTheta.mX - theta_avg;
-                rate = std::exp(-0.5 * (diff1*diff1 - diff2*diff2) / (sigma*sigma));
+                double diff1 = try_theta - ti_avg;
+                double diff2 = mTheta.mX - ti_avg;
+                rate = -0.5 * (diff1*diff1 - diff2*diff2) / (sigma*sigma);
 
-                // rapport = exp((-0.5/(sigma*sigma)) * (pow(try_theta - theta_avg, 2.) - pow(mTheta.mX - theta_avg, 2.)));
             }
-
-            mTheta.try_update(try_theta, rate);
+#ifdef DEBUG
+            if (try_theta <min  || max < try_theta) {
+                std::cout << "[updateTheta_v3] 🔄 " << mName
+                          << " min = " << min << " max = " << max
+                          << ", theta = " << try_theta
+                          << ((min < try_theta && try_theta < max) ? "✅ YES" : "❌ NO")
+                          << std::endl;
+            }
+#endif
+            mTheta.try_update_log(try_theta, rate);
             break;
         }
 
@@ -1794,12 +1808,12 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
             break;
         }
     }
-    //qDebug() << "[Event::updateTheta_v3]-----------> Event update : " << getQStringName() << " : " << mTheta.mX << " between" << "[" << min << " ; " << max << "]";
+
 
 }
 
 // identique à la updateTheta_v3
-// mais à la place de date prior, j'ai mis une loi mélange de gaussienne
+// mais à la place de date prior,
 void Event::updateTheta_v4(const double tmin, const double tmax)
 {
     for (auto&& date : mDates )   {
@@ -1819,107 +1833,58 @@ void Event::updateTheta_v4(const double tmin, const double tmax)
     //  On est en "wiggle" si au moins une des mesures a un delta > 0.
     // -------------------------------------------------------------------------------------------------
 
-    double sum_p = 0.;
-    double sum_t = 0.;
+    double sum_p = 0.0;
+    double sum_t = 0.0;
 
     for (auto&& date: mDates) {
         const double variance  = pow(date.mSigmaTi.mX, 2.);
         sum_t += (date.mTi.mX + date.mDelta) / variance;
-        sum_p += 1. / variance;
+        sum_p += 1.0 / variance;
     }
-    const double theta_avg = sum_t / sum_p;
-    const double sigma = 1. / sqrt(sum_p);
+    const double ti_avg = sum_t / sum_p;
+    const double sigma = 1.0 / sqrt(sum_p);
 
     if (min == max) {
         const double theta = min;
         mTheta.accept_update(theta);
 
     } else {
-        switch(mTheta.mSamplerProposal)
-        {
-        case MHVariable::eDoubleExp:
-        {
-            try {
-                const double theta = Generator::gaussByDoubleExp(theta_avg, sigma, min, max);
-                mTheta.accept_update(theta);
-
-            }
-            catch(QString error) {
-                throw QObject::tr("Error for event : %1 : %2").arg(getQStringName(), error);
-            }
-            break;
-        }
-
-        // Event Prior
-        case MHVariable::eBoxMuller:
-        {
-            long long counter = 0;
-
             const double u1 = Generator::randomUniform();
             double try_value;
             double current_value = mTheta.mX;
-            double mu = 0.1;
+            double mu = 1;
 
-            const double s = 10000;
+            if (u1 < mu) {
+                    // prior Event = updateTheta_v3
+                    try_value = Generator::truncatedNormal(ti_avg, sigma, min, max);
+                    mTheta.accept_update(try_value);
 
-            do {
-                ++counter;
+            } else {
+                const double s = 10000;
+                try_value = Generator::truncatedNormal(ti_avg, s* sigma, min, max);
 
-                if (u1 < mu) {
-                    try_value = Generator::normalDistribution(current_value, mTheta.mSigmaMH);
-                } else {
-                    // -- gaussian
-                    try_value = Generator::normalDistribution(current_value, s);
-                }
-                if (counter == 100000000)
-                    throw QObject::tr("No MCMC solution could be found using event method %1 for event named %2 ( %3  trials done)").arg(MHVariable::getSamplerProposalText(mTheta.mSamplerProposal), getQStringName(), QString::number(counter));
+                // Composante de prior/vraisemblance
+                double pi_y = dnorm(try_value, ti_avg, sigma);
+                double pi_x = dnorm(current_value, ti_avg, sigma);
 
-            } while(try_value < min || try_value > max);
+                // q(θ|θ') / q(θ'|θ)
+                double q_y = dnorm(try_value, ti_avg, s* sigma);
+                double q_x = dnorm(current_value, ti_avg, s* sigma);
 
-            double q1_new = dnorm(try_value, current_value, mTheta.mSigmaMH);
-            double q1_old = dnorm(current_value, try_value, mTheta.mSigmaMH);
+                double rate = (pi_y*q_x) / (pi_x*q_y);
 
-            double q2_new = dnorm(try_value, current_value, s);
-            double q2_old = dnorm(current_value, try_value, s);
+                mTheta.try_update(try_value, rate);
 
-
-            double mixture_new = mu * q1_new + (1.0 - mu) * q2_new;
-            double mixture_old = mu * q1_old + (1.0 - mu) * q2_old;
-            // q(θ|θ') / q(θ'|θ)
-            double rate_Q = mixture_old / mixture_new;
+            }
 
 
-            // Composante de prior/vraisemblance
-            const double rate_P = exp((-0.5/(sigma*sigma)) * (pow(try_value - theta_avg, 2.) - pow(current_value - theta_avg, 2.)));
-            double rate = rate_P * rate_Q;
-
-            mTheta.try_update(try_value, rate);
-            break;
-
-
-        }
-
-        case MHVariable::eMHAdaptGauss:
-        {
-            // MH: The only case where the acceptance rate makes sense, since we use sigma MH :
-            const double try_theta = Generator::normalDistribution(mTheta.mX, mTheta.mSigmaMH);
-            double rapport = 0.0;
-            if (try_theta >= min && try_theta <= max)
-                rapport = exp((-0.5/(sigma*sigma)) * (pow(try_theta - theta_avg, 2.) - pow(mTheta.mX - theta_avg, 2.)));
-
-            mTheta.try_update(try_theta, rapport);
-            break;
-        }
-
-        default:
-            break;
-        }
     }
-    //qDebug() << "[Event::updateTheta_v4]-----------> Event update : " << getQStringName() << " : " << mTheta.mX << " between" << "[" << min << " ; " << max << "]";
+
 
 }
 
 // ne marche pas, trop de rejet
+/*
 void Event::updateThetaAndTiSigma(const double tmin, const double tmax)
 {
     const double min = getThetaMin(tmin);
@@ -2050,7 +2015,8 @@ void Event::updateThetaAndTiSigma(const double tmin, const double tmax)
         }
     }
 }
-
+*/
+/*
 void Event::updateTheta_v4_mixing0(const double tmin, const double tmax, const double rate_theta)
 {
     for (auto&& date : mDates )   {
@@ -2117,7 +2083,9 @@ void Event::updateTheta_v4_mixing0(const double tmin, const double tmax, const d
     }
 }
 
-void Event::updateTheta_v4_mixing(const double tmin,
+
+
+void Event::updateTheta_v4_mixing(const double tmin, // test avec mélange de densités
                                   const double tmax,
                                   const double rate_theta)
 {
@@ -2217,409 +2185,558 @@ void Event::updateTheta_v4_mixing(const double tmin,
     const double rate = rate_P * rate_Q;
 
     mTheta.try_update(theta_try, rate * rate_theta);
-}
+}*/
 
-#ifdef THETA_MIXING_KERNEL
-void Event::updateTheta_v6(const double tmin,
-                           const double tmax)
+
+
+/**
+ * @brief Met à jour le paramètre \f$\theta\f$ d’un événement en mode *tempering*.
+ *
+ * Cette fonction implémente une étape de **tempering** (ou *mixing move*) qui ne
+ * cherche pas à respecter exactement la distribution cible.
+ * L’objectif est d’« secouer » la chaîne de Markov afin d’accélérer le
+ * mélange et d’explorer plus largement l’espace des paramètres.
+ * Aucun test de Metropolis‑Hastings n’est effectué ; il ne s’agit donc pas d’un
+ * pas MCMC rigoureux.
+ *
+ * @details
+ * 1.  Les bornes admissibles de \f$\theta\f$ sont calculées à partir de
+ *     \p tmin et \p tmax via les méthodes \c getThetaMin() et \c getThetaMax().
+ *     Si la borne inférieure est supérieure ou égale à la borne supérieure,
+ *     une exception Qt est levée.
+ *
+ * 2.  Pour chaque date associée à l’événement :
+ *     - les variables internes \c Delta, \c Ti et \c SigmaShrinkage_K sont
+ *       actualisées de façon déterministe ;
+ *     - la fonction \c updateWiggle() rafraîchit les variables dépendantes.
+ *
+ * 3.  Le poids moyen \f$\bar{t}_i\f$ et son incertitude \f$\sigma\f$ sont
+ *     estimés à partir des variances \f$\sigma_{t_i}^2\f$.
+ *
+ * 4.  Le paramètre de température \p T est utilisé pour élargir l’écart‑type
+ *     de la loi normale tronquée :
+ *     \f[ \sigma_T = \sigma \times 2^{T} \f]
+ *
+ * 5.  Un nouveau \f$\theta\f$ est tiré d’une loi normale tronquée
+ *     \f$\mathcal{N}(\bar{t}_i,\sigma_T^2)\f$ sur l’intervalle \f$[{\tt min},
+ *     {\tt max}]\f$ puis stocké via \c mTheta.setValue().
+ *
+ * @param tmin  Borne inférieure du temps de référence (définit \c min).
+ * @param tmax  Borne supérieure du temps de référence (définit \c max).
+ * @param k     Niveau de *tempering* (entier ou réel) ; contrôle l’amplification
+ *              de l’écart‑type (\f$2^{T}\f$). Plus \p T est grand, plus le tirage
+ *              est large.
+ *
+ * @return Toujours \c true (la fonction ne retourne pas d’indicateur d’échec
+ *         autre que l’exception décrite ci‑dessus).
+ *
+ * @throw QObject::tr Si \c min >= \c max, avec le message :
+ *        « Error for event : %1 : min = %2 : max = %3 ».
+ *
+ * @note Cette mise à jour ne comporte aucun rejet ni aucune acceptation de type
+ *       Metropolis‑Hastings ; elle est donc **non‑rigoureuse** du point de vue
+ *       du MCMC classique, mais elle favorise le *mixing* de la chaîne.
+ *
+ * @warning L’appelant doit s’assurer que les vecteurs \c mDates et les
+ *          paramètres internes (\c mTheta, \c mS02Theta, \c mAShrinkage) sont
+ *          correctement initialisés avant l’invocation.
+ *
+ * @see Event::updateTheta_v3()               // mise à jour standard (sans tempering)
+ * @see Generator::truncatedNormal()          // génération d’une loi normale tronquée
+ * @see Event::getThetaMin(), Event::getThetaMax()
+ *
+ * @since 3.3.7
+ */
+
+void Event::applyTheta_v6_regenering_with_tempering(const double tmin,
+                                                    const double tmax,
+                                                    const double T)
 {
-    iter_theta++;
-
-    for (auto&& date : mDates)
-        date.updateDate(mTheta.mX, mS02Theta.mX, mAShrinkage);
-
     const double min = getThetaMin(tmin);
     const double max = getThetaMax(tmax);
-
     if (min >= max)
         throw QObject::tr("Error for event : %1 : min = %2 : max = %3")
             .arg(getQStringName(), QString::number(min), QString::number(max));
 
-    // ----------------------------------------
-    // Calcul de θ moyen local et σ
-    // ----------------------------------------
-    double sum_p = 0.0;
-    double sum_t = 0.0;
     for (auto&& date : mDates) {
-        const double var = pow(date.mSigmaTi.mX, 2.);
+
+        const double u1 = Generator::randomUniform();
+
+        const double tminCalib = date.mCalibration->mTmin;
+        const double idx = interpolate_index(u1, date.mCalibration->mRepartition);
+        double tiNew = tminCalib + idx * date.mCalibration->mStep;
+        date.mTi.setValue(tiNew);
+
+        date.updateDelta(mTheta.value()); // pas de memo
+
+        date.applySigmaShrinkage_K_tempering(mTheta.value(), mS02Theta.value(), mAShrinkage, 1.0);
+
+        date.updateWiggle(); // mise à jour déterministe, pas de tiragedate.updateDate(event->mTheta.mX, event->mS02Theta.mX, event->mAShrinkage);
+
+    }
+
+    double sum_t = 0.0;
+    double sum_p = 0.0;
+    for (auto&& date : mDates) {
+        const double var = pow(date.mSigmaTi.mX, 2.0);
         sum_t += (date.mTi.mX + date.mDelta) / var;
         sum_p += 1.0 / var;
     }
-
     const double ti_avg = sum_t / sum_p;
     const double sigma  = 1.0 / std::sqrt(sum_p);
 
-    const double theta_current = mTheta.mX;
-    double theta_try;
+    double sigma_T = schedule_exp(sigma, T); // Exponentiel doux (k > 0)
 
-    double log_proposal_ratio = 0.0;
-    double log_pi_ratio = 0.0;
-
-    // ----------------------------------------
-    // Poids du mélange
-    // ----------------------------------------
-    //constexpr double w1 = 0.33; //0.6;   // Independence locale
-    //constexpr double w2 = 0.20; //0.2;   // Calibration
-    //constexpr double w3 = 0.1;   // Random-Walk global
-
-    constexpr double k_large = 5;//6.0; // échelle grande marche
-    constexpr double p_small = 0.99;//0.85; // probabilité petit pas RW
-
-    const double u = Generator::randomUniform();
-
-
-    //double proposal_ratio = 1.0;   // q(theta_current | theta_try) / q(theta_try | theta_current)
-    double log_rate = 0.0;
-
-    // ========================================
-    // 1️⃣ Tirage du noyau
-    // ========================================
-    int used_kernel = 0;
-
-
-    w1 = 1.0; // test forcage
-    w2 = 0.;
-    w3 = 0;
-    // =====================================================
-    // q1 : Independence quasi-Gibbs locale (normale tronquée)
-    // =====================================================
-    if (u < w1) { // marche
-        used_kernel = 1;
-        prop1++;
-
-        theta_try = Generator::truncatedNormal(ti_avg, sigma, min, max);
-        //theta_try = Generator::gaussByDoubleExp(ti_avg, sigma, min, max);
-        // Densité de la normale tronquée :
-        // q(theta) = phi(theta) / Z
-        // Z identique pour current et try → se simplifie
-
-        /*const double q_new = dnorm(theta_try, ti_avg, sigma);
-        const double q_old = dnorm(theta_current, ti_avg, sigma);*/
-
-        //const double q_new = mMixingCalibrations->interpolate(theta_try);
-
-        //const double q_old = mMixingCalibrations->interpolate(theta_current);
-
-        log_pi_ratio = 0; //log(q_new) - log(q_old);
-
-        log_proposal_ratio = 0.0;
+    //double sigma_T   = sigma * std::pow(2.0, T);
+    double theta_try = Generator::truncatedNormal(ti_avg, sigma_T, min, max);
+#ifdef DEBUG
+    if (theta_try < min || max < theta_try) {
+        std::cout << "[applyTheta_v6_Tempering] 🔄 " << mName
+                  << " min = " << min << " max = " << max
+                  << ", theta = " << theta_try
+                  << ((min < theta_try && theta_try < max) ? "✅ YES" : "❌ NO")
+                  << std::endl;
     }
-
-    // =====================================================
-    // q2 : Independence via calibration tabulée
-    // =====================================================
-    else if (u < w1 + w2) { // marche pas
-
-        used_kernel = 2;
-        prop2++;
-        /*
-        const double idx = interpolate_index(Generator::randomUniform(), mMixingCalibrations->mRepartition);
-
-        theta_try = mMixingCalibrations->mTmin + idx * mMixingCalibrations->mStep;
-
-        const double q_new = mMixingCalibrations->interpolate(theta_try);
-
-        const double q_old = mMixingCalibrations->interpolate(theta_current);
-
-        // proposal ratio independence
-        log_proposal_ratio = log(q_new) - log(q_old);
-
-        // target ratio
-        log_pi_ratio = log_dnorm(theta_try, ti_avg, sigma) - log_dnorm(theta_current, ti_avg, sigma);
-    */
-
-
-    //case MHVariable::eMHAdaptGauss:
-    //{
-        // MH: The only case where the acceptance rate makes sense, since we use sigma MH :
-        theta_try = Generator::normalDistribution(mTheta.mX, mTheta.mSigmaMH);
-        // RW symétrique
-        log_proposal_ratio = 0.0;
-
-        // target ratio
-        log_pi_ratio = log_dnorm(theta_try, ti_avg, sigma) - log_dnorm(theta_current, ti_avg, sigma);
-
-        /*double rate = 0.0;
-        if (try_theta >= min && try_theta <= max) {
-            double diff1 = try_theta - ti_avg;
-            double diff2 = mTheta.mX - ti_avg;
-            rate = std::exp(-0.5 * (diff1*diff1 - diff2*diff2) / (sigma*sigma));
-            log_proposal_ratio =
-            // rapport = exp((-0.5/(sigma*sigma)) * (pow(try_theta - theta_avg, 2.) - pow(mTheta.mX - theta_avg, 2.)));
-        }
-
-        mTheta.try_update(try_theta, rate);*/
-
-
-
-
-
-    }
-
-    // =====================================================
-    // q3 : Random Walk symétrique multi-échelle
-    // =====================================================
-    else { // marche
-
-        used_kernel = 3;
-        prop3++;
-
-        const double u2 = Generator::randomUniform();
-
-        /*if (u2 < p_small)
-            theta_try = theta_current + Generator::normalDistribution(0.0, sigma);
-
-        else
-            theta_try = theta_current + Generator::normalDistribution(0.0, k_large * sigma);
-        */
-
-       /* if (u2 < p_small)
-            theta_try  = Generator::truncatedNormal(theta_current, 1000, min, max);
-
-        else*/
-            theta_try = Generator::truncatedNormal(min, sigma, min, max);
-
-        // RW symétrique → ratio = 1
-        // proposal_ratio = 1.0;
-
-        // RW symétrique
-        log_proposal_ratio = 0.0;
-
-        log_pi_ratio =  log_dnorm(theta_try, ti_avg, sigma)  - log_dnorm(theta_current, ti_avg, sigma);
-    }
-
-    // ----------------------------------------
-    // Vérification support
-    // ----------------------------------------
-    if (theta_try < min || theta_try > max) {
-        mTheta.reject_update();
-        return;
-    }
-
-    // =====================================================
-    // Acceptation MH finale
-    // =====================================================
-    //const double rate = proposal_ratio * rate_theta;
-    log_rate = log_pi_ratio + log_proposal_ratio;
-
-    if (mTheta.try_update_log(theta_try, log_rate)) { // renvoie true si accepté
-
-        if (used_kernel == 1) acc1++;
-        if (used_kernel == 2) acc2++;
-        if (used_kernel == 3) acc3++;
-
-    }
-    // =====================================================
-    // Adaptation des poids (burn-in seulement)
-    // =====================================================
-    /*if (iter_theta < burnin &&  iter_theta % adapt_interval == 0)  {
-
-        double r1 = (prop1 > 0) ? acc1 / prop1 : 0.0;
-        double r2 = (prop2 > 0) ? acc2 / prop2 : 0.0;
-        double r3 = (prop3 > 0) ? acc3 / prop3 : 0.0;
-
-        double sum = r1 + r2 + r3;
-
-        if (sum > 0) {
-
-            // adaptation décroissante
-            double gamma = 1.0 / sqrt(iter_theta + 1.0);
-
-            w1 = (1 - gamma) * w1 + gamma * (r1 / sum);
-            w2 = (1 - gamma) * w2 + gamma * (r2 / sum);
-            w3 = (1 - gamma) * w3 + gamma * (r3 / sum);
-
-            // plancher minimal pour garder exploration inter-mode
-            //const double min_w2 = 0.15;
-            //w2 = std::max(w2, min_w2);
-            // plancher minimal pour garder exploration des outlayer
-            constexpr double min_w3 = 0.15;
-            w3 = std::max(w3, min_w3);
-
-            // renormalisation
-            double norm = w1 + w2 + w3;
-            w1 /= norm;
-            w2 /= norm;
-            w3 /= norm;
-
-std::cout << _name <<" w1 "<< w1*100. << "\t w2 " << w2*100. << "\t w3 " << w3*100. << std::endl;
-
-        }*/
-    constexpr double w_target[3] = {0.6, 0.2, 0.2};
-    constexpr double min_w[3] = {0.05, 0.05, 0.05}; // plancher pour chaque noyau
-
-    if (iter_theta < burnin &&  iter_theta % adapt_interval == 0)  {
-
-        double r1 = (prop1 > 0) ? acc1 / prop1 : 0.0;
-        double r2 = (prop2 > 0) ? acc2 / prop2 : 0.0;
-        double r3 = (prop3 > 0) ? acc3 / prop3 : 0.0;
-
-        double sum = r1 + r2 + r3;
-
-        if (sum > 0) {
-
-            // adaptation décroissante
-            double gamma = 1.0 / sqrt(iter_theta + 1.0);
-
-
-            // ratios observés
-            double r[3] = { (prop1>0)? acc1/prop1 : 0.0,
-                           (prop2>0)? acc2/prop2 : 0.0,
-                           (prop3>0)? acc3/prop3 : 0.0 };
-
-            // normalisation
-            double r_sum = r[0] + r[1] + r[2];
-            if(r_sum > 0.0) {
-                for(int i=0;i<3;i++)
-                    r[i] /= r_sum;
-            } else {
-                for(int i=0;i<3;i++)
-                    r[i] = 1.0/3.0; // fallback
-            }
-
-            // mise à jour vers la cible
-            w1 = (1.0 - gamma)*w1 + gamma * w_target[0] * r[0];
-            w2 = (1.0 - gamma)*w2 + gamma * w_target[1] * r[1];
-            w3 = (1.0 - gamma)*w3 + gamma * w_target[2] * r[2];
-
-            // plancher minimal
-            w1 = std::max(w1, min_w[0]);
-            w2 = std::max(w2, min_w[1]);
-            w3 = std::max(w3, min_w[2]);
-
-            // renormalisation
-            double norm = w1 + w2 + w3;
-            w1 /= norm;
-            w2 /= norm;
-            w3 /= norm;
-
-           // std::cout << _name <<" w1 "<< w1*100. << "\t w2 " << w2*100. << "\t w3 " << w3*100. << std::endl;
-
-        }
-
-
-        // reset compteurs
-        acc1 = acc2 = acc3 = 0;
-        prop1 = prop2 = prop3 = 0;
-    }
-}
-
-
-void Event::updateExpansionCollapse(const double tmin, const double tmax)
-{
-    double u = Generator::randomUniform();
-
-    if (u < .5)
-        updateTheta_v6(tmin, tmax);
-    else
-        moveVarianceExpansionCollapse(tmin, tmax);
-}
 #endif
+    mTheta.setValue(theta_try);
 
+}
 
-void Event::moveVarianceExpansionCollapse(const double tmin, const double tmax, const double alpha)
+void Event::applyTheta_v6_MH_Tempering(const double tmin,
+                                       const double tmax,
+                                       const double T)
 {
     const double min = getThetaMin(tmin);
     const double max = getThetaMax(tmax);
-
     if (min >= max)
-        throw QObject::tr("move Error for event : %1 : min = %2 : max = %3")
+        throw QObject::tr("[Event::applyTheta_v6_MH_Tempering] Error for event : %1 : min = %2 : max = %3")
             .arg(getQStringName(), QString::number(min), QString::number(max));
 
-    const size_t N = mDates.size();
-    const double theta_current = mTheta.mX;
-
-    // moyenne des t_i
-
-    double sum_p = 0.0;
-    double sum_t = 0.0;
     for (auto&& date : mDates) {
-        const double var = pow(date.mSigmaTi.mX, 2.);
-        sum_t += (date.mTi.mX + date.mDelta) / var;
-        sum_p += 1.0 / var;
+
+        const double u1 = Generator::randomUniform();
+
+        const double tminCalib = date.mCalibration->mTmin;
+        const double idx = interpolate_index(u1, date.mCalibration->mRepartition);
+        double tiNew = tminCalib + idx * date.mCalibration->mStep;
+        date.mTi.setValue(tiNew);
+
+        date.updateDelta(mTheta.value()); // pas de memo
+
+        date.applySigmaShrinkage_K_tempering(mTheta.value(), mS02Theta.value(), mAShrinkage, 1.0);
+
+        date.updateWiggle(); // mise à jour déterministe, pas de tiragedate.updateDate(event->mTheta.mX, event->mS02Theta.mX, event->mAShrinkage);
+
     }
 
+    double sum_t = 0.0;
+    double sum_p = 0.0;
+    for (auto&& date : mDates) {
+        const double var = pow(date.mSigmaTi.value(), 2.0);
+        sum_t += (date.mTi.value() + date.mDelta) / var;
+        sum_p += 1.0 / var;
+    }
     const double ti_avg = sum_t / sum_p;
     const double sigma  = 1.0 / std::sqrt(sum_p);
 
-    // proposer un grand saut de θ
-    const double step_theta = 1000.0;
-    //double theta_try = theta_current + Generator::normalDistribution(0.0, step_theta);
-    double theta_try = Generator::truncatedNormal(theta_current, step_theta, min, max);
+    //double sigma_T = schedule_exp(sigma, T); // Exponentiel doux (k > 0)
+    double sigma_T = schedule_exp_pow(sigma, T,  2.0); // a) Exponentiel décroit (α > 1)
 
-    // respecter les bornes stratigraphiques
-    if (theta_try < min) theta_try = min;
-    if (theta_try > max) theta_try = max;
+    double theta_try = Generator::truncatedNormal(ti_avg, sigma_T, min, max);
 
-    double log_target_current = std::log(dnorm(theta_current, ti_avg, sigma));
-    double log_target_try     = std::log(dnorm(theta_try, ti_avg, sigma));
+    double log_alpha =
+        (log_dnorm(theta_try, ti_avg, sigma)
+         - log_dnorm(mTheta.value(), ti_avg, sigma)) / T;
 
 
-    const double S02 = mS02Theta.mX;
-    const double A = mAShrinkage;
-    double alpha2 = 0.001;
-    double log_r = 0.0;
-    log_r += log_target_current- log_target_try;
+#ifdef DEBUG
+    if (theta_try < min || max < theta_try) {
 
-    std::vector<double> sigma_try(N);
-
-    // ajustement des σ_i avec le facteur alpha
-    for (size_t i = 0; i < N; ++i) {
-        const double sigma = mDates[i].mSigmaTi.mX;
-        const double sigma2 = sigma * sigma;
-
-        const double d_current = mDates[i].mTi.mX - theta_current;
-        const double d_try = mDates[i].mTi.mX - theta_try;
-
-        double sigma2_try = sigma2 + alpha2 * (d_try*d_try - d_current*d_current);
-
-        // si σ_i devient négatif, rejeter le move
-        if (sigma2_try <= 0.0) {
-            mTheta.reject_update();
-            for (auto& d : mDates) {
-                d.mTi.reject_update();
-                d.mSigmaTi.reject_update();
-                d.mZi.reject_update();
-            }
-            std::cout << mName << "  - reject_update (sigma négatif) ❌ NO\n";
-            return;
-        }
-
-        sigma_try[i] = sqrt(sigma2_try);
-
-        // contribution du prior sur σ_i
-        log_r += -(A + 1.0) * log(S02 + sigma2_try)
-                 + (A + 1.0) * log(S02 + sigma2);
-       // log_r += d_try*d_try - d_current*d_current - sigma2 + sigma2;
+        std::cout << "[applyTheta_v6_MH_Tempering] 🔄 " << mName
+                  << " min = " << min << " max = " << max
+                  << ", theta = " << theta_try
+                  << ((min < theta_try && theta_try < max) ? "✅ YES" : "❌ NO")
+                  << std::endl;
     }
+    //std::cout << "[applyTheta_v6_MH_Tempering] 🔄 " << mName
+      //        << " rate = " << exp(log_alpha)
+        //      << std::endl;
+#endif
 
-    // accept/reject MH
-    if (std::log(Generator::randomUniform()) < log_r) {
-        mTheta.accept_update(theta_try);
+    if (MHAcceptanceTest_log(log_alpha))
+        mTheta.setValue(theta_try);
 
-        for (size_t i = 0; i < N; ++i) {
-            auto& d = mDates[i];
-            d.mSigmaTi.mX = sigma_try[i];
-            d.mSigmaTi.accept_update(d.mSigmaTi.mX);
-
-            // t_i et z_i restent fixes
-            d.mTi.accept_update(d.mTi.mX);
-            d.mZi.accept_update(d.mZi.mX);
-        }
-
-        std::cout << mName << "  - accept_update      theta=" << theta_try << " ✅ YES\n";
-    } else {
-        mTheta.reject_update();
-        for (auto& d : mDates) {
-            d.mTi.reject_update();
-            d.mSigmaTi.reject_update();
-            d.mZi.reject_update();
-        }
-        std::cout << mName << "  - reject_update      ❌ NO\n";
-    }
+   // return true;
 }
 
 
+
+// mauvais nom updateTheta_v3, ne fait qu'un tirage avec la courbe de répartition
+// et n'enregistre pas le tirage, juste une affectation
+void Event::applyThetaProposal_v3(const double tmin, const double tmax)
+{
+    for (auto&& date : mDates )   {
+        const double u1 = Generator::randomUniform();
+        double tiNew;
+
+        const double tminCalib = date.mCalibration->mTmin;
+
+        if (u1 <  date.mMixingLevel) { // tiNew always in the study period
+            const double idx = interpolate_index(u1, date.mCalibration->mRepartition);
+            tiNew = tminCalib + idx * date.mCalibration->mStep;
+
+        } else {
+            // -- gaussian
+            const double t0 = date.mTi.mX;
+            const double s = (tmax - tmin) / 2.0;
+
+            tiNew = Generator::normalDistribution(t0, s);
+        }
+
+        const double rate_1 = date.getLikelihood(tiNew) / date.getLikelihood(date.mTi.mX);
+
+        const double rate_2 = exp((-0.5 / (date.mSigmaTi.mX * date.mSigmaTi.mX)) *
+                                  (pow(tiNew - (mTheta.value() - date.mDelta), 2) -
+                                   pow(date.mTi.mX - (mTheta.value() - date.mDelta), 2))
+                                  );
+
+        const double rate_3 = date.fProposalDensity(date.mTi.mX, tiNew) / date.fProposalDensity(tiNew, date.mTi.mX);
+
+        double rate = rate_1 * rate_2 * rate_3;
+        if (MHAcceptanceTest(rate)) {
+            date.mTi.setValue(tiNew);
+        }
+
+
+        date.updateDelta(mTheta.value()); // pas de memo
+
+        date.applySigmaShrinkage_K_tempering(mTheta.value(), mS02Theta.value(), mAShrinkage, 1.0);
+
+        date.updateWiggle(); // mise à jour déterministe, pas de tiragedate.updateDate(event->mTheta.mX, event->mS02Theta.mX, event->mAShrinkage);
+
+    }
+
+    const double min = getThetaMin(tmin);
+    const double max = getThetaMax(tmax);
+
+    if (min > max)
+        throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(getQStringName(), QString::number(min), QString::number(max));
+
+    // -------------------------------------------------------------------------------------------------
+    //  Evaluer theta.
+    //  Le cas Wiggle est inclus ici car on utilise une formule générale.
+    //  On est en "wiggle" si au moins une des mesures a un delta > 0.
+    // -------------------------------------------------------------------------------------------------
+
+    double sum_p = 0.0;
+    double sum_t = 0.0;
+
+    for (auto&& date: mDates) {
+        const double variance  = pow(date.mSigmaTi.mX, 2.);
+        sum_t += (date.mTi.mX + date.mDelta) / variance;
+        sum_p += 1. / variance;
+    }
+    const double ti_avg = sum_t / sum_p;
+    const double sigma = 1.0 / sqrt(sum_p);
+
+    if (min == max) {
+        double theta_try = min;
+        mTheta.setValue(theta_try);
+
+    } else {
+        switch(mTheta.mSamplerProposal)
+        {
+        case MHVariable::eDoubleExp:
+        {
+            try {
+                double theta_try = Generator::gaussByDoubleExp(ti_avg, sigma, min, max);
+                mTheta.setValue(theta_try);
+
+            }
+            catch(QString error) {
+                throw QObject::tr("Error for event : %1 : %2").arg(getQStringName(), error);
+            }
+            break;
+        }
+
+            // Event Prior
+        case MHVariable::eBoxMuller:
+        {
+            double theta_try = Generator::truncatedNormal(ti_avg, sigma, min, max);
+            mTheta.setValue(theta_try);
+            break;
+        }
+
+        case MHVariable::eMHAdaptGauss:
+        {
+            // MH: The only case where the acceptance rate makes sense, since we use sigma MH :
+            double theta_try = Generator::normalDistribution(mTheta.mX, mTheta.mSigmaMH);
+            double rate = 0.0;
+            if (theta_try >= min && theta_try <= max) {
+                double diff1 = theta_try - ti_avg;
+                double diff2 = mTheta.mX - ti_avg;
+                rate = std::exp(-0.5 * (diff1*diff1 - diff2*diff2) / (sigma*sigma));
+
+            }
+#ifdef DEBUG
+           /* if (theta_try <min  || max < theta_try) {
+                std::cout << "[applyThetaProposal_v3] 🔄 " << mName
+                          << " min = " << min << " max = " << max
+                          << ", theta = " << theta_try
+                          << ((min < theta_try && theta_try < max) ? "✅ YES" : "❌ NO")
+                          << std::endl;
+            }*/
+#endif
+            // test MH
+            const bool accepted = MHAcceptanceTest(rate);
+
+            if (accepted)
+                mTheta.setValue(theta_try);
+
+            break;
+        }
+
+        default:
+            break;
+        }
+    }
+
+
+}
+
+void Event::applyThetaPriorCDE(const double tmin, const double tmax)
+{
+    for (auto&& date : mDates )   {
+        const double u1 = Generator::randomUniform();
+        double tiNew;
+
+        const double tminCalib = date.mCalibration->mTmin;
+
+        if (u1 <  date.mMixingLevel) { // tiNew always in the study period
+            const double idx = interpolate_index(u1, date.mCalibration->mRepartition);
+            tiNew = tminCalib + idx * date.mCalibration->mStep;
+
+        } else {
+            // -- gaussian
+            const double t0 = date.mTi.mX;
+            const double s = (tmax - tmin) / 2.0;
+
+            tiNew = Generator::normalDistribution(t0, s);
+        }
+
+        const double rate_1 = date.getLikelihood(tiNew) / date.getLikelihood(date.mTi.mX);
+
+        const double rate_2 = exp((-0.5 / (date.mSigmaTi.mX * date.mSigmaTi.mX)) *
+                                  (pow(tiNew - (mTheta.value() - date.mDelta), 2) -
+                                   pow(date.mTi.mX - (mTheta.value() - date.mDelta), 2))
+                                  );
+
+        const double rate_3 = date.fProposalDensity(date.mTi.mX, tiNew) / date.fProposalDensity(tiNew, date.mTi.mX);
+
+        double rate = rate_1 * rate_2 * rate_3;
+        if (MHAcceptanceTest(rate)) {
+            date.mTi.setValue(tiNew);
+        }
+
+
+        date.updateDelta(mTheta.value()); // pas de memo
+
+        date.applySigmaShrinkage_K_tempering(mTheta.value(), mS02Theta.value(), mAShrinkage, 1.0);
+
+        date.updateWiggle(); // mise à jour déterministe, pas de tiragedate.updateDate(event->mTheta.mX, event->mS02Theta.mX, event->mAShrinkage);
+
+    }
+
+    const double min = getThetaMin(tmin);
+    const double max = getThetaMax(tmax);
+
+    if (min > max)
+        throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(getQStringName(), QString::number(min), QString::number(max));
+
+    // -------------------------------------------------------------------------------------------------
+    //  Evaluer theta.
+    //  Le cas Wiggle est inclus ici car on utilise une formule générale.
+    //  On est en "wiggle" si au moins une des mesures a un delta > 0.
+    // -------------------------------------------------------------------------------------------------
+
+    double sum_p = 0.0;
+    double sum_t = 0.0;
+
+    for (auto&& date: mDates) {
+        const double variance  = pow(date.mSigmaTi.mX, 2.);
+        sum_t += (date.mTi.mX + date.mDelta) / variance;
+        sum_p += 1. / variance;
+    }
+    const double ti_avg = sum_t / sum_p;
+    const double sigma = 1.0 / sqrt(sum_p);
+
+    if (min == max) {
+        double theta_try = min;
+        mTheta.setValue(theta_try);
+
+    } else {
+        // Tirage d'une valeur candidate directement depuis l'a priori empirique
+        const double theta_try = mTheta.sampleFromEmpiricalPrior(min, max);
+
+        // Ratio MH : la proposition n'est pas symétrique → corriger par q(x|x')/q(x'|x)
+        const double q_forward  = mTheta.evalEmpiricalPrior(theta_try);  // q(x'|x)
+        const double q_backward = mTheta.evalEmpiricalPrior(mTheta.value()); // q(x|x')
+
+        const double rate = (dnorm(theta_try, ti_avg, sigma) / dnorm(mTheta.value(), ti_avg, sigma))
+                             * (q_backward / q_forward);                   // correction
+            // test MH
+        const bool accepted = MHAcceptanceTest(rate);
+
+        if (accepted)
+            mTheta.setValue(theta_try);
+
+    }
+
+}
+
+void Event::updateThetaPriorCDE(const double tmin, const double tmax)
+{
+    /*for (auto&& date : mDates )   {
+        date.updateDate(mTheta.mX, mS02Theta.mX, mAShrinkage);
+
+    }*/
+    for (auto&& date : mDates) {
+
+        const double u1 = Generator::randomUniform();
+        double tiNew;
+
+        const double tminCalib = date.mCalibration->mTmin;
+
+        if (u1 <  date.mMixingLevel) { // tiNew always in the study period
+            const double idx = interpolate_index(u1, date.mCalibration->mRepartition);
+            tiNew = tminCalib + idx * date.mCalibration->mStep;
+
+        } else {
+            // -- gaussian
+            const double t0 = date.mTi.mX;
+            const double s = (tmax - tmin) / 2.0;
+
+            tiNew = Generator::normalDistribution(t0, s);
+        }
+
+        const double rate_1 = date.getLikelihood(tiNew) / date.getLikelihood(date.mTi.mX);
+
+        const double rate_2 = exp((-0.5 / (date.mSigmaTi.mX * date.mSigmaTi.mX)) *
+                                  (pow(tiNew - (mTheta.value() - date.mDelta), 2) -
+                                   pow(date.mTi.mX - (mTheta.value() - date.mDelta), 2))
+                                  );
+
+        const double rate_3 = date.fProposalDensity(date.mTi.mX, tiNew) / date.fProposalDensity(tiNew, date.mTi.mX);
+
+        double rate = rate_1 * rate_2 * rate_3;
+        date.mTi.try_update(tiNew, rate);
+
+        // ____
+
+        date.updateDelta(mTheta.value()); // pas de memo
+        // ______
+
+        double V1 = date.mSigmaTi.value()*date.mSigmaTi.value();
+
+        const double mu = pow(date.mTi.mX - (mTheta.value() - date.mDelta), 2.) * 0.5;
+
+
+        //const double logV2 = Generator::truncatedNormal(log10(V1), mSigmaTi.mSigmaMH, logVMin, logVMax);
+        //const double mu_centre = 2. * mu;
+        //const double logV2 = log10(mu_centre) + Generator::normalDistribution(0, 5); // test
+        //double V2 = pow(10, logV2);
+
+        double V_try = date.mSigmaTi.sampleFromEmpiricalPrior(0, 100000);
+
+        const double x1 = exp(-mu * (V1 - V_try) / (V1 * V_try));
+        // Likelihood term
+        //const double log_x1 =  -mu * (V1 - V2) / (V1 * V2);
+
+        const double x2 = pow((mS02Theta.value() + V1) / (mS02Theta.value() + V_try), mAShrinkage + 1.0);// a priori shrinkage
+
+        rate = x1 * sqrt(V1/V_try) * x2;// * V_try / V1 ; // (V2 / V1) est le jacobien!
+
+
+        // Proposition : y* ~ empiricalPrior, x* = y*²
+        //const double y_proposed  = sampleFromEmpiricalPrior(min, max);
+        const double x_proposed  = V_try * V_try;
+
+        // Valeur courante
+        const double y_current   = std::sqrt(V1);
+
+        // Densités de proposition dans l'espace de y
+        const double q_forward   = date.mSigmaTi.evalEmpiricalPrior(V_try);  // q(y*|y)
+        const double q_backward  = date.mSigmaTi.evalEmpiricalPrior(V1);   // q(y|y*)
+
+        // Jacobiens : dx/dy = 2y
+        const double jac_proposed = 2.0 * V_try;   // |dx*/dy*|
+        const double jac_current  = 2.0 * V1;    // |dx/dy|
+
+        //         L(x*)      prior(x*)     q(y|y*)         jac_current
+        // α =  ────────── × ──────────── × ─────────── × ───────────────
+        //         L(x)        prior(x)     q(y*|y)        jac_proposed
+        //
+        // Les jacobiens convertissent q de l'espace y vers l'espace x
+
+        const double alpha = (rate)
+                             * (date.mSigmaTi.evalEmpiricalPrior(x_proposed) / date.mSigmaTi.evalEmpiricalPrior(V1))
+                             * (q_backward / q_forward)
+                             * (jac_current / jac_proposed);
+
+
+
+        date.mSigmaTi.try_update(sqrt(V_try), rate);
+
+        //date.applySigmaShrinkage_K_tempering(mTheta.value(), mS02Theta.value(), mAShrinkage, 1);
+
+        date.updateWiggle(); // mise à jour déterministe, pas de tirage date.updateDate(event->mTheta.mX, event->mS02Theta.mX, event->mAShrinkage);
+
+    }
+    const double min = getThetaMin(tmin);
+    const double max = getThetaMax(tmax);
+
+    if (min > max)
+        throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(getQStringName(), QString::number(min), QString::number(max));
+
+    // -------------------------------------------------------------------------------------------------
+    //  Evaluer theta.
+    //  Le cas Wiggle est inclus ici car on utilise une formule générale.
+    //  On est en "wiggle" si au moins une des mesures a un delta > 0.
+    // -------------------------------------------------------------------------------------------------
+
+    double sum_p = 0.0;
+    double sum_t = 0.0;
+
+    for (auto&& date: mDates) {
+        const double variance  = pow(date.mSigmaTi.mX, 2.);
+        sum_t += (date.mTi.mX + date.mDelta) / variance;
+        sum_p += 1. / variance;
+    }
+    const double ti_avg = sum_t / sum_p;
+    const double sigma = 1.0 / sqrt(sum_p);
+
+    if (min == max) {
+        double theta_try = min;
+        mTheta.accept_update(theta_try);
+
+    } else {
+        // Tirage d'une valeur candidate directement depuis l'a priori empirique
+        const double theta_try = mTheta.sampleFromEmpiricalPrior(min, max);
+        //std::cout << mTheta.mName << " " << theta_try << std::endl;
+
+        // Ratio MH : la proposition n'est pas symétrique → corriger par q(x|x')/q(x'|x)
+        const double q_forward  = mTheta.evalEmpiricalPrior(theta_try);  // q(x'|x)
+        const double q_backward = mTheta.evalEmpiricalPrior(mTheta.value()); // q(x|x')
+
+        const double rate = (dnorm(theta_try, ti_avg, sigma) / dnorm(mTheta.value(), ti_avg, sigma))
+                            * (q_backward / q_forward);                   // correction
+        // test MH
+        mTheta.try_update(theta_try, rate);
+
+
+    }
+
+}
 void Event::generateHistos(const std::vector<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
     if (type() != Event::eBound)
@@ -2665,39 +2782,83 @@ void Event::updateW()
 
 }
 
-void Event::updateS02()
+void Event::updateS02Theta()
 {
     try {
         const double logVMin = -100.0;
         const double logVMax = 100.0;
 
-        const double logV2 = Generator::normalDistribution(log10(mS02Theta.mX) , mS02Theta.mSigmaMH);
+        const double logV2 = Generator::truncatedNormal(log10(mS02Theta.mX) , mS02Theta.mSigmaMH, logVMin, logVMax );
         const double V2 = pow(10.0, logV2);
 
-        double rapport  = -1.0; // Force reject
-        if (logV2 >= logVMin && logV2 <= logVMax) {
+        const double current_h = h_S02(mS02Theta.mX); // h_S02() comporte le jacobien!
 
-            const double current_h = h_S02(mS02Theta.mX); // h_S02() comporte le jacobien!
+        const double try_h = h_S02(V2);
 
-            const double try_h = h_S02(V2);
+        double rate = try_h / current_h;
 
-            rapport = (try_h / current_h);
 
-        }
-#ifdef DEBUG
-        else {
-            //       qDebug()<<"[Event::updateS02] rapport rejet";
-        }
-#endif
-
-        mS02Theta.try_update(V2, rapport);
+        mS02Theta.try_update(V2, rate);
 
     }  catch (...) {
-        qWarning() << "[Event::updateS02] mW = 0";
+        qWarning() << "[Event::updateS02Theta] mW = 0";
     }
 
 }
 
+void Event::applyS02Theta()
+{
+    try {
+        const double logVMin = -100.0;
+        const double logVMax = 100.0;
+
+        const double logV2 = Generator::truncatedNormal(log10(mS02Theta.mX) , mS02Theta.mSigmaMH, logVMin, logVMax );
+        const double V2 = pow(10.0, logV2);
+
+        const double current_h = h_S02(mS02Theta.mX); // h_S02() comporte le jacobien!
+
+        const double try_h = h_S02(V2);
+
+        double rate = try_h / current_h;
+
+        if (MHAcceptanceTest(rate)) {
+            mS02Theta.setValue(V2);
+        }
+
+
+    }  catch (...) {
+        qWarning() << "[Event::applyS02Theta] Error";
+    }
+
+}
+
+void Event::applyS02Theta(double T)
+{
+    try {
+        const double logVMin = -100.0;
+        const double logVMax = 100.0;
+
+        const double logV2 = Generator::truncatedNormal(log10(mS02Theta.mX) , mS02Theta.mSigmaMH, logVMin, logVMax );
+        const double V2 = pow(10.0, logV2);
+
+        const double current_h = h_S02(mS02Theta.mX); // h_S02() comporte le jacobien!
+
+        const double try_h = h_S02(V2);
+
+        double log_rate = log(try_h) -log(current_h);
+
+
+        //if (MHAcceptanceTest_log(log_rate/T)) {
+        if (MHAcceptanceTest(exp(log_rate/T))) {
+            mS02Theta.setValue(V2);
+        }
+
+
+    }  catch (...) {
+        qWarning() << "[Event::applyS02Theta(double T)] Error";
+    }
+
+}
 
 double Event::h_S02(const double S02)
 {

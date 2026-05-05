@@ -453,7 +453,7 @@ void Phase::init_update_beta_phase(double beta_sup)
  * @param max_default : C'est la valeur la plus petite
  * @return
  */
-double Phase::init_max_theta(const double max_default)
+double Phase::init_max_theta(const double max_default) const
 {
     double theta = max_default;
     for (auto ev : mEvents) {
@@ -472,7 +472,7 @@ double Phase::init_max_theta(const double max_default)
  * @param min_default
  * @return
  */
-double Phase::init_min_theta(const double min_default)
+double Phase::init_min_theta(const double min_default) const
 {
     double theta = min_default;
     for (auto ev : mEvents) {
@@ -516,7 +516,7 @@ double Phase::getMinThetaEvents(double tmin)
 }
 
 
-double Phase::getMinThetaNextPhases(const double tmax)
+double Phase::getMinThetaNextPhases(const double tmax) const
 {
     double minTheta = tmax;
     for (auto &&constFwd : mConstraintsNextPhases) {
@@ -532,7 +532,7 @@ double Phase::getMinThetaNextPhases(const double tmax)
     return minTheta;
 }
 
-double Phase::getMaxThetaPrevPhases(const double tmin)
+double Phase::getMaxThetaPrevPhases(const double tmin) const
 {
     double maxTheta (tmin);
 
@@ -698,7 +698,7 @@ void Phase::update_Tau(const double tminPeriod, const double tmaxPeriod)
 
 }
 
-void Phase::memoAll()
+/*void Phase::memoAll()
 {
     mAlpha.memo();
     mBeta.memo();
@@ -711,7 +711,7 @@ void Phase::memoAll()
     if (mBeta.mX - mAlpha.mX < 0.)
         qDebug()<<"[Phase::memoAll] : "<<getQStringName()<<" Warning mBeta.mX - mAlpha.mX<0";
 #endif
-}
+}*/
 
 void Phase::generateHistos(const std::vector<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {   
@@ -786,8 +786,10 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
     if (mValueStack.at("Activity_TimeRange_min") == mValueStack.at("Activity_TimeRange_max")
         || mValueStack.at("Activity_TimeRange_Level") != timeRangeLevel) {
-        const std::pair<double, double> timeRange = timeRangeFromTraces( mAlpha.fullRunRawTrace(model->mChains),
-                                                                         mBeta.fullRunRawTrace(model->mChains), timeRangeLevel, "Time Range for Phase : " + getQStringName());
+        const auto& betaTrace = *mBeta.mAcquiredTrace;
+        const auto& alphaTrace = *mAlpha.mAcquiredTrace;
+
+        const std::pair<double, double> timeRange = timeRangeFromTraces( alphaTrace, betaTrace, timeRangeLevel, "Time Range for Phase : " + getQStringName());
         mValueStack.insert_or_assign("Activity_TimeRange_min", timeRange.first);
         mValueStack.insert_or_assign("Activity_TimeRange_max", timeRange.second);
     }
@@ -805,15 +807,15 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
     for (const auto& ev : mEvents) {
         if (ev->mTheta.mSamplerProposal != MHVariable::eFixe) {
-            const auto &rawtrace = ev->mTheta.fullRunRawTrace(model->mChains);
-
+            //const auto &rawtrace = ev->mTheta.fullRunRawTrace(model->mChains);
+            const auto& rawtrace = *ev->mTheta.mAcquiredTrace;
             std::copy_if(rawtrace.begin(), rawtrace.end(),
                          std::back_inserter(concaTrace),
                          [TimeRange_min, TimeRange_max](double x) { return (TimeRange_min<= x && x<= TimeRange_max); });
         } else {
             const size_t begin_size = concaTrace.size();
             concaTrace.resize(concaTrace.size() + nRealyAccepted);
-            std::fill_n( concaTrace.begin()+begin_size, nRealyAccepted, ev->mTheta.mRawTrace->at(0));
+            std::fill_n( concaTrace.begin()+begin_size, nRealyAccepted, ev->mTheta.mBurnAdaptTrace->at(0));
         }
 
     }

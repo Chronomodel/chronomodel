@@ -65,13 +65,18 @@ protected:
     // Variable for update function
 
     //t_prob current_ln_h_YWI_2, current_ln_h_YWI_3, current_ln_h_YWI_1_2, current_h_theta, current_h_lambda, current_h_VG;
-    t_prob current_ln_h_YWI_3, current_h_theta, current_h_lambda, current_h_VG;
+    t_prob current_ln_h_YWI_3;
+
+    t_prob current_h_theta, current_h_lambda, current_h_VG;
+    t_prob try_h_theta, try_h_lambda, try_h_VG;
 
     SplineMatricesLD current_splineMatrices_LD, current_matriceWI_LD;
     SplineMatricesD current_splineMatrices_D, current_matriceWI_D;
 
     SplineResults current_spline;
+
     std::vector<t_reduceTime> current_vecH;
+    std::vector<t_reduceTime> try_vecH;
 
     std::pair<MatrixLD, DiagonalMatrixLD> current_decomp_QTQ_LD;
     std::pair<MatrixLD, DiagonalMatrixLD> current_decomp_matB_LD;
@@ -79,11 +84,11 @@ protected:
     std::pair<MatrixD, DiagonalMatrixD> current_decomp_QTQ_D;
     std::pair<MatrixD, DiagonalMatrixD> current_decomp_matB_D;
 
-    t_prob try_h_theta, try_h_lambda, try_h_VG;
+
     //t_prob try_ln_h_YWI_2, try_ln_h_YWI_3, try_ln_h_YWI_1_2;
     t_prob try_ln_h_YWI_3;
 
-    std::vector<t_reduceTime> try_vecH;
+
     SplineMatricesLD try_splineMatrices_LD;
     SplineMatricesD try_splineMatrices_D;
 
@@ -94,6 +99,25 @@ protected:
     std::pair<MatrixD, DiagonalMatrixLD> try_decomp_matB_D;
 
     std::vector<std::shared_ptr<Event>> initListEvents;
+
+    long long n_points;
+    long long n_components;
+
+    MatrixD current_Y;
+    MatrixD current_G;
+    SparseMatrixD current_Q;
+    MatrixD current_K;
+    SparseMatrixD current_R;
+    MatrixD current_R_1QT;
+
+    MatrixD try_Y;
+    MatrixD try_G;
+    SparseMatrixD try_Q;
+    MatrixD try_K;
+    SparseMatrixD try_R;
+    MatrixD try_R_1QT;
+
+    double try_S02Vg;
 
 private:
     std::vector<std::shared_ptr<Event>> mPointEvent;
@@ -128,6 +152,17 @@ protected:
     QString initialize_335();
     bool update_335(); // estimation de G as Komlan Thesis
 
+    // with tempering
+    QString initialize_337();
+    bool update_337();
+    bool sampler_337();
+    bool sampler_337_b(); // ok
+    bool tempering_337(double T_max, std::vector<bool> &event_regenerated);
+    bool tempering_337_b(double expo_T_max, std::vector<bool>& event_regenerated );
+    bool tempering_337_c(double T); //ok
+
+    double event_MH_rate(Event* event, double try_theta);
+
 #elif VERSION_MAJOR == 4 && VERSION_MINOR >= 0 && VERSION_PATCH >= 0
 #pragma mark Version 4
     QString initialize_400();
@@ -143,10 +178,6 @@ protected:
 
     void test_depth(std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const SplineMatricesLD &matrices, const double lambda, double &rate, bool &ok);
 
-#if VERSION_MAJOR == KOMLAN_old
-    QString initialize_Komlan();
-    bool update_Komlan();
-#endif
 
 protected:
 
@@ -155,7 +186,11 @@ protected:
     virtual QString initialize();
     virtual bool update();
     virtual bool adapt(const int batchIndex);
-    virtual void memo();
+   // virtual void memo();
+    //void memo(); // obsolete
+    virtual void recordBurnAdapt();
+    virtual void recordMH();
+    virtual void acquire();
     //virtual void memo_accept(const unsigned i_chain);
     virtual void finalize();
     
@@ -215,9 +250,9 @@ private:
     double S02_lambda_WIK (const MatrixLD &K, const int nb_noeuds);
     double h_lambda_Komlan(const MatrixLD &K, const MatrixLD &K_new, const int nb_noeuds, const double &lambdaSpline);
     t_prob rapport_Theta(const std::function<double (std::shared_ptr<Event>)> &fun, const std::vector<std::shared_ptr<Event>> &lEvents, const MatrixLD &K, const MatrixLD &K_new, const double lambdaSpline);
-    // rapport Hasting avec utilisation des matrices Y(x, y, z)
-    t_prob rate_ftKf(const MatrixLD &Y, const MatrixLD &K, const MatrixLD &Y_try, const MatrixLD &K_try, const double lambda);
-    t_prob rate_ftKf(const MatrixD &Y, const MatrixD &K, const MatrixD &Y_try, const MatrixD &K_try, const double lambda);
+    // rapport Hasting avec utilisation des matrices f(x, y, z)
+    t_prob rate_ftKf(const MatrixLD &f, const MatrixLD &K, const MatrixLD &f_try, const MatrixLD &K_try, const double lambda);
+    t_prob rate_ftKf(const MatrixD &f, const MatrixD &K, const MatrixD &f_try, const MatrixD &K_try, const double lambda);
 
     t_prob rate_Theta_X(const std::vector<std::shared_ptr<Event>> &Events, const MatrixLD &K, const MatrixLD &K_try, const double lambdaSpline);
     t_prob rate_Theta_XY(const std::vector<std::shared_ptr<Event>> &Events, const MatrixLD &K, const MatrixLD &K_try, const double lambdaSpline);
@@ -229,8 +264,15 @@ private:
     MCMCSpline samplingSpline_multi2(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixLD &R, const MatrixLD &R_1Qt, const SparseMatrixLD &Q);
     MCMCSpline samplingSpline_multi2(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixD &R, const MatrixD &R_1Qt, const SparseMatrixD& Q);
 
+    // pour tempering, par de tirage des Gx
+    MCMCSpline applySpline(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixD &R, const MatrixD &R_1Qt, const SparseMatrixD& Q);
+
+
+
     MCMCSpline samplingSpline_multi_depth(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixD &R, const MatrixD &R_1Qt, const SparseMatrixD& Q);
     void initialize_spline_for_depth(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixD &R, const MatrixD &R_1Qt, const SparseMatrixD& Q);
+    void initialize_spline_for_depth_v2(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixD &R, const MatrixD &R_1Qt, const SparseMatrixD& Q);
+
 
     std::vector<double> multinormal_sampling (const std::vector<t_matrix>& mu, const MatrixLD& a);
     ColumnVectorLD multinormal_sampling (const ColumnVectorLD& mu, const MatrixLD& A);
@@ -259,6 +301,18 @@ private:
 };
 
 #pragma mark HitRunOrdered
+ColumnVectorD hitAndRun_old(const ColumnVectorD& mu,
+                        const MatrixD& C,
+                        const ColumnVectorD& lastY,
+                        const ColumnVectorD& t,  // Vector des temps/t
+                        double tolerance = 0.0,  // Tolérance sur le rapport
+                        int burnIn = 200);
+ColumnVectorD hitAndRun(const ColumnVectorD& mu,
+                        const MatrixD& C,
+                        const ColumnVectorD& lastY,
+                        const ColumnVectorD& t,  // Vector des temps/t
+                        double tolerance = 0.0,  // Tolérance sur le rapport
+                        int burnIn = 200);
 /* -----------------------------------------------------------------
    Truncated normal sampler (standard deviation = 1, mean = mu)
    ----------------------------------------------------------------- */

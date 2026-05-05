@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -57,38 +57,36 @@ public:
     PluginUniform();
     virtual ~PluginUniform();
 
-    bool areDatesMergeable(const QJsonArray &dates);
-    QJsonObject mergeDates(const QJsonArray &dates);
+    bool areDatesMergeable(const QJsonArray &dates) override;
+    QJsonObject mergeDates(const QJsonArray &dates) override;
 
-    long double getLikelihood(const double t, const QJsonObject &data);
-    bool withLikelihoodArg() {return false; }
+    long double getLikelihood(const double t, const QJsonObject &data) const  noexcept override;
+    bool withLikelihoodArg() override {return false; }
     long double getLikelihoodCombine(const double t, const QJsonArray &data);
 
-    QString getName() const;
-    QIcon getIcon() const;
-    bool doesCalibration() const;
-    bool wiggleAllowed() const;
+    QString getName() const override;
+    QIcon getIcon() const override;
+    bool doesCalibration() const override;
+    bool wiggleAllowed() const override;
 
-    MHVariable::SamplerProposal getDataMethod() const;
-    QList<MHVariable::SamplerProposal> allowedDataMethods() const;
-    QStringList csvColumns() const;
-    QJsonObject fromCSV(const QStringList& list, const QLocale &csvLocale);
-    QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale) const;
-    QString getDateDesc(const Date* date) const;
-    QJsonObject checkValuesCompatibility(const QJsonObject& values);
-    bool isDateValid(const QJsonObject& data, const StudyPeriodSettings& );
+    MHVariable::SamplerProposal getDataMethod() const override;
+    QList<MHVariable::SamplerProposal> allowedDataMethods() const override;
+    QStringList csvColumns() const override;
+    QJsonObject fromCSV(const QStringList& list, const QLocale &csvLocale) const override;
+    QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale) const override;
+    QString getDateDesc(const Date* date) const override;
+    QJsonObject checkValuesCompatibility(const QJsonObject& values) override;
+    bool isDateValid(const QJsonObject& data, const StudyPeriodSettings& ) override;
 
-    PluginFormAbstract* getForm();
-    GraphViewRefAbstract* getGraphViewRef();
+    PluginFormAbstract* getForm() override;
+    GraphViewRefAbstract* getGraphViewRef() override;
 
-    PluginSettingsViewAbstract* getSettingsView();
+    PluginSettingsViewAbstract* getSettingsView() override;
 
-    QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
-    double getMinStepRefsCurve(const QJsonObject &data) const;
+    QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const override;
+    double getMinStepRefsCurve(const QJsonObject &data) override;
 
-    void deleteGraphViewRef(GraphViewRefAbstract* graph);
-
-
+    void deleteGraphViewRef(GraphViewRefAbstract* graph) override;
 
 };
 

@@ -88,14 +88,29 @@ public:
     virtual bool loadFromStream(QDataStream *in)
     {
         //std::cout << "[ModelCurve::restoreFromFile] entering";
-        QList<QString> compatible_version_335;
-        compatible_version_335 << "3.3.5" << "3.3.6";
+        static const QSet<QString> compatible_version_335 = {
+            QStringLiteral("3.3.5"),
+            QStringLiteral("3.3.6"),
+            QStringLiteral("3.3.7"),
+            QStringLiteral("3.3.8")
+        };
+        static const QSet<QString> compatible_version_330 = {
+            QStringLiteral("3.3.0"),
+            QStringLiteral("3.3.1")
+        };
+        static const QSet<QString> compatible_version_328 = {
+            QStringLiteral("3.2.4"),
+            QStringLiteral("3.2.6"),
+            QStringLiteral("3.2.9")
+        };
+        /*QList<QString> compatible_version_335;
+        compatible_version_335 << "3.3.5" << "3.3.6" << "3.3.7";
 
         QList<QString> compatible_version_330;
         compatible_version_330 << "3.3.0" << "3.3.1";
 
         QList<QString> compatible_version_328;
-        compatible_version_328 << "3.2.4" << "3.2.6" << "3.2.9";
+        compatible_version_328 << "3.2.4" << "3.2.6" << "3.2.9";*/
 
         *in >> res_file_version;
 
@@ -129,7 +144,11 @@ public:
 
     void generatePosteriorDensities(const std::vector<ChainSpecs> &chains, int fftLen, double bandwidth);
     virtual void generateCorrelations(const std::vector<ChainSpecs> &chains);
-    void generateNumericalResults(const std::vector<ChainSpecs> &chains);
+
+    //void generateNumericalResults(const std::vector<ChainSpecs> &chains);// obsolete
+    virtual void generateDensityNumericalResults(const std::vector<ChainSpecs>& chains);
+    virtual void generateTraceNumericalResults(const std::vector<ChainSpecs>& chains);
+
     virtual void generateCredibility(const double thresh);
     void generateHPD(const double thresh);
     
@@ -190,7 +209,7 @@ public slots:
 
 
 #pragma mark Loop
-    void memo_accept(const unsigned i_chain);
+    //void memo_accepted_state(const unsigned i_chain);
     void initVariablesForChain();
 
 private:

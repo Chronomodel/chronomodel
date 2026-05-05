@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
     Philippe LANOS
@@ -43,7 +43,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QHBoxLayout>
 #include <QPushButton>
 
-#ifdef DEBUG
+#ifdef WITHCURVEFILTER
+
 RebuildCurveDialog::RebuildCurveDialog(QStringList list, std::vector< std::pair<double, double>> *minMax, std::vector< std::pair<double, double>> *minMaxP,
                                        std::pair<double, double> *minMaxPFilter, std::pair<unsigned, unsigned> mapSize, QWidget *parent):
     QDialog{parent},
@@ -102,7 +103,8 @@ RebuildCurveDialog::RebuildCurveDialog(QStringList list, std::vector< std::pair<
     Y1pmaxEdit->QWidget::setStyleSheet("QLineEdit { border: 0px;}");
 #endif
     connect(Y1pmaxEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::Y1pMaxIsValid);
-#ifdef DEBUG
+
+#ifdef WITHCURVEFILTER
     if (minMaxPFilter != nullptr) {
 
         Y1pminFilterEdit = new QLineEdit(QLocale().toString(mYpMinMaxFilter.first));
@@ -117,7 +119,6 @@ RebuildCurveDialog::RebuildCurveDialog(QStringList list, std::vector< std::pair<
         connect(Y1pmaxFilterEdit, &QLineEdit::textChanged, this, &RebuildCurveDialog::Y1pMaxFilterIsValid);
     }
 #endif
-    //buttonBox = new QDialogButtonBox(Qt::Horizontal);
     buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
     connect(buttonBox, &QDialogButtonBox::accepted, this, &RebuildCurveDialog::accept);
@@ -269,7 +270,7 @@ RebuildCurveDialog::RebuildCurveDialog(QStringList list, std::vector< std::pair<
         }
 
     }
-#ifdef DEBUG
+#ifdef WITHCURVEFILTER
     else { // filter only with 1 componnent
         ligne++;
         str = tr("Filter %1 Rate min").arg(mCompoList[0]);
@@ -400,7 +401,7 @@ void RebuildCurveDialog::Y1pMaxIsValid(QString str)
     setOkEnabled();
 }
 
-#ifdef DEBUG
+#ifdef WITHCURVEFILTER
 // YP Filter
 void RebuildCurveDialog::Y1pMinFilterIsValid(QString str)
 {

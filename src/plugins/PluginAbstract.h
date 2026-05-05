@@ -84,17 +84,77 @@ public:
     virtual ~PluginAbstract(){}
 
     virtual bool withLikelihoodArg() {return false;}
-    virtual long double getLikelihood(const double t, const QJsonObject &data) = 0;
-    virtual QPair<long double, long double > getLikelihoodArg(const double t, const QJsonObject &data)
+
+/**
+ * @brief Pure virtual interface that evaluates the likelihood of a
+ *        measurement at a given time.
+ *
+ * Every concrete plugin must implement this function.  It returns the
+ * (log‑)likelihood value that will be used by the Metropolis‑Hastings
+ * acceptance step.  The implementation is expected to work with the
+ * data supplied in the JSON object and to use the time <tt>t</tt> as the
+ * independent variable (e.g. the age of a reference curve).
+ *
+ * @param[in] t    The time (or age) at which the likelihood is evaluated.
+ * @param[in] data A JSON object that contains all the fields required by
+ *                 the concrete plugin (e.g. measured age, error,
+ *                 reservoir‑effect parameters, …).  The exact keys are
+ *                 documented in the derived class.
+ *
+ * @return The likelihood value as a <tt>long double</tt>.  The sign and
+ *         scaling are left to the implementation – the Metropolis‑Hastings
+ *         code only needs a value that can be compared or exponentiated.
+ *
+ * @note The function is **pure virtual**; calling it on an instance of
+ *       <tt>PluginAbstract</tt> will result in a compilation error.
+ *
+ * @see PluginAbstract::getLikelihoodArg()
+ */
+    virtual long double getLikelihood(const double t, const QJsonObject &data) const noexcept = 0;
+
+ /**
+ * @brief Returns the two intermediate arguments required for the
+ *        Metropolis‑Hastings acceptance test.
+ *
+ * The default implementation does nothing and returns an empty
+ * <tt>QPair</tt>.  Concrete plugins may override this method to provide
+ * the variance of the Gaussian likelihood and the exponent of the
+ * Gaussian (i.e. the two terms that are later combined as
+ * <tt>exp(exponent) * sqrt(variance)</tt> in the acceptance ratio).
+ *
+ * @param[in] t    The time (or age) at which the reference curve is
+ *                 evaluated.
+ * @param[in] data A JSON object that must contain the fields required by
+ *                 the plugin (e.g. measured age, measurement error,
+ *                 reservoir‑effect parameters, …).  The exact set of keys
+ *                 is documented in the derived class.
+ *
+ * @return A @c QPair where:
+ *         - <tt>first</tt>  holds the **variance**  (\f$\sigma^{2}(t)\f$)
+ *         - <tt>second</tt> holds the **exponent** (\f$-\tfrac12\,
+ *           \frac{(age-\mu(t))^{2}}{\sigma^{2}(t)}\f$)
+ *
+ * @note The function is **virtual**, not pure; if a derived class does not
+ *       need the split arguments it may simply inherit this empty
+ *       implementation.
+ *
+ * @warning The default implementation returns an empty pair; using the
+ *          returned values without checking them will lead to undefined
+ *          behaviour.  Always verify that the derived class overrides this
+ *          method when the split arguments are required.
+ *
+ * @see PluginAbstract::getLikelihood()
+ */
+    virtual std::pair<long double, long double > getLikelihoodArg(const double t, const QJsonObject &data) const noexcept
     {
         (void) t;
         (void) data;
-        return QPair<long double, long double>();
+        return std::pair<long double, long double>{0.0, 0.0}; // Exemple de retour
     }
     
     long double getLikelihoodCombine  (const double t, const QJsonArray &subDateArray, const double step)
     {
-        long double produit = 1.l;
+        long double produit = 1.0L;
         Date date;
         QJsonObject subDateJSon;
         QJsonObject data;
@@ -129,7 +189,6 @@ public:
                      break;
 
                     case Date::eDeltaRange: {
-                        //produit *= date.getLikelihoodFromWiggleCalib(t);
 
                         double deltaMin = subDateJSon.value(STATE_DATE_DELTA_MIN).toDouble();
                         double deltaMax = subDateJSon.value(STATE_DATE_DELTA_MAX).toDouble();
@@ -161,14 +220,14 @@ public:
     virtual QStringList csvColumns() const{return QStringList();}
     virtual qsizetype csvMinColumns() const {return csvColumns().size();}
     virtual qsizetype csvOptionalColumns() const {return 0;}
-    virtual QJsonObject fromCSV(const QStringList &list,const QLocale &csvLocale) = 0;
+    virtual QJsonObject fromCSV(const QStringList &list,const QLocale &csvLocale) const = 0;
     virtual QStringList toCSV(const QJsonObject &data,const QLocale &csvLocale) const = 0;
 
     /**
      * @brief getDateDesc is the description of the Data showing in the properties of Event, in the list of data
      */
     virtual QString getDateDesc(const Date* date) const = 0;
-    virtual QString getDateRefCurveName(const Date* ) {return QString();}
+    virtual QString getDateRefCurveName(const Date* ) const {return QString();}
     virtual bool areDatesMergeable(const QJsonArray &dates) { (void) dates; return false;}
     virtual QJsonObject mergeDates(const QJsonArray &dates)
     {
@@ -178,9 +237,9 @@ public:
         return ret;
     }
 
-    QColor getColor() const {return mColor;}
+    inline QColor getColor() const {return mColor;}
 
-    QString getId() const{
+    inline QString getId() const{
         QString name = getName().simplified().toLower();
         name = name.replace(" ", "_");
         return name;
@@ -191,15 +250,12 @@ public:
     virtual QJsonObject checkValuesCompatibility(const QJsonObject& values) {return values;}
     virtual bool isDateValid(const QJsonObject &data, const StudyPeriodSettings &settings)
     {
-        (void)data;
+        (void) data;
         (void) settings;
         return true;
     }
     virtual bool isCombineValid(const QJsonObject &data, const StudyPeriodSettings &settings)
    {
-       //Q_ASSERT(&data);
-       //Q_ASSERT(&settings);
-       
        QJsonArray subData = data.value(STATE_DATE_SUB_DATES).toArray();
       
        bool valid (true);
@@ -224,7 +280,7 @@ public:
      * ------------------------------- */
     virtual QPair<double, double> getTminTmaxRefsCurve(const QJsonObject &data) const = 0;
 
-    virtual double getMinStepRefsCurve(const QJsonObject &data) const {(void) data; return  std::numeric_limits<double>::max();};
+    virtual double getMinStepRefsCurve(const QJsonObject &data) {(void) data; return  std::numeric_limits<double>::max();};
     /*
      * For the majority of the plugins, i.e. having a calibration curve,
      * the wiggles densities are on the same support as the calibrated densities,
@@ -275,7 +331,7 @@ public:
         }
     }
 
-    QStringList getRefsNames() const
+    /* QStringList getRefsNames() const
     {
         QStringList refNames;
         QHash<QString, RefCurve>::const_iterator it = mRefCurves.constBegin();
@@ -287,68 +343,125 @@ public:
             ++it;
         }
         return refNames;
+    }*/
+    QStringList getRefsNames() const noexcept
+    {
+        // 1️⃣  Reserve the maximum possible size – the list will never grow
+        //     beyond the number of entries in the hash.
+        QStringList refNames;
+        refNames.reserve(mRefCurves.size());
+
+        // 2️⃣  Iterate directly over the hash.  The iterator gives us both the
+        //     key and the value without an extra lookup.
+        for (auto it = mRefCurves.cbegin(); it != mRefCurves.cend(); ++it) {
+            // `it.value()` is a const reference to the stored RefCurve.
+
+            if (!it.value().mDataMean.isEmpty()) {
+                // `append()` (or `push_back`) copies the key once; the key is
+                // already a QString, so no conversion is needed.
+                refNames.append(it.key());
+            }
+        }
+        // 3️⃣  Optional: shrink‑to‑fit – frees any over‑allocated memory.
+        refNames.squeeze();          // only useful if the hash is very sparse
+        return refNames;
     }
+
 
     // curveName must be in lower Case
-    double getRefCurveValueAt(const QString &curveName, const double t)
+    double getRefCurveValueAt(const QString& curveName,  double t) const noexcept
     {
-        long double value = 0.;
-        if (mRefCurves.constFind(curveName) != mRefCurves.constEnd()) {
-            const RefCurve& curve = mRefCurves.value(curveName);
+        // ----- 1️⃣ cache / QHash lookup -----
+        const RefCurve* curve = nullptr;
 
-            if (t >= curve.mTmin && t <= curve.mTmax) {
-                // This actually return the iterator with the nearest greater key !!!
-                QMap<double, double>::const_iterator iter = curve.mDataMean.lowerBound(t);
-                if (iter != curve.mDataMean.constBegin())  {
-                        const double t_upper = iter.key();
-                        const double v_upper = iter.value();
+        if (mLastCurvePtr && mLastCurveName == curveName) {
+            curve = mLastCurvePtr;
 
-                        --iter;
-                        const double t_under = iter.key();
-                        const double v_under = iter.value();
+        } else {
+            auto it = mRefCurves.constFind(curveName);
+            if (it == mRefCurves.constEnd())
+                return 0.0;                     // courbe inconnue
 
-                        value = interpolate(t, t_under, t_upper, v_under, v_upper);
-                } else {
-                        value = iter.value();
-                }
-            }
-            else { // onExtension depreciated
-                value = (curve.mDataSupMax + curve.mDataInfMin )/2.;
-            }
+            curve = &it.value();
 
+            // update the cache for the next call
+            mLastCurveName = curveName;
+            mLastCurvePtr  = curve;
         }
-        return value;
+
+        // ----- 2️⃣ hors domaine -----
+        // onExtension depreciated
+        if (t < curve->mTmin || t > curve->mTmax)
+            return (curve->mDataSupMax + curve->mDataInfMin) * 0.5;
+
+        // ----- 3️⃣ recherche binaire -----
+
+        auto itUpper = curve->mDataMean.lowerBound(t);
+
+        // avant le premier point
+        if (itUpper == curve->mDataMean.constBegin())
+            return itUpper.value();
+
+        // après le dernier point (impossible grâce au test de domaine, mais on le garde)
+        if (itUpper == curve->mDataMean.constEnd())
+            return curve->mDataMean.last();
+
+        // ----- 4️⃣ interpolation -----
+        double tUpper = itUpper.key();
+        double vUpper = itUpper.value();
+
+        --itUpper;                     // now points to the lower neighbour
+        double tLower = itUpper.key();
+        double vLower = itUpper.value();
+        return interpolate(t, tLower, tUpper, vLower, vUpper);
     }
 
-    double getRefCurveErrorAt(const QString &curveName, const double t)
+
+    double getRefCurveErrorAt(const QString& curveName,  double t) const noexcept
     {
-        double error = 0.;
-        if (mRefCurves.constFind(curveName) != mRefCurves.constEnd()) {
-            const RefCurve &curve = mRefCurves.value(curveName);
+        // ----- 1️⃣ cache / QHash lookup -----
+        const RefCurve* curve = nullptr;
 
-            if (t >= curve.mTmin && t <= curve.mTmax) {
-               // This actually return the iterator with the nearest greater key !!!
-                QMap<double, double>::const_iterator iter = curve.mDataError.lowerBound(t);
-                // the higher value must be mTmax.
-                if (iter != curve.mDataError.constBegin()) {
+        if (mLastCurvePtr && mLastCurveName == curveName) {
+            curve = mLastCurvePtr;
 
-                    const double t_upper = iter.key();
-                    const double v_upper = iter.value();//memo curve.mDataError[t_upper];
-                    --iter;
-                    const double t_under = iter.key();
-                    const double v_under = iter.value();//memo curve.mDataError[t_under];
+        } else {
+            auto it = mRefCurves.constFind(curveName);
+            if (it == mRefCurves.constEnd())
+                return 0.0;                     // courbe inconnue
 
+            curve = &it.value();
 
-                    error = interpolate(t, t_under, t_upper, v_under, v_upper);
-                } else {
-                    error = iter.value();
-                }
-            }
-            else { // onExtension
-                    error = 1.0e+6 * (curve.mDataSupMax - curve.mDataInfMin);
-            }
+            // update the cache for the next call
+            mLastCurveName = curveName;
+            mLastCurvePtr  = curve;
         }
-        return error;
+
+        // ----- 2️⃣ hors domaine -----
+        // onExtension depreciated
+        if (t < curve->mTmin || t > curve->mTmax)
+            return 1.0e+6 * (curve->mDataSupMax - curve->mDataInfMin);
+
+        // ----- 3️⃣ recherche binaire -----
+
+        auto itUpper = curve->mDataError.lowerBound(t);
+
+        // avant le premier point
+        if (itUpper == curve->mDataError.constBegin())
+            return itUpper.value();
+
+        // après le dernier point (impossible grâce au test de domaine, mais on le garde)
+        if (itUpper == curve->mDataError.constEnd())
+            return curve->mDataError.last();
+
+        // ----- 4️⃣ interpolation -----
+        double tUpper = itUpper.key();
+        double vUpper = itUpper.value();
+
+        --itUpper;                     // now points to the lower neighbour
+        double tLower = itUpper.key();
+        double vLower = itUpper.value();
+        return interpolate(t, tLower, tUpper, vLower, vUpper);
     }
 
     const RefCurve& getRefCurve(const QString& name)
@@ -378,7 +491,17 @@ public:
 #endif
 
     }
+protected:
+    // cache accessors
+    const QString&  cacheCurveName() const noexcept { return mLastCurveName; }
+    void            setCacheCurveName(const QString& n) noexcept { mLastCurveName = n; }
+    const RefCurve* cacheCurvePtr() const noexcept { return mLastCurvePtr; }
+    void            setCacheCurvePtr(const RefCurve* p) noexcept { mLastCurvePtr = p; }
 
+private:
+    // cache du dernier curve
+    mutable QString          mLastCurveName;
+    mutable const RefCurve*  mLastCurvePtr = nullptr;
 
 };
 

@@ -59,50 +59,50 @@ public:
     Plugin14C();
     virtual ~Plugin14C();
 
-    long double getLikelihood(const double t, const QJsonObject &data);
-    bool withLikelihoodArg() {return true; }
-    QPair<long double, long double > getLikelihoodArg(const double t, const QJsonObject &data);
+    long double getLikelihood(const double t, const QJsonObject &data) const noexcept override;
+    bool withLikelihoodArg() override {return true; }
+    std::pair<long double, long double > getLikelihoodArg(const double t, const QJsonObject &data) const noexcept override;
     
     // virtual function
-    QString getName() const;
-    QIcon getIcon() const;
-    bool doesCalibration() const;
-    bool wiggleAllowed() const;
+    QString getName() const override;
+    QIcon getIcon() const override;
+    bool doesCalibration() const override;
+    bool wiggleAllowed() const override;
 
-    virtual MHVariable::SamplerProposal getDataMethod() const;
-    virtual QList<MHVariable::SamplerProposal> allowedDataMethods() const;
+    virtual MHVariable::SamplerProposal getDataMethod() const override;
+    virtual QList<MHVariable::SamplerProposal> allowedDataMethods() const override;
 
-    QStringList csvColumns() const;
-    qsizetype csvMinColumns() const;
-    qsizetype csvOptionalColumns() const {return 2;} // Corresponding to  "ΔR" and "ΔR Error"
-    QJsonObject fromCSV(const QStringList &list, const QLocale &csvLocale) ;
-    QStringList toCSV(const QJsonObject &data, const QLocale &csvLocale) const;
-    QString getDateDesc(const Date* date) const;
-    QString getDateRefCurveName(const Date* date) ;
+    QStringList csvColumns() const override;
+    qsizetype csvMinColumns() const override;
+    qsizetype csvOptionalColumns() const override {return 2;} // Corresponding to  "ΔR" and "ΔR Error"
+    QJsonObject fromCSV(const QStringList &list, const QLocale &csvLocale) const override;
+    QStringList toCSV(const QJsonObject &data, const QLocale &csvLocale) const override;
+    QString getDateDesc(const Date* date) const override;
+    QString getDateRefCurveName(const Date* date) const override ;
 
-    PluginFormAbstract* getForm();
-    GraphViewRefAbstract* getGraphViewRef();
-    virtual void deleteGraphViewRef(GraphViewRefAbstract* graph);
-    PluginSettingsViewAbstract* getSettingsView();
-    QList<QHash<QString, QVariant>> getGroupedActions();
+    PluginFormAbstract* getForm() override;
+    GraphViewRefAbstract* getGraphViewRef() override;
+    virtual void deleteGraphViewRef(GraphViewRefAbstract* graph) override;
+    PluginSettingsViewAbstract* getSettingsView() override;
+    QList<QHash<QString, QVariant>> getGroupedActions() override;
 
-    QJsonObject checkValuesCompatibility(const QJsonObject &values);
-    bool isDateValid(const QJsonObject &data, const StudyPeriodSettings &settings);
+    QJsonObject checkValuesCompatibility(const QJsonObject &values) override;
+    bool isDateValid(const QJsonObject &data, const StudyPeriodSettings &settings) override;
 
-    bool areDatesMergeable(const QJsonArray& dates);
-    QJsonObject mergeDates(const QJsonArray& dates);
+    bool areDatesMergeable(const QJsonArray& dates) override;
+    QJsonObject mergeDates(const QJsonArray& dates) override;
 
     // ---------------------
 
-    QString getRefExt() const;
-    QString getRefsPath() const;
-    RefCurve loadRefFile(QFileInfo refFile);
+    QString getRefExt() const override;
+    QString getRefsPath() const override;
+    RefCurve loadRefFile(QFileInfo refFile) override;
 
-    double getRefValueAt(const QJsonObject& data, const double& t);
-    double getRefErrorAt(const QJsonObject& data, const double& t);
+    double getRefValueAt(const QJsonObject& data, const double& t) const;
+    double getRefErrorAt(const QJsonObject& data, const double& t) const;
 
-    QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
-    double getMinStepRefsCurve(const QJsonObject &data) const;
+    QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const override;
+    double getMinStepRefsCurve(const QJsonObject &data) override;
 };
 
 template <typename T>

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -62,18 +62,61 @@ PluginTL::~PluginTL()
         delete mRefGraph;
 }
 
-long double PluginTL::getLikelihood(const double t, const QJsonObject &data)
+long double PluginTL::getLikelihood(const double t, const QJsonObject &data) const noexcept
 {
-    const double age = data.value(DATE_TL_AGE_STR).toDouble();
-    const long double error = (long double)data.value(DATE_TL_ERROR_STR).toDouble();
-    const double ref_year = data.value(DATE_TL_REF_YEAR_STR).toDouble();
+    /* ------------------------------------------------------------------
+     * 1️⃣  Extract the three numbers from the JSON object and promote them
+     *     to long double once.  This avoids repeated casts later on.
+     * ------------------------------------------------------------------ */
+    const long double age      = static_cast<long double>(data.value(DATE_TL_AGE_STR).toDouble());
+    const long double error    = static_cast<long double>(data.value(DATE_TL_ERROR_STR).toDouble());
+    const long double refYear  = static_cast<long double>(data.value(DATE_TL_REF_YEAR_STR).toDouble());
 
-    // gaussian TL
-    const long double v = expl(-0.5l * powl((long double)(age - (ref_year - t)) / error, 2.l)) / error;
-    return v;
+    /* ------------------------------------------------------------------
+     * 2️⃣  Compute the exponent:
+     *     diff = age - (refYear - t)
+     *     norm = diff / error
+     *     exponent = -0.5 * norm²
+     * ------------------------------------------------------------------ */
+    const long double diff = age - (refYear - static_cast<long double>(t));
+    const long double norm = diff / error;
+    const long double exponent = -0.5L * norm * norm;   // same as powl(norm,2.0L) but faster
+
+    /* ------------------------------------------------------------------
+     * 3️⃣   Gaussian value (normalisation factor = 1 / error)
+     * ------------------------------------------------------------------ */
+    const long double likelihood = std::expl(exponent) / error;
+
+    return likelihood;
 }
 
-QPair<long double, long double> PluginTL::getLikelihoodArg(const double t, const QJsonObject &data)
+
+std::pair<long double, long double> PluginTL::getLikelihoodArg(double t, const QJsonObject &data) const noexcept
+{
+    // ------------------------------------------------------------------
+    // 1️⃣  Extract the three required numbers (still double from JSON)
+    // ------------------------------------------------------------------
+    const long double age      = static_cast<long double>(data.value(DATE_TL_AGE_STR).toDouble());
+    const long double error    = static_cast<long double>(data.value(DATE_TL_ERROR_STR).toDouble());
+    const long double refYear  = static_cast<long double>(data.value(DATE_TL_REF_YEAR_STR).toDouble());
+    // ------------------------------------------------------------------
+    // 2️⃣  Compute the variance = 1 / error²
+    // ------------------------------------------------------------------
+    const long double variance = 1.0L / (error * error);
+    // ------------------------------------------------------------------
+    // 3️⃣  Compute the exponent.
+    //     (age - (refYear - t)) / error  →  then square it.
+    // ------------------------------------------------------------------
+    const long double diff = age - (refYear - t);
+    const long double norm = diff / error;
+    const long double exponent = -0.5L * norm * norm;   // same as powl(norm, 2.0L)
+    // ------------------------------------------------------------------
+    // 4️⃣  Return the pair.
+    // ------------------------------------------------------------------
+    return { variance, exponent };
+}
+/*
+std::pair<long double, long double> PluginTL::getLikelihoodArg(const double t, const QJsonObject &data) const
 {
     QPair<long double, long double> result;
     const double age = data.value(DATE_TL_AGE_STR).toDouble();
@@ -83,7 +126,7 @@ QPair<long double, long double> PluginTL::getLikelihoodArg(const double t, const
     // gaussian TL
     result = QPair<long double,long double>(1.l/(error*error), (-0.5l * powl((long double)(age - (ref_year - t)) / error, 2.l))) ;
     return result;
-}
+}*/
 
 QString PluginTL::getName() const
 {
@@ -144,7 +187,7 @@ QJsonObject PluginTL::checkValuesCompatibility(const QJsonObject &values)
 
     return result;
 }
-QJsonObject PluginTL::fromCSV(const QStringList &list, const QLocale &csvLocale)
+QJsonObject PluginTL::fromCSV(const QStringList &list, const QLocale &csvLocale) const
 {
     QJsonObject json;
     if (list.size() >= csvMinColumns()) {
@@ -204,16 +247,17 @@ QPair<double,double> PluginTL::getTminTmaxRefsCurve(const QJsonObject &data) con
     return QPair<double, double>(tmin, tmax);
 }
 
-double PluginTL::getMinStepRefsCurve(const QJsonObject &data) const
+double PluginTL::getMinStepRefsCurve(const QJsonObject &data)
 {
-    const int frac = 1001;
+    constexpr double frac = 1.0 / 1001;
     const double age = data.value(DATE_TL_AGE_STR).toDouble();
     const double error = data.value(DATE_TL_ERROR_STR).toDouble();
     const double ref_year = data.value(DATE_TL_REF_YEAR_STR).toDouble();
 
     const double tmin = ref_year - age - k_sigma * error;
     const double tmax = ref_year - age + k_sigma * error;
-    return std::abs(tmax-tmin)/ frac;
+
+    return std::abs(tmax-tmin) * frac;
 
 
 }
@@ -226,6 +270,7 @@ GraphViewRefAbstract* PluginTL::getGraphViewRef()
     mRefGraph = new PluginTLRefView();
     return mRefGraph;
 }
+
 void PluginTL::deleteGraphViewRef(GraphViewRefAbstract* graph)
 {
     if (graph)

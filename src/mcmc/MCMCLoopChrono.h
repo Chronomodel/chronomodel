@@ -57,12 +57,26 @@ protected:
 
     virtual QString initialize();
 
-    virtual bool update() {return update_v3();};
+    virtual bool learn() {return learn_v3_tempering();};
+
+    virtual bool update() {return update_v3_tempering();};
+
+
+    //virtual bool update() {return update_v3();};
     virtual bool adapt(const int batchIndex);
-    virtual void memo();
+   // virtual void memo();
+
+    virtual void recordBurnAdapt();
+    virtual void recordMH();
+    virtual void acquire();
+
     virtual void finalize();
 
+    bool learn_v3_tempering();
     bool update_v3();
+    bool update_v3_tempering();
+
+    bool update_v3_simulated_tempering_annealing();
     bool update_v4();
 };
 

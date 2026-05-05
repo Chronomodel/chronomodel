@@ -354,10 +354,10 @@ double variance_Knuth(const std::vector<int> &data)
 
 }
 
-void mean_variance_Knuth(const std::vector<double> &data, double &mean, double &variance)
+void mean_std_Knuth(const std::vector<double> &data, double &mean, double &std)
 {
     int n = 0;
-    variance = 0.0;
+    double variance = 0.0;
     mean = 0.0;
 
     for (const auto& x : data) {
@@ -367,6 +367,7 @@ void mean_variance_Knuth(const std::vector<double> &data, double &mean, double &
         variance +=  ( x - previousMean)*( x - mean);
     }
     variance /= n;
+    std = sqrt(variance);
 }
 
 void mean_variance_Knuth(const QList<double> &data, double& mean, double& variance)
@@ -380,6 +381,21 @@ void mean_variance_Knuth(const QList<double> &data, double& mean, double& varian
         double previousMean = mean;
         mean += (x - previousMean) / n;
         variance += ( x - previousMean)*( x - mean);
+    }
+    variance /= n;
+}
+
+void mean_variance_Knuth(const std::vector<double> &data, double &mean, double &variance)
+{
+    int n = 0;
+    variance = 0.0;
+    mean = 0.0;
+
+    for (const auto& x : data) {
+        n++;
+        double previousMean = mean;
+        mean += (x - previousMean) / n;
+        variance +=  ( x - previousMean)*( x - mean);
     }
     variance /= n;
 }
@@ -611,8 +627,9 @@ QList<double> autocorrelation_by_convol(const QList<double> &trace, const int hm
     // La sortie de la convolution= autro-correlation donne /
     // outputReal[0]=somme(input^2)
     // comme nous avons fait input=t-mean; outputReal[0] vmax = somme((t-mean)^2) = variance* N
-    QList<double> results;
-    for ( int i = 0; i < hmax + 1; i++) {
+    QList<double> results;// Vérifier que hmax + 1 <= N
+    int limit = std::min(hmax + 1, N);
+    for (int i = 0; i < limit; i++) {
         results.push_back(outputReal[i] /vmax);
     }
     fftw_destroy_plan(plan_input);
@@ -716,32 +733,38 @@ TraceStat traceStatistic(const QList<type_data> &trace)
 TraceStat traceStatistic(const std::vector<type_data> &trace)
 {
     TraceStat result;
+    if (trace.size() == 0) {
+        result.mean = 0;
+        result.std = 0.0;
+
+        result.min = 0;
+        result.max = 0;
+
+        result.quartiles.Q1 = 0;
+        result.quartiles.Q2 = 0;
+        result.quartiles.Q3 = 0;
+#ifdef DEBUG
+        std::cout << "[traceStatistic] trace is empty " << std::endl;
+#endif
+        return result;
+    }
+
     if (trace.size() == 1) {
-        result.mean = trace.at(0);
+        const double v  = trace.front();
+        result.mean = v;
         result.std = 0.0; // unbiais
 
-        result.min = trace.at(0);
-        result.max = trace.at(0);
+        result.min = v;
+        result.max = v;
 
-        result.quartiles.Q1 = trace.at(0);
-        result.quartiles.Q2 = trace.at(0);
-        result.quartiles.Q3 = trace.at(0);
+        result.quartiles.Q1 = v;
+        result.quartiles.Q2 = v;
+        result.quartiles.Q3 = v;
 
         return result;
     }
 
-    int n = 0;
-    type_data mean = 0.0;
-    type_data variance = 0.0;
-
-    for (auto&& x : trace) {
-        n++;
-        type_data previousMean = mean;
-        mean +=  (x - previousMean)/n;
-        variance += (x - previousMean)*(x - mean);
-    }
-    result.mean = mean;
-    result.std = sqrt(variance/(n-1)); // unbiais
+    mean_std_Knuth(trace, result.mean, result.std);
 
     auto minMax = std::minmax_element(trace.begin(), trace.end());
     result.min = *minMax.first;
@@ -968,9 +991,13 @@ Quartiles quartilesForRepartition(const QList<double> &repartition, const double
         quartiles.Q3 = tmin;
         return quartiles;
     }
-    const double q1index = vector_interpolate_idx_for_value(0.25, repartition);
+    /*const double q1index = vector_interpolate_idx_for_value(0.25, repartition);
     const double q2index = vector_interpolate_idx_for_value(0.5, repartition);
-    const double q3index = vector_interpolate_idx_for_value(0.75, repartition);
+    const double q3index = vector_interpolate_idx_for_value(0.75, repartition);*/
+
+    const double q1index = interpolate_index(0.25, repartition);
+    const double q2index = interpolate_index(0.5, repartition);
+    const double q3index = interpolate_index(0.75, repartition);
 
     quartiles.Q1 = tmin + q1index * step;
     quartiles.Q2 = tmin + q2index * step;
@@ -988,9 +1015,13 @@ Quartiles quartilesForRepartition(const std::vector<double> &repartition, const 
         quartiles.Q3 = tmin;
         return quartiles;
     }
-    const double q1index = vector_interpolate_idx_for_value(0.25, repartition);
+    /*const double q1index = vector_interpolate_idx_for_value(0.25, repartition);
     const double q2index = vector_interpolate_idx_for_value(0.5, repartition);
-    const double q3index = vector_interpolate_idx_for_value(0.75, repartition);
+    const double q3index = vector_interpolate_idx_for_value(0.75, repartition);*/
+
+    const double q1index = interpolate_index(0.25, repartition);
+    const double q2index = interpolate_index(0.5, repartition);
+    const double q3index = interpolate_index(0.75, repartition);
 
     quartiles.Q1 = tmin + q1index * step;
     quartiles.Q2 = tmin + q2index * step;
@@ -5358,7 +5389,7 @@ QMap<double, double> gaussian_filter(QMap<double, double> &map, const double sig
 
     //qDebug() <<"filtre Gaussian";
     //  data
-    const int inputSize = (int) curve_input.size();
+    int inputSize = (int) curve_input.size();
 
     const double sigma_filter = sigma * step;
 
@@ -5412,6 +5443,13 @@ QMap<double, double> gaussian_filter(QMap<double, double> &map, const double sig
 
     fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, inputComplex, outputReal, FFTW_ESTIMATE);
     fftw_execute(plan_output);
+
+    // Vérifier que inputSize ne dépasse pas la capacité
+    int safe_limit = 2*(N/2)+1 - paddingSize;
+    if (inputSize > safe_limit) {
+        inputSize = safe_limit;
+        qDebug() << "Adjusted inputSize to prevent buffer overflow:" << inputSize;
+    }
 
     QMap<double, double> results;
     for ( int i = 0; i < inputSize; i++) {

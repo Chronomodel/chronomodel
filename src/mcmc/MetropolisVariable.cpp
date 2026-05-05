@@ -38,6 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "MetropolisVariable.h"
+#include "Generator.h" // pour test ucv
 
 #include "StdUtilities.h"
 #include "QtUtilities.h"
@@ -70,13 +71,18 @@ TValueStack::~TValueStack()
 
 /** Default constructor */
 MetropolisVariable::MetropolisVariable():
-    _name("Empty MetropolisVariable"),
-    mX (0.),
-    mRawTrace(std::make_shared<std::vector<double>>()),
-    mFormatedTrace(std::make_shared<std::vector<double>>()),
+    mName("Empty MetropolisVariable"),
+    mAcceptedStateCountByChain(),
+    mX (0.0),
+    mBurnAdaptTrace(std::make_shared<std::vector<double>>()),
+    mAcquiredTrace(std::make_shared<std::vector<double>>()),
+    mFormatedBurnAdaptTrace(std::make_shared<std::vector<double>>()),
+    mFormatedAcquiredTrace(std::make_shared<std::vector<double>>()),
+
     mSupport (eR),
     mFormat (DateUtils::eNumeric),
     mFormatedHisto(),
+
     mChainsHistos(),
     mCorrelations(),
     mFormatedHPD(),
@@ -88,7 +94,11 @@ MetropolisVariable::MetropolisVariable():
     mBandwidthUsed (-1.0),
     mThresholdUsed (-1.0),
     mtminUsed (0.0),
-    mtmaxUsed (0.0)
+    mtmaxUsed (0.0),
+// Learning Prior
+    mBurnInPriorTrace(std::make_shared<std::vector<double>>()),
+    mEmpiricalPrior(),
+    mEmpiricalPriorReady(false)
 {
    mRawCredibility = std::pair<double, double>(1, -1);
    mFormatedCredibility = std::pair<double, double>(1, -1);
@@ -100,10 +110,18 @@ MetropolisVariable::MetropolisVariable(const MetropolisVariable& origin):
     MetropolisVariable()
 {
     mX = origin.mX;
-    _name = origin._name;
+    mName = origin.mName;
+    mAcceptedStateCountByChain = origin.mAcceptedStateCountByChain;
 
-    mRawTrace = std::make_shared<std::vector<double>>(*origin.mRawTrace);
-    mFormatedTrace = std::make_shared<std::vector<double>>(*origin.mFormatedTrace);
+    mBurnAdaptTrace = std::make_shared<std::vector<double>>(*origin.mBurnAdaptTrace);
+    mFormatedBurnAdaptTrace = std::make_shared<std::vector<double>>(*origin.mFormatedBurnAdaptTrace);
+
+    mAcquiredTrace = std::make_shared<std::vector<double>>(*origin.mAcquiredTrace);
+    mFormatedAcquiredTrace = std::make_shared<std::vector<double>>(*origin.mFormatedAcquiredTrace);
+    // Learning Prior
+    mBurnInPriorTrace = std::make_shared<std::vector<double>>(*origin.mBurnInPriorTrace);
+    mEmpiricalPrior = origin.mEmpiricalPrior;
+    mEmpiricalPriorReady = origin.mEmpiricalPriorReady;
 
     mSupport = origin.mSupport;
     mFormat = origin.mFormat;
@@ -142,10 +160,15 @@ MetropolisVariable::~MetropolisVariable()
 MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable& origin)
 {
     mX = origin.mX;
-    _name = origin._name;
+    mName = origin.mName;
+    mAcceptedStateCountByChain = origin.mAcceptedStateCountByChain;
 
-    mRawTrace = std::make_shared<std::vector<double>>(*origin.mRawTrace);
-    mFormatedTrace = std::make_shared<std::vector<double>>(*origin.mFormatedTrace);
+    mBurnAdaptTrace = std::make_shared<std::vector<double>>(*origin.mBurnAdaptTrace);
+    mFormatedBurnAdaptTrace = std::make_shared<std::vector<double>>(*origin.mFormatedBurnAdaptTrace);
+
+    mAcquiredTrace = std::make_shared<std::vector<double>>(*origin.mAcquiredTrace);
+    mFormatedAcquiredTrace = std::make_shared<std::vector<double>>(*origin.mFormatedAcquiredTrace);
+
 
     mSupport = origin.mSupport;
     mFormat = origin.mFormat;
@@ -172,6 +195,11 @@ MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable& orig
     mtminUsed = origin.mtminUsed;
     mtmaxUsed = origin.mtmaxUsed;
 
+    // Learning Prior
+    mBurnInPriorTrace = std::make_shared<std::vector<double>>(*origin.mBurnInPriorTrace);
+    mEmpiricalPrior = origin.mEmpiricalPrior;
+    mEmpiricalPriorReady = origin.mEmpiricalPriorReady;
+
     return *this;
 }
 
@@ -181,10 +209,14 @@ MetropolisVariable& MetropolisVariable::operator=(MetropolisVariable&& origin) n
     if (this != &origin) { // Vérification de l'auto-assignement
         // Transférer les membres
         mX = std::move(origin.mX);
-        _name = std::move(origin._name);
+        mName = std::move(origin.mName);
+        mAcceptedStateCountByChain = std::move(origin.mAcceptedStateCountByChain);
 
-        mRawTrace = std::move(origin.mRawTrace);
-        mFormatedTrace = std::move(origin.mFormatedTrace);
+        mBurnAdaptTrace = std::move(origin.mBurnAdaptTrace);
+        mFormatedBurnAdaptTrace = std::move(origin.mFormatedBurnAdaptTrace);
+
+        mAcquiredTrace = std::move(origin.mAcquiredTrace);
+        mFormatedAcquiredTrace = std::move(origin.mFormatedAcquiredTrace);
 
         mSupport = std::move(origin.mSupport);
         mFormat = std::move(origin.mFormat);
@@ -211,31 +243,40 @@ MetropolisVariable& MetropolisVariable::operator=(MetropolisVariable&& origin) n
         mtminUsed = origin.mtminUsed;
         mtmaxUsed = origin.mtmaxUsed;
 
+        // Learning Prior
+        if (mBurnInPriorTrace) {
+            mBurnInPriorTrace = std::move(origin.mBurnInPriorTrace);
+            mEmpiricalPrior = std::move(origin.mEmpiricalPrior);
+            mEmpiricalPriorReady = origin.mEmpiricalPriorReady;
+        }
+
         // Laisser l'objet source dans un état valide
         // (par exemple, réinitialiser les pointeurs ou les ressources)
-        origin.mRawTrace.reset();
-        origin.mFormatedTrace.reset();
+        origin.mBurnAdaptTrace.reset();
+        origin.mFormatedBurnAdaptTrace.reset();
+
+        origin.mAcquiredTrace.reset();
+        origin.mFormatedAcquiredTrace.reset();
+
+        origin.mBurnInPriorTrace.reset();
+
         // Réinitialiser d'autres membres si nécessaire
     }
 
     return *this;
 }
 
-void MetropolisVariable::memo()
-{
-   mRawTrace->push_back(mX);
-}
 
-void MetropolisVariable::memo(double* valueToSave)
-{
-    mRawTrace->push_back(*valueToSave);
-}
 
 void MetropolisVariable::clear()
 {
-    mRawTrace->clear();
-    mFormatedTrace->clear();
+    mBurnAdaptTrace->clear();
+    mFormatedBurnAdaptTrace->clear();
+    mAcquiredTrace->clear();
+    mFormatedAcquiredTrace->clear();
+
     mFormatedHisto.clear();
+    mAcceptedStateCountByChain.clear();
 
     mChainsHistos.clear();
     mCorrelations.clear();
@@ -246,26 +287,47 @@ void MetropolisVariable::clear()
     mRawCredibility = std::pair<double, double>(1, -1);
     mFormatedCredibility = std::pair<double, double>(1, -1);
     mExactCredibilityThreshold = 0.0;
+
+    // Learning Prior
+    if (mBurnInPriorTrace) mBurnInPriorTrace->clear();
+
+    mEmpiricalPrior.clear();
+    mEmpiricalPriorReady = false;
 
 }
 
 void MetropolisVariable::shrink_to_fit() noexcept
 {
-    mRawTrace->shrink_to_fit();
-    mFormatedTrace->shrink_to_fit();
+    mBurnAdaptTrace->shrink_to_fit();
+    mFormatedBurnAdaptTrace->shrink_to_fit();
+    mAcquiredTrace->shrink_to_fit();
+    mFormatedAcquiredTrace->shrink_to_fit();
+
     mChainsHistos.shrink_to_fit();
     mCorrelations.shrink_to_fit();
     mRawHPDintervals.shrink_to_fit();
     mChainsResults.shrink_to_fit();
+
+    // Learning Prior
+    mBurnInPriorTrace->shrink_to_fit();
+    //mEmpiricalPrior.shrink_to_fit();
 }
 
 void MetropolisVariable::clear_and_shrink() noexcept
 {
-    mRawTrace->clear();
-    mRawTrace->shrink_to_fit();
+    mAcceptedStateCountByChain.clear();
+    mBurnAdaptTrace->clear();
+    mBurnAdaptTrace->shrink_to_fit();
 
-    mFormatedTrace->clear();
-    mFormatedTrace->shrink_to_fit();
+    mFormatedBurnAdaptTrace->clear();
+    mFormatedBurnAdaptTrace->shrink_to_fit();
+
+    mAcquiredTrace->clear();
+    mAcquiredTrace->shrink_to_fit();
+
+    mFormatedAcquiredTrace->clear();
+    mFormatedAcquiredTrace->shrink_to_fit();
+
 
     mFormatedHisto.clear();
     mChainsHistos.shrink_to_fit();
@@ -287,45 +349,88 @@ void MetropolisVariable::clear_and_shrink() noexcept
     mRawCredibility = std::pair<double, double>(1, -1);
     mFormatedCredibility = std::pair<double, double>(1, -1);
     mExactCredibilityThreshold = 0.0;
+
+    // Learning Prior
+    mBurnInPriorTrace->clear();
+    mBurnInPriorTrace->shrink_to_fit();
+    mEmpiricalPrior.clear();
+    mEmpiricalPriorReady = false;
+
 }
 
 
 void MetropolisVariable::remove_smoothed_densities()
 {
-    //mRawTrace->clear(); // not a posterior
-    mFormatedTrace->clear();
+    // -----------------------------------------------------------------
+    // 1️⃣  Nettoyage des conteneurs qui doivent être vidés complètement
+    // -----------------------------------------------------------------
+    // mBurnAdaptTrace->clear();          // not a posterior
+    mFormatedBurnAdaptTrace->clear();    // OK à vider
+    // mAcquiredTrace->clear();           // C'est à garder
 
-    mFormatedHisto.clear();
+    mFormatedAcquiredTrace->clear();     // OK à vider
+    mFormatedHisto.clear();              // OK à vider
+    mChainsHistos.clear();               // OK à vider
+    // mCorrelations.clear();            // ne dépend pas de la fftw
 
-    mChainsHistos.clear();
+    mRawHPDintervals.clear();            // OK à vider
+    mFormatedHPD.clear();                // OK à vider
 
-    //mCorrelations.clear(); // ne dépand pas de la fftw
+    // -----------------------------------------------------------------
+    // 2️⃣  Ré‑initialiser **seulement** la partie FunctionStat de chaque
+    //     élément de mChainsResults (on garde traceAnalysis)
+    // -----------------------------------------------------------------
+    for (auto& chainResult : mChainsResults)
+    {
+        // ----- fonction : on met les champs à NaN pour signifier « non calculé » -----
+        chainResult.funcAnalysis.max  = std::numeric_limits<type_data>::quiet_NaN();
+        chainResult.funcAnalysis.mode = std::numeric_limits<type_data>::quiet_NaN();
+        chainResult.funcAnalysis.mean = std::numeric_limits<type_data>::quiet_NaN();
+        chainResult.funcAnalysis.std  = std::numeric_limits<type_data>::quiet_NaN();
 
-    mRawHPDintervals.clear();
+        chainResult.funcAnalysis.quartiles.Q1 = std::numeric_limits<type_data>::quiet_NaN();
+        chainResult.funcAnalysis.quartiles.Q2 = std::numeric_limits<type_data>::quiet_NaN();
+        chainResult.funcAnalysis.quartiles.Q3 = std::numeric_limits<type_data>::quiet_NaN();
 
-    mFormatedHPD.clear();
+        // ----- traceAnalysis : **on ne touche pas** → il reste tel qu’il était
+    }
 
-    mChainsResults.clear();
+    // -----------------------------------------------------------------
+    // 3️⃣  Le reste des membres de la classe restent inchangés
+    // -----------------------------------------------------------------
+    mRawCredibility               = std::pair<double, double>(1, -1);
+    mFormatedCredibility          = std::pair<double, double>(1, -1);
+    mExactCredibilityThreshold    = 0.0;
 
-    mRawCredibility = std::pair<double, double>(1, -1);
-    mFormatedCredibility = std::pair<double, double>(1, -1);
-    mExactCredibilityThreshold = 0.0;
-
+    // Learning Prior
+    mBurnInPriorTrace->clear();
+    mBurnInPriorTrace->shrink_to_fit();
+    mEmpiricalPrior.clear();
+    mEmpiricalPriorReady = false;
 }
+
 
 void MetropolisVariable::reserve(const size_t reserve)
 {
-    mRawTrace->reserve(reserve); // do memory leak
-    mFormatedTrace->reserve(reserve);
+    mBurnAdaptTrace->reserve(reserve);
+    mFormatedBurnAdaptTrace->reserve(reserve);
+    mAcceptedStateCountByChain.reserve(reserve);
 }
 
 void MetropolisVariable::setFormat(const DateUtils::FormatDate fm)
 {
-    if (mRawTrace) {
-        if (fm != mFormat || mFormatedTrace->size() != mRawTrace->size()) {
-            updateFormatedTrace(fm);
+    if (mBurnAdaptTrace) {
+        if (fm != mFormat || mFormatedBurnAdaptTrace->size() != mBurnAdaptTrace->size()) {
+            updateFormatedTrace(fm); // fait aussi mAcquiredTrace
         }
     }
+
+    /*if (mAcquiredTrace) {
+        if (fm != mFormat || mFormatedAcquiredTrace->size() != mAcquiredTrace->size()) {
+            updateFormatedTrace(fm);
+        }
+    }*/
+
     updateFormatedCredibility(fm);
 
     if (mFormat != DateUtils::eNumeric)
@@ -333,20 +438,27 @@ void MetropolisVariable::setFormat(const DateUtils::FormatDate fm)
 }
 
 /**
- * @brief MetropolisVariable::updateFormatedTrace, it's a slot that transforms or creates mFormatedTrace
+ * @brief MetropolisVariable::updateFormatedTrace, it's a slot that transforms or creates mFormatedBurnAdaptTrace
  * according to mFormat.
  */
 void MetropolisVariable::updateFormatedTrace(const DateUtils::FormatDate fm)
 {
     if (fm == DateUtils::eNumeric || mFormat == DateUtils::eNumeric) {
-        mFormatedTrace = std::make_shared<std::vector<double>>(*mRawTrace);
 
-    //mFormatedTrace = mRawTrace// it's the same pointer, if you delete mFormatedTrace, you delete mRawTrace. If you change the format you change the value of mRawTrace
+        mFormatedBurnAdaptTrace = std::make_shared<std::vector<double>>(*mBurnAdaptTrace);
+        mFormatedAcquiredTrace = std::make_shared<std::vector<double>>(*mAcquiredTrace);
+
+    //mFormatedBurnAdaptTrace = mBurnAdaptTrace// it's the same pointer, if you delete mFormatedBurnAdaptTrace, you delete mBurnAdaptTrace. If you change the format you change the value of mBurnAdaptTrace
 
     } else {
-        mFormatedTrace->resize(mRawTrace->size());
-        std::transform(mRawTrace->cbegin(), mRawTrace->cend(), mFormatedTrace->begin(), [&fm](const double i) {return DateUtils::convertToFormat(i, fm);});
+        mFormatedBurnAdaptTrace->resize(mBurnAdaptTrace->size());
+        std::transform(mBurnAdaptTrace->cbegin(), mBurnAdaptTrace->cend(), mFormatedBurnAdaptTrace->begin(), [&fm](const double i) {return DateUtils::convertToFormat(i, fm);});
+
+        mFormatedAcquiredTrace->resize(mAcquiredTrace->size());
+        std::transform(mAcquiredTrace->cbegin(), mAcquiredTrace->cend(), mFormatedAcquiredTrace->begin(), [&fm](const double i) {return DateUtils::convertToFormat(i, fm);});
+
     }
+
 
 }
 
@@ -369,46 +481,54 @@ void MetropolisVariable::updateFormatedCredibility(const DateUtils::FormatDate f
     }
 }
 /**
- @param[in] dataSrc is the trace, with for example one million data
- @remarks Produce a density with the area equal to 1. The smoothing is done with Hsilvermann method.
- **/
-
-void MetropolisVariable::generateBufferForHisto(double *input, const std::vector<double> &dataSrc, const int numPts, const double a, const double b)
+ * @brief Fills a binning buffer using linear binning — O(n).
+ *
+ * @details
+ * Each observation is distributed between its two neighbouring grid points
+ * proportionally to its distance (linear binning). The buffer is normalized
+ * so that its sum equals 1/delta (i.e., the FFT will produce a proper density).
+ *
+ * The grid uses a **semi-open** interval [a, b[ with step delta = (b-a)/numPts,
+ * consistent with the periodicity assumption of the FFT.
+ *
+ * @param[out] input    Pre-allocated buffer of size numPts (fftw_malloc).
+ * @param[in]  dataSrc  Input data sample (trace).
+ * @param[in]  numPts   FFT grid size (power of 2).
+ * @param[in]  a        Left bound of the grid (= min(data) - 4h).
+ * @param[in]  b        Right bound of the grid (= max(data) + 4h).
+ */
+void MetropolisVariable::generateBufferForHisto(double* input,
+                                                const std::vector<double>& dataSrc,
+                                                const int    numPts,
+                                                const double a,
+                                                const double b)
 {
-    // Work with "double" precision here !
-    // Otherwise, "denum" can be very large and lead to infinity contribs!
+    // ✅ Grille semi-ouverte [a, b[ — cohérente avec la FFT
+    const double delta = (b - a) / static_cast<double>(numPts);
+    const double denum = static_cast<double>(dataSrc.size());
+    const double Nm1   = static_cast<double>(numPts - 1);
 
-    const double delta = (b - a) / (numPts - 1);
+    std::fill(input, input + numPts, 0.0);
 
-    const double denum = dataSrc.size();
+    for (size_t s = 0; s < dataSrc.size(); ++s) {
 
-    for (int i=0; i<numPts; ++i)
-        input[i]= 0.;
+        // Position sur la grille, clampée dans [0, numPts-1]
+        const double idx         = (dataSrc[s] - a) / delta;
+        const double idx_clamped = std::clamp(idx, 0.0, Nm1);
+        const double idx_under   = std::floor(idx_clamped);
+        const double idx_upper   = std::min(idx_under + 1.0, Nm1);
 
-    std::vector<double>::const_iterator iter = dataSrc.cbegin();
-    for (; iter != dataSrc.cend(); ++iter) {
-        const double t = *iter;
+        const double frac          = idx_clamped - idx_under;
+        const double contrib_under = (1.0 - frac) / denum;
+        const double contrib_upper =        frac  / denum;
 
-        const double idx = (t - a) / delta;
-        const double idx_under = std::clamp(floor(idx), 0., numPts-1.);
-        const double idx_upper = std::clamp(idx_under + 1., 0., numPts-1.);
+        const int k0 = static_cast<int>(idx_under);
+        const int k1 = static_cast<int>(idx_upper);
 
-        const double contrib_under = (idx_upper - idx) / denum;
-        const double contrib_upper = (idx - idx_under) / denum;
-#ifdef DEBUG
-        if (std::isinf(contrib_under) || std::isinf(contrib_upper))
-            qDebug() << "FFT input : infinity contrib!";
-
-        if (idx_under < 0 || idx_under >= numPts || idx_upper < 0 || idx_upper > numPts)
-            qDebug() << "FFT input : Wrong index";
-#endif
-        if (idx_under < numPts)
-            input[(int)idx_under] += contrib_under;
-
-        if (idx_upper < numPts) // This is to handle the case when matching the last point index !
-            input[(int)idx_upper] += contrib_upper;
+        input[k0] += contrib_under;
+        if (k1 != k0)              // évite le double ajout sur le dernier bin
+            input[k1] += contrib_upper;
     }
-
 }
 /**
   @param[in] bandwidth corresponds to the bandwidth factor
@@ -432,16 +552,18 @@ void MetropolisVariable::generateBufferForHisto(double *input, const std::vector
 
  **/
 
-std::map<double, double> MetropolisVariable::generateHisto(const std::vector<double>& dataSrc, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+std::map<double, double> MetropolisVariable::generateKDE(const std::vector<double>& dataSrc, const int fftLen, const double coef_bandwidth, const double tmin, const double tmax)
 {
+
     mfftLenUsed = fftLen;
-    mBandwidthUsed = bandwidth;
+    mBandwidthUsed = coef_bandwidth;
     mtmaxUsed = tmax;
     mtminUsed = tmin;
 
     std::map<double, double> result;
 
-    if (dataSrc.size() == 1) {
+    auto N = dataSrc.size();
+    if (N == 1) {
         // value. It can appear with a fixed variable
         result.emplace(dataSrc.at(0), 1.) ;
         return result;
@@ -467,16 +589,46 @@ std::map<double, double> MetropolisVariable::generateHisto(const std::vector<dou
     sigma = std::min(sigma, (quartiles.Q3 - quartiles.Q1)/1.34);
 
 
-    if (sigma == 0) {
+    if (sigma <= 0) {
         // if sigma is null and there are several values, it means: this is a constant value
         // This can occur at the Begin or End of a Phase with a Bound.
         result.emplace(dataSrc.at(0), 1.) ;
-        qDebug()<<"[MetropolisVariable::generateHisto] Constant value = "<< dataSrc.at(0) << QString::fromStdString(_name);
+        qDebug()<<"[MetropolisVariable::generateKDE] Constant value = "<< dataSrc.at(0) << QString::fromStdString(mName);
 
         return result;
     }
 
-    const double h = bandwidth * sigma * pow(dataSrc.size(), -1./5.);
+//std::cout << '\n' << "name  = " << mName << '\n';
+
+
+   /* const double h_silver = 1.06 * sigma * std::pow(static_cast<double>(N), -0.2);
+    std::cout << "Silverman bandwidth = " << h_silver << '\n';
+
+    const double h_opt = brent_minimize(dataSrc,  h_silver/30,  h_silver*3); // donne le mêm cacul que R pour bw.ucv
+    double bw_equi = h_opt / (sigma * pow(static_cast<double>(N), -0.2) );
+    std::cout << "Bandwidth (brent_minimize) = " << h_opt << " coef equivalent=" << bw_equi <<'\n';
+
+    const double h_nai = bw_ucv_gaussian(dataSrc, h_silver/10,  h_silver*3, 50 );
+    double coef_Nai_equi = h_nai / (sigma * pow(static_cast<double>(N), -0.2) );
+    std::cout << "(bw_ucv_gaussian) Bandwidth  = " << h_nai<< " coef equivalent=" << coef_Nai_equi  << '\n';
+
+*/
+    double h = coef_bandwidth * sigma * pow(static_cast<double>(N), -0.2);
+ //   std::cout << "ChronoModel Bandwidth  = " << h << '\n';
+   // h=h_opt;
+
+
+   // double h_sj_dpi = bw_SJ_dpi(dataSrc);   // rapide
+  //  double h_sj_ste = bw_SJ_ste(dataSrc);   // plus précis
+    //h = h_sj_ste;
+   // std::cout << "SJ-DPI = " << h_sj_dpi << "\n";
+    //std::cout << "SJ-STE = " << h_sj_ste << "\n";
+  //  double coef_Si_equi = h_sj_ste / (sigma * pow(static_cast<double>(N), -0.2) );
+
+   // std::cout << mName <<" (h_sj_ste) Bandwidth  = " << h_sj_ste<< " coef equivalent=" << coef_Si_equi  << '\n';
+
+    //h=h_opt;
+
     const double a = range_min_value(dataSrc) - 4. * h;
     const double b = range_max_value(dataSrc) + 4. * h;
 
@@ -528,11 +680,11 @@ std::map<double, double> MetropolisVariable::generateHisto(const std::vector<dou
     switch(mSupport) {
     case eRp:
     case eRpStar: // on R+*
-        tBegin = 0.;
+        tBegin = 0.0;
         break;
     case eRm:
     case eRmStar: // on R-*
-        tEnd = 0.;
+        tEnd = 0.0;
         break;
     case eBounded: // on [tmin;tmax]
         tBegin = tmin;
@@ -543,15 +695,17 @@ std::map<double, double> MetropolisVariable::generateHisto(const std::vector<dou
     }
 
     // Construction du résultat
-    const double delta = (b - a) / (fftLen - 1);
+
+    // ✅ Correct pour FFT (intervalle semi-ouvert [a, b[)
+    const double delta = (b - a) / fftLen;  // pas fftLen - 1
     for (int i = 0; i < fftLen; ++i) {
         const double t = a + static_cast<double>(i) * delta;
-        result[t] = std::max(0., input.get()[i]);
+        result[t] = std::max(0.0, input.get()[i]);
     }
 
     // normalisation
     result = getMapDataInRange(result, tBegin, tEnd);
-    result = equal_areas(result, 1.);
+    result = equal_areas(result, 1.0);
 
     return result;
 }
@@ -559,20 +713,204 @@ std::map<double, double> MetropolisVariable::generateHisto(const std::vector<dou
 
 void MetropolisVariable::generateHistos(const std::vector<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
-    //Q_ASSERT_X(!mFormatedTrace->isEmpty(), "[MetropolisVariable::generateHistos]", "mFormatedTrace.isEmpty()");
-    if (mFormatedTrace == nullptr || mFormatedTrace->size() == 0)
+    //Q_ASSERT_X(!mFormatedBurnAdaptTrace->isEmpty(), "[MetropolisVariable::generateHistos]", "mFormatedBurnAdaptTrace.isEmpty()");
+    if (mFormatedBurnAdaptTrace == nullptr || mFormatedBurnAdaptTrace->size() == 0)
         return;
-    const std::vector<double> &subFullTrace = fullRunFormatedTrace(chains);
-    mFormatedHisto = generateHisto(subFullTrace, fftLen, bandwidth, tmin, tmax);
+    //const std::vector<double> &subFullTrace = fullRunFormatedTrace(chains);
+    const std::vector<double>& trace = *mFormatedAcquiredTrace;
+    mFormatedHisto = generateKDE(trace, fftLen, bandwidth, tmin, tmax);
 
     mChainsHistos.clear();
     for (size_t i = 0; i<chains.size(); ++i) {
-        const std::vector<double> &subTrace = runFormatedTraceForChain(chains, i);
+        //const std::vector<double> &subTrace = runFormatedTraceForChain(chains, i);
+        const std::vector<double> &subTrace = formatedAcquiredTraceforChain(chains, i);
         if (!subTrace.empty()) {
-            mChainsHistos.push_back(generateHisto(subTrace, fftLen, bandwidth, tmin, tmax) );
+            mChainsHistos.push_back(generateKDE(subTrace, fftLen, bandwidth, tmin, tmax) );
         }
     }
 }
+
+
+/**
+ * @brief Builds the CDF from mEmpiricalPrior by trapezoidal integration.
+ *        Must be called once after buildEmpiricalPrior().
+ *
+ * @details
+ * @f[
+ *   F(x_k) = \sum_{i=0}^{k-1} \frac{f(x_i) + f(x_{i+1})}{2} \cdot (x_{i+1} - x_i)
+ * @f]
+ * Then normalized so that F(x_last) = 1.
+ */
+void MetropolisVariable::buildEmpiricalCDF()
+{
+    if (mPriorX.empty() || mPriorY.empty()) return;
+
+    const int n = static_cast<int>(mPriorX.size());
+
+    mPriorCDF_x.resize(n);
+    mPriorCDF_y.resize(n);
+
+    mPriorCDF_x[0] = mPriorX[0];
+    mPriorCDF_y[0] = 0.0;
+
+    // Intégration trapézoïdale
+    for (int i = 1; i < n; ++i) {
+        const double dx   = mPriorX[i] - mPriorX[i - 1];
+        const double area = 0.5 * (mPriorY[i] + mPriorY[i - 1]) * dx;
+
+        mPriorCDF_x[i] = mPriorX[i];
+        mPriorCDF_y[i] = mPriorCDF_y[i - 1] + area;
+    }
+
+    // Normalisation : garantit CDF(x_last) == 1 exactement
+    const double total = mPriorCDF_y.back();
+    if (total > 0.0) {
+        for (double& v : mPriorCDF_y)
+            v /= total;
+    }
+
+    mPriorCDF_y.front() = 0.0;   // sécurité numérique
+    mPriorCDF_y.back()  = 1.0;   // sécurité numérique
+
+    mEmpiricalCDFReady = true;
+}
+
+
+void MetropolisVariable::buildEmpiricalPrior(const int fftLen,
+                                             const double bandwidth,
+                                             const double tmin,
+                                             const double tmax)
+{
+    if (!mBurnInPriorTrace || mBurnInPriorTrace->empty()) return;
+
+    auto histo = generateKDE(*mBurnInPriorTrace, fftLen, bandwidth, tmin, tmax);
+    if (histo.empty()) return;
+
+    mPriorX.clear();
+    mPriorY.clear();
+    mPriorX.reserve(histo.size());
+    mPriorY.reserve(histo.size());
+
+    for (auto& [x, y] : histo) {
+        mPriorX.push_back(x);
+        mPriorY.push_back(std::max(y, 0.0));
+    }
+
+    mEmpiricalPriorReady = true;
+
+    // ✅ Construction immédiate de la CDF
+    buildEmpiricalCDF();
+
+    // Libération mémoire burn-in
+    mBurnInPriorTrace->clear();
+    mBurnInPriorTrace->shrink_to_fit();
+}
+
+// Évaluation de l'a priori en un point x (interpolation linéaire)
+double MetropolisVariable::evalEmpiricalPrior(const double x) const
+{
+    if (!mEmpiricalPriorReady || mEmpiricalPrior.empty())
+        return 1.0; // prior plat par défaut
+
+    auto it = mEmpiricalPrior.lower_bound(x);
+
+    if (it == mEmpiricalPrior.end())   return std::prev(it)->second;
+    if (it == mEmpiricalPrior.begin()) return it->second;
+
+    // Interpolation linéaire entre les deux points encadrants
+    auto prev = std::prev(it);
+    double t = (x - prev->first) / (it->first - prev->first);
+    return prev->second + t * (it->second - prev->second);
+}
+
+/**
+ * @brief Draws one sample from the empirical prior truncated to [min, max].
+ *
+ * @details
+ * Uses truncated CDF inversion — no rejection sampling needed:
+ * @f[
+ *   u \sim \mathcal{U}[0,1], \quad
+ *   u' = F(\text{min}) + u \cdot [F(\text{max}) - F(\text{min})], \quad
+ *   x  = F^{-1}(u')
+ * @f]
+ * This guarantees the result is strictly in [min, max] in O(log n).
+ *
+ * @param min  Lower bound of the truncation interval.
+ * @param max  Upper bound of the truncation interval.
+ * @return     A sample in [min, max] drawn from the truncated empirical prior,
+ *             or the midpoint (min+max)/2 if the CDF has no mass in [min, max].
+ */
+double MetropolisVariable::sampleFromEmpiricalPrior(const double min,
+                                                    const double max) const
+{
+    if (!mEmpiricalCDFReady || mPriorCDF_x.empty())
+        return 0.5 * (min + max);   // fallback : milieu de l'intervalle
+
+    // ----------------------------------------------------------------
+    // 1. Évaluation de F(min) et F(max) par interpolation dans la CDF
+    // ----------------------------------------------------------------
+    auto evalCDF = [&](double xq) -> double
+    {
+        if (xq <= mPriorCDF_x.front()) return 0.0;
+        if (xq >= mPriorCDF_x.back())  return 1.0;
+
+        const auto it = std::lower_bound(mPriorCDF_x.begin(),
+                                         mPriorCDF_x.end(), xq);
+        const int k = static_cast<int>(
+                          std::distance(mPriorCDF_x.begin(), it)) - 1;
+
+        const double dx = mPriorCDF_x[k + 1] - mPriorCDF_x[k];
+        if (dx < 1e-15) return mPriorCDF_y[k];
+
+        const double t = (xq - mPriorCDF_x[k]) / dx;
+        return mPriorCDF_y[k] + t * (mPriorCDF_y[k + 1] - mPriorCDF_y[k]);
+    };
+
+    const double cdf_min = evalCDF(min);
+    const double cdf_max = evalCDF(max);
+
+    // ----------------------------------------------------------------
+    // 2. Masse disponible dans [min, max]
+    //    Si nulle (prior nul sur cet intervalle) → milieu
+    // ----------------------------------------------------------------
+    const double mass = cdf_max - cdf_min;
+    if (mass < 1e-15)
+        return 0.5 * (min + max);
+
+    // ----------------------------------------------------------------
+    // 3. Tirage uniforme rescalé sur [F(min), F(max)]
+    // ----------------------------------------------------------------
+    const double u  = Generator::randomUniform();
+    const double u_ = cdf_min + u * mass;     // u' ∈ [F(min), F(max)]
+
+    // ----------------------------------------------------------------
+    // 4. Inversion CDF standard sur u'
+    // ----------------------------------------------------------------
+    const auto it = std::lower_bound(mPriorCDF_y.begin(),
+                                     mPriorCDF_y.end(), u_);
+
+    if (it == mPriorCDF_y.begin()) return min;
+    if (it == mPriorCDF_y.end())   return max;
+
+    const int k = static_cast<int>(
+                      std::distance(mPriorCDF_y.begin(), it)) - 1;
+
+    const double y0 = mPriorCDF_y[k];
+    const double y1 = mPriorCDF_y[k + 1];
+    const double dy = y1 - y0;
+
+    if (dy < 1e-15)
+        return mPriorCDF_x[k];
+
+    const double t = (u_ - y0) / dy;
+    const double x = mPriorCDF_x[k] + t * (mPriorCDF_x[k + 1] - mPriorCDF_x[k]);
+
+    // ----------------------------------------------------------------
+    // 5. Clamp de sécurité (erreurs d'interpolation aux bords)
+    // ----------------------------------------------------------------
+    return std::clamp(x, min, max);
+}
+
 
 void MetropolisVariable::memoHistoParameter(const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
@@ -604,15 +942,15 @@ void MetropolisVariable::generateHPD(const double threshold)
             mFormatedHPD = tmp_HPD;
             mRawHPDintervals.clear();
 
-            for (const auto& h : formated_intervals) {
+            for (auto it = formated_intervals.begin(); it != formated_intervals.end(); ++it) {
                 double tmin ,tmax ;
                 if (mFormat == DateUtils::eNumeric || mFormat == DateUtils::eUnknown) {
-                    tmin = h.second.first;
-                    tmax = h.second.second;
+                    tmin = it->second.first;
+                    tmax = it->second.second;
 
                 } else {
-                    tmin = DateUtils::convertFromAppSettingsFormat(h.second.first);
-                    tmax = DateUtils::convertFromAppSettingsFormat(h.second.second);
+                    tmin = DateUtils::convertFromAppSettingsFormat(it->second.first);
+                    tmax = DateUtils::convertFromAppSettingsFormat(it->second.second);
                 }
 
                 if (tmin>tmax)
@@ -620,11 +958,11 @@ void MetropolisVariable::generateHPD(const double threshold)
                 
                 if (!mRawHPDintervals.isEmpty() && mRawHPDintervals.at(0).second.second < tmin) {
                     auto t_t = std::make_pair(tmin, tmax);
-                    auto tmp_HPD = std::make_pair(h.first, t_t );
+                    auto tmp_HPD = std::make_pair(it->first, t_t );
                     mRawHPDintervals.push_back(tmp_HPD);
                 } else {
                     auto t_t = std::make_pair(tmin, tmax);
-                    auto tmp_HPD = std::make_pair(h.first, t_t );
+                    auto tmp_HPD = std::make_pair(it->first, t_t );
                     mRawHPDintervals.push_front(tmp_HPD);
                 }
 
@@ -638,17 +976,18 @@ void MetropolisVariable::generateHPD(const double threshold)
         // We don't display the phase duration but we print the numerical HPD result.
         mFormatedHPD = std::map<double, double>();
         mRawHPDintervals.clear();
-        qDebug() << "[MetropolisVariable::generateHPD] WARNING : Cannot generate HPD on empty histo with " << QString::fromStdString(_name);
+        qDebug() << "[MetropolisVariable::generateHPD] WARNING : Cannot generate HPD on empty histo with " << QString::fromStdString(mName);
     }
 }
 
 void MetropolisVariable::generateCredibility(const std::vector<ChainSpecs> &chains, double threshold)
 {
-    if (mRawTrace == nullptr || mRawTrace->size() == 0)  {
+    if (mAcquiredTrace == nullptr || mAcquiredTrace->size() == 0)  {
         mRawCredibility = std::pair<double, double>(1, -1);
 
     } else if (mThresholdUsed != threshold || mExactCredibilityThreshold == 0.0) {
-        mRawCredibility = credibilityForTrace(fullRunRawTrace(chains), threshold, mExactCredibilityThreshold);//, "Compute credibility for "+getName());
+        const std::vector<double>& trace = *mAcquiredTrace;
+        mRawCredibility = credibilityForTrace(trace, threshold, mExactCredibilityThreshold);//, "Compute credibility for "+getName());
     }
     updateFormatedCredibility(mFormat);
 
@@ -665,7 +1004,8 @@ void MetropolisVariable::generateCorrelations(const std::vector<ChainSpecs> &cha
 
     for (size_t i = 0; i<chains.size(); ++i) {
         // Return the acquisition part of the trace
-        const std::vector<double> &trace = runRawTraceForChain(chains, i);
+        //const std::vector<double> &trace = runRawTraceForChain(chains, i);
+        const std::vector<double>& trace = acquiredTraceforChain(chains, i);
         if (trace.size() < hmax)
             continue;
 
@@ -678,22 +1018,74 @@ void MetropolisVariable::generateCorrelations(const std::vector<ChainSpecs> &cha
     //ch.display();
 }
 
-void MetropolisVariable::generateNumericalResults(const std::vector<ChainSpecs> &chains)
+/* --------------------------------------------------------------
+   1️⃣  generateDensityNumericalResults
+   -------------------------------------------------------------- */
+    void MetropolisVariable::generateDensityNumericalResults(const std::vector<ChainSpecs> &chains)
+{
+    // ----- Résultats globaux (concatenation de toutes les chaînes) -----
+    if (mFormatedHisto.empty())
+        return;
+    mResults.funcAnalysis = analyseFunction(mFormatedHisto);
+    const std::vector<double>& trace = *mFormatedAcquiredTrace;
+    mResults.traceAnalysis = traceStatistic(trace);   // on garde le trace global
+
+    // ----- Résultats *par chaîne* (densité) -----
+    // 1️⃣  S’assurer que le vecteur possède exactement le bon nombre d’éléments
+    if (mChainsResults.size() != mChainsHistos.size())
+        mChainsResults.resize(mChainsHistos.size());   // crée des objets « vide »
+
+    // 2️⃣  Remplir uniquement le champ funcAnalysis (densité)
+    for (size_t i = 0; i < mChainsHistos.size(); ++i) {
+        mChainsResults[i].funcAnalysis = analyseFunction(mChainsHistos[i]);
+        // on ne touche pas à traceAnalysis → il garde la valeur déjà présente
+    }
+}
+/*
+ * void MetropolisVariable::generateNumericalResults(const std::vector<ChainSpecs> &chains)
 {
     // Results for chain concatenation
     if (mFormatedHisto.empty())
         return;
     mResults.funcAnalysis = analyseFunction(mFormatedHisto);
-    mResults.traceAnalysis = traceStatistic(fullRunFormatedTrace(chains)); // fullRunFormatedTrace is the formated Traces
+    const std::vector<double>& trace = *mFormatedAcquiredTrace;
+    mResults.traceAnalysis = traceStatistic(trace); // fullRunFormatedTrace is the formated Traces
 
     // Results for individual chains
     mChainsResults.clear();
 
     for (size_t i = 0; i < mChainsHistos.size(); ++i) {
         DensityAnalysis result;
-        result.funcAnalysis = analyseFunction(mChainsHistos.at(i)); // useless
+        result.funcAnalysis = analyseFunction(mChainsHistos[i]); // useless
         result.traceAnalysis = traceStatistic(runFormatedTraceForChain(chains, i)); // only to compute quartiles
         mChainsResults.push_back(result);
+    }
+}
+ */
+/* --------------------------------------------------------------
+   2️⃣  generateTraceNumericalResults
+   -------------------------------------------------------------- */
+void MetropolisVariable::generateTraceNumericalResults(const std::vector<ChainSpecs> &chains)
+{
+    // ----- Résultats globaux (concatenation de toutes les chaînes) -----
+    const std::vector<double>& trace = *mFormatedAcquiredTrace;
+    if (!mFormatedAcquiredTrace)
+        return;
+
+    if (mFormatedAcquiredTrace->empty())
+        return;
+
+    mResults.traceAnalysis = traceStatistic(trace);   // analyse du trace global
+    // ----- Résultats *par chaîne* (trace) -----
+    // 1️⃣  S’assurer que le vecteur possède exactement le bon nombre d’éléments
+    if (mChainsResults.size() != mChainsHistos.size())
+        mChainsResults.resize(mChainsHistos.size());   // crée des objets « vide »
+
+    // 2️⃣  Remplir uniquement le champ traceAnalysis (trace)
+    for (size_t i = 0; i < mChainsHistos.size(); ++i) {
+        mChainsResults[i].traceAnalysis =
+            traceStatistic(runFormatedTraceForChain(chains, i));
+        // on ne touche pas à funcAnalysis → il garde la valeur déjà présente
     }
 }
 
@@ -717,7 +1109,7 @@ std::vector<double>::iterator MetropolisVariable::findIter_element(const long un
         shift += 1 + chains[i].mIterPerBurn + (chains[i].mBatchIndex * chains[i].mIterPerBatch) + chains[i].mRealyAccepted;
     }
     shift += 1 + chains[index].mIterPerBurn +  (chains[index].mBatchIndex * chains[index].mIterPerBatch);
-    return mRawTrace->begin() + shift + iter;
+    return mBurnAdaptTrace->begin() + shift + iter;
 
 }
 
@@ -729,21 +1121,59 @@ std::vector<double>::iterator MetropolisVariable::findIter_element(const long un
  * @param index
  * @return The complet trace (init, Burn-in, adaptation, acquire) corresponding to chain n°index
  */
-std::vector<double> MetropolisVariable::fullTraceForChain(const std::vector<ChainSpecs> &chains, const size_t index)
+std::vector<double> MetropolisVariable::fullTraceForChain(
+    const std::vector<ChainSpecs>& chains,
+    std::size_t index) const noexcept
 {
-    size_t shift = 0;
+    // -------------------------------------------------------------
+    // 0️⃣  Vérifications d’entrée
+    // -------------------------------------------------------------
+    if (index >= chains.size())
+        return {};                     // indice invalide → vecteur vide
 
-    for (size_t i = 0; i<chains.size(); ++i) {
-        // We add 1 for the init
-        const size_t traceSize = 1 + chains.at(i).mIterPerBurn + (chains.at(i).mBatchIndex * chains.at(i).mIterPerBatch ) + chains.at(i).mRealyAccepted;
-        if (i == index) {
-            return std::vector<double> (mFormatedTrace->begin()+shift, mFormatedTrace->begin()+shift+traceSize);
-            break;
-        }
-        shift += traceSize;
+    // -------------------------------------------------------------
+    // 1️⃣  Calcul de l’offset (déplacement) dans la trace *burn‑adapt*
+    // -------------------------------------------------------------
+    std::size_t burnOffset = 0;
+    for (std::size_t i = 0; i < index; ++i) {
+        burnOffset += 1ULL                                   // l’init
+                      + chains[i].mIterPerBurn
+                      + (chains[i].mBatchIndex * chains[i].mIterPerBatch);
     }
-    return std::vector<double> (0);
+
+    const std::size_t burnSize = 1ULL
+                                 + chains[index].mIterPerBurn
+                                 + (chains[index].mBatchIndex * chains[index].mIterPerBatch);
+
+    // -------------------------------------------------------------
+    // 2️⃣  Calcul de l’offset dans la trace *acceptée*
+    // -------------------------------------------------------------
+    std::size_t acceptOffset = 0;
+    for (std::size_t i = 0; i < index; ++i) {
+        acceptOffset += chains[i].mRealyAccepted;
+    }
+
+    const std::size_t acceptSize = chains[index].mRealyAccepted;
+
+    // -------------------------------------------------------------
+    // 3️⃣  Construction du vecteur résultat (une seule allocation)
+    // -------------------------------------------------------------
+    std::vector<double> result;
+    result.reserve(burnSize + acceptSize);   // évite les réallocations
+
+    // Copie de la partie burn‑adapt
+    result.insert(result.end(),
+                  mFormatedBurnAdaptTrace->begin() + static_cast<std::ptrdiff_t>(burnOffset),
+                  mFormatedBurnAdaptTrace->begin() + static_cast<std::ptrdiff_t>(burnOffset + burnSize));
+
+    // Copie de la partie acceptée
+    result.insert(result.end(),
+                  mAcquiredTrace->begin() + static_cast<std::ptrdiff_t>(acceptOffset),
+                  mAcquiredTrace->begin() + static_cast<std::ptrdiff_t>(acceptOffset + acceptSize));
+
+    return result;
 }
+
 
 
 
@@ -908,7 +1338,7 @@ void MetropolisVariable::save_stream_v330(QDataStream& stream) const
         }
 
         // Écriture du nom
-        QString str = QString::fromStdString(_name);
+        QString str = QString::fromStdString(mName);
         stream << str;
 
         if (stream.status() != QDataStream::Ok) {
@@ -953,7 +1383,7 @@ void MetropolisVariable::save_stream_v330(QDataStream& stream) const
 
         // Écriture du trace brut
 
-        save_container_nullable(stream, mRawTrace);
+        save_container_nullable(stream, mBurnAdaptTrace);
         if (stream.status() != QDataStream::Ok) {
             throw std::runtime_error("Failed to write raw trace");
         }
@@ -966,6 +1396,81 @@ void MetropolisVariable::save_stream_v330(QDataStream& stream) const
         // Vous pouvez choisir de lancer, réinitialiser ou ignorer
     }
 }
+
+void MetropolisVariable::save_stream_v337(QDataStream& stream) const
+{
+    try {
+        // Vérification initiale du stream
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Initial stream error");
+        }
+
+        // Écriture du nom
+        QString str = QString::fromStdString(mName);
+        stream << str;
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to write variable name");
+        }
+        save_container(stream, mAcceptedStateCountByChain);
+
+
+        // Écriture du support
+        quint8 support;
+        switch (mSupport) {
+        case eR:        support = 0; break;
+        case eRp:       support = 1; break;
+        case eRm:       support = 2; break;
+        case eRpStar:   support = 3; break;
+        case eRmStar:   support = 4; break;
+        case eBounded:  support = 5; break;
+        default:
+            throw std::runtime_error("Invalid support type");
+        }
+        stream << support;
+
+        // Écriture du format de date
+        qint16 formatDate;
+        switch (mFormat) {
+        case DateUtils::eUnknown:  formatDate = -2; break;
+        case DateUtils::eNumeric:  formatDate = -1; break;
+        case DateUtils::eBCAD:     formatDate = 0; break;
+        case DateUtils::eCalBP:    formatDate = 1; break;
+        case DateUtils::eCalB2K:   formatDate = 2; break;
+        case DateUtils::eDatBP:    formatDate = 3; break;
+        case DateUtils::eDatB2K:   formatDate = 4; break;
+        case DateUtils::eBCECE:    formatDate = 5; break;
+        case DateUtils::eKa:       formatDate = 6; break;
+        case DateUtils::eMa:       formatDate = 7; break;
+        default:
+            throw std::runtime_error("Invalid date format");
+        }
+        stream << formatDate;
+
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to write date format");
+        }
+
+        // Écriture du trace brut
+
+        save_container_nullable(stream, mBurnAdaptTrace);
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to write raw Burn Adapt trace");
+        }
+
+        save_container_nullable(stream, mAcquiredTrace);
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to write raw Acquired trace");
+        }
+
+    } catch (const std::exception& e) {
+        qDebug() << "[MetropolisVariable::save_stream_v337] Error: "
+                 << e.what()
+                 << " ; stream.status()=" << stream.status();
+        // Politique de gestion d'erreur selon vos besoins
+        // Vous pouvez choisir de lancer, réinitialiser ou ignorer
+    }
+}
+
 
 QDataStream &operator<<( QDataStream &stream, const MetropolisVariable& data )
 {
@@ -980,7 +1485,7 @@ void MetropolisVariable::load_stream_v328(QDataStream& stream)
 {
     QString qstr;
     stream >> qstr; // since 2024_08_23
-    _name = qstr.toStdString();
+    mName = qstr.toStdString();
 
     quint8 support;
     stream >> support;
@@ -1004,7 +1509,7 @@ void MetropolisVariable::load_stream_v328(QDataStream& stream)
 
     mFormat = DateUtils::eUnknown; // to keep compatibility and force updateFormat
 
-    load_container_nullable(stream, mRawTrace);
+    load_container_nullable(stream, mBurnAdaptTrace);
 }
 
 void MetropolisVariable::load_stream_v330(QDataStream& stream)
@@ -1026,7 +1531,7 @@ void MetropolisVariable::load_stream_v330(QDataStream& stream)
         }
 
         //std::cout << "[MetropolisVariable::load_stream_v330] name str = " << str.toStdString() << std::endl;
-        _name = str.toStdString();
+        mName = str.toStdString();
 
         // Read support
         quint8 support;
@@ -1067,7 +1572,7 @@ void MetropolisVariable::load_stream_v330(QDataStream& stream)
 
 
         // Read raw trace
-        load_container_nullable(stream, mRawTrace);
+        load_container_nullable(stream, mBurnAdaptTrace);
 
         if (stream.status() != QDataStream::Ok) {
             throw std::runtime_error("Failed to read raw trace");
@@ -1076,6 +1581,87 @@ void MetropolisVariable::load_stream_v330(QDataStream& stream)
     } catch (const std::exception& e) {
         std::cout << "[MetropolisVariable::load_stream_v330] Error: "
                  << e.what()
+                  << " ; stream.status()=" << stream.status()<< std::endl;
+
+    }
+}
+
+// In this version, we add mAcceptedStateCount
+void MetropolisVariable::load_stream_v337(QDataStream& stream)
+{
+    // Initial stream check
+    if (stream.status() != QDataStream::Ok) {
+        std::cout << "[MetropolisVariable::load_stream_v337] Initial stream error" << std::endl;
+        return;
+    }
+
+    try {
+        // Read name
+        QString str;
+        stream >> str;
+
+        if (stream.status() != QDataStream::Ok) {
+            std::cout << "[MetropolisVariable::load_stream_v337] Failed to read variable (name)" << std::endl;
+            throw std::runtime_error("Failed to read variable name");
+        }
+
+        mName = str.toStdString();
+
+        load_container(stream, mAcceptedStateCountByChain);
+
+        // Read support
+        quint8 support;
+        stream >> support;
+        switch (int(support)) {
+        case 0: mSupport = MetropolisVariable::eR; break;
+        case 1: mSupport = MetropolisVariable::eRp; break;
+        case 2: mSupport = MetropolisVariable::eRm; break;
+        case 3: mSupport = MetropolisVariable::eRpStar; break;
+        case 4: mSupport = MetropolisVariable::eRmStar; break;
+        case 5: mSupport = MetropolisVariable::eBounded; break;
+        default:
+            throw std::runtime_error("Invalid support type");
+        }
+
+        // Read date format
+        qint16 formatDate;
+        stream >> formatDate;
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read date format");
+        }
+
+        // Convert date format
+        switch (formatDate) {
+        case -2: mFormat = DateUtils::eUnknown; break;
+        case -1: mFormat = DateUtils::eNumeric; break;
+        case 0: mFormat = DateUtils::eBCAD; break;
+        case 1: mFormat = DateUtils::eCalBP; break;
+        case 2: mFormat = DateUtils::eCalB2K; break;
+        case 3: mFormat = DateUtils::eDatBP; break;
+        case 4: mFormat = DateUtils::eDatB2K; break;
+        case 5: mFormat = DateUtils::eBCECE; break;
+        case 6: mFormat = DateUtils::eKa; break;
+        case 7: mFormat = DateUtils::eMa; break;
+        default:
+            throw std::runtime_error("Invalid date format");
+        }
+
+
+        // Read raw trace
+        load_container_nullable(stream, mBurnAdaptTrace);
+
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read Burn Adapt traces");
+        }
+
+        load_container_nullable(stream, mAcquiredTrace);
+
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read raw Acquired trace");
+        }
+    } catch (const std::exception& e) {
+        std::cout << "[MetropolisVariable::load_stream_v337] Error: "
+                  << e.what()
                   << " ; stream.status()=" << stream.status()<< std::endl;
 
     }

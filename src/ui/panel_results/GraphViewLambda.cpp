@@ -96,7 +96,6 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
         mGraph->setYAxisMode(GraphView::eHidden);
 
 
-
         mTitle = tr("Smoothing");
 
         // ------------------------------------

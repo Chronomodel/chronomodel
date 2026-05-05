@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2025
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -42,6 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ModelCurve.h"
 #include "StdUtilities.h"
+#include "MainWindow.h"
 
 #include <QStringList>
 #include <QColor>
@@ -342,6 +343,7 @@ void save_container(QDataStream& stream, const std::shared_ptr<std::vector<doubl
 // Version avec support des pointeurs null
 void save_container_nullable(QDataStream& stream, const std::shared_ptr<std::vector<double>>& data);
 
+void save_container(QDataStream& stream, const std::deque<bool>& data);
 
 template <template<typename...> class Container, class T>
 void load_container_template(QDataStream& stream, Container<T>& data)
@@ -383,12 +385,29 @@ void load_container(QDataStream& stream, std::vector<long long>& data);
 void load_container(QDataStream& stream, std::vector<bool>& data);
 void load_container(QDataStream& stream, std::vector<double>& data);
 void load_container(QDataStream& stream, std::shared_ptr<std::vector<double>>& data);
+void load_container(QDataStream& stream, std::deque<bool>& data);
+
 // Version avec support des pointeurs null
 void load_container_nullable(QDataStream& stream, std::shared_ptr<std::vector<double>>& data);
 
-std::shared_ptr<Project> getProject_ptr();
-std::shared_ptr<ModelCurve> getModel_ptr();
-QJsonObject* getState_ptr();
+
+inline std::shared_ptr<Project> getProject_ptr()
+{
+    return MainWindow::getInstance()->getProject();
+}
+
+inline std::shared_ptr<ModelCurve> getModel_ptr()
+{
+    auto project = getProject_ptr();
+    return project ? project->mModel : nullptr;
+}
+
+inline QJsonObject* getState_ptr()
+{
+    auto project = getProject_ptr();
+    return project ? &project->mState : nullptr;
+}
+
 
 std::pair<std::vector<double>, std::vector<size_t>> downsampleLTTBWithIndices(
     const std::vector<double>& data, size_t n);

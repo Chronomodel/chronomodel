@@ -51,6 +51,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 // Mersenne Twister 19937 generator
 std::mt19937 Generator::sEngine (0);
 std::uniform_real_distribution<double> Generator::sDoubleDistribution (0.0, 1.0);
+std::normal_distribution<double> Generator::sNormalDistribution(0.0, 1.0);
 
 std::default_random_engine CharGenerator (int(std::chrono::system_clock::now().time_since_epoch().count()));
 
@@ -94,240 +95,11 @@ unsigned Generator::createSeed()
 }
 
 
-double Generator::randomUniform(const double min, const double max)
-{
-    return min + sDoubleDistribution(sEngine) * (max - min);
-    // return min + xorshift64star() * (max - min);
-}
 
-int Generator::randomUniformInt(const int min, const int max)
-{
-    std::uniform_int_distribution<int> distribution(min, max);
-    return distribution(sEngine);
-   //return (int) round(randomUniform(min, max));
-}
 
-double Generator::gaussByDoubleExp(const double mean, const double sigma, const double min, const double max)
-{
-    errno = 0;
-    if ((min >= max) || (sigma == 0)) {
-        if ((min >= max) && (sigma != 0))
-            throw QObject::tr("[Generator::gaussByDoubleExp]: min = %1 , max = %2").arg(QString::number(min), QString::number(max));
 
-#ifdef DEBUG
-        else
-            qDebug() << "[Generator::gaussByDoubleExp] WARNING : min == max";
-#endif
 
-        if ((sigma == 0) && (min <= max))
-            throw QObject::tr("[Generator::gaussByDoubleExp] sigma == 0, mean = %1").arg(QString::number(mean)) ;
-#ifdef DEBUG
-        else
-            qDebug() << "[Generator::gaussByDoubleExp] WARNING : sigma == 0";
-#endif
 
-        return min;
-    }
-
-    const long double x_min = (min - mean) / sigma;
-    const long double x_max = (max - mean) / sigma;
-    double x;
-    // --- CAS 1 : Intervalle étroit ---
-    // Si l'intervalle est plus petit que 0.1 sigma, la densité est presque uniforme.
-    // On utilise un rejet sur l'uniforme, très efficace ici.
-    if ((x_max - x_min) < 0.1) {
-        while (true) {
-            x = x_min + (x_max - x_min) * randomUniform();
-            double u = randomUniform();
-            // On accepte avec la probabilité exp(-x²/2) / exp(-mode²/2)
-            // Pour être sûr, on utilise le point de l'intervalle le plus proche de 0
-            double mode = (x_min > 0) ? x_min : ((x_max < 0) ? x_max : 0.0);
-            if (std::log(u) <= 0.5 * (mode * mode - x * x)) {
-                return mean + x * sigma;
-            }
-        }
-    }
-
-    x = (x_max + x_min) / 2.0;// initialisation arbitraire, valeur écrasée ensuite
-    //const long double sqrt_e = sqrtl(expl(1.0));
-    const long double sqrt_e = 1.64872127070012814689;
-    feclearexcept(FE_ALL_EXCEPT);
-
-    double exp_x_min = 0.0;
-    double exp_x_max = 0.0;
-    double exp_minus_x_min = 0.0;
-    double exp_minus_x_max = 0.0;
-    double c = 0.0;
-    double f0 = 0.0;
-
-    if ((x_min < 0.) && (x_max > 0.)) {
-        exp_x_min = exp(x_min);
-        exp_minus_x_max = exp(-x_max);
-        c = 1. - 0.5 * (exp_x_min + exp_minus_x_max);
-        f0 = 0.5 * (1. - exp_x_min) / c;
-    }
-    else {
-        if (x_min >= 0.) {
-            exp_minus_x_min = exp(-x_min);
-            exp_minus_x_max = exp(-x_max);
-        } else {
-            exp_x_min = exp(x_min);
-            exp_x_max = exp(x_max);
-        }
-    }
-#ifdef DEBUG
-    if (errno != 0) {
-        qDebug() <<  "[Generator::gaussByDoubleExp] errno =  " + QString::fromStdString(std::strerror(errno));
-        qDebug() << " mean = " << mean << " min=" << min << " max=" << max << " sigma" << sigma;
-        qDebug() <<" x_min=" << (double)(x_min) << " x_max=" << (double)(x_max);
-
-    }
-#endif
-    if (errno != 0) {
-        qDebug() <<  "[Generator::gaussByDoubleExp] errno =  " + QString::fromStdString(std::strerror(errno));
-        if (fetestexcept(FE_UNDERFLOW | FE_UNDERFLOW)) {
-            feclearexcept(FE_ALL_EXCEPT);
-            errno = 0;
-            //qDebug() <<  "[Generator::gaussByDoubleExp] reset domain valid  errno =  " + QString::fromStdString(std::strerror(errno));
-        }
-        //qDebug() <<  "[Generator::gaussByDoubleExp] reset errno =  " + QString::fromStdString(std::strerror(errno));
-    }
-
-    double ur = 1.0;
-    long double rap = 0.0;
-
-    int trials = 0.;
-    const int limit = 100000;
-
-    while (rap < ur && trials < limit) {
-        const double u = randomUniform();
-
-        if (x_min < 0. && x_max > 0.) {
-
-            if (u <= f0)
-                x = log(exp_x_min + 2.0 * c * u);
-            else
-                x = -log(1.0 - 2.0*c*(u-f0));
-
-        } else {
-            if (x_min >= 0.)
-                x = -log(exp_minus_x_min - u * (exp_minus_x_min - exp_minus_x_max));
-            else
-                x = log(exp_x_min - u * (exp_x_min - exp_x_max));
-        }
-
-        if (errno != 0) {
-            if (fetestexcept(FE_UNDERFLOW | FE_UNDERFLOW)) {
-                feclearexcept(FE_ALL_EXCEPT);
-                errno = 0;
-            } else
-                throw "[Generator::gaussByDoubleExp] errno =  " + QString::fromStdString(std::strerror(errno));
-        }
-        ur = randomUniform();
-
-        if (x_min >= 1.)
-            rap = exp(0.5 * (x_min * x_min - x * x) + x - x_min);
-
-        else if (x_max <= -1.)
-            rap = exp(0.5 * (x_max * x_max - x * x) + x_max - x);
-
-        else
-            rap = exp(-0.5 * x * x + std::fabs(x)) / sqrt_e;
-
-        ++trials;
-    }
-
-    if (trials == limit)
-        throw "[Generator::gaussByDoubleExp] could not find a solution after " + QString::number(limit) + " trials! This may bed ue to Taylor unsufficients developpement orders. Please try to run the calculations again!";
-#ifdef DEBUG
-    if ((x<x_min) || (x>x_max)) {
-        qDebug() << "DOUBLE EXP DoubleExp : x = "<<(double)(x);
-        qDebug() << "DOUBLE EXP DoubleExp : (mean + (x * sigma)) = "<<(double)(mean + (x * sigma));
-        qDebug() <<" min="<< min<<" max=" <<(double)(x_max);
-
-    }
-    if ((x==x_min) || (x==x_max)) {
-        double value = mean + (x * sigma);
-        qDebug() << "[Generator::gaussByDoubleExp] : value = limit : "<< value <<" min="<< min<<" max=" << max;
-
-    }
-#endif
-    return mean + (x * sigma);
-}
-
-// Helper pour les queues (Exponentielle translatée)
-double sampleTail(double a, double b)
-{
-    double x;
-    while (true) {
-        double u = Generator::randomUniform();
-        // Échantillonnage d'une exponentielle tronquée sur [a, b]
-        x = a - std::log(1.0 - u * (1.0 - std::exp(-a * (b - a))));
-
-        double v = Generator::randomUniform();
-        // Rejet pour transformer l'exponentielle en Gaussienne
-        if (std::log(v) <= -0.5 * (x - a) * (x - a)) {
-            return x;
-        }
-    }
-}
-
-/**
- * @brief Générateur de distribution normale tronquée hautement optimisé.
- * * @details
- * Implémente une stratégie de rejet hybride pour garantir un taux d'acceptation
- * optimal (\f$ \approx 60-100\% \f$) même dans les cas critiques :
- * - **Intervalle étroit :** Rejet sur distribution uniforme (évite le blocage).
- * - **Queues de distribution :** Algorithme de Christian Robert (enveloppe exponentielle) 1995.
- * - **Centre de masse :** Utilisation de la normale standard (Zigghurat).
- * @param mu    Moyenne de la distribution originale.
- * @param sigma Écart-type de la distribution originale.
- * @param low   Borne inférieure de troncature.
- * @param high  Borne supérieure de troncature.
- *
- * * @return double Valeur échantillonnée dans l'intervalle [low, high].
- */
-double Generator::truncatedNormal(const double mu, const double sigma, double low, double high)
-{
-    // 1. Normalisation
-    const double a = (low - mu) / sigma;
-    const double b = (high - mu) / sigma;
-
-    double x;
-
-    // --- CAS 1 : Intervalle étroit ---
-    // Si l'intervalle est plus petit que 0.1 sigma, la densité est presque uniforme.
-    // On utilise un rejet sur l'uniforme, très efficace ici.
-    if ((b - a) < 0.1) {
-        while (true) {
-            x = a + (b - a) * randomUniform();
-            double u = randomUniform();
-            // On accepte avec la probabilité exp(-x²/2) / exp(-mode²/2)
-            // Pour être sûr, on utilise le point de l'intervalle le plus proche de 0
-            double mode = (a > 0) ? a : ((b < 0) ? b : 0.0);
-            if (std::log(u) <= 0.5 * (mode * mode - x * x)) {
-                return mu + x * sigma;
-            }
-        }
-    }
-
-    // --- CAS 2 : Queue de distribution (Robert, 1995) ---
-    if (a > 0.5) {
-        x = sampleTail(a, b);
-    }
-    else if (b < -0.5) {
-        x = -sampleTail(-b, -a);
-    }
-    // --- CAS 3 : Centre de la cloche (Rejet simple) ---
-    else {
-        std::normal_distribution<double> norm(0.0, 1.0);
-        do {
-            x = norm(sEngine);
-        } while (x < a || x > b);
-    }
-
-    return mu + x * sigma;
-}
 
 
 /**
@@ -378,12 +150,7 @@ double Generator::xorshift64star(void) {
        return to_double(Generator::xorshift64starSeed * UINT64_C(2685821657736338717));
 }
 
-double Generator::shrinkageUniforme(const double shrinkage)
-{
-    const double u = Generator::randomUniform();
-    const double x = shrinkage * ((1 - u) / u);
-    return x;
-}
+
 
 
 double Generator::gammaDistribution(const double alpha, const double beta)
@@ -398,8 +165,3 @@ double Generator::exponentialeDistribution(const double meanexp)
     return exponential(sEngine);
 }
 
-double Generator::normalDistribution(const double mu, const double sigma)
-{
-    std::normal_distribution<double> norm(mu, sigma);
-    return norm(sEngine);
-}

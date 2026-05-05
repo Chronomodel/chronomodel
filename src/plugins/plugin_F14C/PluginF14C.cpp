@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -67,24 +67,87 @@ PluginF14C::~PluginF14C()
 }
 
 // Likelihood
-QPair<long double, long double> PluginF14C::getLikelihoodArg(const double t, const QJsonObject &data)
+/**
+ * @brief Calcule les deux arguments nécessaires à la fonction de
+ *        vraisemblance gaussienne pour une mesure de fraction ¹⁴C (F14C).
+ *
+ * La vraisemblance est supposée gaussienne :
+ *
+ * \f[
+ *   L(t)=\exp\!\Bigl(-\tfrac12\,
+ *        \frac{(age-\mu(t))^{2}}{\sigma^{2}(t)}\Bigr)
+ * \f]
+ *
+ * La fonction renvoie le couple **{variance, exponent}** où :
+ *
+ *  * **variance**  = \f$\sigma^{2}(t)=\sigma_{\text{ref}}^{2}(t)+\sigma_{\text{mes}}^{2}\f$
+ *  * **exponent**  = \f$-\tfrac12\,
+ *        \frac{(age-\mu(t))^{2}}{\sigma^{2}(t)}\f$
+ *
+ * Toutes les opérations sont effectuées en **long double** afin de
+ * préserver la précision numérique.
+ *
+ * @param[in] t    Temps (ou âge) auquel la courbe de référence est évaluée.
+ * @param[in] data Objet JSON contenant les clés suivantes :
+ *                 - @c DATE_F14C_FRACTION_STR – fraction mesurée (double)
+ *                 - @c DATE_F14C_ERROR_STR    – incertitude de la mesure (double)
+ *
+ * @return Un @c std::pair dont @c first  contient la variance et
+ *         @c second l’exposant de la gaussienne.
+ *
+ * @note La fonction est déclarée @c noexcept car aucune exception n’est
+ *       levée.  Elle n’est **pas** marquée @c inline afin de laisser le
+ *       compilateur choisir librement son mode d’optimisation.
+ *
+ * @see PluginF14C::getRefValueAt()
+ * @see PluginF14C::getRefErrorAt()
+ */
+std::pair<long double, long double> PluginF14C::getLikelihoodArg(const double t,
+                             const QJsonObject &data) const noexcept
 {
-    double age = data.value(DATE_F14C_FRACTION_STR).toDouble();
-    double error = data.value(DATE_F14C_ERROR_STR).toDouble();
+    /* ------------------------------------------------------------------
+     * 1️⃣  Extraction des valeurs du JSON (promotion unique en long double)
+     * ------------------------------------------------------------------ */
+    const long double age   = static_cast<long double>(data.value(DATE_F14C_FRACTION_STR).toDouble());
+    const long double measError = static_cast<long double>(data.value(DATE_F14C_ERROR_STR).toDouble());
 
-    long double refValue = (long double) getRefValueAt(data, t);
-    long double refError = (long double) getRefErrorAt(data, t);
+    /* ------------------------------------------------------------------
+     * 2️⃣  Valeur de référence et son incertitude
+     * ------------------------------------------------------------------ */
+    const long double refValue = getRefValueAt(data, t);
+    const long double refError = getRefErrorAt(data, t);
 
-    long double variance = refError * refError + error * error;
-    long double exponent = -0.5l * powl((long double)(age - refValue), 2.l) / variance;
-    return qMakePair(variance, exponent);
+    /* ------------------------------------------------------------------
+     * 3️⃣  Variance = σ_ref² + σ_mes²
+     * ------------------------------------------------------------------ */
+    const long double variance = refError * refError + measError * measError;
+
+    /* ------------------------------------------------------------------
+     * 4️⃣  Exposant de la gaussienne
+     * ------------------------------------------------------------------ */
+    const long double diff = age - refValue;          // (age - μ(t))
+    const long double exponent = -0.5L * diff * diff / variance; // (diff)² = diff*diff
+
+    /* ------------------------------------------------------------------
+     * 5️⃣  Retour du couple (variance, exponent)
+     * ------------------------------------------------------------------ */
+    return { variance, exponent };
 }
 
-long double PluginF14C::getLikelihood(const double t, const QJsonObject& data)
+long double PluginF14C::getLikelihood(const double t, const QJsonObject& data) const noexcept
 {
-    QPair<long double, long double > result = getLikelihoodArg(t, data);
-    long double back = expl(result.second) / sqrtl(result.first) ;
-    return back;
+    // ------------------------------------------------------------------
+    // 1️⃣  Retrieve the variance and exponent (already long‑double)
+    // ------------------------------------------------------------------
+    const std::pair<long double, long double> result = getLikelihoodArg(t, data);
+    const long double variance = result.first;
+    const long double exponent = result.second;
+
+    // ------------------------------------------------------------------
+    // 2️⃣  Compute the likelihood:  exp(exponent) / sqrt(variance)
+    // ------------------------------------------------------------------
+    const long double likelihood = expl(exponent) / sqrtl(variance);
+    return likelihood;
 }
 
 // Properties
@@ -146,7 +209,7 @@ QString PluginF14C::getDateDesc(const Date* date) const
     return result;
 }
 
-QString PluginF14C::getDateRefCurveName(const Date* date)
+QString PluginF14C::getDateRefCurveName(const Date* date) const
 {
     Q_ASSERT(date);
     const QJsonObject data = date->mData;
@@ -174,7 +237,7 @@ qsizetype PluginF14C::csvMinColumns() const
  * @return
  * @example:
  */
-QJsonObject PluginF14C::fromCSV(const QStringList& list, const QLocale &csvLocale)
+QJsonObject PluginF14C::fromCSV(const QStringList& list, const QLocale &csvLocale) const
 {
     QJsonObject json;
     if (list.size() >= csvMinColumns()) {
@@ -384,13 +447,13 @@ RefCurve PluginF14C::loadRefFile(QFileInfo refFile)
 }
 
 // References Values & Errors
-double PluginF14C::getRefValueAt(const QJsonObject& data, const double& t)
+double PluginF14C::getRefValueAt(const QJsonObject& data, const double& t) const
 {
     const QString curveName = data.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
     return getRefCurveValueAt(curveName, t);
 }
 
-double PluginF14C::getRefErrorAt(const QJsonObject& data, const double& t)
+double PluginF14C::getRefErrorAt(const QJsonObject& data, const double& t) const
 {
     const QString curveName = data.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
     return getRefCurveErrorAt(curveName, t);
@@ -409,16 +472,29 @@ QPair<double, double> PluginF14C::getTminTmaxRefsCurve(const QJsonObject &data) 
     return QPair<double, double>(tmin, tmax);
 }
 
-double PluginF14C::getMinStepRefsCurve(const QJsonObject &data) const
+double PluginF14C::getMinStepRefsCurve(const QJsonObject &data)
 {
-    const QString ref_curve = data.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
+    const QString refCurve = data.value(DATE_F14C_REF_CURVE_STR).toString().toLower();
 
-    if (mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
-       return mRefCurves.value(ref_curve).mMinStep/3.0;
+    // ----- 1️⃣  Retrieve curve (single lookup, cache) -----
+    const RefCurve* curve = nullptr;
+    if (cacheCurvePtr() && cacheCurveName() == refCurve) {
+        curve = cacheCurvePtr();                     // cache hit
 
     } else {
-       return INFINITY;
+        auto it = mRefCurves.constFind(refCurve);
+        if (it == mRefCurves.constEnd()) {
+            qDebug() << "PluginF14C::getMinStepRefsCurve() unknown curve" << refCurve;
+            return INFINITY;
+        }
+        curve = &it.value();                         // no copy
+        setCacheCurveName(refCurve);
+        setCacheCurvePtr(curve);
     }
+
+    constexpr double frac = 1.0/3.0;
+    return curve->mMinStep * frac;
+
 }
 
 

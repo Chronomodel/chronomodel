@@ -76,7 +76,7 @@ public:
     MHVariable mWiggle;
     double mDelta;
 
-    MHVariable mZi;// test reparametrisation
+   // MHVariable mZi;// test reparametrisation, ,ne marche pas
 
     int mId;
     std::string mUUID;
@@ -198,6 +198,11 @@ public:
                                 const double S02Theta_mX,
                                 const double AShrinkage);
 
+    void applySigmaShrinkage_K_tempering(const double theta_mX,
+                                          const double S02Theta_mX,
+                                          const double AShrinkage,
+                                          const double T = 1.0);
+
     void updateTiSigma_block(const double theta_mX,
                              const double S02Theta_mX,
                              const double AShrinkage);
@@ -216,16 +221,24 @@ public:
     double fProposalDensity(const double t, const double t0);
 
     // List of samplingFunction
-    void Prior(const double theta_mX);//fMHSymetric(Event* theta_mX);
-    void Inversion(const double theta_mX);
+    void Prior(const double theta_mX);
+    void applyPrior(const double theta_mX);
 
-    void MHAdaptGauss(const double theta_mX);//void fMHSymGaussAdapt(Event *event);
+    void Inversion(const double theta_mX);
+    void applyInversion(const double theta_mX);
+
+    void MHAdaptGauss(const double theta_mX);
+    void applyMHAdaptGauss(const double theta_mX);
 
     void PriorWithArg(const double theta_mX);//fMHSymetricWithArg(Event *event);
     void MHAdaptGaussWithArg(const double theta_mX);//void fMHSymGaussAdaptWithArg(Event* theta_mX);
     void InversionWithArg(const double theta_mX);
 
     typedef void (Date::*samplingFunction)(const double theta_mX);
+
+    void applyDateProposal_v3(const double theta_mX, const double S02Theta_mX, const double AShrinkage);
+    void applyTi_MH_Tempering(const double theta_mX, const double T);
+
 
 protected:
     double mTminRefCurve;

@@ -64,7 +64,43 @@ Plugin14C::~Plugin14C()
         delete mRefGraph;
 }
 
-// Likelihood
+/**
+ * @brief Computes the likelihood arguments for a ¹⁴C measurement.
+ *
+ * The function evaluates the Gaussian likelihood
+ *
+ * \f[
+ *   L(t) = \exp\!\Bigl(-\tfrac12
+ *        \frac{(age - \mu(t))^{2}}{\sigma^{2}(t)}\Bigr)
+ * \f]
+ *
+ * and returns the two intermediate values that are needed by the
+ * Metropolis‑Hastings acceptance step:
+ *
+ *  * **variance**  – \f$\sigma^{2}(t) = \sigma_{\text{ref}}^{2}(t) + \sigma_{\text{meas}}^{2}\f$
+ *  * **exponent** – the exponent of the Gaussian, i.e.
+ *    \f$-\tfrac12\,(age-\mu(t))^{2}/\sigma^{2}(t)\f$.
+ *
+ * The age is corrected for the reservoir effect before the calculation.
+ *
+ * @param[in] t    The time (or age) at which the reference curve is evaluated.
+ * @param[in] data A JSON object that must contain the following keys:
+ *                 - @c DATE_14C_AGE_STR            – measured age (double)
+ *                 - @c DATE_14C_ERROR_STR          – measurement error (double)
+ *                 - @c DATE_14C_DELTA_R_STR        – reservoir offset (double)
+ *                 - @c DATE_14C_DELTA_R_ERROR_STR  – error on the reservoir offset (double)
+ *
+ * @return A @c QPair where
+ *         - @c first  holds the **variance**  (\f$\sigma^{2}(t)\f$)
+ *         - @c second holds the **exponent** (\f$-\tfrac12\,(age-\mu(t))^{2}/\sigma^{2}(t)\f$)
+ *
+ * @note The function works entirely with @c long double to preserve the
+ *       numerical precision required by the calibration routine.
+ *
+ * @see Plugin14C::getRefValueAt()
+ * @see Plugin14C::getRefErrorAt()
+ */
+/*
 QPair<long double, long double> Plugin14C::getLikelihoodArg(const double t, const QJsonObject &data)
 {
     double age = data.value(DATE_14C_AGE_STR).toDouble();
@@ -82,13 +118,64 @@ QPair<long double, long double> Plugin14C::getLikelihoodArg(const double t, cons
     long double variance = refError * refError + error * error;
     long double exponent = -0.5l * powl((long double)(age - refValue), 2.l) / variance;
     return qMakePair(variance, exponent);
+}*/
+
+std::pair<long double, long double>
+Plugin14C::getLikelihoodArg(double t, const QJsonObject &data) const noexcept
+{
+    // ------------------------------------------------------------------
+    // 1️⃣  Extraction des valeurs du JSON (double → long double)
+    // ------------------------------------------------------------------
+    const long double age          = static_cast<long double>(data.value(DATE_14C_AGE_STR).toDouble())
+                            - static_cast<long double>(data.value(DATE_14C_DELTA_R_STR).toDouble());
+
+    const long double measError    = static_cast<long double>(data.value(DATE_14C_ERROR_STR).toDouble());
+    const long double deltaRError  = static_cast<long double>(data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble());
+
+    // ------------------------------------------------------------------
+    // 2️⃣  Propagation de l’erreur du réservoir (sans sqrt)
+    // ------------------------------------------------------------------
+    const long double totalErrorSq = std::fma(deltaRError, deltaRError,
+                                              measError * measError);   // = measError² + deltaRError²
+
+    // ------------------------------------------------------------------
+    // 3️⃣  Valeur et incertitude de la courbe de référence (déjà long double)
+    // ------------------------------------------------------------------
+    const long double refValue = getRefValueAt(data, t);
+    const long double refError = getRefErrorAt(data, t);
+
+    // ------------------------------------------------------------------
+    // 4️⃣  Variance totale (σ² = σ_ref² + σ_meas²)
+    // ------------------------------------------------------------------
+    const long double variance = refError * refError + totalErrorSq;
+
+    // ------------------------------------------------------------------
+    // 5️⃣  Exposant de la loi gaussienne
+    // ------------------------------------------------------------------
+    const long double diff = age - refValue;
+    constexpr long double half = static_cast<long double>(-0.5L);
+    const long double exponent = half * diff * diff / variance;
+
+    // ------------------------------------------------------------------
+    // 6️⃣  Retour (variance, exponent)
+    // ------------------------------------------------------------------
+    return { variance, exponent };
 }
 
-long double Plugin14C::getLikelihood(const double t, const QJsonObject &data)
+long double Plugin14C::getLikelihood(const double t, const QJsonObject &data) const noexcept
 {
-    QPair<long double, long double > result = getLikelihoodArg(t, data);
-    long double back = expl(result.second) / sqrtl(result.first) ;
-    return back;
+    // ------------------------------------------------------------------
+    // 1️⃣  Retrieve the variance and exponent (already long‑double)
+    // ------------------------------------------------------------------
+    const std::pair<long double, long double> result = getLikelihoodArg(t, data);
+    const long double variance = result.first;
+    const long double exponent = result.second;
+
+    // ------------------------------------------------------------------
+    // 2️⃣  Compute the likelihood:  exp(exponent) / sqrt(variance)
+    // ------------------------------------------------------------------
+    const long double likelihood = expl(exponent) / sqrtl(variance);
+    return likelihood;
 }
 
 // Properties
@@ -155,7 +242,7 @@ QString Plugin14C::getDateDesc(const Date* date) const
     return result;
 }
 
-QString Plugin14C::getDateRefCurveName(const Date* date)
+QString Plugin14C::getDateRefCurveName(const Date* date) const
 {
     Q_ASSERT(date);
     const QJsonObject data = date->mData;
@@ -176,7 +263,7 @@ qsizetype Plugin14C::csvMinColumns() const
     return csvColumns().count() - 2;
 }
 
-QJsonObject Plugin14C::fromCSV(const QStringList& list, const QLocale &csvLocale)
+QJsonObject Plugin14C::fromCSV(const QStringList& list, const QLocale &csvLocale) const
 {
     QJsonObject json;
     if (list.size() >= csvMinColumns()) {
@@ -379,13 +466,13 @@ RefCurve Plugin14C::loadRefFile(QFileInfo refFile)
 }
 
 // References Values & Errors
-double Plugin14C::getRefValueAt(const QJsonObject& data, const double& t)
+double Plugin14C::getRefValueAt(const QJsonObject& data, const double& t) const
 {
     const QString curveName = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
     return getRefCurveValueAt(curveName, t);
 }
 
-double Plugin14C::getRefErrorAt(const QJsonObject& data, const double& t)
+double Plugin14C::getRefErrorAt(const QJsonObject& data, const double& t) const
 {
     const QString curveName = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
     return getRefCurveErrorAt(curveName, t);
@@ -404,16 +491,28 @@ QPair<double,double> Plugin14C::getTminTmaxRefsCurve(const QJsonObject &data) co
     return QPair<double, double>(tmin, tmax);
 }
 
-double Plugin14C::getMinStepRefsCurve(const QJsonObject &data) const
+double Plugin14C::getMinStepRefsCurve(const QJsonObject &data)
 {
-    const QString ref_curve = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
+    const QString refCurve = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
 
-    if (mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
-       return mRefCurves.value(ref_curve).mMinStep/3.0;
-
+    // ----- 1️⃣  Retrieve curve (single lookup, cache) -----
+    const RefCurve* curve;
+    if (cacheCurvePtr() && cacheCurveName() == refCurve) {
+        curve = cacheCurvePtr();                     // cache hit
     } else {
-       return INFINITY;
+        auto it = mRefCurves.constFind(refCurve);
+        if (it == mRefCurves.constEnd()) {
+            qDebug() << "Plugin14C::isDateValid() unknown curve" << refCurve;
+            return INFINITY;
+        }
+        curve = &it.value();                         // no copy
+        setCacheCurveName(refCurve);
+        setCacheCurvePtr(curve);
     }
+
+    constexpr double frac = 1.0/3.0;
+    return curve->mMinStep * frac;
+
 }
 
 //Settings / Input Form / RefView
@@ -465,43 +564,65 @@ QJsonObject Plugin14C::checkValuesCompatibility(const QJsonObject& values)
 // Date Validity
 bool Plugin14C::isDateValid(const QJsonObject& data, const StudyPeriodSettings& settings)
 {
-    const QString ref_curve = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
-    bool valid = false;
-    if (!mRefCurves.contains(ref_curve)) {
-        qDebug()<<"in Plugin14C::isDateValid() unkowned curve"<<ref_curve;
-        valid = false;
+    const QString refCurve = data.value(DATE_14C_REF_CURVE_STR).toString().toLower();
+
+    // ----- 1️⃣  Retrieve curve (single lookup, cache) -----
+    const RefCurve* curve = nullptr;
+    if (cacheCurvePtr() && cacheCurveName() == refCurve) {
+        curve = cacheCurvePtr();                     // cache hit
     } else {
-        // controle valid solution (double)likelihood>0
-        // remember likelihood type is long double
-        const RefCurve& curve = mRefCurves.value(ref_curve);
-        valid = false;
-        double age = data.value(DATE_14C_AGE_STR).toDouble();
-        const double delta_r = data.value(DATE_14C_DELTA_R_STR).toDouble();
-
-        // Apply reservoir effect
-        age = (age - delta_r);
-
-        if (age>curve.mDataInfMin && age < curve.mDataSupMax)
-            valid = true;
-
-        else {
-            double t = curve.mTmin;
-            long double repartition (0.);
-            long double v (0.);
-            long double lastV (0.);
-            while (valid==false && t<=curve.mTmax) {
-                v = (double)getLikelihood(t,data);
-                // we have to check this calculs
-                //because the repartition can be smaller than the calibration
-                if (lastV>0 && v>0)
-                    repartition += (long double) settings.mStep * (lastV + v) / 2.;
-
-                lastV = v;
-
-                valid = ( (double)repartition > 0);
-                t +=settings.mStep;
-            }
+        auto it = mRefCurves.constFind(refCurve);
+        if (it == mRefCurves.constEnd()) {
+            qDebug() << "Plugin14C::isDateValid() unknown curve" << refCurve;
+            return false;
         }
+        curve = &it.value();                         // no copy
+        setCacheCurveName(refCurve);
+        setCacheCurvePtr(curve);
+    }
+
+
+    // --------------------------------------------------------------
+    // 2️⃣    Lecture des paramètres d’entrée
+    // --------------------------------------------------------------
+    long double age   = static_cast<long double>(data.value(DATE_14C_AGE_STR).toDouble());
+    const long double delta_r = static_cast<long double>(data.value(DATE_14C_DELTA_R_STR).toDouble());
+    // effet du réservoir
+    age -= delta_r;
+    // --------------------------------------------------------------
+    //  3️⃣ Test rapide sur les bornes de la courbe
+    // --------------------------------------------------------------
+    if (age > static_cast<long double>(curve->mDataInfMin) &&
+        age < static_cast<long double>(curve->mDataSupMax))
+        return true;                               // validité immédiate
+
+    // --------------------------------------------------------------
+    // 4️⃣  Parcours du domaine (intégration trapézoïdale)
+    // --------------------------------------------------------------
+    const long double step = static_cast<long double>(settings.mStep);
+    long double t = static_cast<long double>(curve->mTmin);
+    const long double tMax = static_cast<long double>(curve->mTmax);
+    long double repartition = 0.0L;
+    long double lastV = 0.0L;
+
+    bool valid = false;
+
+    // boucle « for » avec sortie dès que la condition de validité est remplie
+    for ( ; t <= tMax && !valid; t += step )
+    {
+        const long double v = getLikelihood(static_cast<double>(t), data);
+
+        // ----------------------------------------------------------
+        //  Trapezoïdal rule – on ne cumule que si les deux valeurs > 0
+        // ----------------------------------------------------------
+        if (lastV > 0.0L && v > 0.0L)
+            repartition += step * (lastV + v) * 0.5L;   // (step/2)*(lastV+v)
+
+        lastV = v;
+        // dès que la somme partielle devient strictement positive,
+        // la date est considérée valide.
+        if (repartition > 0.0L)
+            valid = true;
     }
     return valid;
 }

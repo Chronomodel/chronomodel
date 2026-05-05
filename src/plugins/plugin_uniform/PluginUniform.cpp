@@ -59,7 +59,7 @@ PluginUniform::~PluginUniform()
 
 }
 
-long double PluginUniform::getLikelihood(const double t, const QJsonObject &data)
+long double PluginUniform::getLikelihood(const double t, const QJsonObject &data) const noexcept
 {
     const double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
     const double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
@@ -125,7 +125,7 @@ QJsonObject PluginUniform::checkValuesCompatibility(const QJsonObject &values)
     return result;
 }
 
-QJsonObject PluginUniform::fromCSV(const QStringList &list, const QLocale &csvLocale)
+QJsonObject PluginUniform::fromCSV(const QStringList &list, const QLocale &csvLocale) const
 {
     QJsonObject json;
     if (list.size() >= csvMinColumns()) {
@@ -166,8 +166,8 @@ bool PluginUniform::isDateValid(const QJsonObject &data, const StudyPeriodSettin
 {
     const double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
     const double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
-    return max>min;
-    //return true;
+    return max > min;
+
  }
 // ------------------------------------------------------------------
 
@@ -197,11 +197,13 @@ QPair<double, double> PluginUniform::getTminTmaxRefsCurve(const QJsonObject &dat
     return QPair<double, double>(min, max);
 }
 
-double PluginUniform::getMinStepRefsCurve(const QJsonObject &data) const
+double PluginUniform::getMinStepRefsCurve(const QJsonObject &data)
 {
     const double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
     const double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
-    return std::abs(max-min)/51.;
+
+    constexpr double frac = 1.0/ 51.0;
+    return std::abs(max-min) * frac;
 }
 
 long double PluginUniform::getLikelihoodCombine(const double t, const QJsonArray &subData)
@@ -216,7 +218,7 @@ long double PluginUniform::getLikelihoodCombine(const double t, const QJsonArray
        max = std::min(max, data.value(DATE_UNIFORM_MAX_STR).toDouble() );
    }
 
-    return (t >= min && t <= max) ? static_cast<long double>(1. / (max-min)) : 0.l;
+    return (t >= min && t <= max) ? static_cast<long double>(1.0L / (max-min)) : 0.0L;
     
     
 }

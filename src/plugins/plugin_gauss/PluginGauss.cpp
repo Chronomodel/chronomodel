@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2025
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -66,14 +66,14 @@ PluginGauss::~PluginGauss()
 }
 
 // Likelihood
-long double PluginGauss::getLikelihood(const double t, const QJsonObject &data)
+long double PluginGauss::getLikelihood(const double t, const QJsonObject &data) const noexcept
 {
-    const QPair<long double, long double > result = getLikelihoodArg(t, data);
+    const std::pair<long double, long double > result = getLikelihoodArg(t, data);
 
     return expl(result.second) / sqrt(result.first);
 }
 
-QPair<long double, long double> PluginGauss::getLikelihoodArg(const double t, const QJsonObject &data)
+std::pair<long double, long double> PluginGauss::getLikelihoodArg(const double t, const QJsonObject &data) const noexcept
 {
     // inherits the first data propeties as plug-in and method...
 
@@ -95,7 +95,9 @@ QPair<long double, long double> PluginGauss::getLikelihoodArg(const double t, co
     }
 
     const long double variance = static_cast<long double>(refError * refError + error * error);
-    const long double exponent = -0.5l * powl(static_cast<long double>(age - refValue), 2.l) / variance;
+    const long double exponent = -0.5L *
+                                 powl(static_cast<long double>(age - refValue), 2.0L)
+                                 / variance;
 
     return qMakePair(variance, exponent);
 }
@@ -211,7 +213,7 @@ QString PluginGauss::getDateDesc(const Date* date) const
     return result;
 }
 
-QString PluginGauss::getDateRefCurveName(const Date* date)
+QString PluginGauss::getDateRefCurveName(const Date* date) const
 {
     Q_ASSERT(date);
     const QJsonObject data = date->mData;
@@ -243,7 +245,7 @@ qsizetype PluginGauss::csvMinColumns() const{
     return csvColumns().count() - 3;
 }
 
-QJsonObject PluginGauss::fromCSV(const QStringList& list, const QLocale& csvLocale)
+QJsonObject PluginGauss::fromCSV(const QStringList& list, const QLocale& csvLocale) const
 {
     QJsonObject json;
     if (list.size() >= csvMinColumns()) {
@@ -415,7 +417,7 @@ RefCurve PluginGauss::loadRefFile(QFileInfo refFile)
 
 
 // Reference Values & Errors
-long double PluginGauss::getRefValueAt(const QJsonObject &data, const double t)
+long double PluginGauss::getRefValueAt(const QJsonObject &data, const double t) const
 {
     const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
 
@@ -437,7 +439,7 @@ long double PluginGauss::getRefValueAt(const QJsonObject &data, const double t)
         return 0.0;
 }
 
-double PluginGauss::getRefErrorAt(const QJsonObject &data, const double t, const QString mode)
+double PluginGauss::getRefErrorAt(const QJsonObject &data, const double t, const QString mode) const
 {
     if (mode == DATE_GAUSS_MODE_CURVE) {
         const QString &ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
@@ -579,10 +581,10 @@ double computeMinStepFromRefCurve(const QMap<double, double>& refData, const QJs
 }
 
 
-double PluginGauss::getMinStepRefsCurve(const QJsonObject &data) const
+double PluginGauss::getMinStepRefsCurve(const QJsonObject &data)
 {
     constexpr double one_frac = 1.0/1001.0;
-    const QString &ref_curve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
+
     const QString &mode = data.value(DATE_GAUSS_MODE_STR).toString();
 
     if (mode == DATE_GAUSS_MODE_NONE) {
@@ -621,23 +623,36 @@ double PluginGauss::getMinStepRefsCurve(const QJsonObject &data) const
         }
 
 
-    } else  if (mRefCurves.contains(ref_curve)  && !mRefCurves[ref_curve].mDataMean.isEmpty()) {
+    }
 
-        const double stepMean = computeMinStepFromRefCurve(mRefCurves[ref_curve].mDataMean, data, k_sigma);
-        const double stepInf  = computeMinStepFromRefCurve(mRefCurves[ref_curve].mDataInf,  data, k_sigma);
-        const double stepSup  = computeMinStepFromRefCurve(mRefCurves[ref_curve].mDataSup,  data, k_sigma);
+    const QString refCurve = data.value(DATE_GAUSS_CURVE_STR).toString().toLower();
 
-        auto stepRes = std::min({ stepMean, stepInf, stepSup });
-        if (stepRes == 0) {
-            qDebug()<<"[PluginGauss::getMinStepRefsCurve] step = INFINITY";
+    // ----- 1️⃣  Retrieve curve (single lookup, cache) -----
+    const RefCurve* curve = nullptr;
+    if (cacheCurveName() != refCurve) {
+        auto it = mRefCurves.constFind(refCurve);
+        if (it == mRefCurves.constEnd()) {
+            qDebug() << "PluginF14C::getMinStepRefsCurve() unknown curve" << refCurve;
             return INFINITY;
         }
-
-        return stepRes;
-
+        curve = &it.value();                         // no copy
+        setCacheCurveName(refCurve);
+        setCacheCurvePtr(curve);
     } else {
+        curve = cacheCurvePtr();
+    }
+    const double stepMean = computeMinStepFromRefCurve(curve->mDataMean, data, k_sigma);
+    const double stepInf  = computeMinStepFromRefCurve(curve->mDataInf,  data, k_sigma);
+    const double stepSup  = computeMinStepFromRefCurve(curve->mDataSup,  data, k_sigma);
+
+    auto stepRes = std::min({ stepMean, stepInf, stepSup });
+    if (stepRes == 0) {
+        qDebug()<<"[PluginGauss::getMinStepRefsCurve] step = INFINITY";
         return INFINITY;
     }
+
+    return stepRes;
+
 }
 
 // ------------------------------------------------------------------

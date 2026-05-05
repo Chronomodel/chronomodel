@@ -109,7 +109,19 @@ protected:
     QString initialize_time();
     double SMC_score();
     virtual bool update() = 0;
-    virtual void memo() = 0;
+    virtual bool learn() {return update();};
+
+    //virtual void memo() = 0; // obsolete décomposer en recordBurnAdapt et acquire, pour la partie aquisition
+    virtual void recordBurnAdapt() = 0;
+    virtual void acquire() = 0;
+
+    // À surcharger dans la sous-classe pour itérer sur toutes les variables
+    virtual void recordForEmpiricalPrior();
+    virtual void buildEmpiricalPriors();
+
+
+    virtual void recordMH() = 0;
+
     //virtual void memo_accept(const unsigned int i_chain) = 0;
     virtual void finalize() = 0;
     virtual bool adapt(const int batchIndex) = 0;

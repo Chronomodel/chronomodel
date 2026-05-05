@@ -68,19 +68,19 @@ PluginMag::~PluginMag()
 
 
 // Likelihood
-long double PluginMag::getLikelihood(const double t, const QJsonObject &data)
+long double PluginMag::getLikelihood(const double t, const QJsonObject &data) const noexcept
 {
     return Likelihood(t, data);
 }
 
-QPair<long double, long double> PluginMag::getLikelihoodArg(const double t, const QJsonObject &data)
+std::pair<long double, long double> PluginMag::getLikelihoodArg(const double t, const QJsonObject &data) const noexcept
 {
     (void) data;
     (void) t;
     return qMakePair<long double, long double> (0, 0);
 }
 
-long double PluginMag::Likelihood(const double t, const QJsonObject &data)
+long double PluginMag::Likelihood(const double t, const QJsonObject &data) const
 {
     // Lecture des données
     const long double incl = static_cast<long double> (data.value(DATE_AM_INC_STR).toDouble());
@@ -405,7 +405,7 @@ QString PluginMag::getDateDesc(const Date* date) const
     return result;
 }
 
-QString PluginMag::getDateRefCurveName(const Date* date)
+QString PluginMag::getDateRefCurveName(const Date* date) const
 {
     Q_ASSERT(date);
     const QJsonObject data = date->mData;
@@ -592,7 +592,7 @@ QJsonObject PluginMag::checkValuesCompatibility(const QJsonObject &values)
  * my Event 1;AM;my Vector IF;incl-field;60;5,7;2,5;47,5;4,5;502;bulgaria_i.ref;bulgaria_d.ref;bulgaria_f.ref;none
  * my Event 1;AM;my Vector IDF;incl-decl-field;60;5,7;2,5;47,5;4,5;503;bulgaria_i.ref;bulgaria_d.ref;bulgaria_f.ref;none
  */
-QJsonObject PluginMag::fromCSV(const QStringList &list,const QLocale &csvLocale)
+QJsonObject PluginMag::fromCSV(const QStringList &list,const QLocale &csvLocale) const
 {
     QJsonObject json;
     if (list.size() >= csvMinColumns()) {
@@ -859,8 +859,8 @@ double PluginMag::getRefErrorAt(const QJsonObject &data, const double t)
 
 QPair<double,double> PluginMag::getTminTmaxRefsCurve(const QJsonObject& data) const
 {
-    double tmin = 0.;
-    double tmax = 0.;
+    double tmin = 0.0;
+    double tmax = 0.0;
     QString ref_curve;
     const ProcessTypeAM pta = static_cast<ProcessTypeAM> (data.value(DATE_AM_PROCESS_TYPE_STR).toInt());
 
@@ -929,17 +929,18 @@ QPair<double,double> PluginMag::getTminTmaxRefsCurve(const QJsonObject& data) co
         break;
 
     default:
-        tmin = 0;
-        tmax = 0;
+        tmin = 0.0;
+        tmax = 0.0;
         break;
     }
 
     return QPair<double,double>(tmin, tmax);
 }
 
-double PluginMag::getMinStepRefsCurve(const QJsonObject &data) const
+double PluginMag::getMinStepRefsCurve(const QJsonObject &data)
 {
-  return 1.;
+    (void) data;
+    return 1.0;
 
 }
 
@@ -1030,34 +1031,59 @@ return valid;
 
 }
 
-bool PluginMag::measureIsValidForCurve(const double m, const QString& ref, const QJsonObject& data, const StudyPeriodSettings& settings)
+bool PluginMag::measureIsValidForCurve(const double m, const QString& refCurve, const QJsonObject& data, const StudyPeriodSettings& settings)
 {
-    const RefCurve& curve = mRefCurves.value(ref);
-    bool valid = false;
-   // qDebug()<<"in plugmag refcurve"<<ref_curve<< curve.mDataInf<<curve.mTmin;
+    // --------------------------------------------------------------
+    // 1️⃣  Recherche de curve (une seule fois, pas de copie, cache)
+    // --------------------------------------------------------------
+    const RefCurve* curve = nullptr;
+    if (cacheCurvePtr() && cacheCurveName() == refCurve) {
+        curve = cacheCurvePtr();                     // cache hit
 
-    if (m > curve.mDataInfMin && m < curve.mDataSupMax)
-        valid = true;
-
-    else {
-        double t = curve.mTmin;
-        long double repartition (0.l);
-        long double v (0.l);
-        long double lastV (0.l);
-        while (valid == false && t <= curve.mTmax) {
-            v = static_cast<long double> (getLikelihood(t, data));
-            // we have to check this calculs
-            //because the repartition can be smaller than the calibration
-            if (lastV>0.l && v>0.l)
-                repartition += static_cast<long double> (settings.mStep) * (lastV + v) / 2.l;
-
-            lastV = v;
-
-            valid = ( repartition > 0.l);
-            t += settings.mStep;
+    } else {
+        auto it = mRefCurves.constFind(refCurve);
+        if (it == mRefCurves.constEnd()) {
+            qDebug() << "PluginMag::measureIsValidForCurve() unknown curve" << refCurve;
+            return false; // courbe inconnue → invalide
         }
+        curve = &it.value();                         // no copy
+        setCacheCurveName(refCurve);
+        setCacheCurvePtr(curve);
     }
 
+    // --------------------------------------------------------------
+    // 2️⃣  Test rapide sur les bornes de la courbe
+    // --------------------------------------------------------------
+    if (m > curve->mDataInfMin && m < curve->mDataSupMax)
+        return true;                      // validité immédiate
+
+    // --------------------------------------------------------------
+    // 3️⃣  Parcours du domaine de la courbe (intégration trapézoïdale)
+    // --------------------------------------------------------------
+    const long double step = static_cast<long double>(settings.mStep); // mise en cache locale
+    long double t = static_cast<long double>(curve->mTmin);
+    const long double tMax = static_cast<long double>(curve->mTmax);
+    long double repartition = 0.0L;
+    long double lastV = 0.0L;
+    bool valid = false;
+
+    // La boucle s’arrête dès que la somme partielle dépasse 0.
+    for ( ; t <= tMax && !valid; t += step )
+    {
+        // getLikelihood renvoie déjà un long double → aucune perte.
+        const long double v = getLikelihood(static_cast<double>(t), data);
+
+        // Trapezoïdal rule – on ne calcule que si les deux valeurs sont > 0.
+        if (lastV > 0.0L && v > 0.0L)
+            repartition += step * (lastV + v) * 0.5L;   // (step/2)*(lastV+v)
+
+        lastV = v;
+
+        // Dès que la somme partielle devient strictement positive,
+        // la mesure est considérée valide.
+        if (repartition > 0.0L)
+            valid = true;
+    }
     return valid;
 }
 

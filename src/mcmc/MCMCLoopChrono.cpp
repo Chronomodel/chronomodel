@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2025
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -43,6 +43,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Date.h"
 #include "QtUtilities.h"
 #include "CalibrationCurve.h"
+#include "Generator.h"
 
 #include <QElapsedTimer>
 #include <cmath>
@@ -156,13 +157,19 @@ bool MCMCLoopChrono::update_v3()
     //
     //  B - Update theta Events
     // --------------------------------------------------------------
-    for (std::shared_ptr<Event> &event : mModel->mEvents) {
 
-        event->updateTheta(tminPeriod, tmaxPeriod); // update ti dates and theta
+    for (std::shared_ptr<Event> &event : mModel->mEvents) {
+        if(event->mTheta.mEmpiricalCDFReady) {
+            event->updateThetaPriorCDE(tminPeriod, tmaxPeriod);
+
+        } else {
+            event->updateTheta_v3(tminPeriod, tmaxPeriod);
+        }
+
 
 #ifdef S02_BAYESIAN
         if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
-            event->updateS02();
+            event->updateS02Theta();
 #endif
         //--------------------- Update Phases -set mAlpha and mBeta they coud be used by the Event in the other Phase ----------------------------------------
         /* --------------------------------------------------------------
@@ -186,8 +193,553 @@ bool MCMCLoopChrono::update_v3()
     std::for_each(PAR mModel->mPhaseConstraints.begin(), mModel->mPhaseConstraints.end(), [] (std::shared_ptr<PhaseConstraint> pc) {pc->updateGamma();});
 
 
-   return true;
+    return true;
 
+}
+
+
+bool MCMCLoopChrono::learn_v3_tempering()
+{
+    int iteration =  mLoopChains[ mChainIndex].mTotalIter;
+
+    //const double u = Generator::randomUniform();
+    //constexpr double w_regenerate = 0.3;   // probabilité de régénération de la chaine
+
+    constexpr int    max_expo_T   = 1000;    // nombre d’étapes de température
+    //constexpr double w_event = 0.5;   // probabilité de régénération de l'Event
+
+    bool do_regeneration = (iteration % 10 == 0); // (u < w_regenerate)
+    // ------------------------------------------------------------------
+    // 1️⃣  Décision de régénération
+    // ------------------------------------------------------------------
+    if (do_regeneration) {
+        // --------------------------------------------------------------
+        // 2️⃣  Sélection aléatoire des événements à régénérer
+        // --------------------------------------------------------------
+        std::vector<bool> event_regenerated(mModel->mEvents.size(), true);
+       /* for (std::size_t j = 0; j < event_regenerated.size(); ++j) {
+            if (mModel->mEvents[j]->mTheta.mSamplerProposal != MHVariable::eFixe) { // On ne bouge pas les bornes
+                const double u2 = Generator::randomUniform();
+                event_regenerated[j] = true;//static_cast<bool>(u2 < w_event);
+            }
+        }*/
+
+        // --------------------------------------------------------------
+        // 3️⃣  Fonction générique
+        // --------------------------------------------------------------
+
+        auto MH_all_temp = [&](double expo_T)
+        {
+            std::size_t j = 0;
+            //double T = std::pow(2, 0.1*expo_T); // a) Exponentiel décroit (α > 1)
+            double T = std::pow(2, expo_T);
+            //double factor = 1.0 / (1.0 + 0.5 * (max_expo_T - expo_T));
+            //double T = factor;
+            for (auto &event : mModel->mEvents) {
+                try {
+                    if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+                        if (event_regenerated[j]) {
+                            // --------------------------------------------------------------
+                            //  A - Update ti Dates (idem MCMCLoopChrono)
+                            // --------------------------------------------------------------
+                            try {
+                                for (auto&& date : event->mDates) {
+                                    date.applyDateProposal_v3(event->mTheta.value(), event->mS02Theta.value(), event->mAShrinkage);
+
+                                    date.updateDelta(event->mTheta.value()); // pas de memo
+
+                                    date.applySigmaShrinkage_K_tempering(event->mTheta.value(), event->mS02Theta.value(), event->mAShrinkage, 1);
+
+                                    date.updateWiggle(); // mise à jour déterministe, pas de tirage date.updateDate(event->mTheta.mX, event->mS02Theta.mX, event->mAShrinkage);
+
+                                }
+
+                            }  catch (...) {
+                                qWarning() <<"[MCMCLoopCurve::update_v3_tempering] MH_all_temp-> update Date ???";
+                            }
+
+                            const double min = event->getThetaMin(tminPeriod);
+                            const double max = event->getThetaMax(tmaxPeriod);
+                            if (min >= max)
+                                throw QObject::tr("[Event::applyTheta_v6_MH_Tempering] Error for event : %1 : min = %2 : max = %3")
+                                    .arg(event->getQStringName(), QString::number(min), QString::number(max));
+
+                            double sum_p = 0.0;
+                            double sum_t = 0.0;
+
+                            for (auto&& date: event->mDates) {
+                                const double variance  = pow(date.mSigmaTi.mX, 2);
+                                sum_t += (date.mTi.mX + date.mDelta) / variance;
+                                sum_p += 1.0 / variance;
+                            }
+                            const double ti_avg = sum_t / sum_p;
+                            const double sigma = 1.0 / sqrt(sum_p);
+
+                            //échantillonneur A
+                            //double try_theta = Generator::truncatedNormal(event->mTheta.value(), event->mTheta.mSigmaMH * T, min, max);
+
+                            //échantillonneur B
+
+                           //double T_sigma = T;
+                           //double try_theta = Generator::truncatedNormal(ti_avg, sigma * T_sigma, min, max);
+                           double try_theta = Generator::randomUniform( min, max);
+
+                           // ou
+                            //échantillonneur C
+                            //double try_theta = Generator::truncatedNormal(ti_avg, sigma, min, max);
+
+                            // On fait le rapport MH avec la conditionnelle, donc on peut choisir l'un ou l'autre des échantillonneurs symétriques A ou B
+                            // le A est peut-être plus efficace pour essayer des valeurs loins
+
+                            // Recuit simulé hiérarchique
+                            // π(θ) ∝ exp(-H(θ)/T₁) × ∏ᵢ exp(-Hᵢ(θᵢ)/Tᵢ)
+                          /* double pi_x = dnorm(event->mTheta.value(), ti_avg, sigma );
+                           double pi_y = dnorm(try_theta, ti_avg, sigma );
+
+                           double q_yx = 1;//dnorm(try_theta, ti_avg, sigma * T_sigma);
+                           double q_xy = 1;//dnorm(event->mTheta.value(), ti_avg, sigma * T_sigma);
+
+                           double rate = (pi_y*q_xy) / (pi_x*q_yx) ;
+
+                           double Hx = -log(pi_x * q_yx);
+                           double Hy = -log(pi_y * q_xy);
+
+                           double rT = exp(-(Hy-Hx) / T);
+
+                           double ln_rT = log(rate)/T;
+*/
+                            double log_alpha =
+                                (log_dnorm(try_theta, ti_avg, sigma)
+                                 - log_dnorm(event->mTheta.value(), ti_avg, sigma)) ;
+
+                           /*log_alpha +=
+                               (-log_dnorm(try_theta, ti_avg, sigma * sqrt(T))
+                                          + log_dnorm(event->mTheta.value(), ti_avg, sigma * sqrt(T)));
+*/
+
+                            if (MHAcceptanceTest_log(log_alpha /T)) {
+                           //if (MHAcceptanceTest(exp(ln_rT))) {
+                           // if (MHAcceptanceTest(rT)) {
+                                event->mTheta.setValue(try_theta);
+                                event->mThetaReduced = mModel->reduceTime(try_theta);
+
+                            }
+
+
+                        } else
+                            event->applyThetaProposal_v3(tminPeriod, tmaxPeriod);
+
+                    }
+                    // On ne bouge pas les bornes
+                }
+                catch (const std::exception &e) {
+                    qWarning() << "[MCMCLoopChrono::update_v3_tempering] Tempering error on event"
+                               << event->getQStringName() << ":" << e.what();
+                }
+
+                if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+                    event->applyS02Theta(1);
+
+                std::for_each(event->mPhases.begin(),
+                              event->mPhases.end(),
+                              [this](std::shared_ptr<Phase> p) {
+                                  p->update_AlphaBeta(tminPeriod, tmaxPeriod);
+                              });
+
+
+                ++j;
+            }
+
+            // Mise à jour globale des phases
+            std::for_each(mModel->mPhases.begin(),
+                          mModel->mPhases.end(),
+                          [this](std::shared_ptr<Phase> p) {
+                              p->update_Tau(tminPeriod, tmaxPeriod);
+                          });
+
+            std::for_each(mModel->mPhaseConstraints.begin(),
+                          mModel->mPhaseConstraints.end(),
+                          [](std::shared_ptr<PhaseConstraint> pc) {
+                              pc->updateGamma();
+                          });
+        };
+
+        // --------------------------------------------------------------
+        // 5️⃣  Descente (T décroissant)
+        // --------------------------------------------------------------
+        for (int i = max_expo_T - 1; i >= 0; --i) {
+            MH_all_temp(static_cast<double>(i));
+        }
+
+
+    }
+    else {
+        // ------------------------------------------------------------------
+        // 6️⃣  Pas de régénération → mise à jour standard de tous les events
+        // ------------------------------------------------------------------
+        for (auto &event : mModel->mEvents) {
+            if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+
+                const double u = Generator::randomUniform();
+                //if( u > 0.5) {
+                    event->updateTheta_v3(tminPeriod, tmaxPeriod);
+
+               // } else {
+                  //  event->updateTheta_v4(tminPeriod, tmaxPeriod);
+              //  }
+               // std::cout<< "sampling " << event->mTheta.mName << " " << event->mTheta.value() << std::endl;
+
+                if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+                    event->updateS02Theta();
+
+                std::for_each(event->mPhases.begin(),
+                              event->mPhases.end(),
+                              [this](std::shared_ptr<Phase> p) {
+                                  p->update_AlphaBeta(tminPeriod, tmaxPeriod);
+                              });
+            }
+        }
+
+        // Mise à jour globale des phases (Tau + contraintes)
+        std::for_each(mModel->mPhases.begin(),
+                      mModel->mPhases.end(),
+                      [this](std::shared_ptr<Phase> p) {
+                          p->update_Tau(tminPeriod, tmaxPeriod);
+                      });
+
+        std::for_each(mModel->mPhaseConstraints.begin(),
+                      mModel->mPhaseConstraints.end(),
+                      [](std::shared_ptr<PhaseConstraint> pc) {
+                          pc->updateGamma();
+                      });
+    }
+
+    return !do_regeneration; //true;
+}
+
+bool MCMCLoopChrono::update_v3_tempering()
+{
+    int iteration =  mLoopChains[ mChainIndex].mTotalIter;
+
+    //const double u = Generator::randomUniform();
+    //constexpr double w_regenerate = 0.3;   // probabilité de régénération de la chaine
+
+    constexpr int    max_expo_T   = 100;    // nombre d’étapes de température
+    //constexpr double w_event = 0.5;   // probabilité de régénération de l'Event
+
+    bool do_regeneration = (iteration % 100 == 0); // (u < w_regenerate)
+    // ------------------------------------------------------------------
+    // 1️⃣  Décision de régénération
+    // ------------------------------------------------------------------
+    if (do_regeneration) {
+        // --------------------------------------------------------------
+        // 2️⃣  Sélection aléatoire des événements à régénérer
+        // --------------------------------------------------------------
+        std::vector<bool> event_regenerated(mModel->mEvents.size(), true);
+        /* for (std::size_t j = 0; j < event_regenerated.size(); ++j) {
+            if (mModel->mEvents[j]->mTheta.mSamplerProposal != MHVariable::eFixe) { // On ne bouge pas les bornes
+                const double u2 = Generator::randomUniform();
+                event_regenerated[j] = true;//static_cast<bool>(u2 < w_event);
+            }
+        }*/
+
+        // --------------------------------------------------------------
+        // 3️⃣  Fonction générique
+        // --------------------------------------------------------------
+
+        auto MH_all_temp = [&](double expo_T)
+        {
+            std::size_t j = 0;
+            double T = std::pow(2, expo_T); // a) Exponentiel décroit (α > 1)
+            //double factor = 1.0 / (1.0 + 0.5 * (max_expo_T - expo_T));
+            //double T = factor;
+            for (auto &event : mModel->mEvents) {
+                try {
+                    if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+                        // Recuit simulé hiérarchique
+                        // π(θ) ∝ exp(-H(θ)/T₁) × ∏ᵢ exp(-Hᵢ(θᵢ)/Tᵢ)
+                        // Toutes les variables n'ont pas besoin d'avoir la même température de recuit
+                        if (event_regenerated[j]) {
+                            // --------------------------------------------------------------
+                            //  A - Update ti Dates (idem MCMCLoopChrono)
+                            // --------------------------------------------------------------
+                            try {
+                                for (auto&& date : event->mDates) {
+                                    date.applyDateProposal_v3(event->mTheta.value(), event->mS02Theta.value(), event->mAShrinkage);
+                                }
+
+                            }  catch (...) {
+                                qWarning() <<"[MCMCLoopCurve::update_v3_tempering] MH_all_temp-> update Date ???";
+                            }
+
+                            const double min = event->getThetaMin(tminPeriod);
+                            const double max = event->getThetaMax(tmaxPeriod);
+                            if (min >= max)
+                                throw QObject::tr("[Event::applyTheta_v6_MH_Tempering] Error for event : %1 : min = %2 : max = %3")
+                                    .arg(event->getQStringName(), QString::number(min), QString::number(max));
+
+                            double sum_p = 0.0;
+                            double sum_t = 0.0;
+
+                            for (auto&& date: event->mDates) {
+                                const double variance  = pow(date.mSigmaTi.mX, 2);
+                                sum_t += (date.mTi.mX + date.mDelta) / variance;
+                                sum_p += 1.0 / variance;
+                            }
+                            const double ti_avg = sum_t / sum_p;
+                            const double sigma = 1.0 / sqrt(sum_p);
+
+                            //échantillonneur A
+                            //double try_theta = Generator::truncatedNormal(event->mTheta.value(), event->mTheta.mSigmaMH * T, min, max);
+
+                            //échantillonneur B avec un pas fonction de T
+                            //double T_sigma = 1.;// T;
+                            //double try_theta = Generator::truncatedNormal(ti_avg, sigma * T_sigma, min, max);
+                            //double q_yx = dnorm(try_theta, ti_avg, sigma * T_sigma);
+                            //double q_xy = dnorm(event->mTheta.value(), ti_avg, sigma * T_sigma);
+                            //
+                            // échantillonneur qui utilise la CDE
+                            //const double try_theta = event->mTheta.sampleFromEmpiricalPrior(min, max);
+
+                            // Ratio MH : la proposition n'est pas symétrique → corriger par q(x|x')/q(x'|x)
+                            //const double q_yx  = event->mTheta.evalEmpiricalPrior(try_theta);  // q(x'|x)
+                            //const double q_xy = event->mTheta.evalEmpiricalPrior(event->mTheta.value()); // q(x|x')
+
+                            //const double rate = (dnorm(theta_try, ti_avg, sigma) / dnorm(event-mTheta.value(), ti_avg, sigma))
+                              //                  * (q_backward / q_forward);                   // correction
+                            // test MH
+
+                            // ou
+                            //échantillonneur C
+                            //double try_theta = Generator::truncatedNormal(ti_avg, sigma, min, max);
+                            // ou
+                            //échantillonneur D
+                            double try_theta = Generator::randomUniform(min, max);
+                            //constexpr double q_yx = 1;
+                            //constexpr double q_xy = 1;
+
+                            // On fait le rapport MH avec la conditionnelle, donc on peut choisir l'un ou l'autre des échantillonneurs symétriques A ou B
+                            // le D est peut-être plus efficace pour essayer des valeurs loins
+
+
+                            /*double pi_x = dnorm(event->mTheta.value(), ti_avg, sigma );
+                            double pi_y = dnorm(try_theta, ti_avg, sigma );
+
+                            double rate = (pi_y*q_xy) / (pi_x*q_yx) ;
+
+                            double Hx = -log(pi_x * q_yx);
+                            double Hy = -log(pi_y * q_xy);
+
+                            double rT = exp(-(Hy-Hx) / T);
+
+                            double ln_rT = log(rate)/T;*/
+
+                            double log_alpha =
+                                (log_dnorm(try_theta, ti_avg, sigma)
+                                 - log_dnorm(event->mTheta.value(), ti_avg, sigma)) ;
+
+                            //log_alpha += (log(q_yx) - log(q_xy)) ;
+
+                            if (MHAcceptanceTest_log(log_alpha /T)) {
+                            //if (MHAcceptanceTest(exp(ln_rT))) {
+                                // if (MHAcceptanceTest(rT)) {
+                                event->mTheta.setValue(try_theta);
+                                event->mThetaReduced = mModel->reduceTime(try_theta);
+
+                            }
+
+
+                        } else
+                            event->applyThetaProposal_v3(tminPeriod, tmaxPeriod);
+
+                    }
+                    // On ne bouge pas les bornes
+                }
+                catch (const std::exception &e) {
+                    qWarning() << "[MCMCLoopChrono::update_v3_tempering] Tempering error on event"
+                               << event->getQStringName() << ":" << e.what();
+                }
+
+                if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+                    event->applyS02Theta(1);
+
+                std::for_each(event->mPhases.begin(),
+                              event->mPhases.end(),
+                              [this](std::shared_ptr<Phase> p) {
+                                  p->update_AlphaBeta(tminPeriod, tmaxPeriod);
+                              });
+
+
+                ++j;
+            }
+
+            // Mise à jour globale des phases
+            std::for_each(mModel->mPhases.begin(),
+                          mModel->mPhases.end(),
+                          [this](std::shared_ptr<Phase> p) {
+                              p->update_Tau(tminPeriod, tmaxPeriod);
+                          });
+
+            std::for_each(mModel->mPhaseConstraints.begin(),
+                          mModel->mPhaseConstraints.end(),
+                          [](std::shared_ptr<PhaseConstraint> pc) {
+                              pc->updateGamma();
+                          });
+        };
+
+        // --------------------------------------------------------------
+        // 5️⃣  Descente (T décroissant)
+        // --------------------------------------------------------------
+        for (int i = max_expo_T ; i >= 0; i=i-1) {
+            MH_all_temp(static_cast<double>(i));
+        }
+
+
+    }
+    else {
+        // ------------------------------------------------------------------
+        // 6️⃣  Pas de régénération → mise à jour standard de tous les events
+        // ------------------------------------------------------------------
+        for (auto &event : mModel->mEvents) {
+            if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+
+                const double u = Generator::randomUniform();
+                //if( u > 0.5) {
+                event->applyThetaProposal_v3(tminPeriod, tmaxPeriod);
+
+                // } else {
+                //  event->updateTheta_v4(tminPeriod, tmaxPeriod);
+                //  }
+                // std::cout<< "sampling " << event->mTheta.mName << " " << event->mTheta.value() << std::endl;
+
+                if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+                    event->updateS02Theta();
+
+                std::for_each(event->mPhases.begin(),
+                              event->mPhases.end(),
+                              [this](std::shared_ptr<Phase> p) {
+                                  p->update_AlphaBeta(tminPeriod, tmaxPeriod);
+                              });
+            }
+        }
+
+        // Mise à jour globale des phases (Tau + contraintes)
+        std::for_each(mModel->mPhases.begin(),
+                      mModel->mPhases.end(),
+                      [this](std::shared_ptr<Phase> p) {
+                          p->update_Tau(tminPeriod, tmaxPeriod);
+                      });
+
+        std::for_each(mModel->mPhaseConstraints.begin(),
+                      mModel->mPhaseConstraints.end(),
+                      [](std::shared_ptr<PhaseConstraint> pc) {
+                          pc->updateGamma();
+                      });
+    }
+
+    return !do_regeneration; //true;
+}
+
+// obsolete
+// ne permet pas le deplacement le taux MH reste petit quand on est loin du courrant
+bool MCMCLoopChrono::update_v3_simulated_tempering_annealing()
+{
+    const double u = Generator::randomUniform();
+    constexpr double w_regenerate = 0.7;   // probabilité de régénération
+    constexpr int    max_i        = 1000;    // nombre d’étapes de température
+    constexpr int nb_simulation   = 10;
+
+    // ------------------------------------------------------------------
+    // 1️⃣  Décision de régénération
+    // ------------------------------------------------------------------
+    if (u < w_regenerate) {
+
+        // --------------------------------------------------------------
+        // 3️⃣  Fonction générique d’update (montée ou descente)
+        // --------------------------------------------------------------
+        auto update_all = [&](double T)
+        {
+            for (auto &event : mModel->mEvents) {
+                try {
+                        event->applyTheta_v6_MH_Tempering(tminPeriod, tmaxPeriod, T);
+
+                }
+                catch (const std::exception &e) {
+                    qWarning() << "Tempering error on event"
+                               << event->getQStringName() << ":" << e.what();
+                }
+
+                if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+                    event->updateS02Theta();
+
+                std::for_each(event->mPhases.begin(),
+                              event->mPhases.end(),
+                              [this](std::shared_ptr<Phase> p) {
+                                  p->update_AlphaBeta(tminPeriod, tmaxPeriod);
+                              });
+
+            }
+
+            // Mise à jour globale des phases
+            std::for_each(mModel->mPhases.begin(),
+                          mModel->mPhases.end(),
+                          [this](std::shared_ptr<Phase> p) {
+                              p->update_Tau(tminPeriod, tmaxPeriod);
+                          });
+
+            std::for_each(mModel->mPhaseConstraints.begin(),
+                          mModel->mPhaseConstraints.end(),
+                          [](std::shared_ptr<PhaseConstraint> pc) {
+                              pc->updateGamma();
+                          });
+        };
+
+        // --------------------------------------------------------------
+        // 4️⃣  Montée (T croissant)
+        // --------------------------------------------------------------
+       // for (int i = 0; i <= max_i; ++i)
+         //   for (int j = 0; j <= nb_simulation; ++j)
+           //     update_all(static_cast<double>(i));
+
+        // --------------------------------------------------------------
+        // 5️⃣  Descente (T décroissant)
+        // --------------------------------------------------------------
+        for (int i = max_i - 1; i >= 0; --i)
+            for (int j = 0; j <= nb_simulation; ++j)
+                update_all(static_cast<double>(i));
+    }
+    else {
+        // ------------------------------------------------------------------
+        // 6️⃣  Pas de régénération → mise à jour standard de tous les events
+        // ------------------------------------------------------------------
+        for (auto &event : mModel->mEvents) {
+            event->updateTheta_v3(tminPeriod, tmaxPeriod);
+
+            if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+                event->updateS02Theta();
+
+            std::for_each(event->mPhases.begin(),
+                          event->mPhases.end(),
+                          [this](std::shared_ptr<Phase> p) {
+                              p->update_AlphaBeta(tminPeriod, tmaxPeriod);
+                          });
+        }
+
+        // Mise à jour globale des phases (Tau + contraintes)
+        std::for_each(mModel->mPhases.begin(),
+                      mModel->mPhases.end(),
+                      [this](std::shared_ptr<Phase> p) {
+                          p->update_Tau(tminPeriod, tmaxPeriod);
+                      });
+
+        std::for_each(mModel->mPhaseConstraints.begin(),
+                      mModel->mPhaseConstraints.end(),
+                      [](std::shared_ptr<PhaseConstraint> pc) {
+                          pc->updateGamma();
+                      });
+    }
+
+    return !(u < w_regenerate); //true;
 }
 
 bool MCMCLoopChrono::update_v4()
@@ -213,7 +765,7 @@ bool MCMCLoopChrono::update_v4()
             event->updateTheta(tminPeriod, tmaxPeriod);
 #ifdef S02_BAYESIAN
             if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
-                event->updateS02();
+                event->updateS02Theta();
 #endif
         } else //if (event->mType == Event::eBound)
                 event->updateTheta(tminPeriod, tmaxPeriod);
@@ -345,7 +897,7 @@ bool MCMCLoopChrono::adapt(const int batchIndex)
 }
 
 
-void MCMCLoopChrono::memo()
+/*void MCMCLoopChrono::memo()
 {
     for (auto& event : mModel->mEvents) {
         //--------------------- Memo Events -----------------------------------------
@@ -377,7 +929,88 @@ void MCMCLoopChrono::memo()
     for (auto& ph : mModel->mPhases)
             ph->memoAll();
 
+}*/
+
+
+void MCMCLoopChrono::acquire()
+{
+    for (auto& event : mModel->mEvents) {
+        //--------------------- Memo Events -----------------------------------------
+        if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+            event->mTheta.acquire();
+            for (auto&& date : event->mDates ) {
+                //--------------------- Memo Dates -----------------------------------------
+                date.mTi.acquire();
+                date.mSigmaTi.acquire();
+                date.mWiggle.acquire();
+            }
+
+        }
+
+        if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
+            double memoS02 = sqrt(event->mS02Theta.mX);
+            event->mS02Theta.acquire(&memoS02);
+
+        }
+
+    }
+
+    //--------------------- Memo Phases -----------------------------------------
+    for (auto& ph : mModel->mPhases)
+        ph->acquire();
+
 }
+
+
+void MCMCLoopChrono::recordBurnAdapt()
+{
+    for (auto& event : mModel->mEvents) {
+        //--------------------- Memo Events -----------------------------------------
+        if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+            event->mTheta.recordBurnAdapt();
+            for (auto&& date : event->mDates )   {
+                //--------------------- Memo Dates -----------------------------------------
+                date.mTi.recordBurnAdapt();
+                date.mSigmaTi.recordBurnAdapt();
+                date.mWiggle.recordBurnAdapt();
+            }
+        }
+        if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
+            double memoS02 = sqrt(event->mS02Theta.mX);
+            event->mS02Theta.recordBurnAdapt(&memoS02);
+
+        }
+    }
+
+    //--------------------- Memo Phases -----------------------------------------
+    for (auto& ph : mModel->mPhases)
+        ph->recordBurnAdapt();
+
+}
+
+void MCMCLoopChrono::recordMH()
+{
+    for (auto& event : mModel->mEvents) {
+        //--------------------- Memo Events -----------------------------------------
+        if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+
+            event->mTheta.saveCurrentAcceptRate();
+            for (auto&& date : event->mDates )   {
+                //--------------------- Memo Dates -----------------------------------------
+                date.mTi.saveCurrentAcceptRate();
+                date.mSigmaTi.saveCurrentAcceptRate();
+            }
+
+            if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
+                event->mS02Theta.saveCurrentAcceptRate();
+            }
+
+        }
+
+    }
+
+}
+
 
 
 void MCMCLoopChrono::finalize()
@@ -395,8 +1028,6 @@ void MCMCLoopChrono::finalize()
 
     // This is called here because it is calculated only once and will never change afterwards
     // This is very slow : it is for this reason that the results display may be long to appear at the end of MCMC calculation.
-    /** @todo Find a way to make it faster !
-     */
 
     emit setMessage(tr("Computing posterior distributions and numerical results"));
     mModel->generateCorrelations(mModel->mChains);

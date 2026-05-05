@@ -481,7 +481,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
         }  else {
             HTMLText += line(textBold(textBlue(QObject::tr("Event ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mEvents.size()), event->getQStringName()))));
             HTMLText += line(textBold(textBlue(QObject::tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(event->mTheta.mX), DateUtils::getAppSettingsFormatStr()))));
-            if (event->mTheta.mLastAccepts.size()>2 && event->mTheta.mSamplerProposal!= MHVariable::eFixe) {
+            if (event->mTheta.mLastMHAccepts.size()>2 && event->mTheta.mSamplerProposal!= MHVariable::eFixe) {
                 const auto acceptRate = event->mTheta.getCurrentAcceptRate();
                 const auto samplerType = event->mTheta.mSamplerProposal;
                 if (samplerType == MHVariable::eMHAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
@@ -493,7 +493,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
             }
 #ifdef S02_BAYESIAN
             HTMLText += line(textBold(textBlue(QObject::tr(" - Shrinkage param. : %1").arg(DateUtils::convertToAppSettingsFormatStr(event->mS02Theta.mX)))));
-            if (event->mS02Theta.mLastAccepts.size()>2 && event->mS02Theta.mSamplerProposal!= MHVariable::eFixe) {
+            if (event->mS02Theta.mLastMHAccepts.size()>2 && event->mS02Theta.mSamplerProposal!= MHVariable::eFixe) {
                 const auto acceptRate = event->mS02Theta.getCurrentAcceptRate();
                 const auto samplerType = event->mS02Theta.mSamplerProposal;
                 if (samplerType == MHVariable::eMHAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
@@ -510,7 +510,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
 
         if (curveModel) {
             HTMLText += line(textGreen(QObject::tr(" - Std gi : %1").arg(stringForLocal(sqrt(event->mVg.mX)))));
-            if (event->mVg.mLastAccepts.size()>2  && event->mVg.mSamplerProposal!= MHVariable::eFixe) {
+            if (event->mVg.mLastMHAccepts.size()>2  && event->mVg.mSamplerProposal!= MHVariable::eFixe) {
                 const auto acceptRate = event->mVg.getCurrentAcceptRate();
                 const auto samplerType = event->mVg.mSamplerProposal;
                 if (samplerType == MHVariable::eMHAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
@@ -560,7 +560,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
             HTMLText += line(textBold(textBlack(QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j), QString::number(event->mDates.size()), date.getQStringName()))));
             HTMLText += line(textBlack(QObject::tr(" - ti : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(date.mTi.mX), DateUtils::getAppSettingsFormatStr())));
             if (date.mTi.mSamplerProposal == MHVariable::eMHPrior) {
-                if (date.mTi.mLastAccepts.size()>2) {
+                if (date.mTi.mLastMHAccepts.size()>2) {
                     const auto acceptRate = date.mTi.getCurrentAcceptRate();
                     const auto samplerType = date.mTi.mSamplerProposal;
 
@@ -574,7 +574,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
             }
 
             HTMLText += line(textBlack(QObject::tr(" - Sigma_i : %1").arg(stringForLocal(date.mSigmaTi.mX))));
-            if (date.mSigmaTi.mLastAccepts.size()>2) {
+            if (date.mSigmaTi.mLastMHAccepts.size()>2) {
                 const auto acceptRate = date.mSigmaTi.getCurrentAcceptRate();
                 const auto samplerType = date.mSigmaTi.mSamplerProposal;
                 if (samplerType == MHVariable::eMHAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
@@ -631,7 +631,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
 
         } else {
             HTMLText +=  line(textGreen(QObject::tr("Log10 Smoothing : %1").arg(QLocale().toString(log10(model->mLambdaSpline.mX), 'G', 2))));
-            if (model->mLambdaSpline.mLastAccepts.size() > 2) {
+            if (model->mLambdaSpline.mLastMHAccepts.size() > 2) {
                 const auto acceptRate = model->mLambdaSpline.getCurrentAcceptRate();
                 const auto samplerType = model->mLambdaSpline.mSamplerProposal;
                 if (samplerType == MHVariable::eMHAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
@@ -754,7 +754,7 @@ QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const b
     if (model && model->is_curve) {
         if (e->mVg.mSamplerProposal == MHVariable::eFixe) {
             text += "<br>" + line(textBold(textGreen(QObject::tr("Curve : Std gi"))));
-            text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mRawTrace->at(0)))));
+            text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mBurnAdaptTrace->at(0)))));
 
         } else {
             text += "<br>" + line(textBold(textGreen(QObject::tr("Curve : Posterior Std gi"))));
@@ -791,7 +791,7 @@ QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const b
     if (with_curve) {
         if (e->mVg.mSamplerProposal == MHVariable::eFixe) {
             text += "<br>" + line(textBold(textGreen(QObject::tr("Curve : Std gi"))));
-            text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mRawTrace->at(0)))));
+            text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mBurnAdaptTrace->at(0)))));
 
         } else {
             text += "<br>" + line(textBold(textGreen(QObject::tr("Curve : Posterior Std gi"))));
@@ -830,7 +830,7 @@ QString ModelUtilities::VgResultsHTML(const std::shared_ptr<Event> e)
 
     if (e->mVg.mSamplerProposal == MHVariable::eFixe) {
         text += line(textBold(textGreen(QObject::tr("Curve : Std gi"))));
-        text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mRawTrace->at(0)))));
+        text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mBurnAdaptTrace->at(0)))));
 
     } else {
         text += line(textBold(textGreen(QObject::tr("Curve : Posterior Std gi"))));
@@ -1000,7 +1000,7 @@ QString ModelUtilities::curveResultsHTML(const std::shared_ptr<ModelCurve> model
     text += line(textGreen(QObject::tr(" - Number of Ref. points = %1").arg(model->mEvents.size())));
 
     if (model->mLambdaSpline.mSamplerProposal == MHVariable::eFixe  && model->mCurveSettings.mLambdaSplineType != CurveSettings::eInterpolation) {
-        text += line(textGreen(QObject::tr("Lambda Spline; Fixed value = 10E%1").arg(QString::number(model->mLambdaSpline.mRawTrace->at(0)))));
+        text += line(textGreen(QObject::tr("Lambda Spline; Fixed value = 10E%1").arg(QString::number(model->mCurveSettings.mLambdaSpline))));
 
     } else if (model->mLambdaSpline.mSamplerProposal == MHVariable::eFixe && model->mCurveSettings.mLambdaSplineType == CurveSettings::eInterpolation) {
         text += line(textGreen(QObject::tr("- Lambda Spline; Interpolation Fixed value = %1").arg(QString::number(0))));
@@ -1044,7 +1044,7 @@ QString ModelUtilities::lambdaResultsHTML(const std::shared_ptr<ModelCurve> mode
     QString text;
     if (model->mLambdaSpline.mSamplerProposal == MHVariable::eFixe  && model->mCurveSettings.mLambdaSplineType != CurveSettings::eInterpolation) {
         text = line(textBold(textGreen(QObject::tr("Smoothing"))));
-        text += line(textGreen(QObject::tr("Fixed value : 10E%1").arg(QString::number( model->mLambdaSpline.mRawTrace->at(0)))));
+        text += line(textGreen(QObject::tr("Fixed value : 10E%1").arg(QString::number( model->mCurveSettings.mLambdaSpline))));
 
     } else if (model->mLambdaSpline.mSamplerProposal == MHVariable::eFixe && model->mCurveSettings.mLambdaSplineType == CurveSettings::eInterpolation) {
         text = line(textBold(textGreen(QObject::tr("Smoothing"))));
@@ -1062,7 +1062,7 @@ QString ModelUtilities::S02VgResultsHTML(const std::shared_ptr<ModelCurve> model
 #ifdef KOMLAN
     if (model->mS02Vg.mSamplerProposal == MHVariable::eFixe ) {
         text = line(textBold(textGreen(QObject::tr("S02Vg"))));
-        text += line(textGreen(QObject::tr("Fixed value : 10E%1").arg(QString::number( model->mS02Vg.mRawTrace->at(0)))));
+        text += line(textGreen(QObject::tr("Fixed value : 10E%1").arg(QString::number( model->mS02Vg.mBurnAdaptTrace->at(0)))));
 
     } else {
         text = line(textBold(textGreen(QObject::tr("Stat. on the sqrt of S02Vg"))));
@@ -1231,7 +1231,8 @@ double sample_in_repartition (std::shared_ptr<CalibrationCurve> calibrateCurve, 
         if (idxUpper == idxUnder)
             return Generator::randomUniform(min, max);
 
-        double idx = vector_interpolate_idx_for_value(value, calibrateCurve->mRepartition, idxUnder, idxUpper);
+        /*double idx = vector_interpolate_idx_for_value(value, calibrateCurve->mRepartition, idxUnder, idxUpper);*/
+        double idx = interpolate_index(value, calibrateCurve->mRepartition, idxUnder, idxUpper);
 
         double t = unionTmin + idx * unionStep;
         // Du fait de l'arrondi de idxUnder et idxUpper, la dichotomie peut donner une valeur de t en dehors de l'intervale.
@@ -1280,7 +1281,8 @@ void sampleInCumulatedRepartition_thetaFixe (std::shared_ptr<Event> event, const
 
         // Calcul de l'indice d'interpolation
         const double targetValue = 0.5 * (maxRepartition - minRepartition) + minRepartition;
-        const double idx = vector_interpolate_idx_for_value(targetValue, repartition);
+        /*const double idx = vector_interpolate_idx_for_value(targetValue, repartition);*/
+        const double idx = interpolate_index(targetValue, repartition);
         event->mTheta.mX = t_min_long + idx * step_long;
 
     } else {
@@ -1300,19 +1302,28 @@ double sample_in_Repartition_date_fixe (const Date& d, const StudyPeriodSettings
     const long double t_min_long = d.mCalibration->mTmin;
     const long double t_max_long = d.mCalibration->mTmax;
 
-    // Vérification de la taille de la répartition
-    const size_t repartitionSize = repartition.size();
-    if (repartitionSize > 1) {
-        const long double step_long = (t_max_long - t_min_long) / (repartitionSize - 1.0);
+    const std::size_t n = repartition.size();
 
-        // Calcul de l'indice d'interpolation
-        const double targetValue = 0.5 * (maxRepartition - minRepartition) + minRepartition;
-        const double idx = vector_interpolate_idx_for_value(targetValue, repartition);
-        return std::clamp(settings.mTmin, static_cast<double>(t_min_long + idx * step_long), settings.mTmax);
-
-    } else {
+    // --------------------------------------------------------------------
+    // Cas où la répartition ne contient qu’un seul point → tirage aléatoire
+    // --------------------------------------------------------------------
+    if (n <= 1) {
         return Generator::randomUniform(settings.mTmin, settings.mTmax);
     }
+
+
+    const long double step_long = (t_max_long - t_min_long)  / static_cast<double>(n - 1);
+
+    // Calcul de l'indice d'interpolation
+    const double targetValue = 0.5 * (maxRepartition - minRepartition) + minRepartition;
+    /*const double idx = vector_interpolate_idx_for_value(targetValue, repartition);*/
+    const double idx = interpolate_index(targetValue, repartition);
+    const double sampled = d.mCalibration->mTmin + idx * step_long;
+    return std::clamp(sampled, settings.mTmin, settings.mTmax);
+
+    //return std::clamp(settings.mTmin, static_cast<double>(t_min_long + idx * step_long), settings.mTmax);
+
+
 
 }
 

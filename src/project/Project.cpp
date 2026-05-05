@@ -1969,6 +1969,9 @@ bool Project::saveAs(const QString& dialogTitle)
 bool Project::askToSave(const QString& saveDialogTitle)
 {
     // Check if modifs have been made
+    if (AppSettings::mIsSaved) {
+        return true;
+    }
     (void) saveDialogTitle;
 
     // We have some modifications : ask to save :

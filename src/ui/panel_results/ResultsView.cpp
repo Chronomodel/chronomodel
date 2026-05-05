@@ -1275,13 +1275,13 @@ void ResultsView::initModel()
         double maxY = -std::numeric_limits<double>::max();
         minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, std::shared_ptr<Event> e) {return std::min(e->mXIncDepth, x);});
         maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, std::shared_ptr<Event> e) {return std::max(e->mXIncDepth, x);});
-        int i = 0;
+        /*int i = 0;
         for (const auto &g : gx.vecG) {
             const auto e = 1.96*sqrt(gx.vecVarG.at(i));
             minY = std::min(minY, g - e);
             maxY = std::max(maxY, g + e);
             i++;
-        }
+        }*/
 
         Scale XScale;
         XScale.findOptimal(std::min(minmax_Y.first, minY), std::max(minmax_Y.second, maxY), 7);
@@ -1302,13 +1302,13 @@ void ResultsView::initModel()
             maxY = -std::numeric_limits<double>::max();
             minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, std::shared_ptr<Event> e) {return std::min(e->mYDec, x);});
             maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, std::shared_ptr<Event> e) {return std::max(e->mYDec, x);});
-            int i = 0;
+           /* int i = 0;
             for (const auto &g : gy.vecG) {
                 const auto e = 1.96*sqrt(gy.vecVarG.at(i));
                 minY = std::min(minY, g - e);
                 maxY = std::max(maxY, g + e);
                 i++;
-            }
+            }*/
 
             XScale.findOptimal(std::min(minmax_Y.first, minY), std::max(minmax_Y.second, maxY), 7);
 
@@ -1327,13 +1327,13 @@ void ResultsView::initModel()
                 maxY = -std::numeric_limits<double>::max();
                 minY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), minY, [](double x, std::shared_ptr<Event> e) {return std::min(e->mZField, x);});
                 maxY = std::accumulate(model->mEvents.begin(), model->mEvents.end(), maxY, [](double x, std::shared_ptr<Event> e) {return std::max(e->mZField, x);});
-                int i = 0;
+               /* int i = 0;
                 for (const auto &g : gz.vecG) {
                     const auto e = 1.96*sqrt(gz.vecVarG.at(i));
                     minY = std::min(minY, g - e);
                     maxY = std::max(maxY, g + e);
                     i++;
-                }
+                }*/
 
 
                 XScale.findOptimal(std::min(minmax_Y.first, minY), std::max(minmax_Y.second, maxY), 7);
@@ -2276,8 +2276,8 @@ void ResultsView::createByCurveGraph()
                         dataPerEvent.push_back(nb_dataPts);
 
                         if (event->mTheta.mSamplerProposal == MHVariable::eFixe) {
-                            evPts.Xmin =  event->mTheta.mRawTrace->at(0);
-                            evPts.Xmax =  event->mTheta.mRawTrace->at(0);
+                            evPts.Xmin =  event->mTheta.mBurnAdaptTrace->at(0);
+                            evPts.Xmax =  event->mTheta.mBurnAdaptTrace->at(0);
                             evPts.Ymin = pt_Ymin;
                             evPts.Ymax = pt_Ymax;
                             evPts.color = event->mColor;
@@ -2649,8 +2649,8 @@ void ResultsView::updateCurveEventsPointX()
                     dataPerEvent.push_back(nb_dataPts);
 
                     if (event->mTheta.mSamplerProposal == MHVariable::eFixe) {
-                        evPts.Xmin =  event->mTheta.mRawTrace->at(0);
-                        evPts.Xmax =  event->mTheta.mRawTrace->at(0);
+                        evPts.Xmin =  event->mTheta.mBurnAdaptTrace->at(0);
+                        evPts.Xmax =  event->mTheta.mBurnAdaptTrace->at(0);
                         evPts.Ymin = pt_Ymin;
                         evPts.Ymax = pt_Ymax;
                         evPts.color = event->mColor;
@@ -2866,8 +2866,8 @@ void ResultsView::updateCurveEventsPointXY()
                     dataPerEvent.push_back(nb_dataPts);
 
                     if (event->mTheta.mSamplerProposal == MHVariable::eFixe) {
-                        evPts.Xmin =  event->mTheta.mRawTrace->at(0);
-                        evPts.Xmax =  event->mTheta.mRawTrace->at(0);
+                        evPts.Xmin =  event->mTheta.mBurnAdaptTrace->at(0);
+                        evPts.Xmax =  event->mTheta.mBurnAdaptTrace->at(0);
                         evPts.Ymin = ptX_Ymin;
                         evPts.Ymax = ptX_Ymax;
                         evPts.color = event->mColor;
@@ -3140,8 +3140,8 @@ void ResultsView::updateCurveEventsPointXYZ()
                     dataPerEvent.push_back(nb_dataPts);
 
                     if (event->mTheta.mSamplerProposal == MHVariable::eFixe) {
-                        evPts.Xmin =  event->mTheta.mRawTrace->at(0);
-                        evPts.Xmax =  event->mTheta.mRawTrace->at(0);
+                        evPts.Xmin =  event->mTheta.mBurnAdaptTrace->at(0);
+                        evPts.Xmax =  event->mTheta.mBurnAdaptTrace->at(0);
                         evPts.Ymin = ptX_Ymin;
                         evPts.Ymax = ptX_Ymax;
                         evPts.color = event->mColor;

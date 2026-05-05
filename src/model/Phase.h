@@ -90,11 +90,11 @@ public:
     double getMaxThetaEvents(double tmax);
     double getMinThetaEvents(double tmin);
 
-    double getMinThetaNextPhases(const double tmax);
-    double getMaxThetaPrevPhases(const double tmin);
+    double getMinThetaNextPhases(const double tmax) const;
+    double getMaxThetaPrevPhases(const double tmin) const;
 
-    double init_max_theta(const double max_default);
-    double init_min_theta(const double min_default);
+    double init_max_theta(const double max_default) const;
+    double init_min_theta(const double min_default) const;
 
     std::pair<double, double> getFormatedTimeRange() const;
 
@@ -103,8 +103,31 @@ public:
 
     void update_AlphaBeta(const double tminPeriod, const double tmaxPeriod);
     void update_All(const double tminPeriod, const double tmaxPeriod);
-    void memoAll();
+    //void memoAll(); obsolete
 
+    inline void acquire()
+    {
+        mAlpha.acquire();
+        mBeta.acquire();
+        mDuration.acquire();
+        // if (mTauType == eZOnly)
+        //   mTau.memo();
+
+
+#ifdef DEBUG
+        if (mBeta.mX - mAlpha.mX < 0.)
+            qDebug()<<"[Phase::acquire] : "<<getQStringName()<<" Warning mBeta.mX - mAlpha.mX<0";
+#endif
+    }
+
+    inline void recordBurnAdapt()
+    {
+        mAlpha.recordBurnAdapt();
+        mBeta.recordBurnAdapt();
+        mDuration.recordBurnAdapt();
+        // if (mTauType == eZOnly)
+        //   mTau.memo();
+    }
     QString getTauTypeText() const;
     void initTau(const double tminPeriod, const double tmaxPeriod);
     void update_Tau(const double tminPeriod, const double tmaxPeriod);

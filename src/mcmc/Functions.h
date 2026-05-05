@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2025
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -56,35 +56,73 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 typedef double type_data;
 
-struct Quartiles{
-    type_data Q1 = (type_data)0.;
-    type_data Q2 = (type_data)0.;
-    type_data Q3 = (type_data)0.;
+// ------------------------------------------------------------------
+// Quartiles
+// ------------------------------------------------------------------
+struct Quartiles
+{
+    type_data Q1 = static_cast<type_data>(0.0);
+    type_data Q2 = static_cast<type_data>(0.0);
+    type_data Q3 = static_cast<type_data>(0.0);
 };
 
-struct FunctionStat{
-    type_data max = (type_data)0.;
-    type_data mode = (type_data)0.;
-    type_data mean = (type_data)0.;
-    type_data std = (type_data)0.;
-    Quartiles quartiles;
+// ------------------------------------------------------------------
+// Statistiques de la fonction
+// ------------------------------------------------------------------
+struct FunctionStat
+{
+    type_data max      = static_cast<type_data>(0.0);
+    type_data mode     = static_cast<type_data>(0.0);
+    type_data mean     = static_cast<type_data>(0.0);
+    type_data std      = static_cast<type_data>(0.0);
+    Quartiles quartiles{};
 };
 
-struct TraceStat{
-    type_data min = (type_data)0.;
-    type_data max = (type_data)0.;
-    type_data mean = (type_data)0.;
-    type_data std = (type_data)0.;
-    Quartiles quartiles;
+// ------------------------------------------------------------------
+// Statistiques de la trace
+// ------------------------------------------------------------------
+struct TraceStat
+{
+    type_data min      = static_cast<type_data>(0.0);
+    type_data max      = static_cast<type_data>(0.0);
+    type_data mean     = static_cast<type_data>(0.0);
+    type_data std      = static_cast<type_data>(0.0);
+    Quartiles quartiles{};
 };
-
-
-
+// ------------------------------------------------------------------
+// Analyse combinée (fonction + trace)
+// ------------------------------------------------------------------
 struct DensityAnalysis
 {
-    FunctionStat funcAnalysis;
-    TraceStat traceAnalysis;
+    FunctionStat funcAnalysis{};
+    TraceStat   traceAnalysis{};
+    // constructeur qui met des NaN pour indiquer « non calculé »
+    DensityAnalysis()
+    {
+        // ----- fonction -----
+        funcAnalysis.max  = std::numeric_limits<type_data>::quiet_NaN();
+        funcAnalysis.mode = std::numeric_limits<type_data>::quiet_NaN();
+        funcAnalysis.mean = std::numeric_limits<type_data>::quiet_NaN();
+        funcAnalysis.std  = std::numeric_limits<type_data>::quiet_NaN();
+        // les quartiles restent à 0.0 (ou vous pouvez les mettre à NaN aussi)
+        funcAnalysis.quartiles.Q1 = std::numeric_limits<type_data>::quiet_NaN();
+        funcAnalysis.quartiles.Q2 = std::numeric_limits<type_data>::quiet_NaN();
+        funcAnalysis.quartiles.Q3 = std::numeric_limits<type_data>::quiet_NaN();
+        // ----- trace -----
+        traceAnalysis.min  = std::numeric_limits<type_data>::quiet_NaN();
+        traceAnalysis.max  = std::numeric_limits<type_data>::quiet_NaN();
+        traceAnalysis.mean = std::numeric_limits<type_data>::quiet_NaN();
+        traceAnalysis.std  = std::numeric_limits<type_data>::quiet_NaN();
+        // idem pour les quartiles de la trace
+        traceAnalysis.quartiles.Q1 = std::numeric_limits<type_data>::quiet_NaN();
+        traceAnalysis.quartiles.Q2 = std::numeric_limits<type_data>::quiet_NaN();
+        traceAnalysis.quartiles.Q3 = std::numeric_limits<type_data>::quiet_NaN();
+    }
 };
+
+
+
+
 
 FunctionStat analyseFunction(const QMap<type_data, type_data> &fun);
 FunctionStat analyseFunction(const std::map<type_data, type_data> &fun);
@@ -105,9 +143,9 @@ inline double std_Knuth(const std::vector<double> &data) {return sqrt(variance_K
 inline double std_Knuth(const std::vector<int> &data) {return sqrt(variance_Knuth(data));};
 
 
-
 void mean_variance_Knuth(const std::vector<double> &data, double &mean, double &variance);
 void mean_variance_Knuth(const QList<double> &data, double &mean, double &variance);
+void mean_std_Knuth(const std::vector<double> &data, double& mean, double& std);
 
 double std_unbiais_Knuth(const QList<double> &data);
 double std_unbiais_Knuth(const std::vector<double> &data);
@@ -146,10 +184,38 @@ double shrinkageUniform(const double s02);
 inline double dnorm(const double x, const double mu = 0.0, const double sigma = 1.0)
 {
     static constexpr double inv_sqrt_2pi = 0.3989422804014327; // 1 / sqrt(2π)
-    double z = (x - mu) / sigma;
+    const double z = (x - mu) / sigma;
     return inv_sqrt_2pi / sigma * std::exp(-0.5 * z * z);
 }
 
+inline double log_dnorm(const double x, const double mu = 0.0, const double sigma = 1.0)
+{
+    static constexpr double log_inv_sqrt_2pi = -0.9189385332046727; // log(1/sqrt(2π))
+    const double z = (x - mu) / sigma;
+    return log_inv_sqrt_2pi - std::log(sigma) - 0.5 * z * z;
+}
+/**
+ * Calcule ln( f(x | mu, sigma, df) ) pour une distribution de Student.
+ * @param x : la valeur proposée (theta_prop)
+ * @param mu : la moyenne (ti_avg)
+ * @param sigma : l'échelle (liée à l'écart-type de ton noyau P)
+ * @param df : degrés de liberté (ex: 3.0 pour des queues lourdes)
+ */
+inline double log_dStudentT(double x, double mu, double sigma, double df) {
+    // 1. Constante de normalisation en log
+    // log( Gamma((df+1)/2) / (sqrt(df*pi) * sigma * Gamma(df/2)) )
+    //static const double PI = std::acos(-1.0);
+    double term1 = std::lgamma((df + 1.0) / 2.0);
+    double term2 = 0.5 * std::log(df * M_PI) + std::log(sigma) + std::lgamma(df / 2.0);
+    double log_constant = term1 - term2;
+
+    // 2. Cœur de la densité
+    // -((df+1)/2) * log( 1 + (1/df) * ((x-mu)/sigma)^2 )
+    double diff = (x - mu) / sigma;
+    double log_kernel = -((df + 1.0) / 2.0) * std::log(1.0 + (diff * diff) / df);
+
+    return log_constant + log_kernel;
+}
 Quartiles quartilesForTrace(const QList<type_data> &trace);
 Quartiles quartilesForTrace(const std::vector<type_data> &trace);
 

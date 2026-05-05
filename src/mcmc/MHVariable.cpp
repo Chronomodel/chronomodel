@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2025
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -59,11 +59,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 MHVariable::MHVariable():
     MetropolisVariable(),
     mSigmaMH(0),
-    mLastAccepts(),
-    mLastAcceptsLength(0),
-    mNbValuesAccepted(),
-    mGlobalAcceptationPerCent(0.),
-    //mHistoryAcceptRateMH(new std::vector<double>()),
+    mLastMHAccepts(),
+    mLastMHAcceptsLength(0),
+    mMHAcceptcountSinceAquire(),
+    mGlobalAcceptationPerCent(0.0),
     mHistoryAcceptRateMH(std::make_shared<std::vector<double>>()),
     mSamplerProposal(eDoubleExp)
 {
@@ -73,19 +72,16 @@ MHVariable::MHVariable():
 MHVariable::MHVariable(const MHVariable& origin):
     MetropolisVariable(origin),
     mSigmaMH(origin.mSigmaMH),
-    mLastAccepts(origin.mLastAccepts),
-    mLastAcceptsLength(origin.mLastAcceptsLength),
-    mNbValuesAccepted(origin.mNbValuesAccepted),
+    mLastMHAccepts(origin.mLastMHAccepts),
+    mLastMHAcceptsLength(origin.mLastMHAcceptsLength),
+    mMHAcceptcountSinceAquire(origin.mMHAcceptcountSinceAquire),
     mGlobalAcceptationPerCent(origin.mGlobalAcceptationPerCent),
     mSamplerProposal(origin.mSamplerProposal)
 {
-
-    //mHistoryAcceptRateMH = std::shared_ptr<std::vector<double>>(origin.mHistoryAcceptRateMH);
-    //*mHistoryAcceptRateMH = *origin.mHistoryAcceptRateMH;
     mHistoryAcceptRateMH = std::make_shared<std::vector<double>>(*origin.mHistoryAcceptRateMH);
 #ifdef DEBUG
     if (mHistoryAcceptRateMH->empty()&& !origin.mHistoryAcceptRateMH->empty()) {
-        qDebug()<<"[MHVariable::MHVariable]" << QString::fromStdString(_name);
+        qDebug()<<"[MHVariable::MHVariable]" << QString::fromStdString(mName);
     }
 #endif
 
@@ -96,16 +92,15 @@ MHVariable::MHVariable(MHVariable&& other) noexcept
 {
     MetropolisVariable(std::move(other));
     mSigmaMH = std::move(other.mSigmaMH);
-    mLastAccepts = std::move(other.mLastAccepts);
-    mLastAcceptsLength = std::move(other.mLastAcceptsLength);
-    mNbValuesAccepted = std::move(other.mNbValuesAccepted);
+    mLastMHAccepts = std::move(other.mLastMHAccepts);
+    mLastMHAcceptsLength = std::move(other.mLastMHAcceptsLength);
+    mMHAcceptcountSinceAquire = std::move(other.mMHAcceptcountSinceAquire);
     mGlobalAcceptationPerCent = std::move(other.mGlobalAcceptationPerCent);
     mSamplerProposal = std::move(other.mSamplerProposal);
-    //mHistoryAcceptRateMH.swap(other.mHistoryAcceptRateMH);
     mHistoryAcceptRateMH = std::move(other.mHistoryAcceptRateMH);
 #ifdef DEBUG
     if (mHistoryAcceptRateMH->empty()&& !other.mHistoryAcceptRateMH->empty()) {
-        qDebug()<<"[MHVariable::MHVariable]" <<QString::fromStdString(_name);
+        qDebug()<<"[MHVariable::MHVariable]" <<QString::fromStdString(mName);
     }
 #endif
 
@@ -115,17 +110,16 @@ MHVariable::MHVariable(MHVariable&& other) noexcept
 MHVariable::MHVariable(const MetropolisVariable& origin):
     MetropolisVariable(origin),
     mSigmaMH(0),
-    mLastAccepts(),
-    mLastAcceptsLength(0),
-    mNbValuesAccepted(),
-    mGlobalAcceptationPerCent(0.),
-    //mHistoryAcceptRateMH(new std::vector<double>()),
+    mLastMHAccepts(),
+    mLastMHAcceptsLength(0),
+    mMHAcceptcountSinceAquire(),
+    mGlobalAcceptationPerCent(0.0),
     mHistoryAcceptRateMH(std::make_shared<std::vector<double>>()),
     mSamplerProposal(eDoubleExp)
 {
 #ifdef DEBUG
     if (mHistoryAcceptRateMH->empty()) {
-        qDebug()<<"[MHVariable::MHVariable]" << QString::fromStdString(_name);
+        qDebug()<<"[MHVariable::MHVariable]" << QString::fromStdString(mName);
     }
 #endif
 }
@@ -145,40 +139,84 @@ MHVariable::~MHVariable()
  */
 bool MHVariable::try_update(const double x, const double rate)
 {
-    if (mLastAccepts.size() >= mLastAcceptsLength)
-        mLastAccepts.erase(mLastAccepts.begin());
+    bool accepted = MHAcceptanceTest(rate);
 
-    bool accepted (false);
-    if (!(rate >= 0.0)) {
-        accepted = false; // NaN ou négatif -> Force rejecté
-#ifdef DEBUG
-        qDebug()<< "[MHVariable::try_update] NaN ou negatif -> Force reject : " << _name;
-#endif
-
-    } else if (rate == 2.0) {
-        accepted = true; // force accept
-
-    } else if (rate >= 1.0) {
-        accepted = true;
-
-    } else if (rate >= 0){
-        const double uniform = Generator::randomUniform();
-        accepted = (uniform < rate);
-#ifdef DEBUG
-        if (uniform == 0)
-            qDebug()<< "[MHVariable::try_update] uniform == 0";
-#endif
-    }
-
+    // --------------------------------------------------------------
+    //  1️⃣  Mise à jour de la valeur si accepted
+    // --------------------------------------------------------------
     if (accepted) {
         mX = x;
     }
-    mLastAccepts.push_back(accepted);
+    // --------------------------------------------------------------
+    //  2️⃣  Historique
+    // --------------------------------------------------------------
+    if (mLastMHAccepts.size() == mLastMHAcceptsLength) {
+        // La fenêtre est pleine → on enlève l'élément le plus ancien
+        mLastMHAccepts.pop_front();
+    }
+
+    mLastMHAccepts.push_back(accepted);
 
     return accepted;
 
 }
-
+/** -----------------------------------------------------------------
+*  Implémentation « log‑rate »
+*  Identique à test_update_log, mais ici on ne donne pas la valeur courante
+* -----------------------------------------------------------------
+*/
+bool MHVariable::try_update_log(const double x, const double log_rate)
+{
+    // ------------------------------------------------------------------
+    // 1️⃣  Gestion de l’historique pour le taux d'acceptation
+    // ------------------------------------------------------------------
+    if (mLastMHAccepts.size() == mLastMHAcceptsLength) {
+        // La fenêtre est pleine → on enlève l'élément le plus ancien
+        mLastMHAccepts.pop_front();
+    }
+    bool accepted = false;
+    // ------------------------------------------------------------------
+    // 2️⃣  Cas pathologiques (NaN, -inf, etc.)
+    // ------------------------------------------------------------------
+    if (std::isnan(log_rate) || log_rate == -INFINITY) {
+        // log_rate = -inf ↔ rate = 0  → rejet systématique
+        accepted = false;
+#ifdef DEBUG
+       /* if (std::isnan(log_rate))
+            std::cerr << "[MHVariable::try_update_log] log_rate = NaN -> reject : " << mName << '\n';
+        else {
+            std::cerr << "[MHVariable::try_update_log] log_rate = -inf -> reject : " << mName << '\n';
+        }*/
+#endif
+    }
+    // ------------------------------------------------------------------
+    // 3️⃣  Acceptation forcée (rate ≥ 1 ↔ log_rate ≥ 0)
+    // ------------------------------------------------------------------
+    else if (log_rate >= 0.0) {
+        // cela couvre le cas spécial rate==2 (log(2) ≈ 0.693) ainsi que tout
+        // r > 1.  Le comportement « force accept » est donc conservé.
+        accepted = true;
+    }
+    // ------------------------------------------------------------------
+    // 4️⃣  Acceptation probabiliste (0 < rate < 1 ↔ log_rate < 0)
+    // ------------------------------------------------------------------
+    else {
+        // u ~ Uniform(0,1)  →  log(u) ∈ (‑∞,0)
+        const double u = Generator::randomUniform();          // 0 < u < 1
+        const double log_u = std::log(u);       // toujours négatif
+        accepted = (log_u < log_rate);          // équivalent à u < exp(log_rate)
+#ifdef DEBUG
+        if (u == 0.0)
+            std::cerr << "[MHVariable::try_update_log] uniform == 0\n";
+#endif
+    }
+    // ------------------------------------------------------------------
+    // 5️⃣  Mise à jour de l’état et de l’historique
+    // ------------------------------------------------------------------
+    if (accepted) mX = x;
+    mLastMHAccepts.push_back(accepted);
+    return accepted;
+}
 /**
  * @brief MHVariable::test_update determines whether to accept a new value for mX based on a given acceptance rate.
  *
@@ -189,53 +227,63 @@ bool MHVariable::try_update(const double x, const double rate)
  * - If the rate is 1.0 or higher, the new value (try_value) is unconditionally accepted.
  * - If the rate is within [0.0, 1.0), a random number is generated and compared to the rate to decide acceptance.
  * - If the rate is less than 0.0, the new value is rejected outright.
- * - The function maintains a history of the last few acceptance/rejection outcomes in mLastAccepts.
+ * - The function maintains a history of the last few acceptance/rejection outcomes in mLastMHAccepts.
  *
  * @param current_value The current value of the variable.
  * @param try_value The proposed new value to be tested.
  * @param rate The acceptance rate, typically the ratio pi(try_value)/pi(current_value).
  * @return bool True if the new value is accepted, false otherwise.
  */
-bool MHVariable::test_update(const double current_value, const double try_value, const double rate) {
-    // Ensure mLastAccepts does not exceed its capacity
-    if (mLastAccepts.size() >= mLastAcceptsLength) {
-        mLastAccepts.erase(mLastAccepts.begin());
+bool MHVariable::test_update(const double current_value, const double try_value, const double rate)
+{
+
+    bool accepted = MHAcceptanceTest(rate);
+    // --------------------------------------------------------------
+    //  1️⃣  Mise à jour de la valeur
+    // --------------------------------------------------------------
+    mX = accepted ? try_value : current_value;
+
+    // --------------------------------------------------------------
+    //  2️⃣  Historique
+    // --------------------------------------------------------------
+    if (mLastMHAccepts.size() == mLastMHAcceptsLength) {
+        // La fenêtre est pleine → on enlève l'élément le plus ancien
+        mLastMHAccepts.pop_front();
     }
 
-    bool accepted (false);
-    if (!(rate >= 0.0)) {
-        accepted = false; // NaN ou négatif -> rejet forcé
-#ifdef DEBUG
-       // if (rate<0)
-        //    qDebug()<< "[MHVariable::test_update] Negatif -> rejet force : " << _name;
-       // else
-      //      qDebug()<< "[MHVariable::test_update] NaN  -> rejet force : " << _name;
-#endif
-
-    } else if (rate == 2.0) {
-        accepted = true; // force accept
-
-    } else if (rate >= 1.0) {
-        accepted = true;
-
-    } else if (rate >= 0){
-        const double uniform = Generator::randomUniform();
-        accepted = (uniform < rate);
-#ifdef DEBUG
-        if (uniform == 0)
-            qDebug()<< "[MHVariable::test_update] uniform == 0";
-#endif
-    }
-
-    if (accepted) {
-        mX = try_value;
-    } else {
-        mX = current_value;
-    }
-    mLastAccepts.push_back(accepted);
+    mLastMHAccepts.push_back(accepted);
 
     return accepted;
 }
+
+/*======================================================================
+ *  Implémentation principale – travaille en log‑espace
+ *  Identique à try_update_log, mais ici on donne la valeur courante
+ *====================================================================*/
+
+bool MHVariable::test_update_log(double current_value,
+                                 double try_value,
+                                 double log_rate)
+{
+    bool accepted = MHAcceptanceTest_log(log_rate);
+    // --------------------------------------------------------------
+    //  1️⃣  Mise à jour de la valeur
+    // --------------------------------------------------------------
+    mX = accepted ? try_value : current_value;
+
+    // --------------------------------------------------------------
+    //  2️⃣  Historique
+    // --------------------------------------------------------------
+    if (mLastMHAccepts.size() == mLastMHAcceptsLength) {
+        // La fenêtre est pleine → on enlève l'élément le plus ancien
+        mLastMHAccepts.pop_front();
+    }
+
+    mLastMHAccepts.push_back(accepted);
+
+    return accepted;
+}
+
 /**
  * @brief MHVariable::accept_update force setting mX with the value of x.
  * And append a true value to mLastAccept
@@ -243,12 +291,20 @@ bool MHVariable::test_update(const double current_value, const double try_value,
  */
 void MHVariable::accept_update(const double x)
 {
-    if (mLastAccepts.size() >= mLastAcceptsLength)
-        mLastAccepts.erase(mLastAccepts.begin());
-
+    // --------------------------------------------------------------
+    //  1️⃣  Mise à jour de la valeur
+    // --------------------------------------------------------------
     mX = x;
 
-    mLastAccepts.push_back(true);
+    // --------------------------------------------------------------
+    //  2️⃣  Historique
+    // --------------------------------------------------------------
+    if (mLastMHAccepts.size() == mLastMHAcceptsLength) {
+        // La fenêtre est pleine → on enlève l'élément le plus ancien
+        mLastMHAccepts.pop_front();
+    }
+
+    mLastMHAccepts.push_back(true);
 
 }
 
@@ -257,10 +313,15 @@ void MHVariable::accept_update(const double x)
  */
 void MHVariable::reject_update()
 {
-    if (mLastAccepts.size() >= mLastAcceptsLength)
-        mLastAccepts.erase(mLastAccepts.begin());
+    // --------------------------------------------------------------
+    //  1️⃣ Historique
+    // --------------------------------------------------------------
+    if (mLastMHAccepts.size() == mLastMHAcceptsLength) {
+        // La fenêtre est pleine → on enlève l'élément le plus ancien
+        mLastMHAccepts.pop_front();
+    }
 
-    mLastAccepts.push_back(false);
+    mLastMHAccepts.push_back(false);
 
 }
 /**
@@ -351,7 +412,7 @@ bool MHVariable::adapt(double coef_min, double coef_max,
                        double sigma_min, double sigma_max,
                        double c, double kappa, double t0 )
 {
-    // pas d'apprentissage qui décroit (Robbins‑Monro)
+    // le pas d'apprentissage qui décroit (Robbins‑Monro)
     const double gamma_t = c / std::pow(static_cast<double>(batchIndex) + t0, kappa);
 
     const double acceptRate = getCurrentAcceptRate(); // fenêtre glissante
@@ -381,10 +442,9 @@ void MHVariable::clear()
     if (mHistoryAcceptRateMH) {
         mHistoryAcceptRateMH->clear();
     }
+    //mMHAcceptcountSinceAquire.clear();
 
-    mLastAccepts.clear();
-
-    mNbValuesAccepted.clear();
+    mLastMHAccepts.clear();
 
 }
 
@@ -394,8 +454,7 @@ void MHVariable::shrink_to_fit() noexcept
     if (mHistoryAcceptRateMH) {
         mHistoryAcceptRateMH->shrink_to_fit();
     }
-    mLastAccepts.shrink_to_fit();
-    mNbValuesAccepted.shrink_to_fit();
+    mLastMHAccepts.shrink_to_fit();
 
 }
 
@@ -407,11 +466,11 @@ void MHVariable::clear_and_shrink() noexcept
         mHistoryAcceptRateMH->shrink_to_fit();
     }
 
-    mLastAccepts.clear();
-    mLastAccepts.shrink_to_fit();
+    mLastMHAccepts.clear();
+    mLastMHAccepts.shrink_to_fit();
 
-    mNbValuesAccepted.clear();
-    mNbValuesAccepted.shrink_to_fit();
+    //mAllMHAccepts.clear();
+
 
 }
 
@@ -423,7 +482,7 @@ void MHVariable::remove_smoothed_densities()
 void MHVariable::reserve(const size_t reserve)
 {
     MetropolisVariable::reserve(reserve);
-    mNbValuesAccepted.reserve(reserve);
+    //mAllMHAccepts.reserve(reserve);
 
 }
 
@@ -434,17 +493,17 @@ MHVariable& MHVariable::operator=(const MHVariable& origin)
     MetropolisVariable::operator=(origin);
     
     mSigmaMH = origin.mSigmaMH;
-    mLastAccepts = origin.mLastAccepts;
-    mLastAcceptsLength = origin.mLastAcceptsLength;
+    mLastMHAccepts = origin.mLastMHAccepts;
+    mLastMHAcceptsLength = origin.mLastMHAcceptsLength;
 
-    mNbValuesAccepted = origin.mNbValuesAccepted;
+    mMHAcceptcountSinceAquire = origin.mMHAcceptcountSinceAquire;
 
     mGlobalAcceptationPerCent = origin.mGlobalAcceptationPerCent;
 
     mHistoryAcceptRateMH = std::shared_ptr<std::vector<double>>(origin.mHistoryAcceptRateMH);
 #ifdef DEBUG
     if (mHistoryAcceptRateMH->empty() && !origin.mHistoryAcceptRateMH->empty()) {
-        qDebug()<<"[MHVariable::MHVariable:: operator =]" << QString::fromStdString(_name);
+        qDebug()<<"[MHVariable::MHVariable:: operator =]" << QString::fromStdString(mName);
     }
 #endif
       
@@ -454,10 +513,14 @@ MHVariable& MHVariable::operator=(const MHVariable& origin)
 
 double MHVariable::getCurrentAcceptRate() const
 {
-   if (mLastAccepts.empty())
-        return 0.;
+    if (mLastMHAccepts.empty())
+        return 0.0;
 
-    return std::count_if(mLastAccepts.begin(), mLastAccepts.end(), [](bool i) { return i; })/ (double) mLastAccepts.size();
+    std::size_t trueCount = std::count(mLastMHAccepts.begin(),
+                                       mLastMHAccepts.end(),
+                                       true);
+    return static_cast<double>(trueCount) / mLastMHAccepts.size();
+
 
 }
 
@@ -473,14 +536,14 @@ std::vector<double> MHVariable::acceptationForChain(const std::vector<ChainSpecs
 
     for (size_t i = 0; i < chains.size(); ++i) {
         // We add 1 for the init
-        const size_t chainSize = 1 +chains.at(i).mIterPerBurn + (chains.at(i).mBatchIndex * chains.at(i).mIterPerBatch) + chains.at(i).mRealyAccepted;
+        const size_t chainSize = 1 + chains[i].mIterPerBurn + (chains[i].mBatchIndex * chains[i].mIterPerBatch) + chains[i].mRealyAccepted;
 
         if (i == index) {
             // could be done with
             //accept.resize(chainSize
             //std::copy(from_vector.begin(), from_vector.end(), to_vector.begin());
             if (mHistoryAcceptRateMH->size() < shift+chainSize) {
-                qDebug()<< "[MHVariable::acceptationForChain] variable : "<< QString::fromStdString(_name) << "No mHistoryAcceptRateMH";
+                qDebug()<< "[MHVariable::acceptationForChain] variable : "<< QString::fromStdString(mName) << " No mHistoryAcceptRateMH";
                 return accept;
             }
 
@@ -499,24 +562,36 @@ std::vector<double> MHVariable::acceptationForChain(const std::vector<ChainSpecs
 
 void MHVariable::generateGlobalRunAcceptation(const std::vector<ChainSpecs> &chains)
 {
-    int aquisition = 0.;
+    double aquisition = 0;
 
     mGlobalAcceptationPerCent = 0;
     for (size_t i = 0 ; i<chains.size(); i++) {
-        aquisition += chains.at(i).mAquisitionIterIndex/chains.at(i).mThinningInterval;
-        mGlobalAcceptationPerCent += mNbValuesAccepted.at(i);
-    }
+        aquisition += chains[i].mAquisitionIterIndex / chains[i].mThinningInterval;
+     }
 
-    mGlobalAcceptationPerCent = mGlobalAcceptationPerCent / aquisition * 100.;
-
+    mGlobalAcceptationPerCent = mMHAcceptcountSinceAquire / aquisition * 100.;
 }
 
 
-void MHVariable::generateNumericalResults(const std::vector<ChainSpecs> &chains)
+/*void MHVariable::generateNumericalResults(const std::vector<ChainSpecs> &chains)
 {
     MetropolisVariable::generateNumericalResults(chains);
     generateGlobalRunAcceptation(chains);
+}*/
+
+// doit être fait à chaque modification du lissage
+void MHVariable::generateDensityNumericalResults(const std::vector<ChainSpecs>& chains)
+{
+    MetropolisVariable::generateDensityNumericalResults(chains);
 }
+
+// Peu être fait une fois à la sortie des iterations
+void MHVariable::generateTraceNumericalResults(const std::vector<ChainSpecs>& chains)
+{
+    MetropolisVariable::generateTraceNumericalResults(chains);
+    generateGlobalRunAcceptation(chains);
+}
+
 
 QString MHVariable::resultsString(const QString &noResultMessage, const QString &unit) const
 {
@@ -527,7 +602,7 @@ QString MHVariable::resultsString(const QString &noResultMessage, const QString 
         return result + "<br>" + QObject::tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(globalTxt, getSamplerProposalText(mSamplerProposal));
 
     } else {
-        return QObject::tr("Fixed value : %1 %2").arg(stringForLocal(mFormatedTrace->at(0)), unit); // for VG mX is Variance and we need Std gi
+        return QObject::tr("Fixed value : %1 %2").arg(stringForLocal(mFormatedBurnAdaptTrace->at(0)), unit); // for VG mX is Variance and we need Std gi
     }
 
 }
@@ -607,13 +682,13 @@ QDataStream &operator<<( QDataStream& stream, const MHVariable& data )
 
     /* owned by MHVariable*/
 
-    stream << static_cast<qint64>(data.mLastAcceptsLength); // since v3.3.0
+    stream << static_cast<qint64>(data.mLastMHAcceptsLength);
 
-    save_container(stream, data.mNbValuesAccepted);
+    //save_container(stream, data.mNbValuesAccepted);
     save_container_nullable(stream, data.mHistoryAcceptRateMH);
     
-    //stream << data.mLastAccepts;
-    save_container(stream, data.mLastAccepts);
+    //stream << data.mLastMHAccepts;
+    save_container(stream, data.mLastMHAccepts);
 
     stream << data.mSigmaMH;
     stream << data.mSamplerProposal;
@@ -630,15 +705,15 @@ void MHVariable::load_stream_v327(QDataStream& stream)
     /* herited from MetropolisVariable*/
     MetropolisVariable::load_stream_v328(stream);
 
-    mNbValuesAccepted.clear();
+    //mNbValuesAccepted.clear();
 
-    load_container(stream, mNbValuesAccepted);
+    //load_container(stream, mNbValuesAccepted);
     load_container(stream, mHistoryAcceptRateMH);
 
-    if (!mLastAccepts.empty())
-        mLastAccepts.clear();
+    if (!mLastMHAccepts.empty())
+        mLastMHAccepts.clear();
 
-    load_container(stream, mLastAccepts);
+    load_container(stream, mLastMHAccepts);
 
     stream >> mSigmaMH;
     stream >> mSamplerProposal;
@@ -650,21 +725,22 @@ void MHVariable::load_stream_v328(QDataStream& stream)
     /* herited from MetropolisVariable*/
     MetropolisVariable::load_stream_v328(stream);
 
-    mNbValuesAccepted.clear();
+    //mNbValuesAccepted.clear();
 
-    load_container(stream, mNbValuesAccepted);
+    //load_container(stream, mNbValuesAccepted);
 
     load_container_nullable(stream, mHistoryAcceptRateMH);
 
-    if (!mLastAccepts.empty())
-        mLastAccepts.clear();
+    if (!mLastMHAccepts.empty())
+        mLastMHAccepts.clear();
 
-    load_container(stream, mLastAccepts);
+    load_container(stream, mLastMHAccepts);
 
     stream >> mSigmaMH;
     stream >> mSamplerProposal;
 
 }
+
 void MHVariable::load_stream_v330(QDataStream& stream)
 {
     /* herited from MetropolisVariable*/
@@ -678,19 +754,45 @@ void MHVariable::load_stream_v330(QDataStream& stream)
 
     qint64 l;
     stream >> l;
-    mLastAcceptsLength = l;
+    mLastMHAcceptsLength = l;
 
+    std::vector <long long> mNbValuesAccepted; // not used since v337
     load_container(stream, mNbValuesAccepted);
 
     load_container_nullable(stream, mHistoryAcceptRateMH);
 
-    load_container(stream, mLastAccepts);
+    load_container(stream, mLastMHAccepts);
 
     stream >> mSigmaMH;
     stream >> mSamplerProposal;
 
 }
 
+void MHVariable::load_stream_v337(QDataStream& stream)
+{
+    /* herited from MetropolisVariable*/
+    MetropolisVariable::load_stream_v337(stream);
+
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[QtUtilities::load_stream_v330]  erreur de flux ; stream.status()=" << stream.status();
+        // throw std::runtime_error("Error reading from stream");
+        // return;
+    }
+
+    qint64 l;
+    stream >> l;
+    mLastMHAcceptsLength = l;
+
+    //load_container(stream, mNbValuesAccepted);
+
+    load_container_nullable(stream, mHistoryAcceptRateMH);
+
+    load_container(stream, mLastMHAccepts);
+
+    stream >> mSigmaMH;
+    stream >> mSamplerProposal;
+
+}
 
 QDataStream &operator>>(QDataStream& stream, MHVariable& data )
 {
@@ -701,12 +803,12 @@ QDataStream &operator>>(QDataStream& stream, MHVariable& data )
     const MHVariable tmp_data (metro_data);
     data = tmp_data;
 
-    load_container(stream, data.mNbValuesAccepted);
+    //load_container(stream, data.mNbValuesAccepted);
 
     //data.mHistoryAcceptRateMH = load_std_vector_ptr(stream);
     load_container_nullable(stream, data.mHistoryAcceptRateMH);
 
-    load_container(stream, data.mLastAccepts);
+    load_container(stream, data.mLastMHAccepts);
 
     stream >> data.mSigmaMH;
     stream >> data.mSamplerProposal;

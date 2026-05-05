@@ -258,8 +258,31 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
             }
 
         } else if (mCurrentVariableList.contains(eDuration)) {
-            graph_density();
-            //mGraph->remove_all_zones();
+            //graph_density();
+            mGraph->setOverArrow(GraphView::eBothOverflow);
+
+            mGraph->setTipYLab("");
+            mGraph->setTipXLab("d");
+
+            mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
+
+            mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
+            mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+
+            mGraph->autoAdjustYScale(true);
+
+            mGraph->setXAxisMode(GraphView::eAllTicks);
+            mGraph->setYAxisMode(GraphView::eHidden);
+
+            // ------------------------------------------------------------
+            //  Add zones outside study period
+            // ------------------------------------------------------------
+            const GraphZone zoneMin (-std::numeric_limits<double>::max(), 0);
+            mGraph->add_zone(zoneMin);
+            /*
+            const GraphZone zoneMax (mSettings.getTmaxFormated(), std::numeric_limits<double>::max());
+            mGraph->add_zone(zoneMax);*/
+
             mGraph->reserveCurves(3 + mChains.size());
             mGraph->mLegendX = tr("Years");
 

@@ -86,50 +86,49 @@ public:
     PluginMag();
     virtual ~PluginMag();
 
+    long double Likelihood(const double t, const QJsonObject &data) const;
+
      // virtual function
-    long double getLikelihood(const double t, const QJsonObject &data);
-    bool withLikelihoodArg() {return false; }
-    QPair<long double, long double > getLikelihoodArg(const double t, const QJsonObject &data);
-    long double Likelihood(const double t, const QJsonObject &data);
+    long double getLikelihood(const double t, const QJsonObject &data) const noexcept override;
+    bool withLikelihoodArg() override {return false; }
+    std::pair<long double, long double > getLikelihoodArg(const double t, const QJsonObject &data) const noexcept override;
 
-    bool areDatesMergeable(const QJsonArray &dates);
-    QJsonObject mergeDates(const QJsonArray &dates);
-    //long double getLikelihoodCombine(const double& t, const QJsonArray& data);
-   // QPair<double,double> getTminTmaxRefsCurveCombine(const QJsonArray& subData);
 
-    QString getName() const;
-    QIcon getIcon() const;
-    bool doesCalibration() const;
-    bool wiggleAllowed() const;
-    //Date::DataMethod getDataMethod() const;
-    //QList<Date::DataMethod> allowedDataMethods() const;
-    MHVariable::SamplerProposal getDataMethod() const;
-    QList<MHVariable::SamplerProposal> allowedDataMethods() const;
-    QStringList csvColumns() const;
-    QJsonObject fromCSV(const QStringList& list, const QLocale &csvLocale) ;
-    QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale) const;
-    QJsonObject checkValuesCompatibility(const QJsonObject &values);
+    bool areDatesMergeable(const QJsonArray &dates) override;
+    QJsonObject mergeDates(const QJsonArray &dates) override;
 
-    QString getDateDesc(const Date* date) const;
-    QString getDateRefCurveName(const Date* date) ;
+    QString getName() const override;
+    QIcon getIcon() const override;
+    bool doesCalibration() const override;
+    bool wiggleAllowed() const override;
 
-    PluginFormAbstract* getForm();
-    GraphViewRefAbstract* getGraphViewRef();
-    virtual void deleteGraphViewRef(GraphViewRefAbstract* graph);
-    PluginSettingsViewAbstract* getSettingsView();
+    MHVariable::SamplerProposal getDataMethod() const override;
+    QList<MHVariable::SamplerProposal> allowedDataMethods() const override;
+    QStringList csvColumns() const override;
+    QJsonObject fromCSV(const QStringList& list, const QLocale &csvLocale) const override;
+    QStringList toCSV(const QJsonObject& data, const QLocale &csvLocale) const override;
+    QJsonObject checkValuesCompatibility(const QJsonObject &values) override;
 
-    bool isDateValid(const QJsonObject& data, const StudyPeriodSettings& settings);
+    QString getDateDesc(const Date* date) const override;
+    QString getDateRefCurveName(const Date* date) const override;
+
+    PluginFormAbstract* getForm() override;
+    GraphViewRefAbstract* getGraphViewRef() override;
+    virtual void deleteGraphViewRef(GraphViewRefAbstract* graph) override;
+    PluginSettingsViewAbstract* getSettingsView() override;
+
+    bool isDateValid(const QJsonObject& data, const StudyPeriodSettings& settings) override;
 
     // ---------------------
-    QString getRefExt() const;
-    QString getRefsPath() const;
-    RefCurve loadRefFile(QFileInfo refFile);
+    QString getRefExt() const override;
+    QString getRefsPath() const override;
+    RefCurve loadRefFile(QFileInfo refFile) override;
 
     double getRefValueAt(const QJsonObject& data, const double t);
     double getRefErrorAt(const QJsonObject& data, const double t);
 
-    QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const;
-    double getMinStepRefsCurve(const QJsonObject &data) const;
+    QPair<double,double> getTminTmaxRefsCurve(const QJsonObject& data) const override;
+    double getMinStepRefsCurve(const QJsonObject &data) override;
 
 private:
     bool measureIsValidForCurve(const double m, const QString &ref, const QJsonObject &data, const StudyPeriodSettings &settings);

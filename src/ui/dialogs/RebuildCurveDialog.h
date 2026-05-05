@@ -39,7 +39,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef REBUILDCURVEDIALOG_H
 #define REBUILDCURVEDIALOG_H
 
-#include "LineEdit.h"
 #include <QLabel>
 #include <QLineEdit>
 #include <QCheckBox>
@@ -49,18 +48,22 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QComboBox>
 #include <QtWidgets/qgridlayout.h>
 
+#define WITHCURVEFILTER
+
+
 class RebuildCurveDialog : public QDialog
 {
     Q_OBJECT
 public:
-#ifdef DEBUG
+#ifdef WITHCURVEFILTER
     explicit RebuildCurveDialog (QStringList list = {"X"}, std::vector< std::pair<double, double>> *minMax = nullptr, std::vector< std::pair<double, double>> *minMaxP = nullptr, std::pair<double, double> *minMaxPFilter = nullptr, std::pair<unsigned, unsigned> mapSize = std::pair<unsigned, unsigned>{300, 300}, QWidget *parent = nullptr);
 #else
     explicit RebuildCurveDialog (QStringList list = {"X"}, std::vector< std::pair<double, double>> *minMax = nullptr, std::vector< std::pair<double, double>> *minMaxP = nullptr, std::pair<unsigned, unsigned> mapSize = std::pair<unsigned, unsigned>{300, 300}, QWidget *parent = nullptr);
 #endif
     std::vector< std::pair<double, double>> getYTabMinMax() const {return mYTabMinMax;}
     std::vector< std::pair<double, double>> getYpTabMinMax() const {return mYpTabMinMax;}
- #ifdef DEBUG
+
+#ifdef WITHCURVEFILTER
     std::pair<double, double> getYpMinMaxFilter() const {return mYpMinMaxFilter;}
 #endif
     std::pair<unsigned, unsigned> getMapSize() const;
@@ -85,7 +88,7 @@ protected slots:
     void Y1pMinIsValid (QString str);
     void Y1pMaxIsValid(QString str);
 
-#ifdef DEBUG
+#ifdef WITHCURVEFILTER
     void Y1pMinFilterIsValid (QString str);
     void Y1pMaxFilterIsValid(QString str);
 #endif
@@ -145,7 +148,7 @@ private:
     std::vector< std::pair<double, double>> mYpTabMinMax;
 
     // 1 filter possible
-#ifdef DEBUG
+#ifdef WITHCURVEFILTER
     QLineEdit* Y1pminFilterEdit;
     bool Y1pMinFilterOK = true;
     QLineEdit* Y1pmaxFilterEdit;

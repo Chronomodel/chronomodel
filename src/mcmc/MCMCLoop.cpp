@@ -127,22 +127,21 @@ QString MCMCLoop::initialize_time()
         ev->mInitialized = false;
 
 #ifdef S02_BAYESIAN
-        ev->mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;// not yet integrate within update_321
+        ev->mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
 # else
         ev->mS02Theta.mSamplerProposal = MHVariable::eFixe;
 #endif
     }
     // -------------------------- Init gamma ------------------------------
-   // emit stepChanged(tr("Initializing Phase Gaps..."), 0, (int)phasesConstraints.size());
-    //int i = 0;
+    emit stepChanged(tr("Initializing Phase Gaps..."), 0, (int)phasesConstraints.size());
+    int Ni = 0;
     try {
         for (auto&& phC : phasesConstraints) {
             phC->initGamma();
             if (isInterruptionRequested())
                 return ABORTED_BY_USER;
-            //++i;
-            //emit stepProgressed(i);
+            emit stepProgressed(++Ni);
         }
     }  catch (...) {
         qWarning() <<"Init Gamma ???";
@@ -151,16 +150,16 @@ QString MCMCLoop::initialize_time()
     }
 
     // -------------------------- Init tau -----------------------------------------
-    //emit stepChanged(tr("Initializing Phase Durations..."), 0, (int)phases.size());
-    //i = 0;
+    emit stepChanged(tr("Initializing Phase Durations..."), 0, (int)phases.size());
+    Ni = 0;
     try {
         for (auto&& ph : phases) {
             ph->initTau(tminPeriod, tmaxPeriod);
             qDebug() << "[MCMCLoop::initialize_time] " << ph->getQStringName() << " init Tau =" << ph->mTau.mX;
             if (isInterruptionRequested())
                 return ABORTED_BY_USER;
-            //++i;
-            //emit stepProgressed(i);
+
+            emit stepProgressed(++Ni);
         }
     }  catch (...) {
         qWarning() <<"Init Tau ???";
@@ -174,14 +173,16 @@ QString MCMCLoop::initialize_time()
                 Bound* bound = dynamic_cast<Bound*>(ev.get());
 
                 if (bound) {
-                    bound->mTheta.mX = bound->mFixed;
-                    bound->mThetaReduced = mModel->reduceTime(bound->mTheta.mX);
-                    bound->mTheta.mLastAccepts.clear();
-                    bound->mTheta.memo(); // non sauvegarder dans Loop.memo()
+                    bound->mTheta.setValue(bound->mFixed);
+                    bound->mThetaReduced = mModel->reduceTime(bound->mTheta.value());
+                    bound->mTheta.mLastMHAccepts.clear();
+
+                    bound->mTheta.recordBurnAdapt(); // utile pour creer FormatedTrace
+                    bound->mTheta.acquire(); // non sauvegarder dans Loop.memo()
                     bound->mInitialized = true;
                     bound->mTheta.mSamplerProposal = MHVariable::eFixe;
                     qDebug() << QString("[MCMCLoop::initialize_time] Init for Bound : %1  ->theta = %4 thetaRed = %5-------").arg(bound->getQStringName(), QString::number(bound->mTheta.mX, 'f', 3), QString::number(bound->mThetaReduced, 'f', 3));
-
+                    bound->mS02Theta.mSamplerProposal = MHVariable::eFixe;
                 }
                 bound = nullptr;
             }
@@ -198,9 +199,13 @@ QString MCMCLoop::initialize_time()
 
     std::vector<std::shared_ptr<Event>> unsortedEvents = ModelUtilities::unsortEvents(allEvents);
 
-    //emit stepChanged(tr("Initializing Events..."), 0, (int)unsortedEvents.size());
-    qDebug()<<"[MCMCLoop::initialize_time] mLoopChains seed = "<< mLoopChains[0].mSeed;
     try {
+        int Ni = 0;
+        int N = unsortedEvents.size();
+
+
+        emit stepChanged(tr("Initializing Events..."), 0, N);
+        qDebug()<<"[MCMCLoop::initialize_time] mLoopChains seed = "<< mLoopChains[0].mSeed;
 
         // Check Strati constraint
         for (std::shared_ptr<Event> &ev : unsortedEvents) {
@@ -235,10 +240,13 @@ QString MCMCLoop::initialize_time()
         }
 
         //---------------
-        // int i = 0;
+
         if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
 
             for (std::shared_ptr<Event> uEvent : unsortedEvents) {
+                emit stepProgressed(++Ni);
+                emit setMessage(tr("Initializing Event : %1 / %2").arg(QString::number(Ni), QString::number(N)));
+
                 if (uEvent->mType == Event::eDefault) {
 
                     mModel->initNodeEvents();
@@ -278,8 +286,8 @@ QString MCMCLoop::initialize_time()
 #endif
                         return mAbortedReason;
                     }
-                    // 6- Clear mLastAccepts  array
-                    uEvent->mTheta.mLastAccepts.clear();
+                    // 6- Clear mLastMHAccepts  array
+                    uEvent->mTheta.mLastMHAccepts.clear();
                     //unsortedEvents.at(i)->mTheta.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
                     uEvent->mTheta.accept_update(try_theta);
 
@@ -315,7 +323,9 @@ QString MCMCLoop::initialize_time()
                                 sum_exp += exp_theta * date.mWiggleCalibration->mVector[i];
                                 repart_exp_theta[i] = sum_exp;
                             }
-                            const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(0, sum_exp), repart_exp_theta);
+                            //const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(0, sum_exp), repart_exp_theta);
+                            const double idx = interpolate_index(Generator::randomUniform(0, sum_exp), repart_exp_theta);
+
                             date.mTi.mX = date.mWiggleCalibration->mTmin + idx * date.mWiggleCalibration->mStep;
 
 
@@ -328,8 +338,8 @@ QString MCMCLoop::initialize_time()
                                 sum_exp += exp_theta * date.mCalibration->mVector[i];
                                 repart_exp_theta[i] = sum_exp;
                             }
-                            const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(0, sum_exp), repart_exp_theta);
-
+                            //const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(0, sum_exp), repart_exp_theta);
+                            const double idx = interpolate_index(Generator::randomUniform(0, sum_exp), repart_exp_theta);
                             date.mTi.mX = date.mCalibration->mTmin + idx * date.mCalibration->mStep;
 
                         } else { // in the case of mRepartion curve is null, we must init ti outside the study period
@@ -350,18 +360,18 @@ QString MCMCLoop::initialize_time()
 
                         }
 
-                        // 2 - Init Delta Wiggle matching and Clear mLastAccepts array
+                        // 2 - Init Delta Wiggle matching and Clear mLastMHAccepts array
                         date.initDelta();
-                        date.mWiggle.mLastAccepts.clear();
+                        date.mWiggle.mLastMHAccepts.clear();
                         date.updateWiggle();
                         //date.mWiggle.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
                         date.mWiggle.accept_update(date.mWiggle.mX);
 
                         // 3 - Init sigma MH adaptatif of each Data ti
-                        date.mTi.mSigmaMH = sigma;
+                        date.mTi.mSigmaMH = 2.38 * sigma; // optimum Roberts
 
-                        // 4 - Clear mLastAccepts array and set this init at 100%
-                        date.mTi.mLastAccepts.clear();
+                        // 4 - Clear mLastMHAccepts array and set this init at 100%
+                        date.mTi.mLastMHAccepts.clear();
                         //date.mTheta.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
                         date.mTi.accept_update(date.mTi.mX);
 
@@ -373,9 +383,9 @@ QString MCMCLoop::initialize_time()
                             date.mSigmaTi.mX = 1.0E-6; // Add control the 2015/06/15 with PhL
                             //log += line(date.mName + textBold("Sigma indiv. <=1E-6 set to 1E-6"));
                         }
-                        date.mSigmaTi.mSigmaMH = 1.0;
+                        date.mSigmaTi.mSigmaMH = 0.1; // default = 1.0
 
-                        date.mSigmaTi.mLastAccepts.clear();
+                        date.mSigmaTi.mLastMHAccepts.clear();
                         date.mSigmaTi.accept_update(date.mSigmaTi.mX);
 
                         // intermediary calculus for the harmonic average
@@ -384,9 +394,9 @@ QString MCMCLoop::initialize_time()
                     }
 
                     // 4 - Init S02 of each Event
-                    uEvent->mS02Theta.mSigmaMH = 1.0;
+                    uEvent->mS02Theta.mSigmaMH = 0.1; // default = 1.0
 
-                    uEvent->mS02Theta.mLastAccepts.clear();
+                    uEvent->mS02Theta.mLastMHAccepts.clear();
 
                     const double sqrt_S02_harmonique = sqrt(uEvent->mDates.size() / s02_sum);
 
@@ -403,8 +413,8 @@ QString MCMCLoop::initialize_time()
 #endif
 
                     // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
-                    uEvent->mTheta.mSigmaMH = sqrt(uEvent->mS02Theta.mX);
-                    uEvent->mAShrinkage = 1.;
+                    uEvent->mTheta.mSigmaMH = 2.38 * sqrt(uEvent->mS02Theta.mX); // optimum Roberts
+                    uEvent->mAShrinkage = 1.0;
 
 
                 }
@@ -412,12 +422,14 @@ QString MCMCLoop::initialize_time()
                 if (isInterruptionRequested())
                     return ABORTED_BY_USER;
 
-                // emit stepProgressed(i++);
-
             }
 
         } else { // theta fixe
+
             for (std::shared_ptr<Event> &uEvent : unsortedEvents) {
+                emit stepProgressed(++Ni);
+                emit setMessage(tr("Initializing Event : %1 / %2").arg(QString::number(Ni), QString::number(N)));
+
                 // ----------------------------------------------------------------
                 // Curve init Theta event :
                 // On initialise les theta près des dates ti
@@ -428,7 +440,8 @@ QString MCMCLoop::initialize_time()
                     uEvent->mTheta.mX = static_cast<Bound*>(uEvent.get())->mFixed;
                 // nous devons sauvegarder la valeur ici car dans loop.memo(), les variables fixes ne sont pas memorisées.
                 // Pourtant, il faut récupèrer la valeur pour les affichages et les stats
-                uEvent->mTheta.memo(); // il faut faire memo ici, c'est la seule fois. ce ne sera pas fait dans MCMCLoopChrono.memo()
+                uEvent->mTheta.recordBurnAdapt();
+                uEvent->mTheta.acquire(); // il faut faire memo ici, c'est la seule fois. ce ne sera pas fait dans MCMCLoopChrono.memo()
 
                 uEvent->mThetaReduced = mModel->reduceTime(uEvent->mTheta.mX);
                 uEvent->mInitialized = true;
@@ -437,57 +450,61 @@ QString MCMCLoop::initialize_time()
                 for (auto&& date : uEvent->mDates) {
                     date.mTi.mSamplerProposal = MHVariable::eFixe;
                     date.mTi.mX = uEvent->mTheta.mX;
-                    date.mTi.memo();
+                    date.mTi.recordBurnAdapt();
+                    date.mTi.acquire();
 
-                    // 2 - Init Delta Wiggle matching and Clear mLastAccepts array
+                    // 2 - Init Delta Wiggle matching and Clear mLastMHAccepts array
                     date.initDelta();
                     date.mWiggle.mSamplerProposal = MHVariable::eFixe;
                     date.mWiggle.mX = date.mTi.mX + date.mDelta;
-                    date.mWiggle.memo();
-                    date.mWiggle.mLastAccepts.clear();
+                    date.mWiggle.recordBurnAdapt();
+                    date.mWiggle.acquire();
+                    date.mWiggle.mLastMHAccepts.clear();
                     //date.mWiggle.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
 
                     // 3 - Init sigma MH adaptatif of each Data ti
-                    date.mTi.mSigmaMH = 1;
+                    date.mTi.mSigmaMH = 0.1; // default = 1.0
 
-                    // 4 - Clear mLastAccepts array and set this init at 100%
-                    date.mTi.mLastAccepts.clear();
+                    // 4 - Clear mLastMHAccepts array and set this init at 100%
+                    date.mTi.mLastMHAccepts.clear();
                     //date.mTheta.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
 
                     // 5 - Init Sigma_i and its Sigma_MH
                     date.mSigmaTi.mSamplerProposal = MHVariable::eFixe;
                     date.mSigmaTi.mX = 0;
-                    date.mSigmaTi.memo();
+                    date.mSigmaTi.recordBurnAdapt();
+                    date.mSigmaTi.acquire();
 
-                    date.mSigmaTi.mSigmaMH = 1.;
+                    date.mSigmaTi.mSigmaMH = 0.1; // default = 1.0
 
-                    date.mSigmaTi.mLastAccepts.clear();
+                    date.mSigmaTi.mLastMHAccepts.clear();
+
+
                 }
 
                 // 4 - Init S02 of each Event fixed
                 uEvent->mS02Theta.mX = 0;
-                uEvent->mS02Theta.mLastAccepts.clear();
+                uEvent->mS02Theta.mLastMHAccepts.clear();
                 uEvent->mS02Theta.mSamplerProposal = MHVariable::eFixe;
-
-                uEvent->mS02Theta.memo();
+                uEvent->mS02Theta.recordBurnAdapt();
+                uEvent->mS02Theta.acquire();
 
                 // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
-                uEvent->mTheta.mSigmaMH = 1;
-                uEvent->mAShrinkage = 1.;
+                uEvent->mTheta.mSigmaMH = 0.1; // default = 1.0
+                uEvent->mAShrinkage = 1.0;
 
-                // 6- Clear mLastAccepts  array
-                uEvent->mTheta.mLastAccepts.clear();
+                // 6- Clear mLastMHAccepts  array
+                uEvent->mTheta.mLastMHAccepts.clear();
                 //uEvent->mTheta.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
 
                 if (isInterruptionRequested())
                     return ABORTED_BY_USER;
 
-                //emit stepProgressed(i++);
-
             }
 
 
         }
+
 
     }  catch (const QString e) {
         qWarning() <<"Init theta event, ti,  ???"<<e;
@@ -497,9 +514,9 @@ QString MCMCLoop::initialize_time()
 
 
     // --------------------------- Init alpha and beta phases ----------------------
-    // emit stepChanged(tr("Initializing Phases..."), 0, (int)phases.size());
+    emit stepChanged(tr("Initializing Phases..."), 0, (int)phases.size());
     try {
-        //i = 0;
+        int Ni = 0;
         for (auto&& phase : phases ) {
             phase->update_All(tminPeriod, tmaxPeriod);
             // tau is still initalize
@@ -519,7 +536,7 @@ QString MCMCLoop::initialize_time()
             if (isInterruptionRequested())
                 return ABORTED_BY_USER;
 
-            // emit stepProgressed(++i);
+             emit stepProgressed(++Ni);
         }
 
     }  catch (...) {
@@ -770,27 +787,6 @@ void MCMCLoop::run()
 
         for (auto& p : particles) p.weight /= sum_wi;
 
-        /*
-         * Vous avez commenté la condition sur l'ESS (Effective Sample Size).
-         * Ce que cela signifie : Dans un filtre SMC classique (pour suivre une trajectoire),
-         *  on ne rééchantillonne que si les poids sont trop déséquilibrés (ESS faible) pour éviter d'appauvrir la diversité.
-         * Dans votre cas (Initialisation MCMC) : Vous forcez le rééchantillonnage systématiquement.
-         * C'est logique pour votre usage. Votre but ici n'est pas de maintenir une distribution sur le long terme, mais de sélectionner les N meilleurs points de départ parmi un nuage de 10×N candidats.
-         * Vous faites une étape de sélection Darwinienne pure avant de lancer les MCMC. */
-
-        /* // calcul ESS
-         double sum_wi2 = 0.0;
-        for (int i = 0; i < N_particles; ++i)
-            sum_wi2 += particles[i].weight * particles[i].weight;
-
-        double ESS = 1.0 / sum_wi2;
-
-        std::cout << " ESS : "<< ESS << std::endl;
-        if (ESS  < 0.6 * N_particles)
-            particles = resample(particles);
-        */
-
-
 
         // Construction CDF
         std::vector<double> cdf(particles.size());
@@ -950,19 +946,26 @@ void MCMCLoop::run()
         mState = eInit;
 
         ++iterDone;
-        emit stepChanged(tr("Chain : %1 / %2").arg(QString::number(mChainIndex + 1), QString::number(mLoopChains.size()))  + " : " + tr("Initializing"), 0, estimatedTotalIter);
+        //emit stepChanged(tr("Chain : %1 / %2").arg(QString::number(mChainIndex + 1), QString::number(mLoopChains.size()))  + " : " + tr("Initializing"), 0, estimatedTotalIter);
 
-        updateTimeEstimateMessage(tr("Initializing"));
+        //updateTimeEstimateMessage(tr("Initializing"));
 
         QElapsedTimer initTime;
         initTime.start();
         mAbortedReason = initialize();
 
+        emit stepChanged(tr("Chain : %1 / %2").arg(QString::number(mChainIndex + 1), QString::number(mLoopChains.size()))  + " : " + tr("Initializing"), 0, estimatedTotalIter);
+
+        updateTimeEstimateMessage(tr("Initializing"));
+
+
         //std::cout << "SMC score : " << SMC_score() <<std::endl;
         if (!mAbortedReason.isEmpty())
             return;
 
-        memo();
+        recordBurnAdapt();
+        recordMH();
+
         chain.mInitElapsedTime = initTime.elapsed();
         initTime.~QElapsedTimer();
 
@@ -982,6 +985,7 @@ void MCMCLoop::run()
             Generator::initGenerator(update_seed[mChainIndex]); // 👈 Nouvelle graine pour MCMC ou graine identique à l'initialisation
         }
         updateTimeEstimateMessage(tr("Burn-in"));
+        emit stepChanged(tr("Chain : %1 / %2").arg(QString::number(mChainIndex + 1), QString::number(mLoopChains.size()))  + " : " + tr("Initializing"), 0, estimatedTotalIter);
 
         mState = eBurning;
 
@@ -996,6 +1000,7 @@ void MCMCLoop::run()
 
             try {
                 update();
+                //learn();
 
 
 #ifdef _WIN32
@@ -1007,8 +1012,10 @@ void MCMCLoop::run()
                 mAbortedReason = error;
                 return;
             }
+            //recordForEmpiricalPrior();
 
-            memo();
+            recordBurnAdapt();
+            recordMH();
             ++chain.mBurnIterIndex;
             ++chain.mTotalIter;
 
@@ -1020,6 +1027,9 @@ void MCMCLoop::run()
         }
         chain.burnElapsedTime = burningTime.elapsed();
         burningTime.~QElapsedTimer();
+
+        // ← AJOUT : construction des a priori empiriques sur toutes les variables
+        buildEmpiricalPriors();
 
         //----------------------- Adaptation --------------------------------------
 // ici il faut supprimer les valeurs dans mLastAccept, qui parasite le début de l'adaptation
@@ -1054,7 +1064,10 @@ void MCMCLoop::run()
                     return;
                 }
 
-                memo();
+                // memo();
+                recordBurnAdapt();
+                recordMH();
+
                 ++chain.mBatchIterIndex;
                 ++chain.mTotalIter;
                 ++iterDone;
@@ -1102,7 +1115,7 @@ void MCMCLoop::run()
 
         int thinningIdx = 0;
         int batchIdx = 1;
-        int totalBacth = chain.mBatchIndex;
+        int totalBacth = chain.mBatchIndex; // on continue le comptage du nombre de batch pour l'adaptation
         bool OkToMemo;
 
         int thinning_OkToMemo = 0; // compte le nombre entre chaque update = memo==true
@@ -1137,13 +1150,15 @@ void MCMCLoop::run()
                 thinningIdx = 0;
 
                 if (OkToMemo) {
-                    memo();
+
+                    recordMH();
+                    acquire();
                     thinning_OkToMemo = 0;
 
                     ++chain.mRealyAccepted;
                 }
 
-                mModel->memo_accept(mChainIndex);
+               // mModel->memo_accepted_state(mChainIndex);
 
             }
 
@@ -1200,4 +1215,24 @@ void MCMCLoop::run()
 #endif
 
 
+}
+
+// À surcharger dans la sous-classe pour itérer sur toutes les variables
+void MCMCLoop::recordForEmpiricalPrior()
+{
+    // Exemple si vous avez accès au modèle :
+    for (auto& event : mModel->mEvents) {
+        event->mTheta.recordForPrior();
+        // + autres variables selon votre modèle
+    }
+}
+
+void MCMCLoop::buildEmpiricalPriors()
+{
+    const double tmin = mModel->mSettings.mTmin;
+    const double tmax = mModel->mSettings.mTmax;
+
+    for (auto& event : mModel->mEvents) {
+        event->mTheta.buildEmpiricalPrior(1024, 0.9, tmin, tmax);
+    }
 }
