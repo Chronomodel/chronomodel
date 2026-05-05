@@ -1,5 +1,5 @@
 #!/bin/bash
-# Version du 2025-08-28
+# Version du 2026-05-05
 # Script : Ch_copy_library.sh
 # Chemin : /Users/dufresne/ChronoModel-SoftWare/chronomodel/QtInstaller_ChronoModel
 #
@@ -18,13 +18,13 @@ echo "➡️  [1] Lancement du script de copie des librairies Qt"
 # Paramètres de chemins (à adapter selon la machine)
 # -------------------------------------------------------
 ROOT_PATH=$(dirname $0)
-RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_10_0_for_macOS-Release/build/release/
+RELEASE_PATH=/Users/dufresne/ChronoModel-SoftWare/chronomodel/build/Qt_6_9_3_for_macOS-Release/build/release/
 BUNDLE="${RELEASE_PATH}chronomodel.app"
 
-QT_BIN_PATH=/Users/dufresne/Qt/6.10.1/macos/bin
-QT_LIB_PATH=/Users/dufresne/Qt/6.10.1/macos/lib
-QT_PLUGINS_PATH=/Users/dufresne/Qt/6.10.1/macos/plugins
-VERSION=3.3.6
+QT_BIN_PATH=/Users/dufresne/Qt/6.9.3/macos/bin
+QT_LIB_PATH=/Users/dufresne/Qt/6.9.3/macos/lib
+QT_PLUGINS_PATH=/Users/dufresne/Qt/6.9.3/macos/plugins
+VERSION=3.3.8
 
 # -------------------------------------------------------
 # Copie manuelle des frameworks et plugins Qt
