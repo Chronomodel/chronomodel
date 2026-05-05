@@ -4202,10 +4202,10 @@ bool MCMCLoopCurve::update_337()
     //const double u = Generator::randomUniform();
     //constexpr double w_regenerate = 0.3;   // probabilité de régénération de la chaine
 
-    constexpr int expo_T_max   = 100;    // index max de température
+    constexpr int max_expo_T   = 100;    // index max de température
     //constexpr double w_event = 0.5;   // probabilité de régénération de l'Event
 
-    bool do_regeneration = (iteration % 10 == 0); // (u < w_regenerate)
+    bool do_regeneration = (iteration % 500 == 0); // (u < w_regenerate)
     bool memo = false;
     // ------------------------------------------------------------------
     // 1️⃣  Décision de régénération
@@ -4214,19 +4214,15 @@ bool MCMCLoopCurve::update_337()
         // --------------------------------------------------------------
         // 2  Descente (T décroissant)
         // --------------------------------------------------------------
-        for (int e = expo_T_max ; e >= 0; --e) {
+        for (int e = max_expo_T ; e >= 0; --e) {
             const double T = std::pow(2, e);
             tempering_337_c(T);
 
         }
 
     }
-    else {
-        // ------------------------------------------------------------------
-        // 3  Pas de régénération → mise à jour standard de tous les events
-        // ------------------------------------------------------------------
-        memo = sampler_337_b();
-    }
+
+    memo = sampler_337_b();
 
     return memo;
 

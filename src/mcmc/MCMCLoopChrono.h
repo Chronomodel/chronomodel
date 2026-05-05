@@ -57,8 +57,6 @@ protected:
 
     virtual QString initialize();
 
-    virtual bool learn() {return learn_v3_tempering();};
-
     virtual bool update() {return update_v3_tempering();};
 
 

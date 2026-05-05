@@ -1158,8 +1158,6 @@ void MCMCLoop::run()
                     ++chain.mRealyAccepted;
                 }
 
-               // mModel->memo_accepted_state(mChainIndex);
-
             }
 
             if (batchIdx == chain.mIterPerBatch) {
@@ -1181,6 +1179,9 @@ void MCMCLoop::run()
 
             emit stepProgressed(iterDone);
         }
+
+        chain.mIterDisplay = chain.mRealyAccepted;
+
         chain.mAcquisitionElapsedTime = aquisitionTime.elapsed();
         aquisitionTime.~QElapsedTimer();
         mModel->mLogResults += line(tr("Acquisition time elapsed %1").arg(DHMS(chain.mAcquisitionElapsedTime)));

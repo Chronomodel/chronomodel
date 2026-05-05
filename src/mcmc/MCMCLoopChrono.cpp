@@ -424,10 +424,10 @@ bool MCMCLoopChrono::update_v3_tempering()
     //const double u = Generator::randomUniform();
     //constexpr double w_regenerate = 0.3;   // probabilité de régénération de la chaine
 
-    constexpr int    max_expo_T   = 100;    // nombre d’étapes de température
+    constexpr int max_expo_T   = 100;    // nombre d’étapes de température
     //constexpr double w_event = 0.5;   // probabilité de régénération de l'Event
 
-    bool do_regeneration = (iteration % 100 == 0); // (u < w_regenerate)
+    bool do_regeneration = (iteration % 500 == 0); // (u < w_regenerate)
     // ------------------------------------------------------------------
     // 1️⃣  Décision de régénération
     // ------------------------------------------------------------------
@@ -447,10 +447,10 @@ bool MCMCLoopChrono::update_v3_tempering()
         // 3️⃣  Fonction générique
         // --------------------------------------------------------------
 
-        auto MH_all_temp = [&](double expo_T)
+        auto MH_all_temp = [&](double T)
         {
             std::size_t j = 0;
-            double T = std::pow(2, expo_T); // a) Exponentiel décroit (α > 1)
+
             //double factor = 1.0 / (1.0 + 0.5 * (max_expo_T - expo_T));
             //double T = factor;
             for (auto &event : mModel->mEvents) {
@@ -590,54 +590,48 @@ bool MCMCLoopChrono::update_v3_tempering()
         // --------------------------------------------------------------
         // 5️⃣  Descente (T décroissant)
         // --------------------------------------------------------------
-        for (int i = max_expo_T ; i >= 0; i=i-1) {
-            MH_all_temp(static_cast<double>(i));
+        for (int e = max_expo_T ; e >= 0; --e) {
+            const double T = std::pow(2, e); // a) Exponentiel décroit (α > 1)
+            MH_all_temp(T);
         }
 
 
     }
-    else {
-        // ------------------------------------------------------------------
-        // 6️⃣  Pas de régénération → mise à jour standard de tous les events
-        // ------------------------------------------------------------------
-        for (auto &event : mModel->mEvents) {
-            if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
 
-                const double u = Generator::randomUniform();
-                //if( u > 0.5) {
-                event->applyThetaProposal_v3(tminPeriod, tmaxPeriod);
+    // ------------------------------------------------------------------
+    // 6️⃣  Mise à jour standard de tous les events
+    // ------------------------------------------------------------------
+    for (auto &event : mModel->mEvents) {
+        if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
 
-                // } else {
-                //  event->updateTheta_v4(tminPeriod, tmaxPeriod);
-                //  }
-                // std::cout<< "sampling " << event->mTheta.mName << " " << event->mTheta.value() << std::endl;
+            event->updateTheta_v3(tminPeriod, tmaxPeriod);
 
-                if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
-                    event->updateS02Theta();
+            if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+                event->updateS02Theta();
 
-                std::for_each(event->mPhases.begin(),
-                              event->mPhases.end(),
-                              [this](std::shared_ptr<Phase> p) {
-                                  p->update_AlphaBeta(tminPeriod, tmaxPeriod);
-                              });
-            }
+            std::for_each(event->mPhases.begin(),
+                          event->mPhases.end(),
+                          [this](std::shared_ptr<Phase> p) {
+                              p->update_AlphaBeta(tminPeriod, tmaxPeriod);
+                          });
         }
-
-        // Mise à jour globale des phases (Tau + contraintes)
-        std::for_each(mModel->mPhases.begin(),
-                      mModel->mPhases.end(),
-                      [this](std::shared_ptr<Phase> p) {
-                          p->update_Tau(tminPeriod, tmaxPeriod);
-                      });
-
-        std::for_each(mModel->mPhaseConstraints.begin(),
-                      mModel->mPhaseConstraints.end(),
-                      [](std::shared_ptr<PhaseConstraint> pc) {
-                          pc->updateGamma();
-                      });
     }
 
-    return !do_regeneration; //true;
+    // Mise à jour globale des phases (Tau + contraintes)
+    std::for_each(mModel->mPhases.begin(),
+                  mModel->mPhases.end(),
+                  [this](std::shared_ptr<Phase> p) {
+                      p->update_Tau(tminPeriod, tmaxPeriod);
+                  });
+
+    std::for_each(mModel->mPhaseConstraints.begin(),
+                  mModel->mPhaseConstraints.end(),
+                  [](std::shared_ptr<PhaseConstraint> pc) {
+                      pc->updateGamma();
+                  });
+
+
+    return true;
 }
 
 // obsolete
