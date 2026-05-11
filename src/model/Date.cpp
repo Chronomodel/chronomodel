@@ -1476,13 +1476,13 @@ double Date::getFormatedTmaxCalib()const
     return std::max(DateUtils::convertToAppSettingsFormat(mCalibration->mTmin), DateUtils::convertToAppSettingsFormat(mCalibration->mTmax));
 }
 
-void Date::generateHistos(const std::vector<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+void Date::generateKDE(const std::vector<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
-    mTi.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
-    mSigmaTi.generateHistos(chains, fftLen, bandwidth);
+    mTi.generateKDE(chains, fftLen, bandwidth, tmin, tmax);
+    mSigmaTi.generateKDE(chains, fftLen, bandwidth);
 
     if ( !( mDeltaType == Date::eDeltaNone ) )
-        mWiggle.generateHistos(chains, fftLen, bandwidth);
+        mWiggle.generateKDE(chains, fftLen, bandwidth);
 
 }
 

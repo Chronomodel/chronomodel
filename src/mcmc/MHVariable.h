@@ -137,11 +137,11 @@ public:
 
 
     inline virtual void acquire() override {
-        mAcquiredTrace->push_back(mX);
+        mAllAcquiredTrace->push_back(mX);
         count_MH_accepted();
     }
     inline virtual void acquire(double* valueToSave) override {
-        mAcquiredTrace->push_back(*valueToSave);
+        mAllAcquiredTrace->push_back(*valueToSave);
         count_MH_accepted();
     }
 
@@ -165,13 +165,16 @@ public:
     static MHVariable::SamplerProposal getSamplerProposalFromText(const QString &text);
 
 
-    inline void load_stream(QDataStream& stream) {load_stream_v337(stream);};
+    inline void load_stream(QDataStream& stream) {load_stream_v338(stream);};
 
-private:
+
     void load_stream_v328(QDataStream& stream);
     void load_stream_v327(QDataStream& stream);
     void load_stream_v330(QDataStream& stream);
     void load_stream_v337(QDataStream& stream);
+
+private:
+    void load_stream_v338(QDataStream& stream);
 
 
 };

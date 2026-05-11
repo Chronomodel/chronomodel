@@ -3410,7 +3410,8 @@ void ResultsView::updateGraphsMinMax()
                     const ChainSpecs& chain = model->mChains.at(i);
                     mResultMinT = 0;
                     const int adaptSize = chain.mBatchIndex * chain.mIterPerBatch;
-                    const int runSize = chain.mRealyAccepted;
+                    //const int runSize = chain.mRealyAccepted;
+                    const int runSize = chain.mIterDisplay;
                     mResultMaxT = 1 + chain.mIterPerBurn + adaptSize + runSize;
                     break;
                 }
@@ -3763,7 +3764,8 @@ void ResultsView::updateScales()
                     const ChainSpecs& chain = model->mChains.at(i);
                     mResultCurrentMinT = 0;
                     const int adaptSize = chain.mBatchIndex * chain.mIterPerBatch;
-                    const int runSize = chain.mRealyAccepted;
+                    //const int runSize = chain.mRealyAccepted;
+                    const int runSize = chain.mIterDisplay;
                     mResultCurrentMaxT = 1 + chain.mIterPerBurn + adaptSize + runSize;
                     break;
                 }
@@ -3874,7 +3876,8 @@ void ResultsView::updateScales()
 
         const ChainSpecs& chain = model->mChains.at(idSelect);
         const int adaptSize = chain.mBatchIndex * chain.mIterPerBatch;
-        const int runSize = chain.mRealyAccepted;
+        //const int runSize = chain.mRealyAccepted;
+        const int runSize = chain.mIterDisplay;
         mResultMaxT = 1 +  chain.mIterPerBurn + adaptSize + runSize;
         // The min is always 0
         mResultMinT = 0.;
@@ -5279,7 +5282,8 @@ void ResultsView::applyStudyPeriod()
         }
         const ChainSpecs& chain = model->mChains.at(idSelect);
         const int adaptSize = chain.mBatchIndex * chain.mIterPerBatch;
-        const int runSize = chain.mRealyAccepted;
+        //const int runSize = chain.mRealyAccepted;
+        const int runSize = chain.mIterDisplay;
         // The min is always 0
         mResultCurrentMinT = 0.;
         mResultCurrentMaxT = 1 +  chain.mIterPerBurn + adaptSize + runSize;

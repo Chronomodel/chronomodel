@@ -120,7 +120,7 @@ void GraphViewS02Vg::generateCurves(const graph_t typeGraph, const QList<variabl
         // ------------------------------------
 
         for (size_t i=0; i<mChains.size(); ++i)  {
-            const GraphCurve &curvePostDistribChain = densityCurve(model->mS02Vg.histoForChain(i),
+            const GraphCurve &curvePostDistribChain = densityCurve(model->mS02Vg.KDEForChain(i),
                                                                    "Post Distrib Chain " + QString::number(i),
                                                                    Painting::chainColors.at(i),
                                                                    Qt::SolidLine,

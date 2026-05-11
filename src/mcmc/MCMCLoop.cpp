@@ -1029,7 +1029,7 @@ void MCMCLoop::run()
         burningTime.~QElapsedTimer();
 
         // ← AJOUT : construction des a priori empiriques sur toutes les variables
-        buildEmpiricalPriors();
+        //buildEmpiricalPriors();
 
         //----------------------- Adaptation --------------------------------------
 // ici il faut supprimer les valeurs dans mLastAccept, qui parasite le début de l'adaptation
@@ -1219,7 +1219,7 @@ void MCMCLoop::run()
 }
 
 // À surcharger dans la sous-classe pour itérer sur toutes les variables
-void MCMCLoop::recordForEmpiricalPrior()
+/*void MCMCLoop::recordForEmpiricalPrior()
 {
     // Exemple si vous avez accès au modèle :
     for (auto& event : mModel->mEvents) {
@@ -1237,3 +1237,4 @@ void MCMCLoop::buildEmpiricalPriors()
         event->mTheta.buildEmpiricalPrior(1024, 0.9, tmin, tmax);
     }
 }
+*/

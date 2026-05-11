@@ -501,7 +501,20 @@ template <template<typename...> class C, typename T>
 Quartiles quantilesType(const C<T>& trace, const int quartileType, const double p)
 {
     Quartiles Q;
-    C<T> traceSorted (trace);
+    if (trace.size() == 0) {
+        Q.Q1 = 0;
+        Q.Q2 = 0;
+        Q.Q3 = 0;
+        return Q;
+    }
+    if (trace.size() == 1) {
+        auto v = trace.front();
+        Q.Q1 = v;
+        Q.Q2 = v;
+        Q.Q3 = v;
+        return Q;
+    }
+    C<T> traceSorted(trace);
 
     decltype(gammaQuartile(trace, quartileType, p)) parQ1 = gammaQuartile(trace, quartileType, p); // first is j and second is gamma
     decltype(gammaQuartile(trace, quartileType, p)) parQ2 = gammaQuartile(trace, quartileType, 0.5);

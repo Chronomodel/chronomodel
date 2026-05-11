@@ -713,13 +713,13 @@ void Phase::update_Tau(const double tminPeriod, const double tmaxPeriod)
 #endif
 }*/
 
-void Phase::generateHistos(const std::vector<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+void Phase::generateKDE(const std::vector<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {   
-    mAlpha.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
-    mBeta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+    mAlpha.generateKDE(chains, fftLen, bandwidth, tmin, tmax);
+    mBeta.generateKDE(chains, fftLen, bandwidth, tmin, tmax);
     // if (mTauType == eZOnly)
-    //   mTau.generateHistos(chains, fftLen, bandwidth);
-    mDuration.generateHistos(chains, fftLen, bandwidth);
+    //   mTau.generateKDE(chains, fftLen, bandwidth);
+    mDuration.generateKDE(chains, fftLen, bandwidth);
 }
 
 
@@ -786,8 +786,8 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
     if (mValueStack.at("Activity_TimeRange_min") == mValueStack.at("Activity_TimeRange_max")
         || mValueStack.at("Activity_TimeRange_Level") != timeRangeLevel) {
-        const auto& betaTrace = *mBeta.mAcquiredTrace;
-        const auto& alphaTrace = *mAlpha.mAcquiredTrace;
+        const auto& betaTrace = *mBeta.mAllAcquiredTrace;
+        const auto& alphaTrace = *mAlpha.mAllAcquiredTrace;
 
         const std::pair<double, double> timeRange = timeRangeFromTraces( alphaTrace, betaTrace, timeRangeLevel, "Time Range for Phase : " + getQStringName());
         mValueStack.insert_or_assign("Activity_TimeRange_min", timeRange.first);
@@ -803,12 +803,13 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     double min95 = +INFINITY;
     double max95 = -INFINITY;
     // Ajout artificiel des events et bornes fixes
-    const int nRealyAccepted = std::accumulate(model->mChains.begin(), model->mChains.end(), 0, [] (int sum, ChainSpecs c) {return sum + c.mRealyAccepted;});
+    //const int nRealyAccepted = std::accumulate(model->mChains.begin(), model->mChains.end(), 0, [] (int sum, ChainSpecs c) {return sum + c.mRealyAccepted;});
+    const int nRealyAccepted = std::accumulate(model->mChains.begin(), model->mChains.end(), 0, [] (int sum, ChainSpecs c) {return sum + c.mIterDisplay;});
 
     for (const auto& ev : mEvents) {
         if (ev->mTheta.mSamplerProposal != MHVariable::eFixe) {
             //const auto &rawtrace = ev->mTheta.fullRunRawTrace(model->mChains);
-            const auto& rawtrace = *ev->mTheta.mAcquiredTrace;
+            const auto& rawtrace = *ev->mTheta.mAllAcquiredTrace;
             std::copy_if(rawtrace.begin(), rawtrace.end(),
                          std::back_inserter(concaTrace),
                          [TimeRange_min, TimeRange_max](double x) { return (TimeRange_min<= x && x<= TimeRange_max); });

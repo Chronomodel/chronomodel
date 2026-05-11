@@ -88,11 +88,13 @@ public:
     virtual bool loadFromStream(QDataStream *in)
     {
         //std::cout << "[ModelCurve::restoreFromFile] entering";
+        static const QSet<QString> compatible_version_338 = {
+            QStringLiteral("3.3.8")
+        };
         static const QSet<QString> compatible_version_335 = {
             QStringLiteral("3.3.5"),
             QStringLiteral("3.3.6"),
-            QStringLiteral("3.3.7"),
-            QStringLiteral("3.3.8")
+            QStringLiteral("3.3.7")
         };
         static const QSet<QString> compatible_version_330 = {
             QStringLiteral("3.3.0"),
@@ -103,18 +105,13 @@ public:
             QStringLiteral("3.2.6"),
             QStringLiteral("3.2.9")
         };
-        /*QList<QString> compatible_version_335;
-        compatible_version_335 << "3.3.5" << "3.3.6" << "3.3.7";
-
-        QList<QString> compatible_version_330;
-        compatible_version_330 << "3.3.0" << "3.3.1";
-
-        QList<QString> compatible_version_328;
-        compatible_version_328 << "3.2.4" << "3.2.6" << "3.2.9";*/
 
         *in >> res_file_version;
 
-        if (compatible_version_335.contains(res_file_version))
+        if (compatible_version_338.contains(res_file_version))
+            return loadFromStream_v338(in);
+
+        else if (compatible_version_335.contains(res_file_version))
             return loadFromStream_v335(in);
 
         else if (compatible_version_330.contains(res_file_version))
@@ -134,6 +131,8 @@ public:
     bool loadFromStream_v328(QDataStream *in);
     bool loadFromStream_v330(QDataStream *in);
     bool loadFromStream_v335(QDataStream *in);
+
+    bool loadFromStream_v338(QDataStream *in);
 
     virtual QJsonObject toJson() const;
     virtual void fromJson( const QJsonObject &json);
@@ -200,8 +199,8 @@ public:
     void exportHpdGPComposanteToReferenceCurves(const PosteriorMeanGComposante pMeanCompoXYZ, const QString &defaultPath, QLocale csvLocale, const QString &csvSep) const;
 
 
-    std::vector<MCMCSpline> fullRunSplineTrace(const std::vector<ChainSpecs> &chains);
-    std::vector<MCMCSpline> runSplineTraceForChain(const std::vector<ChainSpecs>& chains, const size_t index);
+    std::vector<MCMCSpline> acceptedSplineTraceForAllChain(const std::vector<ChainSpecs> &chains);
+    std::vector<MCMCSpline> acceptedSplineTraceForChain(const std::vector<ChainSpecs>& chains, const size_t index);
 
 public slots:
     void saveMapToFile(QFile *file, const QString csvSep, const CurveMap &map);

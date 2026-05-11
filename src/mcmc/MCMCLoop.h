@@ -116,8 +116,8 @@ protected:
     virtual void acquire() = 0;
 
     // À surcharger dans la sous-classe pour itérer sur toutes les variables
-    virtual void recordForEmpiricalPrior();
-    virtual void buildEmpiricalPriors();
+    /*virtual void recordForEmpiricalPrior();
+    virtual void buildEmpiricalPriors();*/
 
 
     virtual void recordMH() = 0;

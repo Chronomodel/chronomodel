@@ -159,12 +159,12 @@ bool MCMCLoopChrono::update_v3()
     // --------------------------------------------------------------
 
     for (std::shared_ptr<Event> &event : mModel->mEvents) {
-        if(event->mTheta.mEmpiricalCDFReady) {
+       /* if(event->mTheta.mEmpiricalCDFReady) {
             event->updateThetaPriorCDE(tminPeriod, tmaxPeriod);
 
-        } else {
+        } else {*/
             event->updateTheta_v3(tminPeriod, tmaxPeriod);
-        }
+        //}
 
 
 #ifdef S02_BAYESIAN
@@ -380,7 +380,7 @@ bool MCMCLoopChrono::learn_v3_tempering()
         for (auto &event : mModel->mEvents) {
             if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
 
-                const double u = Generator::randomUniform();
+                //const double u = Generator::randomUniform();
                 //if( u > 0.5) {
                     event->updateTheta_v3(tminPeriod, tmaxPeriod);
 

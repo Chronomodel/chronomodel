@@ -1388,12 +1388,12 @@ static double var_vec(const std::vector<double>& x) {
 // phi^(4)(x) = (x^4 - 6x^2 + 3) * phi(x)
 // phi^(6)(x) = (x^6 - 15x^4 + 45x^2 - 15) * phi(x)
 
-static double phi4(double x) {
+inline double phi4(double x) {
     double x2 = x * x;
     return (x2*x2 - 6.0*x2 + 3.0) * std::exp(-0.5*x2) / std::sqrt(2.0*M_PI);
 }
 
-static double phi6(double x) {
+inline double phi6(double x) {
     double x2 = x * x;
     return (x2*x2*x2 - 15.0*x2*x2 + 45.0*x2 - 15.0)
            * std::exp(-0.5*x2) / std::sqrt(2.0*M_PI);
@@ -1404,7 +1404,8 @@ static double phi6(double x) {
 //  S_r(h) = (1/n²) Σ_i Σ_j phi^(r)((x_i - x_j)/h) / h^(r+1)
 // ================================================================
 // fonction trop lente, préférer la version fft
-static double S4(const std::vector<double>& x, double h) {
+
+inline double S4(const std::vector<double>& x, double h) {
     int n = x.size();
     double sum = 0.0;
     for (int i = 0; i < n; i++)
@@ -1423,7 +1424,7 @@ inline double S6(const std::vector<double>& x, double h) {
 }
 
 // Règle pratique : M = première puissance de 2 >= max(1024, n/100)
-static int chooseFFtSize(int n) {
+inline int chooseFFtSize(int n) {
     int M = 1024;
     while (M < n / 100) M <<= 1;  // doublement jusqu'à n/100
     return M;
@@ -1451,98 +1452,7 @@ static int chooseFFtSize(int n) {
  * @param M  FFT grid size (default 1024, must be a power of 2).
  * @return   Estimate of @f$ \hat\theta_{44} @f$.
  */
-static double S4_fft(const std::vector<double>& x, double h, int M = 1024)
-{
-    const int    n   = static_cast<int>(x.size());
-    const double xmin = *std::min_element(x.begin(), x.end());
-    const double xmax = *std::max_element(x.begin(), x.end());
-
-    // ----------------------------------------------------------------
-    // 1. Grille régulière avec padding 4h de chaque côté
-    // ----------------------------------------------------------------
-    const double a     = xmin - 4.0 * h;
-    const double b     = xmax + 4.0 * h;
-    const double delta = (b - a) / static_cast<double>(M);   // pas de grille
-
-    // ----------------------------------------------------------------
-    // 2. Binning linéaire (linear binning) — O(n)
-    //    Chaque observation est répartie entre les deux bins voisins
-    //    proportionnellement à sa distance aux centres de bins.
-    // ----------------------------------------------------------------
-    std::unique_ptr<double[], decltype(&fftw_free)>
-        grid(static_cast<double*>(fftw_malloc(M * sizeof(double))), fftw_free);
-
-    std::fill(grid.get(), grid.get() + M, 0.0);
-
-    for (int i = 0; i < n; ++i) {
-        const double z   = (x[i] - a) / delta;   // position en unités de bins
-        const int    k   = static_cast<int>(std::floor(z));
-        const double frac = z - static_cast<double>(k);
-
-        if (k >= 0 && k < M - 1) {
-            grid[k]     += (1.0 - frac) / static_cast<double>(n);
-            grid[k + 1] +=        frac  / static_cast<double>(n);
-        } else if (k == M - 1) {
-            grid[k]     += (1.0 - frac) / static_cast<double>(n);
-        }
-    }
-
-    // ----------------------------------------------------------------
-    // 3. FFT forward : grid → spectrum
-    // ----------------------------------------------------------------
-    const int complexSize = M / 2 + 1;
-
-    std::unique_ptr<double[], decltype(&fftw_free)>
-        spectrum(static_cast<double*>(
-                     fftw_malloc(2 * complexSize * sizeof(double))), fftw_free);
-
-    fftw_plan plan_fwd = fftw_plan_dft_r2c_1d(
-        M, grid.get(),
-        reinterpret_cast<fftw_complex*>(spectrum.get()),
-        FFTW_ESTIMATE);
-
-    fftw_execute(plan_fwd);
-    fftw_destroy_plan(plan_fwd);
-
-    // ----------------------------------------------------------------
-    // 4. Intégration dans le domaine fréquentiel
-    //
-    //   θ₄₄ = (1 / 2π) × Σₖ ωₖ⁴ × exp(-ωₖ² h²) × |p̂(ωₖ)|² × Δω
-    //
-    //   avec ωₖ = 2πk / (M × delta)   (fréquence angulaire du bin k)
-    //   et   Δω = 2π / (M × delta)
-    //
-    //   Le facteur 1/fftLen² vient de la normalisation FFTW (non normalisée).
-    // ----------------------------------------------------------------
-    double sum = 0.0;
-    const double L    = static_cast<double>(M) * delta;  // longueur du domaine
-    const double dOmega = 2.0 * M_PI / L;                // pas fréquentiel
-    const double norm2  = static_cast<double>(M) * static_cast<double>(M); // correction FFTW
-
-    for (int k = 0; k < complexSize; ++k) {
-        const double omega  = static_cast<double>(k) * dOmega;
-        const double omega2 = omega * omega;
-        const double omega4 = omega2 * omega2;
-
-        // Module² de p̂(ωₖ), corrigé de la normalisation FFTW
-        const double re  = spectrum[2 * k]     / static_cast<double>(M);
-        const double im  = spectrum[2 * k + 1] / static_cast<double>(M);
-        const double mod2 = re * re + im * im;
-
-        // Filtre gaussien d'ordre 4
-        const double gauss = std::exp(-omega2 * h * h);
-
-        // Facteur 2 pour les fréquences négatives (sauf k=0 et k=M/2)
-        const double weight = (k == 0 || k == M / 2) ? 1.0 : 2.0;
-
-        sum += weight * omega4 * gauss * mod2;
-    }
-
-    // Normalisation finale : Δω / (2π)
-    return sum * dOmega / (2.0 * M_PI);
-}
-
-
+double S4_fft(const std::vector<double>& x, double h, int M = 1024);
 /**
  * @brief Estimates θ₂₄ = ∫ f⁽⁶⁾(x)² dx via FFT — O(n log n)
  *
@@ -1557,69 +1467,7 @@ static double S4_fft(const std::vector<double>& x, double h, int M = 1024)
  * @param M  FFT grid size (default 1024, must be a power of 2).
  * @return   Estimate of @f$ \hat\theta_{24} @f$.
  */
-static double S6_fft(const std::vector<double>& x, double h, int M = 1024)
-{
-    const int    n    = static_cast<int>(x.size());
-    const double xmin = *std::min_element(x.begin(), x.end());
-    const double xmax = *std::max_element(x.begin(), x.end());
-
-    const double a     = xmin - 4.0 * h;
-    const double b     = xmax + 4.0 * h;
-    const double delta = (b - a) / static_cast<double>(M);
-
-    std::unique_ptr<double[], decltype(&fftw_free)>
-        grid(static_cast<double*>(fftw_malloc(M * sizeof(double))), fftw_free);
-
-    std::fill(grid.get(), grid.get() + M, 0.0);
-
-    for (int i = 0; i < n; ++i) {
-        const double z    = (x[i] - a) / delta;
-        const int    k    = static_cast<int>(std::floor(z));
-        const double frac = z - static_cast<double>(k);
-
-        if (k >= 0 && k < M - 1) {
-            grid[k]     += (1.0 - frac) / static_cast<double>(n);
-            grid[k + 1] +=        frac  / static_cast<double>(n);
-        } else if (k == M - 1) {
-            grid[k]     += (1.0 - frac) / static_cast<double>(n);
-        }
-    }
-
-    const int complexSize = M / 2 + 1;
-
-    std::unique_ptr<double[], decltype(&fftw_free)>
-        spectrum(static_cast<double*>(
-                     fftw_malloc(2 * complexSize * sizeof(double))), fftw_free);
-
-    fftw_plan plan_fwd = fftw_plan_dft_r2c_1d(
-        M, grid.get(),
-        reinterpret_cast<fftw_complex*>(spectrum.get()),
-        FFTW_ESTIMATE);
-
-    fftw_execute(plan_fwd);
-    fftw_destroy_plan(plan_fwd);
-
-    double sum = 0.0;
-    const double L       = static_cast<double>(M) * delta;
-    const double dOmega  = 2.0 * M_PI / L;
-
-    for (int k = 0; k < complexSize; ++k) {
-        const double omega  = static_cast<double>(k) * dOmega;
-        const double omega2 = omega * omega;
-        const double omega6 = omega2 * omega2 * omega2;   // ← ω⁶ ici
-
-        const double re   = spectrum[2 * k]     / static_cast<double>(M);
-        const double im   = spectrum[2 * k + 1] / static_cast<double>(M);
-        const double mod2 = re * re + im * im;
-
-        const double gauss  = std::exp(-omega2 * h * h);
-        const double weight = (k == 0 || k == M / 2) ? 1.0 : 2.0;
-
-        sum += weight * omega6 * gauss * mod2;
-    }
-
-    return sum * dOmega / (2.0 * M_PI);
-}
+double S6_fft(const std::vector<double>& x, double h, int M = 1024);
 
 // ================================================================
 //  Estimateurs de référence gaussiens (plug-in initial)

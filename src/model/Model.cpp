@@ -341,9 +341,9 @@ void Model::updateFormatSettings()
 
     for (const auto& event : mEvents) {
 
-       /* for (auto i =0 ; i< event->mTheta.mAcquiredTrace->size(); i++) {
+       /* for (auto i =0 ; i< event->mTheta.mAllAcquiredTrace->size(); i++) {
             if (i<event->mTheta.mBurnInPriorTrace->size())
-                event->mTheta.mAcquiredTrace.get()[i] = event->mTheta.mBurnInPriorTrace.get()[i];
+                event->mTheta.mAllAcquiredTrace.get()[i] = event->mTheta.mBurnInPriorTrace.get()[i];
         }*/
 
         event->mTheta.setFormat(appSetFormat);
@@ -703,7 +703,8 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
     int shift = 0;
     for (const ChainSpecs& chain : mChains) {
         int burnAdaptSize = 1 + chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
-        int runSize = chain.mRealyAccepted;
+        //int runSize = chain.mRealyAccepted;
+        const int runSize = chain.mIterDisplay;
 
         for (int j = burnAdaptSize; j<burnAdaptSize + runSize; ++j) {
             QStringList l;
@@ -744,12 +745,6 @@ QList<QStringList> Model::getPhaseTrace(size_t phaseIdx, const QLocale locale, c
     else
         return QList<QStringList>();
 
-
- /*   int runSize = 0;
-
-    for (auto& chain : mChains)
-        runSize += chain.mRealyAccepted;
-*/
     QStringList headers;
     headers << "iter" << phase->getQStringName() + " Begin" << phase->getQStringName() + " End";
     for (const auto& event : phase->mEvents)
@@ -760,8 +755,9 @@ QList<QStringList> Model::getPhaseTrace(size_t phaseIdx, const QLocale locale, c
     int shift = 0;
 
     for (const ChainSpecs& chain : mChains) {
-        int burnAdaptSize = 1 + chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
-        int runSize = chain.mRealyAccepted;
+        const int burnAdaptSize = 1 + chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
+        //int runSize = chain.mRealyAccepted;
+        const int runSize = chain.mIterDisplay;
 
         for (int j = burnAdaptSize; j < (burnAdaptSize + runSize); ++j) {
             QStringList l;
@@ -819,7 +815,8 @@ QList<QStringList> Model::getEventsTraces(const QLocale& locale,
     std::size_t chainIdx   = 0;
 
     for (const auto& chain : mChains) {
-        const qsizetype nbAcquisition = static_cast<qsizetype>(chain.mRealyAccepted);
+        //const qsizetype nbAcquisition = static_cast<qsizetype>(chain.mRealyAccepted);
+        const qsizetype nbAcquisition = static_cast<qsizetype>(chain.mIterDisplay);
         if (nbAcquisition == 0) { ++chainIdx; continue; }
 
         // Cache des traces
@@ -1352,19 +1349,19 @@ void Model::generatePosteriorDensities(const std::vector<ChainSpecs> &chains, in
     const double tmax = mSettings.getTmaxFormated();
 
     for (const auto& event : mEvents) {
-        event->mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+        event->mTheta.generateKDE(chains, fftLen, bandwidth, tmin, tmax);
 
         if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
-            event->mS02Theta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+            event->mS02Theta.generateKDE(chains, fftLen, bandwidth, tmin, tmax);
 
         if (event->type() != Event::eBound) {
             for (auto&& d : event->mDates)
-                d.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+                d.generateKDE(chains, fftLen, bandwidth, tmin, tmax);
         }
     }
 
     for (const auto& phase : mPhases)
-         phase->generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+         phase->generateKDE(chains, fftLen, bandwidth, tmin, tmax);
 
 #ifdef DEBUG
     qDebug() <<  "=> Model::generatePosteriorDensities done in " + DHMS(t.elapsed());
@@ -1574,8 +1571,8 @@ void Model::generateCredibility(const double thresh)
         //  phase->mTau.generateCredibility(mChains, thresh);
         phase->mDuration.generateCredibility(mChains, thresh);
 
-        const auto& alphaTrace = *phase->mAlpha.mAcquiredTrace;
-        const auto& betaTrace = *phase->mBeta.mAcquiredTrace;
+        const auto& alphaTrace = *phase->mAlpha.mAllAcquiredTrace;
+        const auto& betaTrace = *phase->mBeta.mAllAcquiredTrace;
         phase->mTimeRange = timeRangeFromTraces( alphaTrace, betaTrace, thresh, "Time Range for Phase : " + phase->getQStringName());
     }
 
@@ -1583,8 +1580,8 @@ void Model::generateCredibility(const double thresh)
     for (const auto& phaseConstraint : mPhaseConstraints) {
         const QString str = phaseConstraint->mPhaseFrom->getQStringName() + " to " + phaseConstraint->mPhaseTo->getQStringName();
 
-        const auto& betaTrace = *phaseConstraint->mPhaseFrom->mBeta.mAcquiredTrace;
-        const auto& alphaTrace = *phaseConstraint->mPhaseTo->mAlpha.mAcquiredTrace;
+        const auto& betaTrace = *phaseConstraint->mPhaseFrom->mBeta.mAllAcquiredTrace;
+        const auto& alphaTrace = *phaseConstraint->mPhaseTo->mAlpha.mAllAcquiredTrace;
 
         phaseConstraint->mGapRange = gapRangeFromTraces(betaTrace, alphaTrace, thresh, "Gap Range : "+ str);
 
@@ -1657,13 +1654,13 @@ void Model::generateTempo(const size_t gridLength)
         // Description des données
         std::vector<double> concaAllTrace;
 
-        const int nRealyAccepted = std::accumulate(mChains.begin(), mChains.end(), 0, [](double sum, ChainSpecs chain){return  sum + chain.mRealyAccepted;});
-
+        //const int nRealyAccepted = std::accumulate(mChains.begin(), mChains.end(), 0, [](double sum, ChainSpecs chain){return  sum + chain.mRealyAccepted;});
+        const int nRealyAccepted = std::accumulate(mChains.begin(), mChains.end(), 0, [](double sum, ChainSpecs chain){return  sum + chain.mIterDisplay;});
 
         for (const auto& ev : phase->mEvents) {
             if (ev->mTheta.mSamplerProposal != MHVariable::eFixe) {
 
-                const auto & rawtrace = *ev->mTheta.mAcquiredTrace;
+                const auto & rawtrace = *ev->mTheta.mAllAcquiredTrace;
                 concaAllTrace.resize(concaAllTrace.size() + rawtrace.size());
                 std::copy_backward( rawtrace.begin(), rawtrace.end(), concaAllTrace.end() );
 
@@ -1962,10 +1959,10 @@ void Model::generateActivity(const size_t gridLength, const double h, const doub
         // Curves for error binomial
         const int n = phase->mEvents.size();
         /*if (n<2) {
-            phase->mActivity = phase->mEvents[0]->mTheta.mFormatedHisto;
-            phase->mActivityInf = phase->mEvents[0]->mTheta.mFormatedHisto;
-            phase->mActivitySup = phase->mEvents[0]->mTheta.mFormatedHisto;
-            phase->mActivityUnifTheo = phase->mEvents[0]->mTheta.mFormatedHisto;
+            phase->mActivity = phase->mEvents[0]->mTheta.mFormatedKDE;
+            phase->mActivityInf = phase->mEvents[0]->mTheta.mFormatedKDE;
+            phase->mActivitySup = phase->mEvents[0]->mTheta.mFormatedKDE;
+            phase->mActivityUnifTheo = phase->mEvents[0]->mTheta.mFormatedKDE;
             continue;
         }*/
         if (!mBinomiale_Gx.contains(n) || threshold != mThreshold) {
@@ -2593,6 +2590,152 @@ bool Model::loadFromStream_v330(QDataStream *in)
             *in >> ch.mSeed;
             *in >> ch.mThinningInterval;
             *in >> ch.mRealyAccepted;
+            ch.mIterDisplay = ch.mRealyAccepted;
+            *in >> ch.mTotalIter;
+            mChains.push_back(ch);
+        }
+        if (in->status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read variable Chain");
+        }
+        // -----------------------------------------------------
+        //  Read phases data
+        // -----------------------------------------------------
+
+        for (std::shared_ptr<Phase> &p : mPhases) {
+            p->mAlpha.load_stream_v337(*in);
+            p->mBeta.load_stream_v337(*in);
+            p->mTau.load_stream_v337(*in);
+            p->mDuration.load_stream_v337(*in);
+
+        }
+        if (in->status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read variable Phase");
+        }
+        // -----------------------------------------------------
+        //  Read events data
+        // -----------------------------------------------------
+
+        for (std::shared_ptr<Event> &e : mEvents) {
+            e->mTheta.load_stream_v337(*in);
+            e->mS02Theta.load_stream_v337(*in); // since 2023-06-01 v3.2.3
+        }
+        if (in->status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read variable Event");
+        }
+        // -----------------------------------------------------
+        //  Read dates data
+        // -----------------------------------------------------
+
+        for (std::shared_ptr<Event> &event : mEvents) {
+            if (event->mType == Event::eDefault )
+                for (auto&& d : event->mDates) {
+
+                    d.mTi.load_stream_v337(*in);
+                    d.mSigmaTi.load_stream_v337(*in);
+                    if (d.mDeltaType != Date::eDeltaNone)
+                        d.mWiggle.load_stream_v337(*in);
+
+                    *in >> d.mDeltaFixed;
+                    *in >> d.mDeltaMin;
+                    *in >> d.mDeltaMax;
+                    *in >> d.mDeltaAverage;
+                    *in >> d.mDeltaError;
+
+                    double tmp;
+                    *in >> tmp;
+                    d.setTminRefCurve(tmp);
+                    *in >> tmp;
+                    d.setTmaxRefCurve(tmp);
+
+                    d.mCalibration = & (getProject_ptr()->mCalibCurves[d.mUUID]);
+
+                    quint32 tmpUint32;
+                    *in >> tmpUint32;
+                    double tmpKey;
+                    double tmpValue;
+                    for (quint32 i= 0; i<tmpUint32; i++) {
+                        *in >> tmpKey;
+                        *in >> tmpValue;
+                        d.mCalibHPD[tmpKey]= tmpValue;
+                    }
+                    //#ifdef DEBUG
+
+                    const std::string toFind ("WID::"+ d.mUUID);
+
+                    if (d.mWiggleCalibration == nullptr || d.mWiggleCalibration->mVector.empty()) {
+                        qDebug()<<"[Model::restoreFromFile_v330] mWiggleCalibration vide";
+
+                    } else {
+                        d.mWiggleCalibration = & (getProject_ptr()->mCalibCurves[toFind]);
+                    }
+                    //#endif
+                }
+        }
+        if (in->status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read variable Date");
+        }
+
+        *in >> mLogModel;
+        *in >> mLogInit;
+        *in >> mLogAdapt;
+        *in >> mLogResults;
+
+        if (in->status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read variable Log");
+        }
+        return true;
+
+    }
+    catch (const std::exception& e) {
+        std::cout << "[Model::loadFromStream_v330]  " << e.what() << std::endl;
+        return false;
+    }
+    /*catch (...) {
+        std::cout << "[Model::loadFromStream_v330] Error " << std::endl;
+        return false;
+    }*/
+}
+
+bool Model::loadFromStream_v338(QDataStream *in)
+{
+    std::cout << "[Model::loadFromStream_v338] Entering" << std::endl;
+
+    if (in->version()!= QDataStream::Qt_6_4)
+        return false;
+
+    try {
+
+        // -----------------------------------------------------
+        //  Read info
+        // -----------------------------------------------------
+
+        quint32 tmp32;
+        *in >> tmp32;
+
+        if (in->status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read variable tmp32");
+        }
+        mChains.clear();
+        mChains.reserve(int (tmp32));
+        for (quint32 i=0 ; i<tmp32; ++i) {
+            ChainSpecs ch;
+            *in >> ch.burnElapsedTime;
+            *in >> ch.mAdaptElapsedTime;
+            *in >> ch.mAcquisitionElapsedTime;
+
+            *in >> ch.mBatchIndex;
+            *in >> ch.mBatchIterIndex;
+            *in >> ch.mBurnIterIndex;
+            *in >> ch.mMaxBatchs;
+            *in >> ch.mMixingLevel;
+            *in >> ch.mIterPerBatch;
+            *in >> ch.mIterPerBurn;
+            *in >> ch.mIterPerAquisition;
+            *in >> ch.mAquisitionIterIndex;
+            *in >> ch.mSeed;
+            *in >> ch.mThinningInterval;
+            *in >> ch.mRealyAccepted;
+            ch.mIterDisplay = ch.mRealyAccepted;
             *in >> ch.mTotalIter;
             mChains.push_back(ch);
         }

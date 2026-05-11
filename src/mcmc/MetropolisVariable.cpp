@@ -75,15 +75,17 @@ MetropolisVariable::MetropolisVariable():
     mAcceptedStateCountByChain(),
     mX (0.0),
     mBurnAdaptTrace(std::make_shared<std::vector<double>>()),
-    mAcquiredTrace(std::make_shared<std::vector<double>>()),
+    mAllAcquiredTrace(std::make_shared<std::vector<double>>()),
+    is_curve_filtering(false),
+
+    mDisplayAcquiredTrace(std::make_shared<std::vector<double>>()),
     mFormatedBurnAdaptTrace(std::make_shared<std::vector<double>>()),
     mFormatedAcquiredTrace(std::make_shared<std::vector<double>>()),
-
     mSupport (eR),
     mFormat (DateUtils::eNumeric),
-    mFormatedHisto(),
+    mFormatedKDE(),
 
-    mChainsHistos(),
+    mChainsKDE(),
     mCorrelations(),
     mFormatedHPD(),
     mRawHPDintervals(),
@@ -94,11 +96,11 @@ MetropolisVariable::MetropolisVariable():
     mBandwidthUsed (-1.0),
     mThresholdUsed (-1.0),
     mtminUsed (0.0),
-    mtmaxUsed (0.0),
+    mtmaxUsed (0.0)
 // Learning Prior
-    mBurnInPriorTrace(std::make_shared<std::vector<double>>()),
+   /* mBurnInPriorTrace(std::make_shared<std::vector<double>>()),
     mEmpiricalPrior(),
-    mEmpiricalPriorReady(false)
+    mEmpiricalPriorReady(false)*/
 {
    mRawCredibility = std::pair<double, double>(1, -1);
    mFormatedCredibility = std::pair<double, double>(1, -1);
@@ -116,18 +118,20 @@ MetropolisVariable::MetropolisVariable(const MetropolisVariable& origin):
     mBurnAdaptTrace = std::make_shared<std::vector<double>>(*origin.mBurnAdaptTrace);
     mFormatedBurnAdaptTrace = std::make_shared<std::vector<double>>(*origin.mFormatedBurnAdaptTrace);
 
-    mAcquiredTrace = std::make_shared<std::vector<double>>(*origin.mAcquiredTrace);
+    mAllAcquiredTrace = std::make_shared<std::vector<double>>(*origin.mAllAcquiredTrace);
+    mDisplayAcquiredTrace = std::make_shared<std::vector<double>>(*origin.mDisplayAcquiredTrace);
     mFormatedAcquiredTrace = std::make_shared<std::vector<double>>(*origin.mFormatedAcquiredTrace);
+    is_curve_filtering = origin.is_curve_filtering;
     // Learning Prior
-    mBurnInPriorTrace = std::make_shared<std::vector<double>>(*origin.mBurnInPriorTrace);
+   /* mBurnInPriorTrace = std::make_shared<std::vector<double>>(*origin.mBurnInPriorTrace);
     mEmpiricalPrior = origin.mEmpiricalPrior;
-    mEmpiricalPriorReady = origin.mEmpiricalPriorReady;
+    mEmpiricalPriorReady = origin.mEmpiricalPriorReady; */
 
     mSupport = origin.mSupport;
     mFormat = origin.mFormat;
 
-    mFormatedHisto = origin.mFormatedHisto;
-    mChainsHistos = origin.mChainsHistos;
+    mFormatedKDE = origin.mFormatedKDE;
+    mChainsKDE = origin.mChainsKDE;
 
     mCorrelations = origin.mCorrelations;
 
@@ -166,15 +170,16 @@ MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable& orig
     mBurnAdaptTrace = std::make_shared<std::vector<double>>(*origin.mBurnAdaptTrace);
     mFormatedBurnAdaptTrace = std::make_shared<std::vector<double>>(*origin.mFormatedBurnAdaptTrace);
 
-    mAcquiredTrace = std::make_shared<std::vector<double>>(*origin.mAcquiredTrace);
+    mAllAcquiredTrace = std::make_shared<std::vector<double>>(*origin.mAllAcquiredTrace);
+    mDisplayAcquiredTrace = std::make_shared<std::vector<double>>(*origin.mDisplayAcquiredTrace);
     mFormatedAcquiredTrace = std::make_shared<std::vector<double>>(*origin.mFormatedAcquiredTrace);
-
+    is_curve_filtering = origin.is_curve_filtering;
 
     mSupport = origin.mSupport;
     mFormat = origin.mFormat;
 
-    mFormatedHisto = origin.mFormatedHisto;
-    mChainsHistos = origin.mChainsHistos;
+    mFormatedKDE = origin.mFormatedKDE;
+    mChainsKDE = origin.mChainsKDE;
 
     mCorrelations = origin.mCorrelations;
 
@@ -196,9 +201,10 @@ MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable& orig
     mtmaxUsed = origin.mtmaxUsed;
 
     // Learning Prior
-    mBurnInPriorTrace = std::make_shared<std::vector<double>>(*origin.mBurnInPriorTrace);
+    /*mBurnInPriorTrace = std::make_shared<std::vector<double>>(*origin.mBurnInPriorTrace);
     mEmpiricalPrior = origin.mEmpiricalPrior;
-    mEmpiricalPriorReady = origin.mEmpiricalPriorReady;
+    mEmpiricalPriorReady = origin.mEmpiricalPriorReady; */
+
 
     return *this;
 }
@@ -215,14 +221,16 @@ MetropolisVariable& MetropolisVariable::operator=(MetropolisVariable&& origin) n
         mBurnAdaptTrace = std::move(origin.mBurnAdaptTrace);
         mFormatedBurnAdaptTrace = std::move(origin.mFormatedBurnAdaptTrace);
 
-        mAcquiredTrace = std::move(origin.mAcquiredTrace);
+        mAllAcquiredTrace = std::move(origin.mAllAcquiredTrace);
+        mDisplayAcquiredTrace = std::move(origin.mDisplayAcquiredTrace);
         mFormatedAcquiredTrace = std::move(origin.mFormatedAcquiredTrace);
+        is_curve_filtering = std::move(origin.is_curve_filtering);
 
         mSupport = std::move(origin.mSupport);
         mFormat = std::move(origin.mFormat);
 
-        mFormatedHisto = std::move(origin.mFormatedHisto);
-        mChainsHistos = std::move(origin.mChainsHistos);
+        mFormatedKDE = std::move(origin.mFormatedKDE);
+        mChainsKDE = std::move(origin.mChainsKDE);
 
         mCorrelations = std::move(origin.mCorrelations);
 
@@ -244,21 +252,22 @@ MetropolisVariable& MetropolisVariable::operator=(MetropolisVariable&& origin) n
         mtmaxUsed = origin.mtmaxUsed;
 
         // Learning Prior
-        if (mBurnInPriorTrace) {
+        /*if (mBurnInPriorTrace) {
             mBurnInPriorTrace = std::move(origin.mBurnInPriorTrace);
             mEmpiricalPrior = std::move(origin.mEmpiricalPrior);
             mEmpiricalPriorReady = origin.mEmpiricalPriorReady;
-        }
+        }*/
 
         // Laisser l'objet source dans un état valide
         // (par exemple, réinitialiser les pointeurs ou les ressources)
         origin.mBurnAdaptTrace.reset();
         origin.mFormatedBurnAdaptTrace.reset();
 
-        origin.mAcquiredTrace.reset();
+        origin.mAllAcquiredTrace.reset();
+        origin.mDisplayAcquiredTrace.reset();
         origin.mFormatedAcquiredTrace.reset();
 
-        origin.mBurnInPriorTrace.reset();
+        //origin.mBurnInPriorTrace.reset();
 
         // Réinitialiser d'autres membres si nécessaire
     }
@@ -272,13 +281,14 @@ void MetropolisVariable::clear()
 {
     mBurnAdaptTrace->clear();
     mFormatedBurnAdaptTrace->clear();
-    mAcquiredTrace->clear();
+    mAllAcquiredTrace->clear();
+    mDisplayAcquiredTrace->clear();
     mFormatedAcquiredTrace->clear();
 
-    mFormatedHisto.clear();
+    mFormatedKDE.clear();
     mAcceptedStateCountByChain.clear();
 
-    mChainsHistos.clear();
+    mChainsKDE.clear();
     mCorrelations.clear();
     mRawHPDintervals.clear();
     mFormatedHPD.clear();
@@ -288,11 +298,12 @@ void MetropolisVariable::clear()
     mFormatedCredibility = std::pair<double, double>(1, -1);
     mExactCredibilityThreshold = 0.0;
 
+    is_curve_filtering = false;
     // Learning Prior
-    if (mBurnInPriorTrace) mBurnInPriorTrace->clear();
+    /*if (mBurnInPriorTrace) mBurnInPriorTrace->clear();
 
     mEmpiricalPrior.clear();
-    mEmpiricalPriorReady = false;
+    mEmpiricalPriorReady = false;*/
 
 }
 
@@ -300,16 +311,17 @@ void MetropolisVariable::shrink_to_fit() noexcept
 {
     mBurnAdaptTrace->shrink_to_fit();
     mFormatedBurnAdaptTrace->shrink_to_fit();
-    mAcquiredTrace->shrink_to_fit();
+    mAllAcquiredTrace->shrink_to_fit();
+    mDisplayAcquiredTrace->shrink_to_fit();
     mFormatedAcquiredTrace->shrink_to_fit();
 
-    mChainsHistos.shrink_to_fit();
+    mChainsKDE.shrink_to_fit();
     mCorrelations.shrink_to_fit();
     mRawHPDintervals.shrink_to_fit();
     mChainsResults.shrink_to_fit();
 
     // Learning Prior
-    mBurnInPriorTrace->shrink_to_fit();
+    //mBurnInPriorTrace->shrink_to_fit();
     //mEmpiricalPrior.shrink_to_fit();
 }
 
@@ -322,18 +334,21 @@ void MetropolisVariable::clear_and_shrink() noexcept
     mFormatedBurnAdaptTrace->clear();
     mFormatedBurnAdaptTrace->shrink_to_fit();
 
-    mAcquiredTrace->clear();
-    mAcquiredTrace->shrink_to_fit();
+    mAllAcquiredTrace->clear();
+    mAllAcquiredTrace->shrink_to_fit();
+
+    mDisplayAcquiredTrace->clear();
+    mDisplayAcquiredTrace->shrink_to_fit();
 
     mFormatedAcquiredTrace->clear();
     mFormatedAcquiredTrace->shrink_to_fit();
 
 
-    mFormatedHisto.clear();
-    mChainsHistos.shrink_to_fit();
+    mFormatedKDE.clear();
+    mChainsKDE.shrink_to_fit();
 
-    mChainsHistos.clear();
-    mChainsHistos.shrink_to_fit();
+    mChainsKDE.clear();
+    mChainsKDE.shrink_to_fit();
 
     mCorrelations.clear();
     mCorrelations.shrink_to_fit();
@@ -350,11 +365,13 @@ void MetropolisVariable::clear_and_shrink() noexcept
     mFormatedCredibility = std::pair<double, double>(1, -1);
     mExactCredibilityThreshold = 0.0;
 
+    is_curve_filtering = false;
+
     // Learning Prior
-    mBurnInPriorTrace->clear();
+    /*mBurnInPriorTrace->clear();
     mBurnInPriorTrace->shrink_to_fit();
     mEmpiricalPrior.clear();
-    mEmpiricalPriorReady = false;
+    mEmpiricalPriorReady = false;*/
 
 }
 
@@ -366,11 +383,11 @@ void MetropolisVariable::remove_smoothed_densities()
     // -----------------------------------------------------------------
     // mBurnAdaptTrace->clear();          // not a posterior
     mFormatedBurnAdaptTrace->clear();    // OK à vider
-    // mAcquiredTrace->clear();           // C'est à garder
+    // mAllAcquiredTrace->clear();           // C'est à garder
 
     mFormatedAcquiredTrace->clear();     // OK à vider
-    mFormatedHisto.clear();              // OK à vider
-    mChainsHistos.clear();               // OK à vider
+    mFormatedKDE.clear();              // OK à vider
+    mChainsKDE.clear();               // OK à vider
     // mCorrelations.clear();            // ne dépend pas de la fftw
 
     mRawHPDintervals.clear();            // OK à vider
@@ -403,10 +420,10 @@ void MetropolisVariable::remove_smoothed_densities()
     mExactCredibilityThreshold    = 0.0;
 
     // Learning Prior
-    mBurnInPriorTrace->clear();
+    /*mBurnInPriorTrace->clear();
     mBurnInPriorTrace->shrink_to_fit();
     mEmpiricalPrior.clear();
-    mEmpiricalPriorReady = false;
+    mEmpiricalPriorReady = false;*/
 }
 
 
@@ -421,15 +438,9 @@ void MetropolisVariable::setFormat(const DateUtils::FormatDate fm)
 {
     if (mBurnAdaptTrace) {
         if (fm != mFormat || mFormatedBurnAdaptTrace->size() != mBurnAdaptTrace->size()) {
-            updateFormatedTrace(fm); // fait aussi mAcquiredTrace
+            updateFormatedTrace(fm); // fait aussi mAllAcquiredTrace
         }
     }
-
-    /*if (mAcquiredTrace) {
-        if (fm != mFormat || mFormatedAcquiredTrace->size() != mAcquiredTrace->size()) {
-            updateFormatedTrace(fm);
-        }
-    }*/
 
     updateFormatedCredibility(fm);
 
@@ -443,10 +454,11 @@ void MetropolisVariable::setFormat(const DateUtils::FormatDate fm)
  */
 void MetropolisVariable::updateFormatedTrace(const DateUtils::FormatDate fm)
 {
+    auto traceDisplay = traceToDisplay();
     if (fm == DateUtils::eNumeric || mFormat == DateUtils::eNumeric) {
 
         mFormatedBurnAdaptTrace = std::make_shared<std::vector<double>>(*mBurnAdaptTrace);
-        mFormatedAcquiredTrace = std::make_shared<std::vector<double>>(*mAcquiredTrace);
+        mFormatedAcquiredTrace = std::make_shared<std::vector<double>>(*traceDisplay);
 
     //mFormatedBurnAdaptTrace = mBurnAdaptTrace// it's the same pointer, if you delete mFormatedBurnAdaptTrace, you delete mBurnAdaptTrace. If you change the format you change the value of mBurnAdaptTrace
 
@@ -454,8 +466,8 @@ void MetropolisVariable::updateFormatedTrace(const DateUtils::FormatDate fm)
         mFormatedBurnAdaptTrace->resize(mBurnAdaptTrace->size());
         std::transform(mBurnAdaptTrace->cbegin(), mBurnAdaptTrace->cend(), mFormatedBurnAdaptTrace->begin(), [&fm](const double i) {return DateUtils::convertToFormat(i, fm);});
 
-        mFormatedAcquiredTrace->resize(mAcquiredTrace->size());
-        std::transform(mAcquiredTrace->cbegin(), mAcquiredTrace->cend(), mFormatedAcquiredTrace->begin(), [&fm](const double i) {return DateUtils::convertToFormat(i, fm);});
+        mFormatedAcquiredTrace->resize(traceDisplay->size());
+        std::transform(traceDisplay->cbegin(), traceDisplay->cend(), mFormatedAcquiredTrace->begin(), [&fm](const double i) {return DateUtils::convertToFormat(i, fm);});
 
     }
 
@@ -563,6 +575,10 @@ std::map<double, double> MetropolisVariable::generateKDE(const std::vector<doubl
     std::map<double, double> result;
 
     auto N = dataSrc.size();
+    if (N == 0) {
+        return result;
+    }
+
     if (N == 1) {
         // value. It can appear with a fixed variable
         result.emplace(dataSrc.at(0), 1.) ;
@@ -711,21 +727,21 @@ std::map<double, double> MetropolisVariable::generateKDE(const std::vector<doubl
 }
 
 
-void MetropolisVariable::generateHistos(const std::vector<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+void MetropolisVariable::generateKDE(const std::vector<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
-    //Q_ASSERT_X(!mFormatedBurnAdaptTrace->isEmpty(), "[MetropolisVariable::generateHistos]", "mFormatedBurnAdaptTrace.isEmpty()");
+    //Q_ASSERT_X(!mFormatedBurnAdaptTrace->isEmpty(), "[MetropolisVariable::generateKDE]", "mFormatedBurnAdaptTrace.isEmpty()");
     if (mFormatedBurnAdaptTrace == nullptr || mFormatedBurnAdaptTrace->size() == 0)
         return;
     //const std::vector<double> &subFullTrace = fullRunFormatedTrace(chains);
     const std::vector<double>& trace = *mFormatedAcquiredTrace;
-    mFormatedHisto = generateKDE(trace, fftLen, bandwidth, tmin, tmax);
+    mFormatedKDE = generateKDE(trace, fftLen, bandwidth, tmin, tmax);
 
-    mChainsHistos.clear();
+    mChainsKDE.clear();
     for (size_t i = 0; i<chains.size(); ++i) {
         //const std::vector<double> &subTrace = runFormatedTraceForChain(chains, i);
         const std::vector<double> &subTrace = formatedAcquiredTraceforChain(chains, i);
         if (!subTrace.empty()) {
-            mChainsHistos.push_back(generateKDE(subTrace, fftLen, bandwidth, tmin, tmax) );
+            mChainsKDE.push_back(generateKDE(subTrace, fftLen, bandwidth, tmin, tmax) );
         }
     }
 }
@@ -741,7 +757,7 @@ void MetropolisVariable::generateHistos(const std::vector<ChainSpecs> &chains, c
  * @f]
  * Then normalized so that F(x_last) = 1.
  */
-void MetropolisVariable::buildEmpiricalCDF()
+/*void MetropolisVariable::buildEmpiricalCDF()
 {
     if (mPriorX.empty() || mPriorY.empty()) return;
 
@@ -822,6 +838,7 @@ double MetropolisVariable::evalEmpiricalPrior(const double x) const
     double t = (x - prev->first) / (it->first - prev->first);
     return prev->second + t * (it->second - prev->second);
 }
+*/
 
 /**
  * @brief Draws one sample from the empirical prior truncated to [min, max].
@@ -840,6 +857,7 @@ double MetropolisVariable::evalEmpiricalPrior(const double x) const
  * @return     A sample in [min, max] drawn from the truncated empirical prior,
  *             or the midpoint (min+max)/2 if the CDF has no mass in [min, max].
  */
+/*
 double MetropolisVariable::sampleFromEmpiricalPrior(const double min,
                                                     const double max) const
 {
@@ -910,7 +928,7 @@ double MetropolisVariable::sampleFromEmpiricalPrior(const double min,
     // ----------------------------------------------------------------
     return std::clamp(x, min, max);
 }
-
+*/
 
 void MetropolisVariable::memoHistoParameter(const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
@@ -927,10 +945,10 @@ bool MetropolisVariable::HistoWithParameter(const int fftLen, const double bandw
 
 void MetropolisVariable::generateHPD(const double threshold)
 {
-    if (!mFormatedHisto.empty())  {
+    if (!mFormatedKDE.empty())  {
         const double thresh = std::clamp(threshold, 0.0, 100.0);
         if (thresh == 100.) {
-            mFormatedHPD = mFormatedHisto;
+            mFormatedHPD = mFormatedKDE;
             return;
         } else if (thresh == 0.) {
             mFormatedHPD.clear();
@@ -938,7 +956,7 @@ void MetropolisVariable::generateHPD(const double threshold)
         } else {
             QList<QPair<double, QPair<double, double> > > formated_intervals;
            
-            auto tmp_HPD = std::map<double, double>(create_HPD_by_dichotomy(mFormatedHisto, formated_intervals, thresh));
+            auto tmp_HPD = std::map<double, double>(create_HPD_by_dichotomy(mFormatedKDE, formated_intervals, thresh));
             mFormatedHPD = tmp_HPD;
             mRawHPDintervals.clear();
 
@@ -982,11 +1000,11 @@ void MetropolisVariable::generateHPD(const double threshold)
 
 void MetropolisVariable::generateCredibility(const std::vector<ChainSpecs> &chains, double threshold)
 {
-    if (mAcquiredTrace == nullptr || mAcquiredTrace->size() == 0)  {
+    if (mAllAcquiredTrace == nullptr || mAllAcquiredTrace->size() == 0)  {
         mRawCredibility = std::pair<double, double>(1, -1);
 
     } else if (mThresholdUsed != threshold || mExactCredibilityThreshold == 0.0) {
-        const std::vector<double>& trace = *mAcquiredTrace;
+        const std::vector<double>& trace = *mAllAcquiredTrace;
         mRawCredibility = credibilityForTrace(trace, threshold, mExactCredibilityThreshold);//, "Compute credibility for "+getName());
     }
     updateFormatedCredibility(mFormat);
@@ -1024,20 +1042,20 @@ void MetropolisVariable::generateCorrelations(const std::vector<ChainSpecs> &cha
     void MetropolisVariable::generateDensityNumericalResults(const std::vector<ChainSpecs> &chains)
 {
     // ----- Résultats globaux (concatenation de toutes les chaînes) -----
-    if (mFormatedHisto.empty())
+    if (mFormatedKDE.empty())
         return;
-    mResults.funcAnalysis = analyseFunction(mFormatedHisto);
+    mResults.funcAnalysis = analyseFunction(mFormatedKDE);
     const std::vector<double>& trace = *mFormatedAcquiredTrace;
     mResults.traceAnalysis = traceStatistic(trace);   // on garde le trace global
 
     // ----- Résultats *par chaîne* (densité) -----
     // 1️⃣  S’assurer que le vecteur possède exactement le bon nombre d’éléments
-    if (mChainsResults.size() != mChainsHistos.size())
-        mChainsResults.resize(mChainsHistos.size());   // crée des objets « vide »
+    if (mChainsResults.size() != mChainsKDE.size())
+        mChainsResults.resize(mChainsKDE.size());   // crée des objets « vide »
 
     // 2️⃣  Remplir uniquement le champ funcAnalysis (densité)
-    for (size_t i = 0; i < mChainsHistos.size(); ++i) {
-        mChainsResults[i].funcAnalysis = analyseFunction(mChainsHistos[i]);
+    for (size_t i = 0; i < mChainsKDE.size(); ++i) {
+        mChainsResults[i].funcAnalysis = analyseFunction(mChainsKDE[i]);
         // on ne touche pas à traceAnalysis → il garde la valeur déjà présente
     }
 }
@@ -1045,18 +1063,18 @@ void MetropolisVariable::generateCorrelations(const std::vector<ChainSpecs> &cha
  * void MetropolisVariable::generateNumericalResults(const std::vector<ChainSpecs> &chains)
 {
     // Results for chain concatenation
-    if (mFormatedHisto.empty())
+    if (mFormatedKDE.empty())
         return;
-    mResults.funcAnalysis = analyseFunction(mFormatedHisto);
+    mResults.funcAnalysis = analyseFunction(mFormatedKDE);
     const std::vector<double>& trace = *mFormatedAcquiredTrace;
     mResults.traceAnalysis = traceStatistic(trace); // fullRunFormatedTrace is the formated Traces
 
     // Results for individual chains
     mChainsResults.clear();
 
-    for (size_t i = 0; i < mChainsHistos.size(); ++i) {
+    for (size_t i = 0; i < mChainsKDE.size(); ++i) {
         DensityAnalysis result;
-        result.funcAnalysis = analyseFunction(mChainsHistos[i]); // useless
+        result.funcAnalysis = analyseFunction(mChainsKDE[i]); // useless
         result.traceAnalysis = traceStatistic(runFormatedTraceForChain(chains, i)); // only to compute quartiles
         mChainsResults.push_back(result);
     }
@@ -1078,11 +1096,11 @@ void MetropolisVariable::generateTraceNumericalResults(const std::vector<ChainSp
     mResults.traceAnalysis = traceStatistic(trace);   // analyse du trace global
     // ----- Résultats *par chaîne* (trace) -----
     // 1️⃣  S’assurer que le vecteur possède exactement le bon nombre d’éléments
-    if (mChainsResults.size() != mChainsHistos.size())
-        mChainsResults.resize(mChainsHistos.size());   // crée des objets « vide »
+    if (mChainsResults.size() != mChainsKDE.size())
+        mChainsResults.resize(mChainsKDE.size());   // crée des objets « vide »
 
     // 2️⃣  Remplir uniquement le champ traceAnalysis (trace)
-    for (size_t i = 0; i < mChainsHistos.size(); ++i) {
+    for (size_t i = 0; i < mChainsKDE.size(); ++i) {
         mChainsResults[i].traceAnalysis =
             traceStatistic(runFormatedTraceForChain(chains, i));
         // on ne touche pas à funcAnalysis → il garde la valeur déjà présente
@@ -1092,16 +1110,16 @@ void MetropolisVariable::generateTraceNumericalResults(const std::vector<ChainSp
 // Getters (no calculs)
 std::map<double, double> &MetropolisVariable::fullHisto()
 {
-    return mFormatedHisto;
+    return mFormatedKDE;
 }
 
-std::map<double, double> &MetropolisVariable::histoForChain(const size_t index)
+std::map<double, double> &MetropolisVariable::KDEForChain(const size_t index)
 {
-    Q_ASSERT(index < (size_t)mChainsHistos.size());
-    return mChainsHistos[index];
+    Q_ASSERT(index < (size_t)mChainsKDE.size());
+    return mChainsKDE[index];
 }
 
-
+// useless
 std::vector<double>::iterator MetropolisVariable::findIter_element(const long unsigned iter, const std::vector<ChainSpecs> &chains, const size_t index ) const
 {
     size_t shift = 0;
@@ -1116,12 +1134,12 @@ std::vector<double>::iterator MetropolisVariable::findIter_element(const long un
 
 
 /**
- * @brief MetropolisVariable::fullTraceForChain
+ * @brief MetropolisVariable::fullFormatedTraceForChain
  * @param chains QList of the ChainSpecs in the Model
  * @param index
  * @return The complet trace (init, Burn-in, adaptation, acquire) corresponding to chain n°index
  */
-std::vector<double> MetropolisVariable::fullTraceForChain(
+std::vector<double> MetropolisVariable::fullFormatedTraceForChain(
     const std::vector<ChainSpecs>& chains,
     std::size_t index) const noexcept
 {
@@ -1150,10 +1168,12 @@ std::vector<double> MetropolisVariable::fullTraceForChain(
     // -------------------------------------------------------------
     std::size_t acceptOffset = 0;
     for (std::size_t i = 0; i < index; ++i) {
-        acceptOffset += chains[i].mRealyAccepted;
+        //acceptOffset += chains[i].mRealyAccepted;
+        acceptOffset += chains[i].mIterDisplay;
     }
 
-    const std::size_t acceptSize = chains[index].mRealyAccepted;
+    //const std::size_t acceptSize = chains[index].mRealyAccepted;
+    const std::size_t acceptSize = chains[index].mIterDisplay;
 
     // -------------------------------------------------------------
     // 3️⃣  Construction du vecteur résultat (une seule allocation)
@@ -1167,9 +1187,16 @@ std::vector<double> MetropolisVariable::fullTraceForChain(
                   mFormatedBurnAdaptTrace->begin() + static_cast<std::ptrdiff_t>(burnOffset + burnSize));
 
     // Copie de la partie acceptée
+    /*result.insert(result.end(),
+                  mAllAcquiredTrace->begin() + static_cast<std::ptrdiff_t>(acceptOffset),
+                  mAllAcquiredTrace->begin() + static_cast<std::ptrdiff_t>(acceptOffset + acceptSize));
+    */
+    auto trace = mFormatedAcquiredTrace;
+
     result.insert(result.end(),
-                  mAcquiredTrace->begin() + static_cast<std::ptrdiff_t>(acceptOffset),
-                  mAcquiredTrace->begin() + static_cast<std::ptrdiff_t>(acceptOffset + acceptSize));
+                  trace->begin() + static_cast<std::ptrdiff_t>(acceptOffset),
+                  trace->begin() + static_cast<std::ptrdiff_t>(acceptOffset + acceptSize));
+
 
     return result;
 }
@@ -1188,7 +1215,7 @@ std::vector<double> MetropolisVariable::correlationForChain(const size_t index)
 
 QString MetropolisVariable::resultsString(const QString &noResultMessage, const QString &unit) const
 {
-    if (mFormatedHisto.empty())
+    if (mFormatedKDE.empty())
         return noResultMessage;
 
     QString result = densityAnalysisToString(mResults) + "<br>";
@@ -1235,7 +1262,7 @@ QString MetropolisVariable::resultsString(const QString &noResultMessage, const 
             }
         }
         result += unit + "<br>";
-        //result += QObject::tr("Density Step : %1").arg(stringForLocal(std::abs(mFormatedHisto.lastKey() - mFormatedHisto.firstKey()) / mFormatedHisto.size())) + "<br>";
+        //result += QObject::tr("Density Step : %1").arg(stringForLocal(std::abs(mFormatedKDE.lastKey() - mFormatedKDE.firstKey()) / mFormatedKDE.size())) + "<br>";
     }
 
    return result;
@@ -1457,11 +1484,91 @@ void MetropolisVariable::save_stream_v337(QDataStream& stream) const
             throw std::runtime_error("Failed to write raw Burn Adapt trace");
         }
 
-        save_container_nullable(stream, mAcquiredTrace);
+        save_container_nullable(stream, mAllAcquiredTrace);
         if (stream.status() != QDataStream::Ok) {
             throw std::runtime_error("Failed to write raw Acquired trace");
         }
 
+    } catch (const std::exception& e) {
+        qDebug() << "[MetropolisVariable::save_stream_v337] Error: "
+                 << e.what()
+                 << " ; stream.status()=" << stream.status();
+        // Politique de gestion d'erreur selon vos besoins
+        // Vous pouvez choisir de lancer, réinitialiser ou ignorer
+    }
+}
+
+void MetropolisVariable::save_stream_v338(QDataStream& stream) const
+{
+    try {
+        // Vérification initiale du stream
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Initial stream error");
+        }
+
+        // Écriture du nom
+        QString str = QString::fromStdString(mName);
+        stream << str;
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to write variable name");
+        }
+        save_container(stream, mAcceptedStateCountByChain);
+
+
+        // Écriture du support
+        quint8 support;
+        switch (mSupport) {
+        case eR:        support = 0; break;
+        case eRp:       support = 1; break;
+        case eRm:       support = 2; break;
+        case eRpStar:   support = 3; break;
+        case eRmStar:   support = 4; break;
+        case eBounded:  support = 5; break;
+        default:
+            throw std::runtime_error("Invalid support type");
+        }
+        stream << support;
+
+        // Écriture du format de date
+        qint16 formatDate;
+        switch (mFormat) {
+        case DateUtils::eUnknown:  formatDate = -2; break;
+        case DateUtils::eNumeric:  formatDate = -1; break;
+        case DateUtils::eBCAD:     formatDate = 0; break;
+        case DateUtils::eCalBP:    formatDate = 1; break;
+        case DateUtils::eCalB2K:   formatDate = 2; break;
+        case DateUtils::eDatBP:    formatDate = 3; break;
+        case DateUtils::eDatB2K:   formatDate = 4; break;
+        case DateUtils::eBCECE:    formatDate = 5; break;
+        case DateUtils::eKa:       formatDate = 6; break;
+        case DateUtils::eMa:       formatDate = 7; break;
+        default:
+            throw std::runtime_error("Invalid date format");
+        }
+        stream << formatDate;
+
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to write date format");
+        }
+
+        // Écriture du trace brut
+
+        save_container_nullable(stream, mBurnAdaptTrace);
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to write raw Burn Adapt trace");
+        }
+
+        save_container_nullable(stream, mAllAcquiredTrace);
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to write raw Acquired trace");
+        }
+
+        stream << is_curve_filtering ;
+        save_container_nullable(stream, mDisplayAcquiredTrace);
+
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to write display Acquired trace");
+        }
     } catch (const std::exception& e) {
         qDebug() << "[MetropolisVariable::save_stream_v337] Error: "
                  << e.what()
@@ -1654,7 +1761,7 @@ void MetropolisVariable::load_stream_v337(QDataStream& stream)
             throw std::runtime_error("Failed to read Burn Adapt traces");
         }
 
-        load_container_nullable(stream, mAcquiredTrace);
+        load_container_nullable(stream, mAllAcquiredTrace);
 
         if (stream.status() != QDataStream::Ok) {
             throw std::runtime_error("Failed to read raw Acquired trace");
@@ -1667,7 +1774,93 @@ void MetropolisVariable::load_stream_v337(QDataStream& stream)
     }
 }
 
+void MetropolisVariable::load_stream_v338(QDataStream& stream)
+{
+    // Initial stream check
+    if (stream.status() != QDataStream::Ok) {
+        std::cout << "[MetropolisVariable::load_stream_v337] Initial stream error" << std::endl;
+        return;
+    }
 
+    try {
+        // Read name
+        QString str;
+        stream >> str;
+
+        if (stream.status() != QDataStream::Ok) {
+            std::cout << "[MetropolisVariable::load_stream_v337] Failed to read variable (name)" << std::endl;
+            throw std::runtime_error("Failed to read variable name");
+        }
+
+        mName = str.toStdString();
+
+        load_container(stream, mAcceptedStateCountByChain);
+
+        // Read support
+        quint8 support;
+        stream >> support;
+        switch (int(support)) {
+        case 0: mSupport = MetropolisVariable::eR; break;
+        case 1: mSupport = MetropolisVariable::eRp; break;
+        case 2: mSupport = MetropolisVariable::eRm; break;
+        case 3: mSupport = MetropolisVariable::eRpStar; break;
+        case 4: mSupport = MetropolisVariable::eRmStar; break;
+        case 5: mSupport = MetropolisVariable::eBounded; break;
+        default:
+            throw std::runtime_error("Invalid support type");
+        }
+
+        // Read date format
+        qint16 formatDate;
+        stream >> formatDate;
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read date format");
+        }
+
+        // Convert date format
+        switch (formatDate) {
+        case -2: mFormat = DateUtils::eUnknown; break;
+        case -1: mFormat = DateUtils::eNumeric; break;
+        case 0: mFormat = DateUtils::eBCAD; break;
+        case 1: mFormat = DateUtils::eCalBP; break;
+        case 2: mFormat = DateUtils::eCalB2K; break;
+        case 3: mFormat = DateUtils::eDatBP; break;
+        case 4: mFormat = DateUtils::eDatB2K; break;
+        case 5: mFormat = DateUtils::eBCECE; break;
+        case 6: mFormat = DateUtils::eKa; break;
+        case 7: mFormat = DateUtils::eMa; break;
+        default:
+            throw std::runtime_error("Invalid date format");
+        }
+
+
+        // Read raw trace
+        load_container_nullable(stream, mBurnAdaptTrace);
+
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read Burn Adapt traces");
+        }
+
+        load_container_nullable(stream, mAllAcquiredTrace);
+
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read raw Acquired trace");
+        }
+
+        stream >> is_curve_filtering;
+        load_container_nullable(stream, mDisplayAcquiredTrace);
+
+        if (stream.status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read display Acquired trace");
+        }
+
+    } catch (const std::exception& e) {
+        std::cout << "[MetropolisVariable::load_stream_v337] Error: "
+                  << e.what()
+                  << " ; stream.status()=" << stream.status()<< std::endl;
+
+    }
+}
 
 
 QDataStream &operator>>( QDataStream& stream, MetropolisVariable& data )

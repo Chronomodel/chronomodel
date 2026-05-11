@@ -141,7 +141,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
             mGraph->add_curve(curveHPD);
 
             //  Post Distrib All Chains
-            const std::map<double, double> &normPostDistrib = mDate->mTi.mFormatedHisto.size() == 1 ? std::map<double, double> {{mDate->mTi.mFormatedHisto.begin()->first, max_formatedCalib}} : mDate->mTi.mFormatedHisto;
+            const std::map<double, double> &normPostDistrib = mDate->mTi.mFormatedKDE.size() == 1 ? std::map<double, double> {{mDate->mTi.mFormatedKDE.begin()->first, max_formatedCalib}} : mDate->mTi.mFormatedKDE;
             const GraphCurve &curvePostDistrib = densityCurve(normPostDistrib,
                                                               "Post Distrib All Chains",
                                                               color,
@@ -151,17 +151,17 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
             mGraph->add_curve(curvePostDistrib);
 
             // Post Distrib Chain i
-            if (!mDate->mTi.mChainsHistos.empty())
+            if (!mDate->mTi.mChainsKDE.empty())
                 for (size_t i=0; i<mChains.size(); ++i) {
-                    const std::map<double, double> &normPostDistribChain = mDate->mTi.mChainsHistos.at(i).size() == 1 ? std::map<double, double> {{mDate->mTi.mChainsHistos.at(i).begin()->first, max_formatedCalib}} : mDate->mTi.mChainsHistos.at(i);
+                    const std::map<double, double> &normPostDistribChain = mDate->mTi.mChainsKDE.at(i).size() == 1 ? std::map<double, double> {{mDate->mTi.mChainsKDE.at(i).begin()->first, max_formatedCalib}} : mDate->mTi.mChainsKDE.at(i);
                     const GraphCurve &curvePostDistribChain = densityCurve(normPostDistribChain,
                                                                            "Post Distrib Chain " + QString::number(i),
                                                                            Painting::chainColors.at(i),
                                                                            Qt::SolidLine,
                                                                            Qt::NoBrush);
                     mGraph->add_curve(curvePostDistribChain);
-                    if (!mDate->mWiggle.mChainsHistos.empty()) {
-                        const std::map<double, double> &normPostWiggleChain = mDate->mWiggle.mChainsHistos.at(i).size() == 1 ? std::map<double, double> {{mDate->mWiggle.mChainsHistos.at(i).begin()->first, max_formatedCalib}} : mDate->mWiggle.mChainsHistos.at(i);
+                    if (!mDate->mWiggle.mChainsKDE.empty()) {
+                        const std::map<double, double> &normPostWiggleChain = mDate->mWiggle.mChainsKDE.at(i).size() == 1 ? std::map<double, double> {{mDate->mWiggle.mChainsKDE.at(i).begin()->first, max_formatedCalib}} : mDate->mWiggle.mChainsKDE.at(i);
 
                         const GraphCurve &curveWiggle = densityCurve(normPostWiggleChain,
                                                                      "Wiggle Post Distrib Chain " + QString::number(i),
@@ -176,7 +176,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
             // ---- Wiggle
 
             //  Post Distrib All Chains
-            const std::map<double, double> &normPostWiggleChain = mDate->mWiggle.mFormatedHisto.size() == 1 ? std::map<double, double> {{mDate->mWiggle.mFormatedHisto.begin()->first, max_formatedCalib}} : mDate->mWiggle.mFormatedHisto;
+            const std::map<double, double> &normPostWiggleChain = mDate->mWiggle.mFormatedKDE.size() == 1 ? std::map<double, double> {{mDate->mWiggle.mFormatedKDE.begin()->first, max_formatedCalib}} : mDate->mWiggle.mFormatedKDE;
 
             const GraphCurve &curveWiggle = densityCurve( normPostWiggleChain,
                                                           "Wiggle Post Distrib All Chains",
@@ -227,9 +227,9 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
             mGraph->add_curve(curvePostDistrib);
 
             // Post Distrib Chain i
-            if (!mDate->mSigmaTi.mChainsHistos.empty())
+            if (!mDate->mSigmaTi.mChainsKDE.empty())
                 for (size_t i=0; i<mChains.size(); ++i) {
-                    const GraphCurve &curvePostDistribChain = densityCurve(mDate->mSigmaTi.histoForChain(i),
+                    const GraphCurve &curvePostDistribChain = densityCurve(mDate->mSigmaTi.KDEForChain(i),
                                                                             "Post Distrib Chain " + QString::number(i),
                                                                             Painting::chainColors.at(i),
                                                                             Qt::SolidLine,
@@ -268,6 +268,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
         } else if (variableList.contains(eSigma) && mDate->mSigmaTi.mSamplerProposal!= MHVariable::eFixe) {
                 mTitle = tr("Individual Log10(Std) : %1").arg(mDate->getQStringName());
                 generateLogTraceCurves(mChains, &mDate->mSigmaTi);
+                //generateTraceCurves(mChains, &mDate->mSigmaTi);
         }
 
     }

@@ -3692,7 +3692,7 @@ QString MCMCLoopCurve::initialize_337()
     if (mCurveSettings.mVarianceType == CurveSettings::eModeBayesian) {
         for (std::shared_ptr<Event> &ev : allEvents) {
             if (mModel->is_curve && ev->mTheta.mSamplerProposal!= MHVariable::eFixe) {
-                ev->mTheta.mSamplerProposal = MHVariable::eMHAdaptGauss;
+                ev->mTheta.mSamplerProposal = MHVariable::eMHPrior;
             }
             if (ev->mPointType == Event::eNode)
                 mNodeEvent.push_back(ev);
@@ -3701,19 +3701,19 @@ QString MCMCLoopCurve::initialize_337()
 
 #ifdef S02_BAYESIAN
             if (ev->mTheta.mSamplerProposal!= MHVariable::eFixe)
-                ev->mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss; // not yet integrated within update_330
+                ev->mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
             else
                 ev->mS02Theta.mSamplerProposal = MHVariable::eFixe; // cas des bornes
 
 #else
-            ev->mS02Theta.mSamplerProposal = MHVariable::eFixe; // not yet integrated within update_330
+            ev->mS02Theta.mSamplerProposal = MHVariable::eFixe;
 #endif
 
         }
     } else {
         for (const std::shared_ptr<Event> &ev : allEvents) {
             if (mModel->is_curve && ev->mTheta.mSamplerProposal!= MHVariable::eFixe) {
-                ev->mTheta.mSamplerProposal = MHVariable::eMHAdaptGauss;
+                ev->mTheta.mSamplerProposal = MHVariable::eMHPrior;
             }
             mPointEvent.push_back(ev);
 
@@ -8551,8 +8551,7 @@ bool MCMCLoopCurve::tempering_337_b(double expo_T_max, std::vector<bool>& event_
 
 
 
-
-#pragma mark apply_curve
+/*
                 auto apply_curve = [&]()
                 {
 
@@ -8563,11 +8562,6 @@ bool MCMCLoopCurve::tempering_337_b(double expo_T_max, std::vector<bool>& event_
                         if (mCurveSettings.mVarianceType != CurveSettings::eModeFixed ) {
                             // Events must be ordered
 
-                            /* --------------------------------------------------------------
-                            * F - Update mS02Vg, tau in Komlan thesis,
-                            * non deterministe, c'est une simple fonction. Pas de tirrage aléatoire.
-                            *  La mise à jour doit être faite avcec la mise à jour des theta
-                            * -------------------------------------------------------------- */
 
                             try {
 
@@ -8692,10 +8686,6 @@ bool MCMCLoopCurve::tempering_337_b(double expo_T_max, std::vector<bool>& event_
 
                                     // QUE DEVIENNENT LES BORNES ?? -> il n'y a plus de Node, les Nodes sont transformés en Event
 
-                                    /* Si nous sommes en variance global,
-                                         * il faut trouver l'indice du premier Event qui ne soit pas bound
-                                         * L'ordre et donc l'indice change avec le spread
-                                         */
 
                                     // Ici nous devons retrouver le premier Event, car plus de Node
                                     auto it = std::find_if (initListEvents.begin(), initListEvents.end(),[](auto event) {return event->mPointType == Event::ePoint; });
@@ -8831,9 +8821,9 @@ bool MCMCLoopCurve::tempering_337_b(double expo_T_max, std::vector<bool>& event_
                                 rate = rate_h_lambda_XY_335(current_lambda, try_lambda, n_points) ;
 
                             } else {
-                                /**
-                                     * \f$ P(\lambda) = \frac{ \lambda^{\tfrac{1}{2}(n_{\text{points}} - 2)}} { \left( {c + \lambda} \right)^{\mu + 1}} \f$
-                                     */
+
+                                   // \f$ P(\lambda) = \frac{ \lambda^{\tfrac{1}{2}(n_{\text{points}} - 2)}} { \left( {c + \lambda} \right)^{\mu + 1}} \f$
+
                                 rate = rate_h_lambda_X_335(current_lambda, try_lambda, n_points) ;
                                 // multiplier par le jacobien
                                 rate *= rate_try_ftKf * try_lambda / current_lambda;
@@ -8876,6 +8866,7 @@ bool MCMCLoopCurve::tempering_337_b(double expo_T_max, std::vector<bool>& event_
 
                 };
                 // fin auto update_curve
+                */
 
 #pragma mark update_curve_tempering
                 auto apply_curve_tempering = [&](double T)
@@ -8888,12 +8879,6 @@ bool MCMCLoopCurve::tempering_337_b(double expo_T_max, std::vector<bool>& event_
                     try {
                         if (mCurveSettings.mVarianceType != CurveSettings::eModeFixed ) {
                             // Events must be ordered
-
-                            /* --------------------------------------------------------------
-                            * F - Update mS02Vg, tau in Komlan thesis,
-                            * non deterministe, c'est une simple fonction. Pas de tirrage aléatoire.
-                            *  La mise à jour doit être faite avcec la mise à jour des theta
-                            * -------------------------------------------------------------- */
 
                             try {
 
@@ -9011,19 +8996,9 @@ bool MCMCLoopCurve::tempering_337_b(double expo_T_max, std::vector<bool>& event_
                                                     event->mVg.setValue(try_Vg);
                                                     event->updateW();
 
-                                                }  /* else { // inutile non modifié
-                                                    event->mVg.mX = current_Vg;
-                                                    event->updateW();
-                                                } */
+                                                }
 
-                                            } /*
-                                               else { // inutile non modifié
-
-                                                event->mVg.mX = current_Vg;
-                                                event->updateW();
-
-
-                                            }*/
+                                            }
                                         }
                                         // fin if Vg Bayesien
                                     }
@@ -9034,10 +9009,6 @@ bool MCMCLoopCurve::tempering_337_b(double expo_T_max, std::vector<bool>& event_
             #pragma mark update Vg Global
                                     // QUE DEVIENNENT LES BORNES ?? -> il n'y a plus de Node, les Nodes sont transformés en Event
 
-                                    /* Si nous sommes en variance global,
-                                         * il faut trouver l'indice du premier Event qui ne soit pas bound
-                                         * L'ordre et donc l'indice change avec le spread
-                                         */
 
                                     // Ici nous devons retrouver le premier Event, car plus de Node
                                     auto it = std::find_if (initListEvents.begin(), initListEvents.end(),[](auto event) {return event->mPointType == Event::ePoint; });
@@ -9219,7 +9190,7 @@ bool MCMCLoopCurve::tempering_337_b(double expo_T_max, std::vector<bool>& event_
 
                 }; // fin auto update_curve_tempering
 
-#pragma mark update_curve
+/*
                 auto MH_all_and_curve = [&](double T)
                 {
                     std::size_t j = 0;
@@ -9372,44 +9343,21 @@ bool MCMCLoopCurve::tempering_337_b(double expo_T_max, std::vector<bool>& event_
                     }
 
                     // Mise à jour globale des phases
-                    /* --------------------------------------------------------------
-                    *  C.2 - Update Tau Phases
-                    * -------------------------------------------------------------- */
                     std::for_each(mModel->mPhases.begin(),
                                   mModel->mPhases.end(),
                                   [this](std::shared_ptr<Phase> p) {
                                       p->update_Tau(tminPeriod, tmaxPeriod);
                                   });
-                    /* --------------------------------------------------------------
-                    *  C.3 - Update Gamma Phases
-                    * -------------------------------------------------------------- */
+
                     std::for_each(mModel->mPhaseConstraints.begin(),
                                   mModel->mPhaseConstraints.end(),
                                   [](std::shared_ptr<PhaseConstraint> pc) {
                                       pc->updateGamma();
                                   });
                 }; // fin update MH ll and curve
+*/
+                // --------------------------------------------------------------
 
-                /* ----------------------------------------------------------------------
-                 *  Dans Chronomodel, on appelle simplement : event->updateTheta(t_min,t_max); sur tous les events.
-                 *  Pour mettre à jour un theta d'event dans Curve, on doit accéder aux thetas des autres events.
-                 *  => On effectue donc la mise à jour directement ici, sans passer par une fonction
-                 *  de la classe event (qui n'a pas accès aux autres events)
-                 * ---------------------------------------------------------------------- */
-
-                // --------------------------------------------------------------
- #pragma mark 4️⃣ Régéneration à temp max des Events sélectionnées
-                // --------------------------------------------------------------
-              //  jump_regenereted(static_cast<double>(T_max));
-              //  update_curve();
-
-                // --------------------------------------------------------------
-                // 5️⃣  Descente (T décroissant)
-                // --------------------------------------------------------------
-               // for (int i = T_max - 1; i >= 0; --i) {
-               //     MH_all(static_cast<double>(i));
-               //     update_curve_tempering(static_cast<double>(i));
-               // }
 
                 // --------------------------------------------------------------
                 // 6️⃣ 2e régéneration à temp max
@@ -9428,13 +9376,8 @@ bool MCMCLoopCurve::tempering_337_b(double expo_T_max, std::vector<bool>& event_
                 // --------------------------------------------------------------
                 for (int e = expo_T_max ; e >= 0; --e) {
                     const double T = std::pow(2, e);
-                    MH_all(1);
-                    //apply_curve();
-
-                     //   MH_all_and_curve(po2T);
-
-
-                   apply_curve_tempering(1);
+                    MH_all(T);
+                    apply_curve_tempering(1);
                 }
 
 

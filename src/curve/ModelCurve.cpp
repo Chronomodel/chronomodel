@@ -523,6 +523,57 @@ bool ModelCurve::loadFromStream_v335(QDataStream* in)
 
     try {
         for (auto&& e : mEvents)
+            e->mVg.load_stream_v337(*in);
+
+
+        quint32 tmp32;
+        mLambdaSpline.load_stream_v337(*in);
+
+        //*in >> mS02Vg;
+        //mS02Vg.load_stream(*in);
+
+        *in >> tmp32;
+        mSplinesTrace.resize(tmp32);
+        for (auto& splin : mSplinesTrace) {
+            *in >> splin;           
+        }
+
+        *in >> mPosteriorMeanG;
+
+        *in >> tmp32;
+        mPosteriorMeanGByChain.resize(tmp32);
+        for (auto& pMByChain : mPosteriorMeanGByChain) {
+            *in >> pMByChain;
+        }
+
+        return true;
+
+    } catch (...) {
+        std::cout << "[loadFromStream_v335] error" << std::endl;
+        return false;
+    }
+
+
+}
+
+bool ModelCurve::loadFromStream_v338(QDataStream* in)
+{
+    bool ok = Model::loadFromStream_v338(in);
+
+    // Gérer l'erreur de lecture ici
+    if (in->status() != QDataStream::Ok) {
+        qDebug() << "[ModelCurve::loadFromStream_v335]  erreur de flux ; in->status()=" << in->status();
+        // throw std::runtime_error("Error reading from stream");
+        // return;
+    }
+
+
+    if (!is_curve || !ok) {
+        return ok;
+    }
+
+    try {
+        for (auto&& e : mEvents)
             e->mVg.load_stream(*in);
 
 
@@ -534,15 +585,17 @@ bool ModelCurve::loadFromStream_v335(QDataStream* in)
 
         *in >> tmp32;
         mSplinesTrace.resize(tmp32);
-        for (auto& splin : mSplinesTrace)
+        for (auto& splin : mSplinesTrace) {
             *in >> splin;
+        }
 
         *in >> mPosteriorMeanG;
 
         *in >> tmp32;
         mPosteriorMeanGByChain.resize(tmp32);
-        for (auto& pMByChain : mPosteriorMeanGByChain)
+        for (auto& pMByChain : mPosteriorMeanGByChain) {
             *in >> pMByChain;
+        }
 
         return true;
 
@@ -650,14 +703,14 @@ void ModelCurve::generatePosteriorDensities(const std::vector<ChainSpecs> &chain
     if (is_curve) {
         for (std::shared_ptr<Event> &event : mEvents) {
             if (event->mVg.mSamplerProposal != MHVariable::eFixe)
-                event->mVg.generateHistos(chains, fftLen, bandwidth);
+                event->mVg.generateKDE(chains, fftLen, bandwidth);
         }
 
-        mLambdaSpline.generateHistos(chains, fftLen, bandwidth);
+        mLambdaSpline.generateKDE(chains, fftLen, bandwidth);
 
 #ifdef KOMLAN
         if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
-            mS02Vg.generateHistos(chains, fftLen, bandwidth);
+            mS02Vg.generateKDE(chains, fftLen, bandwidth);
 #endif
     }
 
@@ -1558,7 +1611,7 @@ void ModelCurve::exportHpdGPComposanteToReferenceCurves(const PosteriorMeanGComp
 
 }
 
-std::vector<MCMCSpline> ModelCurve::fullRunSplineTrace(const std::vector<ChainSpecs>& chains)
+std::vector<MCMCSpline> ModelCurve::acceptedSplineTraceForAllChain(const std::vector<ChainSpecs>& chains)
 {
   // Calcul reserve space
     int reserveSize = 0;
@@ -1575,6 +1628,7 @@ std::vector<MCMCSpline> ModelCurve::fullRunSplineTrace(const std::vector<ChainSp
         // we add 1 for the init
         const int burnAdaptSize = 0;//1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch);
         const int runTraceSize = chain.mRealyAccepted; // there is only accepted curves
+
         const int firstRunPosition = shift + burnAdaptSize;
         std::copy(mSplinesTrace.begin() + firstRunPosition , mSplinesTrace.begin() + firstRunPosition + runTraceSize , splineRunTrace.begin() + shiftTrace);
 
@@ -1584,15 +1638,13 @@ std::vector<MCMCSpline> ModelCurve::fullRunSplineTrace(const std::vector<ChainSp
     return splineRunTrace;
 }
 
-std::vector<MCMCSpline> ModelCurve::runSplineTraceForChain(const std::vector<ChainSpecs> &chains, const size_t index)
+std::vector<MCMCSpline> ModelCurve::acceptedSplineTraceForChain(const std::vector<ChainSpecs> &chains, const size_t index)
 {
     size_t shift = 0;
 
     for (size_t i = 0; i<chains.size(); i++) {
         const auto &chain = chains.at(i);
-        // we add 1 for the init
-        //const int burnAdaptSize = 1 + chain.mIterPerBurn + int (chain.mBatchIndex * chain.mIterPerBatch);
-        const int burnAdaptSize = 0; // there is only accepted curves
+        constexpr int burnAdaptSize = 0; // there is only accepted curves
         const int runTraceSize = chain.mRealyAccepted;
         const int firstRunPosition = shift + burnAdaptSize;
 

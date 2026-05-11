@@ -219,14 +219,14 @@ public:
     //virtual void updateTheta(const double tmin, const double tmax) {updateExpansionCollapse(tmin, tmax);};
 
 #else
-    virtual void updateTheta(const double tmin, const double tmax) {updateThetaPriorCDE(tmin, tmax);};
+    virtual void updateTheta(const double tmin, const double tmax) {updateTheta_v3(tmin, tmax);};
 #endif
 
 
     void updateTheta_v3(const double tmin, const double tmax);
 
 
-    void updateTheta_v4(const double tmin, const double tmax);
+    void updateTheta_v4(const double tmin, const double tmax); // ,with mixing kernel
 
     /* // test avec mélange de densités
       void updateTheta_v4_mixing(const double tmin, const double tmax, const double rate_theta = 1.0);
@@ -248,8 +248,10 @@ public:
 
     void applyThetaProposal_v3(const double tmin, const double tmax);
 
-    void applyThetaPriorCDE(const double tmin, const double tmax);
+    /* obsolete
+     * void applyThetaPriorCDE(const double tmin, const double tmax);
     void updateThetaPriorCDE(const double tmin, const double tmax);
+    */
 
     /*obsolete
     void updateThetaAndTiSigma(const double tmin, const double tmax);// ne fonctionne pas
@@ -268,9 +270,33 @@ public:
 
     double h_S02(const double S02);
 
-    void generateHistos(const std::vector<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
+    void generateKDE(const std::vector<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
 
-    void updateW();
+    inline void updateW()
+    {
+#ifdef DEBUG
+        try {
+
+            if ((mVg.mX + mSy * mSy) < 1e-20) {
+                qDebug()<< "[Event::updateW] mVg.mX + mSy * mSy < 1e-20";
+            }
+#endif
+            mW = 1.0 / (mVg.mX + mSy * mSy);
+
+#ifdef DEBUG
+            if (mW < 1e-20) {
+                qDebug()<< "[Event::updateW] mW < 1e-20"<< mW;
+
+            } else if (mW > 1e+20) {
+                qDebug()<< "[Event::updateW] mW > 1e+20"<< mW;
+            }
+
+
+        }  catch (...) {
+            qWarning() <<"[Event::updateW] mW = 0";
+        }
+#endif
+    }
 
 private:
     std::string mName;

@@ -132,12 +132,14 @@ public:
 
     virtual void saveToStream(QDataStream* out) const ;
 
-    virtual bool loadFromStream(QDataStream* in) {return loadFromStream_v330(in);};
+    virtual bool loadFromStream(QDataStream* in) {return loadFromStream_v338(in);};
 
     bool loadFromStream_v323(QDataStream* in);
     bool loadFromStream_v324(QDataStream* in);
     bool loadFromStream_v328(QDataStream* in);
     bool loadFromStream_v330(QDataStream* in);
+
+    bool loadFromStream_v338(QDataStream* in);
 
     // Only trace needed for this :
     virtual void generateCorrelations(const std::vector<ChainSpecs>& chains);

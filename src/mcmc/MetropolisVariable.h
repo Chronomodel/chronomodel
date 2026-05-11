@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2025
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -86,7 +86,16 @@ public:
 
     double mX;
     std::shared_ptr<std::vector<double>> mBurnAdaptTrace; // all the trace for all chain in the burnin state and the addapt state, in raw format
-    std::shared_ptr<std::vector<double>> mAcquiredTrace; // all the trace for all chain in the Aquire state, in raw format
+    std::shared_ptr<std::vector<double>> mAllAcquiredTrace; // all the trace for all chain in the Aquire state, in raw format
+    bool is_curve_filtering = false;
+    std::shared_ptr<std::vector<double>> mDisplayAcquiredTrace;
+
+    inline std::shared_ptr<std::vector<double>> traceToDisplay() const {
+        if (is_curve_filtering)
+            return mDisplayAcquiredTrace;
+        else
+            return mAllAcquiredTrace;
+    }
 
     std::shared_ptr<std::vector<double>> mFormatedBurnAdaptTrace;
     std::shared_ptr<std::vector<double>> mFormatedAcquiredTrace;
@@ -99,12 +108,12 @@ public:
     DateUtils::FormatDate mFormat;
 
     // Posterior density results.
-    // mFormatedHisto is calculated using all run parts of all chains traces.
-    // mChainsHistos constains posterior densities for each chain, computed using only the "run" part of the trace.
+    // mFormatedKDE is calculated using all run parts of all chains traces.
+    // mChainsKDE constains posterior densities for each chain, computed using only the "run" part of the trace.
     // This needs to be re-calculated each time we change fftLength or bandwidth.
-    // See generateHistos() for more.
-    std::map<double, double> mFormatedHisto;
-    std::vector<std::map<double, double>> mChainsHistos;
+    // See generateKDE() for more.
+    std::map<double, double> mFormatedKDE;
+    std::vector<std::map<double, double>> mChainsKDE;
 
     // List of correlations for each chain.
     // They are calculated once, when the MCMC is ready, from the run part of the trace.
@@ -132,7 +141,7 @@ public:
 public:
 
     // Vecteur brut des valeurs enregistrées pendant le burn-in (par chaîne)
-    std::shared_ptr<std::vector<double>> mBurnInPriorTrace;
+  /*  std::shared_ptr<std::vector<double>> mBurnInPriorTrace;
 
     // Stockage sous forme de vecteurs pour l'interpolation
     std::vector<double> mPriorX;   // abscisses (grille régulière issue du KDE)
@@ -149,6 +158,7 @@ public:
     std::vector<double> mPriorCDF_y;    // valeurs CDF ∈ [0, 1]
     bool mEmpiricalCDFReady = false;
     void buildEmpiricalCDF();
+*/
     /**
  * @brief Draws one sample from the empirical prior truncated to [min, max].
  *
@@ -166,7 +176,7 @@ public:
  * @return     A sample in [min, max] drawn from the truncated empirical prior,
  *             or the midpoint (min+max)/2 if the CDF has no mass in [min, max].
  */
-    double sampleFromEmpiricalPrior(double min, double max) const;
+/*    double sampleFromEmpiricalPrior(double min, double max) const;
 
 
 
@@ -184,7 +194,7 @@ public:
 
     // Évaluation de l'a priori en un point x (interpolation linéaire)
     double evalEmpiricalPrior(const double x) const;
-
+*/
 
 public:
     MetropolisVariable();
@@ -219,7 +229,7 @@ public:
     // -----
     void generateCorrelations(const std::vector<ChainSpecs> &chains);
 
-    void generateHistos(const std::vector<ChainSpecs> &chains, const int fftLen = 1024, const double bandwidth = 0.9, const double tmin = 0., const double tmax = 0.);
+    void generateKDE(const std::vector<ChainSpecs> &chains, const int fftLen = 1024, const double bandwidth = 0.9, const double tmin = 0., const double tmax = 0.);
     void memoHistoParameter(const int fftLen = 1024, const double bandwidth = 0.9, const double tmin = 0., const double tmax = 0.);
     bool HistoWithParameter(const int fftLen = 1024, const double bandwidth = 0.9, const double tmin = 0., const double tmax = 0.);
 
@@ -241,10 +251,10 @@ public:
     // These functions do not make any calculation
     // -----
     std::map<double, double> &fullHisto();
-    std::map<double, double> &histoForChain(const size_t index);
+    std::map<double, double> &KDEForChain(const size_t index);
 
     // Full trace for the chain (burn + adapt + run)
-    std::vector<double> fullTraceForChain( const std::vector<ChainSpecs>& chains, std::size_t index) const noexcept;
+    std::vector<double> fullFormatedTraceForChain( const std::vector<ChainSpecs>& chains, std::size_t index) const noexcept;
 
 
     // Trace for run part as a vector
@@ -345,11 +355,13 @@ public:
         // On ne parcourt que les éléments précédents, pas tout le tableau.
         std::size_t shift = 0;
         for (std::size_t i = 0; i < chain_index; ++i)
-            shift += chains[i].mRealyAccepted;
+            //shift += chains[i].mRealyAccepted;
+            shift += chains[i].mIterDisplay;
         // -------------------------------------------------------------
         // 4️⃣  Nombre d’échantillons à extraire pour la chaîne demandée
         // -------------------------------------------------------------
-        const std::size_t nbValue = chains[chain_index].mRealyAccepted;
+        //const std::size_t nbValue = chains[chain_index].mRealyAccepted;
+        const std::size_t nbValue = chains[chain_index].mIterDisplay;
         // Protection contre les incohérences d’index (débordement)
         if (shift + nbValue > trace.size())
             return {0};                     // ou lancer une exception
@@ -362,16 +374,18 @@ public:
                                    trace.begin() + shift + nbValue);
     }
 
+    // used by generateCorrelation
     inline std::vector<double> acquiredTraceforChain(const std::vector<ChainSpecs>& chains, std::size_t chain_index)
     {
-        return extractTraceForChain(mAcquiredTrace, chains, chain_index);
+        return extractTraceForChain(mAllAcquiredTrace, chains, chain_index);
     }
-
+    // use by generatePosteriorDensities et generateKDE
     inline std::vector<double> formatedAcquiredTraceforChain(const std::vector<ChainSpecs>& chains, std::size_t chain_index)
     {
         return extractTraceForChain(mFormatedAcquiredTrace, chains, chain_index);
     }
 
+    // useless
     std::vector<double>::iterator findIter_element(const long unsigned iter, const std::vector<ChainSpecs>& chains, const size_t index ) const;
 
     // Trace for run part of the chain as a vector
@@ -435,7 +449,7 @@ public:
 
     // Obsolete
     inline std::vector<double> runRawTraceForChain(const std::vector<ChainSpecs>& chains, const size_t index) {
-        const std::vector<double> &trace = extractTraceForChain(mAcquiredTrace, chains, index);
+        const std::vector<double> &trace = extractTraceForChain(mAllAcquiredTrace, chains, index);
         return std::vector<double>(trace.begin(), trace.end());
     };
 
@@ -464,14 +478,19 @@ public:
 
     // mémorisation des états retenus dans l'historique qui dépend du thinning.
     inline virtual void acquire() {
-        mAcquiredTrace->push_back(mX);
+        mAllAcquiredTrace->push_back(mX);
     }
     inline virtual void acquire(double* valueToSave) {
-        mAcquiredTrace->push_back(*valueToSave);
+        mAllAcquiredTrace->push_back(*valueToSave);
     }
 
-    inline void load_stream(QDataStream& stream) {load_stream_v337(stream);}
-    inline void save_stream(QDataStream& stream) const {save_stream_v337(stream);}
+    inline void load_stream(QDataStream& stream) {load_stream_v338(stream);}
+    inline void save_stream(QDataStream& stream) const {save_stream_v338(stream);}
+
+    void load_stream_v328(QDataStream& stream);
+    void load_stream_v330(QDataStream& stream);
+    void load_stream_v337(QDataStream& stream);
+    void load_stream_v338(QDataStream& stream);
 
 private:
     /**
@@ -497,11 +516,10 @@ private:
 
     void save_stream_v330(QDataStream& stream) const;
     void save_stream_v337(QDataStream& stream) const;
+    void save_stream_v338(QDataStream& stream) const;
 
-    void load_stream_v328(QDataStream& stream);
-    void load_stream_v330(QDataStream& stream);
-    void load_stream_v337(QDataStream& stream);
-    //void load_stream_v327(QDataStream& stream);
+
+
 
 
 friend class MHVariable;

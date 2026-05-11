@@ -115,8 +115,8 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
             graph_density();
             mGraph->reserveCurves(5 + 2*mChains.size());
 
-            std::map<double, double> &alpha = mPhase->mAlpha.mFormatedHisto;
-            std::map<double, double> &beta = mPhase->mBeta.mFormatedHisto;
+            std::map<double, double> &alpha = mPhase->mAlpha.mFormatedKDE;
+            std::map<double, double> &beta = mPhase->mBeta.mFormatedKDE;
 
             std::map<double, double> &alphaHPD = mPhase->mAlpha.mFormatedHPD;
             std::map<double, double> &betaHPD = mPhase->mBeta.mFormatedHPD;
@@ -163,10 +163,10 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
             const GraphCurve &curveTimeRange = topLineSection(mPhase->getFormatedTimeRange(), "Time Range", color);
             mGraph->add_curve(curveTimeRange);
 
-            if (!mPhase->mAlpha.mChainsHistos.empty())
+            if (!mPhase->mAlpha.mChainsKDE.empty())
                 for (size_t i = 0; i<mChains.size(); ++i) {
-                    std::map<double, double> &alpha_i = mPhase->mAlpha.mChainsHistos[i];
-                    std::map<double, double> &beta_i = mPhase->mBeta.mChainsHistos[i];
+                    std::map<double, double> &alpha_i = mPhase->mAlpha.mChainsKDE[i];
+                    std::map<double, double> &beta_i = mPhase->mBeta.mChainsKDE[i];
 
                     if (alphaIsBound && !betaIsBound) {
                         alpha_i[alpha_i.begin()->first] =  map_max(beta_i)->second;
@@ -314,9 +314,9 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
             }
 
 
-            if (!mPhase->mDuration.mChainsHistos.empty())
+            if (!mPhase->mDuration.mChainsKDE.empty())
                 for (size_t i = 0; i < mChains.size(); ++i) {
-                    const GraphCurve &curveDuration = densityCurve(mPhase->mDuration.histoForChain(i),
+                    const GraphCurve &curveDuration = densityCurve(mPhase->mDuration.KDEForChain(i),
                                                                    "Post Distrib Chain " + QString::number(i),
                                                                    Painting::chainColors.at(i), Qt::DotLine);
 

@@ -61,7 +61,6 @@ void GraphViewEvent::setEvent(std::shared_ptr<Event> event)
     Q_ASSERT(event);
     mEvent = event;
     setItemColor(mEvent->mColor);
-    //update();
 }
 
 
@@ -169,7 +168,7 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
                  *  Post Distrib All Chains
                  * ------------------------------------
                  */
-                const GraphCurve &curvePostDistrib = densityCurve(mEvent->mTheta.mFormatedHisto,
+                const GraphCurve &curvePostDistrib = densityCurve(mEvent->mTheta.mFormatedKDE,
                                                                        "Post Distrib All Chains",
                                                                        color);
                 mGraph->add_curve(curvePostDistrib);
@@ -184,9 +183,9 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
                  *  Post Distrib Chain i
                  * ------------------------------------
                  */
-                if (!mEvent->mTheta.mChainsHistos.empty())
-                    for (size_t i = 0; i < mChains.size(); ++i) {
-                        const GraphCurve &curvePostDistribChain = densityCurve(mEvent->mTheta.mChainsHistos[i],
+                if (!mEvent->mTheta.mChainsKDE.empty())
+                    for (size_t i = 0; i < mEvent->mTheta.mChainsKDE.size(); ++i) {
+                        const GraphCurve &curvePostDistribChain = densityCurve(mEvent->mTheta.mChainsKDE[i],
                                                                                 "Post Distrib Chain " + QString::number(i),
                                                                                 Painting::chainColors.at(i),
                                                                                 Qt::SolidLine,
@@ -230,9 +229,9 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
                                                         color);
                 curve.mVisible = true;
                 mGraph->add_curve(curve);
-                if (!date.mSigmaTi.mChainsHistos.empty())
+                if (!date.mSigmaTi.mChainsKDE.empty())
                     for (size_t j=0; j<mChains.size(); ++j) {
-                        const GraphCurve &curveChain = densityCurve(date.mSigmaTi.histoForChain(j),
+                        const GraphCurve &curveChain = densityCurve(date.mSigmaTi.KDEForChain(j),
                                                                      "Post Distrib Date " + QString::number(i) + " Chain " + QString::number(j),
                                                                      Painting::chainColors.at(j));
                         mGraph->add_curve(curveChain);
@@ -254,9 +253,9 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
             curve.mVisible = true;
             mGraph->add_curve(curve);
 
-            if (!mEvent->mS02Theta.mChainsHistos.empty()) {
+            if (!mEvent->mS02Theta.mChainsKDE.empty()) {
                 for (size_t j = 0; j<mChains.size(); ++j) {
-                    const GraphCurve &curveChain = densityCurve(mEvent->mS02Theta.histoForChain(j), "Post Distrib Chain " + QString::number(j), Painting::chainColors.at(j));
+                    const GraphCurve &curveChain = densityCurve(mEvent->mS02Theta.KDEForChain(j), "Post Distrib Chain " + QString::number(j), Painting::chainColors.at(j));
                     mGraph->add_curve(curveChain);
                 }
             }
@@ -287,9 +286,9 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
             curve.mVisible = true;
             mGraph->add_curve(curve);
             
-            if (!mEvent->mVg.mChainsHistos.empty()) {
+            if (!mEvent->mVg.mChainsKDE.empty()) {
                 for (size_t j = 0; j<mChains.size(); ++j) {
-                    const GraphCurve &curveChain = densityCurve(mEvent->mVg.histoForChain(j), "Post Distrib Chain " + QString::number(j), Painting::chainColors.at(j));
+                    const GraphCurve &curveChain = densityCurve(mEvent->mVg.KDEForChain(j), "Post Distrib Chain " + QString::number(j), Painting::chainColors.at(j));
                     mGraph->add_curve(curveChain);
                 }
             }

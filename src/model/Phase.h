@@ -98,7 +98,7 @@ public:
 
     std::pair<double, double> getFormatedTimeRange() const;
 
-    void generateHistos(const std::vector<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
+    void generateKDE(const std::vector<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
     void generateActivity(size_t gridLength, double h, const double threshold, const double timeRangeLevel = 95.);
 
     void update_AlphaBeta(const double tminPeriod, const double tmaxPeriod);

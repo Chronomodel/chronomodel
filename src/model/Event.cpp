@@ -2503,7 +2503,7 @@ void Event::applyThetaProposal_v3(const double tmin, const double tmax)
 
 
 }
-
+/*
 void Event::applyThetaPriorCDE(const double tmin, const double tmax)
 {
     for (auto&& date : mDates )   {
@@ -2596,10 +2596,6 @@ void Event::applyThetaPriorCDE(const double tmin, const double tmax)
 
 void Event::updateThetaPriorCDE(const double tmin, const double tmax)
 {
-    /*for (auto&& date : mDates )   {
-        date.updateDate(mTheta.mX, mS02Theta.mX, mAShrinkage);
-
-    }*/
     for (auto&& date : mDates) {
 
         const double u1 = Generator::randomUniform();
@@ -2669,7 +2665,7 @@ void Event::updateThetaPriorCDE(const double tmin, const double tmax)
         const double q_backward  = date.mSigmaTi.evalEmpiricalPrior(V1);   // q(y|y*)
 
         // Jacobiens : dx/dy = 2y
-        const double jac_proposed = 2.0 * V_try;   // |dx*/dy*|
+        const double jac_proposed = 2.0 * V_try;
         const double jac_current  = 2.0 * V1;    // |dx/dy|
 
         //         L(x*)      prior(x*)     q(y|y*)         jac_current
@@ -2737,50 +2733,27 @@ void Event::updateThetaPriorCDE(const double tmin, const double tmax)
     }
 
 }
-void Event::generateHistos(const std::vector<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+*/
+
+void Event::generateKDE(const std::vector<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
     if (type() != Event::eBound)
-        mTheta.generateHistos(chains, fftLen, bandwidth, tmin, tmax);
+        mTheta.generateKDE(chains, fftLen, bandwidth, tmin, tmax);
 
     else {
         Bound* ek = dynamic_cast<Bound*>(this);
         // Nothing todo : this is just a Dirac !
-        ek->mTheta.mFormatedHisto.clear();
-        ek->mTheta.mChainsHistos.clear();
+        ek->mTheta.mFormatedKDE.clear();
+        ek->mTheta.mChainsKDE.clear();
 
-        ek->mTheta.mFormatedHisto.emplace(ek->mFixed, 1);
+        ek->mTheta.mFormatedKDE.emplace(ek->mFixed, 1);
         // Generate fictifious chains
         for (size_t i =0 ;i<chains.size(); ++i)
-            ek->mTheta.mChainsHistos.push_back(ek->mTheta.mFormatedHisto);
+            ek->mTheta.mChainsKDE.push_back(ek->mTheta.mFormatedKDE);
     }
 }
 
-void Event::updateW()
-{
-#ifdef DEBUG
-    try {
 
-        if ((mVg.mX + mSy * mSy) < 1e-20) {
-            qDebug()<< "[Event::updateW] mVg.mX + mSy * mSy < 1e-20";
-        }
-#endif
-        mW = 1.0 / (mVg.mX + mSy * mSy);
-
-#ifdef DEBUG
-        if (mW < 1e-20) {
-            qDebug()<< "[Event::updateW] mW < 1e-20"<< mW;
-
-        } else if (mW > 1e+20) {
-            qDebug()<< "[Event::updateW] mW > 1e+20"<< mW;
-        }
-
-
-    }  catch (...) {
-        qWarning() <<"[Event::updateW] mW = 0";
-    }
-#endif
-
-}
 
 void Event::updateS02Theta()
 {
@@ -2791,11 +2764,11 @@ void Event::updateS02Theta()
         const double logV2 = Generator::truncatedNormal(log10(mS02Theta.mX) , mS02Theta.mSigmaMH, logVMin, logVMax );
         const double V2 = pow(10.0, logV2);
 
-        const double current_h = h_S02(mS02Theta.mX); // h_S02() comporte le jacobien!
+        const double current_h_S02 = h_S02(mS02Theta.mX); // h_S02() comporte le jacobien!
 
-        const double try_h = h_S02(V2);
+        const double try_h_S02 = h_S02(V2);
 
-        double rate = try_h / current_h;
+        const double rate = try_h_S02 / current_h_S02;
 
 
         mS02Theta.try_update(V2, rate);
@@ -2815,11 +2788,11 @@ void Event::applyS02Theta()
         const double logV2 = Generator::truncatedNormal(log10(mS02Theta.mX) , mS02Theta.mSigmaMH, logVMin, logVMax );
         const double V2 = pow(10.0, logV2);
 
-        const double current_h = h_S02(mS02Theta.mX); // h_S02() comporte le jacobien!
+        const double current_h_S02 = h_S02(mS02Theta.mX); // h_S02() comporte le jacobien!
 
-        const double try_h = h_S02(V2);
+        const double try_h_S02 = h_S02(V2);
 
-        double rate = try_h / current_h;
+        const double rate = try_h_S02 / current_h_S02;
 
         if (MHAcceptanceTest(rate)) {
             mS02Theta.setValue(V2);
@@ -2832,6 +2805,7 @@ void Event::applyS02Theta()
 
 }
 
+
 void Event::applyS02Theta(double T)
 {
     try {
@@ -2841,18 +2815,15 @@ void Event::applyS02Theta(double T)
         const double logV2 = Generator::truncatedNormal(log10(mS02Theta.mX) , mS02Theta.mSigmaMH, logVMin, logVMax );
         const double V2 = pow(10.0, logV2);
 
-        const double current_h = h_S02(mS02Theta.mX); // h_S02() comporte le jacobien!
+        const double current_h_S02 = h_S02(mS02Theta.mX); // h_S02() comporte le jacobien!
 
-        const double try_h = h_S02(V2);
+        const double try_h_S02 = h_S02(V2);
 
-        double log_rate = log(try_h) -log(current_h);
+        double log_rate = log(try_h_S02) - log(current_h_S02);
 
-
-        //if (MHAcceptanceTest_log(log_rate/T)) {
-        if (MHAcceptanceTest(exp(log_rate/T))) {
+        if (MHAcceptanceTest_log(log_rate/T)) {
             mS02Theta.setValue(V2);
         }
-
 
     }  catch (...) {
         qWarning() << "[Event::applyS02Theta(double T)] Error";

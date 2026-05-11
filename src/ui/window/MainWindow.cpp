@@ -1015,7 +1015,7 @@ void MainWindow::rebuildExportCurve()
 #endif
         // ____
 
-        const auto &runTrace = curveModel->fullRunSplineTrace(curveModel->mChains);
+        const auto &fullrunTrace = curveModel->acceptedSplineTraceForAllChain(curveModel->mChains);
 
         // init Posterior MeanG and map
 
@@ -1057,11 +1057,23 @@ void MainWindow::rebuildExportCurve()
         }
 
         int totalIterDisplay = 1;
+        int last_totalIterDisplay = totalIterDisplay;
+        int iter_index = 0;
+        std::vector<size_t> index_to_memo ;
         if (!curveModel->compute_Y) {
-            for (auto &splineXYZ : runTrace) {
+            for (auto &splineXYZ : fullrunTrace) {
 #ifdef WITHCURVEFILTER
 
+                last_totalIterDisplay = totalIterDisplay;
                 curveModel->memo_PosteriorG_filtering(meanG.gx, splineXYZ.splineX, totalIterDisplay, minMaxPFilter );
+
+                if (last_totalIterDisplay == totalIterDisplay) { // increment = courbe acceptée
+                    index_to_memo.push_back(iter_index);
+                }
+                ++iter_index;
+
+
+
 #else
                 curveModel->memo_PosteriorG(meanG.gx, splineXYZ.splineX,  totalIterDisplay );
 #endif
@@ -1070,7 +1082,7 @@ void MainWindow::rebuildExportCurve()
             }
 
         } else {
-            for (auto &splineXYZ : runTrace) {
+            for (auto &splineXYZ : fullrunTrace) {
 #if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5
                 curveModel->memo_PosteriorG_3D_335(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterDisplay );
 #else
@@ -1094,9 +1106,10 @@ void MainWindow::rebuildExportCurve()
         }
         curveModel->mPosteriorMeanG = std::move(meanG);
 
+        // mise à jour des chaines individuelles
         // update mPosteriorMeanGByChain
         for (size_t i = 0; i<curveModel->mChains.size(); i++) {
-            const auto &runTraceByChain = curveModel->runSplineTraceForChain(curveModel->mChains, i);
+            const auto &runTraceByChain = curveModel->acceptedSplineTraceForChain(curveModel->mChains, i);
             PosteriorMeanG meanGByChain;
             meanGByChain.gx = clearCompo;
             meanGByChain.gx.mapG.setRangeY(tabMinMax[0].first, tabMinMax[0].second);
@@ -1153,6 +1166,91 @@ void MainWindow::rebuildExportCurve()
             curveModel->mPosteriorMeanGByChain[i] = std::move(meanGByChain);
         }
 
+
+        // mise à jour des traces des Events
+        if (index_to_memo.size() < fullrunTrace.size()) {
+
+            auto copyFilteredData = [](auto& source, auto& dest, const std::vector<size_t>& indices) {
+                dest = std::make_shared<std::vector<double>>(indices.size());
+                dest->reserve(indices.size());
+                for (size_t i = 0; i < indices.size(); ++i) {
+                    (*dest)[i] = (*source)[indices[i]];
+                }
+            };
+
+            for (size_t i = 0; i<curveModel->Model::mEvents.size(); ++i) {
+
+                auto& ev = curveModel->mEvents[i];
+                // Initialisation et copie pour mTheta
+                ev->mTheta.is_curve_filtering = true;
+                copyFilteredData(ev->mTheta.mAllAcquiredTrace, ev->mTheta.mDisplayAcquiredTrace, index_to_memo);
+
+                // Initialisation et copie pour mS02Theta
+                ev->mS02Theta.is_curve_filtering = true;
+                copyFilteredData(ev->mS02Theta.mAllAcquiredTrace, ev->mS02Theta.mDisplayAcquiredTrace, index_to_memo);
+
+                // mise à jour des dates
+                for (auto& d : ev->mDates) {
+                    d.mTi.is_curve_filtering = true;
+                    copyFilteredData(d.mTi.mAllAcquiredTrace, d.mTi.mDisplayAcquiredTrace, index_to_memo);
+
+                    d.mSigmaTi.is_curve_filtering = true;
+                    copyFilteredData(d.mSigmaTi.mAllAcquiredTrace, d.mSigmaTi.mDisplayAcquiredTrace, index_to_memo);
+                }
+
+            }
+            if (curveModel->is_curve) {
+                for (size_t i = 0; i<curveModel->Model::mEvents.size(); ++i) {
+                    auto& ev = curveModel->mEvents[i];
+                    if (ev->mVg.mSamplerProposal != MHVariable::eFixe) {
+                        ev->mVg.is_curve_filtering = true;
+                        copyFilteredData(ev->mVg.mAllAcquiredTrace, ev->mVg.mDisplayAcquiredTrace, index_to_memo);
+                    }
+
+                }
+                if (curveModel->mLambdaSpline.mSamplerProposal != MHVariable::eFixe) {
+                    curveModel->mLambdaSpline.is_curve_filtering = true;
+                    copyFilteredData(curveModel->mLambdaSpline.mAllAcquiredTrace, curveModel->mLambdaSpline.mDisplayAcquiredTrace, index_to_memo);
+                }
+            }
+        }
+        else {
+            for (size_t i = 0; i<curveModel->Model::mEvents.size(); i++) {
+                auto& ev = curveModel->mEvents[i];
+                ev->mTheta.is_curve_filtering = false;
+                ev->mTheta.mDisplayAcquiredTrace= std::make_shared<std::vector<double>>();
+
+                ev->mS02Theta.is_curve_filtering = false;
+                ev->mS02Theta.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
+
+                //mise à jour des dates
+                for (auto& d : ev->mDates) {
+                    d.mTi.is_curve_filtering = false;
+                    d.mTi.mDisplayAcquiredTrace= std::make_shared<std::vector<double>>();
+
+                    d.mSigmaTi.is_curve_filtering = false;
+                    d.mSigmaTi.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
+
+                }
+            }
+            if (curveModel->is_curve) {
+                for (size_t i = 0; i<curveModel->Model::mEvents.size(); ++i) {
+                    auto& ev = curveModel->mEvents[i];
+                    if (ev->mVg.mSamplerProposal != MHVariable::eFixe) {
+                        ev->mVg.is_curve_filtering = false;
+                        ev->mVg.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
+                    }
+
+                }
+                if (curveModel->mLambdaSpline.mSamplerProposal != MHVariable::eFixe) {
+                    curveModel->mLambdaSpline.is_curve_filtering = false;
+                    curveModel->mLambdaSpline.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
+                }
+            }
+        }
+        auto& model = mProject->mModel;
+        model->updateDensities(model->mFFTLength, model->mBandwidth, model->mThreshold);
+        //model->generatePosteriorDensities(model->mChains, model->mFFTLength, model->mBandwidth);
         // update ResultView
         mProjectView->updateResults();
 

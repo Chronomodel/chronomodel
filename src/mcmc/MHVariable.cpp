@@ -794,6 +794,31 @@ void MHVariable::load_stream_v337(QDataStream& stream)
 
 }
 
+void MHVariable::load_stream_v338(QDataStream& stream)
+{
+    /* herited from MetropolisVariable*/
+    MetropolisVariable::load_stream_v338(stream);
+
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[QtUtilities::load_stream_v330]  erreur de flux ; stream.status()=" << stream.status();
+        // throw std::runtime_error("Error reading from stream");
+        // return;
+    }
+
+    qint64 l;
+    stream >> l;
+    mLastMHAcceptsLength = l;
+
+    load_container_nullable(stream, mHistoryAcceptRateMH);
+
+    load_container(stream, mLastMHAccepts);
+
+    stream >> mSigmaMH;
+    stream >> mSamplerProposal;
+
+}
+
+
 QDataStream &operator>>(QDataStream& stream, MHVariable& data )
 {
     /* herited from MetropolisVariable*/
@@ -803,9 +828,6 @@ QDataStream &operator>>(QDataStream& stream, MHVariable& data )
     const MHVariable tmp_data (metro_data);
     data = tmp_data;
 
-    //load_container(stream, data.mNbValuesAccepted);
-
-    //data.mHistoryAcceptRateMH = load_std_vector_ptr(stream);
     load_container_nullable(stream, data.mHistoryAcceptRateMH);
 
     load_container(stream, data.mLastMHAccepts);

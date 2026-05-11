@@ -551,7 +551,7 @@ void GraphViewResults::generateTraceCurves(const std::vector<ChainSpecs> &chains
 
         curve.mType = GraphCurve::eVectorData;
         curve.mName = prefix + "Trace " + QString::number(i);
-        const auto v = variable->fullTraceForChain(chains, i);
+        const auto v = variable->fullFormatedTraceForChain(chains, i);
         curve.mDataVector = std::vector(v.begin(), v.end());
         curve.mPen.setColor(Painting::chainColors.at(i));
         mGraph->add_curve(curve);
@@ -585,7 +585,7 @@ void GraphViewResults::generateLogTraceCurves(const std::vector<ChainSpecs> &cha
 
         curve.mType = GraphCurve::eVectorData;
         curve.mName = prefix + "Trace " + QString::number(i);
-        const auto v = variable->fullTraceForChain(chains, i);
+        const auto v = variable->fullFormatedTraceForChain(chains, i);
         // Appliquer log10 à chaque valeur
         curve.mDataVector.reserve(v.size());
         for (const auto& value : v) {
