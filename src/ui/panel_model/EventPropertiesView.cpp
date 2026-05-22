@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2025
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -90,10 +90,10 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mMethodLab = new QLabel(tr("MCMC"), mTopView);
     mMethodLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mMethodCombo = new QComboBox(mTopView);
-    mMethodInfo = new QLabel(MHVariable::getSamplerProposalText(MHVariable::eMHAdaptGauss), mTopView);
+    mMethodInfo = new QLabel(MHVariable::getSamplerProposalText(MHVariable::eEventPrior), mTopView);
 
     mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eDoubleExp));
-    mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eBoxMuller));
+    mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eEventPrior));
     mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eMHAdaptGauss));
     
     connect(mNameEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventName);
@@ -497,7 +497,7 @@ void EventPropertiesView::updateEvent()
             if (mEventObj.value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eDoubleExp)
                 mMethodCombo->setCurrentIndex(0);
 
-            else if (mEventObj.value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eBoxMuller)
+            else if (mEventObj.value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eEventPrior)
                     mMethodCombo->setCurrentIndex(1);
 
             else if (mEventObj.value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eMHAdaptGauss)
@@ -567,7 +567,7 @@ void EventPropertiesView::updateEventSampler(int index)
         sp = MHVariable::eDoubleExp;
         break;
     case 1 :
-        sp = MHVariable::eBoxMuller;
+        sp = MHVariable::eEventPrior;
         break;
     case 2 :
         sp = MHVariable::eMHAdaptGauss;

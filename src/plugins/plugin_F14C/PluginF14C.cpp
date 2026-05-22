@@ -179,7 +179,7 @@ MHVariable::SamplerProposal PluginF14C::getDataMethod() const
 QList<MHVariable::SamplerProposal> PluginF14C::allowedDataMethods() const
 {
     QList<MHVariable::SamplerProposal> methods;
-    methods.append(MHVariable::eMHPrior);
+    methods.append(MHVariable::eDatePrior);
     methods.append(MHVariable::eInversion);
     methods.append(MHVariable::eMHAdaptGauss);
     return methods;

@@ -102,7 +102,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
         //  Post distrib All Chains
         // ------------------------------------
 
-        const GraphCurve &curvePostDistrib = densityCurve(model->mLambdaSpline.fullHisto(),
+        const GraphCurve &curvePostDistrib = densityCurve(model->mLambdaSpline.mFormatedKDE,
                                                           "Post Distrib All Chains",
                                                           color);
 

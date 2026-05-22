@@ -141,7 +141,7 @@ public:
     virtual void generateResultsLog();
 
 
-    void generatePosteriorDensities(const std::vector<ChainSpecs> &chains, int fftLen, double bandwidth);
+    void generatePosteriorDensities(const std::vector<ChainSpecs> &chains, int fftLen, BandwidthType bwt, double bandwidth = 1.);
     virtual void generateCorrelations(const std::vector<ChainSpecs> &chains);
 
     //void generateNumericalResults(const std::vector<ChainSpecs> &chains);// obsolete

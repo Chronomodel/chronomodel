@@ -2871,7 +2871,7 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
          *    enum Method{
          * eFixe = -1,  //<  use with Type==eBound
          * eDoubleExp = 0, //<  The default method
-         * eBoxMuller = 1,
+         * eEventPrior = 1,
          * eMHAdaptGauss = 2,
          */
         if (event.find(STATE_EVENT_METHOD) != event.end()) {
@@ -2883,7 +2883,7 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
                 event[STATE_EVENT_SAMPLER] = MHVariable::eDoubleExp;
                 break;
             case 1 :
-                event[STATE_EVENT_SAMPLER] = MHVariable::eBoxMuller;
+                event[STATE_EVENT_SAMPLER] = MHVariable::eEventPrior;
                 break;
             case 2:
                 event[STATE_EVENT_SAMPLER] = MHVariable::eMHAdaptGauss;
@@ -2962,7 +2962,7 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
             if (date.find(STATE_DATE_METHOD) != date.end()) { // since version 3.0
                 switch (date.value(STATE_DATE_METHOD).toInt()) {
                 case 0 :
-                    date[STATE_DATE_SAMPLER] = MHVariable::eMHPrior; // = 3
+                    date[STATE_DATE_SAMPLER] = MHVariable::eDatePrior; // = 3
                     break;
                 case 1 :
                     date[STATE_DATE_SAMPLER] = MHVariable::eInversion; // = 4
@@ -3005,7 +3005,7 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
                 if (subdate.find(STATE_DATE_METHOD) == date.end()) { // since version 3.0
                     switch (subdate.value(STATE_DATE_METHOD).toInt()) {
                     case 0 :
-                        subdate[STATE_DATE_SAMPLER] = MHVariable::eMHPrior;
+                        subdate[STATE_DATE_SAMPLER] = MHVariable::eDatePrior;
                         break;
                     case 1 :
                         subdate[STATE_DATE_SAMPLER] = MHVariable::eInversion;

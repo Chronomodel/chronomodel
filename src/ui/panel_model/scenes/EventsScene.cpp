@@ -1645,7 +1645,7 @@ QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::de
             QStringList dataTmp = dataStr.mid(1, dataStr.size() - 1);
             date.setName(eventName);
             date.mPlugin = nullptr;
-            date.mTi.mSamplerProposal = MHVariable::eMHPrior; //set but not used
+            date.mTi.mSamplerProposal = MHVariable::eDatePrior; //set but not used
 
             QJsonObject json;
             json.insert(STATE_EVENT_KNOWN_FIXED, csvLocal.toDouble(dataTmp.at(0)));

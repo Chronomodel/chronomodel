@@ -187,7 +187,6 @@ public:
     void updateDate(const double theta_mX, const double S02Theta_mX, const double AShrinkage);
 
     void updateTi(const double theta_mX);
-   // void updateTi_v4(Event* event);
 
     void autoSetTiSampler(const bool bSet);
 
@@ -210,13 +209,12 @@ public:
                                                const double S02Theta_mX,
                                                const double AShrinkage);
 
-   // void updateSigma_v4(Event* event);
-
     void updateSigmaJeffreys(const double theta_mX);
-   // void updateSigmaReParam(const Event* event);
-    inline void updateWiggle() { mWiggle.mX = mTi.mX + mDelta;};
 
-    void generateKDE(const std::vector<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
+    inline void updateWiggle() { mWiggle.setValue(mTi.value() + mDelta);};
+
+    void setBandwidth(BandwidthType bwt, double bandwidth);
+    void generateFormatedKDE(const std::vector<ChainSpecs> &chains, const int fftLen, const double tmin, const double tmax);
 
     double fProposalDensity(const double t, const double t0);
 

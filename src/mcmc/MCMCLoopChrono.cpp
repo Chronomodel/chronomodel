@@ -159,12 +159,9 @@ bool MCMCLoopChrono::update_v3()
     // --------------------------------------------------------------
 
     for (std::shared_ptr<Event> &event : mModel->mEvents) {
-       /* if(event->mTheta.mEmpiricalCDFReady) {
-            event->updateThetaPriorCDE(tminPeriod, tmaxPeriod);
 
-        } else {*/
             event->updateTheta_v3(tminPeriod, tmaxPeriod);
-        //}
+
 
 
 #ifdef S02_BAYESIAN
@@ -198,7 +195,8 @@ bool MCMCLoopChrono::update_v3()
 }
 
 
-bool MCMCLoopChrono::learn_v3_tempering()
+/*
+ * bool MCMCLoopChrono::learn_v3_tempering()
 {
     int iteration =  mLoopChains[ mChainIndex].mTotalIter;
 
@@ -217,12 +215,7 @@ bool MCMCLoopChrono::learn_v3_tempering()
         // 2️⃣  Sélection aléatoire des événements à régénérer
         // --------------------------------------------------------------
         std::vector<bool> event_regenerated(mModel->mEvents.size(), true);
-       /* for (std::size_t j = 0; j < event_regenerated.size(); ++j) {
-            if (mModel->mEvents[j]->mTheta.mSamplerProposal != MHVariable::eFixe) { // On ne bouge pas les bornes
-                const double u2 = Generator::randomUniform();
-                event_regenerated[j] = true;//static_cast<bool>(u2 < w_event);
-            }
-        }*/
+
 
         // --------------------------------------------------------------
         // 3️⃣  Fonction générique
@@ -293,7 +286,7 @@ bool MCMCLoopChrono::learn_v3_tempering()
 
                             // Recuit simulé hiérarchique
                             // π(θ) ∝ exp(-H(θ)/T₁) × ∏ᵢ exp(-Hᵢ(θᵢ)/Tᵢ)
-                          /* double pi_x = dnorm(event->mTheta.value(), ti_avg, sigma );
+                           double pi_x = dnorm(event->mTheta.value(), ti_avg, sigma );
                            double pi_y = dnorm(try_theta, ti_avg, sigma );
 
                            double q_yx = 1;//dnorm(try_theta, ti_avg, sigma * T_sigma);
@@ -307,15 +300,15 @@ bool MCMCLoopChrono::learn_v3_tempering()
                            double rT = exp(-(Hy-Hx) / T);
 
                            double ln_rT = log(rate)/T;
-*/
+
                             double log_alpha =
                                 (log_dnorm(try_theta, ti_avg, sigma)
                                  - log_dnorm(event->mTheta.value(), ti_avg, sigma)) ;
 
-                           /*log_alpha +=
+                           log_alpha +=
                                (-log_dnorm(try_theta, ti_avg, sigma * sqrt(T))
                                           + log_dnorm(event->mTheta.value(), ti_avg, sigma * sqrt(T)));
-*/
+
 
                             if (MHAcceptanceTest_log(log_alpha /T)) {
                            //if (MHAcceptanceTest(exp(ln_rT))) {
@@ -416,6 +409,7 @@ bool MCMCLoopChrono::learn_v3_tempering()
 
     return !do_regeneration; //true;
 }
+*/
 
 bool MCMCLoopChrono::update_v3_tempering()
 {
@@ -450,9 +444,6 @@ bool MCMCLoopChrono::update_v3_tempering()
         auto MH_all_temp = [&](double T)
         {
             std::size_t j = 0;
-
-            //double factor = 1.0 / (1.0 + 0.5 * (max_expo_T - expo_T));
-            //double T = factor;
             for (auto &event : mModel->mEvents) {
                 try {
                     if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
@@ -482,8 +473,8 @@ bool MCMCLoopChrono::update_v3_tempering()
                             double sum_t = 0.0;
 
                             for (auto&& date: event->mDates) {
-                                const double variance  = pow(date.mSigmaTi.mX, 2);
-                                sum_t += (date.mTi.mX + date.mDelta) / variance;
+                                const double variance  = pow(date.mSigmaTi.value(), 2);
+                                sum_t += (date.mTi.value() + date.mDelta) / variance;
                                 sum_p += 1.0 / variance;
                             }
                             const double ti_avg = sum_t / sum_p;
@@ -493,14 +484,14 @@ bool MCMCLoopChrono::update_v3_tempering()
                             //double try_theta = Generator::truncatedNormal(event->mTheta.value(), event->mTheta.mSigmaMH * T, min, max);
 
                             //échantillonneur B avec un pas fonction de T
-                            //double T_sigma = 1.;// T;
-                            //double try_theta = Generator::truncatedNormal(ti_avg, sigma * T_sigma, min, max);
-                            //double q_yx = dnorm(try_theta, ti_avg, sigma * T_sigma);
-                            //double q_xy = dnorm(event->mTheta.value(), ti_avg, sigma * T_sigma);
-                            //
-                            // échantillonneur qui utilise la CDE
-                            //const double try_theta = event->mTheta.sampleFromEmpiricalPrior(min, max);
+                           // double try_theta = Generator::truncatedNormal(ti_avg, sigma * T, min, max);
+                            // Ratio MH : la proposition n'est pas symétrique → corriger par q(x|x')/q(x'|x)
+                           /* double q_yx = dnorm(try_theta, ti_avg, sigma * T);
+                            double q_xy = dnorm(event->mTheta.value(), ti_avg, sigma * T);
 
+                            double ln_q_yx = log_dnorm(try_theta, ti_avg, sigma * T);
+                            double ln_q_xy = log_dnorm(event->mTheta.value(), ti_avg, sigma * T);
+*/
                             // Ratio MH : la proposition n'est pas symétrique → corriger par q(x|x')/q(x'|x)
                             //const double q_yx  = event->mTheta.evalEmpiricalPrior(try_theta);  // q(x'|x)
                             //const double q_xy = event->mTheta.evalEmpiricalPrior(event->mTheta.value()); // q(x|x')
@@ -513,6 +504,7 @@ bool MCMCLoopChrono::update_v3_tempering()
                             //échantillonneur C
                             //double try_theta = Generator::truncatedNormal(ti_avg, sigma, min, max);
                             // ou
+
                             //échantillonneur D
                             double try_theta = Generator::randomUniform(min, max);
                             //constexpr double q_yx = 1;
@@ -538,11 +530,9 @@ bool MCMCLoopChrono::update_v3_tempering()
                                 (log_dnorm(try_theta, ti_avg, sigma)
                                  - log_dnorm(event->mTheta.value(), ti_avg, sigma)) ;
 
-                            //log_alpha += (log(q_yx) - log(q_xy)) ;
+                            //log_alpha += (ln_q_yx - ln_q_xy) ;
 
                             if (MHAcceptanceTest_log(log_alpha /T)) {
-                            //if (MHAcceptanceTest(exp(ln_rT))) {
-                                // if (MHAcceptanceTest(rT)) {
                                 event->mTheta.setValue(try_theta);
                                 event->mThetaReduced = mModel->reduceTime(try_theta);
 
@@ -636,6 +626,7 @@ bool MCMCLoopChrono::update_v3_tempering()
 
 // obsolete
 // ne permet pas le deplacement le taux MH reste petit quand on est loin du courrant
+/*
 bool MCMCLoopChrono::update_v3_simulated_tempering_annealing()
 {
     const double u = Generator::randomUniform();
@@ -734,7 +725,7 @@ bool MCMCLoopChrono::update_v3_simulated_tempering_annealing()
     }
 
     return !(u < w_regenerate); //true;
-}
+}*/
 
 bool MCMCLoopChrono::update_v4()
 {
@@ -942,7 +933,7 @@ void MCMCLoopChrono::acquire()
         }
 
         if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
-            double memoS02 = sqrt(event->mS02Theta.mX);
+            double memoS02 = sqrt(event->mS02Theta.value());
             event->mS02Theta.acquire(&memoS02);
 
         }
@@ -970,7 +961,7 @@ void MCMCLoopChrono::recordBurnAdapt()
             }
         }
         if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
-            double memoS02 = sqrt(event->mS02Theta.mX);
+            double memoS02 = sqrt(event->mS02Theta.value());
             event->mS02Theta.recordBurnAdapt(&memoS02);
 
         }
@@ -1030,7 +1021,6 @@ void MCMCLoopChrono::finalize()
 
     // This should not be done here because it uses resultsView parameters
     // ResultView will trigger it again when loading the model
-    //mModel->generatePosteriorDensities(mChains, 1024, 1);
 
     // Generate numerical results of :
     // - MHVariables (global acceptation)

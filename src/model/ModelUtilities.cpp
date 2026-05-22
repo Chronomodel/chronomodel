@@ -312,6 +312,7 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
                                                                                                                          QString::number(event->mConstraintsBwd.size()),
                                                                                                                          QString::number(event->mConstraintsFwd.size()))
                                  + "<br>" + QObject::tr("- MCMC %1").arg(MHVariable::getSamplerProposalText(event->mTheta.mSamplerProposal))));
+            log += "<br>" + line(textBlue(QObject::tr("BetaS02 of Event  : %1").arg(QString::number(event->mBetaS02))));
         }
 
         if (model->is_curve) {
@@ -475,12 +476,12 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
 
             if (bound) {
                 HTMLText += line(textBold(textRed(QObject::tr("Bound ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mEvents.size()), bound->getQStringName()))));
-                HTMLText += line(textBold(textRed(QObject::tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(bound->mTheta.mX), DateUtils::getAppSettingsFormatStr()))));
+                HTMLText += line(textBold(textRed(QObject::tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(bound->mTheta.value()), DateUtils::getAppSettingsFormatStr()))));
             }
 
         }  else {
             HTMLText += line(textBold(textBlue(QObject::tr("Event ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mEvents.size()), event->getQStringName()))));
-            HTMLText += line(textBold(textBlue(QObject::tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(event->mTheta.mX), DateUtils::getAppSettingsFormatStr()))));
+            HTMLText += line(textBold(textBlue(QObject::tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(event->mTheta.value()), DateUtils::getAppSettingsFormatStr()))));
             if (event->mTheta.mLastMHAccepts.size()>2 && event->mTheta.mSamplerProposal!= MHVariable::eFixe) {
                 const auto acceptRate = event->mTheta.getCurrentAcceptRate();
                 const auto samplerType = event->mTheta.mSamplerProposal;
@@ -492,7 +493,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
                 HTMLText += line(textBlue(QObject::tr(" - Sigma_MH on Theta : %1").arg(stringForLocal(event->mTheta.mSigmaMH))));
             }
 #ifdef S02_BAYESIAN
-            HTMLText += line(textBold(textBlue(QObject::tr(" - Shrinkage param. : %1").arg(DateUtils::convertToAppSettingsFormatStr(event->mS02Theta.mX)))));
+            HTMLText += line(textBold(textBlue(QObject::tr(" - Shrinkage param. : %1").arg(DateUtils::convertToAppSettingsFormatStr(event->mS02Theta.value())))));
             if (event->mS02Theta.mLastMHAccepts.size()>2 && event->mS02Theta.mSamplerProposal!= MHVariable::eFixe) {
                 const auto acceptRate = event->mS02Theta.getCurrentAcceptRate();
                 const auto samplerType = event->mS02Theta.mSamplerProposal;
@@ -509,7 +510,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
         }
 
         if (curveModel) {
-            HTMLText += line(textGreen(QObject::tr(" - Std gi : %1").arg(stringForLocal(sqrt(event->mVg.mX)))));
+            HTMLText += line(textGreen(QObject::tr(" - Std gi : %1").arg(stringForLocal(sqrt(event->mVg.value())))));
             if (event->mVg.mLastMHAccepts.size()>2  && event->mVg.mSamplerProposal!= MHVariable::eFixe) {
                 const auto acceptRate = event->mVg.getCurrentAcceptRate();
                 const auto samplerType = event->mVg.mSamplerProposal;
@@ -558,8 +559,8 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
             HTMLText += "<br>";
 
             HTMLText += line(textBold(textBlack(QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j), QString::number(event->mDates.size()), date.getQStringName()))));
-            HTMLText += line(textBlack(QObject::tr(" - ti : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(date.mTi.mX), DateUtils::getAppSettingsFormatStr())));
-            if (date.mTi.mSamplerProposal == MHVariable::eMHPrior) {
+            HTMLText += line(textBlack(QObject::tr(" - ti : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(date.mTi.value()), DateUtils::getAppSettingsFormatStr())));
+            if (date.mTi.mSamplerProposal == MHVariable::eDatePrior) {
                 if (date.mTi.mLastMHAccepts.size()>2) {
                     const auto acceptRate = date.mTi.getCurrentAcceptRate();
                     const auto samplerType = date.mTi.mSamplerProposal;
@@ -573,7 +574,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
                 HTMLText += line(textBlack(QObject::tr(" - Sigma_MH on ti : %1").arg(stringForLocal(date.mTi.mSigmaMH))));
             }
 
-            HTMLText += line(textBlack(QObject::tr(" - Sigma_i : %1").arg(stringForLocal(date.mSigmaTi.mX))));
+            HTMLText += line(textBlack(QObject::tr(" - Sigma_i : %1").arg(stringForLocal(date.mSigmaTi.value()))));
             if (date.mSigmaTi.mLastMHAccepts.size()>2) {
                 const auto acceptRate = date.mSigmaTi.getCurrentAcceptRate();
                 const auto samplerType = date.mSigmaTi.mSamplerProposal;
@@ -599,9 +600,9 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
         for (auto& phase : model->mPhases) {
             ++i;
             HTMLText += line(textBold(textOrange(QObject::tr("Phase ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mPhases.size()), phase->getQStringName()))));
-            HTMLText += line(textOrange(QObject::tr(" - Begin : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.mX), DateUtils::getAppSettingsFormatStr())));
-            HTMLText += line(textOrange(QObject::tr(" - End : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mBeta.mX), DateUtils::getAppSettingsFormatStr())));
-            HTMLText += line(textOrange(QObject::tr(" - Tau : %1").arg(stringForLocal(phase->mTau.mX))));
+            HTMLText += line(textOrange(QObject::tr(" - Begin : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mAlpha.value()), DateUtils::getAppSettingsFormatStr())));
+            HTMLText += line(textOrange(QObject::tr(" - End : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(phase->mBeta.value()), DateUtils::getAppSettingsFormatStr())));
+            HTMLText += line(textOrange(QObject::tr(" - Tau : %1").arg(stringForLocal(phase->mTau.value()))));
             HTMLText += "<hr>";
 
         }
@@ -627,10 +628,10 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
         HTMLText += "<hr>";
         HTMLText +=  line(textGreen(QObject::tr("Shrinkage parameter for Smoothing Prior: %1").arg(QLocale().toString(model->mC_lambda, 'G', 2))));
         if (model->mLambdaSpline.mSamplerProposal == MHVariable::eFixe) {
-            HTMLText +=  line(textGreen(QObject::tr("Fixed Smoothing : 10E%1").arg(QLocale().toString(log10(model->mLambdaSpline.mX), 'G', 2))));
+            HTMLText +=  line(textGreen(QObject::tr("Fixed Smoothing : 10E%1").arg(QLocale().toString(log10(model->mLambdaSpline.value()), 'G', 2))));
 
         } else {
-            HTMLText +=  line(textGreen(QObject::tr("Log10 Smoothing : %1").arg(QLocale().toString(log10(model->mLambdaSpline.mX), 'G', 2))));
+            HTMLText +=  line(textGreen(QObject::tr("Log10 Smoothing : %1").arg(QLocale().toString(log10(model->mLambdaSpline.value()), 'G', 2))));
             if (model->mLambdaSpline.mLastMHAccepts.size() > 2) {
                 const auto acceptRate = model->mLambdaSpline.getCurrentAcceptRate();
                 const auto samplerType = model->mLambdaSpline.mSamplerProposal;
@@ -1317,10 +1318,10 @@ void sampleInCumulatedRepartition_thetaFixe (std::shared_ptr<Event> event, const
         const double targetValue = 0.5 * (maxRepartition - minRepartition) + minRepartition;
         /*const double idx = vector_interpolate_idx_for_value(targetValue, repartition);*/
         const double idx = interpolate_index(targetValue, repartition);
-        event->mTheta.mX = t_min_long + idx * step_long;
+        event->mTheta.setValue(t_min_long + idx * step_long);
 
     } else {
-        event->mTheta.mX = Generator::randomUniform(settings.mTmin, settings.mTmax);
+        event->mTheta.setValue(Generator::randomUniform(settings.mTmin, settings.mTmax));
     }
 
 }

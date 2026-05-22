@@ -39,6 +39,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "StdUtilities.h"
 #include "Functions.h"
+#include "MCMCLoopCurve.h"
 
 #include <QtGlobal>
 
@@ -49,6 +50,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <thread>
 #include <valarray>
 #include <iterator>
+#include <fftw3.h>
 
 using namespace std;
 
@@ -1931,139 +1933,102 @@ double bw_ucv_gaussian( std::vector<double> x,
 }
 
 double bw_SJ_dpi(const std::vector<double>& x) {
-    const int    n     = x.size();
-    const double sigma = scale_factor(x);   // min(sd, IQR/1.349)
+    const std::size_t n  = x.size();
+    const double      nd = static_cast<double>(n);
+    const double sigma   = scale_factor(x);
+    if (sigma <= 0.0) return 0.0;
 
-    // --- Étape 1 : bandwidths pilotes ---
-    // g1 : pilote pour estimer theta_44
-    // formule R : 1.24 * sigma * n^(-1/7)
-    const double g1 = 1.24 * sigma * std::pow((double)n, -1.0/7.0);
+    // 1. Normalisation
+    std::vector<double> xn(n);
+    for (std::size_t i = 0; i < n; ++i) xn[i] = x[i] / sigma;
 
-    // g2 : pilote pour estimer theta_24
-    // formule R : 1.23 * sigma * n^(-1/9)
-    const double g2 = 1.23 * sigma * std::pow((double)n, -1.0/9.0);
+    // 2. Bandwidths pilotes
+    const double g2 = 1.23 * std::pow(nd, -1.0/9.0);
 
-    // --- Étape 2 : estimation des fonctionnelles ---
-    const double t44 = S4(x, g1);   // ≈ theta_44
-    const double t24 = S6(x, g2);   // on utilise S6 pour theta_24...
+    // 3. Estimation θ6 (R fait TD = -TDh(b), donc TD = |θ6|)
+    const double t6 = S6_fft(xn, g2, 16384);
+    const double TD = -t6;  // doit être positif comme dans R
 
+    if (!std::isfinite(TD) || TD <= 0.0)
+        return 0.9 * sigma * std::pow(nd, -0.2);
 
-    if (std::abs(t44) < 1e-15 || t44 >= 0.0)
-        return 0.9 * sigma * std::pow((double)n, -0.2);
+    // 4. Formule DPI directe (pas besoin de θ4 pilote ni alpha2)
+    // R : res <- (c1 / SDh((2.394/(n*TD))^(1/7)))^(1/5)
+    const double c1       = 1.0 / (2.0 * std::sqrt(M_PI) * nd);
+    const double h_pilot  = std::pow(2.394 / (nd * TD), 1.0/7.0);
+    const double t4_final = S4_fft(xn, h_pilot, 16384);
 
-    if (std::abs(t24) < 1e-15)
-        return 0.9 * sigma * std::pow((double)n, -0.2);
+    if (!std::isfinite(t4_final) || t4_final <= 0.0)
+        return 0.9 * sigma * std::pow(nd, -0.2);
 
-    const double TD = -t44;   // toujours > 0 ici
-    const double SD =  t24;   // toujours défini ici
-
-
-    const double alpha2 = 1.357 * std::pow(std::abs(SD / TD), 1.0/7.0);
-
-    // theta_22(alpha2) estimé par S4
-    const double t22 = S4(x, alpha2);
-
-    if (t22 <= 0.0) {
-        return 0.9 * sigma * std::pow((double)n, -0.2);
-    }
-
-    // h_DPI = (1 / (2*sqrt(pi)*n*t22))^(1/5)
-    const double c1 = 1.0 / (2.0 * std::sqrt(M_PI) * n);
-    return std::pow(c1 / t22, 0.2);
+    // 5. Retour à l'échelle d'origine
+    const double h_n = std::pow(c1 / t4_final, 0.2);
+    return h_n * sigma;
 }
 
-double S4_fft(const std::vector<double>& x, double h, int M)
+/*double S4_fft(const std::vector<double>& x, double h, int M)
 {
-    const int    n   = static_cast<int>(x.size());
-    const double xmin = *std::min_element(x.begin(), x.end());
-    const double xmax = *std::max_element(x.begin(), x.end());
+    const int n = static_cast<int>(x.size());
+    auto [min_it, max_it] = std::minmax_element(x.begin(), x.end());
+    const double xmin = *min_it;
+    const double xmax = *max_it;
 
-    // ----------------------------------------------------------------
-    // 1. Grille régulière avec padding 4h de chaque côté
-    // ----------------------------------------------------------------
-    const double a     = xmin - 4.0 * h;
-    const double b     = xmax + 4.0 * h;
-    const double delta = (b - a) / static_cast<double>(M);   // pas de grille
+    const double a = xmin - 3.0 * h;
+    const double b = xmax + 3.0 * h;
+    const double delta = (b - a) / (M - 1);
 
-    // ----------------------------------------------------------------
-    // 2. Binning linéaire (linear binning) — O(n)
-    //    Chaque observation est répartie entre les deux bins voisins
-    //    proportionnellement à sa distance aux centres de bins.
-    // ----------------------------------------------------------------
-    std::unique_ptr<double[], decltype(&fftw_free)>
-        grid(static_cast<double*>(fftw_malloc(M * sizeof(double))), fftw_free);
+    int complexSize = M / 2 + 1;
+
+    // Allocation avec alignement garanti
+    std::unique_ptr<double[], decltype(&fftw_free)> grid(
+        (double*)fftw_malloc(M * sizeof(double)), fftw_free);
+    std::unique_ptr<fftw_complex[], decltype(&fftw_free)> spectrum(
+        (fftw_complex*)fftw_malloc(complexSize * sizeof(fftw_complex)), fftw_free);
 
     std::fill(grid.get(), grid.get() + M, 0.0);
 
-    for (int i = 0; i < n; ++i) {
-        const double z   = (x[i] - a) / delta;   // position en unités de bins
-        const int    k   = static_cast<int>(std::floor(z));
-        const double frac = z - static_cast<double>(k);
-
+    for (double val : x) {
+        double z = (val - a) / delta;
+        int k = static_cast<int>(std::floor(z));
+        double frac = z - k;
         if (k >= 0 && k < M - 1) {
-            grid[k]     += (1.0 - frac) / static_cast<double>(n);
-            grid[k + 1] +=        frac  / static_cast<double>(n);
-        } else if (k == M - 1) {
-            grid[k]     += (1.0 - frac) / static_cast<double>(n);
+            grid[k] += (1.0 - frac);
+            grid[k + 1] += frac;
         }
     }
 
-    // ----------------------------------------------------------------
-    // 3. FFT forward : grid → spectrum
-    // ----------------------------------------------------------------
-    const int complexSize = M / 2 + 1;
-
-    std::unique_ptr<double[], decltype(&fftw_free)>
-        spectrum(static_cast<double*>(
-                     fftw_malloc(2 * complexSize * sizeof(double))), fftw_free);
-
-    fftw_plan plan_fwd = fftw_plan_dft_r2c_1d(
-        M, grid.get(),
-        reinterpret_cast<fftw_complex*>(spectrum.get()),
-        FFTW_ESTIMATE);
-
-    fftw_execute(plan_fwd);
-    fftw_destroy_plan(plan_fwd);
-
-    // ----------------------------------------------------------------
-    // 4. Intégration dans le domaine fréquentiel
-    //
-    //   θ₄₄ = (1 / 2π) × Σₖ ωₖ⁴ × exp(-ωₖ² h²) × |p̂(ωₖ)|² × Δω
-    //
-    //   avec ωₖ = 2πk / (M × delta)   (fréquence angulaire du bin k)
-    //   et   Δω = 2π / (M × delta)
-    //
-    //   Le facteur 1/fftLen² vient de la normalisation FFTW (non normalisée).
-    // ----------------------------------------------------------------
-    double sum = 0.0;
-    const double L    = static_cast<double>(M) * delta;  // longueur du domaine
-    const double dOmega = 2.0 * M_PI / L;                // pas fréquentiel
-    //const double norm2  = static_cast<double>(M) * static_cast<double>(M); // correction FFTW
-
-    for (int k = 0; k < complexSize; ++k) {
-        const double omega  = static_cast<double>(k) * dOmega;
-        const double omega2 = omega * omega;
-        const double omega4 = omega2 * omega2;
-
-        // Module² de p̂(ωₖ), corrigé de la normalisation FFTW
-        const double re  = spectrum[2 * k]     / static_cast<double>(M);
-        const double im  = spectrum[2 * k + 1] / static_cast<double>(M);
-        const double mod2 = re * re + im * im;
-
-        // Filtre gaussien d'ordre 4
-        const double gauss = std::exp(-omega2 * h * h);
-
-        // Facteur 2 pour les fréquences négatives (sauf k=0 et k=M/2)
-        const double weight = (k == 0 || k == M / 2) ? 1.0 : 2.0;
-
-        sum += weight * omega4 * gauss * mod2;
+    fftw_plan plan;
+// CRITIQUE : La création de plan n'est PAS thread-safe
+#pragma omp critical(FFTW_PLAN_ZONE)
+    {
+        plan = fftw_plan_dft_r2c_1d(M, grid.get(), spectrum.get(), FFTW_ESTIMATE);
     }
 
-    // Normalisation finale : Δω / (2π)
-    return sum * dOmega / (2.0 * M_PI);
+    if (!plan) return 0.0; // Sécurité
+
+    fftw_execute(plan);
+
+#pragma omp critical(FFTW_PLAN_ZONE)
+    {
+        fftw_destroy_plan(plan);
+    }
+
+    double sum = 0.0;
+    const double unit_freq = 2.0 * M_PI / (M * delta);
+
+    for (int k = 0; k < complexSize; ++k) {
+        double omega = k * unit_freq;
+        double mod2 = (spectrum[k][0] * spectrum[k][0] + spectrum[k][1] * spectrum[k][1]);
+        double gauss = std::exp(-0.5 * omega * omega * h * h);
+        double weight = (k == 0 || k == (M / 2)) ? 1.0 : 2.0;
+
+        sum += weight * std::pow(omega, 4) * gauss * mod2;
+    }
+
+    return sum / (2.0 * M_PI * n * n);
+
 }
-
-
+*/
 /**
  * @brief Estimates θ₂₄ = ∫ f⁽⁶⁾(x)² dx via FFT — O(n log n)
  *
@@ -2078,19 +2043,23 @@ double S4_fft(const std::vector<double>& x, double h, int M)
  * @param M  FFT grid size (default 1024, must be a power of 2).
  * @return   Estimate of @f$ \hat\theta_{24} @f$.
  */
+/*
 double S6_fft(const std::vector<double>& x, double h, int M)
 {
-    const int    n    = static_cast<int>(x.size());
+    const int n = static_cast<int>(x.size());
     const double xmin = *std::min_element(x.begin(), x.end());
     const double xmax = *std::max_element(x.begin(), x.end());
 
-    const double a     = xmin - 4.0 * h;
-    const double b     = xmax + 4.0 * h;
+    // 1. Grille avec padding
+   // const double a = xmin - 4.0 * h;
+    //const double b = xmax + 4.0 * h;
+    const double a = xmin - 10.0 * h;
+    const double b = xmax + 10.0 * h;
     const double delta = (b - a) / static_cast<double>(M);
 
+    // 2. Allocation et Binning linéaire
     std::unique_ptr<double[], decltype(&fftw_free)>
         grid(static_cast<double*>(fftw_malloc(M * sizeof(double))), fftw_free);
-
     std::fill(grid.get(), grid.get() + M, 0.0);
 
     for (int i = 0; i < n; ++i) {
@@ -2106,84 +2075,300 @@ double S6_fft(const std::vector<double>& x, double h, int M)
         }
     }
 
+    // 3. FFT Forward
     const int complexSize = M / 2 + 1;
+    std::unique_ptr<fftw_complex[], decltype(&fftw_free)>
+        spectrum(static_cast<fftw_complex*>(
+                     fftw_malloc(complexSize * sizeof(fftw_complex))), fftw_free);
 
-    std::unique_ptr<double[], decltype(&fftw_free)>
-        spectrum(static_cast<double*>(
-                     fftw_malloc(2 * complexSize * sizeof(double))), fftw_free);
-
-    fftw_plan plan_fwd = fftw_plan_dft_r2c_1d(
-        M, grid.get(),
-        reinterpret_cast<fftw_complex*>(spectrum.get()),
-        FFTW_ESTIMATE);
+    // Note : Utiliser un verrou OMP critical si appelé depuis bw_SJ_ste parallélisé
+    fftw_plan plan_fwd;
+#pragma omp critical(FFTW_PLAN_ZONE)
+    {
+        plan_fwd = fftw_plan_dft_r2c_1d(
+            M, grid.get(),
+            spectrum.get(),
+            FFTW_ESTIMATE);
+    }
 
     fftw_execute(plan_fwd);
-    fftw_destroy_plan(plan_fwd);
 
+#pragma omp critical(FFTW_PLAN_ZONE)
+    {
+        fftw_destroy_plan(plan_fwd);
+    }
+
+    // 4. Intégration fréquentielle
     double sum = 0.0;
-    const double L       = static_cast<double>(M) * delta;
-    const double dOmega  = 2.0 * M_PI / L;
+    //const double L      = static_cast<double>(M) * delta;
+    //const double dOmega = 2.0 * M_PI / L;
+    const double dOmega = 2.0 * M_PI / (static_cast<double>(M) * delta);
 
     for (int k = 0; k < complexSize; ++k) {
         const double omega  = static_cast<double>(k) * dOmega;
         const double omega2 = omega * omega;
-        const double omega6 = omega2 * omega2 * omega2;   // ← ω⁶ ici
+        const double omega6 = omega2 * omega2 * omega2;
 
-        const double re   = spectrum[2 * k]     / static_cast<double>(M);
-        const double im   = spectrum[2 * k + 1] / static_cast<double>(M);
+        // Normalisation FFT (Division par M car r2c n'est pas normalisée)
+        //const double re = spectrum[k][0] / static_cast<double>(M);
+        //const double im = spectrum[k][1] / static_cast<double>(M);
+        const double re = spectrum[k][0];
+        const double im = spectrum[k][1];
         const double mod2 = re * re + im * im;
 
-        const double gauss  = std::exp(-omega2 * h * h);
+        // CORRECTION : Facteur 0.5 indispensable
+        const double gauss  = std::exp(-0.5 * omega2 * h * h);
         const double weight = (k == 0 || k == M / 2) ? 1.0 : 2.0;
 
         sum += weight * omega6 * gauss * mod2;
     }
 
-    return sum * dOmega / (2.0 * M_PI);
+    // 5. Normalisation finale
+    // Le signe est négatif car theta_6 = E[f^(6)(X)] = - Integral [f'''(x)]^2 dx
+    //return -sum * dOmega / (2.0 * M_PI);
+    return -sum * dOmega  / (2.0 * M_PI);
+
+}
+*/
+// ─── Fonction générique ───────────────────────────────────────────────────────
+// power    : puissance de omega dans l'intégrale (4 pour S4, 6 pour S6)
+// padding  : multiplicateur de h pour le padding de grille (3.0 pour S4, 10.0 pour S6)
+// finalizer: lambda qui normalise le résultat final
+template<typename Finalizer>
+static double Sn_fft_impl(const std::vector<double>& x, double h, int M,
+                          int power, double padding, Finalizer finalizer)
+{
+    const int    n    = static_cast<int>(x.size());
+    const double xmin = *std::min_element(x.begin(), x.end());
+    const double xmax = *std::max_element(x.begin(), x.end());
+
+    // 1. Grille avec padding
+    const double a     = xmin - padding * h;
+    const double b     = xmax + padding * h;
+    const double delta = (b - a) / static_cast<double>(M);
+
+    // 2. Allocation et binning linéaire
+    std::unique_ptr<double[], decltype(&fftw_free)>
+        grid(static_cast<double*>(fftw_malloc(M * sizeof(double))), fftw_free);
+    std::fill(grid.get(), grid.get() + M, 0.0);
+
+    for (int i = 0; i < n; ++i) {
+        const double z    = (x[i] - a) / delta;
+        const int    k    = static_cast<int>(std::floor(z));
+        const double frac = z - static_cast<double>(k);
+        if (k >= 0 && k < M - 1) {
+            grid[k]     += (1.0 - frac);
+            grid[k + 1] += frac;
+        }
+    }
+
+
+    // 3. FFT Forward
+    const int complexSize = M / 2 + 1;
+    std::unique_ptr<fftw_complex[], decltype(&fftw_free)>
+        spectrum(static_cast<fftw_complex*>(
+                     fftw_malloc(complexSize * sizeof(fftw_complex))), fftw_free);
+
+    fftw_plan plan;
+#pragma omp critical(FFTW_PLAN_ZONE)
+    { plan = fftw_plan_dft_r2c_1d(M, grid.get(), spectrum.get(), FFTW_ESTIMATE); }
+    if (!plan) return 0.0;
+    fftw_execute(plan);
+#pragma omp critical(FFTW_PLAN_ZONE)
+    { fftw_destroy_plan(plan); }
+
+    // 4. Intégration fréquentielle
+    const double dOmega = 2.0 * M_PI / (static_cast<double>(M) * delta);
+    double sum = 0.0;
+    // Dans la boucle d'intégration de Sn_fft_impl
+    for (int k = 0; k < complexSize; ++k) {
+        const double omega  = static_cast<double>(k) * dOmega;
+        const double re     = spectrum[k][0];
+        const double im     = spectrum[k][1];
+        //double mod2         = re * re + im * im;
+        double mod2 = (re * re + im * im) / delta * delta;
+
+        // Correction biais binning linéaire (noyau triangulaire → sinc²)
+        if (k > 0) {
+            const double arg   = omega * delta / (2.0 * M_PI);
+            const double sincv = std::sin(M_PI * arg) / (M_PI * arg);
+            mod2 /= (sincv * sincv * sincv * sincv);  // sinc^4
+        }
+
+        const double gauss  = std::exp(-0.5 * omega * omega * h * h);
+        const double weight = (k == 0 || k == M / 2) ? 1.0 : 2.0;
+        sum += weight * std::pow(omega, power) * gauss * mod2;
+    }
+
+    // 5. Normalisation finale (déléguée à l'appelant)
+    return finalizer(sum, dOmega, n);
 }
 
-
-
-double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter )
+// ─── Wrappers publics ────────────────────────────────────────────────────────
+double S4_fft(const std::vector<double>& x, double h, int M)
 {
-    const int    n     = x.size();
-    const double sigma = scale_factor(x);
+    return Sn_fft_impl(x, h, M, 4, 6.0,  // 3→6
+                       [](double sum, double dOmega, int n) -> double {
+                           return sum * dOmega / (2.0 * M_PI * (double)n * (double)n);
+                       });
+}
 
-    const double g1 = 1.24 * sigma * std::pow((double)n, -1.0/7.0);
-    const double g2 = 1.23 * sigma * std::pow((double)n, -1.0/9.0);
+double S6_fft(const std::vector<double>& x, double h, int M)
+{
+    return Sn_fft_impl(x, h, M, 6, 10.0,
+                       [](double sum, double dOmega, int n) -> double {
+                           return -sum * dOmega / (2.0 * M_PI * static_cast<double>(n) * static_cast<double>(n));
+                       });
+}
 
-    const int M = chooseFFtSize(n);
-    const double t44 = S4_fft(x, g1, M);
-    const double t24 = S6_fft(x, g2, M);
+double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
+{
+
+    const std::size_t n  = x.size();
+    const double      nd = static_cast<double>(n);
+    const double sigma   = scale_factor(x);
+
+    // -----------------------------------------------------------------
+    // Normalisation : on travaille sur x/sigma
+    // SJ est invariant par changement d'échelle :
+    // h_optimal(x) = sigma * h_optimal(x/sigma)
+    // -----------------------------------------------------------------
+    std::vector<double> xn(n);
+    for (std::size_t i = 0; i < n; ++i)
+        xn[i] = x[i] / sigma;
+
+    // Tout le calcul SJ sur xn (sigma_xn ≈ 1)
+    const double sigma_n = scale_factor(xn);
+    const double h_ref_n = 0.9 * sigma_n * std::pow(nd, -0.2);
+    const int    M       = chooseFFtSize(n);
+
+    const double g1 = 1.24 * sigma_n * std::pow(nd, -1.0/7.0);
+    const double g2 = 1.23 * sigma_n * std::pow(nd, -1.0/9.0);
+
+    const double t44 = S4_fft(xn, g1, M);
+    const double t24 = S6_fft(xn, g2, M);
 
     if (std::abs(t44) < 1e-15 || std::abs(t24) < 1e-15)
-        return 0.9 * sigma * std::pow((double)n, -0.2);
+        return sigma * h_ref_n;
 
-    const double alpha2 = 1.357 * std::pow(std::abs(t24 / t44), 1.0/7.0);
-    const double c1     = 1.0 / (2.0 * std::sqrt(M_PI) * n);
+    //double alpha2 = 1.357 * std::pow(std::abs(t24 / t44), 1.0/7.0);
+    double alpha2 = 1.357 * std::pow(std::abs(t44 / t24), 1.0/7.0);
+    //const double c1     = 1.0 / (2.0 * std::sqrt(M_PI) * nd);
+    const double RK = 1.0 / (2.0 * std::sqrt(M_PI)); // R(K)
+    const double c1 = RK / nd; // Car mu2(K) = 1
 
-    auto eq = [&](double h) { return sj_equation(h, x, alpha2, c1, M); };
+    auto eq = [&](double h){ return sj_equation(h, xn, alpha2, c1, M); };
 
-    double lo = 0.1 * sigma * std::pow((double)n, -0.2);
-    double hi = 2.0 * sigma * std::pow((double)n, -0.2);
+    // -----------------------------------------------------------------
+    // Balayage logarithmique sur données normalisées
+    // -----------------------------------------------------------------
+    //const double lo_abs  = 1e-4 * h_ref_n;
+    //const double hi_abs  = 10.0 * h_ref_n;
+    //const int    n_scan  = 100;
+    // -----------------------------------------------------------------
+    // Bornes conformes à l'implémentation R (bw.SJ)
+    // -----------------------------------------------------------------
+    const double lo_abs = 0.001 * h_ref_n;  // R descend rarement en dessous de 0.1 * h_ref
 
-    bool found = false;
-    for (int k = 0; k < 20; k++) {
-        if (eq(lo) * eq(hi) < 0.0) { found = true; break; }
-        lo /= 1.2;
-        hi *= 1.2;
+    // IMPORTANT : hi_abs ne devrait pas dépasser 2.0 pour des données normalisées.
+    // Si hi_abs est trop grand (ex: 10 * h_ref), vous tombez dans la zone de "sur-lissage"
+    // où S4 devient nul, créant la racine parasite à 54.
+    const double hi_abs = 2.0;
+    const int n_scan = 100;
+
+    const double log_lo = std::log(lo_abs);
+    const double log_hi = std::log(hi_abs);
+
+    std::vector<double> grid(n_scan + 1);
+    for (int k = 0; k <= n_scan; k++)
+        grid[k] = std::exp(log_lo + k * (log_hi - log_lo) / n_scan);
+
+    std::vector<double> evals(n_scan + 1);
+
+#pragma omp parallel for schedule(dynamic)
+    for (int k = 0; k <= n_scan; k++)
+        evals[k] = eq(grid[k]);
+
+    std::vector<std::pair<double,double>> brackets;
+    for (int k = 0; k < n_scan; k++) {
+        if (std::isnan(evals[k]) || std::isnan(evals[k+1])) continue;
+        if (evals[k] * evals[k+1] < 0.0)
+            brackets.push_back({grid[k], grid[k+1]});
     }
-    if (!found)
-        return 0.9 * sigma * std::pow((double)n, -0.2);
 
-    double result = bisect(eq, lo, hi, tol, max_iter);
+    if (brackets.empty())
+        return sigma * h_ref_n;
 
-    if (std::isnan(result))
-        return 0.9 * sigma * std::pow((double)n, -0.2);
-    return result;
+    // -----------------------------------------------------------------
+    // Raffinement + bissection
+    // -----------------------------------------------------------------
+    std::vector<std::pair<double,double>> fine_brackets;
+
+    for (auto& [a, b] : brackets) {
+        constexpr int N_FINE = 10;
+        std::array<double, N_FINE + 1> fgrid, fevals;
+        const double flog_lo = std::log(a);
+        const double flog_hi = std::log(b);
+
+        for (int k = 0; k <= N_FINE; k++)
+            fgrid[k] = std::exp(flog_lo + k * (flog_hi - flog_lo) / N_FINE);
+
+#pragma omp parallel for schedule(dynamic)
+        for (int k = 0; k <= N_FINE; k++)
+            fevals[k] = eq(fgrid[k]);
+
+        for (int k = 0; k < N_FINE; k++) {
+            if (std::isnan(fevals[k]) || std::isnan(fevals[k+1])) continue;
+            if (fevals[k] * fevals[k+1] < 0.0)
+                fine_brackets.push_back({fgrid[k], fgrid[k+1]});
+        }
+    }
+
+    if (fine_brackets.empty())
+        return sigma * h_ref_n;
+
+    const int nb = static_cast<int>(fine_brackets.size());
+    std::vector<double> roots(nb, std::numeric_limits<double>::quiet_NaN());
+
+#pragma omp parallel for schedule(dynamic)
+    for (int i = 0; i < nb; i++) {
+        const double root = bisect(eq, fine_brackets[i].first,
+                                   fine_brackets[i].second, tol, max_iter);
+        if (!std::isnan(root) && root > 0.0)
+            roots[i] = root;
+    }
+
+    // Racine la plus proche de h_ref_n en log-scale
+    double best      = std::numeric_limits<double>::quiet_NaN();
+    double best_dist = std::numeric_limits<double>::max();
+
+    for (double root : roots) {
+        if (std::isnan(root)) continue;
+        const double dist = std::abs(std::log(root / h_ref_n));
+        if (dist < best_dist) {
+            best_dist = dist;
+            best      = root;
+        }
+    }
+    if (std::isnan(best))
+        return sigma * h_ref_n;
+
+    // -----------------------------------------------------------------
+    // Dénormalisation : h_réel = sigma * h_normalisé
+    // -----------------------------------------------------------------
+    return sigma * best;
+
 }
 
 
+double bw_nrd0(const std::vector<double>& x)
+{
+    const double nd    = static_cast<double>(x.size());
+    const double sigma = scale_factor(x);  // min(sd, IQR/1.349)
+
+    // Si IQR=0, scale_factor retourne sd — garanti positif
+    return 0.9 * sigma * std::pow(nd, -0.2);
+}
 /*
 double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
 {

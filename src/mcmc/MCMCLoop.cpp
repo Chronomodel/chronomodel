@@ -155,7 +155,7 @@ QString MCMCLoop::initialize_time()
     try {
         for (auto&& ph : phases) {
             ph->initTau(tminPeriod, tmaxPeriod);
-            qDebug() << "[MCMCLoop::initialize_time] " << ph->getQStringName() << " init Tau =" << ph->mTau.mX;
+            qDebug() << "[MCMCLoop::initialize_time] " << ph->getQStringName() << " init Tau =" << ph->mTau.value();
             if (isInterruptionRequested())
                 return ABORTED_BY_USER;
 
@@ -181,7 +181,7 @@ QString MCMCLoop::initialize_time()
                     bound->mTheta.acquire(); // non sauvegarder dans Loop.memo()
                     bound->mInitialized = true;
                     bound->mTheta.mSamplerProposal = MHVariable::eFixe;
-                    qDebug() << QString("[MCMCLoop::initialize_time] Init for Bound : %1  ->theta = %4 thetaRed = %5-------").arg(bound->getQStringName(), QString::number(bound->mTheta.mX, 'f', 3), QString::number(bound->mThetaReduced, 'f', 3));
+                    qDebug() << QString("[MCMCLoop::initialize_time] Init for Bound : %1  ->theta = %4 thetaRed = %5-------").arg(bound->getQStringName(), QString::number(bound->mTheta.value(), 'f', 3), QString::number(bound->mThetaReduced, 'f', 3));
                     bound->mS02Theta.mSamplerProposal = MHVariable::eFixe;
                 }
                 bound = nullptr;
@@ -236,7 +236,7 @@ QString MCMCLoop::initialize_time()
         // On regarde les gamma entre les phases, pour initialiser les alpha et beta
         for (auto p : phases) {
             p->init_alpha_beta_phase(phases);
-            qDebug() << "[MCMCLoop::initialize_time] " << p->getQStringName() << " init alpha =" << p->mAlpha.mX << " beta=" << p->mBeta.mX;
+            qDebug() << "[MCMCLoop::initialize_time] " << p->getQStringName() << " init alpha =" << p->mAlpha.value() << " beta=" << p->mBeta.value();
         }
 
         //---------------
@@ -292,11 +292,11 @@ QString MCMCLoop::initialize_time()
                     uEvent->mTheta.accept_update(try_theta);
 
 
-                    uEvent->mThetaReduced = mModel->reduceTime(uEvent->mTheta.mX);
+                    uEvent->mThetaReduced = mModel->reduceTime(uEvent->mTheta.value());
                     uEvent->mInitialized = true;
 
                     // ------- debug init
-                    qDebug() << QString("[MCMCLoop::initialize_time] Init for event : %1 : min = %2 : max = %3  ->theta = %4 thetaRed = %5-------").arg(uEvent->getQStringName(), QString::number(min, 'f', 3), QString::number(max, 'f', 3), QString::number(uEvent->mTheta.mX, 'f', 3), QString::number(uEvent->mThetaReduced, 'f', 3));
+                    qDebug() << QString("[MCMCLoop::initialize_time] Init for event : %1 : min = %2 : max = %3  ->theta = %4 thetaRed = %5-------").arg(uEvent->getQStringName(), QString::number(min, 'f', 3), QString::number(max, 'f', 3), QString::number(uEvent->mTheta.value(), 'f', 3), QString::number(uEvent->mThetaReduced, 'f', 3));
                     // ----------------------------------------------------------------
 
 
@@ -319,14 +319,14 @@ QString MCMCLoop::initialize_time()
                             std::vector<double> repart_exp_theta (date.mWiggleCalibration->mVector.size());
                             double sum_exp = 0.0;
                             for ( size_t i = 0; i < date.mWiggleCalibration->mVector.size(); i++) {
-                                double exp_theta = dnorm(date.mWiggleCalibration->mTmin + i * date.mWiggleCalibration->mStep, uEvent->mTheta.mX, sigma);
+                                double exp_theta = dnorm(date.mWiggleCalibration->mTmin + i * date.mWiggleCalibration->mStep, uEvent->mTheta.value(), sigma);
                                 sum_exp += exp_theta * date.mWiggleCalibration->mVector[i];
                                 repart_exp_theta[i] = sum_exp;
                             }
                             //const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(0, sum_exp), repart_exp_theta);
                             const double idx = interpolate_index(Generator::randomUniform(0, sum_exp), repart_exp_theta);
 
-                            date.mTi.mX = date.mWiggleCalibration->mTmin + idx * date.mWiggleCalibration->mStep;
+                            date.mTi.setValue(date.mWiggleCalibration->mTmin + idx * date.mWiggleCalibration->mStep);
 
 
                         } else if (!date.mCalibration->mRepartition.empty()) {
@@ -334,13 +334,13 @@ QString MCMCLoop::initialize_time()
                             std::vector<double> repart_exp_theta (date.mCalibration->mVector.size());
                             double sum_exp = 0.0;
                             for ( size_t i = 0; i < date.mCalibration->mVector.size(); i++) {
-                                double exp_theta = dnorm(date.mCalibration->mTmin + i * date.mCalibration->mStep, uEvent->mTheta.mX, sigma);
+                                double exp_theta = dnorm(date.mCalibration->mTmin + i * date.mCalibration->mStep, uEvent->mTheta.value(), sigma);
                                 sum_exp += exp_theta * date.mCalibration->mVector[i];
                                 repart_exp_theta[i] = sum_exp;
                             }
                             //const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(0, sum_exp), repart_exp_theta);
                             const double idx = interpolate_index(Generator::randomUniform(0, sum_exp), repart_exp_theta);
-                            date.mTi.mX = date.mCalibration->mTmin + idx * date.mCalibration->mStep;
+                            date.mTi.setValue(date.mCalibration->mTmin + idx * date.mCalibration->mStep);
 
                         } else { // in the case of mRepartion curve is null, we must init ti outside the study period
                             // For instance we use a gaussian random sampling
@@ -348,13 +348,13 @@ QString MCMCLoop::initialize_time()
                             qDebug() << "[MCMCLoop::initialize_time] mRepartion curve is null for" << date.getQStringName();
                             const double u = Generator::normalDistribution(0., sigma);
                             if (u<0)
-                                date.mTi.mX = tminPeriod + u;
+                                date.mTi.setValue(tminPeriod + u);
                             else
-                                date.mTi.mX = tmaxPeriod + u;
+                                date.mTi.setValue(tmaxPeriod + u);
 
                             if (date.mTi.mSamplerProposal == MHVariable::eInversion) {
-                                qDebug()<<"[MCMCLoop::initialize_time] Automatic sampling method exchange eInversion to eMHPrior for"<< date.getQStringName();
-                                date.mTi.mSamplerProposal = MHVariable::eMHPrior;
+                                qDebug()<<"[MCMCLoop::initialize_time] Automatic sampling method exchange eInversion to eDatePrior for"<< date.getQStringName();
+                                date.mTi.mSamplerProposal = MHVariable::eDatePrior;
                                 date.autoSetTiSampler(true);
                             }
 
@@ -365,7 +365,7 @@ QString MCMCLoop::initialize_time()
                         date.mWiggle.mLastMHAccepts.clear();
                         date.updateWiggle();
                         //date.mWiggle.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
-                        date.mWiggle.accept_update(date.mWiggle.mX);
+                        date.mWiggle.accept_update(date.mWiggle.value());
 
                         // 3 - Init sigma MH adaptatif of each Data ti
                         date.mTi.mSigmaMH = 2.38 * sigma; // optimum Roberts
@@ -373,20 +373,20 @@ QString MCMCLoop::initialize_time()
                         // 4 - Clear mLastMHAccepts array and set this init at 100%
                         date.mTi.mLastMHAccepts.clear();
                         //date.mTheta.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
-                        date.mTi.accept_update(date.mTi.mX);
+                        date.mTi.accept_update(date.mTi.value());
 
                         // 5 - Init Sigma_i and its Sigma_MH
-                        date.mSigmaTi.mX = std::abs(date.mTi.mX - (uEvent->mTheta.mX - date.mDelta));
+                        date.mSigmaTi.setValue(std::abs(date.mTi.value() - (uEvent->mTheta.value() - date.mDelta)));
 
 
-                        if (date.mSigmaTi.mX <= 1.0E-6) {
-                            date.mSigmaTi.mX = 1.0E-6; // Add control the 2015/06/15 with PhL
+                        if (date.mSigmaTi.value() <= 1.0E-6) {
+                            date.mSigmaTi.setValue(1.0E-6); // Add control the 2015/06/15 with PhL
                             //log += line(date.mName + textBold("Sigma indiv. <=1E-6 set to 1E-6"));
                         }
                         date.mSigmaTi.mSigmaMH = 0.1; // default = 1.0
 
                         date.mSigmaTi.mLastMHAccepts.clear();
-                        date.mSigmaTi.accept_update(date.mSigmaTi.mX);
+                        date.mSigmaTi.accept_update(date.mSigmaTi.value());
 
                         // intermediary calculus for the harmonic average
                         s02_sum += 1.0 / (sigma * sigma);
@@ -413,7 +413,7 @@ QString MCMCLoop::initialize_time()
 #endif
 
                     // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
-                    uEvent->mTheta.mSigmaMH = 2.38 * sqrt(uEvent->mS02Theta.mX); // optimum Roberts
+                    uEvent->mTheta.mSigmaMH = 2.38 * sqrt(uEvent->mS02Theta.value()); // optimum Roberts
                     uEvent->mAShrinkage = 1.0;
 
 
@@ -429,7 +429,7 @@ QString MCMCLoop::initialize_time()
             for (std::shared_ptr<Event> &uEvent : unsortedEvents) {
                 emit stepProgressed(++Ni);
                 emit setMessage(tr("Initializing Event : %1 / %2").arg(QString::number(Ni), QString::number(N)));
-
+                uEvent->mTheta.mSamplerProposal = MHVariable::eFixe;
                 // ----------------------------------------------------------------
                 // Curve init Theta event :
                 // On initialise les theta près des dates ti
@@ -437,26 +437,27 @@ QString MCMCLoop::initialize_time()
                 if (uEvent->mType == Event::eDefault)
                     sampleInCumulatedRepartition_thetaFixe(uEvent, mModel->mSettings);
                 else
-                    uEvent->mTheta.mX = static_cast<Bound*>(uEvent.get())->mFixed;
+                    uEvent->mTheta.setValue(static_cast<Bound*>(uEvent.get())->mFixed);
                 // nous devons sauvegarder la valeur ici car dans loop.memo(), les variables fixes ne sont pas memorisées.
                 // Pourtant, il faut récupèrer la valeur pour les affichages et les stats
+
                 uEvent->mTheta.recordBurnAdapt();
                 uEvent->mTheta.acquire(); // il faut faire memo ici, c'est la seule fois. ce ne sera pas fait dans MCMCLoopChrono.memo()
 
-                uEvent->mThetaReduced = mModel->reduceTime(uEvent->mTheta.mX);
+                uEvent->mThetaReduced = mModel->reduceTime(uEvent->mTheta.value());
                 uEvent->mInitialized = true;
-                uEvent->mTheta.mSamplerProposal = MHVariable::eFixe;
+
 
                 for (auto&& date : uEvent->mDates) {
                     date.mTi.mSamplerProposal = MHVariable::eFixe;
-                    date.mTi.mX = uEvent->mTheta.mX;
+                    date.mTi.setValue(uEvent->mTheta.value());
                     date.mTi.recordBurnAdapt();
                     date.mTi.acquire();
 
                     // 2 - Init Delta Wiggle matching and Clear mLastMHAccepts array
                     date.initDelta();
                     date.mWiggle.mSamplerProposal = MHVariable::eFixe;
-                    date.mWiggle.mX = date.mTi.mX + date.mDelta;
+                    date.mWiggle.setValue(date.mTi.value() + date.mDelta);
                     date.mWiggle.recordBurnAdapt();
                     date.mWiggle.acquire();
                     date.mWiggle.mLastMHAccepts.clear();
@@ -471,7 +472,7 @@ QString MCMCLoop::initialize_time()
 
                     // 5 - Init Sigma_i and its Sigma_MH
                     date.mSigmaTi.mSamplerProposal = MHVariable::eFixe;
-                    date.mSigmaTi.mX = 0;
+                    date.mSigmaTi.setValue(0);
                     date.mSigmaTi.recordBurnAdapt();
                     date.mSigmaTi.acquire();
 
@@ -483,7 +484,7 @@ QString MCMCLoop::initialize_time()
                 }
 
                 // 4 - Init S02 of each Event fixed
-                uEvent->mS02Theta.mX = 0;
+                uEvent->mS02Theta.setValue(0);
                 uEvent->mS02Theta.mLastMHAccepts.clear();
                 uEvent->mS02Theta.mSamplerProposal = MHVariable::eFixe;
                 uEvent->mS02Theta.recordBurnAdapt();
@@ -551,10 +552,10 @@ QString MCMCLoop::initialize_time()
                 const double min = ev->getThetaMin(tminPeriod); // need alpha and beta Phase
                 const double max = ev->getThetaMax(tmaxPeriod);
 
-                qDebug() << QString("[MCMCLoop::initialize_time] Init for event theta fixed : %1 : min = %2 : max = %3  ->theta = %4 thetaRed = %5-------").arg(ev->getQStringName(), QString::number(min, 'f', 3), QString::number(max, 'f', 3), QString::number(ev->mTheta.mX, 'f', 5), QString::number(ev->mThetaReduced, 'f', 5));
+                qDebug() << QString("[MCMCLoop::initialize_time] Init for event theta fixed : %1 : min = %2 : max = %3  ->theta = %4 thetaRed = %5-------").arg(ev->getQStringName(), QString::number(min, 'f', 3), QString::number(max, 'f', 3), QString::number(ev->mTheta.value(), 'f', 5), QString::number(ev->mThetaReduced, 'f', 5));
 
-                if (ev->mTheta.mX < min || ev->mTheta.mX > max) {
-                    throw QObject::tr("Error for event theta fixed : %1 : min = %2 : max = %3 but Theta = %4" ).arg(ev->getQStringName(), QString::number(min), QString::number(max), QString::number(ev->mTheta.mX, 'f', 3));
+                if (ev->mTheta.value() < min || ev->mTheta.value() > max) {
+                    throw QObject::tr("Error for event theta fixed : %1 : min = %2 : max = %3 but Theta = %4" ).arg(ev->getQStringName(), QString::number(min), QString::number(max), QString::number(ev->mTheta.value(), 'f', 3));
                 }
             }
         }  catch (const QString e) {
@@ -622,7 +623,7 @@ double MCMCLoop::SMC_score()
     for (const auto& ev : mModel->mEvents) {
         if (ev->mType == Event::eDefault) {
             for (const Date& date : ev->mDates) {
-                sigmas.push_back(date.mSigmaTi.mX);
+                sigmas.push_back(date.mSigmaTi.value());
             }
         }
     }
@@ -648,7 +649,7 @@ double MCMCLoop::SMC_score()
         // Contribution des dates
         double mean_date_score = 0.0;
         for (const Date& date : ev->mDates) {
-            mean_date_score += std::exp(-date.mSigmaTi.mX / tau);
+            mean_date_score += std::exp(-date.mSigmaTi.value() / tau);
         }
         mean_date_score /= ev->mDates.size();
 
@@ -683,7 +684,7 @@ double MCMCLoop::SMC_score()
 
         for (const auto& ev : mModel->mEvents) {
             if (ev->mPointType == Event::ePoint) {
-                var_residuel = ev->mVg.mX;
+                var_residuel = ev->mVg.value();
                 // On pourrait imaginer que var_reference soit ev->mInitialVariance
                 break;
             }
@@ -1000,7 +1001,6 @@ void MCMCLoop::run()
 
             try {
                 update();
-                //learn();
 
 
 #ifdef _WIN32
@@ -1012,7 +1012,6 @@ void MCMCLoop::run()
                 mAbortedReason = error;
                 return;
             }
-            //recordForEmpiricalPrior();
 
             recordBurnAdapt();
             recordMH();

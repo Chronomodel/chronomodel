@@ -1249,8 +1249,8 @@ void MainWindow::rebuildExportCurve()
             }
         }
         auto& model = mProject->mModel;
-        model->updateDensities(model->mFFTLength, model->mBandwidth, model->mThreshold);
-        //model->generatePosteriorDensities(model->mChains, model->mFFTLength, model->mBandwidth);
+        model->updateDensities(model->mFFTLength, model->mBandwidthType, model->mBandwidth, model->mThreshold);
+
         // update ResultView
         mProjectView->updateResults();
 
@@ -1279,7 +1279,7 @@ void MainWindow::changeEventsMethod()
 
     QStringList opts;
     opts.append(MHVariable::getSamplerProposalText(MHVariable::eMHAdaptGauss));
-    opts.append(MHVariable::getSamplerProposalText(MHVariable::eBoxMuller));
+    opts.append(MHVariable::getSamplerProposalText(MHVariable::eEventPrior));
     opts.append(MHVariable::getSamplerProposalText(MHVariable::eDoubleExp));
 
     bool ok;
@@ -1310,7 +1310,7 @@ void MainWindow::changeDatesMethod()
                                              opts, 0, false, &ok);
     if (ok) {
         opts.clear();
-        opts.append(MHVariable::getSamplerProposalText(MHVariable::eMHPrior));
+        opts.append(MHVariable::getSamplerProposalText(MHVariable::eDatePrior));
         opts.append(MHVariable::getSamplerProposalText(MHVariable::eInversion));
         opts.append(MHVariable::getSamplerProposalText(MHVariable::eMHAdaptGauss));
 

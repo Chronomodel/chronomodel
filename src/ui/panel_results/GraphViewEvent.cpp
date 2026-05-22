@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------
-Copyright or © or Copr. CNRS	2014 - 2025
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -164,10 +164,10 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
             } else {
 
 
-                /* ------------------------------------
-                 *  Post Distrib All Chains
-                 * ------------------------------------
-                 */
+                // ------------------------------------
+                //  Post Distrib All Chains
+                // ------------------------------------
+                //
                 const GraphCurve &curvePostDistrib = densityCurve(mEvent->mTheta.mFormatedKDE,
                                                                        "Post Distrib All Chains",
                                                                        color);
@@ -179,10 +179,10 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
                                                        color);
                 mGraph->add_curve(curveHPD);
 
-                /* ------------------------------------
-                 *  Post Distrib Chain i
-                 * ------------------------------------
-                 */
+                // ------------------------------------
+                //  Post Distrib Chain i
+                // ------------------------------------
+                //
                 if (!mEvent->mTheta.mChainsKDE.empty())
                     for (size_t i = 0; i < mEvent->mTheta.mChainsKDE.size(); ++i) {
                         const GraphCurve &curvePostDistribChain = densityCurve(mEvent->mTheta.mChainsKDE[i],
@@ -193,10 +193,10 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
                         mGraph->add_curve(curvePostDistribChain);
                     }
 
-                /* ------------------------------------
-                 *  Theta Credibility
-                 * ------------------------------------
-                 */
+                // ------------------------------------
+                //  Theta Credibility
+                // ------------------------------------
+                //
                 const GraphCurve &curveCred = topLineSection(mEvent->mTheta.mFormatedCredibility,
                                                                 "Credibility All Chains",
                                                                 color);

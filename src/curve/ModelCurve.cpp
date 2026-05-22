@@ -71,7 +71,7 @@ ModelCurve::ModelCurve():
     compute_X_only(false)
 {
     mLambdaSpline.setName(std::string("LambdaSpline of Curve"));
-    mLambdaSpline.mSupport = MetropolisVariable::eR;
+    mLambdaSpline.mSupport = Support::eR;
     mLambdaSpline.mFormat = DateUtils::eNumeric;
     mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
@@ -97,7 +97,7 @@ ModelCurve::ModelCurve(const QJsonObject& json):
     compute_X_only(false)
 {
     mLambdaSpline.setName(std::string("LambdaSpline of Curve"));
-    mLambdaSpline.mSupport = MetropolisVariable::eR;
+    mLambdaSpline.mSupport = Support::eR;
     mLambdaSpline.mFormat = DateUtils::eNumeric;
     mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
@@ -697,20 +697,25 @@ void ModelCurve::generateResultsLog()
     }
 }
 
-void ModelCurve::generatePosteriorDensities(const std::vector<ChainSpecs> &chains, int fftLen, double bandwidth)
+void ModelCurve::generatePosteriorDensities(const std::vector<ChainSpecs> &chains, int fftLen, BandwidthType bwt, double bandwidth)
 {
-    Model::generatePosteriorDensities(chains, fftLen, bandwidth);
+    Model::generatePosteriorDensities(chains, fftLen, bwt, bandwidth);
+
     if (is_curve) {
         for (std::shared_ptr<Event> &event : mEvents) {
-            if (event->mVg.mSamplerProposal != MHVariable::eFixe)
-                event->mVg.generateKDE(chains, fftLen, bandwidth);
+            if (event->mVg.mSamplerProposal != MHVariable::eFixe) {
+                event->mVg.setBandwidth(bwt, bandwidth);
+                event->mVg.generateFormatedKDE(chains, fftLen);
+            }
         }
-
-        mLambdaSpline.generateKDE(chains, fftLen, bandwidth);
+        mLambdaSpline.setBandwidth(bwt, bandwidth);
+        mLambdaSpline.generateFormatedKDE(chains, fftLen);
 
 #ifdef KOMLAN
-        if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
-            mS02Vg.generateKDE(chains, fftLen, bandwidth);
+        if (mS02Vg.mSamplerProposal != MHVariable::eFixe) {
+            mS02Vg.setBandwidth(bwt, bandwidth);
+            mS02Vg.generateFormatedKDE(chains, fftLen);
+        }
 #endif
     }
 
@@ -804,13 +809,13 @@ void ModelCurve::generateCredibility(const double thresh)
     if (getProject_ptr()->isCurve()) {
         for (const auto& event : mEvents) {
             if (event->mVg.mSamplerProposal != MHVariable::eFixe)
-                event->mVg.generateCredibility(mChains, thresh);
+                event->mVg.generateCredibility(thresh);
         }
-        mLambdaSpline.generateCredibility(mChains, thresh);
+        mLambdaSpline.generateCredibility(thresh);
 
 #ifdef KOMLAN
         if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
-            mS02Vg.generateCredibility(mChains, thresh);
+            mS02Vg.generateCredibility(thresh);
 #endif
 
     }

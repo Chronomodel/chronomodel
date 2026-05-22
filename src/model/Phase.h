@@ -98,7 +98,8 @@ public:
 
     std::pair<double, double> getFormatedTimeRange() const;
 
-    void generateKDE(const std::vector<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
+    void setBandwidth(BandwidthType bwt, double bandwidth);
+    void generateFormatedKDE(const std::vector<ChainSpecs>& chains, const int fftLen, const double tmin, const double tmax);
     void generateActivity(size_t gridLength, double h, const double threshold, const double timeRangeLevel = 95.);
 
     void update_AlphaBeta(const double tminPeriod, const double tmaxPeriod);
@@ -115,7 +116,7 @@ public:
 
 
 #ifdef DEBUG
-        if (mBeta.mX - mAlpha.mX < 0.)
+        if (mBeta.value() - mAlpha.value() < 0.)
             qDebug()<<"[Phase::acquire] : "<<getQStringName()<<" Warning mBeta.mX - mAlpha.mX<0";
 #endif
     }

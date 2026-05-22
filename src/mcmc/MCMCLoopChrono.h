@@ -70,11 +70,11 @@ protected:
 
     virtual void finalize();
 
-    bool learn_v3_tempering();
+    //bool learn_v3_tempering();
     bool update_v3();
     bool update_v3_tempering();
 
-    bool update_v3_simulated_tempering_annealing();
+   // bool update_v3_simulated_tempering_annealing();
     bool update_v4();
 };
 

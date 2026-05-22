@@ -76,7 +76,11 @@ public:
     int mNumberOfDates;
 
     double mThreshold; // used for TimeRange + Credibility + transition Range + GapRange
+
+    BandwidthType mBandwidthType;
     double mBandwidth;
+
+
     int mFFTLength;
     double mHActivity;
     // Stockage des courbes binomiales en fonction de n
@@ -149,16 +153,16 @@ public:
     int getFFTLength() const;
 
     virtual void setThreshold(const double threshold);
-    void setBandwidth(const double bandwidth);
+    void setBandwidth(BandwidthType bwt, const double bandwidth);
     void setFFTLength(int FFTLength);
     void setHActivity(const double h, const double rangePercent);
 
     virtual void setThresholdToAllModel(const double threshold);
     void initDensities();
-    void updateDensities(int fftLen, double bandwidth, double threshold);
+    void updateDensities(int fftLen, BandwidthType bandwidthType, double bandwidth, double threshold);
 
     // Computed from trace using FFT :
-    virtual void generatePosteriorDensities(const std::vector<ChainSpecs> &chains, int fftLen, double bandwidth);
+    virtual void generatePosteriorDensities(const std::vector<ChainSpecs> &chains, int fftLen,  BandwidthType bwt, double bandwidth = 1.);
     // Trace and Posterior density needed for this :
 
     virtual void generateCredibility(const double threshold);

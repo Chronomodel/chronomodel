@@ -133,6 +133,8 @@ protected:
     void spreadEventsThetaReduced0(std::vector<std::shared_ptr<Event>> &sortedEvents, t_reduceTime spreadSpan = 0.0);
     std::vector<double> spreadEventsTheta0(std::vector<std::shared_ptr<Event>>& Events, t_reduceTime spreadSpan = 0.0);
     std::vector<double> unclumpTheta(const std::vector<std::shared_ptr<Event>>& events, double spreadSpan = 1e-8);
+    std::vector<double> unclumpThetaReduit(const std::vector<std::shared_ptr<Event>>& events, double spreadSpan = 1e-8);
+
 
     bool (MCMCLoopCurve::*updateLoop)();;
 #if VERSION_MAJOR == 3 && VERSION_MINOR == 2 && VERSION_PATCH == 1
@@ -155,10 +157,10 @@ protected:
     // with tempering
     QString initialize_337();
     bool update_337();
-    bool sampler_337();
+    //bool sampler_337();
     bool sampler_337_b(); // ok
-    bool tempering_337(double T_max, std::vector<bool> &event_regenerated);
-    bool tempering_337_b(double expo_T_max, std::vector<bool>& event_regenerated );
+    //bool tempering_337(double T_max, std::vector<bool> &event_regenerated);
+    //bool tempering_337_b(double expo_T_max, std::vector<bool>& event_regenerated );
     bool tempering_337_c(double T); //ok
 
     double event_MH_rate(Event* event, double try_theta);

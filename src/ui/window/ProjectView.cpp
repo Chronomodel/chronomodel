@@ -258,7 +258,7 @@ void ProjectView::applySettings(std::shared_ptr<ModelCurve> &model)
         const double memoThreshold = model->mThreshold;
         model->mThreshold = -1;
         model->clearThreshold();
-        model->updateDensities(model->mFFTLength, model->mBandwidth, memoThreshold);
+        model->updateDensities(model->mFFTLength, model->mBandwidthType, model->mBandwidth, memoThreshold);
         mResultsView->applyAppSettings();
 
         mLogInitEdit->setText(model->getInitLog());

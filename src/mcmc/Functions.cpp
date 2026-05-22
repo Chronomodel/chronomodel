@@ -740,7 +740,8 @@ TraceStat traceStatistic(const std::vector<type_data> &trace)
         result.min = 0;
         result.max = 0;
 
-        result.bdw = 0;
+        result.bw_SJ = 0;
+        result.bw_nrd0 = 0;
 
         result.quartiles.Q1 = 0;
         result.quartiles.Q2 = 0;
@@ -760,7 +761,8 @@ TraceStat traceStatistic(const std::vector<type_data> &trace)
         result.min = v;
         result.max = v;
 
-        result.bdw = 0;
+        result.bw_SJ = 0;
+        result.bw_nrd0 = 0;
 
         result.quartiles.Q1 = v;
         result.quartiles.Q2 = v;
@@ -775,18 +777,34 @@ TraceStat traceStatistic(const std::vector<type_data> &trace)
     result.min = *minMax.first;
     result.max = *minMax.second;
 
+    //test
+    //  c( rnorm(nbIter, mean = -300, sd = 5), rnorm(nbIter, mean =  300, sd = 5) ) "h SJ_ste 10.0233092084062" "h SJ_dpi 37.3458401274182"
+    // "equivalent CM 0.0834166666666667"
+    //std::vector<double> trace_test = {-302.802378232761,-301.150887447416,-292.206458429254,-299.647458042877,-299.353561324195,-291.424675065584,-297.695418970054,-306.325306173033,-303.434264259468,-302.2283098505,-293.879591012803,-298.200930864713,-297.99614274703,-299.446586420274,-302.77920567377,-291.065434315985,-297.510747608854,-309.833085783148,-296.493220492182,-302.36395703864,-305.339118529934,-301.089874573291,-305.130022241536,-303.644456146456,-303.125196339246,-308.433466553712,-295.811064777527,-299.233134410817,-305.69068468506,-293.73092539465,-297.867678892616,-301.475357414961,-295.524371694775,-295.609332562335,-295.892094591813,-296.5567987295,-297.230411732312,-300.309558552884,-301.5298133187,-301.902355005062,-303.473534894603,-301.039586390098,-306.326981757841,-289.155220173307,-293.960190008475,-305.615542916017,-302.014424176495,-302.333276768116,-296.100174408318,-300.416845332359,301.266592569974,299.857266223256,299.785647713543,306.843011420072,298.871145071704,307.582353022148,292.256235978849,302.92306874818,300.619271219223,301.07970784372,301.898197413799,297.488382734453,298.333963081653,294.907123084465,294.641043867622,301.517643207021,302.241048893147,300.265021133653,304.611337339399,310.250423428136,297.544844169717,288.454155621796,305.028692622311,296.453996187088,296.559956917663,305.127856848483,298.576134964745,293.896411438727,300.906517398746,299.305543187805,300.028820929499,301.926402005632,298.146699841038,303.221882742594,298.897567190906,301.658909819578,305.484195065747,302.175907454169,298.370342072344,305.744038092255,304.967519279811,302.74198479754,301.193658675557,296.860469619803,306.80326224265,296.998702064264,310.936664965083,307.663053130926,298.821498204498,294.867895498466};
 
-    // double h_sj_dpi = bw_SJ_dpi(dataSrc);   // rapide
-    double h_sj_ste = bw_SJ_ste(trace);   // plus précis
+    // N(0,1) doit donné  "h SJ_ste 0.491017490078519" et  "h SJ_dpi 0.485152825792427"
+    //std::vector<double> trace_test = {-0.710406563699301,0.25688370915653,-0.246691878462374,-0.347542599397733,-0.951618567265016,-0.0450277248089203,-0.784904469457076,-1.66794193658814,-0.380226520287762,0.918996609060766,-0.575346962608392,0.607964322225033,-1.61788270828916,-0.0555619655245394,0.519407203943462,0.301153362166714,0.105676194148943,-0.640706008305376,-0.849704346033582,-1.02412879060491,0.117646597100126,-0.947474614184802,-0.490557443700668,-0.256092192198247,1.84386200523221,-0.651949901695459,0.235386572284857,0.0779608495637108,-0.961856634130129,-0.0713080861235987,1.44455085842335,0.451504053079215,0.0412329219929399,-0.422496832339625,-2.05324722154052,1.13133721341418,-1.46064007092482,0.739947510877334,1.90910356921748,-1.4438931609718,0.701784335374711,-0.262197489402468,-1.57214415914549,-1.51466765378175,-1.60153617357459,-0.530906522170303,-1.4617555849959,0.687916772975828,2.10010894052567,-1.28703047603518};
+
+    double h_sj_ste = bw_SJ_ste(trace);
+
+    //double h_sj_dpi = bw_SJ_dpi(trace);   // rapide
+    //double h_sj_ste = bw_SJ_ste(trace);   // plus précis
     //h = h_sj_ste;
+
+
+    double h_nrd0 = bw_nrd0(trace);//0.9 * result.std * pow(trace.size(), -0.2);
     // std::cout << "SJ-DPI = " << h_sj_dpi << "\n";
     //std::cout << "SJ-STE = " << h_sj_ste << "\n";
-    double coef_Si_equi = h_sj_ste / (result.std * pow(trace.size(), -0.2) );
+    //double scaleFactor = scale_factor(trace);
+    //double coef_Si_equi = h_sj_ste / (scaleFactor * pow(trace.size(), -0.2) );
 
     //std::cout <<" (h_sj_ste) Bandwidth  = " << h_sj_ste<< " coef equivalent=" << coef_Si_equi  << '\n';
-    result.bdw = coef_Si_equi;
+    //result.bdw = coef_Si_equi;
+    result.bw_SJ   = h_sj_ste;
+    result.bw_nrd0 = h_nrd0;
 
     result.quartiles = quartilesForTrace(trace);
+
     return result;
 }
 
@@ -839,7 +857,8 @@ QString densityAnalysisToString(const DensityAnalysis &analysis)
         result += QObject::tr("min = %1  ;  max  = %2 ").arg( stringForLocal(analysis.traceAnalysis.min),
                                                              stringForLocal(analysis.traceAnalysis.max)) + "<br>";
 
-        result += QObject::tr("Sheather-Jones bandwidth = %1  ").arg( stringForLocal(analysis.traceAnalysis.bdw))+ "<br>";
+        result += QObject::tr("Sheather-Jones bandwidth = %1  ").arg( stringForLocal(analysis.traceAnalysis.bw_SJ))+ "<br>";
+        result += QObject::tr("Silverman's rule of thumb bandwidth = %1  ").arg( stringForLocal(analysis.traceAnalysis.bw_nrd0))+ "<br>";
 
 
         result += "<br><i>" + QObject::tr("Density Stat.") + "</i><br>";

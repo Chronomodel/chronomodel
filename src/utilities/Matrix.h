@@ -1095,6 +1095,12 @@ BandedMatrix operator*(long double scalar, const BandedMatrix& matrix);
      SparseMatrixD R_template_;
 
  public:
+     ColumnVectorD solve(const ColumnVectorD& rhs) const {
+#ifdef DEBUG
+         assert(is_factorized_);
+#endif
+         return solver_.solve(rhs);
+     }
 #ifdef DEBUG
       explicit SparseQuadraticFormSolver(long shift = 1) : shift_(shift), is_factorized_(false) {}
 #else

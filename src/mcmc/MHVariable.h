@@ -50,11 +50,11 @@ public:
         // Event
         eNone = -2, // use with S02VG
         eFixe = -1,  //<  use with Type==eBound
-        eDoubleExp = 0, //<  The default method for Event->theta
-        eBoxMuller = 1,
+        eDoubleExp = 0, //<  The default method for Event->theta for EDM1
+        eEventPrior = 1, //<  The default method for Event->theta for EDM2
         eMHAdaptGauss = 2, // also for data
         // Data
-        eMHPrior = 3,
+        eDatePrior = 3,
         eInversion = 4,
         //eMHSymGaussAdapt = 5
     };
@@ -64,8 +64,6 @@ public:
     // Buffer glissant de la taille d'un batch pour calculer la courbe d'évolution
     // du taux d'acceptation chaine par chaine
 
-    //std::vector<bool> mLastMHAccepts;
-    //decltype(mLastMHAccepts.size()) mLastMHAcceptsLength;
     std::deque<bool> mLastMHAccepts;
     std::size_t mLastMHAcceptsLength;
 

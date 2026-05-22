@@ -510,6 +510,10 @@ private:
 
     QLabel* mFFTLenLab;
     QComboBox* mFFTLenCombo;
+
+    RadioButton* mBandwidthJSRadio;
+    RadioButton* mBandwidthNrd0Radio;
+    RadioButton* mBandwidthCustomRadio;
     QLabel* mBandwidthLab;
     LineEdit* mBandwidthEdit;
     Button* mUpdateDisplay;

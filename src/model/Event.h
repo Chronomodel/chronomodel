@@ -270,18 +270,18 @@ public:
 
     double h_S02(const double S02);
 
-    void generateKDE(const std::vector<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax);
+    void generateFormatedKDE(const std::vector<ChainSpecs> &chains, const int fftLen, const double tmin, const double tmax);
 
     inline void updateW()
     {
 #ifdef DEBUG
         try {
 
-            if ((mVg.mX + mSy * mSy) < 1e-20) {
+            if ((mVg.value() + mSy * mSy) < 1e-20) {
                 qDebug()<< "[Event::updateW] mVg.mX + mSy * mSy < 1e-20";
             }
 #endif
-            mW = 1.0 / (mVg.mX + mSy * mSy);
+            mW = 1.0 / (mVg.value() + mSy * mSy);
 
 #ifdef DEBUG
             if (mW < 1e-20) {
@@ -323,7 +323,7 @@ inline double get_Gx(std::shared_ptr<Event> e) {return e->mGx;};
 inline double get_Gy(std::shared_ptr<Event> e) {return e->mGy;};
 inline double get_Gz(std::shared_ptr<Event> e) {return e->mGz;};
 
-inline decltype(MetropolisVariable::mX) get_Theta(std::shared_ptr<Event> e) {return e->mTheta.mX;};
+inline double get_Theta(std::shared_ptr<Event> e) {return e->mTheta.value();};
 inline t_reduceTime get_ThetaReduced(std::shared_ptr<Event> e) {return e->mThetaReduced;};
 
 template <typename T, typename Func>

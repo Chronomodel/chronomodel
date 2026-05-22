@@ -429,6 +429,13 @@ bool hasPositiveGPrimeByDet (const MCMCSplineComposante &splineComposante);
 bool hasPositiveGPrimeByDerivate (const MCMCSplineComposante &splineComposante, const double k = 0.0);
 bool hasPositiveGPrimePlusConst (const MCMCSplineComposante &splineComposante, const double tmin, const double tmax, const double dy_threshold = 0.0);
 
+
+/**
+ * @brief log_p = log(x) / log(n)
+ * @param x
+ * @param n
+ * @return
+ */
 inline double log_p(const double x, const double n) {
     return log(x) / log(n) ;
 }

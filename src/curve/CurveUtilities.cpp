@@ -832,15 +832,6 @@ MatrixLD computeMatA_optimized_kahan(const MatrixLD& Q,
                                      const DiagonalMatrixLD &W_1,
                                      double lambda)
 {
-    /*
-       const MatrixLD& QB_1QT = multiMatParMat0(Q, multiMatParMat0(B_1, QT));
-
-        const MatrixLD& W_1QB_1QT = multiDiagParMat0(W_1, QB_1QT);
-
-        const MatrixLD& lambdaW_1QB_1QT = multiConstParMat0(W_1QB_1QT, - mModel->mLambdaSpline.mX);
-
-        const MatrixLD& A = addIdentityToMat(lambdaW_1QB_1QT);
-    */
 
     size_t n = Q.rows();        // nombre de lignes
     size_t k = Q.cols();     // nombre de colonnes
@@ -2051,6 +2042,7 @@ DiagonalMatrixLD diagonal_influence_matrix(const SplineMatricesLD& matrices,
     return matA;
 }
 
+/*
 DiagonalMatrixD diagonal_influence_matrix(const SplineMatricesD& matrices,
                                            const int nbBandes,
                                            const std::pair<MatrixD, DiagonalMatrixD> &decomp,
@@ -2156,7 +2148,7 @@ DiagonalMatrixD diagonal_influence_matrix(const SplineMatricesD& matrices,
         if (mat_a < 0.0) {
             qDebug() << "[CurveUtilities] diagonal_influence_matrix : Oups mat_a=" << mat_a << "< 0 change to 0" << "n=" << n;
 
-            mat_a = 0.0L;
+
         }
         else if (mat_a > 1.0) {
             qDebug() << "[CurveUtilities] diagonal_influence_matrix : Oups mat_a="<< mat_a << "> 1 change to 1" << "n=" << n;
@@ -2169,6 +2161,62 @@ DiagonalMatrixD diagonal_influence_matrix(const SplineMatricesD& matrices,
 
     return matA;
 }
+*/
+
+DiagonalMatrixD diagonal_influence_matrix(const SplineMatricesD& matrices,
+                                           const int nbBandes,
+                                           const std::pair<MatrixD, DiagonalMatrixD> &decomp,
+                                           const double lambda)
+{
+    const Index n = matrices.diagWInv.rows();
+
+    const MatrixD matB_1 = inverseMatSym_origin(decomp, nbBandes + 4, 1);
+
+    DiagonalMatrixD matQB_1QT(n);
+
+    // --- Calcul de (Q B^{-1} Q^T)_ii sans annulation catastrophique ---
+    // Q est tridiagonale : au plus 3 éléments non nuls par ligne
+    // => double boucle intérieure = 9 produits max => O(n), stable
+
+    for (Index i = 0; i < n; ++i) {
+
+        // Extraire les entrées non nulles de la ligne i de matQ
+        std::vector<std::pair<Index, double>> q_entries;
+        for (typename SparseMatrix<double>::InnerIterator it(matrices.matQ, i); it; ++it)
+            q_entries.push_back({it.col(), it.value()});
+
+        // q_i^T * B^{-1} * q_i  (seulement sur les indices non nuls)
+        double qb = 0.0;
+        for (auto& [j, qj] : q_entries)
+            for (auto& [k, qk] : q_entries)
+                qb += qj * matB_1(j, k) * qk;
+
+        matQB_1QT.diagonal()[i] = qb;
+    }
+
+    // --- Calcul diagonal matA avec clamp [0, 1] ---
+    DiagonalMatrixD matA(n);
+
+    for (Index i = 0; i < n; ++i) {
+        const double winv = matrices.diagWInv.diagonal()[i];
+        const double qb   = matQB_1QT.diagonal()[i];
+        double mat_a = 1.0 - lambda * winv * qb;
+
+        if (mat_a < 0.0) {
+            std::cout << "[CurveUtilities] diagonal_influence_matrix : Oups mat_a=" << mat_a << "< 0 change to 0" << " n = " << n << std::endl;
+            mat_a = 0.0;
+        }
+        else if (mat_a > 1.0) {
+            std::cout << "[CurveUtilities] diagonal_influence_matrix : Oups mat_a=" << mat_a << " > 1 change to 1" << " n = " << n<< std::endl;
+            mat_a = 1.0;
+        }
+
+        matA.diagonal()[i] = mat_a;
+    }
+
+    return matA;
+}
+
 
 std::vector<double> calcul_spline_variance(const SplineMatricesLD& matrices, const std::vector<std::shared_ptr<Event>> &events, const std::pair<MatrixLD, DiagonalMatrixLD> &decomp, const double lambdaSpline)
 {
@@ -2474,67 +2522,7 @@ MCMCSpline currentSpline (std::vector<std::shared_ptr<Event> > &events, const st
      // -- autre méthode pour varG, sans passer par l'inversion de B, en utilisant la résolution de l'équation
      // cette méthode fonctionne mais elle est beaucoup plus lente, car la décomposition est complète
 
-/*
- Chronometer t2("var_G");
-     DiagonalMatrixD W_1 (events.size()) ; // correspond à 1.0/mW
-     std::transform(events.begin(), events.end(), W_1.diagonal().begin(), [](std::shared_ptr<Event> ev){return 1.0/ ev->mW;});// {return (ev->mSy*ev->mSy + ev->mVg.mX;});
 
-     auto Z = matrices.matQ.transpose() * W_1; // ici
-
-     // autre solution avec solver LLT plus robuste que LDLT
-     SparseMatrixD result(B.rows(), B.cols());
-     {
-         Eigen::SimplicialLLT<SparseMatrixD> solver; // si tu es sûr SPD
-         //Eigen::SparseLU<SparseMatrixD> solver;      // fonctionne même si pas SPD
-
-         constexpr int shift_ = 1;
-         const auto n_center = B.rows() - 2 * shift_;
-         SparseMatrixD B_center = B.block(shift_, shift_, n_center, n_center);
-
-         solver.compute(B_center); // effectue la factorisation solver
-#ifdef DEBUG
-         if (solver.info() != Eigen::Success) {
-             throw std::runtime_error("[currentSpline] LU factorization failed");
-         }
-
-#endif
-         SparseMatrixD Z_relevant = Z.block(shift_, 0, n_center, Z.cols());
-
-         MatrixD Z_dense = MatrixD(Z_relevant);
-         MatrixD solutions = solver.solve(Z_dense);
-
-         //showMatrix(solutions, "solutions");
-         // Remise en forme avec padding
-
-         std::vector<Eigen::Triplet<double>> triplets;
-
-         for (int i = 0; i < solutions.rows(); ++i) {
-             for (int j = 0; j < solutions.cols(); ++j) {
-                 const double value = static_cast<double>(solutions(i, j));
-                 triplets.emplace_back(i + shift_, j, value);
-             }
-         }
-
-         result.setFromTriplets(triplets.begin(), triplets.end());
-         result.makeCompressed();
-     }
-     MatrixD varG = W_1.toDenseMatrix() - lambda * W_1 * matrices.matQ * result;
-     // transtypage
-     DiagonalMatrixD varG_diag = varG.diagonal().asDiagonal();
-     std::vector<double> vec_varG2(varG_diag.diagonal().data(), varG_diag.diagonal().data() + varG_diag.diagonal().rows());
-t2.display();
-
-showVector(vec_varG2, "vec_varG2");
-
- #ifdef DEBUG
-     if (std::any_of(vec_varG2.begin(), vec_varG2.end(),
-                     [](double v){ return v <= 0; })) {
-         qDebug() << "[CurveUtilities::currentSpline] Houps! varG < 0 ";
-       //  showVector(vec_varG2, "vec_varG2");
-     }
-
- #endif
-*/
     // --------------------------------------------------------------
     //  Calcul de la spline g, g" pour chaque composante x y z + stockage
     // --------------------------------------------------------------

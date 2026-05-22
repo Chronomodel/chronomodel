@@ -95,7 +95,7 @@ MHVariable::SamplerProposal PluginUniform::getDataMethod() const
 QList<MHVariable::SamplerProposal> PluginUniform::allowedDataMethods() const
 {
     QList<MHVariable::SamplerProposal> methods;
-    methods.append(MHVariable::eMHPrior);
+    methods.append(MHVariable::eDatePrior);
     methods.append(MHVariable::eInversion); // since version v3.2.4
     methods.append(MHVariable::eMHAdaptGauss);
     return methods;

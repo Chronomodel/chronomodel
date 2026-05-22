@@ -40,6 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef STDUTILITIES_H
 #define STDUTILITIES_H
 
+#include "Functions.h"
 #pragma once
 
 #include <RefCurve.h>
@@ -1368,6 +1369,7 @@ double bw_ucv_gaussian(std::vector<double> x,
 //  Utilitaires
 // ================================================================
 
+/*
 static double mean_vec(const std::vector<double>& x) {
     return std::accumulate(x.begin(), x.end(), 0.0) / x.size();
 }
@@ -1378,7 +1380,7 @@ static double var_vec(const std::vector<double>& x) {
     for (double v : x) s += (v - m) * (v - m);
     return s / (x.size() - 1);
 }
-
+*/
 // ================================================================
 //  Noyaux dérivés (convolutions gaussiennes)
 //  Reproduit exactement les formules de Sheather & Jones (1991)
@@ -1467,7 +1469,7 @@ double S4_fft(const std::vector<double>& x, double h, int M = 1024);
  * @param M  FFT grid size (default 1024, must be a power of 2).
  * @return   Estimate of @f$ \hat\theta_{24} @f$.
  */
-double S6_fft(const std::vector<double>& x, double h, int M = 1024);
+double S6_fft(const std::vector<double>& x, double h, int M = 512);
 
 // ================================================================
 //  Estimateurs de référence gaussiens (plug-in initial)
@@ -1494,7 +1496,7 @@ static double theta44_gauss(double sigma, int n) {
 //  Reproduit R : scale = min(sd, IQR/1.349)
 // ================================================================
 
-static double iqr_vec(std::vector<double> x) {
+inline double iqr_vec(std::vector<double> x) {
     std::sort(x.begin(), x.end());
     int n = x.size();
     // interpolation linéaire comme R
@@ -1508,9 +1510,16 @@ static double iqr_vec(std::vector<double> x) {
     return quantile(0.75) - quantile(0.25);
 }
 
-inline double scale_factor(const std::vector<double>& x) {
+/* inline double scale_factor(const std::vector<double>& x) {
     const double s  = std::sqrt(var_vec(x));
     const double iq = iqr_vec(x) / 1.349;
+    // Si IQR nul, on replie sur l'écart-type seul
+    return (iq > 0.0) ? std::min(s, iq) : s;
+}*/
+inline double scale_factor(const std::vector<double>& x) {
+    const double s  = std_Knuth(x);
+    auto Q = quantilesType(x, 8, 0.25);
+    const double iq = (Q.Q3 - Q.Q1)/1.349;
     // Si IQR nul, on replie sur l'écart-type seul
     return (iq > 0.0) ? std::min(s, iq) : s;
 }
@@ -1549,7 +1558,7 @@ double bw_SJ_dpi(const std::vector<double>& x);
  *
  * @see bw_SJ_ste(), S4_fft(), bisect()
  */
-inline double sj_equation(double h,
+/* inline double sj_equation(double h,
                           const std::vector<double>& x,
                           double alpha2,
                           double c1,
@@ -1566,6 +1575,27 @@ inline double sj_equation(double h,
         return std::numeric_limits<double>::quiet_NaN();
 
     return h - std::pow(c1 / absDenom, 0.2);
+}*/
+inline double sj_equation(double h,
+                          const std::vector<double>& x,
+                          double alpha2,
+                          double c1,
+                          int M)
+{
+    if (h <= 0.0)
+        return std::numeric_limits<double>::quiet_NaN();
+
+    const double h_pilot = alpha2 * std::pow(h, 5.0 / 7.0);
+    if (!std::isfinite(h_pilot) || h_pilot <= 0.0)
+        return std::numeric_limits<double>::quiet_NaN();
+
+    const double denom = S4_fft(x, h_pilot, M);
+
+    // θ4 doit être strictement positif — si négatif, S4_fft est bugué
+    if (!std::isfinite(denom) || denom < 1e-15)
+        return std::numeric_limits<double>::quiet_NaN();
+
+    return h - std::pow(c1 / denom, 0.2);  // plus de abs()
 }
 
 // Bisection pour résoudre l'équation STE (comme uniroot dans R)
@@ -1665,10 +1695,59 @@ double bisect(F f, double a, double b, double tol, int max_iter)
  *
  * @see S4(), S6(), bisect(), sj_equation(), scale_factor()
  * @see Sheather & Jones (1991), JRSS-B 53(3):683–690.
+ *   @article {sheather_density_2004,
+    title = {Density {Estimation}},
+    volume = {19},
+    issn = {0883-4237},
+    url = {https://projecteuclid.org/journals/statistical-science/volume-19/issue-4/Density-Estimation/10.1214/088342304000000297.full},
+    doi = {10.1214/088342304000000297},
+    abstract = {This paper provides a practical description of density estimation based on kernel methods. An important aim is to encourage practicing statisticians to apply these methods to data. As such, reference is made to implementations of these methods in R, S-PLUS and SAS},
+    number = {4},
+    urldate = {2023-10-09},
+    journal = {Statistical Science},
+    author = {Sheather, Simon J.},
+    month = nov,
+    year = {2004},
+ }
  */
+
 double bw_SJ_ste(const std::vector<double>& x,
                  double tol      = 1e-6,
                  int    max_iter = 100);
+
+/**
+ * @brief  Bande passante (bandwidth) « nrd0 » pour un estimateur de densité à noyau gaussien.
+ *
+ * Cette fonction implémente la règle de pouce de Silverman (1986, p. 48, eq. (3.31))
+ * – souvent appelée **Silverman's rule of thumb** – pour choisir la largeur de
+ * bande (bandwidth) d’un noyau gaussien.
+ *
+ * La formule utilisée est :
+ * \f[
+ *     h = 0.9 \times \sigma \times n^{-1/5},
+ * \f]
+ * où :
+ * - \f$n\f$ est la taille de l’échantillon \f$|x|\f$,
+ * - \f$\sigma = \min\bigl(\text{sd}(x),\; \frac{\text{IQR}(x)}{1.349}\bigr)\f$ est le facteur d’échelle
+ *   (calculé par la fonction `scale_factor`),
+ * - le facteur \f$0.9\f$ provient de la règle de Silverman.
+ *
+ * Si les quartiles coïncident (c’est‑à‑dire que l’IQR = 0), `scale_factor` renvoie
+ * simplement l’écart‑type, garantissant ainsi que le résultat soit strictement
+ * positif.
+ *
+ * @param x  Vecteur contenant les observations de l’échantillon.
+ *
+ * @return La bande passante optimale \f$h\f$ calculée selon la règle de Silverman.
+ *
+ * @note   La fonction `scale_factor` (non montrée ici) renvoie
+ *         \f$\min(\text{sd},\text{IQR}/1.349)\f$ et garantit un résultat positif.
+ *
+ * @see    Silverman, B. W. (1986). *Density Estimation for Statistics and Data
+ *         Analysis*. Chapman & Hall. Equation (3.31), p. 48.
+ */
+
+double bw_nrd0(const std::vector<double>& x);
 
 #pragma mark tempering
 

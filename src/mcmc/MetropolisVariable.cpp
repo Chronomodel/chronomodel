@@ -38,7 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "MetropolisVariable.h"
-#include "Generator.h" // pour test ucv
+//#include "Generator.h" // pour test ucv
 
 #include "StdUtilities.h"
 #include "QtUtilities.h"
@@ -71,20 +71,21 @@ TValueStack::~TValueStack()
 
 /** Default constructor */
 MetropolisVariable::MetropolisVariable():
+    mBandwidth (-1.0),
     mName("Empty MetropolisVariable"),
-    mAcceptedStateCountByChain(),
     mX (0.0),
+    mSupport (eR),
+    mFormat (DateUtils::eNumeric),
+    mAcceptedStateCountByChain(),
+
     mBurnAdaptTrace(std::make_shared<std::vector<double>>()),
     mAllAcquiredTrace(std::make_shared<std::vector<double>>()),
     is_curve_filtering(false),
-
     mDisplayAcquiredTrace(std::make_shared<std::vector<double>>()),
     mFormatedBurnAdaptTrace(std::make_shared<std::vector<double>>()),
     mFormatedAcquiredTrace(std::make_shared<std::vector<double>>()),
-    mSupport (eR),
-    mFormat (DateUtils::eNumeric),
-    mFormatedKDE(),
 
+    mFormatedKDE(),
     mChainsKDE(),
     mCorrelations(),
     mFormatedHPD(),
@@ -93,7 +94,6 @@ MetropolisVariable::MetropolisVariable():
     mResults(),
     mChainsResults(),
     mfftLenUsed (-1),
-    mBandwidthUsed (-1.0),
     mThresholdUsed (-1.0),
     mtminUsed (0.0),
     mtmaxUsed (0.0)
@@ -145,8 +145,8 @@ MetropolisVariable::MetropolisVariable(const MetropolisVariable& origin):
     mResults = origin.mResults;
     mChainsResults = origin.mChainsResults;
 
-    mfftLenUsed = origin.mBandwidthUsed;
-    mBandwidthUsed = origin.mBandwidthUsed;
+    mfftLenUsed = origin.mfftLenUsed;
+    mBandwidth = origin.mBandwidth;
     mThresholdUsed = origin.mThresholdUsed;
 
     mtminUsed = origin.mtminUsed;
@@ -193,8 +193,8 @@ MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable& orig
     mResults = origin.mResults;
     mChainsResults = origin.mChainsResults;
 
-    mfftLenUsed = origin.mBandwidthUsed;
-    mBandwidthUsed = origin.mBandwidthUsed;
+    mfftLenUsed = origin.mfftLenUsed;
+    mBandwidth = origin.mBandwidth;
     mThresholdUsed = origin.mThresholdUsed;
 
     mtminUsed = origin.mtminUsed;
@@ -245,7 +245,7 @@ MetropolisVariable& MetropolisVariable::operator=(MetropolisVariable&& origin) n
         mChainsResults = std::move(origin.mChainsResults);
 
         mfftLenUsed = origin.mfftLenUsed;
-        mBandwidthUsed = origin.mBandwidthUsed;
+        mBandwidth = origin.mBandwidth;
         mThresholdUsed = origin.mThresholdUsed;
 
         mtminUsed = origin.mtminUsed;
@@ -542,33 +542,12 @@ void MetropolisVariable::generateBufferForHisto(double* input,
             input[k1] += contrib_upper;
     }
 }
-/**
-  @param[in] bandwidth corresponds to the bandwidth factor
-  @param[in] dataSrc is the trace of the raw data
-  @brief the FFTW function transform the area such that the area output is the area input multiplied by fftLen. So we have to corret it.
-  The result is migth be not with regular step between value.
-  @article {sheather_density_2004,
-    title = {Density {Estimation}},
-    volume = {19},
-    issn = {0883-4237},
-    url = {https://projecteuclid.org/journals/statistical-science/volume-19/issue-4/Density-Estimation/10.1214/088342304000000297.full},
-    doi = {10.1214/088342304000000297},
-    abstract = {This paper provides a practical description of density estimation based on kernel methods. An important aim is to encourage practicing statisticians to apply these methods to data. As such, reference is made to implementations of these methods in R, S-PLUS and SAS},
-    number = {4},
-    urldate = {2023-10-09},
-    journal = {Statistical Science},
-    author = {Sheather, Simon J.},
-    month = nov,
-    year = {2004},
- }
 
- **/
-
-std::map<double, double> MetropolisVariable::generateKDE(const std::vector<double>& dataSrc, const int fftLen, const double coef_bandwidth, const double tmin, const double tmax)
+// le bandwidth est calculé avant par les stats sur la trace
+std::map<double, double> MetropolisVariable::generateKDE(const std::vector<double>& dataSrc, const int fftLen, const double tmin, const double tmax)
 {
 
     mfftLenUsed = fftLen;
-    mBandwidthUsed = coef_bandwidth;
     mtmaxUsed = tmax;
     mtminUsed = tmin;
 
@@ -586,7 +565,7 @@ std::map<double, double> MetropolisVariable::generateKDE(const std::vector<doubl
     }
 
 
-    double sigma = std_unbiais_Knuth(dataSrc);
+  //  double sigma = std_unbiais_Knuth(dataSrc);
 
     /* In the case of Vg and Vt (sigma_ti), there may be very large values that pull the mean.
     * It is preferable in this case, to evaluate an equivalent of the standard deviation using the quantiles at 15.85%, in the Gaussian case.
@@ -601,11 +580,20 @@ std::map<double, double> MetropolisVariable::generateKDE(const std::vector<doubl
 
     // Density Estimation - Simon J. Sheather, Statistical Science 2004, Vol. 19, No. 4, 588–597 DOI 10.1214/088342304000000297
     // Silverman’s rule of thumb. It is given by hSROT = 0.9An−1/5, where A = min{sample standard deviation, (sample interquartile range)/1.34}
-    const Quartiles quartiles = quantilesType(dataSrc, 8, 0.1585);
-    sigma = std::min(sigma, (quartiles.Q3 - quartiles.Q1)/1.34);
+    //const Quartiles quartiles = quantilesType(dataSrc, 8, 0.1585);
+    //sigma = std::min(sigma, (quartiles.Q3 - quartiles.Q1)/1.34);
 
+    /*auto s_factor = [&]() {
+        const double s  = mResults.traceAnalysis.std;
+        auto Q = mResults.traceAnalysis.quartiles;
+        const double iq = (Q.Q3 - Q.Q1)/1.349;
+        // Si IQR nul, on replie sur l'écart-type seul
+        return (iq > 0.0) ? std::min(s, iq) : s;
 
-    if (sigma <= 0) {
+    };
+    double scaleFactor = s_factor();
+
+    if (scaleFactor <= 0) {
         // if sigma is null and there are several values, it means: this is a constant value
         // This can occur at the Begin or End of a Phase with a Bound.
         result.emplace(dataSrc.at(0), 1.) ;
@@ -617,7 +605,7 @@ std::map<double, double> MetropolisVariable::generateKDE(const std::vector<doubl
 //std::cout << '\n' << "name  = " << mName << '\n';
 
 
-   /* const double h_silver = 1.06 * sigma * std::pow(static_cast<double>(N), -0.2);
+    const double h_silver = 1.06 * sigma * std::pow(static_cast<double>(N), -0.2);
     std::cout << "Silverman bandwidth = " << h_silver << '\n';
 
     const double h_opt = brent_minimize(dataSrc,  h_silver/30,  h_silver*3); // donne le mêm cacul que R pour bw.ucv
@@ -629,9 +617,11 @@ std::map<double, double> MetropolisVariable::generateKDE(const std::vector<doubl
     std::cout << "(bw_ucv_gaussian) Bandwidth  = " << h_nai<< " coef equivalent=" << coef_Nai_equi  << '\n';
 
 */
-    double h = coef_bandwidth * sigma * pow(static_cast<double>(N), -0.2);
+
+    //const double h = bandwidth;
+
  //   std::cout << "ChronoModel Bandwidth  = " << h << '\n';
-   // h=h_opt;
+    //h = mResults.traceAnalysis.bdw * sigma * pow(static_cast<double>(N), -0.2);
 
 
    // double h_sj_dpi = bw_SJ_dpi(dataSrc);   // rapide
@@ -645,8 +635,8 @@ std::map<double, double> MetropolisVariable::generateKDE(const std::vector<doubl
 
     //h=h_opt;
 
-    const double a = range_min_value(dataSrc) - 4. * h;
-    const double b = range_max_value(dataSrc) + 4. * h;
+    const double a = range_min_value(dataSrc) - 4. * mBandwidth;
+    const double b = range_max_value(dataSrc) + 4. * mBandwidth;
 
     // Préparation des buffers avec gestion RAII
     std::unique_ptr<double, decltype(&fftw_free)> input(
@@ -676,7 +666,7 @@ std::map<double, double> MetropolisVariable::generateKDE(const std::vector<doubl
     const int outputSize = 2 * (fftLen / 2 + 1);
     for (int i = 0; i < outputSize / 2; ++i) {
         const double s = 2. * M_PI * i / (b - a);
-        const double factor = std::exp(-0.5 * s * s * h * h);
+        const double factor = std::exp(-0.5 * s * s * mBandwidth * mBandwidth);
         output.get()[2*i] *= factor;
         output.get()[2*i + 1] *= factor;
     }
@@ -727,21 +717,23 @@ std::map<double, double> MetropolisVariable::generateKDE(const std::vector<doubl
 }
 
 
-void MetropolisVariable::generateKDE(const std::vector<ChainSpecs> &chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+void MetropolisVariable::generateFormatedKDE(const std::vector<ChainSpecs> &chains, const int fftLen, const double tmin, const double tmax)
 {
-    //Q_ASSERT_X(!mFormatedBurnAdaptTrace->isEmpty(), "[MetropolisVariable::generateKDE]", "mFormatedBurnAdaptTrace.isEmpty()");
     if (mFormatedBurnAdaptTrace == nullptr || mFormatedBurnAdaptTrace->size() == 0)
         return;
-    //const std::vector<double> &subFullTrace = fullRunFormatedTrace(chains);
+
+    if (mFormatedAcquiredTrace == nullptr || mFormatedAcquiredTrace->size() == 0)
+        return;
+
+
     const std::vector<double>& trace = *mFormatedAcquiredTrace;
-    mFormatedKDE = generateKDE(trace, fftLen, bandwidth, tmin, tmax);
+    mFormatedKDE = generateKDE(trace, fftLen, tmin, tmax);
 
     mChainsKDE.clear();
     for (size_t i = 0; i<chains.size(); ++i) {
-        //const std::vector<double> &subTrace = runFormatedTraceForChain(chains, i);
         const std::vector<double> &subTrace = formatedAcquiredTraceforChain(chains, i);
         if (!subTrace.empty()) {
-            mChainsKDE.push_back(generateKDE(subTrace, fftLen, bandwidth, tmin, tmax) );
+            mChainsKDE.push_back(generateKDE(subTrace, fftLen, tmin, tmax) );
         }
     }
 }
@@ -930,17 +922,18 @@ double MetropolisVariable::sampleFromEmpiricalPrior(const double min,
 }
 */
 
+// obsolete
 void MetropolisVariable::memoHistoParameter(const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
     mfftLenUsed = fftLen;
-    mBandwidthUsed = bandwidth;
+    mBandwidth = bandwidth;
     mtminUsed = tmin;
     mtmaxUsed = tmax;
 }
-
+//obsolete
 bool MetropolisVariable::HistoWithParameter(const int fftLen, const double bandwidth, const double tmin, const double tmax)
 {
-   return ((mfftLenUsed == fftLen) &&  (mBandwidthUsed == bandwidth) && (mtminUsed == tmin) && (mtmaxUsed == tmax) ? true: false);
+   return ((mfftLenUsed == fftLen) &&  (mBandwidth == bandwidth) && (mtminUsed == tmin) && (mtmaxUsed == tmax) ? true: false);
 }
 
 void MetropolisVariable::generateHPD(const double threshold)
@@ -950,9 +943,11 @@ void MetropolisVariable::generateHPD(const double threshold)
         if (thresh == 100.) {
             mFormatedHPD = mFormatedKDE;
             return;
+
         } else if (thresh == 0.) {
             mFormatedHPD.clear();
             return;
+
         } else {
             QList<QPair<double, QPair<double, double> > > formated_intervals;
            
@@ -998,7 +993,7 @@ void MetropolisVariable::generateHPD(const double threshold)
     }
 }
 
-void MetropolisVariable::generateCredibility(const std::vector<ChainSpecs> &chains, double threshold)
+void MetropolisVariable::generateCredibility(const double threshold)
 {
     if (mAllAcquiredTrace == nullptr || mAllAcquiredTrace->size() == 0)  {
         mRawCredibility = std::pair<double, double>(1, -1);
@@ -1597,17 +1592,17 @@ void MetropolisVariable::load_stream_v328(QDataStream& stream)
     quint8 support;
     stream >> support;
     switch (int (support)) {
-        case 0 : mSupport = MetropolisVariable::eR; // on R
+        case 0 : mSupport = Support::eR; // on R
             break;
-        case 1 : mSupport = MetropolisVariable::eRp; // on R+
+        case 1 : mSupport = Support::eRp; // on R+
             break;
-        case 2 : mSupport = MetropolisVariable::eRm; // on R-
+        case 2 : mSupport = Support::eRm; // on R-
             break;
-        case 3 : mSupport = MetropolisVariable::eRpStar; // on R+*
+        case 3 : mSupport = Support::eRpStar; // on R+*
             break;
-        case 4 : mSupport = MetropolisVariable::eRmStar; // on R-*
+        case 4 : mSupport = Support::eRmStar; // on R-*
             break;
-        case 5 : mSupport = MetropolisVariable::eBounded; // on bounded support
+        case 5 : mSupport = Support::eBounded; // on bounded support
             break;
     }
 
@@ -1644,12 +1639,12 @@ void MetropolisVariable::load_stream_v330(QDataStream& stream)
         quint8 support;
         stream >> support;
         switch (int(support)) {
-        case 0: mSupport = MetropolisVariable::eR; break;
-        case 1: mSupport = MetropolisVariable::eRp; break;
-        case 2: mSupport = MetropolisVariable::eRm; break;
-        case 3: mSupport = MetropolisVariable::eRpStar; break;
-        case 4: mSupport = MetropolisVariable::eRmStar; break;
-        case 5: mSupport = MetropolisVariable::eBounded; break;
+        case 0: mSupport = Support::eR; break;
+        case 1: mSupport = Support::eRp; break;
+        case 2: mSupport = Support::eRm; break;
+        case 3: mSupport = Support::eRpStar; break;
+        case 4: mSupport = Support::eRmStar; break;
+        case 5: mSupport = Support::eBounded; break;
         default:
             throw std::runtime_error("Invalid support type");
         }
@@ -1720,12 +1715,12 @@ void MetropolisVariable::load_stream_v337(QDataStream& stream)
         quint8 support;
         stream >> support;
         switch (int(support)) {
-        case 0: mSupport = MetropolisVariable::eR; break;
-        case 1: mSupport = MetropolisVariable::eRp; break;
-        case 2: mSupport = MetropolisVariable::eRm; break;
-        case 3: mSupport = MetropolisVariable::eRpStar; break;
-        case 4: mSupport = MetropolisVariable::eRmStar; break;
-        case 5: mSupport = MetropolisVariable::eBounded; break;
+        case 0: mSupport = Support::eR; break;
+        case 1: mSupport = Support::eRp; break;
+        case 2: mSupport = Support::eRm; break;
+        case 3: mSupport = Support::eRpStar; break;
+        case 4: mSupport = Support::eRmStar; break;
+        case 5: mSupport = Support::eBounded; break;
         default:
             throw std::runtime_error("Invalid support type");
         }
@@ -1800,12 +1795,12 @@ void MetropolisVariable::load_stream_v338(QDataStream& stream)
         quint8 support;
         stream >> support;
         switch (int(support)) {
-        case 0: mSupport = MetropolisVariable::eR; break;
-        case 1: mSupport = MetropolisVariable::eRp; break;
-        case 2: mSupport = MetropolisVariable::eRm; break;
-        case 3: mSupport = MetropolisVariable::eRpStar; break;
-        case 4: mSupport = MetropolisVariable::eRmStar; break;
-        case 5: mSupport = MetropolisVariable::eBounded; break;
+        case 0: mSupport = Support::eR; break;
+        case 1: mSupport = Support::eRp; break;
+        case 2: mSupport = Support::eRm; break;
+        case 3: mSupport = Support::eRpStar; break;
+        case 4: mSupport = Support::eRmStar; break;
+        case 5: mSupport = Support::eBounded; break;
         default:
             throw std::runtime_error("Invalid support type");
         }

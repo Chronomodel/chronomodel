@@ -87,7 +87,8 @@ struct TraceStat
     type_data max      = static_cast<type_data>(0.0);
     type_data mean     = static_cast<type_data>(0.0);
     type_data std      = static_cast<type_data>(0.0);
-    type_data bdw      = static_cast<type_data>(0.0);
+    type_data bw_SJ      = static_cast<type_data>(0.0);
+    type_data bw_nrd0      = static_cast<type_data>(0.0);
     Quartiles quartiles{};
 };
 // ------------------------------------------------------------------
@@ -189,12 +190,51 @@ inline double dnorm(const double x, const double mu = 0.0, const double sigma = 
     return inv_sqrt_2pi / sigma * std::exp(-0.5 * z * z);
 }
 
+/**
+ * @brief  Logarithme de la densité de probabilité d’une loi normale (gaussienne).
+ *
+ * Cette fonction calcule \f$\log\bigl(p(x\mid\mu,\sigma)\bigr)\f$ où
+ * \f$p(x\mid\mu,\sigma) = \frac{1}{\sigma\sqrt{2\pi}}
+ * \exp\!\bigl(-\tfrac12\bigl(\frac{x-\mu}{\sigma}\bigr)^2\bigr)\f$.
+ *
+ * La formule utilisée est :
+ * \f[
+ *   \log p(x\mid\mu,\sigma) =
+ *   -\tfrac12\log(2\pi) - \log\sigma - \tfrac12\Bigl(\frac{x-\mu}{\sigma}\Bigr)^2 .
+ * \f]
+ *
+ * @param x     Valeur pour laquelle on veut la log‑densité.
+ * @param mu    Moyenne de la distribution (défaut : 0.0).
+ * @param sigma Écart‑type de la distribution (défaut : 1.0).
+ *              Doit être strictement positif.
+ *
+ * @return Le logarithme de la densité de probabilité normale évaluée en @p x.
+ *
+ * @note   La constante \f$\log(1/\sqrt{2\pi})\f$ est pré‑calculée
+ *         (`log_inv_sqrt_2pi`) pour éviter de la recomposer à chaque appel.
+ *
+ * @warning Si @p sigma ≤ 0, le résultat sera indéfini (division par zéro ou
+ *          logarithme d’un nombre négatif). Il est recommandé de vérifier
+ *          la validité de @p sigma avant d’appeler la fonction.
+ *
+ * @example
+ * @code
+ * double x = 1.2;
+ * double mu = 0.0;
+ * double sigma = 2.0;
+ *
+ * double logpdf = log_dnorm(x, mu, sigma);
+ * // logpdf ≈ -1.837877...
+ * @endcode
+ */
 inline double log_dnorm(const double x, const double mu = 0.0, const double sigma = 1.0)
 {
     static constexpr double log_inv_sqrt_2pi = -0.9189385332046727; // log(1/sqrt(2π))
     const double z = (x - mu) / sigma;
     return log_inv_sqrt_2pi - std::log(sigma) - 0.5 * z * z;
 }
+
+
 /**
  * Calcule ln( f(x | mu, sigma, df) ) pour une distribution de Student.
  * @param x : la valeur proposée (theta_prop)

@@ -74,7 +74,8 @@ Model::Model():
     mNumberOfEvents(0),
     mNumberOfDates(0),
     mThreshold(-1.),
-    mBandwidth(0.9),
+    mBandwidthType(BandwidthType::eBWUndefine),
+    mBandwidth(1),
     mFFTLength(1024),
     mHActivity(1)
 {
@@ -91,7 +92,8 @@ Model::Model(const QJsonObject& json):
     mNumberOfEvents(0),
     mNumberOfDates(0),
     mThreshold(-1.),
-    mBandwidth(0.9),
+    mBandwidthType(BandwidthType::eBWUndefine),
+    mBandwidth(1),
     mFFTLength(1024),
     mHActivity(1)
 {
@@ -1107,10 +1109,16 @@ void Model::generateCorrelations(const std::vector<ChainSpecs> &chains)
 
 #pragma mark FFTLength, Threshold, bandwidth
 
-void Model::setBandwidth(const double bandwidth)
-{  
-    if (mBandwidth != bandwidth) {
-        updateDensities(mFFTLength, bandwidth, mThreshold);
+void Model::setBandwidth(BandwidthType bwt, const double bandwidth)
+{
+
+    if (mBandwidthType != bwt) {
+        updateDensities(mFFTLength, bwt, bandwidth, mThreshold);
+        // mBandwidth = bandwidth; // done in updateDensities
+    }
+
+    if (bwt == BandwidthType::eBWCustom && mBandwidth != bandwidth) {
+        updateDensities(mFFTLength, bwt, bandwidth, mThreshold);
        // mBandwidth = bandwidth; // done in updateDensities
     }
 }
@@ -1118,7 +1126,7 @@ void Model::setBandwidth(const double bandwidth)
 void Model::setFFTLength(int FFTLength)
 {
     if (mFFTLength != FFTLength) {
-        updateDensities(FFTLength, mBandwidth, mThreshold);
+        updateDensities(FFTLength, mBandwidthType ,mBandwidth, mThreshold);
     }
 }
 
@@ -1137,7 +1145,7 @@ void Model::setHActivity(const double h, const double rangePercent)
 void Model::setThreshold(const double threshold)
 {
     if (mThreshold != threshold) {
-        updateDensities(mFFTLength, mBandwidth, threshold);
+        updateDensities(mFFTLength, mBandwidthType ,mBandwidth, threshold);
         /*generateCredibility(threshold);
         generateHPD(threshold);
 
@@ -1292,7 +1300,7 @@ void Model::initDensities()
     updateFormatSettings(); // update mFormat for formatedCredibility and formatedTrace
     generateTraceNumericalResults(mChains); // stats pour formatedTrace
 
-    generatePosteriorDensities(mChains, mFFTLength, mBandwidth);
+    generatePosteriorDensities(mChains, mFFTLength, mBandwidthType, mBandwidth);
 
     generateHPD(95.);
     generateCredibility(95.);
@@ -1309,7 +1317,7 @@ void Model::initDensities()
 
 }
 
-void Model::updateDensities(int fftLen, double bandwidth, double threshold)
+void Model::updateDensities(int fftLen, BandwidthType bandwidthType, double bandwidth, double threshold)
 {
     remove_smoothed_densities();//clearPosteriorDensities();
 
@@ -1318,7 +1326,7 @@ void Model::updateDensities(int fftLen, double bandwidth, double threshold)
 
     updateFormatSettings(); // update mFormat for formatedCredibility and formatedTrace
 
-    generatePosteriorDensities(mChains, fftLen, bandwidth);
+    generatePosteriorDensities(mChains, fftLen, bandwidthType, bandwidth);
 
     generateHPD(threshold);
     generateCredibility(threshold);
@@ -1333,12 +1341,13 @@ void Model::updateDensities(int fftLen, double bandwidth, double threshold)
 
     generateDensityNumericalResults(mChains);
 
+    mBandwidthType = bandwidthType;
     mBandwidth = bandwidth;
     mFFTLength = fftLen;
 
 }
 
-void Model::generatePosteriorDensities(const std::vector<ChainSpecs> &chains, int fftLen, double bandwidth)
+void Model::generatePosteriorDensities(const std::vector<ChainSpecs> &chains, int fftLen,  BandwidthType bwt, double bandwidth)
 {
 #ifdef DEBUG
     QElapsedTimer t;
@@ -1349,19 +1358,25 @@ void Model::generatePosteriorDensities(const std::vector<ChainSpecs> &chains, in
     const double tmax = mSettings.getTmaxFormated();
 
     for (const auto& event : mEvents) {
-        event->mTheta.generateKDE(chains, fftLen, bandwidth, tmin, tmax);
+        event->mTheta.setBandwidth(bwt, bandwidth);
+        event->mTheta.generateFormatedKDE(chains, fftLen, tmin, tmax);
 
-        if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
-            event->mS02Theta.generateKDE(chains, fftLen, bandwidth, tmin, tmax);
+        event->mS02Theta.setBandwidth(bwt, bandwidth);
+        event->mS02Theta.generateFormatedKDE(chains, fftLen, tmin, tmax);
 
-        if (event->type() != Event::eBound) {
-            for (auto&& d : event->mDates)
-                d.generateKDE(chains, fftLen, bandwidth, tmin, tmax);
-        }
+       if (event->type() != Event::eBound) {
+            for (auto&& d : event->mDates) {
+               d.setBandwidth(bwt, bandwidth);
+               d.generateFormatedKDE(chains, fftLen, tmin, tmax);
+            }
+       }
+
     }
 
-    for (const auto& phase : mPhases)
-         phase->generateKDE(chains, fftLen, bandwidth, tmin, tmax);
+    for (const auto& phase : mPhases) {
+        phase->setBandwidth(bwt, bandwidth);
+        phase->generateFormatedKDE(chains, fftLen, tmin, tmax);
+    }
 
 #ifdef DEBUG
     qDebug() <<  "=> Model::generatePosteriorDensities done in " + DHMS(t.elapsed());
@@ -1550,15 +1565,15 @@ void Model::generateCredibility(const double thresh)
 
     for (const auto& ev : mEvents) {
         if (ev->type() != Event::eBound)//(ev->mTheta.mSamplerProposal != MHVariable::eFixe)
-            ev->mTheta.generateCredibility(mChains, thresh);
+            ev->mTheta.generateCredibility(thresh);
 
         if (ev->mS02Theta.mSamplerProposal != MHVariable::eFixe)
-            ev->mS02Theta.generateCredibility(mChains, thresh);
+            ev->mS02Theta.generateCredibility(thresh);
 
         if (ev->type() != Event::eBound) {
             for (auto&& date : ev->mDates )  {
-                date.mTi.generateCredibility(mChains, thresh);
-                date.mSigmaTi.generateCredibility(mChains, thresh);
+                date.mTi.generateCredibility(thresh);
+                date.mSigmaTi.generateCredibility(thresh);
             }
         }
 
@@ -1566,10 +1581,10 @@ void Model::generateCredibility(const double thresh)
 
     for (const auto& phase :mPhases) {
         // If there is only one Event in the phase, there is no Duration
-        phase->mAlpha.generateCredibility(mChains, thresh);
-        phase->mBeta.generateCredibility(mChains, thresh);
+        phase->mAlpha.generateCredibility(thresh);
+        phase->mBeta.generateCredibility(thresh);
         //  phase->mTau.generateCredibility(mChains, thresh);
-        phase->mDuration.generateCredibility(mChains, thresh);
+        phase->mDuration.generateCredibility(thresh);
 
         const auto& alphaTrace = *phase->mAlpha.mAllAcquiredTrace;
         const auto& betaTrace = *phase->mBeta.mAllAcquiredTrace;
@@ -1606,11 +1621,9 @@ void Model::generateHPD(const double thresh)
      t.start();
 #endif
 
-    for (const auto& event : mEvents) {
-        event->mTheta.generateHPD(thresh);
-
-        if (event->type() != Event::eBound) {
-
+    /*for (const auto& event : mEvents) {
+        if (event->mTheta.mSamplerProposal != MHVariable::eFixe && event->type() != Event::eBound) {
+                event->mTheta.generateHPD(thresh);
             if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
                 event->mS02Theta.generateHPD(thresh);
 
@@ -1618,6 +1631,21 @@ void Model::generateHPD(const double thresh)
                 date.mTi.generateHPD(thresh);
                 date.mSigmaTi.generateHPD(thresh);
             }
+        }
+    }
+    */
+
+    for (const auto& event : mEvents
+                                 | std::views::filter([](const auto& ev) {
+                                       return ev->mTheta.mSamplerProposal != MHVariable::eFixe
+                                              && ev->type() != Event::eBound;
+                                   })) {
+        event->mTheta.generateHPD(thresh);
+        if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+            event->mS02Theta.generateHPD(thresh);
+        for (auto&& date : event->mDates) {
+            date.mTi.generateHPD(thresh);
+            date.mSigmaTi.generateHPD(thresh);
         }
     }
 

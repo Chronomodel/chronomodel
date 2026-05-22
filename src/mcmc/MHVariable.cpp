@@ -442,7 +442,6 @@ void MHVariable::clear()
     if (mHistoryAcceptRateMH) {
         mHistoryAcceptRateMH->clear();
     }
-    //mMHAcceptcountSinceAquire.clear();
 
     mLastMHAccepts.clear();
 
@@ -485,7 +484,6 @@ void MHVariable::reserve(const size_t reserve)
     //mAllMHAccepts.reserve(reserve);
 
 }
-
 
 
 MHVariable& MHVariable::operator=(const MHVariable& origin)
@@ -622,7 +620,7 @@ QString MHVariable::getSamplerProposalText(const MHVariable::SamplerProposal sp)
         return MHAdaptGaussStr;
         break;
 
-    case MHVariable::eBoxMuller:
+    case MHVariable::eEventPrior:
         return BoxMullerStr;
         break;
 
@@ -634,7 +632,7 @@ QString MHVariable::getSamplerProposalText(const MHVariable::SamplerProposal sp)
     case MHVariable::eInversion:
         return InversionStr;
         break;
-    case MHVariable::eMHPrior:
+    case MHVariable::eDatePrior:
         return MHDatePriorStr;
         break;
 
@@ -651,7 +649,7 @@ MHVariable::SamplerProposal MHVariable::getSamplerProposalFromText(const QString
         return MHVariable::eMHAdaptGauss;
 
     else if (text == BoxMullerStr)
-        return MHVariable::eBoxMuller;
+        return MHVariable::eEventPrior;
 
     else if (text == DoubleExpStr)
         return MHVariable::eDoubleExp;
@@ -660,7 +658,7 @@ MHVariable::SamplerProposal MHVariable::getSamplerProposalFromText(const QString
         return MHVariable::eInversion;
 
     else if (text == MHDatePriorStr)
-        return MHVariable::eMHPrior;
+        return MHVariable::eDatePrior;
 
     else if (text == FixeStr)
         return MHVariable::eFixe;

@@ -84,6 +84,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QFileDialog>
 #include <QDir>
 #include <QSvgGenerator>
+#include <QButtonGroup>
 
 constexpr int h_Title = 20;
 constexpr int h_Edit = 20;
@@ -890,7 +891,30 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
 
     mFFTLenCombo->setCurrentIndex(5);
 
-    mBandwidthLab = new QLabel(tr("FFTW Bandwidth"), mDensityOptsGroup);
+    mBandwidthJSRadio = new RadioButton(tr("Sheather & Jones"), mDensityOptsGroup);
+    mBandwidthJSRadio->setFixedHeight(h_Radio);
+    mBandwidthJSRadio->setVisible(true);
+
+    mBandwidthNrd0Radio = new RadioButton(tr("Silverman's Rule of Thumb"), mDensityOptsGroup);
+    mBandwidthNrd0Radio->setFixedHeight(h_Radio);
+    mBandwidthNrd0Radio->setVisible(true);
+
+    mBandwidthCustomRadio = new RadioButton(tr("Custom"), mDensityOptsGroup);
+    mBandwidthCustomRadio->setFixedHeight(h_Radio);
+    mBandwidthCustomRadio->setVisible(true);
+    // Créez le groupe (une fois, par ex. dans le constructeur)
+    QButtonGroup *bwGroup = new QButtonGroup(this);
+    bwGroup->setExclusive(true);                     // c’est la valeur par défaut, mais on le précise
+
+    // Ajoutez chaque bouton au groupe
+    bwGroup->addButton(mBandwidthJSRadio,    0);   // l’id est optionnel
+    bwGroup->addButton(mBandwidthNrd0Radio,  1);
+    bwGroup->addButton(mBandwidthCustomRadio,2);
+
+    // Vous pouvez maintenant définir le bouton initialement coché
+    mBandwidthJSRadio->setChecked(true);
+
+    mBandwidthLab = new QLabel(tr("Bandwidth"), mDensityOptsGroup);
     mBandwidthLab->setFixedHeight(h_Label);
     mBandwidthLab->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
@@ -898,9 +922,15 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mBandwidthEdit->setFixedHeight(h_Edit);
     mBandwidthEdit->setValidator(RplusValidator);
 
+
+    connect(mBandwidthJSRadio, &RadioButton::clicked, this, &ResultsView::applyBandwidth);
+    connect(mBandwidthNrd0Radio, &RadioButton::clicked, this, &ResultsView::applyBandwidth);
+    connect(mBandwidthCustomRadio, &RadioButton::clicked, this, &ResultsView::applyBandwidth);
+    connect(mBandwidthEdit, &LineEdit::editingFinished, this, &ResultsView::applyBandwidth);
+
     connect(mCredibilityCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
     connect(mFFTLenCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::applyFFTLength);
-    connect(mBandwidthEdit, &LineEdit::editingFinished, this, &ResultsView::applyBandwidth);
+
     connect(mThresholdEdit, &LineEdit::editingFinished, this, &ResultsView::applyThreshold);
 
 
@@ -933,15 +963,21 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     densityLayout1->addWidget(mFFTLenLab);
     densityLayout1->addWidget(mFFTLenCombo);
 
+    QVBoxLayout* densityLayout = new QVBoxLayout();
+
+    densityLayout->addWidget(mBandwidthLab);
+    densityLayout->addWidget(mBandwidthJSRadio);
+    densityLayout->addWidget(mBandwidthNrd0Radio);
+
     QHBoxLayout* densityLayout2 = new QHBoxLayout();
-    densityLayout2->addWidget(mBandwidthLab);
+    densityLayout2->addWidget(mBandwidthCustomRadio);
     densityLayout2->addWidget(mBandwidthEdit);
 
     QHBoxLayout* densityLayout3 = new QHBoxLayout();
     densityLayout3->addWidget(mThreshLab);
     densityLayout3->addWidget(mThresholdEdit);
 
-    QVBoxLayout* densityLayout = new QVBoxLayout();
+
     densityLayout->setContentsMargins(10, 0, 0, 0);
     densityLayout->setSpacing(5);
     densityLayout->addWidget(mCredibilityCheck);
@@ -1378,6 +1414,22 @@ void ResultsView::applyAppSettings()
     mHActivityEdit->setText(stringForLocal(model->mHActivity));
 
     mFFTLenCombo->setCurrentText(stringForLocal(model->getFFTLength()));
+
+    auto bwt = model->mBandwidthType;
+    switch (bwt) {
+    case BandwidthType::eBWSJ:
+        mBandwidthJSRadio->setChecked(true);
+        break;
+    case BandwidthType::eBWNRD0:
+        mBandwidthNrd0Radio->setChecked(true);
+        break;
+    case BandwidthType::eBWCustom:
+        mBandwidthCustomRadio->setChecked(true);
+        break;
+    default:
+        break;
+    }
+
     mBandwidthEdit->resetText(model->getBandwidth());
 
     setTimeRange();
@@ -3321,7 +3373,8 @@ QList<GraphViewResults*> ResultsView::currentGraphs(bool onlySelected)
 
     if (onlySelected && !selectedGraphs.isEmpty()) {
         QList<GraphViewResults*> selectedGraphsList;
-        for (GraphViewResults* graph : selectedGraphs) {
+        for (int i = 0; i < selectedGraphs.size(); i++) {
+            GraphViewResults* graph = selectedGraphs[i];
             if (graph->isSelected()) {
                 selectedGraphsList.append(graph);
             }
@@ -4869,12 +4922,28 @@ void ResultsView::updateDistribOptions(qreal &optionWidgetHeight, bool isPostDis
         addTotalHeight(totalH, mFFTLenCombo);
         densityLayout->addLayout(densityLayout2);
 
+
         mBandwidthLab->show();
+        mBandwidthJSRadio->show();
+        mBandwidthNrd0Radio->show();
+
+
+        densityLayout->addWidget(mBandwidthLab);
+        addTotalHeight(totalH, mBandwidthLab);
+
+        densityLayout->addWidget(mBandwidthJSRadio);
+        addTotalHeight(totalH, mBandwidthJSRadio);
+
+        densityLayout->addWidget(mBandwidthNrd0Radio);
+        addTotalHeight(totalH, mBandwidthNrd0Radio);
+
+
+        mBandwidthCustomRadio->show();
         mBandwidthEdit->show();
         QHBoxLayout* densityLayout3 = new QHBoxLayout();
         densityLayout3->setContentsMargins(0, 0, 0, 0);
-        densityLayout3->setSpacing(5);
-        densityLayout3->addWidget(mBandwidthLab);
+        densityLayout3->addWidget(mBandwidthCustomRadio);
+        densityLayout3->setSpacing(5);   
         densityLayout3->addWidget(mBandwidthEdit);
         addTotalHeight(totalH, mBandwidthEdit);
         densityLayout->addLayout(densityLayout3);
@@ -4946,6 +5015,9 @@ void ResultsView::updateDistribOptions(qreal &optionWidgetHeight, bool isPostDis
         mFFTLenLab->hide();
         mFFTLenCombo->hide();
 
+        mBandwidthJSRadio->hide();
+        mBandwidthNrd0Radio->hide();
+        mBandwidthCustomRadio->hide();
         mBandwidthLab->hide();
         mBandwidthEdit->hide();
     }
@@ -5717,12 +5789,42 @@ void ResultsView::applyHActivity()
 
 void ResultsView::applyBandwidth()
 {
-   if (mBandwidthEdit->hasAcceptableInput()) {
-        const double bandwidth = QLocale().toDouble(mBandwidthEdit->text());
-        getModel_ptr()->setBandwidth(bandwidth);
-        generateCurves();
+    // Valeurs par défaut – elles ne seront utilisées que si
+    // l’on a bien déterminé le type de bande passante.
+    BandwidthType bwt = BandwidthType::eBWSJ;   // valeur « par défaut » (au cas où)
+    double       bandwidth = 1.0;                // même chose
+
+    // -----------------------------------------------------------------
+    // 1️⃣  Détermination du type choisi par l’utilisateur
+    // -----------------------------------------------------------------
+    if (mBandwidthJSRadio->isChecked()) {
+        bwt = BandwidthType::eBWSJ;               // « SJ »
+
+    } else if (mBandwidthNrd0Radio->isChecked()) {
+        bwt = BandwidthType::eBWNRD0;             // « NRD0 »
+
+    } else {                                      // → mode **custom**
+        // -------------------------------------------------------------
+        // 2️⃣  Vérification de la saisie personnalisée
+        // -------------------------------------------------------------
+        if (!mBandwidthEdit->hasAcceptableInput()) {
+            // La saisie n’est pas valide : on ne fait rien
+            return;                                 // <‑‑ sortie prématurée
+        }
+
+        // La saisie est correcte → on récupère la valeur.
+        bandwidth = QLocale().toDouble(mBandwidthEdit->text());
+        bwt       = BandwidthType::eBWCustom;
     }
+
+    // -----------------------------------------------------------------
+    // 3️⃣  Application de la bande passante et génération des courbes
+    // -----------------------------------------------------------------
+    // À ce stade, `bwt` et `bandwidth` sont garantis valides.
+    getModel_ptr()->setBandwidth(bwt, bandwidth);
+    generateCurves();
 }
+
 
 void ResultsView::applyThreshold()
 {

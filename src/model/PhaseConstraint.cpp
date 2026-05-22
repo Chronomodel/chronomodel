@@ -167,7 +167,7 @@ void PhaseConstraint::updateGamma()
         mGamma = mGammaFixed;
 
     else if (mGammaType == eGammaRange && mGammaMax > mGammaMin) {
-        double max = qMin(mGammaMax, mPhaseTo->mAlpha.mX - mPhaseFrom->mBeta.mX);
+        double max = qMin(mGammaMax, mPhaseTo->mAlpha.value() - mPhaseFrom->mBeta.value());
         mGamma = Generator::randomUniform(mGammaMin, max);
     }
 }

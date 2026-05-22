@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -78,16 +78,16 @@ Phase::Phase():
     _name("no Phase Name")
 {
     mColor = randomColor();
-    mAlpha.mSupport = MetropolisVariable::eBounded;
+    mAlpha.mSupport = Support::eBounded;
     mAlpha.mFormat = DateUtils::eUnknown;
 
-    mBeta.mSupport = MetropolisVariable::eBounded;
+    mBeta.mSupport = Support::eBounded;
     mBeta.mFormat = DateUtils::eUnknown;
 
-    mTau.mSupport = MetropolisVariable::eRp;
+    mTau.mSupport = Support::eRp;
     mTau.mFormat = DateUtils::eNumeric;
 
-    mDuration.mSupport = MetropolisVariable::eRp;
+    mDuration.mSupport = Support::eRp;
     mDuration.mFormat = DateUtils::eNumeric;
     // Item initial position :
     mItemX = 0.;
@@ -161,19 +161,19 @@ Phase::Phase (const QJsonObject& json):
    mItemY = json.value(STATE_ITEM_Y).toDouble();
 
    mAlpha.setName("Begin of Phase : " + _name);
-   mAlpha.mSupport = MetropolisVariable::eBounded;
+   mAlpha.mSupport = Support::eBounded;
    mAlpha.mFormat = DateUtils::eUnknown;
 
    mBeta.setName("End of Phase : " + _name);
-   mBeta.mSupport = MetropolisVariable::eBounded;
+   mBeta.mSupport = Support::eBounded;
    mBeta.mFormat = DateUtils::eUnknown;
 
    mTau.setName("Tau of Phase : " + _name);
-   mTau.mSupport = MetropolisVariable::eRp;
+   mTau.mSupport = Support::eRp;
    mTau.mFormat = DateUtils::eNumeric;
 
    mDuration.setName("Duration of Phase : " + _name);
-   mDuration.mSupport = MetropolisVariable::eRp;
+   mDuration.mSupport = Support::eRp;
    mDuration.mFormat = DateUtils::eNumeric;
 
    mValueStack.emplace("t_min", -INFINITY);
@@ -412,8 +412,8 @@ void Phase::init_alpha_beta_phase(std::vector<std::shared_ptr<Phase>> &phases)
 {
     auto model = getModel_ptr();
     for (auto phase : phases) {
-        phase->mAlpha.mX = model->mSettings.mTmin + phase->sum_gamma_prev_phases();
-        phase->mBeta.mX = model->mSettings.mTmax - phase->sum_gamma_next_phases();
+        phase->mAlpha.setValue(model->mSettings.mTmin + phase->sum_gamma_prev_phases());
+        phase->mBeta.setValue(model->mSettings.mTmax - phase->sum_gamma_next_phases());
     }
 }
 
@@ -424,8 +424,8 @@ void Phase::init_update_alpha_phase(double theta_max_phase_prev)
     else {
         for (const auto &prev_c : mConstraintsNextPhases) {
             if (mTauType != Phase::TauType::eTauUnknown) {
-                prev_c->mPhaseTo->mAlpha.mX = std::max(prev_c->mPhaseTo->mAlpha.mX, theta_max_phase_prev  + prev_c->mGamma);
-                qDebug()<<"[Phase::init_update_alpha_phase] mise à jour alpha des phases Sup " <<prev_c->mPhaseTo->getQStringName()<<" init alpha ="<<prev_c->mPhaseTo->mAlpha.mX;
+                prev_c->mPhaseTo->mAlpha.setValue(std::max(prev_c->mPhaseTo->mAlpha.value(), theta_max_phase_prev  + prev_c->mGamma));
+                qDebug()<<"[Phase::init_update_alpha_phase] mise à jour alpha des phases Sup " <<prev_c->mPhaseTo->getQStringName()<<" init alpha ="<<prev_c->mPhaseTo->mAlpha.value();
             }
         }
         return;
@@ -439,8 +439,8 @@ void Phase::init_update_beta_phase(double beta_sup)
     else {
         for(const auto &prev_c : mConstraintsPrevPhases) {
             if (mTauType != Phase::TauType::eTauUnknown) {
-                prev_c->mPhaseFrom->mBeta.mX = std::max(prev_c->mPhaseFrom->mBeta.mX, beta_sup - prev_c->mGamma);
-                qDebug()<<"[Phase::init_update_beta_phase] mise à jour beta des phases Inf " <<prev_c->mPhaseFrom->getQStringName()<<" init beta ="<<prev_c->mPhaseFrom->mBeta.mX;
+                prev_c->mPhaseFrom->mBeta.setValue(std::max(prev_c->mPhaseFrom->mBeta.value(), beta_sup - prev_c->mGamma));
+                qDebug()<<"[Phase::init_update_beta_phase] mise à jour beta des phases Inf " <<prev_c->mPhaseFrom->getQStringName()<<" init beta ="<<prev_c->mPhaseFrom->mBeta.value();
             }
         }
         return;
@@ -458,7 +458,7 @@ double Phase::init_max_theta(const double max_default) const
     double theta = max_default;
     for (auto ev : mEvents) {
         if (ev->mInitialized)  {
-            theta = std::max(theta, ev->mTheta.mX);
+            theta = std::max(theta, ev->mTheta.value());
         } else {
             theta = std::max(theta, ev->getThetaMinRecursive_v3(max_default));
         }
@@ -477,7 +477,7 @@ double Phase::init_min_theta(const double min_default) const
     double theta = min_default;
     for (auto ev : mEvents) {
         if (ev->mInitialized)  {
-            theta = std::min(theta, ev->mTheta.mX);
+            theta = std::min(theta, ev->mTheta.value());
         } else {
             theta = std::min(theta, ev->getThetaMaxRecursive_v3(min_default));
         }
@@ -492,10 +492,10 @@ double Phase::getMaxThetaEvents(double tmax)
 {
     Q_ASSERT_X(!mEvents.empty(), "[Phase::getMaxThetaEvents]", QString("No Event in Phase :" + this->getQStringName()).toStdString().c_str());
     (void) tmax;
-    double theta (mEvents[0]->mTheta.mX);
+    double theta (mEvents[0]->mTheta.value());
 
     // All Event must be Initialized
-    std::for_each(mEvents.begin(), mEvents.end(), [&theta] (std::shared_ptr<Event> ev) {theta= std::max(ev->mTheta.mX, theta);});
+    std::for_each(mEvents.begin(), mEvents.end(), [&theta] (std::shared_ptr<Event> ev) {theta= std::max(ev->mTheta.value(), theta);});
     return theta;
 
 }
@@ -508,10 +508,10 @@ double Phase::getMinThetaEvents(double tmin)
 {
     Q_ASSERT_X(!mEvents.empty(), "[Phase::getMinThetaEvents]", QString("No Event in Phase :" + getQStringName()).toStdString().c_str());
     (void) tmin;
-    double theta (mEvents[0]->mTheta.mX);
+    double theta (mEvents[0]->mTheta.value());
 
     // All Event must be Initialized
-    std::for_each(mEvents.begin(), mEvents.end(), [&theta] (std::shared_ptr<Event> ev){theta= std::min(ev->mTheta.mX, theta);});
+    std::for_each(mEvents.begin(), mEvents.end(), [&theta] (std::shared_ptr<Event> ev){theta= std::min(ev->mTheta.value(), theta);});
     return theta;
 }
 
@@ -522,7 +522,7 @@ double Phase::getMinThetaNextPhases(const double tmax) const
     for (auto &&constFwd : mConstraintsNextPhases) {
         // we can juste look alpha and beta set in member mAlpha and mBeta
         //double theta= mConstraintsFwd[i]->mPhaseTo->getMinThetaEvents(tmax);
-        double theta (constFwd->mPhaseTo->mAlpha.mX);
+        double theta (constFwd->mPhaseTo->mAlpha.value());
 
         if (constFwd->mGammaType != PhaseConstraint::eGammaUnknown)
             minTheta = std::min(minTheta, theta - constFwd->mGamma);
@@ -537,7 +537,7 @@ double Phase::getMaxThetaPrevPhases(const double tmin) const
     double maxTheta (tmin);
 
     for (auto &&constBwd : mConstraintsPrevPhases) {
-        const double theta (constBwd->mPhaseFrom->mBeta.mX);
+        const double theta (constBwd->mPhaseFrom->mBeta.value());
 
         if (constBwd->mGammaType != PhaseConstraint::eGammaUnknown)
             maxTheta = std::max(maxTheta, theta + constBwd->mGamma);
@@ -551,16 +551,16 @@ double Phase::getMaxThetaPrevPhases(const double tmin) const
 
 void Phase::update_AlphaBeta(const double tminPeriod, const double tmaxPeriod)
 {
-    mAlpha.mX = getMinThetaEvents(tminPeriod);
-    mBeta.mX = getMaxThetaEvents(tmaxPeriod);
-    mDuration.mX = mBeta.mX - mAlpha.mX;
+    mAlpha.setValue(getMinThetaEvents(tminPeriod));
+    mBeta.setValue(getMaxThetaEvents(tmaxPeriod));
+    mDuration.setValue(mBeta.value() - mAlpha.value());
 }
 
 void Phase::update_All(const double tminPeriod, const double tmaxPeriod)
 {
-    mAlpha.mX = getMinThetaEvents(tminPeriod);
-    mBeta.mX = getMaxThetaEvents(tmaxPeriod);
-    mDuration.mX = mBeta.mX - mAlpha.mX;
+    mAlpha.setValue(getMinThetaEvents(tminPeriod));
+    mBeta.setValue(getMaxThetaEvents(tmaxPeriod));
+    mDuration.setValue(mBeta.value() - mAlpha.value());
 
     update_Tau(tminPeriod, tmaxPeriod);
 }
@@ -587,15 +587,15 @@ QString Phase::getTauTypeText() const
 void Phase::initTau(const double tminPeriod, const double tmaxPeriod)
 {
     if (mTauType == eTauFixed && mTauFixed != 0.)
-        mTau.mX = mTauFixed;
+        mTau.setValue(mTauFixed);
 
     else if (mTauType == eZOnly) {
             // Modif PhD ; initialisation arbitraire
-            mTau.mX = tmaxPeriod - tminPeriod;
+            mTau.setValue(tmaxPeriod - tminPeriod);
             // nothing to do
         }
     else if (mTauType == eTauUnknown) {
-        mTau.mX = 0.;
+        mTau.setValue(0.0);
         // nothing to do
     }
 }
@@ -649,14 +649,14 @@ double Px(double x, int n, double Rp)
 void Phase::update_Tau(const double tminPeriod, const double tmaxPeriod)
 {
     if (mTauType == eTauFixed && mTauFixed != 0.) {
-        mTau.mX = mTauFixed;
+        mTau.setValue(mTauFixed);
 
     } else if (mTauType == eZOnly) {
             // Modif PhD 2022
             // model definition
 
         const int n = (int) mEvents.size();
-        double s = mBeta.mX - mAlpha.mX;
+        double s = mBeta.value() - mAlpha.value();
         const double precision = .0001;
         const double R = tmaxPeriod - tminPeriod;
         const double Rp = R/(n-1)*n;
@@ -692,34 +692,28 @@ void Phase::update_Tau(const double tminPeriod, const double tmaxPeriod)
 
         }
 
-        mTau.mX = std::move(xn);
+        mTau.setValue(std::move(xn));
 
     }
 
 }
 
-/*void Phase::memoAll()
+
+void Phase::setBandwidth(BandwidthType bwt, double bandwidth)
 {
-    mAlpha.memo();
-    mBeta.memo();
-    mDuration.memo();
-   // if (mTauType == eZOnly)
-     //   mTau.memo();
+    mAlpha.setBandwidth(bwt, bandwidth);
+    mBeta.setBandwidth(bwt, bandwidth);
+    mDuration.setBandwidth(bwt, bandwidth);
 
+}
 
-#ifdef DEBUG
-    if (mBeta.mX - mAlpha.mX < 0.)
-        qDebug()<<"[Phase::memoAll] : "<<getQStringName()<<" Warning mBeta.mX - mAlpha.mX<0";
-#endif
-}*/
-
-void Phase::generateKDE(const std::vector<ChainSpecs>& chains, const int fftLen, const double bandwidth, const double tmin, const double tmax)
+void Phase::generateFormatedKDE(const std::vector<ChainSpecs>& chains, const int fftLen, const double tmin, const double tmax)
 {   
-    mAlpha.generateKDE(chains, fftLen, bandwidth, tmin, tmax);
-    mBeta.generateKDE(chains, fftLen, bandwidth, tmin, tmax);
+    mAlpha.generateFormatedKDE(chains, fftLen, tmin, tmax);
+    mBeta.generateFormatedKDE(chains, fftLen, tmin, tmax);
     // if (mTauType == eZOnly)
     //   mTau.generateKDE(chains, fftLen, bandwidth);
-    mDuration.generateKDE(chains, fftLen, bandwidth);
+    mDuration.generateFormatedKDE(chains, fftLen);
 }
 
 

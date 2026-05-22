@@ -89,7 +89,7 @@ DateDialog::DateDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, f
 
     mMethodLab = new QLabel(tr("MCMC"), mAdvancedWidget);
     mMethodCombo = new QComboBox(mAdvancedWidget);
-    mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eMHPrior));
+    mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eDatePrior));
     mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eInversion));
     mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eMHAdaptGauss));
 
@@ -252,7 +252,7 @@ void DateDialog::setForm(PluginFormAbstract* form)
 
             switch (i) {
             case 0 :
-                spTest = MHVariable::eMHPrior;
+                spTest = MHVariable::eDatePrior;
                 break;
             case 1 :
                 spTest = MHVariable::eInversion;
@@ -375,7 +375,7 @@ void DateDialog::setDataMethod(MHVariable::SamplerProposal sp)
 {
     int index;
     switch (sp) {
-    case MHVariable::eMHPrior :
+    case MHVariable::eDatePrior :
         index = 0;
         break;
     case MHVariable::eInversion:
@@ -387,7 +387,7 @@ void DateDialog::setDataMethod(MHVariable::SamplerProposal sp)
     // The following cases are not for data Method
     case MHVariable::eFixe:
     case MHVariable::eDoubleExp:
-    case MHVariable::eBoxMuller:
+    case MHVariable::eEventPrior:
     //case MHVariable::eMHAdaptGauss:
     default:
         index = -1;
@@ -452,7 +452,7 @@ double DateDialog::getDeltaError() const {return mDeltaErrorEdit->text().toDoubl
 
 MHVariable::SamplerProposal DateDialog::getMethod() const
 {
-    MHVariable::SamplerProposal sampler = MHVariable::eMHPrior;
+    MHVariable::SamplerProposal sampler = MHVariable::eDatePrior;
     if (mMethodCombo->currentIndex() == 1)
         sampler = MHVariable::eInversion;
 

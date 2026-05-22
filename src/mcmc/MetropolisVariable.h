@@ -67,24 +67,41 @@ protected :
     std::string _comment ;
 };
 
+enum Support
+{
+    eR = 0, // on R
+    eRp = 1, // on R+
+    eRm = 2, // on R-
+    eRpStar = 3, // on R+*
+    eRmStar = 4, // on R-*
+    eBounded = 5 // on bounded support
+};
+
+enum BandwidthType
+{
+    eBWUndefine = 0,
+    eBWCustom = 1,
+    eBWSJ = 2,
+    eBWNRD0 = 3
+};
+
 class MetropolisVariable
 {
-public:
-    enum Support
-    {
-        eR = 0, // on R
-        eRp = 1, // on R+
-        eRm = 2, // on R-
-        eRpStar = 3, // on R+*
-        eRmStar = 4, // on R-*
-        eBounded = 5 // on bounded support
-    };
+private:
+    BandwidthType mBandwidthType;
+    double mBandwidth;
 
     std::string mName;
+    double mX;
+
+
+public:
+
+    Support mSupport;
+    DateUtils::FormatDate mFormat;
 
     std::vector<long long> mAcceptedStateCountByChain; //Number of State accepted by chain
 
-    double mX;
     std::shared_ptr<std::vector<double>> mBurnAdaptTrace; // all the trace for all chain in the burnin state and the addapt state, in raw format
     std::shared_ptr<std::vector<double>> mAllAcquiredTrace; // all the trace for all chain in the Aquire state, in raw format
     bool is_curve_filtering = false;
@@ -101,11 +118,11 @@ public:
     std::shared_ptr<std::vector<double>> mFormatedAcquiredTrace;
 
 
-
     // If we use std::vector we can not use QDataStream to save,
     // because QDataStream provides support for multi system and takes account of endians
-    Support mSupport;
-    DateUtils::FormatDate mFormat;
+
+
+
 
     // Posterior density results.
     // mFormatedKDE is calculated using all run parts of all chains traces.
@@ -131,70 +148,12 @@ public:
     std::vector<DensityAnalysis> mChainsResults;
 
     int mfftLenUsed;
-    double mBandwidthUsed;
+
     double mThresholdUsed;
 
     double mtminUsed;
     double mtmaxUsed;
 
-#pragma mark Learning
-public:
-
-    // Vecteur brut des valeurs enregistrées pendant le burn-in (par chaîne)
-  /*  std::shared_ptr<std::vector<double>> mBurnInPriorTrace;
-
-    // Stockage sous forme de vecteurs pour l'interpolation
-    std::vector<double> mPriorX;   // abscisses (grille régulière issue du KDE)
-    std::vector<double> mPriorY;   // densités
-
-    // A priori empirique : densité KDE issue du burn-in
-    std::map<double, double> mEmpiricalPrior;
-
-    // Indique si l'a priori empirique est prêt à être utilisé
-    bool mEmpiricalPriorReady = false;
-
-    // CDF empirique précalculée (construite une fois depuis mEmpiricalPrior)
-    std::vector<double> mPriorCDF_x;    // abscisses (identiques à mPriorX)
-    std::vector<double> mPriorCDF_y;    // valeurs CDF ∈ [0, 1]
-    bool mEmpiricalCDFReady = false;
-    void buildEmpiricalCDF();
-*/
-    /**
- * @brief Draws one sample from the empirical prior truncated to [min, max].
- *
- * @details
- * Uses truncated CDF inversion — no rejection sampling needed:
- * @f[
- *   u \sim \mathcal{U}[0,1], \quad
- *   u' = F(\text{min}) + u \cdot [F(\text{max}) - F(\text{min})], \quad
- *   x  = F^{-1}(u')
- * @f]
- * This guarantees the result is strictly in [min, max] in O(log n).
- *
- * @param min  Lower bound of the truncation interval.
- * @param max  Upper bound of the truncation interval.
- * @return     A sample in [min, max] drawn from the truncated empirical prior,
- *             or the midpoint (min+max)/2 if the CDF has no mass in [min, max].
- */
-/*    double sampleFromEmpiricalPrior(double min, double max) const;
-
-
-
-    // Enregistrement pendant le burn-in (à appeler dans recordBurnAdapt)
-    inline void recordForPrior() {
-        mBurnInPriorTrace->push_back(mX);
-    }
-
-    // Construction de l'a priori à partir de la trace burn-in
-    void buildEmpiricalPrior(const int fftLen = 1024,
-                             const double bandwidth = 0.9,
-                             const double tmin = 0.,
-                             const double tmax = 0.);
-
-
-    // Évaluation de l'a priori en un point x (interpolation linéaire)
-    double evalEmpiricalPrior(const double x) const;
-*/
 
 public:
     MetropolisVariable();
@@ -204,8 +163,6 @@ public:
     virtual MetropolisVariable& operator=(const MetropolisVariable& origin);
     virtual MetropolisVariable& operator=(MetropolisVariable&& origin) noexcept;
 
-    //virtual void memo();
-    //virtual void memo(double* valueToSave);
     virtual void clear();
     virtual void shrink_to_fit() noexcept;
     virtual void clear_and_shrink() noexcept;
@@ -224,17 +181,34 @@ public:
     inline void setValue(const double v) noexcept {mX= v;}
     inline double value() const noexcept {return mX;}
 
+    inline void setBandwidth(BandwidthType bwt, double h = 1)
+    { switch (bwt) {
+        case BandwidthType::eBWCustom :
+            mBandwidth = h;
+            break;
+        case BandwidthType::eBWSJ :
+            mBandwidth = mResults.traceAnalysis.bw_SJ;
+            break;
+        case BandwidthType::eBWNRD0 :
+            mBandwidth = mResults.traceAnalysis.bw_nrd0;
+            break;
+        default:
+            break;
+        }}
+
     // -----
     //  These functions are time consuming!
     // -----
     void generateCorrelations(const std::vector<ChainSpecs> &chains);
 
-    void generateKDE(const std::vector<ChainSpecs> &chains, const int fftLen = 1024, const double bandwidth = 0.9, const double tmin = 0., const double tmax = 0.);
+    void generateFormatedKDE(const std::vector<ChainSpecs> &chains, const int fftLen = 1024, const double tmin = 0., const double tmax = 0.);
+
+    // obsolete
     void memoHistoParameter(const int fftLen = 1024, const double bandwidth = 0.9, const double tmin = 0., const double tmax = 0.);
     bool HistoWithParameter(const int fftLen = 1024, const double bandwidth = 0.9, const double tmin = 0., const double tmax = 0.);
 
     void generateHPD(const double threshold = 95);
-    void generateCredibility(const std::vector<ChainSpecs> &chains, double threshold = 95.);
+    void generateCredibility(const double threshold = 95.0);
 
 
     // Virtual because MHVariable subclass adds some information
@@ -243,9 +217,7 @@ public:
 
     void updateFormatedCredibility(const DateUtils::FormatDate fm);
 
-
-   // QMap<double, double> generateKDE(const QList<double>& data, const int fftLen, const  double bandwidth, const double tmin = 0., const double tmax = 0.);
-    std::map<double, double> generateKDE(const std::vector<double> &dataSrc, const int fftLen, const double coef_bandwidth, const double tmin, const double tmax);
+    std::map<double, double> generateKDE(const std::vector<double> &dataSrc, const int fftLen, const double tmin, const double tmax);
 
     // -----
     // These functions do not make any calculation
