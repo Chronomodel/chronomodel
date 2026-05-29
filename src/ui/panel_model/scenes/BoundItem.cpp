@@ -37,7 +37,7 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#include "EventKnownItem.h"
+#include "BoundItem.h"
 
 #include "EventsScene.h"
 #include "Painting.h"
@@ -49,21 +49,21 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 
 
-EventKnownItem::EventKnownItem(EventsScene* eventsScene, const QJsonObject& eventObj, const QJsonObject& settings, QGraphicsItem* parent):
+BoundItem::BoundItem(EventsScene* eventsScene, const QJsonObject& eventObj, const QJsonObject& settings, QGraphicsItem* parent):
     EventItem(eventsScene, eventObj, settings, parent),
     mThumbH (20)
 {
     mEltsHeight = 60;
     mSize = QSize(230, 136);
-    EventKnownItem::setEvent(eventObj, settings);
+    BoundItem::setEvent(eventObj, settings);
 }
 
-EventKnownItem::~EventKnownItem()
+BoundItem::~BoundItem()
 {
 
 }
 
-void EventKnownItem::setEvent(const QJsonObject& eventObj, const QJsonObject& settings)
+void BoundItem::setEvent(const QJsonObject& eventObj, const QJsonObject& settings)
 {
     prepareGeometryChange();
 
@@ -144,12 +144,12 @@ void EventKnownItem::setEvent(const QJsonObject& eventObj, const QJsonObject& se
     update();
 }
 
-void EventKnownItem::setDatesVisible(const bool visible)
+void BoundItem::setDatesVisible(const bool visible)
 {
     mThumbVisible = visible;
 }
 
-void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* , QWidget* )
+void BoundItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* , QWidget* )
 {
     painter->setRenderHint(QPainter::Antialiasing);
 
@@ -251,12 +251,12 @@ void EventKnownItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* , 
 
 }
 
-void EventKnownItem::dropEvent(QGraphicsSceneDragDropEvent* e)
+void BoundItem::dropEvent(QGraphicsSceneDragDropEvent* e)
 {
     e->ignore();
 }
 
-QRectF EventKnownItem::toggleRect() const
+QRectF BoundItem::toggleRect() const
 {
     return QRectF();
 }

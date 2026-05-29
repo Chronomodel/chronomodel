@@ -39,10 +39,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "EventsScene.h"
 #include "Event.h"
-#include "Bound.h"
 #include "EventConstraint.h"
 #include "EventItem.h"
-#include "EventKnownItem.h"
+#include "BoundItem.h"
 #include "DateItem.h"
 #include "ArrowItem.h"
 #include "ArrowTmpItem.h"
@@ -174,7 +173,7 @@ void EventsScene::updateHelp()
             text += tr("\nYou can also edit constraints by double clicking on the arrow");
         mHelpView->setLink("https://chronomodel.com/storage/medias/83_chronomodel_v32_user_manual_2024_05_13_min.pdf#page=38"); // Chapter
     } else if (selected.count() == 1) {
-        const bool isBound = (dynamic_cast<EventKnownItem*>(selected[0]) != nullptr);
+        const bool isBound = (dynamic_cast<BoundItem*>(selected[0]) != nullptr);
 
         if (mAltIsDown) {
             text = tr("Mouve your mouse and click on another element to create a constraint.");
@@ -351,20 +350,19 @@ void EventsScene::createSceneFromState()
 
         if (type == Event::eDefault) {
             EventItem* newItem = new EventItem(this, eventObj, settings);
-            //mItems.append(static_cast<AbstractItem*>(newItem));
-            //addItem(static_cast<QGraphicsItem*>(newItem));
+
             mItems.append(newItem);
             addItem(newItem);
             newItem = nullptr;
 
         } else {//if(type == Event::eBound)
-            EventKnownItem* newItem = new EventKnownItem(this, eventObj, settings);
+            BoundItem* newItem = new BoundItem(this, eventObj, settings);
             mItems.append(newItem);
             addItem(newItem);
             newItem = nullptr;
         }
 
-        qDebug()<<"[EventsScene::createSceneFromState] Create mItems:"<<eventObj.value(STATE_NAME).toString();
+        qDebug() << "[EventsScene::createSceneFromState] Create mItems:" << eventObj.value(STATE_NAME).toString();
 
     }
 
@@ -380,7 +378,7 @@ void EventsScene::createSceneFromState()
         i++;
         const QJsonObject& constraint = c.toObject();
         progress->setValue((int)i);
-        ArrowItem* constraintItem = new ArrowItem(this, ArrowItem::eEvent, constraint);
+        ArrowItem* constraintItem = new ArrowItem(this, eEventsScene, constraint);
         mConstraintItems.append(constraintItem);
         addItem(constraintItem);
     }
@@ -628,7 +626,7 @@ void EventsScene::updateSceneFromState()
                     if (type == Event::eDefault)
                         newItem = new EventItem(this, event, settings);
                     else //if(type == Event::eBound)
-                        newItem = new EventKnownItem(this, event, settings);
+                        newItem = new BoundItem(this, event, settings);
 
                     newItem->setGreyedOut(false);
                     // is pos() is null, it's a new Event , No more usefull
@@ -732,7 +730,7 @@ void EventsScene::updateSceneFromState()
         }
         if (!itemExists) {
             // CREATE ITEM
-            ArrowItem* arrowItem = new ArrowItem(this, ArrowItem::eEvent, constraint);
+            ArrowItem* arrowItem = new ArrowItem(this, eEventsScene, constraint);
             mConstraintItems.append(arrowItem);
             addItem(arrowItem);
 #ifdef DEBUG
@@ -934,7 +932,7 @@ EventItem* EventsScene::currentEvent() const
 AbstractItem* EventsScene::collidingItem(const QGraphicsItem* item)
 {
     for (auto && it : mItems) {
-        const bool isBound = (dynamic_cast<EventKnownItem*>(it) != nullptr);
+        const bool isBound = (dynamic_cast<BoundItem*>(it) != nullptr);
         if (item != it && !isBound && item->collidesWithItem(it))
             return it;
     }

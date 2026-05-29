@@ -54,14 +54,20 @@ class PhaseItem;
    ArrowItem représente une contrainte (flèche) entre deux items
    (EventItem ou PhaseItem).
    --------------------------------------------------------------------- */
+
+enum ArrowType {
+    eEventsScene = 0,
+    ePhasesScene = 1
+};
+
 class ArrowItem : public QGraphicsItem
 {
 public:
-    enum TypeFrom { eEvent = 0, ePhase = 1 };
+
 
 
     explicit ArrowItem(AbstractScene* scene,
-                       TypeFrom type_from,
+                       ArrowType type_from,
                        const QJsonObject& constraint,
                        QGraphicsItem* parent = nullptr);
 
@@ -111,7 +117,7 @@ public:
     // -----------------------------------------------------------------
     //  Données publiques (pour un accès rapide depuis la scène)
     // -----------------------------------------------------------------
-    TypeFrom    mTypeFrom;
+    ArrowType  mArrowType ; // old mType_from
     QJsonObject mData;
     AbstractScene* mScene = nullptr;
     QPointF mStart;

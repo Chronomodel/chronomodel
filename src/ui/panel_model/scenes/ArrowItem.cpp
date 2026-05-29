@@ -39,7 +39,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "ArrowItem.h"
 #include "EventItem.h"
-#include "EventKnownItem.h"
+#include "BoundItem.h"
 #include "PhaseItem.h"
 #include "StateKeys.h"
 
@@ -49,11 +49,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 
 ArrowItem::ArrowItem(AbstractScene* scene,
-                     TypeFrom type_from,
+                     ArrowType arrowtype,
                      const QJsonObject& constraint,
                      QGraphicsItem* parent)
     : QGraphicsItem(parent)
-    , mTypeFrom(type_from)
+    , mArrowType(arrowtype)
     , mScene(scene)
     , mStart(0,0)
     , mEnd(0,0)
@@ -136,7 +136,7 @@ void ArrowItem::updatePosition()
         }
     }*/
 
-    if (mTypeFrom == eEvent) {
+    if (mArrowType == eEventsScene) {
         EventItem* ev_from = findEventItemWithJsonId(fromId);
         EventItem* ev_to = findEventItemWithJsonId(toId);
         // control if all event still exist
@@ -175,7 +175,7 @@ QPointF ArrowItem::contactPos(const double theta, AbstractItem* e)
 {
     double xp, yp;
 
-    auto bound = dynamic_cast<EventKnownItem*> (e);
+    auto bound = dynamic_cast<BoundItem*> (e);
     if (bound) {
         // Polar form relative to center, ellipse's equation is
         const double a2 = pow(e->sizeF().width()/2., 2.);
@@ -547,12 +547,12 @@ QString ArrowItem::getBubbleText() const
 {
     QString bubbleText;
     if (mShowDelete)
-        if (mTypeFrom == eEvent)
+        if (mArrowType == eEventsScene)
             bubbleText = "X";
         else
             bubbleText = "?";
 
-    else if (mTypeFrom == ePhase) {
+    else if (mArrowType == ePhasesScene) {
             PhaseConstraint::GammaType gammaType = PhaseConstraint::GammaType (mData.value(STATE_CONSTRAINT_GAMMA_TYPE).toInt());
             if (gammaType == PhaseConstraint::eGammaFixed)
                 bubbleText = "hiatus ≥ " + QLocale().toString(mData.value(STATE_CONSTRAINT_GAMMA_FIXED).toDouble());
@@ -573,7 +573,7 @@ EventItem* ArrowItem::findEventItemWithJsonId(const int id) const
                            [id](QGraphicsItem* gi) -> bool
                            {
                                // 3️⃣  Safe Qt cast; if the item is not an EventItem we skip it.
-                               if (auto* ev = qgraphicsitem_cast<EventItem*>(gi))
+                               if (auto* ev = dynamic_cast<EventItem*>(gi))
                                    return ev->getData()
                                               .value(STATE_ID)
                                               .toInt() == id;
@@ -590,7 +590,7 @@ PhaseItem* ArrowItem::findPhaseItemWithJsonId(int id) const
                            [id](QGraphicsItem* gi) -> bool
                            {
                                // Cast Qt‑safe : nullptr si ce n’est pas un PhaseItem.
-                               if (auto* ph = qgraphicsitem_cast<PhaseItem*>(gi))
+                               if (auto* ph = dynamic_cast<PhaseItem*>(gi))
                                    return ph->getData()
                                               .value(STATE_ID)
                                               .toInt() == id;

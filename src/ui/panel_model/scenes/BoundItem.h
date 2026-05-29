@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -37,17 +37,17 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#ifndef EVENTKNOWNITEM_H
-#define EVENTKNOWNITEM_H
+#ifndef BOUNDITEM_H
+#define BOUNDITEM_H
 
 #include "EventItem.h"
 
-class EventKnownItem : public EventItem
+class BoundItem : public EventItem
 {
     Q_OBJECT
 public:
-    EventKnownItem(EventsScene* eventsScene, const QJsonObject &eventObj, const QJsonObject &settings, QGraphicsItem* parent = 0);
-    virtual ~EventKnownItem();
+    BoundItem(EventsScene* eventsScene, const QJsonObject &eventObj, const QJsonObject &settings, QGraphicsItem* parent = 0);
+    virtual ~BoundItem();
 
     enum { Type = UserType + 13 };
 

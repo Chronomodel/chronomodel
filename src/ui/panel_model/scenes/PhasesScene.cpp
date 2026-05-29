@@ -221,7 +221,7 @@ void PhasesScene::createSceneFromState()
         const QJsonObject constraint = c.toObject();
 
         // CREATE ITEM
-        ArrowItem* constraintItem = new ArrowItem(this, ArrowItem::ePhase, constraint);
+        ArrowItem* constraintItem = new ArrowItem(this, ePhasesScene, constraint);
         mConstraintItems.append(constraintItem);
         addItem(constraintItem);
  #ifdef DEBUG
@@ -423,7 +423,7 @@ void PhasesScene::updateSceneFromState()
         }
         if (!itemExists) {
             // CREATE ITEM
-            ArrowItem* arrowItem = new ArrowItem(this, ArrowItem::ePhase, constraint);
+            ArrowItem* arrowItem = new ArrowItem(this, ePhasesScene, constraint);
             mConstraintItems.append(arrowItem);
             addItem(arrowItem);
 
