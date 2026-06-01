@@ -598,7 +598,8 @@ HEADERS += src/ui/panel_model/scenes/ArrowItem.h
 HEADERS += src/ui/panel_model/scenes/ArrowTmpItem.h
 HEADERS += src/ui/panel_model/scenes/DateItem.h
 HEADERS += src/ui/panel_model/scenes/EventItem.h
-HEADERS += src/ui/panel_model/scenes/EventKnownItem.h
+HEADERS += \
+    src/ui/panel_model/scenes/BoundItem.h
 HEADERS += src/ui/panel_model/scenes/EventsScene.h
 HEADERS += src/ui/panel_model/scenes/PhaseItem.h
 HEADERS += src/ui/panel_model/scenes/PhasesScene.h
@@ -765,7 +766,8 @@ SOURCES += src/ui/panel_model/scenes/ArrowItem.cpp
 SOURCES += src/ui/panel_model/scenes/ArrowTmpItem.cpp
 SOURCES += src/ui/panel_model/scenes/DateItem.cpp
 SOURCES += src/ui/panel_model/scenes/EventItem.cpp
-SOURCES += src/ui/panel_model/scenes/EventKnownItem.cpp
+SOURCES += \
+    src/ui/panel_model/scenes/BoundItem.cpp
 SOURCES += src/ui/panel_model/scenes/EventsScene.cpp
 SOURCES += src/ui/panel_model/scenes/PhaseItem.cpp
 SOURCES += src/ui/panel_model/scenes/PhasesScene.cpp

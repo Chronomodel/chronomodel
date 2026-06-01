@@ -38,6 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "AppSettings.h"
+#include "Event.h"
 
 #include <QSettings>
 #include <QString>
@@ -70,8 +71,12 @@ int AppSettings::mIconSize;
 int AppSettings::mDpm;
 int AppSettings::mImageQuality;
 DateUtils::FormatDate AppSettings::mFormatDate;
+QString AppSettings::mFormatDateCustom;
+
 int AppSettings::mPrecision;
 int AppSettings::mNbSheet;
+
+EventModelType AppSettings::mEventModel;
 
 QString AppSettings:: mLastDir;
 QString AppSettings::mLastFile;
@@ -145,9 +150,14 @@ else
 
     AppSettings::mDpm = settings.value(APP_SETTINGS_STR_DPM, APP_SETTINGS_DEFAULT_DPM).toInt();
     AppSettings::mImageQuality = settings.value(APP_SETTINGS_STR_IMAGE_QUALITY, APP_SETTINGS_DEFAULT_IMAGE_QUALITY).toInt();
+
     AppSettings::mFormatDate = DateUtils::FormatDate (settings.value(APP_SETTINGS_STR_FORMATDATE, APP_SETTINGS_DEFAULT_FORMATDATE).toInt());
+    AppSettings::mFormatDateCustom = settings.value(APP_SETTINGS_STR_FORMATDATE_CUSTOM, APP_SETTINGS_DEFAULT_FORMATDATE_CUSTOM).toString();
+
     AppSettings::mPrecision = settings.value(APP_SETTINGS_STR_PRECISION, APP_SETTINGS_DEFAULT_PRECISION).toInt();
     AppSettings::mNbSheet = settings.value(APP_SETTINGS_STR_SHEET, APP_SETTINGS_DEFAULT_SHEET).toInt();
+
+    AppSettings::mEventModel = EventModelType(settings.value(APP_SETTINGS_DEFAULT_FORMATDATE_CUSTOM, APP_SETTINGS_DEFAULT_FORMATDATE_CUSTOM).toInt());
 
     try {
         AppSettings::mLastDir = settings.value("last_project_dir", "").toString();
@@ -190,9 +200,14 @@ void AppSettings::writeSettings()
     settings.setValue(APP_SETTINGS_STR_PIXELRATIO, AppSettings::mPixelRatio);
     settings.setValue(APP_SETTINGS_STR_DPM, AppSettings::mDpm);
     settings.setValue(APP_SETTINGS_STR_IMAGE_QUALITY, AppSettings::mImageQuality);
+
     settings.setValue(APP_SETTINGS_STR_FORMATDATE, AppSettings::mFormatDate);
+    settings.setValue(APP_SETTINGS_STR_FORMATDATE_CUSTOM, AppSettings::mFormatDateCustom);
+
     settings.setValue(APP_SETTINGS_STR_PRECISION, AppSettings::mPrecision);
     settings.setValue(APP_SETTINGS_STR_SHEET, AppSettings::mNbSheet);
+
+    settings.setValue(APP_SETTINGS_STR_EVENTMODEL, AppSettings::mEventModel);
 
     settings.setValue("last_project_dir", AppSettings::mLastDir);
     settings.setValue("last_project_filename", AppSettings::mLastFile);

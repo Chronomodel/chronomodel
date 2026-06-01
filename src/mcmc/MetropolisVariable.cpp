@@ -558,11 +558,13 @@ std::map<double, double> MetropolisVariable::generateKDE(const std::vector<doubl
         return result;
     }
 
-    if (N == 1) {
+    if (N == 1 || mResults.traceAnalysis.std == 0.0) {
         // value. It can appear with a fixed variable
         result.emplace(dataSrc.at(0), 1.) ;
         return result;
     }
+
+    auto bandwidth = mBandwidth > 0? mBandwidth : 1;
 
 
   //  double sigma = std_unbiais_Knuth(dataSrc);
@@ -635,8 +637,8 @@ std::map<double, double> MetropolisVariable::generateKDE(const std::vector<doubl
 
     //h=h_opt;
 
-    const double a = range_min_value(dataSrc) - 4. * mBandwidth;
-    const double b = range_max_value(dataSrc) + 4. * mBandwidth;
+    const double a = range_min_value(dataSrc) - 4. * bandwidth;
+    const double b = range_max_value(dataSrc) + 4. * bandwidth;
 
     // Préparation des buffers avec gestion RAII
     std::unique_ptr<double, decltype(&fftw_free)> input(
@@ -666,7 +668,7 @@ std::map<double, double> MetropolisVariable::generateKDE(const std::vector<doubl
     const int outputSize = 2 * (fftLen / 2 + 1);
     for (int i = 0; i < outputSize / 2; ++i) {
         const double s = 2. * M_PI * i / (b - a);
-        const double factor = std::exp(-0.5 * s * s * mBandwidth * mBandwidth);
+        const double factor = std::exp(-0.5 * s * s * bandwidth * bandwidth);
         output.get()[2*i] *= factor;
         output.get()[2*i + 1] *= factor;
     }

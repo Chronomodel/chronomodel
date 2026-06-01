@@ -78,6 +78,16 @@ protected:
     void updateLayout();
 
 private:
+    // Simulated Annealing widgets
+    QLabel*   mTitleAnnealLabel;
+    QLabel*   mAnnealTempLabel;
+    QLabel*   mAnnealRecurrenceLabel;
+    QLabel*   mAnnealDwellLabel;
+    LineEdit* mAnnealTempEdit;
+    LineEdit* mAnnealRecurrenceEdit;
+    LineEdit* mAnnealDwellEdit;
+    QRectF    mAnnealRect;
+
     // Dimension
    MCMCSettings initalSetting;
    int mTop;

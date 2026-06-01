@@ -269,7 +269,7 @@ std::vector<std::shared_ptr<Event>> ModelUtilities::unsortEvents(const std::vect
     return results;
 }
 
-
+/*
 QString ModelUtilities::getMCMCSettingsLog(const std::shared_ptr<ModelCurve> model)
 {
     QString log;
@@ -280,6 +280,96 @@ QString ModelUtilities::getMCMCSettingsLog(const std::shared_ptr<ModelCurve> mod
     log += QObject::tr("Number of running iterations : %1").arg(QString::number(model->mMCMCSettings.mIterPerAquisition)) + "<br>";
     log += QObject::tr("Thinning Interval : %1").arg(QString::number(model->mMCMCSettings.mThinningInterval)) + "<br>";
     log += QObject::tr("Mixing level : %1").arg(QString::number(model->mMCMCSettings.mMixingLevel)) + "<br>";
+
+    log += QObject::tr("Anneal Init. Temp. : %1").arg(QString::number(model->mMCMCSettings.mAnnealTemp)) + "<br>";
+    log += QObject::tr("Anneal Recurrrence : %1").arg(QString::number(model->mMCMCSettings.mAnnealRecurrence)) + "<br>";
+    log += QObject::tr("Anneal Dwell : %1").arg(QString::number(model->mMCMCSettings.mAnnealDwell)) + "<br>";
+
+    return log;
+}
+*/
+QString ModelUtilities::getMCMCSettingsLog(const std::shared_ptr<ModelCurve> model)
+{
+    const auto& s = model->mMCMCSettings;
+
+    const QString burnColor    = "#EB7364"; // rouge burn-in
+    const QString adaptColor   = "#FAB45A"; // orange adapt
+    const QString acquireColor = "#82CD6E"; // vert acquire
+    const QString annealColor  = "#6EA0DC"; // bleu annealing
+    const QString globalColor  = "#D0D0D0"; // gris paramètres globaux
+
+    QString log;
+
+    auto sectionTitle = [](const QString& title, const QString& color) {
+        return QString(
+                   "<div style='"
+                   "margin-top:8px;"
+                   "margin-bottom:4px;"
+                   "padding:4px 8px;"
+                   "border-radius:4px;"
+                   "background-color:%1;"
+                   "color:black;"
+                   "font-weight:bold;'>%2</div>")
+            .arg(color, title);
+    };
+
+    auto line = [](const QString& label, const QString& value) {
+        return QString(
+                   "<div style='margin-left:12px;'>"
+                   "<b>%1</b> %2"
+                   "</div>")
+            .arg(label, value);
+    };
+
+    /* ---- Global ---- */
+
+    log += sectionTitle(QObject::tr("MCMC"), globalColor);
+
+    log += line(QObject::tr("Number of chains :"),
+                QString::number(s.mNumChains));
+
+    log += line(QObject::tr("Mixing level :"),
+                QString::number(s.mMixingLevel));
+
+    /* ---- Burn-in ---- */
+
+    log += sectionTitle(QObject::tr("1 - BURN-IN"), burnColor);
+
+    log += line(QObject::tr("Iterations :"),
+                QString::number(s.mIterPerBurn));
+
+    /* ---- Adapt ---- */
+
+    log += sectionTitle(QObject::tr("2 - ADAPT"), adaptColor);
+
+    log += line(QObject::tr("Max batches :"),
+                QString::number(s.mMaxBatches));
+
+    log += line(QObject::tr("Iterations per batch :"),
+                QString::number(s.mIterPerBatch));
+
+    /* ---- Acquire ---- */
+
+    log += sectionTitle(QObject::tr("3 - ACQUIRE"), acquireColor);
+
+    log += line(QObject::tr("Running iterations :"),
+                QString::number(s.mIterPerAquisition));
+
+    log += line(QObject::tr("Thinning interval :"),
+                QString::number(s.mThinningInterval));
+
+    /* ---- Annealing ---- */
+
+    log += sectionTitle(QObject::tr("4 - ANNEALING"), annealColor);
+
+    log += line(QObject::tr("Init. Temp. :"),
+                QString::number(s.mAnnealTemp));
+
+    log += line(QObject::tr("Recurrence :"),
+                QString::number(s.mAnnealRecurrence));
+
+    log += line(QObject::tr("Dwell :"),
+                QString::number(s.mAnnealDwell));
 
     return log;
 }
@@ -492,7 +582,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
 
                 HTMLText += line(textBlue(QObject::tr(" - Sigma_MH on Theta : %1").arg(stringForLocal(event->mTheta.mSigmaMH))));
             }
-#ifdef S02_BAYESIAN
+
             HTMLText += line(textBold(textBlue(QObject::tr(" - Shrinkage param. : %1").arg(DateUtils::convertToAppSettingsFormatStr(event->mS02Theta.value())))));
             if (event->mS02Theta.mLastMHAccepts.size()>2 && event->mS02Theta.mSamplerProposal!= MHVariable::eFixe) {
                 const auto acceptRate = event->mS02Theta.getCurrentAcceptRate();
@@ -504,9 +594,9 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
 
                 HTMLText += line(textBlue(QObject::tr(" - Sigma_MH on S02 : %1").arg(stringForLocal(event->mS02Theta.mSigmaMH))));
             }
-#else
-            HTMLText += line(textBlue(QObject::tr(" - Shrinkage param. : %1").arg(stringForLocal(event->mS02Theta.mX))));
-#endif
+           // else {
+           //     HTMLText += line(textBlue(QObject::tr(" - Shrinkage param. : %1").arg(stringForLocal(event->mS02Theta.value()))));
+
         }
 
         if (curveModel) {
@@ -643,12 +733,10 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
                HTMLText +=  line(textGreen(QObject::tr(" - Sigma_MH on Smoothing : %1").arg(stringForLocal(model->mLambdaSpline.mSigmaMH))));
             }
         }
-//Var_residual_spline
+
         HTMLText +=  line(textGreen(QObject::tr("Variance Shrinkage on the Curve : %1").arg(QLocale().toString(model->mS02Vg, 'G', 2))));
         HTMLText += "<br>";
 
-        //HTMLText +=  line(textGreen(QObject::tr("Curve beta parameter : %1").arg(QLocale().toString(model->mSO2_beta, 'G', 2))));
-        //HTMLText += "<br>";
     }
 
     return HTMLText;

@@ -45,10 +45,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QLocale>
 
 
-const double BASE_YEAR_BP = 1950.0;
-const double BASE_YEAR_B2K = 2000.0;
-const double KA_CONVERSION_FACTOR = -1.0 / 1e+3; // Coefficient pour eKa
-const double MA_CONVERSION_FACTOR = -1.0 / 1e+06; // Coefficient pour eMa
+constexpr double BASE_YEAR_BP = 1950.0;
+constexpr double BASE_YEAR_B2K = 2000.0;
+constexpr double KA_CONVERSION_FACTOR = -1.0 / 1e3; // Coefficient pour eKa
+constexpr double MA_CONVERSION_FACTOR = -1.0 / 1e6; // Coefficient pour eMa
 
 double DateUtils::convertToFormat(const double valueToFormat, const FormatDate format)
 {
@@ -74,6 +74,7 @@ double DateUtils::convertToFormat(const double valueToFormat, const FormatDate f
 
         case eBCAD:
         case eBCECE:
+        case eCustom:
         case eNumeric:
         default:
             return valueToFormat;
@@ -105,6 +106,7 @@ double DateUtils::convertFromFormat(const double formatedValue, const FormatDate
 
         case eBCAD:
         case eBCECE:
+        case eCustom:
         case eNumeric:
         default:
             return formatedValue;
@@ -138,6 +140,9 @@ QString DateUtils::dateFormatToString(const FormatDate format)
             break;
         case eMa:
             return "Age Ma"; // "Megaannum"
+            break;
+        case eCustom:
+            return AppSettings::mFormatDateCustom;
             break;
         case eNumeric:
         default:
@@ -219,6 +224,7 @@ std::map<double, double> DateUtils::convertMapToAppSettingsFormat(const std::map
 
     case eBCAD:
     case eBCECE:
+    case eCustom:
     case eNumeric:
         return mapToFormat;
         break;
@@ -270,6 +276,7 @@ std::map<double, double> DateUtils::convertMapFromAppSettingsFormat(const std::m
 
     case eBCAD:
     case eBCECE:
+    case eCustom:
     case eNumeric:
         return mapToFormat;
         break;
@@ -298,6 +305,7 @@ bool DateUtils::is_date(const FormatDate format)
         case eDatB2K:
         case eBCAD:
         case eBCECE:
+        case eCustom:
         case eNumeric:
         default:
             return true;
@@ -319,6 +327,7 @@ bool DateUtils::is_age(const FormatDate format)
         case eDatB2K:
         case eBCAD:
         case eBCECE:
+        case eCustom:
         case eNumeric:
         default:
             return false;

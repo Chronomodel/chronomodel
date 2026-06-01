@@ -235,16 +235,22 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     mFormatDateLab = new QLabel(tr("Time Scale"), this);
     mFormatDateLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mFormatDate = new QComboBox(this);
-    for (int i = 0; i < 8; ++i) // until 8 to use Age Ma and ka ; default 6
+    for (int i = 0; i < 9; ++i) // until 9 to use Age Ma and ka ; default 6
         mFormatDate->addItem(DateUtils::dateFormatToString(DateUtils::FormatDate (i)));
 
     mFormatDate->setCurrentIndex(1);
     mFormatDate->setVisible(true);
 
+    mCustomDateEdit = new QLineEdit("Years", this);
+
     mPrecisionLab = new QLabel(tr("Decimal Precision"), this);
     mPrecision = new QSpinBox(this);
     mPrecision->setRange(0, 10);
     mPrecision->setSingleStep(1);
+
+    mEventModelCombo = new QComboBox(this);
+    mEventModelCombo->addItem(tr("EDM1 (Old Version)"));
+    mEventModelCombo->addItem(tr("EDM2 (Last Version)"));
 
     connect(mAutoSaveCheck, &QCheckBox::toggled, mAutoSaveDelayEdit, &QLineEdit::setEnabled);
 
@@ -306,15 +312,26 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
 
     grid->addWidget(mFormatDateLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mFormatDate, row, 1);
+
+    grid->addWidget(mCustomDateEdit, ++row, 1);
+
     grid->addWidget(mPrecisionLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mPrecision, row, 1);
+
+    QFrame* line5 = new QFrame();
+    line5->setFrameShape(QFrame::HLine);
+    line5->setFrameShadow(QFrame::Sunken);
+    grid->addWidget(line5, ++row, 0, 1, 2);
+
+    QLabel* EventModelLabel = new QLabel(tr("Event Model"));
+    grid->addWidget(EventModelLabel, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mEventModelCombo, row, 1);
 
     QVBoxLayout* mainLayout = new QVBoxLayout();
     mainLayout->setContentsMargins(0, 10, 10, 10);
     mainLayout->addWidget(mRestoreBox);
     mainLayout->addLayout(grid);
     
-
     mGeneralView->setLayout(mainLayout);
 
     connect(mLanguageCombo,static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &AppSettingsDialog::changeSettings);
@@ -333,7 +350,11 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     connect(mPixelRatio, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &AppSettingsDialog::changeSettings);
 
     connect(mFormatDate, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &AppSettingsDialog::changeSettings);
+    connect(mCustomDateEdit, &QLineEdit::editingFinished, this,  &AppSettingsDialog::changeSettings);
+
     connect(mPrecision, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, &AppSettingsDialog::changeSettings);
+
+    connect(mEventModelCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &AppSettingsDialog::changeSettings);
 
     // -----------------------------
     //  List & Stack
@@ -393,8 +414,6 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
 
 AppSettingsDialog::~AppSettingsDialog()
 {
-    qDebug()<<"[AppSettingsDialog::~AppSettingsDialog]";
-
 }
 
 void AppSettingsDialog::needCalibration()
@@ -419,14 +438,23 @@ void AppSettingsDialog::setSettings()
     if (AppSettings::mCSVDecSeparator == ",")
         mCSVDecSepCombo->setCurrentIndex(0);
 
-    else mCSVDecSepCombo->setCurrentIndex(1);
+    else
+        mCSVDecSepCombo->setCurrentIndex(1);
 
     mOpenLastProjectCheck->setChecked(AppSettings::mOpenLastProjectAtLaunch);
 
     mPixelRatio->setValue(AppSettings::mPixelRatio);
     mImageQuality->setValue(AppSettings::mImageQuality);
     mFormatDate->setCurrentIndex(int (AppSettings::mFormatDate));
+    mCustomDateEdit->setText(AppSettings::mFormatDateCustom);
+
     mPrecision->setValue(AppSettings::mPrecision);
+
+    if (AppSettings::mEventModel == EventModelType::EDM1)
+        mEventModelCombo->setCurrentIndex(0);
+
+    else
+        mEventModelCombo->setCurrentIndex(1);
 
  }
 
@@ -452,8 +480,13 @@ void AppSettingsDialog::getSettings()
     AppSettings::mPixelRatio = mPixelRatio->value();
     //settings.mDpm = mDpm->currentText().toShort();
     AppSettings::mImageQuality = mImageQuality->value();
+
     AppSettings::mFormatDate = DateUtils::FormatDate (mFormatDate->currentIndex());
+    AppSettings::mFormatDateCustom = mCustomDateEdit->text();
+
     AppSettings::mPrecision = mPrecision->value();
+
+    AppSettings::mEventModel = EventModelType (mEventModelCombo->currentIndex());
 
 }
 
@@ -502,6 +535,7 @@ void AppSettingsDialog::restore()
     if (QLocale::system().decimalPoint()==',') {
         mCSVCellSepEdit->setText(";");
         mCSVDecSepCombo->setCurrentIndex(0);
+
     } else {
         mCSVCellSepEdit->setText(",");
         mCSVDecSepCombo->setCurrentIndex(1);
@@ -513,6 +547,8 @@ void AppSettingsDialog::restore()
     mImageQuality->setValue(APP_SETTINGS_DEFAULT_IMAGE_QUALITY);
     mFormatDate->setCurrentIndex(int (APP_SETTINGS_DEFAULT_FORMATDATE));
     mPrecision->setValue(APP_SETTINGS_DEFAULT_PRECISION);
+
+    mEventModelCombo->setCurrentIndex(1); //EDM2
 
 
 }

@@ -52,7 +52,10 @@ class Model;
 class Phase;
 class EventConstraint;
 
-
+enum EventModelType {
+    EDM1 = 0,
+    EDM2 = 1
+};
 
 class Event: std::enable_shared_from_this<Event>
 {

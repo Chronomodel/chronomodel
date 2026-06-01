@@ -49,6 +49,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "StateKeys.h"
 #include "StdUtilities.h"
+#include "AppSettings.h"
 
 #include <QString>
 #include <QJsonArray>
@@ -107,11 +108,11 @@ Event::Event():
     mS02Theta.mSupport = Support::eRpStar;
     mS02Theta.mFormat = DateUtils::eNumeric;
 
-#ifdef S02_BAYESIAN
-    mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
-#else
-    mS02Theta.mSamplerProposal = MHVariable::eFixe;
-#endif
+    if (AppSettings::mEventModel == EventModelType::EDM2 )
+        mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    else
+        mS02Theta.mSamplerProposal = MHVariable::eFixe;
+
 
     // Item initial position :
 
@@ -179,11 +180,12 @@ Event::Event (const QJsonObject& json):
     mS02Theta.setName(std::string("SO2Theta of Event : ") + mName);
     mS02Theta.mSupport = Support::eRpStar;
     mS02Theta.mFormat = DateUtils::eNumeric;
-#ifdef S02_BAYESIAN
-    mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
-#else
-    mS02Theta.mSamplerProposal = MHVariable::eFixe;
-#endif
+
+    if (AppSettings::mEventModel == EventModelType::EDM2 )
+        mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    else
+        mS02Theta.mSamplerProposal = MHVariable::eFixe;
+
 
     mPhasesIds = QStringToStdVectorInt(json.value(STATE_EVENT_PHASE_IDS).toString());
 
@@ -500,11 +502,12 @@ Event const Event::fromJson(const QJsonObject& json)
     event.mS02Theta = MHVariable();
     event.mS02Theta.setName("S02 of Event : "+ event.name());
     event.mS02Theta.mSupport = Support::eRpStar;
-#ifdef S02_BAYESIAN
-    event.mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
-#else
-    event.mS02Theta.mSamplerProposal = MHVariable::eFixe;
-#endif
+
+    if (AppSettings::mEventModel == EventModelType::EDM2 )
+        event.mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    else
+        event.mS02Theta.mSamplerProposal = MHVariable::eFixe;
+
 
     event.mVg = MHVariable();
     event.mVg.setName("VG of Event : " + event.name());

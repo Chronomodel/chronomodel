@@ -41,7 +41,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MCMCLoopCurve.h"
 
 #include "AxisTool.h"
-#include "CalibrationCurve.h"
 #include "ModelCurve.h"
 #include "CurveUtilities.h"
 #include "Functions.h"
@@ -53,6 +52,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MainWindow.h"
 #include "QtUtilities.h"
 #include "version.h"
+#include "AppSettings.h"
 
 #include <iostream>
 #include <memory>
@@ -73,6 +73,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <vector>
 #include <cmath>
 #include <time.h>
+#include <ranges>
 
 
 #ifdef _WIN32
@@ -181,6 +182,7 @@ QString MCMCLoopCurve::calibrate()
 QString MCMCLoopCurve::initialize()
 {
     const QString initTime = initialize_time();
+
     if (initTime != QString())
         return initTime;
 
@@ -2292,11 +2294,11 @@ QString MCMCLoopCurve::initialize_335()
             else
                 mPointEvent.push_back(ev);
 
-#ifdef S02_BAYESIAN
-            ev->mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss; // not yet integrated within update_330
-#else
-            ev->mS02Theta.mSamplerProposal = MHVariable::eFixe; // not yet integrated within update_330
-#endif
+            if (AppSettings::mEventModel == EventModelType::EDM2)
+                ev->mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss; // not yet integrated within update_330
+            else
+                ev->mS02Theta.mSamplerProposal = MHVariable::eFixe; // not yet integrated within update_330
+
 
         }
     } else {
@@ -3234,19 +3236,20 @@ bool MCMCLoopCurve::update_335()
         // --------------------------------------------------------------
         //  D - Update S02 - à faire dans la version 4 ou EDM2
         // --------------------------------------------------------------
-#ifdef S02_BAYESIAN
-        if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
-            try {
-                for (std::shared_ptr<Event> &event : initListEvents) {
-                    event->updateS02Theta();
+        if (AppSettings::mEventModel == EventModelType::EDM2 ) {
+            if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
+                try {
+                    for (std::shared_ptr<Event> &event : initListEvents) {
+                        event->updateS02Theta();
+
+                    }
+                }  catch (...) {
+                    qDebug() << "MCMCLoopCurve::update S02 : Caught Exception!\n";
 
                 }
-            }  catch (...) {
-                qDebug() << "MCMCLoopCurve::update S02 : Caught Exception!\n";
-
             }
         }
-#endif
+
 
         // --------------------------------------------------------------
         //  Remarque : à ce stade, tous les theta events sont à jour et ordonnés.
@@ -3699,15 +3702,14 @@ QString MCMCLoopCurve::initialize_337()
             else
                 mPointEvent.push_back(ev);
 
-#ifdef S02_BAYESIAN
-            if (ev->mTheta.mSamplerProposal!= MHVariable::eFixe)
-                ev->mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
-            else
-                ev->mS02Theta.mSamplerProposal = MHVariable::eFixe; // cas des bornes
+            if (AppSettings::mEventModel == EventModelType::EDM2 ) {
+                if (ev->mTheta.mSamplerProposal!= MHVariable::eFixe)
+                    ev->mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
+                else
+                    ev->mS02Theta.mSamplerProposal = MHVariable::eFixe; // cas des bornes
+            } else
+                ev->mS02Theta.mSamplerProposal = MHVariable::eFixe;
 
-#else
-            ev->mS02Theta.mSamplerProposal = MHVariable::eFixe;
-#endif
 
         }
     } else {
@@ -3732,6 +3734,7 @@ QString MCMCLoopCurve::initialize_337()
 
     //emit stepChanged(tr("Initializing G ..."), 0, (int)allEvents.size());
     orderEventsByThetaReduced(mModel->mEvents);
+
     spreadEventsThetaReduced0(mModel->mEvents);
 
 #ifdef TEST_SPREAD
@@ -3881,7 +3884,7 @@ QString MCMCLoopCurve::initialize_337()
 #pragma mark initilize Matrix
     std::vector<double> sy = get_vector<double>(get_Sy, initListEvents);
 
-    std::vector<double> current_vect_Yx, current_vect_Yy, current_vect_Yz;
+    //std::vector<double> current_vect_Yx, current_vect_Yy, current_vect_Yz;
 
     // Les vecteurs positions X, Y et Z doivent suivre l'ordre des thétas
 
@@ -4303,14 +4306,11 @@ QString MCMCLoopCurve::initialize_337()
 // with tempering
 bool MCMCLoopCurve::update_337()
 {
-    int iteration =  mLoopChains[ mChainIndex].mTotalIter;
+    const int iteration =  mLoopChains[ mChainIndex].mTotalIter;
 
-    //const double u = Generator::randomUniform();
-    //constexpr double w_regenerate = 0.3;   // probabilité de régénération de la chaine
+    const int max_expo_T   = mModel->mMCMCSettings.mAnnealTemp;    // index max de température
 
-    constexpr int max_expo_T   = 100;    // index max de température
-
-    bool do_regeneration = (iteration> 0 && iteration % 500 == 0); // (u < w_regenerate)
+    bool do_regeneration = (iteration> 0 && iteration % mModel->mMCMCSettings.mAnnealRecurrence == 0);
     bool memo = false;
     // ------------------------------------------------------------------
     // 1️⃣  Décision de régénération
@@ -4319,9 +4319,22 @@ bool MCMCLoopCurve::update_337()
         // --------------------------------------------------------------
         // 2  Descente (T décroissant)
         // --------------------------------------------------------------
+        const int dwell_steps_T0 = mModel->mMCMCSettings.mAnnealDwell;
+
         for (int e = max_expo_T ; e >= 0; --e) {
             const double T = std::pow(2, e);
-            tempering_337_c(T);
+
+            const int dwell_steps = std::max(1,
+                                             static_cast<int>(std::ceil(dwell_steps_T0 / (1.0 + static_cast<double>(e))))
+                                             );
+            // --------------------------------------------------------------
+            // 5️⃣  Relaxation
+            // --------------------------------------------------------------
+
+            for (int s = 0; s < dwell_steps; ++s)
+                tempering_337_c(T);
+
+
 
         }
 
@@ -5242,30 +5255,30 @@ bool MCMCLoopCurve::sampler_337_b()
 
 
         } catch(...) {
-            qDebug() << "[MCMCLoopCurve::update_335] Theta : Caught Exception!\n";
+            qDebug() << "[MCMCLoopCurve::sampler_337_b] Theta : Caught Exception!\n";
         }
 
         // --------------------------------------------------------------
         //  D - Update S02 - à faire dans la version 4 ou EDM2
         // --------------------------------------------------------------
-#ifdef S02_BAYESIAN
-        if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
-            try {
-                //for (std::shared_ptr<Event> &event : initListEvents) {
-                for (std::shared_ptr<Event> &event : initListEvents
-                            | std::views::filter([](const auto& ev) {
-                                  return ev->mTheta.mSamplerProposal != MHVariable::eFixe
-                                      && ev->type() != Event::eBound;
-                              })) {
-                    event->updateS02Theta();
+        if (AppSettings::mEventModel == EventModelType::EDM2 ) {
+            if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
+                try {
+                    //for (std::shared_ptr<Event> &event : initListEvents) {
+                    for (std::shared_ptr<Event> &event : initListEvents
+                         | std::views::filter([](const auto& ev) {
+                                              return ev->mTheta.mSamplerProposal != MHVariable::eFixe
+                                              && ev->type() != Event::eBound;
+                })) {
+                        event->updateS02Theta();
+
+                    }
+                }  catch (...) {
+                    qDebug() << "[MCMCLoopCurve::sampler_337_b] S02 : Caught Exception!\n";
 
                 }
-            }  catch (...) {
-                qDebug() << "MCMCLoopCurve::update S02 : Caught Exception!\n";
-
             }
         }
-#endif
 
         // --------------------------------------------------------------
         //  Remarque : à ce stade, tous les theta events sont à jour et ordonnés.
@@ -5298,7 +5311,7 @@ bool MCMCLoopCurve::sampler_337_b()
 
 
                 } catch (std::exception& e) {
-                    std::cout<< "[MCMCLoopCurve::update_335] S02 Vg : exception caught: " << e.what() << std::endl;
+                    std::cout<< "[MCMCLoopCurve::sampler_337_b] S02 Vg : exception caught: " << e.what() << std::endl;
 
                 }
 
@@ -5479,8 +5492,6 @@ bool MCMCLoopCurve::sampler_337_b()
 
                             log_rate = log_rate_sqrt_Wi + (h_try - h_current) + log_rate_h_vg;
 
-                            //rate = exp(log_rate);
-                            //---
 
 
                         if (MHAcceptanceTest_log(log_rate)) {
@@ -5502,10 +5513,10 @@ bool MCMCLoopCurve::sampler_337_b()
                     }
 
                 } catch (std::exception& e) {
-                    std::cout << "[MCMCLoopCurve::update_335] VG : exception caught: " << e.what() << std::endl;
+                    std::cout << "[MCMCLoopCurve::sampler_337_b] VG : exception caught: " << e.what() << std::endl;
 
                 } catch(...) {
-                    std::cout << "[MCMCLoopCurve::update_335] update VG Event Caught Exception!" << std::endl;
+                    std::cout << "[MCMCLoopCurve::sampler_337_b] update VG Event Caught Exception!" << std::endl;
                 }
 
 
@@ -5519,7 +5530,7 @@ bool MCMCLoopCurve::sampler_337_b()
             }
 
         } catch(...) {
-            std::cout << "[MCMCLoopCurve::update_335] update VG Event Caught Exception!" << std::endl;
+            std::cout << "[MCMCLoopCurve::sampler_337_b] update VG Event Caught Exception!" << std::endl;
         }
 
 
@@ -5530,7 +5541,7 @@ bool MCMCLoopCurve::sampler_337_b()
 
         try {
             // On stocke l'ancienne valeur :
-            current_value = mModel->mLambdaSpline.value();
+            const double current_lambda = mModel->mLambdaSpline.value();
 
             if (mCurveSettings.mLambdaSplineType == CurveSettings::eModeBayesian) {
                 // Au lieu de : current_K = current_Q * current_R_1QT;
@@ -5559,44 +5570,31 @@ bool MCMCLoopCurve::sampler_337_b()
 
                 // On tire une nouvelle valeur :
 
-                constexpr double lambda_logMin = -20.0;
-                constexpr double lambda_logMax = +10.0;
+                const double try_lambda_log = Generator::truncatedNormal(log10(current_lambda), mModel->mLambdaSpline.mSigmaMH, -20, +10);
 
+                const double try_lambda = pow(10.0, try_lambda_log);
 
-                double try_value_log = Generator::normalDistribution(log10(current_value), mModel->mLambdaSpline.mSigmaMH);
+                const double rate_try_ftKf = exp(-(try_lambda - try_lambda) * 0.5 * sum_quadratic); // rate_ftKF()
 
-                if (try_value_log >= lambda_logMin && try_value_log <= lambda_logMax ) {
+                // Calcul du rapport de probabilité d'acceptation.
+                if (mModel->compute_XYZ) {
+                    rate = rate_h_lambda_XYZ_335(try_lambda, try_lambda, n_points) ;
 
-                    try_value = pow(10.0, try_value_log);
-
-                    const double rate_try_ftKf = exp(-(try_value - current_value) * 0.5 * sum_quadratic); // rate_ftKF()
-
-                    // Calcul du rapport de probabilité d'acceptation.
-                    if (mModel->compute_XYZ) {
-                        rate = rate_h_lambda_XYZ_335(current_value, try_value, n_points) ;
-
-                    } else if (mModel->compute_Y) {
-                        rate = rate_h_lambda_XY_335(current_value, try_value, n_points) ;
-
-                    } else {
-                        /**
-                         * \f$ P(\lambda) = \frac{ \lambda^{\tfrac{1}{2}(n_{\text{points}} - 2)}} { \left( {c + \lambda} \right)^{\mu + 1}} \f$
-                         */
-                        rate = rate_h_lambda_X_335(current_value, try_value, n_points) ;
-                        // multiplier par le jacobien
-                        rate *= rate_try_ftKf * try_value / current_value;
-
-
-                    }
-
-                    mModel->mLambdaSpline.test_update(current_value, try_value, rate);
-
+                } else if (mModel->compute_Y) {
+                    rate = rate_h_lambda_XY_335(try_lambda, try_lambda, n_points) ;
 
                 } else {
+                    /**
+                         * \f$ P(\lambda) = \frac{ \lambda^{\tfrac{1}{2}(n_{\text{points}} - 2)}} { \left( {c + \lambda} \right)^{\mu + 1}} \f$
+                         */
+                    rate = rate_h_lambda_X_335(try_lambda, try_lambda, n_points) ;
+                    // multiplier par le jacobien
+                    rate *= rate_try_ftKf * try_lambda / try_lambda;
 
-                    mModel->mLambdaSpline.reject_update();
+
                 }
 
+                mModel->mLambdaSpline.test_update(try_lambda, try_lambda, rate);
 
 
             }
@@ -5608,7 +5606,7 @@ bool MCMCLoopCurve::sampler_337_b()
             }
 
         } catch(...) {
-            qDebug() << "[MCMCLoopCurve::update_335] Lambda : Caught Exception!\n";
+            qDebug() << "[MCMCLoopCurve::sampler_337_b] Lambda : Caught Exception!\n";
         }
 
 
@@ -5632,7 +5630,7 @@ bool MCMCLoopCurve::sampler_337_b()
             //return hasPositiveGPrimePlusConst(mModel->mSpline.splineX, mModel->mSettings.mTmin, mModel->mSettings.mTmax, mCurveSettings.mThreshold); // si dy >mCurveSettings.mThreshold => pas de memo de la courbe
 #endif
 #ifdef DEBUG
-        std::cout << "[MCMCLoopCurve::update_335] " << std::endl;
+        std::cout << "[MCMCLoopCurve::sampler_337_b] " << std::endl;
         for (size_t i = 0; i < mModel->mEvents.size(); i++) {
             std::cout << "Y= " << mModel->mEvents[i]->mYx << "\t Gx= "<< mModel->mEvents[i]->mGx << "\t theta= " << mModel->mEvents[i]->mTheta.value() << "\t theta_reduit= " << mModel->mEvents[i]->mThetaReduced << std::endl;
         }
@@ -5646,19 +5644,19 @@ bool MCMCLoopCurve::sampler_337_b()
 
 
     } catch (const char* e) {
-        qWarning() << "[MCMCLoopCurve::update_335] char "<< e;
+        qWarning() << "[MCMCLoopCurve::sampler_337_b] char " << e;
 
     } catch (const std::length_error& e) {
-        qWarning() << "[MCMCLoopCurve::update_335] length_error"<< e.what();
+        qWarning() << "[MCMCLoopCurve::sampler_337_b] length_error" << e.what();
 
     } catch (const std::out_of_range& e) {
-        qWarning() << "[MCMCLoopCurve::update_335] out_of_range" << e.what();
+        qWarning() << "[MCMCLoopCurve::sampler_337_b] out_of_range" << e.what();
 
     } catch (const std::exception& e) {
-        qWarning() << "[MCMCLoopCurve::update_335] "<< e.what();
+        qWarning() << "[MCMCLoopCurve::sampler_337_b] " << e.what();
 
     } catch(...) {
-        qWarning() << "[MCMCLoopCurve::update_335] Caught Exception!\n";
+        qWarning() << "[MCMCLoopCurve::sampler_337_b] Caught Exception!\n";
         return false;
     }
 
@@ -6004,23 +6002,23 @@ bool MCMCLoopCurve::tempering_337_c(double T)
         // --------------------------------------------------------------
         //  D - Update S02 - à faire dans la version 4 ou EDM2
         // --------------------------------------------------------------
-#ifdef S02_BAYESIAN
-        if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
-            try {
-                for (std::shared_ptr<Event> &event : initListEvents
-                            | std::views::filter([](const auto& ev) {
-                                  return ev->mTheta.mSamplerProposal != MHVariable::eFixe
-                                      && ev->type() != Event::eBound;
-                              })) {
-                    event->applyS02Theta();
+        if (AppSettings::mEventModel == EventModelType::EDM2 ) {
+            if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
+                try {
+                    for (std::shared_ptr<Event> &event : initListEvents
+                         | std::views::filter([](const auto& ev) {
+                                              return ev->mTheta.mSamplerProposal != MHVariable::eFixe
+                                              && ev->type() != Event::eBound;
+                })) {
+                        event->applyS02Theta();
+
+                    }
+                }  catch (...) {
+                    qDebug() << "[MCMCLoopCurve::tempering_337_c] applyS02Theta : Caught Exception!\n";
 
                 }
-            }  catch (...) {
-                qDebug() << "[MCMCLoopCurve::tempering_337_c] applyS02Theta : Caught Exception!\n";
-
             }
         }
-#endif
 
         // --------------------------------------------------------------
         //  Remarque : à ce stade, tous les theta events sont à jour et ordonnés.
@@ -6315,7 +6313,7 @@ bool MCMCLoopCurve::tempering_337_c(double T)
 
         try {
             // On stocke l'ancienne valeur :
-            double current_lambda = mModel->mLambdaSpline.value();
+            const double current_lambda = mModel->mLambdaSpline.value();
 
 
             if (mCurveSettings.mLambdaSplineType == CurveSettings::eModeBayesian) {
@@ -6345,9 +6343,9 @@ bool MCMCLoopCurve::tempering_337_c(double T)
 
                 // On tire une nouvelle valeur :
 
-                double try_lambda_log = Generator::truncatedNormal(log10(current_lambda), mModel->mLambdaSpline.mSigmaMH, -20, +10);
+                const double try_lambda_log = Generator::truncatedNormal(log10(current_lambda), mModel->mLambdaSpline.mSigmaMH, -20, +10);
 
-                double try_lambda = pow(10.0, try_lambda_log);
+                const double try_lambda = pow(10.0, try_lambda_log);
 
                 const double rate_try_ftKf = exp(-(try_lambda - current_lambda) * 0.5 * sum_quadratic); // rate_ftKF()
 
@@ -6397,19 +6395,19 @@ bool MCMCLoopCurve::tempering_337_c(double T)
 
 
     } catch (const char* e) {
-        qWarning() << "[MCMCLoopCurve::update_335] char "<< e;
+        qWarning() << "[MCMCLoopCurve::tempering_337_c] char " << e;
 
     } catch (const std::length_error& e) {
-        qWarning() << "[MCMCLoopCurve::update_335] length_error"<< e.what();
+        qWarning() << "[MCMCLoopCurve::tempering_337_c] length_error" << e.what();
 
     } catch (const std::out_of_range& e) {
-        qWarning() << "[MCMCLoopCurve::update_335] out_of_range" << e.what();
+        qWarning() << "[MCMCLoopCurve::tempering_337_c] out_of_range" << e.what();
 
     } catch (const std::exception& e) {
-        qWarning() << "[MCMCLoopCurve::update_335] "<< e.what();
+        qWarning() << "[MCMCLoopCurve::tempering_337_c] " << e.what();
 
     } catch(...) {
-        qWarning() << "[MCMCLoopCurve::update_335] Caught Exception!\n";
+        qWarning() << "[MCMCLoopCurve::tempering_337_c] Caught Exception!\n";
         return false;
     }
 
@@ -6417,494 +6415,7 @@ bool MCMCLoopCurve::tempering_337_c(double T)
 
 
 }
-/*
-bool MCMCLoopCurve::tempering_337(double T_max, std::vector<bool>& event_regenerated )
-{
 
-    try {
-
-        DiagonalMatrixD W_1;
-
-        // --------------------------------------------------------------
-        //  B - Update theta Events
-        // --------------------------------------------------------------
-        try {
-
-              // init the current state
-#pragma mark update Theta
-            if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
-                // --------------------------------------------------------------
-                // 3️⃣  Helpers, Fonction générique
-                // --------------------------------------------------------------
-
-                auto jump_regenereted = [&](double T)
-                {
-                    std::size_t j = 0;
-                    for (auto &event : mModel->mEvents) {
-                        try {
-                            if (mModel->mEvents[j]->mTheta.mSamplerProposal != MHVariable::eFixe) { // On ne bouge pas les bornes
-                                if (event_regenerated[j]) {
-                                    // --------------------------------------------------------------
-                                    //  A - Update ti Dates (idem MCMCLoopChrono)
-                                    // --------------------------------------------------------------
-                                    try {
-                                        for (auto&& date : event->mDates) {
-                                            //updateTi(theta_mX);
-                                            const double u1 = Generator::randomUniform();
-
-                                            const double tminCalib = date.mCalibration->mTmin;
-                                            const double idx = interpolate_index(u1, date.mCalibration->mRepartition);
-                                            double tiNew = tminCalib + idx * date.mCalibration->mStep;
-                                            date.mTi.setValue(tiNew);
-                                            date.updateDelta(event->mTheta.value()); // pas de memo
-
-                                            date.applySigmaShrinkage_K_tempering(event->mTheta.value(), event->mS02Theta.value(), event->mAShrinkage, T); // ici, peut être garder
-
-                                            date.updateWiggle(); // mise à jour déterministe, pas de tiragedate.updateDate(event->mTheta.mX, event->mS02Theta.mX, event->mAShrinkage);
-
-                                        }
-
-                                    }  catch (...) {
-                                        qWarning() <<"[MCMCLoopCurve::tempering_337] jump_regenereted-> update Date ???";
-                                    }
-                                    // ici on force un saut
-                                    event->applyTheta_v6_regenering_with_tempering(tminPeriod, tmaxPeriod, T);
-                                    event->mThetaReduced = mModel->reduceTime(event->mTheta.value());
-
-                                    // Calcul de nouvelles matrices
-                                    event_MH_rate(event.get(), event->mTheta.value());
-
-                                    // il faut swapper les matrices et S02Vg qui sont mis à jour dans event_MH_rate
-                                    current_vecH = std::move(try_vecH);
-                                    current_K = std::move(try_K);
-
-                                    current_R_1QT = std::move(try_R_1QT);
-                                    current_R = std::move(try_R);
-                                    current_Q = std::move(try_Q);
-                                    current_Y = std::move(try_Y);
-                                    current_G = std::move(try_G);
-
-                                    mModel->mS02Vg = try_S02Vg;
-                                    Var_residual_spline = try_S02Vg;
-
-
-                                } else {
-                                    // Ici processus normale pour les theta
-                                    const double min = event->getThetaMin(tminPeriod);
-                                    const double max = event->getThetaMax(tmaxPeriod);
-
-                                    if (min >= max) {
-                                        const auto seed = mLoopChains.at(mChainIndex).mSeed;
-                                        throw QObject::tr("Error for event theta : %1 :\n min = %2 : max = %3 \n seed = %4").arg(event->getQStringName(), QString::number(min), QString::number(max), QString::number(seed));
-                                    }
-
-                                    // tirage Prior Theta
-                                    double sum_p = 0.0;
-                                    double sum_t = 0.0;
-
-                                    for (auto&& date: event->mDates) {
-                                        const double variance  = pow(date.mSigmaTi.mX, 2);
-                                        sum_t += (date.mTi.mX + date.mDelta) / variance;
-                                        sum_p += 1.0 / variance;
-                                    }
-                                    const double ti_avg = sum_t / sum_p;
-                                    const double sigma = 1.0 / sqrt(sum_p);
-                                    const double try_theta = Generator::truncatedNormal(ti_avg, sigma, min, max);
-
-
-                                    double MH_rate = event_MH_rate(event.get(), try_theta);
-
-                                    if (MHAcceptanceTest(MH_rate)) {
-                                        event->mTheta.setValue(try_theta);
-                                        event->mThetaReduced = mModel->reduceTime(try_theta);
-                                        // il faut swapper les matrices et S02Vg qui sont mis à jour dans event_MH_rate
-                                        current_vecH = std::move(try_vecH);
-                                        current_K = std::move(try_K);
-
-                                        current_R_1QT = std::move(try_R_1QT);
-                                        current_R = std::move(try_R);
-                                        current_Q = std::move(try_Q);
-                                        current_Y = std::move(try_Y);
-                                        current_G = std::move(try_G);
-
-                                        mModel->mS02Vg = try_S02Vg;
-                                        Var_residual_spline = try_S02Vg;
-                                    }
-                                }
-                            }
-
-                        }
-                        catch (const std::exception &e) {
-                            qWarning() << "[MCMCLoopChrono::update_v3_tempering] Tempering error on event"
-                                       << event->getQStringName() << ":" << e.what();
-                        }
-
-                        if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
-                            event->updateS02Theta();
-
-                        std::for_each(event->mPhases.begin(),
-                                      event->mPhases.end(),
-                                      [this](std::shared_ptr<Phase> p) {
-                                          p->update_AlphaBeta(tminPeriod, tmaxPeriod);
-                                      });
-
-
-                        ++j;
-                    }
-
-                    // Mise à jour globale des phases
-                    std::for_each(mModel->mPhases.begin(),
-                                  mModel->mPhases.end(),
-                                  [this](std::shared_ptr<Phase> p) {
-                                      p->update_Tau(tminPeriod, tmaxPeriod);
-                                  });
-
-                    std::for_each(mModel->mPhaseConstraints.begin(),
-                                  mModel->mPhaseConstraints.end(),
-                                  [](std::shared_ptr<PhaseConstraint> pc) {
-                                      pc->updateGamma();
-                                  });
-                };
-
-
-                auto MH_all = [&](double T)
-                {
-                    std::size_t j = 0;
-                    for (auto &event : mModel->mEvents) {
-                        try {
-                            if (mModel->mEvents[j]->mTheta.mSamplerProposal != MHVariable::eFixe) { // On ne bouge pas les bornes
-                                const double min = event->getThetaMin(tminPeriod);
-                                const double max = event->getThetaMax(tmaxPeriod);
-                                if (min >= max)
-                                    throw QObject::tr("[Event::applyTheta_v6_MH_Tempering] Error for event : %1 : min = %2 : max = %3")
-                                        .arg(event->getQStringName(), QString::number(min), QString::number(max));
-                                // --------------------------------------------------------------
-                                //  A - Update ti Dates (idem MCMCLoopChrono)
-                                // --------------------------------------------------------------
-                                try {
-                                    for (auto&& date : event->mDates) {
-                                        //updateTi(theta_mX);
-                                        const double u1 = Generator::randomUniform();
-
-                                        const double tminCalib = date.mCalibration->mTmin;
-                                        const double idx = interpolate_index(u1, date.mCalibration->mRepartition);
-                                        double tiNew = tminCalib + idx * date.mCalibration->mStep;
-                                        date.mTi.setValue(tiNew);
-                                        date.updateDelta(event->mTheta.value()); // pas de memo
-
-                                        date.applySigmaShrinkage_K_tempering(event->mTheta.value(), event->mS02Theta.value(), event->mAShrinkage, T); // ici, peut être garder
-
-                                        date.updateWiggle(); // mise à jour déterministe, pas de tiragedate.updateDate(event->mTheta.mX, event->mS02Theta.mX, event->mAShrinkage);
-
-                                    }
-
-                                }  catch (...) {
-                                    qWarning() <<"[MCMCLoopCurve::tempering_337] MH_all-> update Date ???";
-                                }
-
-                                double sum_p = 0.0;
-                                double sum_t = 0.0;
-
-                                for (auto&& date: event->mDates) {
-                                    const double variance  = pow(date.mSigmaTi.mX, 2);
-                                    sum_t += (date.mTi.mX + date.mDelta) / variance;
-                                    sum_p += 1.0 / variance;
-                                }
-                                const double ti_avg = sum_t / sum_p;
-                                const double sigma = 1.0 / sqrt(sum_p);
-
-                                if (event_regenerated[j]) {
-
-                                    //double sigma_T = schedule_exp(sigma, T); // Exponentiel doux (k > 0)
-                                    double sigma_T = schedule_exp_pow(sigma, T,  2.0); // a) Exponentiel décroit (α > 1)
-
-                                    double try_theta = Generator::truncatedNormal(ti_avg, sigma_T, min, max);
-
-                                    double MH_rate = event_MH_rate(event.get(), try_theta);
-
-                                    // Recuit simulé hiérarchique
-                                    // π(θ) ∝ exp(-H(θ)/T₁) × ∏ᵢ exp(-Hᵢ(θᵢ)/Tᵢ)
-
-                                    double log_alpha =
-                                            (log_dnorm(try_theta, ti_avg, sigma)
-                                             - log_dnorm(event->mTheta.value(), ti_avg, sigma)) / T;
-
-                                    if (MHAcceptanceTest(MH_rate * exp(log_alpha))) {
-                                        event->mTheta.setValue(try_theta);
-                                        event->mThetaReduced = mModel->reduceTime(try_theta);
-                                        current_vecH = std::move(try_vecH);
-                                        current_K = std::move(try_K);
-
-                                        current_R_1QT = std::move(try_R_1QT);
-                                        current_R = std::move(try_R);
-                                        current_Q = std::move(try_Q);
-                                        current_Y = std::move(try_Y);
-                                        current_G = std::move(try_G);
-
-                                        mModel->mS02Vg = try_S02Vg;
-                                        Var_residual_spline = try_S02Vg;
-                                    }
-
-                                } else {
-                                    // Ici processus normale pour les theta
-
-                                    // tirage Prior Theta
-
-                                    double try_theta = Generator::truncatedNormal(ti_avg, sigma, min, max);
-
-                                    double MH_rate = event_MH_rate(event.get(), try_theta);
-
-                                    if (MHAcceptanceTest(MH_rate)) {
-                                        event->mTheta.setValue(try_theta);
-                                        event->mThetaReduced = mModel->reduceTime(try_theta);
-                                        current_vecH = std::move(try_vecH);
-                                        current_K = std::move(try_K);
-
-                                        current_R_1QT = std::move(try_R_1QT);
-                                        current_R = std::move(try_R);
-                                        current_Q = std::move(try_Q);
-                                        current_Y = std::move(try_Y);
-                                        current_G = std::move(try_G);
-
-                                        mModel->mS02Vg = try_S02Vg;
-                                        Var_residual_spline = try_S02Vg;
-                                    }
-
-
-                                }
-                            }
-                        }
-                        catch (const std::exception &e) {
-                            qWarning() << "[MCMCLoopChrono::update_v3_tempering] Tempering error on event"
-                                       << event->getQStringName() << ":" << e.what();
-                        }
-
-                        if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
-                            event->updateS02Theta();
-
-                        std::for_each(event->mPhases.begin(),
-                                      event->mPhases.end(),
-                                      [this](std::shared_ptr<Phase> p) {
-                                          p->update_AlphaBeta(tminPeriod, tmaxPeriod);
-                                      });
-
-
-                        ++j;
-                    }
-
-                    // Mise à jour globale des phases
-
-                    std::for_each(mModel->mPhases.begin(),
-                                  mModel->mPhases.end(),
-                                  [this](std::shared_ptr<Phase> p) {
-                                      p->update_Tau(tminPeriod, tmaxPeriod);
-                                  });
-
-
-                    std::for_each(mModel->mPhaseConstraints.begin(),
-                                  mModel->mPhaseConstraints.end(),
-                                  [](std::shared_ptr<PhaseConstraint> pc) {
-                                      pc->updateGamma();
-                                  });
-                };
-
-                // --------------------------------------------------------------
-                // 4️⃣ Régéneration à temp max des Events sélectionnées
-                // --------------------------------------------------------------
-                jump_regenereted(static_cast<double>(T_max));
-
-
-                // --------------------------------------------------------------
-                // 5️⃣  Descente (T décroissant)
-                // --------------------------------------------------------------
-                for (int i = T_max - 1; i >= 0; --i) {
-                    MH_all(static_cast<double>(i));
-                }
-
-                // --------------------------------------------------------------
-                // 6️⃣ 2e régéneration à temp max
-                // --------------------------------------------------------------
-
-                // On bouge les autres Events
-                for (std::size_t j = 0; j < event_regenerated.size(); ++j) {
-                    if (mModel->mEvents[j]->mTheta.mSamplerProposal != MHVariable::eFixe) { // On ne bouge pas les bornes
-                        event_regenerated[j] = !event_regenerated[j];
-                    }
-                }
-                jump_regenereted(static_cast<double>(T_max));
-
-                // test ICI on bouge tout le monde
-
-
-
-                // --------------------------------------------------------------
-                // 5️⃣  Descente (T décroissant)
-                // --------------------------------------------------------------
-                for (int i = T_max - 1; i >= 0; --i) {
-                    MH_all(static_cast<double>(i));
-                }
-
-
-            } // Pas bayésien : rien à faire
-
-            //  Update Phases Tau; they could be used by the Event in the other Phase ----------------------------------------
-
-            //std::for_each(PAR mModel->mPhases.begin(), mModel->mPhases.end(), [this] (std::shared_ptr<Phase> p) {p->update_Tau (tminPeriod, tmaxPeriod);});
-
-
-            //std::for_each(PAR mModel->mPhaseConstraints.begin(), mModel->mPhaseConstraints.end(), [] (std::shared_ptr<PhaseConstraint> pc) {pc->updateGamma();});
-
-
-        } catch(...) {
-            qDebug() << "[MCMCLoopCurve::tempering_337] Theta : Caught Exception!\n";
-        }
-
-
-
-        // --------------------------------------------------------------
-        //  D - Update S02 - à faire dans la version 4 ou EDM2
-        // --------------------------------------------------------------
-
-        if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
-            try {
-                for (std::shared_ptr<Event> &event : initListEvents) {
-                    if (event->mTheta.mSamplerProposal != MHVariable::eFixe) { // On ne bouge pas les bornes
-                        event->updateS02Theta();
-                    }
-
-                }
-            }  catch (...) {
-                qDebug() << "[MCMCLoopCurve::tempering_337] S02 : Caught Exception!\n";
-
-            }
-        }
-
-
-        // --------------------------------------------------------------
-        //  Remarque : à ce stade, tous les theta events sont à jour et ordonnés.
-        //  On va à présent mettre à jour tous les VG, puis Lambda Spline.
-        //  Pour cela, nous devons espacer les thetas pour permettre les calculs.
-        //  Nous le faisons donc ici, et restaurerons les vrais thetas à la fin.
-        // --------------------------------------------------------------
-
-        // --------------------------------------------------------------
-        //  D - Update Vg Global or individual (Events)
-        // --------------------------------------------------------------
-        try {
-            if (mCurveSettings.mVarianceType != CurveSettings::eModeFixed ) {
-                // Events must be ordered
-
-                *  La mise à jour doit être faite avcec la mise à jour des theta
-            std::cout << "[MCMCLoopCurve::tempering_337] VG : exception caught: " << e.what() << std::endl;
-
-        } catch(...) {
-            std::cout << "[MCMCLoopCurve::tempering_337] update VG Event Caught Exception!" << std::endl;
-        }
-
-
-
-
-
-        // --------------------------------------------------------------
-        //  E - Update Lambda
-        // --------------------------------------------------------------
-#pragma mark update Lambda
-
-        try {
-            // On stocke l'ancienne valeur :
-            double current_lambda = mModel->mLambdaSpline.mX;
-
-
-            if (mCurveSettings.mLambdaSplineType == CurveSettings::eModeBayesian) {
-
-                // les Events peuvent avoir changé d'ordre depuis la mise à jour des Thétas
-                // et il faut vérifier que current_G soit à jour depuis update theta
-                // produit f^t*K*f et la trace de la matrice K
-                double sum_quadratic = quadratic_form(current_K, current_G);
-
-                // On tire une nouvelle valeur :
-
-                double try_lambda_log = Generator::truncatedNormal(log10(current_lambda), mModel->mLambdaSpline.mSigmaMH, -20, +10);
-
-                double try_lambda = pow(10.0, try_lambda_log);
-
-                const double rate_try_ftKf = exp(-(try_lambda - current_lambda) * 0.5 * sum_quadratic); // rate_ftKF()
-
-                // Calcul du rapport de probabilité d'acceptation.
-                double rate;
-                if (mModel->compute_XYZ) {
-                    rate = rate_h_lambda_XYZ_335(current_lambda, try_lambda, n_points) ;
-
-                } else if (mModel->compute_Y) {
-                    rate = rate_h_lambda_XY_335(current_lambda, try_lambda, n_points) ;
-
-                } else {
-
-                          \f$ P(\lambda) = \frac{ \lambda^{\tfrac{1}{2}(n_{\text{points}} - 2)}} { \left( {c + \lambda} \right)^{\mu + 1}} \f$
-
-                    rate = rate_h_lambda_X_335(current_lambda, try_lambda, n_points) ;
-                    // multiplier par le jacobien
-                    rate *= rate_try_ftKf * try_lambda / current_lambda;
-
-
-                }
-
-                const bool accepted = MHAcceptanceTest(rate);
-
-                if (accepted) {
-                    mModel->mLambdaSpline.setValue(try_lambda);
-                }
-
-
-            }
-            // Pas bayésien : rien à faire
-
-
-        } catch(...) {
-            qDebug() << "[MCMCLoopCurve::tempering_337] Lambda : Caught Exception!\n";
-        }
-
-
-        // --------------------------------------------------------------
-        //  F - update G(x) in MCMCSpline mModel->mSpline
-        // --------------------------------------------------------------
-#pragma mark update G(x)
-        //-------- Simulation gaussienne multivariées des splines f
-
-        // F.1- Calcul spline
-
-        // Toutes les matrices doivent être à jours, aprés le passage dans update theta, et update VG met à jour event->mW
-
-
-        // ON ne teste pas la courbe "positive", inutile-> elle ne l'ai plus
-        // applySpline ne recalcule pas Gx
-        mModel->mSpline = applySpline(mModel->mEvents, current_R, current_R_1QT, current_Q); // utilise mModel->mLambdaSpline.mX et ev->mW et mets à jour lEvents[i]-> mGx = fx[i];
-
-        return false;
-
-
-    } catch (const char* e) {
-        qWarning() << "[MCMCLoopCurve::tempering_337] char "<< e;
-
-    } catch (const std::length_error& e) {
-        qWarning() << "[MCMCLoopCurve::tempering_337] length_error"<< e.what();
-
-    } catch (const std::out_of_range& e) {
-        qWarning() << "[MCMCLoopCurve::tempering_337] out_of_range" << e.what();
-
-    } catch (const std::exception& e) {
-        qWarning() << "[MCMCLoopCurve::tempering_337] "<< e.what();
-
-    } catch(...) {
-        qWarning() << "[MCMCLoopCurve::tempering_337] Caught Exception!\n";
-        return false;
-    }
-
-    return false;
-
-
-}
-*/
 #endif
 
 
@@ -8375,7 +7886,7 @@ bool MCMCLoopCurve::tempering_337_b(double expo_T_max, std::vector<bool>& event_
                             }
                         }
                         catch (const std::exception &e) {
-                            qWarning() << "[MCMCLoopChrono::update_v3_tempering] Tempering error on event"
+                            qWarning() << "[MCMCLoopChrono::learn_v3_tempering] Tempering error on event"
                                        << event->getQStringName() << ":" << e.what();
                         }
                         // --------------------------------------------------------------
@@ -14057,19 +13568,32 @@ void MCMCLoopCurve::spreadEventsTheta(std::vector<std::shared_ptr<Event> > &even
  * @details On parcourt les events triées par date réduite croissante, si la date suivante ne vérifie pas le spreadSpand, on repère une cravate:
  * on mémorise la date comme début temps et on continue en vérifiant le spread suivant. Si le spreadSpan est vérifié, on note la fin de temps et on répartie les dates entres le début et la fin.
  * Sinon, on compte nbEgal+1 et on continue avec la date suivante.
+ *
+ * Le pivot minimal acceptable pour LDLt est typiquement ‖A‖ * ε_machine.
+ * Pour une matrice de spline cubique, la norme croît comme 1/h² où h est le plus petit écart entre nœuds.
  * @param sortedEvents
  * @param spreadSpan
  */
 void MCMCLoopCurve::spreadEventsThetaReduced0(std::vector<std::shared_ptr<Event> > &sortedEvents, t_reduceTime spreadSpan)
 {
-    //sortedEvents = unclumpThetaReduit(sortedEvents, spreadSpan);
-    //return;
-
     std::vector<std::shared_ptr<Event>>::iterator itEvenFirst = sortedEvents.end();
-    std::vector<std::shared_ptr<Event>>::iterator itEventLast = sortedEvents.end();
+    std::vector<std::shared_ptr<Event>>::iterator itEventLast = sortedEvents.end(); 
 
     if (spreadSpan == 0.0) {
-        spreadSpan = 1.0E-5; //std::numeric_limits<double>::epsilon() * 1.E12;//1.E6;// epsilon = 1E-16
+        static t_reduceTime cachedSpreadSpan = 0.0;
+        if (cachedSpreadSpan == 0.0) {
+            const std::size_t n = n_points;
+            const double eps = std::numeric_limits<double>::epsilon(); // ~1e-16
+            // h_min tel que 1/h_min² reste dans la précision double
+            // soit h_min > range * sqrt(eps) * n
+            cachedSpreadSpan = std::sqrt(eps) * (double)n;  // ~1e-8 * n  (range=1 donc disparaît)
+
+            // garde-fou haut : ne pas dépasser 1/10 de l'espacement moyen
+            cachedSpreadSpan = std::min(cachedSpreadSpan, 1.0 / (double)(n * 10));
+        }
+
+        spreadSpan = cachedSpreadSpan;
+        //spreadSpan = 1.0E-5; //std::numeric_limits<double>::epsilon() * 1.E12;//1.E6;// epsilon = 1E-16
        // spreadSpan = 1.0E-8; // ici test
     }
 
@@ -15122,8 +14646,17 @@ MCMCSpline MCMCLoopCurve::samplingSpline_multi2(std::vector<std::shared_ptr<Even
                 lEvents[i]-> mGy = fy[i];
             }
 
+            // Donc : résoudre B * gamma_y = Q^T * Yy  (pas Q^T * f !)
+            rhs = SparseMatrixD(Q.transpose()) * Yy;
+            rhs_sub = rhs.segment(first, nsub);
+            gamma_sub = solver.solve(rhs_sub);  // réutilise le solver de B déjà factorisé !
+
+            ColumnVectorD vecGamma_y = ColumnVectorD::Zero(n_points);
+            vecGamma_y.segment(first, nsub) = gamma_sub;
+
+
             // Calcul de la dérivée seconde de la fonction f
-            ColumnVectorD vecGamma_y =  R_1Qt * fy;
+            //ColumnVectorD vecGamma_y =  R_1Qt * fy;
 
             // La sauvegarde de theta, f et f'
             MCMCSplineComposante splineY;
@@ -15147,8 +14680,16 @@ MCMCSpline MCMCLoopCurve::samplingSpline_multi2(std::vector<std::shared_ptr<Even
                 lEvents[i]-> mGz = fz[i];
             }
 
+            // Donc : résoudre B * gamma_z = Q^T * Yz  (pas Q^T * f !)
+            rhs = SparseMatrixD(Q.transpose()) * Yz;
+            rhs_sub = rhs.segment(first, nsub);
+            gamma_sub = solver.solve(rhs_sub);  // réutilise le solver de B déjà factorisé !
+
+            ColumnVectorD vecGamma_z = ColumnVectorD::Zero(n_points);
+            vecGamma_z.segment(first, nsub) = gamma_sub;
+
             // Calcul de la dérivée seconde de la fonction f
-            ColumnVectorD vecGamma_z =  R_1Qt * fz;
+            //ColumnVectorD vecGamma_z =  R_1Qt * fz;
 
             // La sauvegarde de theta, f et f'
             MCMCSplineComposante splineZ;
@@ -15168,7 +14709,7 @@ MCMCSpline MCMCLoopCurve::samplingSpline_multi2(std::vector<std::shared_ptr<Even
     return spline;
 }
 
-
+// obsolete, remarqu el calcul de gamma à changer
 MCMCSpline MCMCLoopCurve::applySpline(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixD &R, const MatrixD &R_1Qt, const SparseMatrixD& Q)
 {
     MCMCSpline spline;

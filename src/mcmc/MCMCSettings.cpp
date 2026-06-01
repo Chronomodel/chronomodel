@@ -46,18 +46,22 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QDataStream>
 
 
-MCMCSettings::MCMCSettings():
-    mNumChains(MCMC_NUM_CHAINS_DEFAULT),
+MCMCSettings::MCMCSettings()
+    : mNumChains(MCMC_NUM_CHAINS_DEFAULT),
     mIterPerAquisition(MCMC_NUM_RUN_DEFAULT),
     mIterPerBurn(MCMC_NUM_BURN_DEFAULT),
     mMaxBatches(MCMC_MAX_ADAPT_BATCHES_DEFAULT),
     mIterPerBatch(MCMC_ITER_PER_BATCH_DEFAULT),
     mThinningInterval(MCMC_THINNING_INTERVAL_DEFAULT),
     mFinalBatchIndex(0),
-    mMixingLevel(MCMC_MIXING_DEFAULT)
-{
+    mMixingLevel(MCMC_MIXING_DEFAULT),
 
+    mAnnealTemp(MCMC_ANNEAL_TEMP),
+    mAnnealRecurrence(MCMC_ANNEAL_RECURRENCE),
+    mAnnealDwell(MCMC_ANNEAL_DWELL)
+{
 }
+
 
 MCMCSettings::MCMCSettings(const MCMCSettings& s)
 {
@@ -72,17 +76,22 @@ MCMCSettings& MCMCSettings::operator=(const MCMCSettings& s)
 
 void MCMCSettings::copyFrom(const MCMCSettings& s)
 {
-    mNumChains = s.mNumChains;
-    mIterPerAquisition = s.mIterPerAquisition;
-    mIterPerBurn = s.mIterPerBurn;
-    mMaxBatches = s.mMaxBatches;
-    mIterPerBatch = s.mIterPerBatch;
-    mSeeds = s.mSeeds;
-    mThinningInterval = s.mThinningInterval;
-    mFinalBatchIndex = s.mFinalBatchIndex;
+    mNumChains          = s.mNumChains;
+    mIterPerAquisition  = s.mIterPerAquisition;
+    mIterPerBurn        = s.mIterPerBurn;
+    mMaxBatches         = s.mMaxBatches;
+    mIterPerBatch       = s.mIterPerBatch;
+    mThinningInterval   = s.mThinningInterval;
+    mFinalBatchIndex    = s.mFinalBatchIndex;
+    mMixingLevel        = s.mMixingLevel;
+    mSeeds              = s.mSeeds;
 
-    mMixingLevel = s.mMixingLevel;
+    // ----- paramètres d’annealing -----
+    mAnnealTemp         = s.mAnnealTemp;
+    mAnnealRecurrence   = s.mAnnealRecurrence;
+    mAnnealDwell        = s.mAnnealDwell;
 }
+
 
 MCMCSettings::~MCMCSettings()
 {
@@ -91,54 +100,75 @@ MCMCSettings::~MCMCSettings()
 
 void MCMCSettings::restoreDefault()
 {
-    mNumChains = MCMC_NUM_CHAINS_DEFAULT;
-    mIterPerAquisition =  MCMC_NUM_RUN_DEFAULT;
-    mIterPerBurn =  MCMC_NUM_BURN_DEFAULT;
-    mMaxBatches =  MCMC_MAX_ADAPT_BATCHES_DEFAULT;
-    mIterPerBatch = MCMC_ITER_PER_BATCH_DEFAULT;
-    mThinningInterval =  MCMC_THINNING_INTERVAL_DEFAULT;
-    mMixingLevel =  MCMC_MIXING_DEFAULT;
-    mFinalBatchIndex= 0;
+    mNumChains          = MCMC_NUM_CHAINS_DEFAULT;
+    mIterPerAquisition  = MCMC_NUM_RUN_DEFAULT;
+    mIterPerBurn        = MCMC_NUM_BURN_DEFAULT;
+    mMaxBatches         = MCMC_MAX_ADAPT_BATCHES_DEFAULT;
+    mIterPerBatch       = MCMC_ITER_PER_BATCH_DEFAULT;
+    mThinningInterval   = MCMC_THINNING_INTERVAL_DEFAULT;
+    mMixingLevel        = MCMC_MIXING_DEFAULT;
+    mFinalBatchIndex    = 0;
 
+    // ----- Paramètres d’annealing -----
+    mAnnealTemp         = MCMC_ANNEAL_TEMP;
+    mAnnealRecurrence   = MCMC_ANNEAL_RECURRENCE;
+    mAnnealDwell        = MCMC_ANNEAL_DWELL;
 }
+
 
 
 MCMCSettings MCMCSettings::fromJson(const QJsonObject& json)
 {
     MCMCSettings settings;
-    settings.mNumChains = json.contains(STATE_MCMC_NUM_CHAINS) ? json.value(STATE_MCMC_NUM_CHAINS).toInt() : MCMC_NUM_CHAINS_DEFAULT;
-    settings.mIterPerAquisition = json.contains(STATE_MCMC_NUM_RUN_ITER) ? json.value(STATE_MCMC_NUM_RUN_ITER).toInt() : MCMC_NUM_RUN_DEFAULT;
-    settings.mIterPerBurn = json.contains(STATE_MCMC_NUM_BURN_ITER) ? json.value(STATE_MCMC_NUM_BURN_ITER).toInt() : MCMC_NUM_BURN_DEFAULT;
-    settings.mMaxBatches = json.contains(STATE_MCMC_MAX_ADAPT_BATCHES) ? json.value(STATE_MCMC_MAX_ADAPT_BATCHES).toInt() : MCMC_MAX_ADAPT_BATCHES_DEFAULT;
-    settings.mIterPerBatch = json.contains(STATE_MCMC_ITER_PER_BATCH) ? json.value(STATE_MCMC_ITER_PER_BATCH).toInt() : MCMC_ITER_PER_BATCH_DEFAULT;
-    settings.mThinningInterval = json.contains(STATE_MCMC_THINNING_INTERVAL) ? json.value(STATE_MCMC_THINNING_INTERVAL).toInt() : MCMC_THINNING_INTERVAL_DEFAULT;
-    settings.mMixingLevel = json.contains(STATE_MCMC_MIXING) ? json.value(STATE_MCMC_MIXING).toDouble() : MCMC_MIXING_DEFAULT;
+
+    // … paramètres déjà existants …
+    settings.mNumChains          = json.contains(STATE_MCMC_NUM_CHAINS)        ? json.value(STATE_MCMC_NUM_CHAINS).toInt()        : MCMC_NUM_CHAINS_DEFAULT;
+    settings.mIterPerAquisition  = json.contains(STATE_MCMC_NUM_RUN_ITER)    ? json.value(STATE_MCMC_NUM_RUN_ITER).toInt()    : MCMC_NUM_RUN_DEFAULT;
+    settings.mIterPerBurn        = json.contains(STATE_MCMC_NUM_BURN_ITER)   ? json.value(STATE_MCMC_NUM_BURN_ITER).toInt()   : MCMC_NUM_BURN_DEFAULT;
+    settings.mMaxBatches         = json.contains(STATE_MCMC_MAX_ADAPT_BATCHES)? json.value(STATE_MCMC_MAX_ADAPT_BATCHES).toInt(): MCMC_MAX_ADAPT_BATCHES_DEFAULT;
+    settings.mIterPerBatch       = json.contains(STATE_MCMC_ITER_PER_BATCH) ? json.value(STATE_MCMC_ITER_PER_BATCH).toInt() : MCMC_ITER_PER_BATCH_DEFAULT;
+    settings.mThinningInterval   = json.contains(STATE_MCMC_THINNING_INTERVAL)? json.value(STATE_MCMC_THINNING_INTERVAL).toInt(): MCMC_THINNING_INTERVAL_DEFAULT;
+    settings.mMixingLevel        = json.contains(STATE_MCMC_MIXING)          ? json.value(STATE_MCMC_MIXING).toDouble()      : MCMC_MIXING_DEFAULT;
+
+    // ----- nouveaux paramètres d’annealing -----
+    settings.mAnnealTemp         = json.contains(STATE_MCMC_ANNEAL_TEMP)        ? json.value(STATE_MCMC_ANNEAL_TEMP).toDouble()      : MCMC_ANNEAL_TEMP;
+    settings.mAnnealRecurrence   = json.contains(STATE_MCMC_ANNEAL_RECURRENCE) ? json.value(STATE_MCMC_ANNEAL_RECURRENCE).toInt()   : MCMC_ANNEAL_RECURRENCE;
+    settings.mAnnealDwell        = json.contains(STATE_MCMC_ANNEAL_DWELL)      ? json.value(STATE_MCMC_ANNEAL_DWELL).toInt()       : MCMC_ANNEAL_DWELL;
+
+    // ----- seeds (inchangés) -----
     QJsonArray seeds = json.value(STATE_MCMC_SEEDS).toArray();
-    for (int i=0; i<seeds.size(); ++i)
+    for (int i = 0; i < seeds.size(); ++i)
         settings.mSeeds.append(seeds.at(i).toInt());
 
     return settings;
 }
 
+
 QJsonObject MCMCSettings::toJson() const
 {
     QJsonObject mcmc;
-    mcmc[STATE_MCMC_NUM_CHAINS] = QJsonValue::fromVariant(mNumChains);
-    mcmc[STATE_MCMC_NUM_RUN_ITER] = QJsonValue::fromVariant(mIterPerAquisition);
-    mcmc[STATE_MCMC_NUM_BURN_ITER] = QJsonValue::fromVariant(mIterPerBurn);
-    mcmc[STATE_MCMC_MAX_ADAPT_BATCHES] = QJsonValue::fromVariant(mMaxBatches);
-    mcmc[STATE_MCMC_ITER_PER_BATCH] = QJsonValue::fromVariant(mIterPerBatch);
-    mcmc[STATE_MCMC_THINNING_INTERVAL] = QJsonValue::fromVariant(mThinningInterval);
+    mcmc[STATE_MCMC_NUM_CHAINS]          = QJsonValue::fromVariant(mNumChains);
+    mcmc[STATE_MCMC_NUM_RUN_ITER]        = QJsonValue::fromVariant(mIterPerAquisition);
+    mcmc[STATE_MCMC_NUM_BURN_ITER]       = QJsonValue::fromVariant(mIterPerBurn);
+    mcmc[STATE_MCMC_MAX_ADAPT_BATCHES]   = QJsonValue::fromVariant(mMaxBatches);
+    mcmc[STATE_MCMC_ITER_PER_BATCH]      = QJsonValue::fromVariant(mIterPerBatch);
+    mcmc[STATE_MCMC_THINNING_INTERVAL]  = QJsonValue::fromVariant(mThinningInterval);
+    mcmc[STATE_MCMC_MIXING]              = QJsonValue::fromVariant(mMixingLevel);
 
-    mcmc[STATE_MCMC_MIXING] = QJsonValue::fromVariant(mMixingLevel);
+    // ----- Paramètres d’annealing -----
+    mcmc[STATE_MCMC_ANNEAL_TEMP]        = QJsonValue::fromVariant(mAnnealTemp);
+    mcmc[STATE_MCMC_ANNEAL_RECURRENCE] = QJsonValue::fromVariant(mAnnealRecurrence);
+    mcmc[STATE_MCMC_ANNEAL_DWELL]      = QJsonValue::fromVariant(mAnnealDwell);
 
+    // ----- seeds -----
     QJsonArray seeds;
-    for (int i=0; i<mSeeds.size(); ++i)
-        seeds.append(QJsonValue::fromVariant(mSeeds.at(i)) );
+    for (int i = 0; i < mSeeds.size(); ++i)
+        seeds.append(QJsonValue::fromVariant(mSeeds.at(i)));
     mcmc[STATE_MCMC_SEEDS] = seeds;
 
     return mcmc;
 }
+
 
 std::vector<ChainSpecs> MCMCSettings::getChains() const
 {
@@ -171,18 +201,24 @@ std::vector<ChainSpecs> MCMCSettings::getChains() const
 
 bool MCMCSettings::operator==(const MCMCSettings& other) const
 {
-    return mNumChains == other.mNumChains &&
-           mIterPerAquisition == other.mIterPerAquisition &&
-           mIterPerBurn == other.mIterPerBurn &&
-           mMaxBatches == other.mMaxBatches &&
-           mIterPerBatch == other.mIterPerBatch &&
-           mThinningInterval == other.mThinningInterval &&
-           mSeeds == other.mSeeds &&
-           mFinalBatchIndex == other.mFinalBatchIndex &&
-           mMixingLevel == other.mMixingLevel;
+    return mNumChains          == other.mNumChains &&
+           mIterPerAquisition  == other.mIterPerAquisition &&
+           mIterPerBurn        == other.mIterPerBurn &&
+           mMaxBatches         == other.mMaxBatches &&
+           mIterPerBatch       == other.mIterPerBatch &&
+           mThinningInterval   == other.mThinningInterval &&
+           mSeeds              == other.mSeeds &&
+           mFinalBatchIndex    == other.mFinalBatchIndex &&
+           mMixingLevel        == other.mMixingLevel &&
+
+               // ----- Paramètres d’annealing -----
+               mAnnealTemp         == other.mAnnealTemp &&
+           mAnnealRecurrence   == other.mAnnealRecurrence &&
+           mAnnealDwell        == other.mAnnealDwell;
 }
 
-QDataStream &operator<<( QDataStream &stream, const MCMCSettings &data )
+
+QDataStream &operator<<(QDataStream &stream, const MCMCSettings &data)
 {
     stream << quint8 (data.mNumChains);
     stream << (quint32) data.mIterPerAquisition;
@@ -194,39 +230,36 @@ QDataStream &operator<<( QDataStream &stream, const MCMCSettings &data )
     stream << (quint32) data.mFinalBatchIndex;
     stream << data.mMixingLevel;
 
-    return stream;
+    // ----- Paramètres d’annealing -----
+    stream << data.mAnnealTemp;          // double → écrit tel quel
+    stream << (quint32) data.mAnnealRecurrence;
+    stream << (quint32) data.mAnnealDwell;
 
+    return stream;
 }
 
-QDataStream &operator>>( QDataStream &stream, MCMCSettings &data )
+
+QDataStream &operator>>(QDataStream &stream, MCMCSettings &data)
 {
-    quint8 tmp8;
-    stream >> tmp8;
-    data.mNumChains = tmp8;
-
+    quint8  tmp8;
     quint32 tmp32;
-    stream >> tmp32;
-    data.mIterPerAquisition = int(tmp32);
+    double  tmpDouble;
 
-    stream >> tmp32;
-    data.mIterPerBurn = int(tmp32);
-
-    stream >> tmp32;
-    data.mMaxBatches = int(tmp32);
-
-    stream >> tmp32;
-    data.mIterPerBatch = int(tmp32);
-
-    stream >> tmp32;
-    data.mThinningInterval = int(tmp32);
-
+    stream >> tmp8;  data.mNumChains          = tmp8;
+    stream >> tmp32; data.mIterPerAquisition  = int(tmp32);
+    stream >> tmp32; data.mIterPerBurn        = int(tmp32);
+    stream >> tmp32; data.mMaxBatches         = int(tmp32);
+    stream >> tmp32; data.mIterPerBatch       = int(tmp32);
+    stream >> tmp32; data.mThinningInterval   = int(tmp32);
     stream >> data.mSeeds;
-
-    stream >> tmp32;
-    data.mFinalBatchIndex = int(tmp32);
-
+    stream >> tmp32; data.mFinalBatchIndex    = int(tmp32);
     stream >> data.mMixingLevel;
 
-    return stream;
+    // ----- nouveaux paramètres d’annealing -----
+    stream >> tmpDouble; data.mAnnealTemp       = tmpDouble;
+    stream >> tmp32;    data.mAnnealRecurrence = int(tmp32);
+    stream >> tmp32;    data.mAnnealDwell      = int(tmp32);
 
+    return stream;
 }
+

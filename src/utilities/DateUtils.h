@@ -61,7 +61,8 @@ public:
         eDatB2K = 4,
         eBCECE = 5,
         eKa = 6,
-        eMa = 7
+        eMa = 7,
+        eCustom = 8
     };
 
     static QString dateFormatToString(const FormatDate format);

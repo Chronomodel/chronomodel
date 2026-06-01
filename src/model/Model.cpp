@@ -56,6 +56,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtWidgets>
 #include <QtCore/QStringList>
 #include <iostream>
+#include <ranges>
 
 #define NO_USE_THREAD
 #ifdef USE_THREAD
@@ -74,7 +75,7 @@ Model::Model():
     mNumberOfEvents(0),
     mNumberOfDates(0),
     mThreshold(-1.),
-    mBandwidthType(BandwidthType::eBWUndefine),
+    mBandwidthType(BandwidthType::eBWSJ),
     mBandwidth(1),
     mFFTLength(1024),
     mHActivity(1)
@@ -92,7 +93,7 @@ Model::Model(const QJsonObject& json):
     mNumberOfEvents(0),
     mNumberOfDates(0),
     mThreshold(-1.),
-    mBandwidthType(BandwidthType::eBWUndefine),
+    mBandwidthType(BandwidthType::eBWSJ),
     mBandwidth(1),
     mFFTLength(1024),
     mHActivity(1)

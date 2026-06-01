@@ -8,7 +8,7 @@
 
 #endif // VERSION_H
 
-#define S02_BAYESIAN // active EDM2
+#define S02_BAYESIAN_no // active EDM2
 #define THETA_MIXING_KERNEL_no // active le sampler de theta avec le mixing kernel
 
 

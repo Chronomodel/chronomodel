@@ -49,6 +49,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define MCMC_ITER_PER_BATCH_DEFAULT 100
 #define MCMC_THINNING_INTERVAL_DEFAULT 10
 
+#define MCMC_ANNEAL_TEMP 100
+#define MCMC_ANNEAL_RECURRENCE 500
+#define MCMC_ANNEAL_DWELL 100
+
 #define MCMC_MIXING_DEFAULT 0.99
 
 
@@ -104,6 +108,11 @@ public:
 
     int mFinalBatchIndex;
     double mMixingLevel;
+
+    double mAnnealTemp       = MCMC_ANNEAL_TEMP;
+    int    mAnnealRecurrence = MCMC_ANNEAL_RECURRENCE;
+    int    mAnnealDwell      = MCMC_ANNEAL_DWELL;
+
 };
 
 QDataStream &operator<<( QDataStream &stream, const MCMCSettings &data );

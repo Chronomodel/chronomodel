@@ -179,9 +179,8 @@ public:
         eBeginEnd,
         eThetaEvent,
 
-#ifdef S02_BAYESIAN
         eS02,
-#endif
+
 
 #ifdef KOMLAN
         eS02Vg,

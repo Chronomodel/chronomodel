@@ -267,6 +267,7 @@ private:
     MCMCSpline samplingSpline_multi2(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixD &R, const MatrixD &R_1Qt, const SparseMatrixD& Q);
 
     // pour tempering, par de tirage des Gx
+    // obsolete
     MCMCSpline applySpline(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixD &R, const MatrixD &R_1Qt, const SparseMatrixD& Q);
 
 

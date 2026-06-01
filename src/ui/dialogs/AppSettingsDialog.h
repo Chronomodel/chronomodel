@@ -134,8 +134,12 @@ private:
     QLabel* mFormatDateLab;
     QComboBox* mFormatDate;
 
+    QLineEdit* mCustomDateEdit;
+
     QLabel* mPrecisionLab;
     QSpinBox* mPrecision;
+
+    QComboBox* mEventModelCombo;
 
     QDialogButtonBox* mApplyButton;
     QPushButton *mRestoreBox;

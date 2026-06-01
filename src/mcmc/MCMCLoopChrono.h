@@ -57,7 +57,7 @@ protected:
 
     virtual QString initialize();
 
-    virtual bool update() {return update_v3_tempering();};
+    virtual bool update() {return update_v4_simulated_annealing();};
 
 
     //virtual bool update() {return update_v3();};
@@ -72,7 +72,7 @@ protected:
 
     //bool learn_v3_tempering();
     bool update_v3();
-    bool update_v3_tempering();
+    bool update_v4_simulated_annealing();
 
    // bool update_v3_simulated_tempering_annealing();
     bool update_v4();

@@ -41,6 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define APPSETTINGS_H
 
 #include "DateUtils.h"
+#include "Event.h"
 #include "Painting.h"
 
 #include <qsystemdetection.h>
@@ -77,11 +78,16 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define APP_SETTINGS_STR_PIXELRATIO "pixel_ratio"
 #define APP_SETTINGS_STR_DPM "dpm"
 #define APP_SETTINGS_STR_IMAGE_QUALITY "image_quality"
+
 #define APP_SETTINGS_STR_FORMATDATE "format_date"
+#define APP_SETTINGS_STR_FORMATDATE_CUSTOM "format_date_custom"
+#define APP_SETTINGS_DEFAULT_FORMATDATE_CUSTOM "Years"
 
 #define APP_SETTINGS_STR_PRECISION "precision"
 #define APP_SETTINGS_STR_SHEET "sheet"
 
+#define APP_SETTINGS_STR_EVENTMODEL "event_model"
+#define APP_SETTINGS_DEFAULT_EVENTMODEL 2
 
 class AppSettings
 {
@@ -115,8 +121,12 @@ public:
     static int mDpm;
     static int mImageQuality;
     static  DateUtils::FormatDate mFormatDate;
+    static QString mFormatDateCustom;
+
     static int mPrecision;
     static int mNbSheet;
+
+    static EventModelType mEventModel;
 
     static QString mLastDir;
     static QString mLastFile;

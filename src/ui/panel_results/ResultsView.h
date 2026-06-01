@@ -349,14 +349,12 @@ private:
     CheckBox* mWiggleCheck;
     RadioButton* mDataSigmaRadio;
 
-#ifdef S02_BAYESIAN
     RadioButton* mS02Radio;
 
 #ifdef KOMLAN
     RadioButton* mS02VgRadio;
 #endif
 
-#endif
     RadioButton* mEventVGRadio;
 
     CheckBox* mEventsStatCheck;

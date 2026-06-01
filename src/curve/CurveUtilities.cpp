@@ -98,8 +98,10 @@ std::vector<t_reduceTime> calculVecH(const std::vector<std::shared_ptr<Event>>& 
         const t_reduceTime diff = result[i];
         if (diff <= 1.0E-10) {
             qDebug() << "[CurveUtilities::calculVecH] diff Theta r <= 1.0E-10 "
-                     << static_cast<double>(events[i]->mThetaReduced) << " "
-                     << static_cast<double>(events[i + 1]->mThetaReduced);
+                     << " theta[i] = " << static_cast<double>(events[i]->mTheta.value()) << " "
+                     << " theta[i+1] = " << static_cast<double>(events[i + 1]->mTheta.value())
+                     << " mThetaReduced[i] = " << static_cast<double>(events[i]->mThetaReduced) << " "
+                     << " mThetaReduced[i+1] = " << static_cast<double>(events[i + 1]->mThetaReduced);
         }
     }
 #endif
@@ -2020,18 +2022,22 @@ DiagonalMatrixLD diagonal_influence_matrix(const SplineMatricesLD& matrices,
     DiagonalMatrixLD matA(n);
     const t_matrix lambdaL = static_cast<t_matrix>(lambda);
 
+    constexpr t_matrix eps = std::numeric_limits<t_matrix>::epsilon(); // ~2e‑19 pour long double
+
     for (Index i = 0; i < n; ++i) {
         const t_matrix winv = matrices.diagWInv.diagonal()[i];
         const t_matrix qb = matQB_1QT.diagonal()[i];
         t_matrix mat_a = 1.0L - lambdaL * winv * qb;
 
-        if (mat_a < (t_matrix)0) {
-            qDebug() << "[CurveUtilities] diagonal_influence_matrix : Oups mat_a=" << static_cast<double>(mat_a) << "< 0 change to 0" << "n=" << n;
+        if (mat_a < -eps) {
+            // < 0
+            qDebug() << "[CurveUtilities::diagonal_influence_matrix] Oups mat_a = " << static_cast<double>(mat_a) << "< 0 force to 0" << "n=" << n;
 
             mat_a = 0.0L;
         }
-        else if (mat_a > 1.0) {
-            qDebug() << "[CurveUtilities] diagonal_influence_matrix : Oups mat_a="<< static_cast<double>(mat_a) << "> 1 change to 1" << "n=" << n;
+        else if (mat_a > 1.0L + eps) {
+            // > 1
+            qDebug() << "[CurveUtilities::diagonal_influence_matrix] Oups mat_a = " << static_cast<double>(mat_a) << "> 1 force to 1" << "n=" << n;
 
             mat_a = 1.0L;
         }

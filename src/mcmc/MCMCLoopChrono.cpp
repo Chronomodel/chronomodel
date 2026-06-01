@@ -44,6 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "CalibrationCurve.h"
 #include "Generator.h"
+#include "AppSettings.h"
 
 #include <QElapsedTimer>
 #include <cmath>
@@ -162,12 +163,9 @@ bool MCMCLoopChrono::update_v3()
 
             event->updateTheta_v3(tminPeriod, tmaxPeriod);
 
+            if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+                event->updateS02Theta();
 
-
-#ifdef S02_BAYESIAN
-        if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
-            event->updateS02Theta();
-#endif
         //--------------------- Update Phases -set mAlpha and mBeta they coud be used by the Event in the other Phase ----------------------------------------
         /* --------------------------------------------------------------
          * C.1 - Update Alpha, Beta & Duration Phases
@@ -248,7 +246,7 @@ bool MCMCLoopChrono::update_v3()
                                 }
 
                             }  catch (...) {
-                                qWarning() <<"[MCMCLoopCurve::update_v3_tempering] MH_all_temp-> update Date ???";
+                                qWarning() <<"[MCMCLoopCurve::learn_v3_tempering] MH_all_temp-> update Date ???";
                             }
 
                             const double min = event->getThetaMin(tminPeriod);
@@ -326,7 +324,7 @@ bool MCMCLoopChrono::update_v3()
                     // On ne bouge pas les bornes
                 }
                 catch (const std::exception &e) {
-                    qWarning() << "[MCMCLoopChrono::update_v3_tempering] Tempering error on event"
+                    qWarning() << "[MCMCLoopChrono::learn_v3_tempering] Tempering error on event"
                                << event->getQStringName() << ":" << e.what();
                 }
 
@@ -411,46 +409,54 @@ bool MCMCLoopChrono::update_v3()
 }
 */
 
-bool MCMCLoopChrono::update_v3_tempering()
+/**
+ * @brief MCMCLoopChrono::update_v4_simulated_annealing routine de simulated tempering
+ * https://en.wikipedia.org/wiki/Simulated_annealing
+ * @return
+ */
+bool MCMCLoopChrono::update_v4_simulated_annealing()
 {
-    int iteration =  mLoopChains[ mChainIndex].mTotalIter;
+    const int iteration =  mLoopChains[ mChainIndex].mTotalIter;
 
-    //const double u = Generator::randomUniform();
-    //constexpr double w_regenerate = 0.3;   // probabilité de régénération de la chaine
+    const int max_expo_T   = mModel->mMCMCSettings.mAnnealTemp;
 
-    constexpr int max_expo_T   = 100;    // nombre d’étapes de température
-    //constexpr double w_event = 0.5;   // probabilité de régénération de l'Event
-
-    bool do_regeneration = (iteration % 500 == 0); // (u < w_regenerate)
+    bool do_regeneration = (iteration> 0 && iteration % mModel->mMCMCSettings.mAnnealRecurrence == 0);
     // ------------------------------------------------------------------
     // 1️⃣  Décision de régénération
     // ------------------------------------------------------------------
     if (do_regeneration) {
-        // --------------------------------------------------------------
-        // 2️⃣  Sélection aléatoire des événements à régénérer
-        // --------------------------------------------------------------
-        std::vector<bool> event_regenerated(mModel->mEvents.size(), true);
-        /* for (std::size_t j = 0; j < event_regenerated.size(); ++j) {
-            if (mModel->mEvents[j]->mTheta.mSamplerProposal != MHVariable::eFixe) { // On ne bouge pas les bornes
-                const double u2 = Generator::randomUniform();
-                event_regenerated[j] = true;//static_cast<bool>(u2 < w_event);
+
+        // -------------------------------------------------
+        // 1️⃣ Déclaration du vecteur vide (ou avec capacité)
+        // -------------------------------------------------
+        std::vector<std::shared_ptr<Event>> event_regenerated{};
+        event_regenerated.reserve(mModel->mEvents.size());
+        // -------------------------------------------------
+        // 2️⃣ Remplissage conditionnel
+        // -------------------------------------------------
+        for (std::size_t j = 0; j < mModel->mEvents.size(); ++j) {
+            if (mModel->mEvents[j]->mTheta.mSamplerProposal != MHVariable::eFixe) {
+                event_regenerated.push_back(mModel->mEvents[j]);   // copie du shared_ptr
             }
-        }*/
+        }
 
         // --------------------------------------------------------------
         // 3️⃣  Fonction générique
         // --------------------------------------------------------------
 
-        auto MH_all_temp = [&](double T)
+        auto MH_all_temp = [&](double T) -> double
         {
-            std::size_t j = 0;
-            for (auto &event : mModel->mEvents) {
+            int n_accepted = 0;
+            int n_total    = 0;
+
+            //std::size_t j = 0;
+            for (auto &event : event_regenerated) {
                 try {
-                    if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+                    //if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
                         // Recuit simulé hiérarchique
                         // π(θ) ∝ exp(-H(θ)/T₁) × ∏ᵢ exp(-Hᵢ(θᵢ)/Tᵢ)
                         // Toutes les variables n'ont pas besoin d'avoir la même température de recuit
-                        if (event_regenerated[j]) {
+                        //if (event_regenerated[j]) {
                             // --------------------------------------------------------------
                             //  A - Update ti Dates (idem MCMCLoopChrono)
                             // --------------------------------------------------------------
@@ -460,7 +466,7 @@ bool MCMCLoopChrono::update_v3_tempering()
                                 }
 
                             }  catch (...) {
-                                qWarning() <<"[MCMCLoopCurve::update_v3_tempering] MH_all_temp-> update Date ???";
+                                qWarning() <<"[MCMCLoopCurve::update_v4_simulated_annealing] MH_all_temp-> update Date ???";
                             }
 
                             const double min = event->getThetaMin(tminPeriod);
@@ -535,23 +541,27 @@ bool MCMCLoopChrono::update_v3_tempering()
                             if (MHAcceptanceTest_log(log_alpha /T)) {
                                 event->mTheta.setValue(try_theta);
                                 event->mThetaReduced = mModel->reduceTime(try_theta);
+                                // accepté
+                                ++n_accepted;
 
                             }
 
+                            ++n_total;
 
-                        } else
-                            event->applyThetaProposal_v3(tminPeriod, tmaxPeriod);
+                        //} else
+                         //   event->applyThetaProposal_v3(tminPeriod, tmaxPeriod);
 
-                    }
+                    //}
                     // On ne bouge pas les bornes
                 }
                 catch (const std::exception &e) {
-                    qWarning() << "[MCMCLoopChrono::update_v3_tempering] Tempering error on event"
+                    qWarning() << "[MCMCLoopChrono::update_v4_simulated_annealing] Tempering error on event"
                                << event->getQStringName() << ":" << e.what();
                 }
 
                 if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
                     event->applyS02Theta(1);
+
 
                 std::for_each(event->mPhases.begin(),
                               event->mPhases.end(),
@@ -560,7 +570,7 @@ bool MCMCLoopChrono::update_v3_tempering()
                               });
 
 
-                ++j;
+               // ++j;
             }
 
             // Mise à jour globale des phases
@@ -575,17 +585,32 @@ bool MCMCLoopChrono::update_v3_tempering()
                           [](std::shared_ptr<PhaseConstraint> pc) {
                               pc->updateGamma();
                           });
+
+            // Retourne un taux entre 0.0 et 1.0
+            return (n_total > 0) ? static_cast<double>(n_accepted) / n_total : 1.0;
         };
 
-        // --------------------------------------------------------------
-        // 5️⃣  Descente (T décroissant)
-        // --------------------------------------------------------------
-        for (int e = max_expo_T ; e >= 0; --e) {
-            const double T = std::pow(2, e); // a) Exponentiel décroit (α > 1)
-            MH_all_temp(T);
+        const int dwell_steps_T0 = mModel->mMCMCSettings.mAnnealDwell;
+
+        for (int e = max_expo_T; e >= 0; --e) {
+            const double T = std::pow(2, e);
+
+            const int dwell_steps = std::max(1,
+                                             static_cast<int>(std::ceil(dwell_steps_T0 / (1.0 + static_cast<double>(e))))
+                                             );
+            double rate = 0.0;
+            // --------------------------------------------------------------
+            // 5️⃣  Relaxation
+            // --------------------------------------------------------------
+
+            for (int s = 0; s < dwell_steps; ++s)
+                rate += MH_all_temp(T);
+            rate /= dwell_steps;
+
+            //qDebug() << "T = " << T
+            //         << " rate = " << rate
+            //         << " dwell_steps = " << dwell_steps;
         }
-
-
     }
 
     // ------------------------------------------------------------------
@@ -624,108 +649,7 @@ bool MCMCLoopChrono::update_v3_tempering()
     return true;
 }
 
-// obsolete
-// ne permet pas le deplacement le taux MH reste petit quand on est loin du courrant
-/*
-bool MCMCLoopChrono::update_v3_simulated_tempering_annealing()
-{
-    const double u = Generator::randomUniform();
-    constexpr double w_regenerate = 0.7;   // probabilité de régénération
-    constexpr int    max_i        = 1000;    // nombre d’étapes de température
-    constexpr int nb_simulation   = 10;
 
-    // ------------------------------------------------------------------
-    // 1️⃣  Décision de régénération
-    // ------------------------------------------------------------------
-    if (u < w_regenerate) {
-
-        // --------------------------------------------------------------
-        // 3️⃣  Fonction générique d’update (montée ou descente)
-        // --------------------------------------------------------------
-        auto update_all = [&](double T)
-        {
-            for (auto &event : mModel->mEvents) {
-                try {
-                        event->applyTheta_v6_MH_Tempering(tminPeriod, tmaxPeriod, T);
-
-                }
-                catch (const std::exception &e) {
-                    qWarning() << "Tempering error on event"
-                               << event->getQStringName() << ":" << e.what();
-                }
-
-                if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
-                    event->updateS02Theta();
-
-                std::for_each(event->mPhases.begin(),
-                              event->mPhases.end(),
-                              [this](std::shared_ptr<Phase> p) {
-                                  p->update_AlphaBeta(tminPeriod, tmaxPeriod);
-                              });
-
-            }
-
-            // Mise à jour globale des phases
-            std::for_each(mModel->mPhases.begin(),
-                          mModel->mPhases.end(),
-                          [this](std::shared_ptr<Phase> p) {
-                              p->update_Tau(tminPeriod, tmaxPeriod);
-                          });
-
-            std::for_each(mModel->mPhaseConstraints.begin(),
-                          mModel->mPhaseConstraints.end(),
-                          [](std::shared_ptr<PhaseConstraint> pc) {
-                              pc->updateGamma();
-                          });
-        };
-
-        // --------------------------------------------------------------
-        // 4️⃣  Montée (T croissant)
-        // --------------------------------------------------------------
-       // for (int i = 0; i <= max_i; ++i)
-         //   for (int j = 0; j <= nb_simulation; ++j)
-           //     update_all(static_cast<double>(i));
-
-        // --------------------------------------------------------------
-        // 5️⃣  Descente (T décroissant)
-        // --------------------------------------------------------------
-        for (int i = max_i - 1; i >= 0; --i)
-            for (int j = 0; j <= nb_simulation; ++j)
-                update_all(static_cast<double>(i));
-    }
-    else {
-        // ------------------------------------------------------------------
-        // 6️⃣  Pas de régénération → mise à jour standard de tous les events
-        // ------------------------------------------------------------------
-        for (auto &event : mModel->mEvents) {
-            event->updateTheta_v3(tminPeriod, tmaxPeriod);
-
-            if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
-                event->updateS02Theta();
-
-            std::for_each(event->mPhases.begin(),
-                          event->mPhases.end(),
-                          [this](std::shared_ptr<Phase> p) {
-                              p->update_AlphaBeta(tminPeriod, tmaxPeriod);
-                          });
-        }
-
-        // Mise à jour globale des phases (Tau + contraintes)
-        std::for_each(mModel->mPhases.begin(),
-                      mModel->mPhases.end(),
-                      [this](std::shared_ptr<Phase> p) {
-                          p->update_Tau(tminPeriod, tmaxPeriod);
-                      });
-
-        std::for_each(mModel->mPhaseConstraints.begin(),
-                      mModel->mPhaseConstraints.end(),
-                      [](std::shared_ptr<PhaseConstraint> pc) {
-                          pc->updateGamma();
-                      });
-    }
-
-    return !(u < w_regenerate); //true;
-}*/
 
 bool MCMCLoopChrono::update_v4()
 {
@@ -738,7 +662,6 @@ bool MCMCLoopChrono::update_v4()
      *  C.3 - Update Gamma Phases
      * ---------------------------------------------------------------------- */
 
-
     // --------------------------------------------------------------
     //  B - Update theta Events
     // --------------------------------------------------------------
@@ -748,10 +671,10 @@ bool MCMCLoopChrono::update_v4()
         // --------------------------------------------------------------
         if (event->mType == Event::eDefault) {
             event->updateTheta(tminPeriod, tmaxPeriod);
-#ifdef S02_BAYESIAN
+if (AppSettings::mEventModel == EventModelType::EDM2 ) {
             if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
                 event->updateS02Theta();
-#endif
+}
         } else //if (event->mType == Event::eBound)
                 event->updateTheta(tminPeriod, tmaxPeriod);
 
@@ -871,10 +794,10 @@ bool MCMCLoopChrono::adapt(const int batchIndex)
         if ((event->mType != Event::eBound) && ( event->mTheta.mSamplerProposal == MHVariable::eMHAdaptGauss) )
             noAdapt = event->mTheta.adapt(taux_min, taux_max, batchIndex) && noAdapt;
 
-#ifdef S02_BAYESIAN
-        if ( event->mS02Theta.mSamplerProposal == MHVariable::eMHAdaptGauss)
-            noAdapt = event->mS02Theta.adapt(taux_min, taux_max, batchIndex) && noAdapt;
-#endif
+        if (AppSettings::mEventModel == EventModelType::EDM2 ) {
+            if ( event->mS02Theta.mSamplerProposal == MHVariable::eMHAdaptGauss)
+                noAdapt = event->mS02Theta.adapt(taux_min, taux_max, batchIndex) && noAdapt;
+        }
     }
 
 

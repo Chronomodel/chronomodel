@@ -199,7 +199,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
 
     mDataSigmaRadio = new RadioButton(tr("Std ti"));
     mDataSigmaRadio->setFixedHeight(h_Radio);
-#ifdef S02_BAYESIAN
+
     mS02Radio = new RadioButton(tr("Shrinkage Param."));
     mS02Radio->setFixedHeight(h_Radio);
 
@@ -208,7 +208,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mS02VgRadio->setFixedHeight(h_Radio);
 #endif
 
-#endif
+
 
 
     mEventVGRadio = new RadioButton(tr("Std gi"));
@@ -231,12 +231,12 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     resultsGroupLayout->addWidget(mEventThetaRadio);
     resultsGroupLayout->addWidget(mDataSigmaRadio);
 
-#ifdef S02_BAYESIAN
+
     resultsGroupLayout->addWidget(mS02Radio);
  #ifdef KOMLAN
     resultsGroupLayout->addWidget(mS02VgRadio);
  #endif
-#endif
+
 
     resultsGroupLayout->addWidget(mEventVGRadio);
 
@@ -390,13 +390,12 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     //  Connections
     // -----------------------------------------------------------------
     connect(mEventThetaRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
-#ifdef S02_BAYESIAN
+
     connect(mS02Radio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
 #ifdef KOMLAN
     connect(mS02VgRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
 #endif
 
-#endif
     connect(mEventsDatesUnfoldCheck, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
 
     connect(mDataSigmaRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
@@ -1281,6 +1280,28 @@ void ResultsView::initModel()
     mHActivityEdit->resetText(model->mHActivity);
 
     mFFTLenCombo->setCurrentText(stringForLocal(model->getFFTLength()));
+    // mettre à jour le bandwidtType
+
+    mBandwidthJSRadio->blockSignals(true);
+    mBandwidthNrd0Radio->blockSignals(true);
+    mBandwidthCustomRadio->blockSignals(true);
+
+    auto bwdType = model->mBandwidthType;
+    switch (bwdType) {
+    case BandwidthType::eBWSJ:
+        mBandwidthJSRadio->setChecked(true);
+        break;
+    case BandwidthType::eBWNRD0:
+        mBandwidthNrd0Radio->setChecked(true);
+        break;
+    default:
+        mBandwidthCustomRadio->setChecked(true);
+        break;
+    }
+    mBandwidthJSRadio->blockSignals(false);
+    mBandwidthNrd0Radio->blockSignals(false);
+    mBandwidthCustomRadio->blockSignals(false);
+
     mBandwidthEdit->resetText(model->getBandwidth());
 
     mZoomsT.clear();
@@ -1645,12 +1666,9 @@ void ResultsView::updateMainVariable()
         } else if (mDataSigmaRadio->isChecked()) {
             mMainVariable = GraphViewResults::eSigma;
 
-#ifdef S02_BAYESIAN
         } else if (mS02Radio->isChecked()) {
             mMainVariable = GraphViewResults::eS02;
 
-
-#endif
         } else if (mEventVGRadio->isChecked()) {
             mMainVariable = GraphViewResults::eVg;
         }
@@ -3429,9 +3447,9 @@ void ResultsView::updateGraphsMinMax()
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
 
         if (mMainVariable == GraphViewResults::eDuration
-#ifdef S02_BAYESIAN
+
             || mMainVariable == GraphViewResults::eS02
-#endif
+
 
 #ifdef KOMLAN
             || mMainVariable == GraphViewResults::eS02Vg
@@ -3682,13 +3700,13 @@ void ResultsView::updateCurvesToShow()
                 showVariableList.append(GraphViewResults::eCredibility);
             showVariableList.append(GraphViewResults::eVg);
         }
-#ifdef S02_BAYESIAN
+
         else if (mEventVGRadio->isChecked()) {
             if (mCredibilityCheck->isChecked())
                 showVariableList.append(GraphViewResults::eCredibility);
             showVariableList.append(GraphViewResults::eS02);
         }
-#endif
+
 
     }
     else if (mGraphListTab->currentName() == tr("Phases")) {
@@ -3881,9 +3899,9 @@ void ResultsView::updateScales()
 
     } else if (mCurrentTypeGraph == GraphViewResults::ePostDistrib &&
                ( mMainVariable == GraphViewResults::eSigma
-#ifdef S02_BAYESIAN
+
                 || mMainVariable == GraphViewResults::eS02
-#endif
+
 
 #ifdef KOMLAN
                 || mMainVariable == GraphViewResults::eS02Vg
@@ -4135,16 +4153,14 @@ void ResultsView::createOptionsWidget()
         //eventGroupLayout->setSpacing(15);
         eventGroupLayout->addWidget(mEventThetaRadio);
         eventGroupLayout->addWidget(mDataSigmaRadio);
-#ifdef S02_BAYESIAN
+
         eventGroupLayout->addWidget(mS02Radio);
         qreal totalH =  4*h;
  #ifdef KOMLAN
         eventGroupLayout->addWidget(mS02VgRadio);
         totalH =  5*h;
  #endif
-#else
-        qreal totalH =  3*h;
-#endif
+
 
         mEventVGRadio->hide();
 
@@ -4287,9 +4303,8 @@ void ResultsView::updateEventsOptions(qreal& optionWidgetHeight, bool isPostDist
     add(mEventThetaRadio);
     add(mDataSigmaRadio);
 
-#ifdef S02_BAYESIAN
     add(mS02Radio);
-#endif
+
 
     if (isCurve()) {
         add(mEventVGRadio);
@@ -5325,9 +5340,9 @@ void ResultsView::applyStudyPeriod()
 
     } else if ( mMainVariable == GraphViewResults::eSigma ||
                 mMainVariable == GraphViewResults::eDuration ||
-#ifdef S02_BAYESIAN
+
                 mMainVariable == GraphViewResults::eS02  ||
-#endif
+
 
 #ifdef KOMLAN
                 mMainVariable == GraphViewResults::eS02Vg  ||
@@ -6442,10 +6457,10 @@ GraphViewResults::variable_t ResultsView::getMainVariable() const
 
     if (mCurrentVariableList.contains(GraphViewResults::eThetaEvent))
         return GraphViewResults::eThetaEvent;
-#ifdef S02_BAYESIAN
+
     else if (mCurrentVariableList.contains(GraphViewResults::eS02))
         return GraphViewResults::eS02;
-#endif
+
 
 #ifdef KOMLAN
     else if (mCurrentVariableList.contains(GraphViewResults::eS02Vg))

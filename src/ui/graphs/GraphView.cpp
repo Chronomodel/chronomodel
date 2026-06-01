@@ -1126,7 +1126,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
 // Implémentation de la méthode d'update
 void GraphView::autoUpdate()
 {
-    qDebug() << "[GraphView::autoUpdate] -> Retour en MODE QUALITE";
+    //qDebug() << "[GraphView::autoUpdate] -> Retour en MODE QUALITE";
     update(); // Demande une mise à jour de l'affichage
 }
 

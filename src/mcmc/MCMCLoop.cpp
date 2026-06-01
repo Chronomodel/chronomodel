@@ -45,6 +45,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "ModelUtilities.h"
 #include "StdUtilities.h"
+#include "AppSettings.h"
 
 #include <QDebug>
 #include <QTime>
@@ -126,12 +127,12 @@ QString MCMCLoop::initialize_time()
     for (std::shared_ptr<Event> &ev : allEvents) {
         ev->mInitialized = false;
 
-#ifdef S02_BAYESIAN
-        ev->mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
+        if (AppSettings::mEventModel == EventModelType::EDM2)
+            ev->mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
 
-# else
-        ev->mS02Theta.mSamplerProposal = MHVariable::eFixe;
-#endif
+        else
+            ev->mS02Theta.mSamplerProposal = MHVariable::eFixe;
+
     }
     // -------------------------- Init gamma ------------------------------
     emit stepChanged(tr("Initializing Phase Gaps..."), 0, (int)phasesConstraints.size());
@@ -296,7 +297,7 @@ QString MCMCLoop::initialize_time()
                     uEvent->mInitialized = true;
 
                     // ------- debug init
-                    qDebug() << QString("[MCMCLoop::initialize_time] Init for event : %1 : min = %2 : max = %3  ->theta = %4 thetaRed = %5-------").arg(uEvent->getQStringName(), QString::number(min, 'f', 3), QString::number(max, 'f', 3), QString::number(uEvent->mTheta.value(), 'f', 3), QString::number(uEvent->mThetaReduced, 'f', 3));
+                    qDebug() << QString("[MCMCLoop::initialize_time] Init for event : %1 : min = %2 : max = %3  -> theta = %4 thetaRed = %5 -------").arg(uEvent->getQStringName(), QString::number(min, 'f', 6), QString::number(max, 'f', 6), QString::number(uEvent->mTheta.value(), 'f', 6), QString::number(uEvent->mThetaReduced, 'f', 6));
                     // ----------------------------------------------------------------
 
 
@@ -552,7 +553,7 @@ QString MCMCLoop::initialize_time()
                 const double min = ev->getThetaMin(tminPeriod); // need alpha and beta Phase
                 const double max = ev->getThetaMax(tmaxPeriod);
 
-                qDebug() << QString("[MCMCLoop::initialize_time] Init for event theta fixed : %1 : min = %2 : max = %3  ->theta = %4 thetaRed = %5-------").arg(ev->getQStringName(), QString::number(min, 'f', 3), QString::number(max, 'f', 3), QString::number(ev->mTheta.value(), 'f', 5), QString::number(ev->mThetaReduced, 'f', 5));
+                qDebug() << QString("[MCMCLoop::initialize_time] Init for event theta fixed : %1 : min = %2 : max = %3  ->theta = %4 thetaRed = %5-------").arg(ev->getQStringName(), QString::number(min, 'f', 3), QString::number(max, 'f', 3), QString::number(ev->mTheta.value(), 'f', 5), QString::number(ev->mThetaReduced, 'f', 6));
 
                 if (ev->mTheta.value() < min || ev->mTheta.value() > max) {
                     throw QObject::tr("Error for event theta fixed : %1 : min = %2 : max = %3 but Theta = %4" ).arg(ev->getQStringName(), QString::number(min), QString::number(max), QString::number(ev->mTheta.value(), 'f', 3));
@@ -858,7 +859,7 @@ void MCMCLoop::run()
     for (auto& chain : chains())
          seeds << QString::number(chain.mSeed);
 
-    mModel->mLogInit += line(tr("List of used chain seeds (to be copied for re-use in MCMC Settings) : ") + seeds.join(";"));
+    mModel->mLogInit += "<br>" + line(tr("List of used chain seeds (to be copied for re-use in MCMC Settings) : ") + seeds.join(";"));
 
 
     // copie la liste des pointeurs, pour garder l'ordre initiale des Events;

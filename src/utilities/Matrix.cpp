@@ -1109,7 +1109,7 @@ void SparseQuadraticFormSolver::factorize(const SparseMatrixD& R)
     solver_.compute(R_center); // effectue la factorisation LDLT
 #ifdef DEBUG
     if (solver_.info() != Eigen::Success) {
-        throw std::runtime_error("[SparseQuadraticFormSolver] LDLT factorization failed");
+        throw std::runtime_error("[SparseQuadraticFormSolver::factorize] LDLT factorization failed");
     }
 
     is_factorized_ = true;
@@ -1123,7 +1123,7 @@ SparseMatrixD SparseQuadraticFormSolver::compute_Rinv_QT(const SparseMatrixD &Q)
 {
 #ifdef DEBUG
     if (!is_factorized_) {
-        throw std::runtime_error("[SparseQuadraticFormSolver] Matrix must be factorized first");
+        throw std::runtime_error("[SparseQuadraticFormSolver::compute_Rinv_QT] Matrix must be factorized first");
     }
 #endif
     SparseMatrixD QT = Q.transpose();
@@ -1163,7 +1163,7 @@ SparseMatrixD SparseQuadraticFormSolver::solve_with_padding(const SparseMatrixD&
     MatrixD solutions = solver_.solve(B_dense);
 
     if (solver_.info() != Eigen::Success) {
-        throw std::runtime_error("[SparseQuadraticFormSolver] LDLT solve failed");
+        throw std::runtime_error("[SparseQuadraticFormSolver::solve_with_padding] LDLT solve failed");
     }
 
     SparseMatrixD result(R_template_.rows(), B.cols());

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -130,8 +130,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #define STATE_MCMC_MIXING "mixing_level"
 
+
+// ----- Paramètres d’annealing -----
+#define STATE_MCMC_ANNEAL_TEMP  "anneal_temp"
+#define STATE_MCMC_ANNEAL_RECURRENCE "anneal_recurrence"
+#define STATE_MCMC_ANNEAL_DWELL "anneal_dwell"
+
 #define STATE_CURVE_PROCESS_TYPE "process_type"
-//#define STATE_CURVE_VARIABLE_TYPE "variable_type"
 
 #define STATE_CURVE_THRESHOLD "speed_threshold"
 
