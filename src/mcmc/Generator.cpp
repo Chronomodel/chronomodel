@@ -40,8 +40,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Generator.h"
 
 #include <cmath>
-#include <errno.h>
-#include <fenv.h>
 #include <ctgmath>
 
 #include <chrono>
@@ -50,7 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 // Mersenne Twister 19937 generator
 std::mt19937 Generator::sEngine (0);
-std::uniform_real_distribution<double> Generator::sDoubleDistribution (0.0, 1.0);
+std::uniform_real_distribution<double> Generator::sDoubleUniformDistribution (0.0, 1.0);
 std::normal_distribution<double> Generator::sNormalDistribution(0.0, 1.0);
 
 std::default_random_engine CharGenerator (int(std::chrono::system_clock::now().time_since_epoch().count()));
@@ -67,7 +65,8 @@ std::uint64_t Generator::xorshift64starSeed(35); /**< used with Generator::xorsh
 void Generator::initGenerator(const unsigned seed)
 {
    sEngine.seed(seed);
-   sDoubleDistribution.reset();
+   sDoubleUniformDistribution.reset();
+   sNormalDistribution.reset();
    //qDebug()<<"initGenerator seed"<<seed;
    xorshift64starSeed = seed;
 }
@@ -153,11 +152,7 @@ double Generator::xorshift64star(void) {
 
 
 
-double Generator::gammaDistribution(const double alpha, const double beta)
-{
-    std::gamma_distribution<double>  gamma(alpha, beta);
-    return gamma(sEngine);
-}
+
 
 double Generator::exponentialeDistribution(const double meanexp)
 {

@@ -145,13 +145,13 @@ public:
 
     static inline double randomUniform(const double min = 0.0 , const double max = 1.0) noexcept
     {
-        return min + sDoubleDistribution(sEngine) * (max - min);
+        return min + sDoubleUniformDistribution(Generator::sEngine) * (max - min);
     }
 
     static inline int randomUniformInt(const int min = 0, const int max = 1) noexcept
     {
         std::uniform_int_distribution<int> distribution(min, max);
-        return distribution(sEngine);
+        return distribution(Generator::sEngine);
     }
 
     //static double gaussByDoubleExp(const double mean, const double sigma, const double min, const double max) ;
@@ -169,8 +169,8 @@ public:
         // -----------------------------------------------------------------
         if ((x_max - x_min) < 0.1L) {
             while (true) {
-                x = static_cast<double>(x_min + (x_max - x_min) * randomUniform());
-                const double u = randomUniform();
+                x = static_cast<double>(x_min + (x_max - x_min) * Generator::randomUniform());
+                const double u = Generator::randomUniform();
                 // mode = point de l’intervalle le plus proche de 0
                 const double mode = (x_min > 0.0) ? static_cast<double>(x_min)
                                                   : ((x_max < 0.0) ? static_cast<double>(x_max) : 0.0);
@@ -221,7 +221,7 @@ public:
         int trials = 0;
         constexpr int LIMIT = 100000;   // garde‑fou (devrait jamais être atteint)
         while (rap < ur && trials < LIMIT) {
-            const double u = randomUniform();
+            const double u = Generator::randomUniform();
             // ---- proposition x dans [x_min , x_max] ----
             if (x_min < 0.0L && x_max > 0.0L) {          // intervalle qui coupe 0
                 if (u <= f0)
@@ -237,7 +237,7 @@ public:
                 }
             }
             // ---- tirage d’un u de comparaison ----
-            ur = randomUniform();
+            ur = Generator::randomUniform();
             // ---- facteur d’acceptation (rap) ----
             if (x_min >= 1.0L) {
                 rap = std::exp(0.5L * (x_min * x_min - x * x) + x - x_min);
@@ -335,8 +335,8 @@ public:
         // On utilise un rejet sur l'uniforme, très efficace ici.
         if ((b - a) < 0.1) {
             while (true) {
-                x = a + (b - a) * randomUniform();
-                double u = randomUniform();
+                x = a + (b - a) * Generator::randomUniform();
+                double u = Generator::randomUniform();
                 // On accepte avec la probabilité exp(-x²/2) / exp(-mode²/2)
                 // Pour être sûr, on utilise le point de l'intervalle le plus proche de 0
                 double mode = (a > 0) ? a : ((b < 0) ? b : 0.0);
@@ -347,16 +347,16 @@ public:
         }
 
         // --- CAS 2 : Queue de distribution (Robert, 1995) ---
-        if (a > 0.5) {
+        if (a > 0.6) {
             x = sampleTail(a, b);
         }
-        else if (b < -0.5) {
+        else if (b < -0.6) {
             x = -sampleTail(-b, -a);
         }
         // --- CAS 3 : Centre de la cloche (Rejet simple) ---
         else {
             do {
-                x = sNormalDistribution(sEngine);
+                x = Generator::normalDistribution();
             } while (x < a || x > b);
         }
 #ifdef DEBUG
@@ -392,7 +392,11 @@ public:
         return x;
     }
 
-    static inline double gammaDistribution(const double alpha, const double beta);
+    static inline double gammaDistribution(const double alpha, const double beta) noexcept
+    {
+        std::gamma_distribution<double>  gamma(alpha, beta);
+        return gamma(Generator::sEngine);
+    }
     static inline double exponentialeDistribution(const double meanexp);
 
     /** @brief Retourne un nombre gaussien N(mu, sigma²).
@@ -421,15 +425,14 @@ public:
         //static thread_local std::normal_distribution<double> dist01(0.0, 1.0);
         // Box‑Muller (ou autre algorithme interne) produit deux valeurs.
         // En conservant l’objet, le deuxième nombre est ré‑utilisé automatiquement.
-        return mu + sigma * sNormalDistribution(sEngine);
+        return mu + sigma * sNormalDistribution(Generator::sEngine);
     }
 
 private:
     
     static double boxMuller() ;
     static std::mt19937 sEngine;
-    static std::uniform_real_distribution<double> sDoubleDistribution;
-    //static thread_local std::normal_distribution<double> sNormalDistribution;
+    static std::uniform_real_distribution<double> sDoubleUniformDistribution;
     static std::normal_distribution<double> sNormalDistribution;
 
     //https://en.wikipedia.org/wiki/Xorshift
