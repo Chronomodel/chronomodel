@@ -45,11 +45,18 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 GraphViewAbstract::GraphViewAbstract(QWidget* parent):
     QWidget(parent),
-    mCurrentMinX(-HUGE_VAL), mCurrentMaxX(HUGE_VAL),
-    mGraphWidth(150.), mGraphHeight(50), mMarginLeft(50), mMarginRight(10),
-    mMarginTop(5), mMarginBottom(15),
-    mMinX(0.), mMaxX(10.),
-    mMinY(0.), mMaxY(10.)
+    mCurrentMinX(-HUGE_VAL),
+    mCurrentMaxX(HUGE_VAL),
+    mGraphWidth(150.0),
+    mGraphHeight(50),
+    mMarginLeft(50),
+    mMarginRight(10),
+    mMarginTop(5),
+    mMarginBottom(15),
+    mMinX(0.0),
+    mMaxX(10.0),
+    mMinY(0.0),
+    mMaxY(10.0)
 {
 
 }
@@ -97,8 +104,8 @@ void GraphViewAbstract::setRangeY(const type_data aMinY, const type_data aMaxY)
 {
     if (aMinY != mMinY || aMaxY != mMaxY) {
         if (aMinY == aMaxY) {
-            mMinY = aMinY - type_data (1.);
-            mMaxY = aMaxY + type_data (1.);
+            mMinY = aMinY - type_data (1.0);
+            mMaxY = aMaxY + type_data (1.0);
             //qDebug() << "Warning : setting min == max for graph y scale : " << aMinY;
         }
 #ifdef DEBUG
@@ -159,24 +166,24 @@ bool GraphViewAbstract::parameterChange() const
  */
 qreal GraphViewAbstract::getXForValue(const type_data value, const bool constainResult) const
 {
-    return mMarginLeft + valueForProportion(value, mCurrentMinX, mCurrentMaxX, 0., std::max(0.,  mGraphWidth - BLANK_SPACE_ON_RIGHT) , constainResult);
+    return mMarginLeft + valueForProportion(value, mCurrentMinX, mCurrentMaxX, 0.0, std::max(0.0,  mGraphWidth - BLANK_SPACE_ON_RIGHT) , constainResult);
 }
 
 type_data GraphViewAbstract::getValueForX(const qreal x, const bool constainResult) const
 {
     const qreal xFromSide (x - mMarginLeft);
-    return valueForProportion(type_data(xFromSide), 0., std::max(0.,  mGraphWidth - BLANK_SPACE_ON_RIGHT), mCurrentMinX, mCurrentMaxX, constainResult);
+    return valueForProportion(type_data(xFromSide), 0.0, std::max(0.0,  mGraphWidth - BLANK_SPACE_ON_RIGHT), mCurrentMinX, mCurrentMaxX, constainResult);
 }
 
 
 qreal GraphViewAbstract::getYForValue(const type_data aValue, const bool constainResult) const
 {
-    const type_data yFromBase = valueForProportion(aValue, mMinY, mMaxY, 0., std::max(0., type_data (mGraphHeight) - BLANK_SPACE_ON_TOP), constainResult);
+    const type_data yFromBase = valueForProportion(aValue, mMinY, mMaxY, 0.0, std::max(0.0, type_data (mGraphHeight) - BLANK_SPACE_ON_TOP), constainResult);
     return mGraphHeight + mMarginTop - qreal(yFromBase) ;
 }
 
 type_data GraphViewAbstract::getValueForY(const qreal y, const bool constainResult) const
 {
     const qreal yFromBase = mMarginTop + mGraphHeight - y;
-    return valueForProportion( type_data (yFromBase), 0., std::max(0., type_data (mGraphHeight) - BLANK_SPACE_ON_TOP), mMinY, mMaxY, constainResult);
+    return valueForProportion( type_data (yFromBase), 0.0, std::max(0.0, type_data (mGraphHeight) - BLANK_SPACE_ON_TOP), mMinY, mMaxY, constainResult);
 }

@@ -74,7 +74,9 @@ public:
     MHVariable mTi;// t i de la date
     MHVariable mSigmaTi; // sigma i de la date (par rapport au fait)
     MHVariable mWiggle;
+
     double mDelta;
+    double mXi; // utiliser par le nouveau prior EDM2
 
    // MHVariable mZi;// test reparametrisation, ,ne marche pas
 
@@ -184,34 +186,108 @@ public:
 
     void initDelta();
 
-    void updateDate(const double theta_mX, const double S02Theta_mX, const double AShrinkage);
+#pragma mark Fonctions pour v3
+    void updateDate_v3(const double theta, const double S02Theta);
+    inline void updateTi_v3(const double theta)
+    {
+        (this->*updateti) (theta);
+    }
+    void applyTi_v3(const double theta);
+    void updateDelta_v3(const double theta, const double = 0);
+    inline void applyDelta_v3(const double theta, const double )
+    {
+        updateDelta_v3(theta);
+    }
 
-    void updateTi(const double theta_mX);
+#pragma mark Fonctions pour v4
+    // fonction qui utilise mXi
 
-    void autoSetTiSampler(const bool bSet);
+    void updateDelta_v4(const double theta, const double S02Theta);
+    void applyDelta_v4(const double theta, const double S02Theta);
+    void updateTi_v4(const double theta, const double S02Theta);
+    void applyTi_v4(const double theta, const double S02Theta);
 
-    void updateDelta(const double theta_mX);
-    void updateSigmaShrinkage0(const double theta_mX, const double S02Theta_mX, const double AShrinkage);
-    void updateSigmaShrinkage(const double theta_mX, const double S02Theta_mX, const double AShrinkage);
-    void updateSigmaShrinkage_K(const double theta_mX,
-                                const double S02Theta_mX,
-                                const double AShrinkage);
+    inline void updateSigma_v4 (const double theta)
+    { // mise à jour déterministe
+        const double t_delta_theta = abs((mTi.value() + mDelta) - theta);
+        mSigmaTi.setValue( t_delta_theta / sqrt(mXi) );
+    }
+
+#pragma mark Fonction General
+
+    inline void updateTi(const double theta)
+    {
+        updateTi_v3(theta);
+    }
+
+    inline void applyTi(const double theta)
+    {
+        applyTi_v3(theta);
+    }
+
+    inline void updateDelta(const double theta, const double S02Theta = 0)
+    {
+        updateDelta_v3(theta, S02Theta);
+    }
+
+    inline void applyDelta(const double theta, const double S02Theta)
+    {
+        applyDelta_v3(theta, S02Theta);
+    }
+
+    inline void updateSigma (const double theta, const double S02Theta)
+    {
+        updateSigmaShrinkage_K(theta, S02Theta);
+    }
+    inline void applySigma (const double theta, const double S02Theta)
+    {
+        applySigmaShrinkage_K_tempering(theta, S02Theta);
+    }
+
+    inline void updateWiggle()
+    {
+        // déterministe
+        mWiggle.setValue(mTi.value() + mDelta);
+    }
+    // Alias demandé – wrapper inline, zéro coût après optimisation
+    inline void applyWiggle()
+    {
+        updateWiggle();   // le compilateur inline‑ra cet appel
+    }
+
+    inline void updateDate(const double theta, const double S02Theta)
+    {
+        updateTi(theta);
+
+        updateDelta(theta, S02Theta);
+        updateSigma(theta, S02Theta);
+
+        updateWiggle();
+    }
+
+    inline void applyDate(const double theta, const double S02Theta)
+    {
+        applyTi(theta);
+
+        applyDelta(theta, S02Theta);
+        applySigma(theta, S02Theta);
+
+        updateWiggle();
+    }
 
     void applySigmaShrinkage_K_tempering(const double theta_mX,
-                                          const double S02Theta_mX,
-                                          const double AShrinkage,
-                                          const double T = 1.0);
-
-    void updateTiSigma_block(const double theta_mX,
-                             const double S02Theta_mX,
-                             const double AShrinkage);
-    void updateTiSigma_block_theta_fixed(const double theta_j,
-                                               const double S02Theta_mX,
-                                               const double AShrinkage);
+                                         const double S02Theta_mX,
+                                         const double T = 1.0);
 
     void updateSigmaJeffreys(const double theta_mX);
 
-    inline void updateWiggle() { mWiggle.setValue(mTi.value() + mDelta);};
+
+    void autoSetTiSampler(const bool bSet);
+
+    void updateSigmaShrinkage0(const double theta_mX, const double S02Theta_mX);
+    void updateSigmaShrinkage(const double theta_mX, const double S02Theta_mX);
+    void updateSigmaShrinkage_K(const double theta_mX, const double S02Theta_mX);
+
 
     void setBandwidth(BandwidthType bwt, double bandwidth);
     void generateFormatedKDE(const std::vector<ChainSpecs> &chains, const int fftLen, const double tmin, const double tmax);
@@ -226,7 +302,7 @@ public:
     void applyInversion(const double theta_mX);
 
     void MHAdaptGauss(const double theta_mX);
-    void applyMHAdaptGauss(const double theta_mX);
+    void applyMHAdaptGauss(const double theta_mX, const double T = 1);
 
     void PriorWithArg(const double theta_mX);//fMHSymetricWithArg(Event *event);
     void MHAdaptGaussWithArg(const double theta_mX);//void fMHSymGaussAdaptWithArg(Event* theta_mX);
@@ -234,7 +310,7 @@ public:
 
     typedef void (Date::*samplingFunction)(const double theta_mX);
 
-    void applyDateProposal_v3(const double theta_mX, const double S02Theta_mX, const double AShrinkage);
+    void applyDateProposal_v3(const double theta, const double S02Theta);
     void applyTi_MH_Tempering(const double theta_mX, const double T);
 
 

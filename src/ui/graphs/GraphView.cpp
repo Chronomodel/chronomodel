@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------
-Copyright or © or Copr. CNRS	2014 - 2025
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -369,60 +369,6 @@ void GraphView::changeXScaleDivision (const double& major, const int& minor)
  *  Options
  * ------------------------------------------------------*/
 
-void GraphView::setBackgroundColor(const QColor& color)
-{
-    mBackgroundColor = color;
-}
-
-QColor GraphView::getBackgroundColor() const
-{
-    return mBackgroundColor;
-}
-
-void GraphView::addInfo(const QString& info)
-{
-    mInfos << info;
-}
-
-void GraphView::clearInfos()
-{
-    mInfos.clear();
- }
-
-void GraphView::showInfos(bool show)
-{
-    mShowInfos = show;
- }
-
-void GraphView::setNothingMessage(const QString& message)
-{
-    mNothingMessage = message;
-}
-
-void GraphView::resetNothingMessage()
-{
-    mNothingMessage = tr("Nothing to display");
- }
-
-// Just Setter no action
-void GraphView::showXAxisLine(bool show)     { mXAxisLine = show;}
-void GraphView::showXAxisArrow(bool show)    { mXAxisArrow = show;}
-void GraphView::showXAxisTicks(bool show)    { mXAxisTicks = show;}
-void GraphView::showXAxisSubTicks(bool show) { mXAxisSubTicks = show;}
-void GraphView::showXAxisValues(bool show)   { mXAxisValues = show;}
-
-void GraphView::showYAxisLine(bool show)     { mYAxisLine = show;}
-void GraphView::showYAxisArrow(bool show)    { mYAxisArrow = show;}
-void GraphView::showYAxisTicks(bool show)    { mYAxisTicks = show;}
-void GraphView::showYAxisSubTicks(bool show) { mYAxisSubTicks = show;}
-void GraphView::showYAxisValues(bool show)   { mYAxisValues = show;}
-
-
-void GraphView::setXAxisMode(AxisMode mode)
-{
-    mXAxisMode = mode;
-    mAxisToolX.mShowText = (mXAxisMode != eHidden);
-}
 
 void GraphView::setYAxisMode(AxisMode mode)
 {
@@ -464,27 +410,14 @@ void GraphView::setYAxisMode(AxisMode mode)
      }
 }
 
-/**
- * @brief If active is true, the current view automaticaly adjust Y axis on the next paint.
- */
-void GraphView::autoAdjustYScale(bool active)
-{
-    mAutoAdjustYScale = active;
-}
+
 
 void GraphView::setGraphFont(const QFont& font)
 {
     setFont(font);
     repaintGraph();
 }
-/**
- * @brief GraphView::setCurvesThickness, set mThickness without repaint
- * @param value
- */
-void GraphView::setCurvesThickness(int value)
-{
-    mThickness = value;
-}
+
 
 /**
  * @brief GraphView::updateCurvesThickness slot which modify thickness
@@ -496,10 +429,7 @@ void GraphView::updateCurvesThickness(int value)
     repaintGraph();
 }
 
-void GraphView::setCurvesOpacity(int value)
-{
-    mOpacity = value;
-}
+
 
 void GraphView::updateCurvesOpacity(int value)
 {
@@ -507,20 +437,9 @@ void GraphView::updateCurvesOpacity(int value)
     repaintGraph();
 }
 
-void GraphView::setCanControlOpacity(bool can)
-{
-    mCanControlOpacity = can;
-}
 
-void GraphView::setFormatFunctX(DateConversion f)
-{
-    mUnitFunctionX = f;
-}
 
-void GraphView::setFormatFunctY(DateConversion f)
-{
-    mUnitFunctionY = f;
-}
+
 
 /* ------------------------------------------------------
  Curves & Zones
@@ -969,14 +888,15 @@ void GraphView::paintToDevice(QPaintDevice* device)
     pen.setWidth(pen.width() * mThickness);
     painter.setPen(pen);
 
-    mAxisToolX.mShowArrow = mXAxisArrow;
-    mAxisToolX.mShowSubs = mXAxisTicks;
-    mAxisToolX.mShowSubSubs = mXAxisSubTicks;
-    mAxisToolX.mShowText = mXAxisValues;
+    if (mXAxisLine) {
+        mAxisToolX.mShowArrow = mXAxisArrow;
+        mAxisToolX.mShowSubs = mXAxisTicks;
+        mAxisToolX.mShowSubSubs = mXAxisSubTicks;
+        mAxisToolX.mShowText = mXAxisValues;
 
-    mAxisToolX.updateValues(int (mGraphWidth), int (mStepMinWidth), mCurrentMinX, mCurrentMaxX);
-    mAxisToolX.paint(painter, QRectF(mMarginLeft, mMarginTop + mGraphHeight , mGraphWidth , mMarginBottom), -1.,mUnitFunctionX);
-
+        mAxisToolX.updateValues(int (mGraphWidth), int (mStepMinWidth), mCurrentMinX, mCurrentMaxX);
+        mAxisToolX.paint(painter, QRectF(mMarginLeft, mMarginTop + mGraphHeight , mGraphWidth , mMarginBottom), -1.,mUnitFunctionX);
+    }
     /* ----------------------------------------------------
      *  Vertical axis
      * ----------------------------------------------------*/
@@ -1332,359 +1252,348 @@ QPainterPath GraphView::makePath (const QMap<double, double>& map, const bool sh
 
 void GraphView::drawCurves(QPainter& painter)
 {
-    if ((mGraphWidth<=0) || (mGraphHeight<=0))
+    if ((mGraphWidth <= 0) || (mGraphHeight <= 0))
         return;
 
     painter.save();
     // Draw curves inside axis only (not in margins!)
     //painter.setClipRect(int (mMarginLeft), int (mMarginTop), int(mGraphWidth), int (mGraphHeight));
+    { // RAII guard, garantie de passer par painter.restore()
+        for (const GraphCurve& curve : std::as_const(mCurves)) {
+            if (curve.mVisible) {
+                QPainterPath path;
 
-    for (const GraphCurve& curve : std::as_const(mCurves)) {
-        if (curve.mVisible) {
-            QPainterPath path;
+                QPen pen = curve.mPen;
+                pen.setWidth(pen.width() * mThickness);
+                painter.setPen(pen);
 
-            QPen pen = curve.mPen;
-            pen.setWidth(pen.width() * mThickness);
-            painter.setPen(pen);
+                QBrush brush = curve.mBrush;
 
-            QBrush brush = curve.mBrush;
-
-            if (mCanControlOpacity) {
-                QColor c = brush.color();
-                c.setAlpha(curve.mBrush.color().alpha()*mOpacity / 100);
-                brush.setColor(c);
-            }
-
-            painter.setBrush(brush);
-
-            if (curve.isHorizontalLine()) {
-                const qreal y = getYForValue(curve.mHorizontalValue);
-                path.moveTo(mMarginLeft, y);
-                path.lineTo(mMarginLeft + mGraphWidth, y);
-
-                painter.strokePath(path, pen);
-
-            } else if (curve.isVerticalLine()) {
-                const qreal x = getXForValue(curve.mVerticalValue, false);
-                path.moveTo(x, mMarginTop + mGraphHeight);
-                path.lineTo(x, mMarginTop);
-
-                painter.strokePath(path, pen);
-
-            } else if (curve.isHorizontalSections()) { // used for Bound and Unif-Typo
-                const qreal y1 = getYForValue(mMaxY);
-                const qreal y0 = getYForValue(mMinY);
-                path.moveTo(mMarginLeft, y0);
-
-                for (auto& section : curve.mSections ) {
-                    const qreal x1 = getXForValue(section.first, false);
-                    const qreal x2 = getXForValue(section.second, false);
-
-                    path.lineTo(x1, y0);
-                    path.lineTo(x1, y1);
-                    path.lineTo(x2, y1);
-                    path.lineTo(x2, y0);
-                }
-                path.lineTo(mMarginLeft + mGraphWidth, y0);
-
-                painter.setClipRect(mMarginLeft, mMarginTop, mGraphWidth, mGraphHeight);
-                painter.fillPath(path, brush);
-                painter.strokePath(path, pen);
-
-            } else if (curve.isTopLineSections()) { // Used for credibility, phase time range
-                const qreal y1 =  mMarginTop - curve.mPen.width();
-
-                for (auto& section : curve.mSections ) {
-                    const type_data s1 = section.first;
-                    const type_data s2 = section.second;
-
-                    if (s1<mCurrentMaxX && s2>mCurrentMinX) {
-                        const qreal x1 = getXForValue(s1, true);
-                        const qreal x2 = getXForValue(s2, true);
-
-                        painter.drawLine(QPointF(x1, y1),QPointF(x2, y1));
-                    }
+                if (mCanControlOpacity) {
+                    QColor c = brush.color();
+                    c.setAlpha(curve.mBrush.color().alpha()*mOpacity / 100);
+                    brush.setColor(c);
                 }
 
-            } else if (curve.isVertical()) {
-                path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
+                painter.setBrush(brush);
 
-                int index (0);
-                qreal last_y (0.);
+                if (curve.isHorizontalLine()) {
+                    const qreal y = getYForValue(curve.mHorizontalValue);
+                    path.moveTo(mMarginLeft, y);
+                    path.lineTo(mMarginLeft + mGraphWidth, y);
 
-                QMap<type_data, type_data>::const_iterator iter = curve.mData.cbegin();
+                    painter.strokePath(path, pen);
 
-                while (iter != curve.mData.cend()) {
-                    type_data valueX = iter.value();
-                    type_data valueY = iter.key();
+                } else if (curve.isVerticalLine()) {
+                    const qreal x = getXForValue(curve.mVerticalValue, false);
+                    path.moveTo(x, mMarginTop + mGraphHeight);
+                    path.lineTo(x, mMarginTop);
 
-                    // vertical curves must be normalized (values from 0 to 1)
-                    // They are drawn using a 100px width
-                    qreal x = mMarginLeft + valueX * 100.;
-                    qreal y = getYForValue(valueY, false);
+                    painter.strokePath(path, pen);
 
-                    y = std::clamp(y, mMarginTop, mMarginTop + mGraphHeight);
+                } else if (curve.isHorizontalSections()) { // used for Bound and Unif-Typo
 
-                    if (index == 0) {
-                        path.lineTo(x, y);
+                    const qreal y1 = getYForValue(mMaxY);
+                    const qreal y0 = getYForValue(mMinY);
+                    path.moveTo(mMarginLeft, y0);
 
-                    } else {
-                        if (curve.isHisto())
-                            path.lineTo(x, last_y);
-                        path.lineTo(x, y);
+                    for (auto& section : curve.mSections ) {
+                        const qreal x1 = getXForValue(section.first, false);
+                        const qreal x2 = getXForValue(section.second, false);
+
+                        path.lineTo(x1, y0);
+                        path.lineTo(x1, y1);
+                        path.lineTo(x2, y1);
+                        path.lineTo(x2, y0);
                     }
-                    last_y = y;
-                    ++index;
-                    ++iter;
-                }
-                path.lineTo(mMarginLeft, mMarginTop);
-                painter.drawPath(path);
+                    path.lineTo(mMarginLeft + mGraphWidth, y0);
 
-            } else if (curve.isCurveMap()) {
-                /* -------------------------- Map ---------------------------*/
-                drawMap(curve, painter);
+                    painter.setClipRect(mMarginLeft, mMarginTop, mGraphWidth, mGraphHeight);
+                    painter.fillPath(path, brush);
+                    painter.strokePath(path, pen);
 
 
-            } else if (curve.isShape()) {
+                } else if (curve.isTopLineSections()) { // Used for credibility, phase time range
+                    const qreal y1 =  mMarginTop - curve.mPen.width();
 
-                drawShape(curve, painter);
+                    for (auto& section : curve.mSections ) {
+                        const type_data s1 = section.first;
+                        const type_data s2 = section.second;
 
+                        if (s1<mCurrentMaxX && s2>mCurrentMinX) {
+                            const qreal x1 = getXForValue(s1, true);
+                            const qreal x2 = getXForValue(s2, true);
 
-            } else if (curve.isFunction()) {
-
-                path = makePath(curve.mData, false);
-                painter.drawPath(path);
-
-            } else if (curve.isDensityCurve()) {
-
-                 drawDensity(curve, painter);
-
-            } else { // it's horizontal curve
-
-                path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
-
-                qreal last_y = 0.;
-
-                if (curve.isVectorData()) {
-                    // Down sample vector
-                    if (curve.mDataVector.empty())
-                        return;
-
-                    std::vector<type_data> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
-
-                    //auto [lightData, indices] = downsampleLTTBWithIndices(subData, mGraphWidth*3);
-
-
-
-                    // répartition uniforme
-                    const auto n = mGraphWidth;
-                    const auto m = subData.size();
-                    std::vector<type_data> lightData;
-                    if (m > n ) {
-                        for (size_t i = 0; i < n; ++i) {
-                            size_t idx = i * (m - 1) / (n - 1);
-                            lightData.push_back(subData[idx]);
-                        }
-                    } else {
-                        lightData = subData;
-                    }
-
-                     const type_data dataStep = type_data(subData.size()) / type_data(n);
-                    /*std::vector<type_data> lightData;
-                    const type_data dataStep = type_data(subData.size()) / type_data(mGraphWidth);
-                    if (dataStep > 1) {
-                        for (int i = 0; i < mGraphWidth; ++i) {
-                            const int idx = int (floor(i * dataStep));
-                            lightData.push_back(subData.at(idx));
-                        }
-
-                    } else
-                        lightData = subData;
-
-                    bool isFirst = true;
-
-                    for (size_t i = 0; i<lightData.size(); ++i) {
-*/
-                   // qDebug() <<" indices.size" <<indices.size() << "ligthdata.size" <<lightData.size();
-                    bool isFirst = true;
-
-                    for (size_t i = 0; i<lightData.size(); ++i) {
-                        // Use "dataStep" only if lightData is different of subData !
-                        const type_data valueX = mCurrentMinX + ((dataStep > 1) ? i * dataStep : (type_data)i);
-                        const type_data valueY = lightData.at(i);
-
-                        if (valueX >= mCurrentMinX && valueX <= mCurrentMaxX && mMinY<= valueY && valueY <= mMaxY) {
-                            qreal x = getXForValue(valueX, false);
-                            qreal y = getYForValue(valueY, false);
-
-                             if (isFirst) {
-                                path.moveTo(x, y);
-                                isFirst=false;
-
-                            } else {
-                                if (curve.isHisto())
-                                    path.lineTo(x, last_y);
-                                path.lineTo(x, y);
-                            }
-                            //last_x = x;
-                            last_y = y;
-
+                            painter.drawLine(QPointF(x1, y1),QPointF(x2, y1));
                         }
                     }
+
+                } else if (curve.isVertical()) {
+                    path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
+
+                    int index (0);
+                    qreal last_y (0.);
+
+                    QMap<type_data, type_data>::const_iterator iter = curve.mData.cbegin();
+
+                    while (iter != curve.mData.cend()) {
+                        type_data valueX = iter.value();
+                        type_data valueY = iter.key();
+
+                        // vertical curves must be normalized (values from 0 to 1)
+                        // They are drawn using a 100px width
+                        qreal x = mMarginLeft + valueX * 100.;
+                        qreal y = getYForValue(valueY, false);
+
+                        y = std::clamp(y, mMarginTop, mMarginTop + mGraphHeight);
+
+                        if (index == 0) {
+                            path.lineTo(x, y);
+
+                        } else {
+                            if (curve.isHisto())
+                                path.lineTo(x, last_y);
+                            path.lineTo(x, y);
+                        }
+                        last_y = y;
+                        ++index;
+                        ++iter;
+                    }
+                    path.lineTo(mMarginLeft, mMarginTop);
                     painter.drawPath(path);
 
+                } else if (curve.isCurveMap()) {
+                    /* -------------------------- Map ---------------------------*/
+                    drawMap(curve, painter);
+
+
+                } else if (curve.isShape()) {
+
+                    drawShape(curve, painter);
+
+
+                } else if (curve.isFunction()) {
+
+                    path = makePath(curve.mData, false);
+                    painter.drawPath(path);
+
+                } else if (curve.isDensityCurve()) {
+
+                    drawDensity(curve, painter);
+
+                } else { // it's horizontal curve
+
+                    path.moveTo(mMarginLeft, mMarginTop + mGraphHeight);
+
+                    qreal last_y = 0.;
+
+                    if (curve.isVectorData()) {
+                        // Down sample vector
+                        if (curve.mDataVector.empty()) continue;
+                        // return;
+
+                        std::vector<type_data> subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, mMinX, mMaxX);
+
+                        // répartition uniforme
+                        const auto n = mGraphWidth;
+                        const auto m = subData.size();
+                        std::vector<type_data> lightData;
+                        if (m > n ) {
+                            for (size_t i = 0; i < n; ++i) {
+                                size_t idx = i * (m - 1) / (n - 1);
+                                lightData.push_back(subData[idx]);
+                            }
+                        } else {
+                            lightData = subData;
+                        }
+
+                        // const type_data dataStep = type_data(subData.size()) / type_data(n);
+
+                        // qDebug() <<" indices.size" <<indices.size() << "ligthdata.size" <<lightData.size();
+                        bool isFirst = true;
+
+                        const type_data xStep = (mCurrentMaxX - mCurrentMinX) / type_data(lightData.size() - 1);
+
+
+                        for (size_t i = 0; i<lightData.size(); ++i) {
+                            // Use "dataStep" only if lightData is different of subData !
+                            //const type_data valueX = mCurrentMinX + ((dataStep > 1) ? i * dataStep : (type_data)i);
+                            const type_data valueX = mCurrentMinX + i * xStep;
+                            const type_data valueY = lightData.at(i);
+
+                            if (valueX >= mCurrentMinX && valueX <= mCurrentMaxX && mMinY<= valueY && valueY <= mMaxY) {
+                                qreal x = getXForValue(valueX, false);
+                                qreal y = getYForValue(valueY, false);
+
+                                if (isFirst) {
+                                    path.moveTo(x, y);
+                                    isFirst=false;
+
+                                } else {
+                                    if (curve.isHisto())
+                                        path.lineTo(x, last_y);
+                                    path.lineTo(x, y);
+                                }
+
+                                last_y = y;
+
+                            }
+                        }
+                        painter.drawPath(path);
+
+                    }
                 }
             }
         }
-    }
 
-    for (const auto& refPoint : refPoints) {
-        if (refPoint.isVisible()) {
-            QPen pen = refPoint.pen;
-            pen.setWidth(pen.width() * mThickness);
-            painter.setPen(pen);
+        for (const auto& refPoint : refPoints) {
+            if (refPoint.isVisible()) {
+                QPen pen = refPoint.pen;
+                pen.setWidth(pen.width() * mThickness);
+                painter.setPen(pen);
 
-            type_data xmin = refPoint.Xmin;
-            type_data xmax = refPoint.Xmax;
-            type_data ymin = refPoint.Ymin;
-            type_data ymax = refPoint.Ymax;
-            if (xmax >= mCurrentMinX && xmin <= mCurrentMaxX && ymax >= mMinY && ymin <= mMaxY) {
-                const type_data xmoy = (xmax + xmin) / 2.0;
-                const type_data ymoy = (ymax + ymin) / 2.0;
+                type_data xmin = refPoint.Xmin;
+                type_data xmax = refPoint.Xmax;
+                type_data ymin = refPoint.Ymin;
+                type_data ymax = refPoint.Ymax;
+                if (xmax >= mCurrentMinX && xmin <= mCurrentMaxX && ymax >= mMinY && ymin <= mMaxY) {
+                    const type_data xmoy = (xmax + xmin) / 2.0;
+                    const type_data ymoy = (ymax + ymin) / 2.0;
 
-                QPen refPointsPen = pen;
-                refPointsPen.setColor(refPoint.color);
-                refPointsPen.setBrush(refPoint.color);
-                refPointsPen.setWidthF(pen.widthF());
-                QPainterPath pathPoint;
-                // ----
-                const qreal penWidth = std::max(2.0, pen.widthF());
-
-                const qreal yPlot = getYForValue(ymoy, true);
-                const qreal xPlot = getXForValue(xmoy);
-
-                qreal xMinPlot = getXForValue(xmin);
-                qreal xMaxPlot = getXForValue(xmax);
-                if (xMaxPlot - xMinPlot < 2*penWidth) {
-                    const qreal xMean = (xMaxPlot+xMinPlot) / 2.0;
-                    xMinPlot = xMean - penWidth;
-                    xMaxPlot = xMean + penWidth;
-                }
-
-                const qreal rayPlot = 1.5*penWidth;
-
-                QColor bg (getBackgroundColor());
-                bg.setAlpha(100);
-                const QRectF border_h (xMinPlot - 1.0, yPlot - (penWidth + 1.0) / 2.0, xMaxPlot - xMinPlot + 1.0, penWidth + 1.0 );
-                const QRectF border_v (xPlot -(penWidth + 1.0) / 2.0, getYForValue(ymin, true) - (1+penWidth)/2., penWidth + 1.0, (getYForValue(ymax, true) - getYForValue(ymin, true)) + penWidth + 2.0 );
-
-                switch (refPoint.type) {
-                case CurveRefPts::eCross:
-                    refPointsPen.setWidthF(penWidth);
-
-                    painter.setBrush(refPointsPen.brush());
-                    painter.setPen(QPen(bg, 1));
-                    painter.drawRect(border_v);
-                    painter.drawRect(border_h);
-
-                    painter.setPen(refPointsPen);
-                    painter.drawEllipse(QRectF( xPlot - penWidth, yPlot - penWidth,  penWidth*2., penWidth*2.));
-                    break;
-
-                case CurveRefPts::eLine:
-                    refPointsPen.setWidthF(penWidth);
-
-                    // Draw a line with a border color background
-                    painter.setBrush(refPointsPen.brush());
-
-                    painter.setPen(QPen(bg, 1));
-                    painter.drawRect(border_h);
-
-                    break;
-
-                case CurveRefPts::eDotLine:
-                    pathPoint.moveTo( xMinPlot, yPlot );
-                    pathPoint.lineTo( xMaxPlot, yPlot );
-
-                    refPointsPen.setWidthF(penWidth);
-                    refPointsPen.setStyle(Qt::DotLine);
-                    painter.setBrush(refPointsPen.brush());
-                    painter.setPen(refPointsPen);
-                    painter.strokePath(pathPoint, refPointsPen);
-                    break;
-
-                case CurveRefPts::eDotLineCross:
-                    painter.drawEllipse(QRectF( xPlot - penWidth, yPlot - penWidth,  penWidth*2., penWidth*2.));
-
-                    pathPoint.moveTo( xMinPlot, yPlot);
-                    pathPoint.lineTo( xMaxPlot, yPlot);
-
-                    refPointsPen.setWidthF(penWidth - 1.);
-                    refPointsPen.setStyle(Qt::CustomDashLine);
-                    refPointsPen.setDashPattern(QList<qreal>{1, 5});
-
-                    painter.setBrush(refPointsPen.brush());
-                    painter.setPen(refPointsPen);
-                    painter.strokePath(pathPoint, refPointsPen);
-
-                    refPointsPen.setStyle(Qt::SolidLine);
-                    refPointsPen.setWidthF(penWidth);
-
-                    painter.setPen(QPen(bg, 1));
-                    painter.drawRect(border_v);
-
-                    break;
-
-                case CurveRefPts::eCustomDashLineCross:
-                    pathPoint.moveTo( xMinPlot, yPlot);
-                    pathPoint.lineTo( xMaxPlot, yPlot);
-
+                    QPen refPointsPen = pen;
+                    refPointsPen.setColor(refPoint.color);
+                    refPointsPen.setBrush(refPoint.color);
                     refPointsPen.setWidthF(pen.widthF());
-                    refPointsPen.setStyle(Qt::CustomDashLine);
-                    refPointsPen.setDashPattern(QList<qreal>{5, 5});
+                    QPainterPath pathPoint;
+                    // ----
+                    const qreal penWidth = std::max(2.0, pen.widthF());
 
-                    painter.setBrush(refPointsPen.brush());
-                    painter.setPen(refPointsPen);
-                    painter.strokePath(pathPoint, refPointsPen);
+                    const qreal yPlot = getYForValue(ymoy, true);
+                    const qreal xPlot = getXForValue(xmoy);
 
-                    pathPoint.clear();
-                    refPointsPen.setStyle(Qt::SolidLine);
-                    pathPoint.moveTo( xPlot, getYForValue(ymin, true));
-                    pathPoint.lineTo( xPlot, getYForValue(ymax, true));
-                    painter.strokePath(pathPoint, refPointsPen);
-                    break;
+                    qreal xMinPlot = getXForValue(xmin);
+                    qreal xMaxPlot = getXForValue(xmax);
+                    if (xMaxPlot - xMinPlot < 2*penWidth) {
+                        const qreal xMean = (xMaxPlot+xMinPlot) / 2.0;
+                        xMinPlot = xMean - penWidth;
+                        xMaxPlot = xMean + penWidth;
+                    }
 
-                case CurveRefPts::eRoundLine:
-                    pathPoint.addEllipse(xPlot - rayPlot, yPlot - rayPlot, rayPlot*2., rayPlot*2.);
+                    const qreal rayPlot = 1.5*penWidth;
 
-                    pathPoint.moveTo( xPlot, getYForValue(ymin, true));
-                    pathPoint.lineTo( xPlot, getYForValue(ymax, true));
+                    QColor bg (getBackgroundColor());
+                    bg.setAlpha(100);
+                    const QRectF border_h (xMinPlot - 1.0, yPlot - (penWidth + 1.0) / 2.0, xMaxPlot - xMinPlot + 1.0, penWidth + 1.0 );
+                    const QRectF border_v (xPlot -(penWidth + 1.0) / 2.0, getYForValue(ymin, true) - (1+penWidth)/2., penWidth + 1.0, (getYForValue(ymax, true) - getYForValue(ymin, true)) + penWidth + 2.0 );
 
-                    refPointsPen.setWidthF( pen.widthF()); // not penWidth
-                    refPointsPen.setStyle(Qt::SolidLine);
-                    painter.setBrush(Qt::NoBrush);
-                    painter.setPen(refPointsPen);
-                    painter.strokePath(pathPoint, refPointsPen);
-                    break;
+                    switch (refPoint.type) {
+                    case CurveRefPts::eCross:
+                        refPointsPen.setWidthF(penWidth);
 
-                case CurveRefPts::ePoint:
-                    pathPoint.addEllipse(xPlot - rayPlot, yPlot - rayPlot, rayPlot*2., rayPlot*2.);
+                        painter.setBrush(refPointsPen.brush());
+                        painter.setPen(QPen(bg, 1));
+                        painter.drawRect(border_v);
+                        painter.drawRect(border_h);
 
-                    refPointsPen.setWidthF( penWidth);
-                    refPointsPen.setStyle(Qt::SolidLine);
-                    painter.setBrush(refPointsPen.brush());
-                    painter.setPen(refPointsPen);
-                    painter.strokePath(pathPoint, refPointsPen);
-                    break;
+                        painter.setPen(refPointsPen);
+                        painter.drawEllipse(QRectF( xPlot - penWidth, yPlot - penWidth,  penWidth*2., penWidth*2.));
+                        break;
 
-                default:
-                    break;
+                    case CurveRefPts::eLine:
+                        refPointsPen.setWidthF(penWidth);
+
+                        // Draw a line with a border color background
+                        painter.setBrush(refPointsPen.brush());
+
+                        painter.setPen(QPen(bg, 1));
+                        painter.drawRect(border_h);
+
+                        break;
+
+                    case CurveRefPts::eDotLine:
+                        pathPoint.moveTo( xMinPlot, yPlot );
+                        pathPoint.lineTo( xMaxPlot, yPlot );
+
+                        refPointsPen.setWidthF(penWidth);
+                        refPointsPen.setStyle(Qt::DotLine);
+                        painter.setBrush(refPointsPen.brush());
+                        painter.setPen(refPointsPen);
+                        painter.strokePath(pathPoint, refPointsPen);
+                        break;
+
+                    case CurveRefPts::eDotLineCross:
+                        painter.drawEllipse(QRectF( xPlot - penWidth, yPlot - penWidth,  penWidth*2., penWidth*2.));
+
+                        pathPoint.moveTo( xMinPlot, yPlot);
+                        pathPoint.lineTo( xMaxPlot, yPlot);
+
+                        refPointsPen.setWidthF(penWidth - 1.);
+                        refPointsPen.setStyle(Qt::CustomDashLine);
+                        refPointsPen.setDashPattern(QList<qreal>{1, 5});
+
+                        painter.setBrush(refPointsPen.brush());
+                        painter.setPen(refPointsPen);
+                        painter.strokePath(pathPoint, refPointsPen);
+
+                        refPointsPen.setStyle(Qt::SolidLine);
+                        refPointsPen.setWidthF(penWidth);
+
+                        painter.setPen(QPen(bg, 1));
+                        painter.drawRect(border_v);
+
+                        break;
+
+                    case CurveRefPts::eCustomDashLineCross:
+                        pathPoint.moveTo( xMinPlot, yPlot);
+                        pathPoint.lineTo( xMaxPlot, yPlot);
+
+                        refPointsPen.setWidthF(pen.widthF());
+                        refPointsPen.setStyle(Qt::CustomDashLine);
+                        refPointsPen.setDashPattern(QList<qreal>{5, 5});
+
+                        painter.setBrush(refPointsPen.brush());
+                        painter.setPen(refPointsPen);
+                        painter.strokePath(pathPoint, refPointsPen);
+
+                        pathPoint.clear();
+                        refPointsPen.setStyle(Qt::SolidLine);
+                        pathPoint.moveTo( xPlot, getYForValue(ymin, true));
+                        pathPoint.lineTo( xPlot, getYForValue(ymax, true));
+                        painter.strokePath(pathPoint, refPointsPen);
+                        break;
+
+                    case CurveRefPts::eRoundLine:
+                        pathPoint.addEllipse(xPlot - rayPlot, yPlot - rayPlot, rayPlot*2., rayPlot*2.);
+
+                        pathPoint.moveTo( xPlot, getYForValue(ymin, true));
+                        pathPoint.lineTo( xPlot, getYForValue(ymax, true));
+
+                        refPointsPen.setWidthF( pen.widthF()); // not penWidth
+                        refPointsPen.setStyle(Qt::SolidLine);
+                        painter.setBrush(Qt::NoBrush);
+                        painter.setPen(refPointsPen);
+                        painter.strokePath(pathPoint, refPointsPen);
+                        break;
+
+                    case CurveRefPts::ePoint:
+                        pathPoint.addEllipse(xPlot - rayPlot, yPlot - rayPlot, rayPlot*2., rayPlot*2.);
+
+                        refPointsPen.setWidthF( penWidth);
+                        refPointsPen.setStyle(Qt::SolidLine);
+                        painter.setBrush(refPointsPen.brush());
+                        painter.setPen(refPointsPen);
+                        painter.strokePath(pathPoint, refPointsPen);
+                        break;
+
+                    default:
+                        break;
+                    }
+
                 }
 
             }
 
         }
-
     }
     painter.restore();
 
@@ -1714,15 +1623,10 @@ std::vector<double> smooth_histogram(const std::vector<double>& histo, int demi)
 // Fonction pour assombrir/éclaircir une couleur
 QColor adjustColor(const QColor& base, double factor) {
     factor = std::clamp(factor, 0.0, 1.0);
-    /* return QColor(
-        static_cast<int>(base.red()   * factor + 255 * (1 - factor)),
-        static_cast<int>(base.green() * factor + 255 * (1 - factor)),
-        static_cast<int>(base.blue()  * factor + 255 * (1 - factor))
-        ); */
 
-    int r = std::clamp(293.92 * pow(factor,3) - 476.17 * pow(factor,2) + 318.25 * factor + base.red(), 0.0, 247.0);
-    int g = std::clamp(-83.48 * pow(factor,3) + 138.88 * pow(factor,2) + 14.75 * factor + base.green(), 0.0, 247.0);
-    int b = std::clamp(-1.26 * pow(factor,3) + 3.31 * pow(factor,2) - 11.22 * factor + base.blue(), 0.0, 247.0);
+    const int r = std::clamp(293.92 * pow(factor,3) - 476.17 * pow(factor,2) + 318.25 * factor + base.red(), 0.0, 247.0);
+    const int g = std::clamp(-83.48 * pow(factor,3) + 138.88 * pow(factor,2) + 14.75 * factor + base.green(), 0.0, 247.0);
+    const int b = std::clamp(-1.26 * pow(factor,3) + 3.31 * pow(factor,2) - 11.22 * factor + base.blue(), 0.0, 247.0);
     return QColor(r, g, b);
 
 }

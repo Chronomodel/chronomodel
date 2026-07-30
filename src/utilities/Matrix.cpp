@@ -1106,9 +1106,9 @@ void SparseQuadraticFormSolver::factorize(const SparseMatrixD& R)
     const auto n_center = R.rows() - 2 * shift_;
     SparseMatrixD R_center = R.block(shift_, shift_, n_center, n_center);
 
-    solver_.compute(R_center); // effectue la factorisation LDLT
+    solver_->compute(R_center); // effectue la factorisation LDLT
 #ifdef DEBUG
-    if (solver_.info() != Eigen::Success) {
+    if (solver_->info() != Eigen::Success) {
         throw std::runtime_error("[SparseQuadraticFormSolver::factorize] LDLT factorization failed");
     }
 
@@ -1160,9 +1160,9 @@ SparseMatrixD SparseQuadraticFormSolver::solve_with_padding(const SparseMatrixD&
     SparseMatrixD B_relevant = B.block(shift_, 0, n_center, B.cols());
 
     MatrixD B_dense = MatrixD(B_relevant);
-    MatrixD solutions = solver_.solve(B_dense);
+    MatrixD solutions = solver_->solve(B_dense);
 
-    if (solver_.info() != Eigen::Success) {
+    if (solver_->info() != Eigen::Success) {
         throw std::runtime_error("[SparseQuadraticFormSolver::solve_with_padding] LDLT solve failed");
     }
 

@@ -572,9 +572,9 @@
     </message>
 </context>
 <context>
-    <name>EventKnownItem</name>
+    <name>BoundItem</name>
     <message>
-        <location filename="../src/ui/panel_model/scenes/EventKnownItem.cpp" line="213"/>
+        <location filename="../src/ui/panel_model/scenes/BoundItem.cpp" line="213"/>
         <source>Invalid bound</source>
         <translation>Borne incorrecte</translation>
     </message>

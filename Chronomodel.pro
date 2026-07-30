@@ -185,11 +185,14 @@ CONFIG(release, debug|release) {
 
         # This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
         #QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14 # OS X 10.9 	Mavericks oct 2013  # essai sinon 10.14
-        # cible au minimum macOS 12 (Monterey).
-        QMAKE_MACOSX_DEPLOYMENT_TARGET = 12.0 # Since 2022-10-11 work with fftw 3.3.2
         # 11.0 = plus compatible (Intel Big Sur 2020 inclus).
 
-         QMAKE_APPLE_DEVICE_ARCHS = x86_64 #arm64
+        # cible au minimum macOS 12 (Monterey).
+        # QMAKE_MACOSX_DEPLOYMENT_TARGET = 12.0 # Since 2022-10-11 work with fftw 3.3.2
+
+        QMAKE_MACOSX_DEPLOYMENT_TARGET = 14.0 # Since 2026-06-22
+
+        QMAKE_APPLE_DEVICE_ARCHS = x86_64 #arm64
 
         QMAKE_CXXFLAGS += -arch x86_64 #-arch arm64
         QMAKE_CFLAGS   += -arch x86_64 #-arch arm64
@@ -374,12 +377,14 @@ macx{
 	# The generated XCode project will locate FFTW files in the project directory and statically link against it.
 
 	# this is to include fftw.h in the code :
-        INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.2.2_uni/mac # for universel architecture i386, x86_64 and arm64
-        LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.2.2_uni/mac" -lfftw3
 
-        
-	# Link the application with FFTW library
-	# If no dylib are present, static libs (.a) are used => that's why we moved .dylib files in a "dylib" folder.
+        # FFTW 3.3.11 - universal (x86_64 + arm64)
+        INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.3.11_uni/mac/include
+        # LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.3.11_uni/mac" -lfftw3_universal
+
+        LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.3.11_uni/mac" \
+                -lfftw3_threads_universal \
+                -lfftw3_universal
 
 
         #LIBS += -L"$$_PRO_FILE_PWD_/lib/FFTW/mac" -lfftw3

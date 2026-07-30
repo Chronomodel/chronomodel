@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2023
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -88,7 +88,7 @@ public:
     void setMajorScale( const double major) { mMajorScale= major;} //Mark
     void setMinorScaleCount(const int minorCount) { mMinorScaleCount = minorCount;}
     void setScaleDivision (const double major, const int minorCount);
-    void setScaleDivision (const Scale & sc);
+    void setScaleDivision (const Scale& sc);
 
 public:
     bool mIsHorizontal;

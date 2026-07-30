@@ -3,8 +3,8 @@
 
 #define VERSION_MAJOR 3
 #define VERSION_MINOR 3
-#define VERSION_PATCH 8
-#define VERSION_STRING "3.3.8"
+#define VERSION_PATCH 9
+#define VERSION_STRING "3.3.9"
 
 #endif // VERSION_H
 

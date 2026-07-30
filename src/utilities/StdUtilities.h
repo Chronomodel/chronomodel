@@ -1782,6 +1782,156 @@ inline double schedule_power(double sigma, double T,
     return sigma * std::pow(ratio, p);          // sigma_T = sigma * (T/T_max)^p
 }
 
+#pragma mark  Cache thread‑local
+/**
+ * @file    FFTWThreadCache.hpp
+ * @brief   Cache de plans FFTW thread‑local.
+ *
+ * Cette classe fournit un accès simple à des plans FFTW (type *r2c*) qui sont
+ * créés une seule fois **par thread** et détruits automatiquement à la fin du
+ * thread grâce au destructeur du cache interne.
+ *
+ * L’utilisation typique consiste à appeler `FFTWThreadCache::forward(M)` chaque
+ * fois que l’on a besoin d’un plan de taille `M`.  Le premier appel dans le
+ * thread crée le plan (avec `FFTW_MEASURE`), les appels suivants réutilisent le
+ * même objet, ce qui évite le coût élevé de création/destruction répété.
+ *
+ * @author  Votre Nom <votre.email@exemple.com>
+ * @date    2026‑06‑16
+ * @version 1.0
+ *
+ * @note    FFTW doit être compilé avec le support multithread
+ *          (`--enable-threads` ou `--enable-openmp`).  L’initialisation globale
+ *          de FFTW ( `fftw_init_threads()` + `fftw_plan_with_nthreads(...)` )
+ *          doit être effectuée **avant** le premier appel à cette classe.
+ *
+ * @see     fftw_plan_dft_r2c_1d()
+ * @see     fftw_destroy_plan()
+ * @see     fftw_init_threads()
+ * @see     fftw_plan_with_nthreads()
+ */
+class FFTWThreadCache
+{
+public:
+    /**
+     * @brief   Retourne un plan FFTW « forward » (real‑to‑complex) de taille @p M.
+     *
+     * Le plan est stocké dans un cache **thread‑local**.  La première fois que
+     * la fonction est appelée dans un thread donné, le plan est créé avec
+     * `FFTW_MEASURE`.  Les appels suivants renvoient le même objet, sans frais
+     * supplémentaire.
+     *
+     * @param[in] M  Taille de la transformée (nombre de points dans le domaine
+     *               temporel).  La valeur doit être strictement positive.
+     *
+     * @return  Un handle `fftw_plan` valide que l’on peut passer à
+     *          `fftw_execute_dft_r2c()` ou à d’autres fonctions d’exécution.
+     *
+     * @throw std::runtime_error  Si la création du plan échoue (par ex.
+     *                             allocation insuffisante ou erreur interne de
+     *                             FFTW).
+     *
+     * @note    Le plan est détruit automatiquement lorsque le thread se termine
+     *          grâce au destructeur de `PlanCache`.  Il n’est **pas** nécessaire
+     *          d’appeler `fftw_destroy_plan()` manuellement.
+     *
+     * @since   1.0
+     */
+    static fftw_plan forward(int M)
+    {
+        thread_local PlanCache cache;   ///< cache propre à chaque thread
+        return cache.get(M);
+    }
+
+private:
+    // Appelé une seule fois dans main() avant fftw_cleanup_threads()
+    static std::mutex& planMutex() {
+        static std::mutex m;  // ← static à durée de vie garantie (Meyers singleton)
+        return m;
+    }
+    /**
+     * @brief   Structure interne qui stocke les plans FFTW d’un thread.
+     *
+     * Chaque instance de `PlanCache` possède une map `std::unordered_map<int,
+     * fftw_plan>` où la clé est la taille du tableau (`M`) et la valeur le plan
+     * correspondant.  Le destructeur parcourt la map et libère chaque plan avec
+     * `fftw_destroy_plan()`.
+     *
+     * @note    Cette structure n’est jamais exposée à l’extérieur de la classe
+     *          `FFTWThreadCache`; elle sert uniquement de conteneur privé.
+     *
+     * @since   1.0
+     */
+    struct PlanCache
+    {
+        /** @brief  Map <taille, plan> gérée par le thread. */
+        std::unordered_map<int, fftw_plan> map;
+
+        /**
+         * @brief   Retourne (ou crée) le plan FFTW de taille @p M.
+         *
+         * Si un plan pour la taille demandée existe déjà dans la map, il est
+         * renvoyé immédiatement.  Sinon, un nouveau plan est créé avec
+         * `fftw_plan_dft_r2c_1d()` en mode `FFTW_MEASURE`, stocké dans la map,
+         * puis retourné.
+         *
+         * @param[in] M  Taille de la transformée.
+         *
+         * @return  Un handle `fftw_plan` valide.
+         *
+         * @throw std::runtime_error  Si la création du plan échoue.
+         *
+         * @warning  La fonction alloue temporairement deux buffers (`tmp_in`,
+         *           `tmp_out`) avec `fftw_malloc`.  En cas d’exception, ces
+         *           buffers sont libérés avant de propager l’erreur.
+         *
+         * @since   1.0
+         */
+        fftw_plan get(int M)
+        {
+            auto it = map.find(M);
+            if (it != map.end())
+                return it->second;               // plan déjà présent
+
+            // ✅ mutex global pour la création du plan
+            fftw_plan p;
+            {
+                static std::mutex fftw_plan_mutex;
+                std::lock_guard<std::mutex> lock(FFTWThreadCache::planMutex());
+
+                double*       tmp_in  = static_cast<double*>(
+                    fftw_malloc(M * sizeof(double)));
+                fftw_complex* tmp_out = static_cast<fftw_complex*>(
+                    fftw_malloc((M/2+1) * sizeof(fftw_complex)));
+
+                p = fftw_plan_dft_r2c_1d(M, tmp_in, tmp_out, FFTW_MEASURE);
+
+                fftw_free(tmp_in);
+                fftw_free(tmp_out);
+            }
+            if (!p)
+                throw std::runtime_error("FFTW forward plan creation failed");
+
+            map[M] = p;                           // mémorisation dans le cache
+            return p;
+        }
+
+        /**
+         * @brief   Destructeur : libère tous les plans détenus par le thread.
+         *
+         * Le destructeur est invoqué automatiquement lorsque le thread se
+         * termine (ou à la fin du programme pour le thread principal).  Chaque
+         * plan stocké dans `map` est détruit avec `fftw_destroy_plan()`.
+         *
+         * @since   1.0
+         */
+        ~PlanCache() {
+            for (auto& [M, plan] : map)
+                fftw_destroy_plan(plan);
+            map.clear();
+        }
+    };
+};
 
 
 #endif

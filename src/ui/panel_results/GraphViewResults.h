@@ -207,7 +207,7 @@ public:
 
     // member
 protected:
-    int mHeightForVisibleAxis;
+    int mHeightForVisibleTicksAxis;
     Overlay* mOverLaySelect;
 
     GraphView* mGraph;
@@ -239,7 +239,7 @@ protected:
     int mTopShift;
 
     QFont mGraphFont;
-    //-----
+
 
 public:
 
@@ -254,7 +254,10 @@ public:
     void setMainColor(const QColor &color);
 
     void setTitle(const QString &title);
-    inline void setTipYLab (const QString &label) {mGraph->setTipYLab(label);};
+    inline void setTipYLab (const QString &label)
+    {
+        mGraph->setTipYLab(label);
+    };
     inline QString title() const {return mTitle;};
 
     void setMarginLeft (qreal &m);
@@ -269,12 +272,15 @@ public:
 
     void setItemColor(const QColor &itemColor);
 
-    void setHeightForVisibleAxis( const int height)
+    inline void setHeightForVisibleAxis( const int height)
     {
-        mHeightForVisibleAxis = height;
+        mHeightForVisibleTicksAxis = height;
     }
 
-    inline bool isSelected() const  {return mIsSelected;}
+    inline bool isSelected() const
+    {
+        return mIsSelected;
+    }
 
     inline void setSelected( const bool selected) {
         mIsSelected = selected;
@@ -286,14 +292,29 @@ public:
 
     void setShowNumericalResults(const bool show);
 
-    QFont getGraphFont() const {return mGraphFont;};
+    inline QFont getGraphFont() const
+    {
+        return mGraphFont;
+    };
     GraphView *getGraph() const;
-    inline QList<variable_t> getCurrentVariables() const {return mCurrentVariableList;}
-    inline graph_t getCurrentType() const { return mCurrentTypeGraph; }
+    inline QList<variable_t> getCurrentVariables() const
+    {
+        return mCurrentVariableList;
+    }
+    inline graph_t getCurrentType() const
+    {
+        return mCurrentTypeGraph;
+    }
 
-    QString getTextAreaToHtml() const { return QString();};
+    inline QString getTextAreaToHtml() const
+    {
+        return QString();
+    };
 
-    QString getTextAreaToPlainText() const { return html_to_plain_text(mStatHTMLText);};
+    inline QString getTextAreaToPlainText() const
+    {
+        return html_to_plain_text(mStatHTMLText);
+    };
 
     void generateTraceCurves(const std::vector<ChainSpecs> &chains, MetropolisVariable* variable, const QString& name = QString());
     void generateLogTraceCurves(const std::vector<ChainSpecs> &chains, MetropolisVariable* variable, const QString& name = QString());
@@ -318,14 +339,24 @@ public:
     virtual void updateCurvesToShow(bool showAllChains, const QList<bool> &showChainList, const QList<variable_t> &showVariableList);
 
 
-    inline void changeYScaleDivision(const Scale &sc) {mGraph->setYScaleDivision(sc);};
-    inline void changeYScaleDivision(const double major, const int minor) {mGraph->setYScaleDivision(major, minor);};
+    inline void changeYScaleDivision(const Scale &sc)
+    {
+        mGraph->setYScaleDivision(sc);
+    };
+    inline void changeYScaleDivision(const double major, const int minor)
+    {
+        mGraph->setYScaleDivision(major, minor);
+    };
 
     // This is not from QWidget : we create this function to update the layout from different places (eg: in resizeEvent()).
     // It is vitual because we want a different behavior in subclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
     void updateLayout();
     void showNumericalResults(const bool show);
-    inline void setNumericalResults(const QString &resultsHTML) {mStatHTMLText = resultsHTML; mStatArea->setText(mStatHTMLText);};
+    inline void setNumericalResults(const QString &resultsHTML)
+    {
+        mStatHTMLText = resultsHTML;
+        mStatArea->setText(mStatHTMLText);
+    };
 
     void setView(type_data range_Xmin, type_data range_Xmax, type_data resultCurrentMinT, type_data resultCurrentMaxT, const double scale_major, const int scale_minor);
 

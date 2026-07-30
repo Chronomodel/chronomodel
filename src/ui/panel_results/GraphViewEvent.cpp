@@ -164,34 +164,34 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
             } else {
 
 
-                // ------------------------------------
-                //  Post Distrib All Chains
-                // ------------------------------------
-                //
-                const GraphCurve &curvePostDistrib = densityCurve(mEvent->mTheta.mFormatedKDE,
-                                                                       "Post Distrib All Chains",
-                                                                       color);
-                mGraph->add_curve(curvePostDistrib);
+                    // ------------------------------------
+                    //  Post Distrib All Chains
+                    // ------------------------------------
+                    //
+                    const GraphCurve &curvePostDistrib = densityCurve(mEvent->mTheta.mFormatedKDE,
+                                                                      "Post Distrib All Chains",
+                                                                      color);
+                    mGraph->add_curve(curvePostDistrib);
 
-                // HPD All Chains
-                const GraphCurve &curveHPD = HPDCurve(mEvent->mTheta.mFormatedHPD,
-                                                       "HPD All Chains",
-                                                       color);
-                mGraph->add_curve(curveHPD);
+                    // HPD All Chains
+                    const GraphCurve &curveHPD = HPDCurve(mEvent->mTheta.mFormatedHPD,
+                                                          "HPD All Chains",
+                                                          color);
+                    mGraph->add_curve(curveHPD);
 
-                // ------------------------------------
-                //  Post Distrib Chain i
-                // ------------------------------------
-                //
-                if (!mEvent->mTheta.mChainsKDE.empty())
-                    for (size_t i = 0; i < mEvent->mTheta.mChainsKDE.size(); ++i) {
-                        const GraphCurve &curvePostDistribChain = densityCurve(mEvent->mTheta.mChainsKDE[i],
-                                                                                "Post Distrib Chain " + QString::number(i),
-                                                                                Painting::chainColors.at(i),
-                                                                                Qt::SolidLine,
-                                                                                Qt::NoBrush);
-                        mGraph->add_curve(curvePostDistribChain);
-                    }
+                    // ------------------------------------
+                    //  Post Distrib Chain i
+                    // ------------------------------------
+                    //
+                    if (!mEvent->mTheta.mChainsKDE.empty())
+                        for (size_t i = 0; i < mEvent->mTheta.mChainsKDE.size(); ++i) {
+                            const GraphCurve &curvePostDistribChain = densityCurve(mEvent->mTheta.mChainsKDE[i],
+                                                                                   "Post Distrib Chain " + QString::number(i),
+                                                                                   Painting::chainColors.at(i),
+                                                                                   Qt::SolidLine,
+                                                                                   Qt::NoBrush);
+                            mGraph->add_curve(curvePostDistribChain);
+                        }
 
                 // ------------------------------------
                 //  Theta Credibility
@@ -391,10 +391,9 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
          */
         if (mCurrentVariableList.contains(eThetaEvent)) {
 
-            //QStringList curvesToShow;
-
             if (mShowAllChains) {
                 curvesToShow << "Post Distrib All Chains" << "HPD All Chains";
+
                 if (mShowVariableList.contains(eCredibility))
                    curvesToShow << "Credibility All Chains";
 
@@ -406,8 +405,6 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
                     curvesToShow << QString("Post Distrib Chain %1").arg(i);
 
             }
-
-            //mGraph->setCurveVisible(curvesToShow, true);
 
         }
         /* ------------------------------------------------

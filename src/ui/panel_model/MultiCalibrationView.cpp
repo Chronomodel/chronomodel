@@ -605,19 +605,19 @@ void MultiCalibrationView::updateGraphList()
         }
 
         if (mScatterClipBut->isChecked()) {
-            mHeightForVisibleAxis = 8 * AppSettings::heigthUnit();
+            mHeightForVisibleTicksAxis = 8 * AppSettings::heigthUnit();
             mDrawing = scatterPlot(mThreshold);
 
         } else if (mFitClipBut->isChecked()) {
-            mHeightForVisibleAxis = 8 * AppSettings::heigthUnit();
+            mHeightForVisibleTicksAxis = 8 * AppSettings::heigthUnit();
             mDrawing = fitPlot(mThreshold);
 
         }  else {
-            mHeightForVisibleAxis = 4 * AppSettings::heigthUnit();
+            mHeightForVisibleTicksAxis = 4 * AppSettings::heigthUnit();
             mDrawing = multiCalibrationPlot(mThreshold);
 
         }
-        const double origin = mHeightForVisibleAxis;
+        const double origin = mHeightForVisibleTicksAxis;
         const double prop = mYZoom->getProp();
 
         mGraphHeight = mScatterClipBut->isChecked() || mFitClipBut->isChecked()?  3*prop * origin * 2 : prop * origin * 2;
@@ -669,7 +669,7 @@ void MultiCalibrationView::updateGraphList()
     const double baseHeight = 8.0 * AppSettings::heigthUnit();
     const double prop = mYZoom->getProp();
     const bool tall = scatter || fit;
-    mHeightForVisibleAxis = baseHeight;
+    mHeightForVisibleTicksAxis = baseHeight;
     mGraphHeight = prop * baseHeight * (tall ? 6.0 : 2.0);  // 3*prop*origin*2 → 6*prop*heigthUnit
 
     // --- Configuration du dessin ---
@@ -1346,7 +1346,8 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                             typePts = CurveRefPts::eLine;
                         }
                         // Trace HPD
-                        for (const auto& h : intervals) {
+                        for (int i = 0 ; i<intervals.size(); i++) {
+                            auto& h   = intervals[i];
                             tmin = h.second.first;
                             tmax = h.second.second;
 
@@ -2059,7 +2060,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 
     }
 
-    std::pair<MCMCSpline, std::pair<double, double>> do_spline_res;
+    std::pair<SilvermanSpline3D, std::pair<double, double>> do_spline_res;
     switch (processType) {
         case CurveSettings::eProcess_Univariate:
         case CurveSettings::eProcess_Inclination:
@@ -2074,7 +2075,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
                 do_spline_res = do_spline_kernel_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam); // test
 
             } else {
-                    do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam);
+                do_spline_res = do_spline_composante(vec_t, vec_X, vec_X_err, tmin_poly, tmax_poly, mSilverParam);
             }
          break;
 
@@ -2115,7 +2116,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
     // Génération des courbes
     // __________________________
 
-    MCMCSpline spline = do_spline_res.first;
+    SilvermanSpline3D spline = do_spline_res.first;
     std::pair<double, double> lambda_Vg = do_spline_res.second;
     QString spline_info;
     auto lambda = lambda_Vg.first;
@@ -2365,7 +2366,7 @@ void MultiCalibrationView::updateGraphsSize(const QString &sizeStr)
     bool ok;
     const double val = QLocale().toDouble(sizeStr, &ok);
     if (ok) {
-        const double origin = mHeightForVisibleAxis;
+        const double origin = mHeightForVisibleTicksAxis;
         const double prop =  val / 100.;
 
         mGraphHeight = prop * origin;
@@ -2387,7 +2388,7 @@ void MultiCalibrationView::updateGraphsSize(const QString &sizeStr)
 
 void MultiCalibrationView::updateYZoom(const double prop)
 {
-    const double origin = mHeightForVisibleAxis;
+    const double origin = mHeightForVisibleTicksAxis;
 
     mGraphHeight = int ( prop * origin * 2);
 
@@ -2662,7 +2663,7 @@ void MultiCalibrationView::exportImage()
 /*
 void MultiCalibrationView::exportFullImage()
 {
-    bool printAxis = (mGraphHeight < mHeightForVisibleAxis);
+    bool printAxis = (mGraphHeight < mHeightForVisibleTicksAxis);
     QFontMetricsF fmAxe (mDrawing->font());
 
     QWidget* widgetExport = mDrawing->getGraphWidget();
@@ -2749,7 +2750,7 @@ void MultiCalibrationView::exportFullImage()
 
 void MultiCalibrationView::exportFullImage()
 {
-    const bool printAxis = (mGraphHeight < mHeightForVisibleAxis);
+    const bool printAxis = (mGraphHeight < mHeightForVisibleTicksAxis);
     QWidget* widgetExport = mDrawing->getGraphWidget();
     widgetExport->setFont(mDrawing->font());
 
@@ -3012,13 +3013,13 @@ void MultiCalibrationView::exportResults()
                         // hpd is calculate only on the study Period
                         std::map<double, double> periodCalib = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
                         periodCalib = equal_areas(periodCalib, 1.);
-                        DensityAnalysis results;
-                        results.funcAnalysis = analyseFunction(periodCalib);
+                        PosteriorAnalysis results;
+                        results.densityAnalysis = analyseDensity(periodCalib);
 
                         if (!periodCalib.empty()) {
 
-                            statLine << csvLocal.toString(results.funcAnalysis.mode) << csvLocal.toString(results.funcAnalysis.mean) << csvLocal.toString(results.funcAnalysis.std);
-                            statLine << csvLocal.toString(results.funcAnalysis.quartiles.Q1) << csvLocal.toString(results.funcAnalysis.quartiles.Q2) << csvLocal.toString(results.funcAnalysis.quartiles.Q3);
+                            statLine << csvLocal.toString(results.densityAnalysis.mode) << csvLocal.toString(results.densityAnalysis.mean) << csvLocal.toString(results.densityAnalysis.std);
+                            statLine << csvLocal.toString(results.densityAnalysis.quartiles.Q1) << csvLocal.toString(results.densityAnalysis.quartiles.Q2) << csvLocal.toString(results.densityAnalysis.quartiles.Q3);
 
                             // hpd results
                             QList<QPair<double, QPair<double, double> > > formated_intervals;
@@ -3130,12 +3131,12 @@ void MultiCalibrationView::showStat()
 
                             std::map<double, double> subData = getMapDataInRange(calibMap, mSettings.getTminFormated(), mSettings.getTmaxFormated());
                             subData = equal_areas(subData, 1.);
-                            DensityAnalysis results;
-                            results.funcAnalysis = analyseFunction(subData);
+                            PosteriorAnalysis results;
+                            results.densityAnalysis = analyseDensity(subData);
 
                             if (!subData.empty()) {
 
-                                resultsStr += "<br>" + FunctionStatToString(results.funcAnalysis);
+                                resultsStr += "<br>" + densityStatToString(results.densityAnalysis);
 
                                 // hpd results
                                 QList<QPair<double, QPair<double, double> > > formated_intervals;

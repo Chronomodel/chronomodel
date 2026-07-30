@@ -200,12 +200,9 @@ QJsonObject Bound::toJson() const
     return json;
 }
 
-void Bound::setFixedValue(const double& value) {mFixed = value;}
 
-double Bound::fixedValue() const
-{
-    return mFixed;
-}
+
+
 
 double Bound::formatedFixedValue() const
 {
@@ -213,7 +210,4 @@ double Bound::formatedFixedValue() const
 }
 
 
-void Bound::updateTheta(const double , const double )
-{
-    mTheta.accept_update(mFixed);
-}
+

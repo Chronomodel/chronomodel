@@ -144,8 +144,8 @@ public:
 
     double mExactCredibilityThreshold;
 
-    DensityAnalysis mResults;
-    std::vector<DensityAnalysis> mChainsResults;
+    PosteriorAnalysis mResults;
+    std::vector<PosteriorAnalysis> mChainsResults;
 
     int mfftLenUsed;
 
@@ -182,7 +182,8 @@ public:
     inline double value() const noexcept {return mX;}
 
     inline void setBandwidth(BandwidthType bwt, double h = 1)
-    { switch (bwt) {
+    {
+        switch (bwt) {
         case BandwidthType::eBWCustom :
             mBandwidth = h;
             break;
@@ -194,7 +195,8 @@ public:
             break;
         default:
             break;
-        }}
+        }
+    }
 
     // -----
     //  These functions are time consuming!
@@ -466,7 +468,7 @@ public:
 
 private:
     /**
- * @brief Fills a binning buffer using linear binning — O(n).
+     * @brief Fills a binning buffer using linear binning — O(n).
  *
  * @details
  * Each observation is distributed between its two neighbouring grid points
@@ -490,11 +492,9 @@ private:
     void save_stream_v337(QDataStream& stream) const;
     void save_stream_v338(QDataStream& stream) const;
 
+    friend class MHVariable;
+    friend class Phase;
 
-
-
-
-friend class MHVariable;
 };
 
 QDataStream &operator<<( QDataStream& stream, const MetropolisVariable& data );

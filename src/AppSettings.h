@@ -98,11 +98,18 @@ public:
     static void readSettings();
     static void writeSettings();
 
-    static int widthUnit();
-    static int heigthUnit();
-
     static void setWidthUnit(int &width) {mWidthUnit = width;}
     static void setHeigthUnit(int &heigth) {mHeigthUnit = heigth;}
+
+    static int widthUnit()
+    {
+        return mWidthUnit;
+    }
+
+    static int heigthUnit()
+    {
+        return mHeigthUnit;
+    }
 
     static QLocale::Language mLanguage;
 #if QT_DEPRECATED_SINCE(6, 6)

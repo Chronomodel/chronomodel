@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2025
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -54,8 +54,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 //  Constructor / Destructor
 
-//int GraphViewResults::mHeightForVisibleAxis = int (4 * AppSettings::heigthUnit()); //look ResultsView::applyAppSettings()
-
 GraphViewResults::GraphViewResults(QWidget* parent):
     QWidget(parent),
     mCurrentTypeGraph(ePostDistrib),
@@ -78,7 +76,7 @@ GraphViewResults::GraphViewResults(QWidget* parent):
     mTopShift(0),
     mGraphFont()
 {
-    mHeightForVisibleAxis = int (4 * AppSettings::heigthUnit());
+    mHeightForVisibleTicksAxis = int (4 * AppSettings::heigthUnit());
     setMouseTracking(true);
 
     mGraph = new GraphView(this);
@@ -445,25 +443,35 @@ void GraphViewResults::updateLayout()
     QFontMetricsF fmTitle (fontTitle);
     mTopShift = int (2.5 * fmTitle.height()) ;
 
-    QFontMetricsF fm (mGraphFont);
-
-    if (mShowNumResults) {
-        mGraph->setGeometry(0, mTopShift, int (width()*2./3. -1), height() - mTopShift);
-
-        const int area_x = width()*2./3. + 2.;
-        const int area_w = width() - area_x -2 - 2;
-
-        mStatArea->setGeometry(area_x, 2, area_w, height() - 2);
-
-    } else {
-        mGraph->setGeometry(0, mTopShift, width(), height() - mTopShift);
-    }
-
-    const bool axisVisible = (height() >= mHeightForVisibleAxis);
+    const auto h = height();
+    const auto graph_h = h - mTopShift;
+    const auto w = width();
 
     if (mGraph->has_curves()) {
+        const QFontMetricsF fm (mGraphFont);
+        const bool axisVisible = (graph_h >= mHeightForVisibleTicksAxis);
+
         mGraph->showXAxisValues(axisVisible);
+        mGraph->showXAxisTicks(axisVisible);
+
+        const bool showXAxisLine = (graph_h >= (mHeightForVisibleTicksAxis*0.5));
+        mGraph->showXAxisLine(showXAxisLine);
+        mGraph->showYAxisLine(showXAxisLine);
+
         mGraph->setMarginBottom(axisVisible ? fm.ascent()* 2.0 : fm.ascent());
+    }
+
+
+    if (mShowNumResults) {
+        mGraph->setGeometry(0, mTopShift, int (w * 0.6666 -1), graph_h);
+
+        const int area_x = w * 2.0/3.0 + 2.;
+        const int area_w = w - area_x - 2 - 2;
+
+        mStatArea->setGeometry(area_x, 2, area_w, h - 2);
+
+    } else {
+        mGraph->setGeometry(0, mTopShift, w, graph_h);
     }
 
     update();
@@ -485,7 +493,6 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     fontTitle.setBold(true);
     QFontMetrics fmTitle(fontTitle);
 
-    //const QRectF title_metrics = fmTitle.boundingRect(mTitle);
     QPainter p(this);
 
     p.fillRect(rect(), mGraph->getBackgroundColor());
@@ -493,7 +500,6 @@ void GraphViewResults::paintEvent(QPaintEvent* )
 
     p.setPen(Qt::black);
 
-    //p.drawText(QRectF( 2 * AppSettings::widthUnit(), 0, fmTitle.horizontalAdvance(mTitle), mTopShift), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
     p.drawText(QRectF( 2 * AppSettings::widthUnit(), 0, fmTitle.horizontalAdvance(mTitle), mTopShift), Qt::AlignVCenter | Qt::AlignLeft, mTitle);
 
     p.setFont(QFont(mGraphFont.family(), mGraphFont.pointSize(), -1 , true));

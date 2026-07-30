@@ -79,8 +79,14 @@ public:
     explicit CurveRefPts();
     virtual ~CurveRefPts();
 
-    inline bool isVisible() const {return mVisible;};
-    inline void setVisible(const bool visible) {mVisible = visible;};
+    inline bool isVisible() const
+    {
+        return mVisible;
+    };
+    inline void setVisible(const bool visible)
+    {
+        mVisible = visible;
+    };
 
 };
 
@@ -131,14 +137,35 @@ public:
     bool mVisible;
 
 public :
-    inline bool isHisto() const {return mType == eHisto;}
-    inline bool isVectorData() const {return mType == eVectorData;}
+    inline bool isHisto() const
+    {
+        return mType == eHisto;
+    }
+    inline bool isVectorData() const
+    {
+        return mType == eVectorData;
+    }
 
-    inline bool isHorizontalLine() const {return mType == eHorizontalLine;}
-    inline bool isVerticalLine() const {return mType == eVerticalLine;}
-    inline bool isHorizontalSections() const {return mType == eHorizontalSections;}
-    inline bool isTopLineSections() const {return mType == eTopLineSections;}
-    inline bool isVertical() const {return mType == eVerticalQMap;}
+    inline bool isHorizontalLine() const
+    {
+        return mType == eHorizontalLine;
+    }
+    inline bool isVerticalLine() const
+    {
+        return mType == eVerticalLine;
+    }
+    inline bool isHorizontalSections() const
+    {
+        return mType == eHorizontalSections && !mSections.empty();
+    }
+    inline bool isTopLineSections() const
+    {
+        return mType == eTopLineSections  && !mSections.empty();
+    }
+    inline bool isVertical() const
+    {
+        return mType == eVerticalQMap;
+    }
 
     inline bool isDensityCurve() const {return mType == eDensityData;}
     inline bool isRefPoints() const {return mType == eRefPoints;}
@@ -146,12 +173,27 @@ public :
     inline bool isShape() const {return mType == eShapeData;}
     inline bool isFunction() const {return mType == eFunctionData;}
 
-    void setBrush(const QBrush& brush)  { mBrush = brush;}
-    void setPenStyle(const Qt::PenStyle& penStyle)  { mPen.setStyle(penStyle);}
-    void setLineColor(const QColor& lineColor)  { mPen.setColor(lineColor);}
+    inline void setBrush(const QBrush& brush)
+    {
+        mBrush = brush;
+    }
+    inline void setPenStyle(const Qt::PenStyle& penStyle)
+    {
+        mPen.setStyle(penStyle);
+    }
+    inline void setLineColor(const QColor& lineColor)
+    {
+        mPen.setColor(lineColor);
+    }
 
-    void setPalette(const ColorPalette& palette)  { mColorStops = ColorStops::getStops(palette);}
-    void setColorStops(const std::vector<ColorStop>& stops)  { mColorStops = stops;}
+    inline void setPalette(const ColorPalette& palette)
+    {
+        mColorStops = ColorStops::getStops(palette);
+    }
+    inline void setColorStops(const std::vector<ColorStop>& stops)
+    {
+        mColorStops = stops;
+    }
 };
 
 GraphCurve densityCurve(const QMap<double, double> data,

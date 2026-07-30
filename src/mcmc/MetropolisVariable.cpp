@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2025
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -97,10 +97,6 @@ MetropolisVariable::MetropolisVariable():
     mThresholdUsed (-1.0),
     mtminUsed (0.0),
     mtmaxUsed (0.0)
-// Learning Prior
-   /* mBurnInPriorTrace(std::make_shared<std::vector<double>>()),
-    mEmpiricalPrior(),
-    mEmpiricalPriorReady(false)*/
 {
    mRawCredibility = std::pair<double, double>(1, -1);
    mFormatedCredibility = std::pair<double, double>(1, -1);
@@ -122,10 +118,6 @@ MetropolisVariable::MetropolisVariable(const MetropolisVariable& origin):
     mDisplayAcquiredTrace = std::make_shared<std::vector<double>>(*origin.mDisplayAcquiredTrace);
     mFormatedAcquiredTrace = std::make_shared<std::vector<double>>(*origin.mFormatedAcquiredTrace);
     is_curve_filtering = origin.is_curve_filtering;
-    // Learning Prior
-   /* mBurnInPriorTrace = std::make_shared<std::vector<double>>(*origin.mBurnInPriorTrace);
-    mEmpiricalPrior = origin.mEmpiricalPrior;
-    mEmpiricalPriorReady = origin.mEmpiricalPriorReady; */
 
     mSupport = origin.mSupport;
     mFormat = origin.mFormat;
@@ -200,12 +192,6 @@ MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable& orig
     mtminUsed = origin.mtminUsed;
     mtmaxUsed = origin.mtmaxUsed;
 
-    // Learning Prior
-    /*mBurnInPriorTrace = std::make_shared<std::vector<double>>(*origin.mBurnInPriorTrace);
-    mEmpiricalPrior = origin.mEmpiricalPrior;
-    mEmpiricalPriorReady = origin.mEmpiricalPriorReady; */
-
-
     return *this;
 }
 
@@ -251,15 +237,6 @@ MetropolisVariable& MetropolisVariable::operator=(MetropolisVariable&& origin) n
         mtminUsed = origin.mtminUsed;
         mtmaxUsed = origin.mtmaxUsed;
 
-        // Learning Prior
-        /*if (mBurnInPriorTrace) {
-            mBurnInPriorTrace = std::move(origin.mBurnInPriorTrace);
-            mEmpiricalPrior = std::move(origin.mEmpiricalPrior);
-            mEmpiricalPriorReady = origin.mEmpiricalPriorReady;
-        }*/
-
-        // Laisser l'objet source dans un état valide
-        // (par exemple, réinitialiser les pointeurs ou les ressources)
         origin.mBurnAdaptTrace.reset();
         origin.mFormatedBurnAdaptTrace.reset();
 
@@ -267,9 +244,6 @@ MetropolisVariable& MetropolisVariable::operator=(MetropolisVariable&& origin) n
         origin.mDisplayAcquiredTrace.reset();
         origin.mFormatedAcquiredTrace.reset();
 
-        //origin.mBurnInPriorTrace.reset();
-
-        // Réinitialiser d'autres membres si nécessaire
     }
 
     return *this;
@@ -281,7 +255,7 @@ void MetropolisVariable::clear()
 {
     mBurnAdaptTrace->clear();
     mFormatedBurnAdaptTrace->clear();
-    mAllAcquiredTrace->clear();
+    if (mAllAcquiredTrace) mAllAcquiredTrace->clear();
     mDisplayAcquiredTrace->clear();
     mFormatedAcquiredTrace->clear();
 
@@ -299,11 +273,6 @@ void MetropolisVariable::clear()
     mExactCredibilityThreshold = 0.0;
 
     is_curve_filtering = false;
-    // Learning Prior
-    /*if (mBurnInPriorTrace) mBurnInPriorTrace->clear();
-
-    mEmpiricalPrior.clear();
-    mEmpiricalPriorReady = false;*/
 
 }
 
@@ -311,7 +280,7 @@ void MetropolisVariable::shrink_to_fit() noexcept
 {
     mBurnAdaptTrace->shrink_to_fit();
     mFormatedBurnAdaptTrace->shrink_to_fit();
-    mAllAcquiredTrace->shrink_to_fit();
+    if(mAllAcquiredTrace) mAllAcquiredTrace->shrink_to_fit();
     mDisplayAcquiredTrace->shrink_to_fit();
     mFormatedAcquiredTrace->shrink_to_fit();
 
@@ -320,9 +289,6 @@ void MetropolisVariable::shrink_to_fit() noexcept
     mRawHPDintervals.shrink_to_fit();
     mChainsResults.shrink_to_fit();
 
-    // Learning Prior
-    //mBurnInPriorTrace->shrink_to_fit();
-    //mEmpiricalPrior.shrink_to_fit();
 }
 
 void MetropolisVariable::clear_and_shrink() noexcept
@@ -394,20 +360,20 @@ void MetropolisVariable::remove_smoothed_densities()
     mFormatedHPD.clear();                // OK à vider
 
     // -----------------------------------------------------------------
-    // 2️⃣  Ré‑initialiser **seulement** la partie FunctionStat de chaque
+    // 2️⃣  Ré‑initialiser **seulement** la partie DensityStat de chaque
     //     élément de mChainsResults (on garde traceAnalysis)
     // -----------------------------------------------------------------
     for (auto& chainResult : mChainsResults)
     {
         // ----- fonction : on met les champs à NaN pour signifier « non calculé » -----
-        chainResult.funcAnalysis.max  = std::numeric_limits<type_data>::quiet_NaN();
-        chainResult.funcAnalysis.mode = std::numeric_limits<type_data>::quiet_NaN();
-        chainResult.funcAnalysis.mean = std::numeric_limits<type_data>::quiet_NaN();
-        chainResult.funcAnalysis.std  = std::numeric_limits<type_data>::quiet_NaN();
+        chainResult.densityAnalysis.max  = std::numeric_limits<type_data>::quiet_NaN();
+        chainResult.densityAnalysis.mode = std::numeric_limits<type_data>::quiet_NaN();
+        chainResult.densityAnalysis.mean = std::numeric_limits<type_data>::quiet_NaN();
+        chainResult.densityAnalysis.std  = std::numeric_limits<type_data>::quiet_NaN();
 
-        chainResult.funcAnalysis.quartiles.Q1 = std::numeric_limits<type_data>::quiet_NaN();
-        chainResult.funcAnalysis.quartiles.Q2 = std::numeric_limits<type_data>::quiet_NaN();
-        chainResult.funcAnalysis.quartiles.Q3 = std::numeric_limits<type_data>::quiet_NaN();
+        chainResult.densityAnalysis.quartiles.Q1 = std::numeric_limits<type_data>::quiet_NaN();
+        chainResult.densityAnalysis.quartiles.Q2 = std::numeric_limits<type_data>::quiet_NaN();
+        chainResult.densityAnalysis.quartiles.Q3 = std::numeric_limits<type_data>::quiet_NaN();
 
         // ----- traceAnalysis : **on ne touche pas** → il reste tel qu’il était
     }
@@ -567,76 +533,6 @@ std::map<double, double> MetropolisVariable::generateKDE(const std::vector<doubl
     auto bandwidth = mBandwidth > 0? mBandwidth : 1;
 
 
-  //  double sigma = std_unbiais_Knuth(dataSrc);
-
-    /* In the case of Vg and Vt (sigma_ti), there may be very large values that pull the mean.
-    * It is preferable in this case, to evaluate an equivalent of the standard deviation using the quantiles at 15.85%, in the Gaussian case.
-    */
-
-
-    /* code version <3.2.6
-    * if (mSupport == eRp || mSupport== eRpStar) {
-        const Quartiles quartiles = quantilesType(dataSrc, 8, 0.1585);
-        sigma = std::min(sigma, (quartiles.Q3 - quartiles.Q1)/1.34);
-    }*/
-
-    // Density Estimation - Simon J. Sheather, Statistical Science 2004, Vol. 19, No. 4, 588–597 DOI 10.1214/088342304000000297
-    // Silverman’s rule of thumb. It is given by hSROT = 0.9An−1/5, where A = min{sample standard deviation, (sample interquartile range)/1.34}
-    //const Quartiles quartiles = quantilesType(dataSrc, 8, 0.1585);
-    //sigma = std::min(sigma, (quartiles.Q3 - quartiles.Q1)/1.34);
-
-    /*auto s_factor = [&]() {
-        const double s  = mResults.traceAnalysis.std;
-        auto Q = mResults.traceAnalysis.quartiles;
-        const double iq = (Q.Q3 - Q.Q1)/1.349;
-        // Si IQR nul, on replie sur l'écart-type seul
-        return (iq > 0.0) ? std::min(s, iq) : s;
-
-    };
-    double scaleFactor = s_factor();
-
-    if (scaleFactor <= 0) {
-        // if sigma is null and there are several values, it means: this is a constant value
-        // This can occur at the Begin or End of a Phase with a Bound.
-        result.emplace(dataSrc.at(0), 1.) ;
-        qDebug()<<"[MetropolisVariable::generateKDE] Constant value = "<< dataSrc.at(0) << QString::fromStdString(mName);
-
-        return result;
-    }
-
-//std::cout << '\n' << "name  = " << mName << '\n';
-
-
-    const double h_silver = 1.06 * sigma * std::pow(static_cast<double>(N), -0.2);
-    std::cout << "Silverman bandwidth = " << h_silver << '\n';
-
-    const double h_opt = brent_minimize(dataSrc,  h_silver/30,  h_silver*3); // donne le mêm cacul que R pour bw.ucv
-    double bw_equi = h_opt / (sigma * pow(static_cast<double>(N), -0.2) );
-    std::cout << "Bandwidth (brent_minimize) = " << h_opt << " coef equivalent=" << bw_equi <<'\n';
-
-    const double h_nai = bw_ucv_gaussian(dataSrc, h_silver/10,  h_silver*3, 50 );
-    double coef_Nai_equi = h_nai / (sigma * pow(static_cast<double>(N), -0.2) );
-    std::cout << "(bw_ucv_gaussian) Bandwidth  = " << h_nai<< " coef equivalent=" << coef_Nai_equi  << '\n';
-
-*/
-
-    //const double h = bandwidth;
-
- //   std::cout << "ChronoModel Bandwidth  = " << h << '\n';
-    //h = mResults.traceAnalysis.bdw * sigma * pow(static_cast<double>(N), -0.2);
-
-
-   // double h_sj_dpi = bw_SJ_dpi(dataSrc);   // rapide
-  //  double h_sj_ste = bw_SJ_ste(dataSrc);   // plus précis
-    //h = h_sj_ste;
-   // std::cout << "SJ-DPI = " << h_sj_dpi << "\n";
-    //std::cout << "SJ-STE = " << h_sj_ste << "\n";
-  //  double coef_Si_equi = h_sj_ste / (sigma * pow(static_cast<double>(N), -0.2) );
-
-   // std::cout << mName <<" (h_sj_ste) Bandwidth  = " << h_sj_ste<< " coef equivalent=" << coef_Si_equi  << '\n';
-
-    //h=h_opt;
-
     const double a = range_min_value(dataSrc) - 4. * bandwidth;
     const double b = range_max_value(dataSrc) + 4. * bandwidth;
 
@@ -740,189 +636,6 @@ void MetropolisVariable::generateFormatedKDE(const std::vector<ChainSpecs> &chai
     }
 }
 
-
-/**
- * @brief Builds the CDF from mEmpiricalPrior by trapezoidal integration.
- *        Must be called once after buildEmpiricalPrior().
- *
- * @details
- * @f[
- *   F(x_k) = \sum_{i=0}^{k-1} \frac{f(x_i) + f(x_{i+1})}{2} \cdot (x_{i+1} - x_i)
- * @f]
- * Then normalized so that F(x_last) = 1.
- */
-/*void MetropolisVariable::buildEmpiricalCDF()
-{
-    if (mPriorX.empty() || mPriorY.empty()) return;
-
-    const int n = static_cast<int>(mPriorX.size());
-
-    mPriorCDF_x.resize(n);
-    mPriorCDF_y.resize(n);
-
-    mPriorCDF_x[0] = mPriorX[0];
-    mPriorCDF_y[0] = 0.0;
-
-    // Intégration trapézoïdale
-    for (int i = 1; i < n; ++i) {
-        const double dx   = mPriorX[i] - mPriorX[i - 1];
-        const double area = 0.5 * (mPriorY[i] + mPriorY[i - 1]) * dx;
-
-        mPriorCDF_x[i] = mPriorX[i];
-        mPriorCDF_y[i] = mPriorCDF_y[i - 1] + area;
-    }
-
-    // Normalisation : garantit CDF(x_last) == 1 exactement
-    const double total = mPriorCDF_y.back();
-    if (total > 0.0) {
-        for (double& v : mPriorCDF_y)
-            v /= total;
-    }
-
-    mPriorCDF_y.front() = 0.0;   // sécurité numérique
-    mPriorCDF_y.back()  = 1.0;   // sécurité numérique
-
-    mEmpiricalCDFReady = true;
-}
-
-
-void MetropolisVariable::buildEmpiricalPrior(const int fftLen,
-                                             const double bandwidth,
-                                             const double tmin,
-                                             const double tmax)
-{
-    if (!mBurnInPriorTrace || mBurnInPriorTrace->empty()) return;
-
-    auto histo = generateKDE(*mBurnInPriorTrace, fftLen, bandwidth, tmin, tmax);
-    if (histo.empty()) return;
-
-    mPriorX.clear();
-    mPriorY.clear();
-    mPriorX.reserve(histo.size());
-    mPriorY.reserve(histo.size());
-
-    for (auto& [x, y] : histo) {
-        mPriorX.push_back(x);
-        mPriorY.push_back(std::max(y, 0.0));
-    }
-
-    mEmpiricalPriorReady = true;
-
-    // ✅ Construction immédiate de la CDF
-    buildEmpiricalCDF();
-
-    // Libération mémoire burn-in
-    mBurnInPriorTrace->clear();
-    mBurnInPriorTrace->shrink_to_fit();
-}
-
-// Évaluation de l'a priori en un point x (interpolation linéaire)
-double MetropolisVariable::evalEmpiricalPrior(const double x) const
-{
-    if (!mEmpiricalPriorReady || mEmpiricalPrior.empty())
-        return 1.0; // prior plat par défaut
-
-    auto it = mEmpiricalPrior.lower_bound(x);
-
-    if (it == mEmpiricalPrior.end())   return std::prev(it)->second;
-    if (it == mEmpiricalPrior.begin()) return it->second;
-
-    // Interpolation linéaire entre les deux points encadrants
-    auto prev = std::prev(it);
-    double t = (x - prev->first) / (it->first - prev->first);
-    return prev->second + t * (it->second - prev->second);
-}
-*/
-
-/**
- * @brief Draws one sample from the empirical prior truncated to [min, max].
- *
- * @details
- * Uses truncated CDF inversion — no rejection sampling needed:
- * @f[
- *   u \sim \mathcal{U}[0,1], \quad
- *   u' = F(\text{min}) + u \cdot [F(\text{max}) - F(\text{min})], \quad
- *   x  = F^{-1}(u')
- * @f]
- * This guarantees the result is strictly in [min, max] in O(log n).
- *
- * @param min  Lower bound of the truncation interval.
- * @param max  Upper bound of the truncation interval.
- * @return     A sample in [min, max] drawn from the truncated empirical prior,
- *             or the midpoint (min+max)/2 if the CDF has no mass in [min, max].
- */
-/*
-double MetropolisVariable::sampleFromEmpiricalPrior(const double min,
-                                                    const double max) const
-{
-    if (!mEmpiricalCDFReady || mPriorCDF_x.empty())
-        return 0.5 * (min + max);   // fallback : milieu de l'intervalle
-
-    // ----------------------------------------------------------------
-    // 1. Évaluation de F(min) et F(max) par interpolation dans la CDF
-    // ----------------------------------------------------------------
-    auto evalCDF = [&](double xq) -> double
-    {
-        if (xq <= mPriorCDF_x.front()) return 0.0;
-        if (xq >= mPriorCDF_x.back())  return 1.0;
-
-        const auto it = std::lower_bound(mPriorCDF_x.begin(),
-                                         mPriorCDF_x.end(), xq);
-        const int k = static_cast<int>(
-                          std::distance(mPriorCDF_x.begin(), it)) - 1;
-
-        const double dx = mPriorCDF_x[k + 1] - mPriorCDF_x[k];
-        if (dx < 1e-15) return mPriorCDF_y[k];
-
-        const double t = (xq - mPriorCDF_x[k]) / dx;
-        return mPriorCDF_y[k] + t * (mPriorCDF_y[k + 1] - mPriorCDF_y[k]);
-    };
-
-    const double cdf_min = evalCDF(min);
-    const double cdf_max = evalCDF(max);
-
-    // ----------------------------------------------------------------
-    // 2. Masse disponible dans [min, max]
-    //    Si nulle (prior nul sur cet intervalle) → milieu
-    // ----------------------------------------------------------------
-    const double mass = cdf_max - cdf_min;
-    if (mass < 1e-15)
-        return 0.5 * (min + max);
-
-    // ----------------------------------------------------------------
-    // 3. Tirage uniforme rescalé sur [F(min), F(max)]
-    // ----------------------------------------------------------------
-    const double u  = Generator::randomUniform();
-    const double u_ = cdf_min + u * mass;     // u' ∈ [F(min), F(max)]
-
-    // ----------------------------------------------------------------
-    // 4. Inversion CDF standard sur u'
-    // ----------------------------------------------------------------
-    const auto it = std::lower_bound(mPriorCDF_y.begin(),
-                                     mPriorCDF_y.end(), u_);
-
-    if (it == mPriorCDF_y.begin()) return min;
-    if (it == mPriorCDF_y.end())   return max;
-
-    const int k = static_cast<int>(
-                      std::distance(mPriorCDF_y.begin(), it)) - 1;
-
-    const double y0 = mPriorCDF_y[k];
-    const double y1 = mPriorCDF_y[k + 1];
-    const double dy = y1 - y0;
-
-    if (dy < 1e-15)
-        return mPriorCDF_x[k];
-
-    const double t = (u_ - y0) / dy;
-    const double x = mPriorCDF_x[k] + t * (mPriorCDF_x[k + 1] - mPriorCDF_x[k]);
-
-    // ----------------------------------------------------------------
-    // 5. Clamp de sécurité (erreurs d'interpolation aux bords)
-    // ----------------------------------------------------------------
-    return std::clamp(x, min, max);
-}
-*/
 
 // obsolete
 void MetropolisVariable::memoHistoParameter(const int fftLen, const double bandwidth, const double tmin, const double tmax)
@@ -1041,42 +754,24 @@ void MetropolisVariable::generateCorrelations(const std::vector<ChainSpecs> &cha
     // ----- Résultats globaux (concatenation de toutes les chaînes) -----
     if (mFormatedKDE.empty())
         return;
-    mResults.funcAnalysis = analyseFunction(mFormatedKDE);
-    const std::vector<double>& trace = *mFormatedAcquiredTrace;
-    mResults.traceAnalysis = traceStatistic(trace);   // on garde le trace global
+    mResults.densityAnalysis = analyseDensity(mFormatedKDE);
+    mResults.densityAnalysis.bandwidth_used = mBandwidth;
 
     // ----- Résultats *par chaîne* (densité) -----
+    // useless
     // 1️⃣  S’assurer que le vecteur possède exactement le bon nombre d’éléments
+    /*
     if (mChainsResults.size() != mChainsKDE.size())
         mChainsResults.resize(mChainsKDE.size());   // crée des objets « vide »
 
-    // 2️⃣  Remplir uniquement le champ funcAnalysis (densité)
+    // 2️⃣  Remplir uniquement le champ densityAnalysis (densité)
     for (size_t i = 0; i < mChainsKDE.size(); ++i) {
-        mChainsResults[i].funcAnalysis = analyseFunction(mChainsKDE[i]);
+        mChainsResults[i].densityAnalysis = analyseDensity(mChainsKDE[i]);
         // on ne touche pas à traceAnalysis → il garde la valeur déjà présente
     }
+    */
 }
-/*
- * void MetropolisVariable::generateNumericalResults(const std::vector<ChainSpecs> &chains)
-{
-    // Results for chain concatenation
-    if (mFormatedKDE.empty())
-        return;
-    mResults.funcAnalysis = analyseFunction(mFormatedKDE);
-    const std::vector<double>& trace = *mFormatedAcquiredTrace;
-    mResults.traceAnalysis = traceStatistic(trace); // fullRunFormatedTrace is the formated Traces
 
-    // Results for individual chains
-    mChainsResults.clear();
-
-    for (size_t i = 0; i < mChainsKDE.size(); ++i) {
-        DensityAnalysis result;
-        result.funcAnalysis = analyseFunction(mChainsKDE[i]); // useless
-        result.traceAnalysis = traceStatistic(runFormatedTraceForChain(chains, i)); // only to compute quartiles
-        mChainsResults.push_back(result);
-    }
-}
- */
 /* --------------------------------------------------------------
    2️⃣  generateTraceNumericalResults
    -------------------------------------------------------------- */
@@ -1090,17 +785,64 @@ void MetropolisVariable::generateTraceNumericalResults(const std::vector<ChainSp
     if (mFormatedAcquiredTrace->empty())
         return;
 
+    if (mResults.traceAnalysis.updated == true)
+        return;
+
+    mResults.traceAnalysis.updated = true;
+
+    if (mAllAcquiredTrace->size() > chains.size()+1) { // variable fixe
+        // -----------------------------------------------------------------
+        // 1. Recherche de la taille d’acquisition la plus petite
+        // -----------------------------------------------------------------
+        // On initialise sizeMin à la plus grande valeur possible afin que
+        // la première comparaison le remplace correctement.
+        int sizeMin = std::numeric_limits<int>::max();
+        for (std::size_t chain_index = 0; chain_index < chains.size(); ++chain_index) {
+            sizeMin = std::min(sizeMin, chains[chain_index].mRealyAccepted);
+        }
+        // -----------------------------------------------------------------
+        // 2. Construction du tableau de sous‑chaînes à utiliser pour Gelman‑Rubin
+        // -----------------------------------------------------------------
+        // On crée un vecteur de vecteurs de la même taille que le nombre de chaînes.
+        // Chaque sous‑vecteur contiendra les `sizeMin` derniers éléments de la trace.
+        std::vector<std::vector<double>> chainForGR(chains.size());
+        for (std::size_t chain_index = 0; chain_index < chains.size(); ++chain_index) {
+            // Récupère la trace complète de la chaîne courante
+            std::vector<double> fullTrace = runRawTraceForChain(chains, chain_index);
+
+            // Sécurité : on s’assure que sizeMin ne dépasse pas la longueur réelle
+            // de la trace (cela ne devrait pas arriver si mRealyAccepted est correct).
+            if (sizeMin > static_cast<int>(fullTrace.size())) {
+                // Gestion d’erreur simple – on peut lancer une exception,
+                // afficher un message, ou ajuster sizeMin.
+                throw std::runtime_error("sizeMin > longueur de la trace pour la chaîne "
+                                         + std::to_string(chain_index));
+            }
+            // Copie les `sizeMin` derniers éléments dans le vecteur dédié.
+            // L’intervalle [end‑sizeMin, end) contient exactement sizeMin éléments.
+            chainForGR[chain_index] = std::vector<double>(fullTrace.end() - sizeMin,
+                                                          fullTrace.end());
+        }
+        // À ce stade, `chainForGR` contient les sous‑chaînes prêtes à être
+        // utilisées dans le calcul de l’indice de Gelman‑Rubin.
+        const double R_hat = gelmanRubin(chainForGR);
+        mResults.R_hat_Gelman_Rubin = R_hat;
+
+    } else {
+        mResults.R_hat_Gelman_Rubin = 1.0;
+    }
+
     mResults.traceAnalysis = traceStatistic(trace);   // analyse du trace global
     // ----- Résultats *par chaîne* (trace) -----
     // 1️⃣  S’assurer que le vecteur possède exactement le bon nombre d’éléments
-    if (mChainsResults.size() != mChainsKDE.size())
-        mChainsResults.resize(mChainsKDE.size());   // crée des objets « vide »
+    if (mChainsResults.size() != chains.size())
+        mChainsResults.resize(chains.size());   // crée des objets « vide »
 
     // 2️⃣  Remplir uniquement le champ traceAnalysis (trace)
-    for (size_t i = 0; i < mChainsKDE.size(); ++i) {
-        mChainsResults[i].traceAnalysis =
-            traceStatistic(runFormatedTraceForChain(chains, i));
-        // on ne touche pas à funcAnalysis → il garde la valeur déjà présente
+    for (size_t i = 0; i < chains.size(); ++i) {
+        auto tracetmp = runFormatedTraceForChain(chains, i);
+        mChainsResults[i].traceAnalysis = traceStatistic(runFormatedTraceForChain(chains, i));
+        // on ne touche pas à densityAnalysis → il garde la valeur déjà présente
     }
 }
 
@@ -1215,28 +957,27 @@ QString MetropolisVariable::resultsString(const QString &noResultMessage, const 
     if (mFormatedKDE.empty())
         return noResultMessage;
 
-    QString result = densityAnalysisToString(mResults) + "<br>";
-
+    QString result = "<br>" + posteriorAnalysisToString(mResults) + "<br>";
 
     result += "<i>"+ QObject::tr("Probabilities") + " </i><br>";
 
     // the mFormatedCredibility is already in the time scale, we don't need to convert
     if (mFormatedCredibility != std::pair<double, double>(1, -1))
-        result += QObject::tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(mExactCredibilityThreshold * 100.),
+        result += QObject::tr("Credibility Interval") + QString(" ( %1 %) : [ %2 ; %3 ] %4").arg(stringForLocal(mExactCredibilityThreshold * 100.0),
                                                                                                  stringForLocal(mFormatedCredibility.first),
                                                                                                  stringForLocal(mFormatedCredibility.second),
                                                                                                  unit) + "<br>";
     if (!mRawHPDintervals.isEmpty()) {
         const QList<QPair<double, QPair<double, double>>>& intervals = mRawHPDintervals;
 
-        const double total_thresh = std::accumulate(intervals.begin(), intervals.end(), 0., [](double sum, auto i) {return sum + i.first;});
+        const double total_thresh = std::accumulate(intervals.begin(), intervals.end(), 0.0, [](double sum, auto i) {return sum + i.first;});
 
 
-        result += QObject::tr("HPD Region ( %1 %) :").arg(stringForLocal(total_thresh * 100.));
+        result += QObject::tr("HPD Region ( %1 %) :").arg(stringForLocal(total_thresh * 100.0));
         if (mFormat == DateUtils::eNumeric) {
 
             for (auto&& interval : intervals) {
-                const QString str_rate = stringForLocal(interval.first*100.);
+                const QString str_rate = stringForLocal(interval.first * 100.0);
                 const QString str_tmin = stringForLocal(interval.second.first);
                 const QString str_tmax = stringForLocal(interval.second.second);
                 result +=  QString(" [ %2 ; %3 ] (%4 %) ").arg(str_tmin, str_tmax, str_rate);
@@ -1244,7 +985,7 @@ QString MetropolisVariable::resultsString(const QString &noResultMessage, const 
 
         } else if (DateUtils::is_date(mFormat)) {
             for (auto&& interval : intervals) {
-                const QString str_rate = stringForLocal(interval.first*100.);
+                const QString str_rate = stringForLocal(interval.first * 100.0);
                 const QString str_tmin = stringForLocal(DateUtils::convertToAppSettingsFormat(interval.second.first));
                 const QString str_tmax = stringForLocal(DateUtils::convertToAppSettingsFormat(interval.second.second));
                 result +=  QString(" [ %2 ; %3 ] (%4 %) ").arg(str_tmin, str_tmax, str_rate);
@@ -1252,14 +993,13 @@ QString MetropolisVariable::resultsString(const QString &noResultMessage, const 
 
         } else {
             for (auto interval = intervals.crbegin(); interval != intervals.crend(); interval++) {
-                const QString str_rate = stringForLocal(interval->first*100.);
+                const QString str_rate = stringForLocal(interval->first * 100.0);
                 const QString str_tmin = DateUtils::convertToAppSettingsFormatStr(interval->second.second);
                 const QString str_tmax = DateUtils::convertToAppSettingsFormatStr(interval->second.first);
                 result +=  QString(" [ %2 ; %3 ] (%4 %) ").arg(str_tmin, str_tmax, str_rate);
             }
         }
         result += unit + "<br>";
-        //result += QObject::tr("Density Step : %1").arg(stringForLocal(std::abs(mFormatedKDE.lastKey() - mFormatedKDE.firstKey()) / mFormatedKDE.size())) + "<br>";
     }
 
    return result;
@@ -1279,31 +1019,31 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
         list << locale.toString(mResults.traceAnalysis.max, 'f', precision);
 
          // Statistic Results on Density
-        list << locale.toString(mResults.funcAnalysis.mode, 'f', precision);
-        list << locale.toString(mResults.funcAnalysis.mean, 'f', precision);
-        list << locale.toString(mResults.funcAnalysis.std, 'f', precision);
-        list << locale.toString(mResults.funcAnalysis.quartiles.Q1, 'f', precision);
-        list << locale.toString(mResults.funcAnalysis.quartiles.Q2, 'f', precision);
-        list << locale.toString(mResults.funcAnalysis.quartiles.Q3, 'f', precision);
+        list << locale.toString(mResults.densityAnalysis.mode, 'f', precision);
+        list << locale.toString(mResults.densityAnalysis.mean, 'f', precision);
+        list << locale.toString(mResults.densityAnalysis.std, 'f', precision);
+        list << locale.toString(mResults.densityAnalysis.quartiles.Q1, 'f', precision);
+        list << locale.toString(mResults.densityAnalysis.quartiles.Q2, 'f', precision);
+        list << locale.toString(mResults.densityAnalysis.quartiles.Q3, 'f', precision);
 
-        list << locale.toString(mExactCredibilityThreshold * 100., 'f', 2);
+        list << locale.toString(mExactCredibilityThreshold * 100.0, 'f', 2);
         list << locale.toString(mFormatedCredibility.first, 'f', precision);
         list << locale.toString(mFormatedCredibility.second, 'f', precision);
 
         const QList<QPair<double, QPair<double, double>>>& intervals = mRawHPDintervals;
-        double min_inter = DateUtils::convertToAppSettingsFormat(intervals.at(0).second.first);
-        double max_inter = DateUtils::convertToAppSettingsFormat(intervals.at(0).second.second);
+        double min_inter = DateUtils::convertToAppSettingsFormat(intervals[0].second.first);
+        double max_inter = DateUtils::convertToAppSettingsFormat(intervals[0].second.second);
 
         if (min_inter < max_inter) {
             for (auto&& interval : intervals) {
-                list << locale.toString(interval.first * 100., 'f', 2);
+                list << locale.toString(interval.first * 100.0, 'f', 2);
                 list << locale.toString(DateUtils::convertToAppSettingsFormat(interval.second.first), 'f', precision);
                 list << locale.toString(DateUtils::convertToAppSettingsFormat(interval.second.second), 'f', precision);
             }
 
         } else {
             for (auto interval = intervals.crbegin(); interval != intervals.crend(); interval++) {
-                list << locale.toString(interval->first * 100., 'f', 2);
+                list << locale.toString(interval->first * 100.0, 'f', 2);
                 min_inter = DateUtils::convertToAppSettingsFormat(interval->second.second);
                 max_inter = DateUtils::convertToAppSettingsFormat(interval->second.first);
                 list << locale.toString(min_inter, 'f', precision);
@@ -1325,9 +1065,9 @@ QStringList MetropolisVariable::getResultsList(const QLocale locale, const int p
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mFormatedCredibility.first), 'f', precision);
         list << locale.toString(DateUtils::convertFromAppSettingsFormat(mFormatedCredibility.second), 'f', precision);
         // Statistic Results on Density
-        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.funcAnalysis.mode), 'f', precision);
-        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.funcAnalysis.mean), 'f', precision);
-        list << locale.toString(mResults.funcAnalysis.std, 'f', precision);
+        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.densityAnalysis.mode), 'f', precision);
+        list << locale.toString(DateUtils::convertFromAppSettingsFormat(mResults.densityAnalysis.mean), 'f', precision);
+        list << locale.toString(mResults.densityAnalysis.std, 'f', precision);
 
         const QList<QPair<double, QPair<double, double>>>& intervals = mRawHPDintervals;
 
@@ -1539,6 +1279,7 @@ void MetropolisVariable::save_stream_v338(QDataStream& stream) const
         case DateUtils::eBCECE:    formatDate = 5; break;
         case DateUtils::eKa:       formatDate = 6; break;
         case DateUtils::eMa:       formatDate = 7; break;
+        case DateUtils::eCustom:   formatDate = 8; break;
         default:
             throw std::runtime_error("Invalid date format");
         }
@@ -1567,11 +1308,10 @@ void MetropolisVariable::save_stream_v338(QDataStream& stream) const
             throw std::runtime_error("Failed to write display Acquired trace");
         }
     } catch (const std::exception& e) {
-        qDebug() << "[MetropolisVariable::save_stream_v337] Error: "
+        qDebug() << "[MetropolisVariable::save_stream_v338] Error: "
                  << e.what()
                  << " ; stream.status()=" << stream.status();
-        // Politique de gestion d'erreur selon vos besoins
-        // Vous pouvez choisir de lancer, réinitialiser ou ignorer
+
     }
 }
 
@@ -1775,7 +1515,7 @@ void MetropolisVariable::load_stream_v338(QDataStream& stream)
 {
     // Initial stream check
     if (stream.status() != QDataStream::Ok) {
-        std::cout << "[MetropolisVariable::load_stream_v337] Initial stream error" << std::endl;
+        std::cout << "[MetropolisVariable::load_stream_v338] Initial stream error" << std::endl;
         return;
     }
 
@@ -1785,7 +1525,7 @@ void MetropolisVariable::load_stream_v338(QDataStream& stream)
         stream >> str;
 
         if (stream.status() != QDataStream::Ok) {
-            std::cout << "[MetropolisVariable::load_stream_v337] Failed to read variable (name)" << std::endl;
+            std::cout << "[MetropolisVariable::load_stream_v338] Failed to read variable (name)" << std::endl;
             throw std::runtime_error("Failed to read variable name");
         }
 
@@ -1804,14 +1544,14 @@ void MetropolisVariable::load_stream_v338(QDataStream& stream)
         case 4: mSupport = Support::eRmStar; break;
         case 5: mSupport = Support::eBounded; break;
         default:
-            throw std::runtime_error("Invalid support type");
+            throw std::runtime_error("[MHVariable::load_stream_v338] Invalid support type");
         }
 
         // Read date format
         qint16 formatDate;
         stream >> formatDate;
         if (stream.status() != QDataStream::Ok) {
-            throw std::runtime_error("Failed to read date format");
+            throw std::runtime_error("[MHVariable::load_stream_v338] Failed to read date format");
         }
 
         // Convert date format
@@ -1826,8 +1566,9 @@ void MetropolisVariable::load_stream_v338(QDataStream& stream)
         case 5: mFormat = DateUtils::eBCECE; break;
         case 6: mFormat = DateUtils::eKa; break;
         case 7: mFormat = DateUtils::eMa; break;
+        case 8: mFormat = DateUtils::eCustom; break;
         default:
-            throw std::runtime_error("Invalid date format");
+            throw std::runtime_error("[MHVariable::load_stream_v338] Invalid date format");
         }
 
 
@@ -1835,24 +1576,24 @@ void MetropolisVariable::load_stream_v338(QDataStream& stream)
         load_container_nullable(stream, mBurnAdaptTrace);
 
         if (stream.status() != QDataStream::Ok) {
-            throw std::runtime_error("Failed to read Burn Adapt traces");
+            throw std::runtime_error("[MHVariable::load_stream_v338] Failed to read Burn Adapt traces");
         }
 
         load_container_nullable(stream, mAllAcquiredTrace);
 
         if (stream.status() != QDataStream::Ok) {
-            throw std::runtime_error("Failed to read raw Acquired trace");
+            throw std::runtime_error("[MHVariable::load_stream_v338] Failed to read raw Acquired trace");
         }
 
         stream >> is_curve_filtering;
         load_container_nullable(stream, mDisplayAcquiredTrace);
 
         if (stream.status() != QDataStream::Ok) {
-            throw std::runtime_error("Failed to read display Acquired trace");
+            throw std::runtime_error("[MHVariable::load_stream_v338] Failed to read display Acquired trace");
         }
 
     } catch (const std::exception& e) {
-        std::cout << "[MetropolisVariable::load_stream_v337] Error: "
+        std::cout << "[MetropolisVariable::load_stream_v338] Error: "
                   << e.what()
                   << " ; stream.status()=" << stream.status()<< std::endl;
 

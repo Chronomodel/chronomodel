@@ -64,11 +64,10 @@ public:
 protected:
     // Variable for update function
 
-    //t_prob current_ln_h_YWI_2, current_ln_h_YWI_3, current_ln_h_YWI_1_2, current_h_theta, current_h_lambda, current_h_VG;
     t_prob current_ln_h_YWI_3;
 
-    t_prob current_h_theta, current_h_lambda, current_h_VG;
-    t_prob try_h_theta, try_h_lambda, try_h_VG;
+    t_prob current_h_theta, current_h_lambda;
+    t_prob try_h_theta, try_h_lambda;
 
     SplineMatricesLD current_splineMatrices_LD, current_matriceWI_LD;
     SplineMatricesD current_splineMatrices_D, current_matriceWI_D;
@@ -108,6 +107,7 @@ protected:
     SparseMatrixD current_Q;
     MatrixD current_K;
     SparseMatrixD current_R;
+    SparseQuadraticFormSolver current_R_solver;
     MatrixD current_R_1QT;
 
     MatrixD try_Y;
@@ -157,13 +157,22 @@ protected:
     // with tempering
     QString initialize_337();
     bool update_337();
-    //bool sampler_337();
     bool sampler_337_b(); // ok
-    //bool tempering_337(double T_max, std::vector<bool> &event_regenerated);
-    //bool tempering_337_b(double expo_T_max, std::vector<bool>& event_regenerated );
+
     bool tempering_337_c(double T); //ok
 
     double event_MH_rate(Event* event, double try_theta);
+
+#pragma mark Version 3.3.9
+    QString initialize_339();
+    bool update_339();
+    bool sampler_339();
+    bool tempering_339(double T);
+
+    // Echantillonnage par block
+    bool sampler_339_block();
+    bool tempering_339_block(double T);
+
 
 #elif VERSION_MAJOR == 4 && VERSION_MINOR >= 0 && VERSION_PATCH >= 0
 #pragma mark Version 4
@@ -184,16 +193,15 @@ protected:
 protected:
 
     virtual QString calibrate();
-   // virtual void initVariablesForChain();
+
     virtual QString initialize();
     virtual bool update();
     virtual bool adapt(const int batchIndex);
-   // virtual void memo();
-    //void memo(); // obsolete
+
     virtual void recordBurnAdapt();
     virtual void recordMH();
     virtual void acquire();
-    //virtual void memo_accept(const unsigned i_chain);
+
     virtual void finalize();
     
     
@@ -249,6 +257,29 @@ private:
     t_prob rate_h_lambda_XY_335(const double current_lambda, const double try_lambda, const unsigned int n_points);
     t_prob rate_h_lambda_XYZ_335(const double current_lambda, const double try_lambda, const unsigned int n_points);
 
+    // implémentation en log_rate de h_lambda
+private:
+    t_prob log_rate_h_lambda_339_impl(const double old_lambda,
+                                      const double prop_lambda,
+                                      const unsigned int n_points,
+                                      const double coef_n_points) const;
+
+public:
+    inline t_prob log_rate_h_lambda_X_339(const double old_lambda, const double prop_lambda, const unsigned int n_points)
+    {
+        return log_rate_h_lambda_339_impl(old_lambda, prop_lambda, n_points, 0.5);
+    }
+
+    inline t_prob log_rate_h_lambda_XY_339(const double old_lambda, const double prop_lambda, const unsigned int n_points)
+    {
+        return log_rate_h_lambda_339_impl(old_lambda, prop_lambda, n_points, 1.0);
+    }
+
+    inline t_prob log_rate_h_lambda_XYZ_339(const double old_lambda, const double prop_lambda, const unsigned int n_points)
+    {
+        return log_rate_h_lambda_339_impl(old_lambda, prop_lambda, n_points, 1.5);
+    }
+
     double S02_lambda_WIK (const MatrixLD &K, const int nb_noeuds);
     double h_lambda_Komlan(const MatrixLD &K, const MatrixLD &K_new, const int nb_noeuds, const double &lambdaSpline);
     t_prob rapport_Theta(const std::function<double (std::shared_ptr<Event>)> &fun, const std::vector<std::shared_ptr<Event>> &lEvents, const MatrixLD &K, const MatrixLD &K_new, const double lambdaSpline);
@@ -263,10 +294,10 @@ private:
     SplineMatricesLD prepareCalculSpline_W_Vg0(const std::vector<std::shared_ptr<Event> > &sortedEvents, std::vector<double> &vecH);
 
     MCMCSpline samplingSpline_multi(std::vector<std::shared_ptr<Event>> &lEvents, std::vector<std::shared_ptr<Event>> &lEventsinit, std::vector<t_matrix> vecYx, std::vector<double> vecYstd, const SparseMatrixLD &R, const MatrixLD &R_1QT, const SparseMatrixLD &Q);
-    MCMCSpline samplingSpline_multi2(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixLD &R, const MatrixLD &R_1Qt, const SparseMatrixLD &Q);
-    MCMCSpline samplingSpline_multi2(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixD &R, const MatrixD &R_1Qt, const SparseMatrixD& Q);
+    //MCMCSpline samplingSpline_multi2(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixLD &R, const MatrixLD &R_1Qt, const SparseMatrixLD &Q);
+    MCMCSpline samplingSpline_multi2(std::vector<std::shared_ptr<Event> > &Events, const SparseMatrixD &R, const SparseMatrixD& Q);
 
-    // pour tempering, par de tirage des Gx
+    // pour tempering, pas de tirage des Gx
     // obsolete
     MCMCSpline applySpline(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixD &R, const MatrixD &R_1Qt, const SparseMatrixD& Q);
 

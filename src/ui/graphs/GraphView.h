@@ -87,62 +87,166 @@ public:
     void copyFrom(const GraphView &graph);
     virtual ~GraphView();
 
-    // Options
+    inline void setInfo(const QString& info)
+    {
+        mInfos.clear();
+        mInfos.append(info);
+    };
 
-    void setBackgroundColor(const QColor &color);
-    QColor getBackgroundColor() const;
-
-    void setInfo(const QString& info) {mInfos.clear(); mInfos.append(info);};
-    void addInfo(const QString& info);
     QString getInfo(char sep = '|');
-    void clearInfos();
-    void showInfos(bool show);
     bool isShow();
 
-    void setNothingMessage(const QString& message);
-    void resetNothingMessage();
+    inline void setBackgroundColor(const QColor& color)
+    {
+        mBackgroundColor = color;
+    }
 
-    void showXAxisLine(bool show);
-    void showXAxisArrow(bool show);
-    void showXAxisTicks(bool show);
-    void showXAxisSubTicks(bool show);
-    void showXAxisValues(bool show);
+    inline QColor getBackgroundColor() const
+    {
+        return mBackgroundColor;
+    }
 
-    void showYAxisLine(bool show);
-    void showYAxisArrow(bool show);
-    void showYAxisTicks(bool show);
-    void showYAxisSubTicks(bool show);
-    void showYAxisValues(bool show);
+    inline void addInfo(const QString& info)
+    {
+        mInfos << info;
+    }
 
-    void setXAxisSupport(AxisTool::AxisSupport support) {mAxisToolX.mSupport = support;};
-    void setYAxisSupport(AxisTool::AxisSupport support) {mAxisToolY.mSupport = support;};
+    inline void clearInfos()
+    {
+        mInfos.clear();
+    }
 
-    void setXAxisMode(AxisMode mode);
+    inline void showInfos(bool show)
+    {
+        mShowInfos = show;
+    }
+
+    inline void setNothingMessage(const QString& message)
+    {
+        mNothingMessage = message;
+    }
+
+    inline void resetNothingMessage()
+    {
+        mNothingMessage = tr("Nothing to display");
+    }
+
+    // Just Setter no action
+    inline void showXAxisLine(bool show)
+    {
+        mXAxisLine = show;
+
+    }
+    inline void showXAxisArrow(bool show)
+    {
+        mXAxisArrow = show;
+    }
+    inline void showXAxisTicks(bool show)
+    {
+        mXAxisTicks = show;
+    }
+    inline void showXAxisSubTicks(bool show)
+    {
+        mXAxisSubTicks = show;
+    }
+    inline void showXAxisValues(bool show)
+    {
+        mXAxisValues = show;
+    }
+
+    inline void showYAxisLine(bool show)
+    {
+        mYAxisLine = show;
+    }
+    inline void showYAxisArrow(bool show)
+    {
+        mYAxisArrow = show;
+    }
+    inline void showYAxisTicks(bool show)
+    {
+        mYAxisTicks = show;
+    }
+    inline void showYAxisSubTicks(bool show)
+    {
+        mYAxisSubTicks = show;
+    }
+    inline void showYAxisValues(bool show)
+    {
+        mYAxisValues = show;
+    }
+
+    void setXAxisMode(AxisMode mode)
+    {
+        mXAxisMode = mode;
+        mAxisToolX.mShowText = (mXAxisMode != eHidden);
+    }
+
+    inline void setXAxisSupport(AxisTool::AxisSupport support)
+    {
+        mAxisToolX.mSupport = support;
+    }
+    inline void setYAxisSupport(AxisTool::AxisSupport support)
+    {
+        mAxisToolY.mSupport = support;
+    }
+
     void setYAxisMode(AxisMode mode);
 
-    void setOverArrow(OverflowDataArrowMode mode) { mOverflowArrowMode = mode;}
+    inline void setOverArrow(OverflowDataArrowMode mode)
+    {
+        mOverflowArrowMode = mode;
+    }
 
-    void autoAdjustYScale(bool active);
-    inline bool autoAdjustY() {return mAutoAdjustYScale;};
+    /**
+     * @brief If active is true, the current view automaticaly adjust Y axis on the next paint.
+     */
+    inline void autoAdjustYScale(bool active)
+    {
+        mAutoAdjustYScale = active;
+    }
+
+    inline bool autoAdjustY() const
+    {
+        return mAutoAdjustYScale;
+    }
+
     void adjustYScale();
 
    // void setRendering(Rendering render);
    // Rendering getRendering();
     void setGraphFont(const QFont& font);
 
-    void setCurvesThickness(int value);
+    /**
+     * @brief GraphView::setCurvesThickness, set mThickness without repaint
+     * @param value
+    */
+    inline void setCurvesThickness(int value)
+    {
+        mThickness = value;
+    }
     void updateCurvesThickness(int value);
-    int getGraphsThickness()const {return mThickness;};
+    inline int getGraphsThickness() const
+    {
+        return mThickness;
+    }
 
-    void setCurvesOpacity(int value);
+    inline void setCurvesOpacity(int value)
+    {
+        mOpacity = value;
+    }
     void updateCurvesOpacity(int value);
 
-    void setCanControlOpacity(bool can);
-
+    inline void setCanControlOpacity(bool can)
+    {
+        mCanControlOpacity = can;
+    }
     // Manage Curves
 
     void add_curve(const GraphCurve& curve);
-    inline bool has_curves() {return ((mCurves.size() != 0) || (mZones.size() != 0)) ;}
+    inline bool has_curves() const
+    {
+        return ((mCurves.size() != 0) || (mZones.size() != 0)) ;
+    }
 
     void removeCurve(const QString& name);
     void removeAllCurves();
@@ -166,19 +270,40 @@ public:
     void add_zone(const GraphZone& zone);
 
     // Set value formatting functions
-    void setFormatFunctX(DateConversion f);
-    void setFormatFunctY(DateConversion f);
+    inline void setFormatFunctX(DateConversion f)
+    {
+        mUnitFunctionX = f;
+    }
 
-    void setXScaleDivision(const Scale& sc) { mAxisToolX.setScaleDivision(sc);}
-    void setXScaleDivision(const double& major, const int& minorCount) { mAxisToolX.setScaleDivision(major, minorCount);}
+    inline void setFormatFunctY(DateConversion f)
+    {
+        mUnitFunctionY = f;
+    }
 
-    void setYScaleDivision(const Scale& sc) { mAxisToolY.setScaleDivision(sc);}
-    void setYScaleDivision(const double& major, const int& minorCount) { mAxisToolY.setScaleDivision(major, minorCount);}
+    inline void setXScaleDivision(const Scale& sc)
+    {
+        mAxisToolX.setScaleDivision(sc);
+    }
+    inline void setXScaleDivision(const double& major, const int& minorCount)
+    {
+        mAxisToolX.setScaleDivision(major, minorCount);
+    }
+
+    inline void setYScaleDivision(const Scale& sc)
+    {
+        mAxisToolY.setScaleDivision(sc);
+    }
+    inline void setYScaleDivision(const double& major, const int& minorCount)
+    {
+        mAxisToolY.setScaleDivision(major, minorCount);
+    }
 
     // Paint
 
     void paintToDevice(QPaintDevice* device);
-    void forceRefresh() {repaintGraph();}
+    inline void forceRefresh() {
+        repaintGraph();
+    }
     // Save
 
     bool saveAsSVG(const QString& fileName, const QString& svgTitle, const QString& svgDescrition, const bool withVersion, const int versionHeight = 20);
@@ -334,26 +459,60 @@ public:
     void paintEvent(QPaintEvent*);
     void repaintGraph();
 
-    void setTitle(const QString& title) {mTitle.setText(title);};
-    void setSubTitle(const QString& subTitle) {mSubTitle.setText(subTitle);};
-    void setBackGroundColor(const QColor& color) {mBackgroundColor = color;};
-    void setTitleBarColor(const QColor& color) {mTitleBarColor = color;};
+    inline void setTitle(const QString& title)
+    {
+        mTitle.setText(title);
+    };
+    inline void setSubTitle(const QString& subTitle)
+    {
+        mSubTitle.setText(subTitle);
+    };
+    inline void setBackGroundColor(const QColor& color)
+    {
+        mBackgroundColor = color;
+    };
+    inline void setTitleBarColor(const QColor& color)
+    {
+        mTitleBarColor = color;
+    };
 
-    void setTitleHeight(const qreal h) {mTitleHeight = h; mAutoAdjustTitleHeight = false;};
-    qreal titleHeight() {return mTitleHeight;};
+    inline void setTitleHeight(const qreal h)
+    {
+        mTitleHeight = h;
+        mAutoAdjustTitleHeight = false;
+    };
+    inline qreal titleHeight() const
+    {
+        return mTitleHeight;
+    };
 
-    void setSubTitleHeight(const qreal h) {mSubTitleHeight = h; mAutoAdjustSubTitleHeight = false;};
-    qreal subTitleHeight() {return mSubTitleHeight;};
+    inline void setSubTitleHeight(const qreal h) {
+        mSubTitleHeight = h;
+        mAutoAdjustSubTitleHeight = false;
+    };
+    inline qreal subTitleHeight() const
+    {
+        return mSubTitleHeight;
+    }
 
     void setAutoAdjustTitleHeight(bool adjust) {mAutoAdjustTitleHeight = adjust;};
     void setAutoAdjustSubTitleHeight(bool adjust) {mAutoAdjustSubTitleHeight = adjust;};
     bool autoAdjustTitleHeight() {return mAutoAdjustTitleHeight;};
-    bool autoAdjustSubTitleHeight() {return mAutoAdjustSubTitleHeight;};
+    inline bool autoAdjustSubTitleHeight()const
+    {
+        return mAutoAdjustSubTitleHeight;
+    };
 
     qreal height();
 
-    bool isTitle() const {return !mTitle.text().isEmpty();};
-    bool withTitle() const {return !mSubTitle.text().isEmpty();};
+    inline bool isTitle() const
+    {
+        return !mTitle.text().isEmpty();
+    };
+    inline bool withTitle() const
+    {
+        return !mSubTitle.text().isEmpty();
+    };
 };
 
 

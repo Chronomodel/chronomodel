@@ -97,7 +97,7 @@ public:
     void setGraphHeight(int height);
     inline void setGraphHeightForVisibleAxis (qreal height)
     {
-        mHeightForVisibleAxis = height;
+        mHeightForVisibleTicksAxis = height;
     };
     void hideMarker();
     void showMarker();
@@ -123,7 +123,7 @@ private:
     int mVerticalSpacer;
 
     qreal mGraphHeight;
-    qreal mHeightForVisibleAxis;
+    qreal mHeightForVisibleTicksAxis;
 
     QFont mGraphFont;
 

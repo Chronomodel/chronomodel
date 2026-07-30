@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2025
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -112,7 +112,6 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
         "pH Scale",
         QVariant::fromValue(ColorPalette::pHScale)
         );
-
 
 
     // Variation de densité
@@ -235,8 +234,18 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     mFormatDateLab = new QLabel(tr("Time Scale"), this);
     mFormatDateLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mFormatDate = new QComboBox(this);
-    for (int i = 0; i < 9; ++i) // until 9 to use Age Ma and ka ; default 6
-        mFormatDate->addItem(DateUtils::dateFormatToString(DateUtils::FormatDate (i)));
+    for (int i = 0; i < 8; ++i) { // until 9 to use Age Ma and ka ; default 6
+        mFormatDate->addItem(
+                             DateUtils::dateFormatToString(DateUtils::FormatDate (i)),
+                             QVariant::fromValue(DateUtils::FormatDate(i))
+            );
+
+    }
+    mFormatDate->addItem(
+        tr("Custom X Label"),
+        QVariant::fromValue(DateUtils::eCustom)
+        );
+
 
     mFormatDate->setCurrentIndex(1);
     mFormatDate->setVisible(true);
@@ -313,7 +322,9 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     grid->addWidget(mFormatDateLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mFormatDate, row, 1);
 
-    grid->addWidget(mCustomDateEdit, ++row, 1);
+    QLabel* dateEdit = new QLabel(tr("Custom X Label"));
+    grid->addWidget(dateEdit, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
+    grid->addWidget(mCustomDateEdit, row, 1);
 
     grid->addWidget(mPrecisionLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mPrecision, row, 1);
@@ -481,7 +492,7 @@ void AppSettingsDialog::getSettings()
     //settings.mDpm = mDpm->currentText().toShort();
     AppSettings::mImageQuality = mImageQuality->value();
 
-    AppSettings::mFormatDate = DateUtils::FormatDate (mFormatDate->currentIndex());
+    AppSettings::mFormatDate = mFormatDate ->currentData().value<DateUtils::FormatDate>();
     AppSettings::mFormatDateCustom = mCustomDateEdit->text();
 
     AppSettings::mPrecision = mPrecision->value();

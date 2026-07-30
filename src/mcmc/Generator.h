@@ -385,6 +385,32 @@ public:
 
     static c_UUID UUID;
 
+/**
+ * @brief Génère une réalisation d'une loi de type Lomax (Pareto II) pour un paramètre de shrinkage.
+ *
+ * Cette fonction implémente une inversion de la fonction de survie de la distribution Lomax
+ * de paramètre d'échelle `shrinkage` (cas particulier α = 1).
+ *
+ * Elle génère une variable aléatoire selon :
+ * \f[
+ * X = s \frac{1 - U}{U}, \quad U \sim \mathcal{U}(0,1)
+ * \f]
+ *
+ * ce qui est équivalent à une distribution de densité :
+ * \f[
+ * p(x) = \frac{s}{(x + s)^2}, \quad x \ge 0
+ * \f]
+ *
+ * @param shrinkage Paramètre d'échelle de la distribution (s > 0).
+ *
+ * @return Une réalisation aléatoire suivant une loi Lomax(α = 1, scale = shrinkage).
+ *
+ * @note Cette paramétrisation utilise la fonction de survie pour l'inversion,
+ * ce qui améliore la stabilité numérique pour les queues lourdes.
+ *
+ * @warning La distribution a une queue lourde (loi en 1/x²), ce qui implique
+ * des valeurs extrêmes rares mais potentiellement très grandes.
+ */
     static inline double shrinkageUniforme(const double shrinkage)
     {
         const double u = Generator::randomUniform();
@@ -397,7 +423,11 @@ public:
         std::gamma_distribution<double>  gamma(alpha, beta);
         return gamma(Generator::sEngine);
     }
-    static inline double exponentialeDistribution(const double meanexp);
+    static inline double exponentialeDistribution(const double meanexp)
+    {
+        std::exponential_distribution<double> exponential(meanexp);
+        return exponential(sEngine);
+    }
 
     /** @brief Retourne un nombre gaussien N(mu, sigma²).
      *

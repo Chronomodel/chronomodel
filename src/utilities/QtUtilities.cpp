@@ -1101,6 +1101,10 @@ void load_container(QDataStream& stream, std::vector<double>& data)
     }
 
     data.clear();
+    if (size ==0) {
+        return;
+    }
+
     data.reserve(size);  // Optimisation pour std::vector
 
     for (quint32 i = 0; i < size; ++i) {

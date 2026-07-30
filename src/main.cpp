@@ -40,6 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ChronoApp.h"
 
 #include "MainController.h"
+#include "fftw3.h"
 #include "version.h"
 
 #include <QIcon>
@@ -196,6 +197,10 @@ int main(int argc, char *argv[])
     std::cout << "  - Threads used by Eigen:        " << Eigen::nbThreads() << "\n";
     std::cout << "  - Using multi-threading:        " << (Eigen::nbThreads() > 1 ? "✅ YES" : "❌ NO") << "\n";
 
+
+    fftw_init_threads();             // <-- initialise le support multithread
+    fftw_plan_with_nthreads(nCores); // <-- nombre de threads à utiliser
+    std::cout << "  - fftw multi-Threading: " << nCores << "\n";
 
 // ---
 #ifdef Q_OS_MAC

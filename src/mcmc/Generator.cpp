@@ -153,10 +153,3 @@ double Generator::xorshift64star(void) {
 
 
 
-
-double Generator::exponentialeDistribution(const double meanexp)
-{
-    std::exponential_distribution<double> exponential(meanexp);
-    return exponential(sEngine);
-}
-

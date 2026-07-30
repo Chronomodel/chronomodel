@@ -44,6 +44,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 class Bound: public Event
 {
+private:
+    double mFixed;
+
 public:
 
     Bound();
@@ -59,15 +62,22 @@ public:
     static const Bound fromJson(const QJsonObject& json);
     virtual QJsonObject toJson() const;
 
-    void setFixedValue(const double& value);
-    double fixedValue() const;
+    inline void setValue(const double& value) {mFixed = value;}
+    inline double value() const {return mFixed;}
     double formatedFixedValue() const;
 
-    virtual void updateTheta(const double, const double);
+    inline virtual void updateTheta(const double, const double)
+    {
+        mTheta.accept_update(mFixed);
+    }
+
+    inline virtual void applyTheta(const double , const double, const double )
+    {
+        mTheta.setValue(mFixed);
+    }
 
 
-public:
-    double mFixed;
+
 
 };
 

@@ -745,13 +745,45 @@ void Project::updateState(const QJsonObject &state, const ReasonId id, bool noti
  */
 bool Project::load(const QString &path, bool force)
 {
+    /* --------------------------------------------------------------
+     * 1️⃣  Vérifier le paramètre d’entrée
+     * --------------------------------------------------------------
+     *  - `path` doit contenir le **chemin complet** du fichier *.chr*.
+     *  - Si `path` est vide, on ne peut rien charger → on renvoie false.
+     * -------------------------------------------------------------- */
+    if (path.isEmpty())
+        return false;
+    /* --------------------------------------------------------------
+     * 2️⃣  Décomposer le chemin reçu
+     * --------------------------------------------------------------
+     *  - `dirPath`  → répertoire contenant le projet.
+     *  - `baseName` → nom du projet **sans** extension (ex. « myProject »).
+     * -------------------------------------------------------------- */
+    QFileInfo info(path);
+    QString dirPath  = info.absolutePath();                 // répertoire du fichier
+    QString baseName = info.completeBaseName();             // nom sans .chr
+
+    /* --------------------------------------------------------------
+     * 4️⃣  Construire les chemins des fichiers associés
+     * --------------------------------------------------------------
+     *  - *.chr*  : données du projet (principal).
+     *  - *.cal*  : fichier de calibration (optionnel).
+     *  - *.res*  : fichier de résultats (optionnel).
+     * -------------------------------------------------------------- */
+    QDir dir(dirPath);
+    const QString chrPath = dir.filePath(baseName + ".chr");
+    const QString calPath = dir.filePath(baseName + ".cal");
+    const QString resPath = dir.filePath(baseName + ".res");
+
+
+
     const QString appVersionStr = QApplication::applicationVersion();
     bool initialLoadSuccess = false;
     bool newerProject = false;
     bool olderProject = false;
 
     // -------------------- VÉRIFICATION DU FICHIER PRINCIPAL --------------------
-    QFileInfo checkFile(path);
+    QFileInfo checkFile(chrPath);
     if (!checkFile.exists() || !checkFile.isFile()) {
         QMessageBox message(QMessageBox::Critical,
                             tr("Error loading project file"),
@@ -767,7 +799,7 @@ bool Project::load(const QString &path, bool force)
     bool isCorrected = false;
     {  // Bloc de portée pour QFile
         QFile file(path);
-        qDebug() << "[Project::load] Project file: " << path;
+        qDebug() << "[Project::load] Project file: " << chrPath;
         std::cout << "[Project::load] Project file: " << file.fileName().toStdString() << std::endl;
 
         if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -783,9 +815,18 @@ bool Project::load(const QString &path, bool force)
         // Mise à jour des informations de chemin
         QFileInfo info(path);
         MainWindow::getInstance()->setCurrentPath(info.absolutePath());
-        AppSettings::mLastDir = info.absolutePath();
-        AppSettings::mLastFile = info.fileName();
-        mName = info.fileName();
+        /* --------------------------------------------------------------
+     * 3️⃣  Mettre à jour les paramètres globaux de l’application
+     * --------------------------------------------------------------
+     *  - `AppSettings::mLastDir`  ← répertoire utilisé.
+     *  - `AppSettings::mLastFile` ← nom complet **avec** extension .chr
+     *    (c’est ce que le reste du code attendait auparavant).
+     * -------------------------------------------------------------- */
+        AppSettings::mLastDir  = dirPath;
+        AppSettings::mLastFile = info.fileName();   // ex. « myProject.chr »
+
+
+        mName                  = info.completeBaseName();      // nom du projet (sans extension)
 
         // Lecture et analyse du JSON
         QByteArray saveData = file.readAll();
@@ -941,13 +982,13 @@ bool Project::load(const QString &path, bool force)
 #pragma mark loading *.CAL
     bool hasCalibration = false;
     {
-        QString caliPath = path + ".cal";
-        QFileInfo calFileInfo(caliPath);
+        //QString caliPath = path + ".cal";
+        QFileInfo calFileInfo(calPath);
 
         if (calFileInfo.isFile() && !isCorrected && force == false) {
             std::cout << "[Project::load] file.cal: " << calFileInfo.fileName().toStdString() << std::endl;
 
-            QFile calFile(caliPath);
+            QFile calFile(calPath);
 
             if (!calFile.open(QIODevice::ReadOnly)) {
                 // Problème du à la sécurité sous macOs, pour les application non signés
@@ -1136,15 +1177,15 @@ bool Project::load(const QString &path, bool force)
 
     if (hasCalibration) {
 
-        QString dataPath = path + ".res";
-        QFileInfo resFileInfo(dataPath);
+        //QString dataPath = path + ".res";
+        QFileInfo resFileInfo(resPath);
 
         if (resFileInfo.isFile()) {
-            QFile dataFile(dataPath);
+            QFile dataFile(resPath);
             std::cout << "[Project::load] file.res exists?: " << (dataFile.exists() ? "Yes" : "No") << std::endl;
 
             if (dataFile.exists() && dataFile.open(QIODevice::ReadOnly)) {
-                qDebug() << "[Project::load] file.res: " << dataPath << " size=" << dataFile.size();
+                qDebug() << "[Project::load] file.res: " << resPath << " size=" << dataFile.size();
                 std::cout << "[Project::load] file.res: " << resFileInfo.fileName().toStdString() << std::endl;
 
                 try {
@@ -1156,21 +1197,18 @@ bool Project::load(const QString &path, bool force)
 
                     QDataStream in(&dataFile);
 
-                    int qDataStreamVersion;
-                    in >> qDataStreamVersion;
+                    // 1️⃣  Lire la version du QDataStream (en tant qu'entier)
+                    qint32 rawVersion = 0;
+                    in >> rawVersion;
 
+                    QDataStream::Version qDataStreamVersion = static_cast<QDataStream::Version>(rawVersion);
                     bool compatible_file = true;
-
-                    // *out << quint32 (out->version());// we could add software version here << quint16(out.version());
-                    //in >> res_file_version;
-                    //QString resVersion;
-                    //in >> resVersion;
 
                     if (qDataStreamVersion == QDataStream::Qt_6_4) {
                         in.setVersion(QDataStream::Qt_6_4);
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
-                    } else if (qDataStreamVersion == QDataStream::Qt_6_8) {
+                    } else if (qDataStreamVersion >= QDataStream::Qt_6_8) {
                         in.setVersion(QDataStream::Qt_6_4); // Forçage
 #endif
                     } else {
@@ -1230,14 +1268,14 @@ bool Project::load(const QString &path, bool force)
                                     QMessageBox::Ok,
                                     qApp->activeWindow());
                 message.exec();
-                qDebug() << "[Project::load] file.res not exists: " << dataPath;
-                std::cout << "[Project::load] file.res not exists: " << QString(dataPath).toStdString() << std::endl;
+                qDebug() << "[Project::load] file.res not exists: " << resPath;
+                std::cout << "[Project::load] file.res not exists: " << QString(resPath).toStdString() << std::endl;
                 setNoResults();
                 clear_and_shrink_model();
                 //hasResults = false;
             }
         } else {
-            std::cout << "[Project::load] No file.res: " << QString(dataPath).toStdString() << std::endl;
+            std::cout << "[Project::load] No file.res: " << QString(resPath).toStdString() << std::endl;
             setNoResults();
             clear_and_shrink_model();
             //hasResults = false;
@@ -1280,9 +1318,10 @@ bool Project::load_old(const QString &path, bool force)
         QFileInfo info(path);
         MainWindow::getInstance()->setCurrentPath(info.absolutePath());
 
-        AppSettings::mLastDir = info.absolutePath();
-        AppSettings::mLastFile = info.fileName();
-        mName = info.fileName();
+        AppSettings::mLastDir  = info.absolutePath();          // dernier répertoire utilisé
+        AppSettings::mLastFile = info.fileName();              // nom complet avec extension
+        //mName = info.fileName();
+        mName                  = info.completeBaseName();      // nom du projet (sans extension)
         QByteArray saveData = file.readAll();
         QJsonParseError error;
         QJsonDocument jsonDoc (QJsonDocument::fromJson(saveData, &error));
@@ -1943,7 +1982,7 @@ bool Project::insert(const QString &path, QJsonObject &return_state)
  * @return
  */
 
-bool Project::saveAs(const QString& dialogTitle)
+/*bool Project::saveAs(const QString& dialogTitle)
 {
     QString path = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                            dialogTitle,
@@ -1964,6 +2003,81 @@ bool Project::saveAs(const QString& dialogTitle)
         return saveProjectToFile();
     }
     return false;
+}
+*/
+
+bool Project::saveAs(const QString& dialogTitle)
+{
+    /* --------------------------------------------------------------
+     * 1️⃣  Construction du répertoire de départ
+     * --------------------------------------------------------------
+     *  - Si `MainWindow::getInstance()->getCurrentPath()` renvoie
+     *    une chaîne vide, on utilise le dernier répertoire connu
+     *    (`AppSettings::mLastDir`) ou, à défaut, le répertoire « home ».
+     * -------------------------------------------------------------- */
+    QString startDir = MainWindow::getInstance()->getCurrentPath();
+    if (startDir.isEmpty())
+        startDir = AppSettings::mLastDir.isEmpty()
+                       ? QDir::homePath()
+                       : AppSettings::mLastDir;
+
+    QString defaultFile = QDir(startDir).filePath(mName + QLatin1String(".chr"));
+    /* --------------------------------------------------------------
+     * 2️⃣  Ouverture du dialogue « Enregistrer sous »
+     * --------------------------------------------------------------
+     *  - `QFileDialog::DontUseNativeDialog` peut être ajouté si vous
+     *    rencontrez des problèmes d’affichage sous macOS/Windows.
+     * -------------------------------------------------------------- */
+    QString filePath = QFileDialog::getSaveFileName(
+        QApplication::activeWindow(),   // fenêtre active
+        dialogTitle,                    // titre du dialogue
+        defaultFile,                       // répertoire de départ
+        tr("Chronomodel Project (*.chr)"),
+        nullptr,
+        QFileDialog::DontConfirmOverwrite); // on gère le overwrite nous‑mêmes
+
+    if (filePath.isEmpty())
+        return false;          // l’utilisateur a annulé
+
+    /* --------------------------------------------------------------
+     * 3️⃣  S’assurer que l’extension « .chr » est bien présente
+     * -------------------------------------------------------------- */
+    QFileInfo fi(filePath);
+    if (fi.suffix().isEmpty())
+        filePath += QLatin1String(".chr");
+
+    /* --------------------------------------------------------------
+     * 4️⃣  Mettre à jour les chemins / noms dans l’application
+     * -------------------------------------------------------------- */
+    fi = QFileInfo(filePath);               // on reconstruit l’objet après ajout éventuel d’extension
+    MainWindow::getInstance()->setCurrentPath(fi.absolutePath());
+
+    AppSettings::mLastDir  = fi.absolutePath();          // dernier répertoire utilisé
+    AppSettings::mLastFile = fi.fileName();              // nom complet avec extension
+
+    if (mName != fi.completeBaseName()) {
+        mName                  = fi.completeBaseName();      // nom du projet (sans extension)
+        AppSettings::mIsSaved = false;
+    }
+
+
+    /* --------------------------------------------------------------
+     * 5️⃣  Sauvegarde effective du projet
+     * --------------------------------------------------------------
+     *  - `saveProjectToFile()` doit accepter le chemin complet ou bien
+     *    utiliser `mCurrentFileName` qui a été mis à jour juste avant.
+     *  - On ne réinitialise **pas** `mIsSaved` tant que la sauvegarde
+     *    n’a pas réussi.
+     * -------------------------------------------------------------- */
+    bool ok = saveProjectToFile();
+    if (ok) {
+        AppSettings::mIsSaved = true;       // le projet est maintenant enregistré
+    } else {
+        // En cas d’échec, on remet l’état « non‑sauvegardé » pour que
+        // l’utilisateur soit à nouveau invité à enregistrer.
+        AppSettings::mIsSaved = false;
+    }
+    return ok;
 }
 
 bool Project::askToSave(const QString& saveDialogTitle)
@@ -1998,11 +2112,28 @@ bool Project::askToSave(const QString& saveDialogTitle)
 bool Project::saveProjectToFile()
 {
 
-    QString path = AppSettings::mLastDir + "/" + AppSettings::mLastFile;
+    /*QString path = AppSettings::mLastDir + "/" + AppSettings::mLastFile;
     QFile file_chr(path);
 
     QFile file_cal(AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".cal");
-    QFile file_res(AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res");
+    QFile file_res(AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res");*/
+
+    // 1️⃣  Récupérer le répertoire et le nom de base du projet
+    QString dirPath  = AppSettings::mLastDir;
+    if (dirPath.isEmpty())
+        dirPath = QDir::homePath();                 // fallback
+    // Si mLastFile contient déjà une extension, on ne garde que le nom de base
+    QString baseName = QFileInfo(AppSettings::mLastFile).completeBaseName();
+    // 2️⃣  Construire les chemins complets (portable, sans double slash)
+    QDir dir(dirPath);
+    QString chrPath = dir.filePath(baseName + ".chr");
+    QString calPath = dir.filePath(baseName + ".cal");
+    QString resPath = dir.filePath(baseName + ".res");
+    // 3️⃣  Créer les objets QFile
+    QFile file_chr(chrPath);
+    QFile file_cal(calPath);
+    QFile file_res(resPath);
+
 
     /*
      * Save in case of no backup or different version.
@@ -2021,7 +2152,7 @@ bool Project::saveProjectToFile()
 
         if (file_chr.open(QIODevice::ReadWrite | QIODevice::Text)) {
 #if DEBUG
-            qDebug() << "[Project::saveProjectToFile] Project saved to : " << path;
+            qDebug() << "[Project::saveProjectToFile] Project saved to : " << chrPath;
 
             if (mState["events"].toArray().isEmpty())
                 qDebug() << "[Project::saveProjectToFile] empty Project saved ???? ";
@@ -2050,6 +2181,7 @@ bool Project::saveProjectToFile()
         return true;
     }
 #endif
+#pragma mark save *.CAL
     if (file_cal.open(QIODevice::WriteOnly)) {
 
         QDataStream out(&file_cal);
@@ -2081,7 +2213,7 @@ bool Project::saveProjectToFile()
 
     if (!mNoResults && !mModel->mEvents.empty()) {
 
-        qDebug() << "[Project::saveProjectToFile] Saving project results in "<< AppSettings::mLastDir + "/" + AppSettings::mLastFile + ".res";
+        qDebug() << "[Project::saveProjectToFile] Saving project results in "<< resPath;
 
         mModel->setProject();
 
@@ -2091,13 +2223,16 @@ bool Project::saveProjectToFile()
         //QFileInfo info(fileName);
         //QFile file(info.path() + info.baseName() + ".~res"); // when we could do a compressed file
         //QFile file(info.path() + info.baseName() + ".res");
-
+#pragma mark save *.RES
         if (file_res.open(QIODevice::WriteOnly)) {
             QDataStream out(&file_res);
             out.setVersion(QDataStream::Qt_6_4); // since v3.3.0 before Qt_6_4
-            out << out.version();
-            out << QApplication::applicationVersion();
+            out << static_cast<qint32>(out.version());        // on stocke comme qint32 pour être sûr
+            // 2️⃣  Écrire la version de l'application (facultatif mais recommandé)
+            QString appVersion = QApplication::applicationVersion();
+            out << appVersion;
 
+            // 3️⃣  Sérialiser le modèle
             mModel->saveToStream(&out);
 
             file_res.flush();
@@ -4149,8 +4284,6 @@ void Project::runCurve()
      -------------------------------------------------------------------- */
     if (dialog.startMCMC() == QDialog::Accepted) {
         if (loop.mAbortedReason.isEmpty()) {
-            //Memo of the init variable state to show in Log view
-            //mModel->mLogInit = loop.getChainsLog() + loop.getInitLog();
             AppSettings::mIsSaved = false;
             dialog.setFinishedState();
             emit mcmcFinished();

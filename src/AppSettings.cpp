@@ -157,7 +157,7 @@ else
     AppSettings::mPrecision = settings.value(APP_SETTINGS_STR_PRECISION, APP_SETTINGS_DEFAULT_PRECISION).toInt();
     AppSettings::mNbSheet = settings.value(APP_SETTINGS_STR_SHEET, APP_SETTINGS_DEFAULT_SHEET).toInt();
 
-    AppSettings::mEventModel = EventModelType(settings.value(APP_SETTINGS_DEFAULT_FORMATDATE_CUSTOM, APP_SETTINGS_DEFAULT_FORMATDATE_CUSTOM).toInt());
+    AppSettings::mEventModel = EventModelType(settings.value(APP_SETTINGS_STR_EVENTMODEL, APP_SETTINGS_DEFAULT_EVENTMODEL).toInt());
 
     try {
         AppSettings::mLastDir = settings.value("last_project_dir", "").toString();
@@ -222,13 +222,3 @@ AppSettings::~AppSettings()
 {
 
 }
-
- int AppSettings::widthUnit()
-{
-    return AppSettings::mWidthUnit;
-}
-
- int AppSettings::heigthUnit()
- {
-     return AppSettings::mHeigthUnit;
- }

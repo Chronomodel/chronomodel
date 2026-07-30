@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -38,8 +38,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "StdUtilities.h"
-#include "Functions.h"
-#include "MCMCLoopCurve.h"
 
 #include <QtGlobal>
 
@@ -2135,7 +2133,7 @@ double S6_fft(const std::vector<double>& x, double h, int M)
 // padding  : multiplicateur de h pour le padding de grille (3.0 pour S4, 10.0 pour S6)
 // finalizer: lambda qui normalise le résultat final
 template<typename Finalizer>
-static double Sn_fft_impl(const std::vector<double>& x, double h, int M,
+static double Sn_fft_impl0(const std::vector<double>& x, double h, int M,
                           int power, double padding, Finalizer finalizer)
 {
     const int    n    = static_cast<int>(x.size());
@@ -2203,6 +2201,80 @@ static double Sn_fft_impl(const std::vector<double>& x, double h, int M,
     // 5. Normalisation finale (déléguée à l'appelant)
     return finalizer(sum, dOmega, n);
 }
+
+
+// -------------------------------------------------------------
+//  Sn_fft_impl – version thread‑safe, plan thread‑local
+// -------------------------------------------------------------
+template<typename Finalizer>
+static double Sn_fft_impl(const std::vector<double>& x,
+                          double h,
+                          int M,
+                          int power,
+                          double padding,
+                          Finalizer finalizer)
+{
+    const int    n    = static_cast<int>(x.size());
+    const double xmin = *std::min_element(x.begin(), x.end());
+    const double xmax = *std::max_element(x.begin(), x.end());
+
+    const double a     = xmin - padding * h;
+    const double b     = xmax + padding * h;
+    const double delta = (b - a) / static_cast<double>(M);
+
+    // --- buffers -------------------------------------------------
+    std::unique_ptr<double[], decltype(&fftw_free)>
+        grid(static_cast<double*>(fftw_malloc(M * sizeof(double))), fftw_free);
+    std::fill(grid.get(), grid.get() + M, 0.0);
+
+    for (int i = 0; i < n; ++i) {
+        const double z    = (x[i] - a) / delta;
+        const int    k    = static_cast<int>(std::floor(z));
+        const double frac = z - static_cast<double>(k);
+        if (k < 0 || k >= M) continue;          // hors grille : ignorer
+
+        if (k < M - 1) {
+            grid[k]     += (1.0 - frac);
+            grid[k + 1] += frac;
+        } else {
+            // k == M-1 : dernier bin, pas de voisin à droite
+            grid[k] += 1.0;
+        }
+    }
+
+    const int complexSize = M / 2 + 1;
+    std::unique_ptr<fftw_complex[], decltype(&fftw_free)>
+        spectrum(static_cast<fftw_complex*>(
+                     fftw_malloc(complexSize * sizeof(fftw_complex))), fftw_free);
+
+    // --- FFT forward (plan déjà mis en cache) -------------------
+    fftw_plan plan_fwd = FFTWThreadCache::forward(M);
+    fftw_execute_dft_r2c(plan_fwd, grid.get(), spectrum.get());
+
+    // --- Intégration fréquentielle -------------------------------
+    const double dOmega = 2.0 * M_PI / (static_cast<double>(M) * delta);
+    double sum = 0.0;
+    for (int k = 0; k < complexSize; ++k) {
+        const double omega = static_cast<double>(k) * dOmega;
+        const double re    = spectrum[k][0];
+        const double im    = spectrum[k][1];
+        double mod2 = (re * re + im * im) / (delta * delta);
+
+        if (k > 0) {
+            const double arg   = omega * delta / (2.0 * M_PI);
+            const double sincv = std::sin(M_PI * arg) / (M_PI * arg);
+            mod2 /= (sincv * sincv * sincv * sincv);   // sinc⁴
+        }
+
+        const double gauss  = std::exp(-0.5 * omega * omega * h * h);
+        const double weight = (k == 0 || k == M / 2) ? 1.0 : 2.0;
+        sum += weight * std::pow(omega, power) * gauss * mod2;
+    }
+
+    return finalizer(sum, dOmega, n);
+}
+
+
 
 // ─── Wrappers publics ────────────────────────────────────────────────────────
 double S4_fft(const std::vector<double>& x, double h, int M)

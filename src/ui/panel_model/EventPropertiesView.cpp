@@ -95,6 +95,7 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eDoubleExp));
     mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eEventPrior));
     mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eMHAdaptGauss));
+    mMethodCombo->setCurrentIndex(1);
     
     connect(mNameEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventName);
     connect(mColorPicker, &ColorPicker::colorChanged, this, &EventPropertiesView::updateEventColor);
@@ -492,12 +493,13 @@ void EventPropertiesView::updateEvent()
         mBoundView->setVisible(type == Event::eBound);
 
         if (type == Event::eDefault) {
-            mMethodCombo->setCurrentIndex(mEventObj.value(STATE_EVENT_SAMPLER).toInt());
+            //mMethodCombo->setCurrentIndex(mEventObj.value(STATE_EVENT_SAMPLER).toInt());
             
             if (mEventObj.value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eDoubleExp)
                 mMethodCombo->setCurrentIndex(0);
 
-            else if (mEventObj.value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eEventPrior)
+            else
+                if (mEventObj.value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eEventPrior)
                     mMethodCombo->setCurrentIndex(1);
 
             else if (mEventObj.value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eMHAdaptGauss)

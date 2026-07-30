@@ -174,7 +174,7 @@ QString MCMCLoop::initialize_time()
                 Bound* bound = dynamic_cast<Bound*>(ev.get());
 
                 if (bound) {
-                    bound->mTheta.setValue(bound->mFixed);
+                    bound->mTheta.setValue(bound->value());
                     bound->mThetaReduced = mModel->reduceTime(bound->mTheta.value());
                     bound->mTheta.mLastMHAccepts.clear();
 
@@ -302,14 +302,14 @@ QString MCMCLoop::initialize_time()
 
 
                     double s02_sum = 0.;
-
+                    auto sigmaU = (tmaxPeriod - tminPeriod) / 2.0;
                     for (Date& date : uEvent->mDates) {
 
                         // 1 - Init ti
                         bool is_wiggle = date.mWiggleCalibration != nullptr;
 
 
-                        const FunctionStat &data = analyseFunction(date.mCalibration->mMap);
+                        const DensityStat &data = analyseDensity(date.mCalibration->mMap);
                         double sigma = data.std;
 #ifdef DEBUG
                         if (sigma == 0.)
@@ -320,7 +320,7 @@ QString MCMCLoop::initialize_time()
                             std::vector<double> repart_exp_theta (date.mWiggleCalibration->mVector.size());
                             double sum_exp = 0.0;
                             for ( size_t i = 0; i < date.mWiggleCalibration->mVector.size(); i++) {
-                                double exp_theta = dnorm(date.mWiggleCalibration->mTmin + i * date.mWiggleCalibration->mStep, uEvent->mTheta.value(), sigma);
+                                double exp_theta = dnorm(date.mWiggleCalibration->mTmin + i * date.mWiggleCalibration->mStep, uEvent->mTheta.value(), sigmaU);
                                 sum_exp += exp_theta * date.mWiggleCalibration->mVector[i];
                                 repart_exp_theta[i] = sum_exp;
                             }
@@ -331,23 +331,23 @@ QString MCMCLoop::initialize_time()
 
 
                         } else if (!date.mCalibration->mRepartition.empty()) {
-                            // On favorise les solutions pretes de theta de l'Event
+                            // On favorise les solutions proches de theta de l'Event
                             std::vector<double> repart_exp_theta (date.mCalibration->mVector.size());
                             double sum_exp = 0.0;
                             for ( size_t i = 0; i < date.mCalibration->mVector.size(); i++) {
-                                double exp_theta = dnorm(date.mCalibration->mTmin + i * date.mCalibration->mStep, uEvent->mTheta.value(), sigma);
+                                double exp_theta = dnorm(date.mCalibration->mTmin + i * date.mCalibration->mStep, uEvent->mTheta.value(), sigmaU);
                                 sum_exp += exp_theta * date.mCalibration->mVector[i];
                                 repart_exp_theta[i] = sum_exp;
                             }
-                            //const double idx = vector_interpolate_idx_for_value(Generator::randomUniform(0, sum_exp), repart_exp_theta);
+
                             const double idx = interpolate_index(Generator::randomUniform(0, sum_exp), repart_exp_theta);
                             date.mTi.setValue(date.mCalibration->mTmin + idx * date.mCalibration->mStep);
 
                         } else { // in the case of mRepartion curve is null, we must init ti outside the study period
                             // For instance we use a gaussian random sampling
-                            sigma = tmaxPeriod - tminPeriod;
+
                             qDebug() << "[MCMCLoop::initialize_time] mRepartion curve is null for" << date.getQStringName();
-                            const double u = Generator::normalDistribution(0., sigma);
+                            const double u = Generator::normalDistribution(0., sigmaU);
                             if (u<0)
                                 date.mTi.setValue(tminPeriod + u);
                             else
@@ -392,30 +392,40 @@ QString MCMCLoop::initialize_time()
                         // intermediary calculus for the harmonic average
                         s02_sum += 1.0 / (sigma * sigma);
 
+                        constexpr double esp_gamma =  0.5/ 0.5; // mode de la loi gamma(0.5, 0.5)
+                        date.mXi = 1.;//esp_gamma;
                     }
 
                     // 4 - Init S02 of each Event
                     uEvent->mS02Theta.mSigmaMH = 0.1; // default = 1.0
 
                     uEvent->mS02Theta.mLastMHAccepts.clear();
+                    const double S02_harmonique = uEvent->mDates.size() / s02_sum;
+                    const double sqrt_S02_harmonique = sqrt(S02_harmonique);
 
-                    const double sqrt_S02_harmonique = sqrt(uEvent->mDates.size() / s02_sum);
-
-
+                    // Formule de Komlan
                     uEvent->mBetaS02 = 1.004680139*(1 - exp(- 0.0000847244 * pow(sqrt_S02_harmonique, 2.373548593)));
+                    //uEvent->mBetaS02 = S02_harmonique * 0.0002; // ICI modif ❌ donne le même beta que formule komlan pour sqrt_S02_harmonique=10
+                    //uEvent->mBetaS02 = S02_harmonique * 0.00024; // même beta que formule komlan pour sqrt_S02_harmonique=50
+                    //uEvent->mBetaS02 = S02_harmonique * 0.001; // ICI modif ❌
 #ifdef CODE_KOMLAN
                     // new code
                     //uEvent->mS02Theta.mX = 1.0 / Generator::gammaDistribution(1., uEvent->mBetaS02);
                     uEvent->mS02Theta.accept_update(1.0 / Generator::gammaDistribution(1., uEvent->mBetaS02));
 
 #else
-                    uEvent->mS02Theta.accept_update(uEvent->mDates.size() / s02_sum);
+                    //constexpr double scale = 100 * 100 ;
+                    if (AppSettings::mEventModel == EventModelType::EDM2 ) {
+                        uEvent->mS02Theta.accept_update(uEvent->mBetaS02/2.0); // mode de l'inverse gamma
+                    } else {
+                        uEvent->mS02Theta.accept_update(S02_harmonique);
+                    }
 
 #endif
 
                     // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
-                    uEvent->mTheta.mSigmaMH = 2.38 * sqrt(uEvent->mS02Theta.value()); // optimum Roberts
-                    uEvent->mAShrinkage = 1.0;
+                    uEvent->mTheta.mSigmaMH = 2.38 * sqrt(S02_harmonique); // optimum Roberts
+                    //uEvent->mAShrinkage = 1.0;
 
 
                 }
@@ -438,7 +448,7 @@ QString MCMCLoop::initialize_time()
                 if (uEvent->mType == Event::eDefault)
                     sampleInCumulatedRepartition_thetaFixe(uEvent, mModel->mSettings);
                 else
-                    uEvent->mTheta.setValue(static_cast<Bound*>(uEvent.get())->mFixed);
+                    uEvent->mTheta.setValue(static_cast<Bound*>(uEvent.get())->value());
                 // nous devons sauvegarder la valeur ici car dans loop.memo(), les variables fixes ne sont pas memorisées.
                 // Pourtant, il faut récupèrer la valeur pour les affichages et les stats
 
@@ -493,7 +503,7 @@ QString MCMCLoop::initialize_time()
 
                 // 5 - Init sigma MH adaptatif of each Event with sqrt(S02)
                 uEvent->mTheta.mSigmaMH = 0.1; // default = 1.0
-                uEvent->mAShrinkage = 1.0;
+                //uEvent->mAShrinkage = 1.0;
 
                 // 6- Clear mLastMHAccepts  array
                 uEvent->mTheta.mLastMHAccepts.clear();
@@ -805,7 +815,7 @@ void MCMCLoop::run()
         new_particles.reserve(N_new);
 
         // Rééchantillonnage systématique sécurisé
-        /** @ref Tille, Y., s. d. Theorie Des Sondages - 2E Ed. Dunod. ISBN 10:2100797956, Chap. 5.6 **/
+        /** @ref Tille, Y., s. d. Theorie Des Sondages - 2E Ed. Dunod. ISBN 10:2100797956, Chap. 5.6 **/
 
 
         double u0 = Generator::randomUniform() / N_new;

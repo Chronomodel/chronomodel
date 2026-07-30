@@ -423,9 +423,9 @@ void CalibrationView::updateGraphs()
             QString resultsStr;
 
             if (!periodCalib.empty()) {
-                DensityAnalysis results;
-                results.funcAnalysis = analyseFunction(periodCalib);
-                resultsStr += FunctionStatToString(results.funcAnalysis);
+                PosteriorAnalysis results;
+                results.densityAnalysis = analyseDensity(periodCalib);
+                resultsStr += densityStatToString(results.densityAnalysis);
 
                 const double real_thresh = std::accumulate(formated_intervals.begin(), formated_intervals.end(), 0., [](double sum, QPair<double, QPair<double, double> > p) {return sum + p.first;});
 

@@ -69,7 +69,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 // -----------------------------------------------------------------
 
 /**
- * @brief Product a FunctionStat from a QMap
+ * @brief Product a DensityStat from a QMap
  * @todo Handle empty function case and null density case (pi = 0)
  *
  *  Calculate the variance based on equations (15) and (16) on
@@ -78,15 +78,15 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
  *  Publishing Company, 1973.
 */
 
-FunctionStat analyseFunction(const QMap<type_data, type_data> &fun)
+DensityStat analyseDensity(const QMap<type_data, type_data> &fun)
 {
-    FunctionStat result;
+    DensityStat result;
     if (fun.isEmpty()) {
         result.max = (type_data)0.;
         result.mode = (type_data)0.;
         result.mean = (type_data)0.;
         result.std = (type_data)(-1.);
-        qDebug() << "[Function::analyseFunction] WARNING : No data !!";
+        qDebug() << "[Function::analyseDensity] WARNING : No data !!";
         return result;
 
     } else if (fun.size() == 1) {
@@ -94,7 +94,7 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &fun)
         result.mode = fun.firstKey();
         result.mean = fun.firstKey();
         result.std = 0.;
-        //qDebug() << "[Function::analyseFunction] WARNING : Only one data !! ";
+        //qDebug() << "[Function::analyseDensity] WARNING : Only one data !! ";
         result.quartiles.Q1 = fun.firstKey();
         result.quartiles.Q2 = fun.firstKey();
         result.quartiles.Q3 = fun.firstKey();
@@ -164,15 +164,15 @@ FunctionStat analyseFunction(const QMap<type_data, type_data> &fun)
     return result;
 }
 
-FunctionStat analyseFunction(const std::map<type_data, type_data> &fun)
+DensityStat analyseDensity(const std::map<type_data, type_data> &fun)
 {
-    FunctionStat result;
+    DensityStat result;
     if (fun.empty()) {
         result.max = (type_data)0.;
         result.mode = (type_data)0.;
         result.mean = (type_data)0.;
         result.std = (type_data)(-1.);
-        qDebug() << "[Function::analyseFunction] WARNING : No data !!";
+        qDebug() << "[Function::analyseDensity] WARNING : No data !!";
         return result;
 
     } else if (fun.size() == 1) {
@@ -180,7 +180,7 @@ FunctionStat analyseFunction(const std::map<type_data, type_data> &fun)
         result.mode = fun.begin()->first;
         result.mean = fun.begin()->first;
         result.std = 0.;
-        //qDebug() << "[Function::analyseFunction] WARNING : only one data !! ";
+        //qDebug() << "[Function::analyseDensity] WARNING : only one data !! ";
         result.quartiles.Q1 = fun.begin()->first;
         result.quartiles.Q2 = fun.begin()->first;
         result.quartiles.Q3 = fun.begin()->first;
@@ -686,6 +686,10 @@ const std::pair<double, double> linear_regression(const std::vector<double> &dat
     return std::pair<double, double>(std::move(a), std::move(b));
 }
 
+
+
+
+
 #pragma mark TRACE STAT
 /**
  * @brief traceStatistic : This function uses the Knuth-Welford algorithm to calculate the standard deviation.
@@ -733,6 +737,7 @@ TraceStat traceStatistic(const QList<type_data> &trace)
 TraceStat traceStatistic(const std::vector<type_data> &trace)
 {
     TraceStat result;
+    result.updated = true;
     if (trace.size() == 0) {
         result.mean = 0;
         result.std = 0.0;
@@ -784,15 +789,23 @@ TraceStat traceStatistic(const std::vector<type_data> &trace)
 
     // N(0,1) doit donné  "h SJ_ste 0.491017490078519" et  "h SJ_dpi 0.485152825792427"
     //std::vector<double> trace_test = {-0.710406563699301,0.25688370915653,-0.246691878462374,-0.347542599397733,-0.951618567265016,-0.0450277248089203,-0.784904469457076,-1.66794193658814,-0.380226520287762,0.918996609060766,-0.575346962608392,0.607964322225033,-1.61788270828916,-0.0555619655245394,0.519407203943462,0.301153362166714,0.105676194148943,-0.640706008305376,-0.849704346033582,-1.02412879060491,0.117646597100126,-0.947474614184802,-0.490557443700668,-0.256092192198247,1.84386200523221,-0.651949901695459,0.235386572284857,0.0779608495637108,-0.961856634130129,-0.0713080861235987,1.44455085842335,0.451504053079215,0.0412329219929399,-0.422496832339625,-2.05324722154052,1.13133721341418,-1.46064007092482,0.739947510877334,1.90910356921748,-1.4438931609718,0.701784335374711,-0.262197489402468,-1.57214415914549,-1.51466765378175,-1.60153617357459,-0.530906522170303,-1.4617555849959,0.687916772975828,2.10010894052567,-1.28703047603518};
+#ifdef DEBUG_no
+    Chronometer t ("h_sj_ste");
+    std::cout << "[traceStatistic] debut calcul h_sj_ste  " << std::endl;
+#endif
+    const double h_sj_ste = bw_SJ_ste(trace);
 
-    double h_sj_ste = bw_SJ_ste(trace);
+#ifdef DEBUG_no
+    t.display();
+    std::cout << "[traceStatistic] fin calcul h_sj_ste  " << std::endl;
 
+#endif
     //double h_sj_dpi = bw_SJ_dpi(trace);   // rapide
     //double h_sj_ste = bw_SJ_ste(trace);   // plus précis
     //h = h_sj_ste;
 
 
-    double h_nrd0 = bw_nrd0(trace);//0.9 * result.std * pow(trace.size(), -0.2);
+    const double h_nrd0 = bw_nrd0(trace);//0.9 * result.std * pow(trace.size(), -0.2);
     // std::cout << "SJ-DPI = " << h_sj_dpi << "\n";
     //std::cout << "SJ-STE = " << h_sj_ste << "\n";
     //double scaleFactor = scale_factor(trace);
@@ -808,31 +821,195 @@ TraceStat traceStatistic(const std::vector<type_data> &trace)
     return result;
 }
 
+#pragma mark Gelman Rubin
+
+// chains[m][n] = n-ième échantillon de la chaîne m
+double gelmanRubin0(const std::vector<std::vector<double>>& chains)
+{
+    const int M = chains.size();
+    if (M < 2)
+        return 0.0;
+    const int N = chains[0].size();
+    for (const auto& c : chains)
+        if ((int)c.size() != N)
+            throw std::invalid_argument("[Function::gelmanRubin] Toutes les chaînes doivent avoir la même longueur");
+    if (N < 2)
+        return 0.0;
+
+    // 1. Moyennes par chaîne
+    std::vector<double> chain_mean(M);
+    for (int m = 0; m < M; ++m)
+        chain_mean[m] = std::accumulate(chains[m].begin(), chains[m].end(), 0.0) / N;
+
+    // 2. Moyenne globale
+    double grand_mean = std::accumulate(chain_mean.begin(), chain_mean.end(), 0.0) / M;
+
+    // 3. Variance inter-chaînes B
+    double B = 0.0;
+    for (int m = 0; m < M; ++m) {
+        double d = chain_mean[m] - grand_mean;
+        B += d * d;
+    }
+    B *= static_cast<double>(N) / (M - 1);
+
+    // 4. Variance intra-chaîne W
+    double W = 0.0;
+    for (int m = 0; m < M; ++m) {
+        double s2 = 0.0;
+        for (int n = 0; n < N; ++n) {
+            double d = chains[m][n] - chain_mean[m];
+            s2 += d * d;
+        }
+        W += s2 / (N - 1);
+    }
+    W /= M;
+
+    // Cas dégénérés
+    if (W < 1e-15)        // chaînes constantes
+        return 1.0;
+    if (B < 1e-15 * W)   // chaînes indiscernables
+        return 1.0;
+
+    // 5. Variance marginale estimée
+    double V_hat = ((N - 1.0) / N) * W + ((M + 1.0) / (M * N)) * B;
+
+    // 6. R-hat
+    return std::sqrt(V_hat / W);
+}
+
+
+struct WelfordStats {
+    double mean = 0.0, M2 = 0.0;
+    int    count = 0;
+
+    void update(double x) {
+        ++count;
+        double delta = x - mean;
+        mean += delta / count;
+        M2   += delta * (x - mean);
+    }
+
+    // Fusion de deux accumulateurs (Chan 1979)
+    static WelfordStats merge(const WelfordStats& a, const WelfordStats& b) {
+        WelfordStats r;
+        r.count = a.count + b.count;
+        double delta = b.mean - a.mean;
+        r.mean = (a.count * a.mean + b.count * b.mean) / r.count;
+        r.M2   = a.M2 + b.M2 + delta * delta * a.count * b.count / r.count;
+        return r;
+    }
+
+    double variance() const { return M2 / (count - 1); }
+};
+// version accélérer avec knuth et la formule de Chan (WelfordStats)
+double gelmanRubin(const std::vector<std::vector<double>>& chains)
+{
+    const int M = chains.size();
+    if (M < 2) return 0.0;
+    const int N = chains[0].size();
+    for (const auto& c : chains)
+        if ((int)c.size() != N)
+            throw std::invalid_argument("Toutes les chaînes doivent avoir la même longueur");
+    if (N < 2) return 0.0;
+
+    std::vector<double> chain_mean(M);
+    std::vector<double> chain_var(M);
+
+    // Parallélisation sur N par chaîne (M chaînes séquentielles)
+    for (int m = 0; m < M; ++m) {
+        const auto& ch = chains[m];
+        WelfordStats global;
+
+#pragma omp parallel
+        {
+            WelfordStats local;
+
+#pragma omp for schedule(static) nowait
+            for (int n = 0; n < N; ++n)
+                local.update(ch[n]);
+
+#pragma omp critical
+            global = WelfordStats::merge(global, local);
+        }
+
+        chain_mean[m] = global.mean;
+        chain_var[m]  = global.variance();
+    }
+
+    // Moyenne globale et variance inter B
+    double grand_mean = 0.0;
+    for (int m = 0; m < M; ++m)
+        grand_mean += chain_mean[m];
+    grand_mean /= M;
+
+    double B = 0.0;
+    for (int m = 0; m < M; ++m) {
+        double d = chain_mean[m] - grand_mean;
+        B += d * d;
+    }
+    B *= static_cast<double>(N) / (M - 1);
+
+    double W = 0.0;
+    for (int m = 0; m < M; ++m)
+        W += chain_var[m];
+    W /= M;
+
+    if (W < 1e-15)       return 1.0;
+    if (B < 1e-15 * W)   return 1.0;
+
+    double V_hat = ((N - 1.0) / N) * W + ((M + 1.0) / (M * N)) * B;
+    return std::sqrt(V_hat / W);
+}
+
+// Version multi-paramètres : retourne un R-hat par paramètre
+// chains[m][n][p] = paramètre p, échantillon n, chaîne m
+std::vector<double> gelmanRubinMulti(
+    const std::vector<std::vector<std::vector<double>>>& chains)
+{
+    const int M = chains.size();
+    const int N = chains[0].size();
+    const int P = chains[0][0].size();
+
+    std::vector<std::vector<double>> param_chains(M, std::vector<double>(N));
+    std::vector<double> r_hats(P);
+
+    for (int p = 0; p < P; ++p) {
+        for (int m = 0; m < M; ++m)
+            for (int n = 0; n < N; ++n)
+                param_chains[m][n] = chains[m][n][p];
+        r_hats[p] = gelmanRubin(param_chains);
+    }
+    return r_hats;
+}
+
+
+
 double shrinkageUniform(const double s02)
 {
-    //double u = Generator::randomUniform();
     const double u = Generator::randomUniform(0, 1);
     return (s02 * (1. - u) / u);
 }
 
 /**
- * @brief Return a text from a FunctionStat
- * @see FunctionStat
+ * @brief Return a text from a DensityStat
+ * @see DensityStat
  */
-QString FunctionStatToString(const FunctionStat &analysis)
+QString densityStatToString(const DensityStat &analysis)
 {
-    QString result;
-
-    if (analysis.std<0.)
+    QString result = "<i>" + QObject::tr("Density Stat.") + "</i><br>";
+    if (analysis.std < 0.0)
         result = QObject::tr("No data");
 
     else {
-        result += QObject::tr("MAP = %1  ;  Mean = %2  ;  Std = %3").arg( stringForLocal(analysis.mode),
+        if (analysis.bandwidth_used > 0.0)
+            result = QObject::tr("Bandwidth used = %1").arg(stringForLocal(analysis.bandwidth_used)) + "<br>";
+
+        result += QObject::tr("MAP = %1  ;  Mean = %2  ;  Std = %3").arg(stringForLocal(analysis.mode),
                                                                          stringForLocal(analysis.mean),
                                                                          stringForLocal(analysis.std)) + "<br>";
-        result += QObject::tr("Q1 = %1  ;  Q2 = %2  ;  Q3 = %3").arg( stringForLocal(analysis.quartiles.Q1),
+        result += QObject::tr("Q1 = %1  ;  Q2 = %2  ;  Q3 = %3").arg(stringForLocal(analysis.quartiles.Q1),
                                                                      stringForLocal(analysis.quartiles.Q2),
-                                                                     stringForLocal(analysis.quartiles.Q3));//+ "<br>";
+                                                                     stringForLocal(analysis.quartiles.Q3));
 
     }
 
@@ -841,12 +1018,12 @@ QString FunctionStatToString(const FunctionStat &analysis)
 
 /**
  * @brief Return a text with the value of th Quartiles Q1, Q2 and Q3
- * @see DensityAnalysis
+ * @see PosteriorAnalysis
  */
-QString densityAnalysisToString(const DensityAnalysis &analysis)
+QString posteriorAnalysisToString(const PosteriorAnalysis &analysis)
 {
     QString result (QObject::tr("No data"));
-    if (analysis.funcAnalysis.std >= 0.) {
+    if (analysis.densityAnalysis.std >= 0.) {
 
         result = "<i>" + QObject::tr("Trace Stat.")  + "</i><br>";
         result += QObject::tr("Mean = %1  ;  Std = %2").arg( stringForLocal(analysis.traceAnalysis.mean),
@@ -857,14 +1034,39 @@ QString densityAnalysisToString(const DensityAnalysis &analysis)
         result += QObject::tr("min = %1  ;  max  = %2 ").arg( stringForLocal(analysis.traceAnalysis.min),
                                                              stringForLocal(analysis.traceAnalysis.max)) + "<br>";
 
-        result += QObject::tr("Sheather-Jones bandwidth = %1  ").arg( stringForLocal(analysis.traceAnalysis.bw_SJ))+ "<br>";
+        result += "<br>" + QObject::tr("Sheather-Jones bandwidth = %1  ").arg( stringForLocal(analysis.traceAnalysis.bw_SJ))+ "<br>";
         result += QObject::tr("Silverman's rule of thumb bandwidth = %1  ").arg( stringForLocal(analysis.traceAnalysis.bw_nrd0))+ "<br>";
 
+        QString rhat_color, rhat_status;
+        double rhat = analysis.R_hat_Gelman_Rubin;
 
-        result += "<br><i>" + QObject::tr("Density Stat.") + "</i><br>";
+        if (rhat == 0) {
+            rhat_color  = "black";
+            rhat_status = QObject::tr("One Chain");
+        } else if (rhat < 1.01) {
+            rhat_color  = "green";
+            rhat_status = QObject::tr("Satisfactory convergence");
+        } else if (rhat < 1.1) {
+            rhat_color  = "orange";
+            rhat_status = QObject::tr("Insufficient convergence");
+        } else {
+            rhat_color  = "red";
+            rhat_status = QObject::tr("Not converged");
+        }
+
+        result += "<br><i>"
+                  + QString("<span style='color:%1'>").arg(rhat_color)
+                  + QObject::tr("Gelman-Rubin R_hat = %1 (%2)")
+                        .arg(rhat, 0, 'f', 4)
+                        .arg(rhat_status)
+                  + "</span>"
+                  + "</i><br>";
+
+
+        //result += "<br><i>" + QObject::tr("Density Stat.") + "</i><br>";
     }
 
-    result += FunctionStatToString(analysis.funcAnalysis) + "<br>";
+    result += "<br>" + densityStatToString(analysis.densityAnalysis) + "<br>";
 
 
     return result;
@@ -5467,9 +5669,11 @@ QMap<double, double> gaussian_filter(QMap<double, double> &map, const double sig
     for (int i = 0; i < NComplex; ++i) {
         const double s =  M_PI * (double)i / (double)NComplex;
         const double factor = exp(-2. * pow(s * sigma_filter, 2.));
+#ifdef DEBUG
         if (isnan(factor)) {
-            qDebug()<<"gaussian filter"<< s << " isnan";
+            qDebug()<<"[Function::gaussian_filter]" << s << " isnan";
         }
+#endif
         inputComplex[i][0] *= factor;
         inputComplex[i][1] *= factor;
 
@@ -5479,7 +5683,6 @@ QMap<double, double> gaussian_filter(QMap<double, double> &map, const double sig
     double *outputReal;
     outputReal = new double [2* (N/2)+1];//;[N];
 
-
     fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, inputComplex, outputReal, FFTW_ESTIMATE);
     fftw_execute(plan_output);
 
@@ -5487,7 +5690,7 @@ QMap<double, double> gaussian_filter(QMap<double, double> &map, const double sig
     int safe_limit = 2*(N/2)+1 - paddingSize;
     if (inputSize > safe_limit) {
         inputSize = safe_limit;
-        qDebug() << "Adjusted inputSize to prevent buffer overflow:" << inputSize;
+        qDebug() << "[Function::gaussian_filter] Adjusted inputSize to prevent buffer overflow:" << inputSize;
     }
 
     QMap<double, double> results;
@@ -5496,7 +5699,7 @@ QMap<double, double> gaussian_filter(QMap<double, double> &map, const double sig
         results[t] = outputReal[i + paddingSize]/N;
 #ifdef DEBUG
         if (isnan(results[t])) {
-            qDebug()<<"gaussian filter"<<t<< " isnan";
+            qDebug() << "[Function::gaussian_filter]" << t << " isnan";
         }
 #endif
     }

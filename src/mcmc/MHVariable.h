@@ -113,14 +113,9 @@ public:
     void accept_update(const double x);
     void reject_update();
 
-    //bool adapt (const double coef_min = 0.42, const double coef_max = 0.46, const double delta = 0.01);
-
-   // bool adapt(const double coef_min = 0.42, const double coef_max = 0.46, double delta = 0.01, double sigma_min = 1e-4, double sigma_max = 10.0);
-
-
     bool adapt(double coef_min = 0.42, const double coef_max = 0.46,
                            size_t batchIndex = 100,
-                           double sigma_min = 1e-4, double sigma_max = 10.0,
+                           double sigma_min = 1e-10, double sigma_max = 100000.0,
                            double c = 0.5, double kappa = 0.6, double t0 = 10.0);
 
     inline bool acceptMH_buffer_full() {return mLastMHAccepts.size() == mLastMHAcceptsLength;};
@@ -150,8 +145,6 @@ public:
 
     std::vector<double> acceptationForChain(const std::vector<ChainSpecs>& chains, size_t index);
     void generateGlobalRunAcceptation(const std::vector<ChainSpecs>& chains);
-
-    //void generateNumericalResults(const std::vector<ChainSpecs> &chains) override;
 
     virtual void generateDensityNumericalResults(const std::vector<ChainSpecs>& chains) override;
     virtual void generateTraceNumericalResults(const std::vector<ChainSpecs>& chains) override;

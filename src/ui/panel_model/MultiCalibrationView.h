@@ -109,7 +109,7 @@ private:
     double mTmaxDisplay;
     double mThreshold;
     qreal mGraphHeight;
-    qreal mHeightForVisibleAxis;
+    qreal mHeightForVisibleTicksAxis;
 
     bool mUsePluginColor;
     bool mUseEventColor;

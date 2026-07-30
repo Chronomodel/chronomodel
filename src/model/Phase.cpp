@@ -710,10 +710,14 @@ void Phase::setBandwidth(BandwidthType bwt, double bandwidth)
 void Phase::generateFormatedKDE(const std::vector<ChainSpecs>& chains, const int fftLen, const double tmin, const double tmax)
 {   
     mAlpha.generateFormatedKDE(chains, fftLen, tmin, tmax);
+    mAlpha.mResults.densityAnalysis.bandwidth_used = mAlpha.mBandwidth;
+
     mBeta.generateFormatedKDE(chains, fftLen, tmin, tmax);
+    mBeta.mResults.densityAnalysis.bandwidth_used = mAlpha.mBandwidth;
     // if (mTauType == eZOnly)
     //   mTau.generateKDE(chains, fftLen, bandwidth);
     mDuration.generateFormatedKDE(chains, fftLen);
+    mDuration.mResults.densityAnalysis.bandwidth_used = mDuration.mBandwidth;
 }
 
 

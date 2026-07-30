@@ -60,7 +60,8 @@ Date::Date():
     mTi(),
     mSigmaTi(),
     mWiggle(),
-    mDelta(0.),
+    mDelta(0.0),
+    mXi(0.0),
     mId(-1),
     mUUID(""),
     mColor(Qt::blue),
@@ -99,7 +100,7 @@ Date::Date():
 
     mWiggle.setName("Wiggle of Date : " + mName);
     mWiggle.mSupport = Support::eR;
-    mWiggle.mFormat = DateUtils::eUnknown;
+    mWiggle.mFormat = DateUtils::eNumeric;
 
     mId = -1;
 
@@ -112,7 +113,8 @@ Date::Date(const QJsonObject& json):
     mTi(),
     mSigmaTi(),
     mWiggle(),
-    mDelta(0.),
+    mDelta(0.0),
+    mXi(0.0),
     mUUID(""),
     mColor(Qt::blue),
     mData(),
@@ -143,7 +145,8 @@ Date::Date(PluginAbstract* plugin):
     mTi(),
     mSigmaTi(),
     mWiggle(),
-    mDelta(0.),
+    mDelta(0.0),
+    mXi(0.0),
     mUUID(""),
     mColor(Qt::blue),
     mData(),
@@ -194,13 +197,13 @@ void Date::init()
     mUUID = "";
 
     mIsValid = true;
-    mDelta = 0.;
+    mDelta = 0.0;
     mDeltaType = eDeltaNone;
-    mDeltaFixed = 0.;
-    mDeltaMin = 0.;
-    mDeltaMax = 0.;
-    mDeltaAverage = 0.;
-    mDeltaError = 0.;
+    mDeltaFixed = 0.0;
+    mDeltaMin = 0.0;
+    mDeltaMax = 0.0;
+    mDeltaAverage = 0.0;
+    mDeltaError = 0.0;
     mIsCurrent = false;
     mIsSelected = false;
    // mSubTDates.clear();
@@ -246,6 +249,8 @@ void Date::moveFrom(Date&& other) noexcept
     mSigmaTi = std::move(other.mSigmaTi);
     mWiggle = std::move(other.mWiggle);
     mDelta = other.mDelta;
+    mXi = other.mXi;
+
     mId = other.mId;
     mUUID = other.mUUID;
     mColor = other.mColor;
@@ -299,6 +304,8 @@ void Date::copyFrom(const Date& date)
 
     mWiggle = date.mWiggle;
     mDelta = date.mDelta;
+    mXi = date.mXi;
+
     mId = date.mId;
     mUUID = date.mUUID;
     mColor = date.mColor;
@@ -1593,7 +1600,6 @@ QPixmap Date::generateCalibThumb(const StudyPeriodSettings& settings)
 
         const std::map<double, double> &calib = normalize_map(getMapDataInRange(getRawCalibMap(), tmin, tmax));
 
-        qDebug()<<"[Date::generateCalibThumb] mName "<< mCalibration->getQStringName() << mCalibration->mVector.size() << calib.size();
         if (calib.empty())
             return QPixmap();
 
@@ -1634,7 +1640,6 @@ QPixmap Date::generateCalibThumb(const StudyPeriodSettings& settings)
         graph.showYAxisSubTicks(false);
         graph.showYAxisValues(false);
 
-
         graph.setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
         graph.setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
         graph.setXAxisMode(GraphView::eHidden);
@@ -1658,7 +1663,6 @@ QPixmap Date::generateCalibThumb(const StudyPeriodSettings& settings)
             return QPixmap(); // Gestion d'erreur
         }
 
-        //graph.repaint();
         graph.render(&p);
         p.end();
 
@@ -1714,45 +1718,315 @@ double Date::getLikelihoodFromWiggleCalib(const double &t) const
 
 }
 
-void Date::updateDate(const double theta_mX, const double S02Theta_mX, const double AShrinkage)
-{
 
-    updateTi(theta_mX);
-    updateDelta(theta_mX);
-   // updateSigmaShrinkage(theta_mX, S02Theta_mX, AShrinkage);
-    updateSigmaShrinkage_K(theta_mX, S02Theta_mX, AShrinkage);
+
+void Date::updateDate_v3(const double theta, const double S02Theta)
+{
+    updateTi_v3(theta);
+
+    updateDelta_v3(theta, S02Theta);
+    updateSigmaShrinkage_K(theta, S02Theta);
 
     updateWiggle();
 }
 
-void Date::updateTi(const double theta_mX)
+void Date::applyTi_v3(const double theta)
 {
-    (this->*updateti) (theta_mX);
+    switch (mTi.mSamplerProposal) {
+    case MHVariable::eDatePrior:
+        applyPrior(theta);
+        break;
+    case MHVariable::eMHAdaptGauss:
+        applyMHAdaptGauss(theta);
+        break;
+    case MHVariable::eInversion:
+    default:
+        applyInversion(theta);
+        break;
+    }
+}
+// Utilise Xi
+//Obsolete
+
+
+void Date::updateTi_v4(const double theta, const double S02Theta)
+{
+    /*
+     double try_ti;
+      if (Generator::randomUniform() < mMixingLevel) { // try_ti always in the study period
+        const double tminCalib = mCalibration->mTmin;
+        const double u = Generator::randomUniform();
+        const double idx = interpolate_index(u, mCalibration->mRepartition);
+        try_ti = tminCalib + idx * mCalibration->mStep;
+
+    } else {
+        // -- gaussian -- try_ti can be outside the study period
+        const double t0 = mTi.value();
+        const double s = (mSettings.mTmax - mSettings.mTmin) / 2.0;
+        try_ti = Generator::normalDistribution(t0, s);
+    }
+    const double rate_q = fProposalDensity(mTi.value(), try_ti) / fProposalDensity(try_ti, mTi.value());
+
+    */
+
+    const double try_ti = Generator::normalDistribution(mTi.value(), mTi.mSigmaMH);
+    const double rate_q = 1.0;
+
+    const double rate_L = getLikelihood(try_ti) / getLikelihood(mTi.value());
+
+    const double h_p_x = h_prior_EDM2(theta, mTi.value(), mDelta, mXi, S02Theta);
+    const double h_p_y = h_prior_EDM2(theta, try_ti,      mDelta, mXi, S02Theta);
+    const double rate_p2 = h_p_y  / h_p_x;
+
+    // La loi instrumentale avec mélange de distribution Calibré-Gaussienne, n'est pas symétrique
+    // il faut faire le rapport q_xy/q_yx
+
+
+    mTi.try_update(try_ti, rate_L * rate_p2 * rate_q);
+
+    // mise à jour de x_i
+
+    // Attention  dans wiki beta -> 1/beta dans la fonction gammaDistribution
+    // ---------------------------------------------------------------------
+    // 0.  Choix du mode d’échantillonnage
+    // ---------------------------------------------------------------------
+    //   A  → Gamma direct
+    //   B  → Random‑Walk gaussienne tronquée sur le log‑échelle
+    //   C  → Random‑Walk gaussienne tronquée sur l’échelle naturelle
+    // ---------------------------------------------------------------------
+
+    #define SAMPLER_MODE 'A'          // <-- choisissez A, B ou C
+    // ---------------------------------------------------------------------
+    // 1.  Paramètres du prior Gamma (déclarés une fois, visibles partout)
+    // ---------------------------------------------------------------------
+    constexpr double alpha_gamma = 0.5;   // shape
+    constexpr double beta_gamma  = 0.5;   // scale  (β > 0)
+    constexpr double teta_gamma  = 1.0 / beta_gamma;
+    // ---------------------------------------------------------------------
+    // 2.  Variables d’adaptation (static → persiste entre appels)
+    // ---------------------------------------------------------------------
+    static double sigmaMH   = 1.0;                // écart‑type de la proposition
+    static std::size_t iter = 0;                 // compteur d’itérations
+    // ---------------------------------------------------------------------
+    const double log_Xi_curr = std::log(mXi);   // état courant en log(e)
+
+#if defined(SAMPLER_MODE) && (SAMPLER_MODE == 'A')
+    // -----------------------------------------------------------------
+    // A – Proposition Gamma directe (tirage du prior)
+    // -----------------------------------------------------------------
+    // 5.1  Tirage direct d’une loi Gamma(α=0.5 , β=0.5)
+    //      (dans la documentation de la fonction, β = 1/θ)
+    double try_x_i = Generator::gammaDistribution(alpha_gamma, teta_gamma);
+
+    // 5.2  Log‑densités du prior EDM2 (déjà en log, pas de Jacobien)
+    const double log_h_p_Xx = log_h_prior_EDM2(theta, mTi.value(), mDelta, mXi,     S02Theta);
+    const double log_h_p_Xy = log_h_prior_EDM2(theta, mTi.value(), mDelta, try_x_i, S02Theta);
+
+    // 5.3  Log‑ratio d’acceptation (seulement le facteur EDM2,
+    //     le prior Gamma s’annule car on a tiré *exactement* dans ce prior)
+    double log_alpha = log_h_p_Xy - log_h_p_Xx;
+
+#endif
+
+    auto logGammaPrior = [&](double y) -> double
+    {
+        // log p_Gamma(e^y) = (α‑1)·y – e^y / θ   (+ constantes ignorées), notation wiki
+        return (alpha_gamma - 1.0) * y - std::exp(y) / teta_gamma;
+    };
+
+#if defined(SAMPLER_MODE) && (SAMPLER_MODE == 'B')
+    // ---------------------------------------------------------------------
+    // B.  Proposition (Random‑Walk gaussienne tronquée) sur le log‑échelle
+    // ---------------------------------------------------------------------
+    double log_Xi_prop = Generator::truncatedNormal(
+        log_Xi_curr,   // μ
+        sigmaMH,           // σ
+        -6.0,          // lower bound
+        100.0);        // upper bound
+
+    // Retour à l’échelle naturelle pour le prior EDM2
+    const double try_x_i = std::exp(log_Xi_prop);
+    // -------------------------------------------------------------
+    //   f)  Log‑ratio d’acceptation (la proposition est symétrique,
+    //       donc le facteur q(x→y)/q(y→x) = 1 et disparaît)
+    // -------------------------------------------------------------
+
+
+    const double log_h_gamma_x = logGammaPrior(log_Xi_curr);
+    const double log_h_gamma_y = logGammaPrior(log_Xi_prop);
+
+    const double log_h_p_Xx = log_h_prior_EDM2(theta, mTi.value(), mDelta, mXi,     S02Theta);
+    const double log_h_p_Xy = log_h_prior_EDM2(theta, mTi.value(), mDelta, try_x_i, S02Theta);
+
+    // ---------------------------------------------------------------------
+    // 8.  Log‑ratio d’acceptation (inclut le Jacobien y) si echantillonneur echelle log
+    // ---------------------------------------------------------------------
+    const double log_alpha = (log_h_gamma_y + log_h_p_Xy + log_Xi_prop)
+                             - (log_h_gamma_x + log_h_p_Xx + log_Xi_curr);
+#endif
+
+#if defined(SAMPLER_MODE) && (SAMPLER_MODE == 'C')
+    // -----------------------------------------------------------------
+    // C – Random‑Walk gaussienne tronquée sur l’échelle naturelle
+    //-----------------------------------------------------------------
+    // 5.1  Proposition asymétrique : N(mXi , sigmaMH²) tronquée à x>0
+    const double try_x_i = Generator::truncatedNormal(
+        mXi,   // μ
+        sigmaMH,           // σ
+        0,          // lower bound
+        5);        // upper bound
+
+    const double log_Xi_prop = log(try_x_i);
+
+    const double log_h_gamma_x = logGammaPrior(log_Xi_curr);
+    const double log_h_gamma_y = logGammaPrior(log_Xi_prop);
+
+    const double log_h_p_Xx = log_h_prior_EDM2(theta, mTi.value(), mDelta, mXi,     S02Theta);
+    const double log_h_p_Xy = log_h_prior_EDM2(theta, mTi.value(), mDelta, try_x_i, S02Theta);
+
+    // ---------------------------------------------------------------------
+    // 8.  Log‑ratio d’acceptation
+    // ---------------------------------------------------------------------
+    const double log_alpha = (log_h_gamma_y + log_h_p_Xy )
+                           - (log_h_gamma_x + log_h_p_Xx );
+#endif
+
+
+
+    // ---------------------------------------------------------------------
+    // 7.  Test d’acceptation (Metropolis)
+    // ---------------------------------------------------------------------
+    bool accepted = MHAcceptanceTest_log(log_alpha);
+    if (accepted) {
+        mXi = try_x_i;          // on accepte la proposition
+    }
+
+    // ---------------------------------------------------------------------
+    // 8.  Adaptation de sigmaMH (Robbins‑Monro)
+    // ---------------------------------------------------------------------
+    ++iter;                                 // incrément du compteur
+    constexpr double target = 0.44;        // taux d’acceptation cible (1‑D)
+    constexpr double gamma0 = 0.05;        // amplitude du pas d’adaptation
+    constexpr double eta    = 0.6;         // décroissance du pas (0.5 < η ≤ 1)
+    double gamma_k = gamma0 / std::pow(static_cast<double>(iter), eta);
+
+    sigmaMH = std::exp( std::log(sigmaMH)
+                       + gamma_k * ( (accepted ? 1.0 : 0.0) - target ) );
+    // (optionnel) on borne sigmaMH pour éviter des valeurs extrêmes
+    //sigmaMH = std::clamp(sigmaMH, 0.01, 5.0);
+
+#ifdef DEBUG_no
+    // ---------------------------------------------------------------------
+    // 8.  DEBUG – statistiques d’acceptation et suivi de sigmaMH
+    // ---------------------------------------------------------------------
+    static std::size_t naccept = 0;
+    static std::size_t ntot    = 0;
+    static double mean = 0.0;
+
+    if (accepted) ++naccept;
+    ++ntot;
+    mean += (mXi - mean) / static_cast<double>(ntot);
+
+    std::cout << " mXi  accept% = "
+              << 100.0 * static_cast<double>(naccept) / static_cast<double>(ntot)
+              << "%   mean = " << mean
+              << "   sigmaMH = " << sigmaMH << '\n';
+#endif
+
+}
+
+// Utilise Xi
+void Date::applyTi_v4(const double theta, const double S02Theta)
+{
+    // mise à jour de x_i
+    // ---------------------------------------------------------------------
+    // 1.  Paramètres du prior Gamma (déclarés une fois, visibles partout)
+    // ---------------------------------------------------------------------
+    constexpr double alpha_gamma = 0.5;   // shape
+    constexpr double beta_gamma  = 0.5;   // scale  (β > 0)
+    constexpr double teta_gamma  = 1.0 / beta_gamma;
+
+#if defined(SAMPLER_MODE) && (SAMPLER_MODE == 'A')
+    // -----------------------------------------------------------------
+    // A – Proposition Gamma directe (tirage du prior)
+    // -----------------------------------------------------------------
+    // 5.1  Tirage direct d’une loi Gamma(α=0.5 , β=0.5)
+    //      (dans la documentation de la fonction, β = 1/θ)
+    double try_x_i = Generator::gammaDistribution(alpha_gamma, teta_gamma);
+
+    // 5.2  Log‑densités du prior EDM2 (déjà en log, pas de Jacobien)
+    const double log_h_p_Xx = log_h_prior_EDM2(theta, mTi.value(), mDelta, mXi,     S02Theta);
+    const double log_h_p_Xy = log_h_prior_EDM2(theta, mTi.value(), mDelta, try_x_i, S02Theta);
+
+    // 5.3  Log‑ratio d’acceptation (seulement le facteur EDM2,
+    //     le prior Gamma s’annule car on a tiré *exactement* dans ce prior)
+    double log_alpha = log_h_p_Xy - log_h_p_Xx;
+
+#endif
+
+    if (MHAcceptanceTest_log(log_alpha)) {
+        mXi = try_x_i;
+    }
+
+    // mise à jour de ti
+    double try_ti;
+
+    if (Generator::randomUniform() < mMixingLevel) { // try_ti always in the study period
+        const double tminCalib = mCalibration->mTmin;
+        const double u = Generator::randomUniform();
+        const double idx = interpolate_index(u, mCalibration->mRepartition);
+        try_ti = tminCalib + idx * mCalibration->mStep;
+
+    } else {
+        // -- gaussian -- try_ti can be outside the study period
+        const double t0 = mTi.value();
+        const double s = (mSettings.mTmax - mSettings.mTmin) / 2.0;
+        try_ti = Generator::normalDistribution(t0, s);
+    }
+
+    const double rate_p1 = getLikelihood(try_ti) / getLikelihood(mTi.value());
+
+    const double h_p_x = h_prior_EDM2(theta, mTi.value(), mDelta, mXi, S02Theta);
+    const double h_p_y = h_prior_EDM2(theta, try_ti,      mDelta, mXi, S02Theta);
+    const double rate_p2 = h_p_y  / h_p_x;
+
+    // La loi instrumentale avec mélange de distribution Calibré et une Gaussienne, n'est pas symétrique
+    // il faut faire le rapport q_xy/q_yx
+
+    const double rate_q = fProposalDensity(mTi.value(), try_ti) / fProposalDensity(try_ti, mTi.value());
+
+    if (MHAcceptanceTest(rate_p1 * rate_p2 * rate_q)) {
+        mTi.setValue(try_ti);
+    }
+
+
+
+
 }
 
 // identique à updateDate, mais sans mémorisation des valeurs
 
-void Date::applyDateProposal_v3(const double theta_mX, const double S02Theta_mX, const double AShrinkage)
+void Date::applyDateProposal_v3(const double theta, const double S02Theta)
 {
     switch (mTi.mSamplerProposal) {
     case MHVariable::eDatePrior:
-        applyPrior(theta_mX);
+        applyPrior(theta);
         break;
 
      // only case with acceptation rate, because we use sigmaMH :
     case MHVariable::eMHAdaptGauss:
-        applyMHAdaptGauss(theta_mX);
+        applyMHAdaptGauss(theta);
         break;
 
     case MHVariable::eInversion:
     default:
-        applyInversion(theta_mX);
+        applyInversion(theta);
         break;
     }
 
 
-    updateDelta(theta_mX); // pas de memo
-    applySigmaShrinkage_K_tempering(theta_mX, S02Theta_mX, AShrinkage); // Par defaut T=1, càd pas de recuit
+    updateDelta(theta, S02Theta); // pas de memo
+    applySigmaShrinkage_K_tempering(theta, S02Theta); // Par defaut T=1, càd pas de recuit
 
     updateWiggle(); // mise à jour déterministe, pas de tirage
 }
@@ -1776,7 +2050,7 @@ void Date::applyTi_MH_Tempering(const double theta_mX, const double T)
         mTi.setValue(ti_try);
 
 
-    updateDelta(theta_mX); // pas de memo
+    updateDelta(theta_mX, 1.0); // pas de memo
 
     //updateSigmaShrinkage_K(theta_mX, S02Theta_mX, AShrinkage); // ici, peut être garder
 
@@ -1803,9 +2077,9 @@ void Date::initDelta()
         case eDeltaGaussian: {
             // change init of Delta in case of gaussian function since 2015/06 with PhL
             //mDelta = event->mTheta.mX - mTheta.mX;
-            const double tmin = mDeltaAverage - 5*mDeltaError;
-            const double tmax = mDeltaAverage + 5*mDeltaError;
-            mDelta = Generator::gaussByDoubleExp(mDeltaAverage, mDeltaError, tmin, tmax);
+            const double tmin = mDeltaAverage - 5 * mDeltaError;
+            const double tmax = mDeltaAverage + 5 * mDeltaError;
+            mDelta = Generator::truncatedNormal(mDeltaAverage, mDeltaError, tmin, tmax);
             }
             break;
         
@@ -1818,9 +2092,9 @@ void Date::initDelta()
     mWiggle.mLastMHAccepts.clear();
 }
 
-void Date::updateDelta(const double theta_mX)
+void Date::updateDelta_v3(const double theta, const double )
 {
-    const double mu = theta_mX - mTi.value();
+    const double lambda_i = theta - mTi.value();
     
     switch (mDeltaType) {
         case eDeltaNone:
@@ -1828,15 +2102,14 @@ void Date::updateDelta(const double theta_mX)
             break;
         
         case eDeltaRange:
-            mDelta = Generator::gaussByDoubleExp(mu, mSigmaTi.value(), mDeltaMin, mDeltaMax);
+            mDelta = Generator::gaussByDoubleExp(lambda_i, mSigmaTi.value(), mDeltaMin, mDeltaMax);
             break;
         
         case eDeltaGaussian: {
-
-            const double w = ( 1.0/(mSigmaTi.value() * mSigmaTi.value()) ) + ( 1.0/(mDeltaError * mDeltaError) );
-            const double deltaAvg = (mu / (mSigmaTi.value() * mSigmaTi.value()) + mDeltaAverage / (mDeltaError * mDeltaError)) / w;
+            const double w_i = ( 1.0/(mSigmaTi.value() * mSigmaTi.value()) ) + ( 1.0/(mDeltaError * mDeltaError) );
+            const double deltaAvg = (lambda_i / (mSigmaTi.value() * mSigmaTi.value()) + mDeltaAverage / (mDeltaError * mDeltaError)) / w_i;
             const double x = Generator::normalDistribution(0, 1);
-            mDelta = deltaAvg + x / sqrt(w);
+            mDelta = deltaAvg + x / sqrt(w_i);
 
         }
             break;
@@ -1848,6 +2121,79 @@ void Date::updateDelta(const double theta_mX)
     }
 }
 
+void Date::updateDelta_v4(const double theta, const double S02Theta)
+{
+    double try_delta;
+
+    switch (mDeltaType) {
+    case eDeltaNone:
+        mDelta = 0.0;
+        return;
+        break;
+
+    case eDeltaFixed:
+        mDelta = mDeltaFixed;
+        return;
+        break;
+
+    case eDeltaRange:
+        try_delta = Generator::randomUniform( mDeltaMin, mDeltaMax);
+        break;
+
+    case eDeltaGaussian:
+       try_delta = Generator::normalDistribution(mDeltaAverage, mDeltaError);
+       break;
+    }
+
+    const double h_p_x = h_prior_EDM2(theta, mTi.value(), mDelta,    mXi, S02Theta);
+    const double h_p_y = h_prior_EDM2(theta, mTi.value(), try_delta, mXi, S02Theta);
+    const double rate_p_xy = h_p_y  / h_p_x;
+
+    if (MHAcceptanceTest(rate_p_xy)) {
+        mDelta = try_delta;
+    }
+
+}
+
+
+
+
+// fonction identique à updateDelta_v4 car il n'y a pas de memo
+void Date::applyDelta_v4(const double theta, const double S02Theta)
+{
+    double try_delta;
+
+    switch (mDeltaType) {
+    case eDeltaNone:
+        mDelta = 0.0;
+        return;
+        break;
+
+    case eDeltaFixed:
+        mDelta = mDeltaFixed;
+        return;
+        break;
+
+    case eDeltaRange:
+        try_delta = Generator::randomUniform( mDeltaMin, mDeltaMax);
+        break;
+
+    case eDeltaGaussian:
+        try_delta = Generator::normalDistribution(mDeltaAverage, mDeltaError);
+        break;
+    }
+
+    const double h_p_x = h_prior_EDM2(theta, mTi.value(), mDelta,    mXi, S02Theta);
+    const double h_p_y = h_prior_EDM2(theta, mTi.value(), try_delta, mXi, S02Theta);
+    const double rate_p_xy = h_p_y  / h_p_x;
+
+    if (MHAcceptanceTest(rate_p_xy)) {
+        mDelta = try_delta;
+    }
+
+}
+
+// obsolete
 void Date::updateSigmaJeffreys(const double theta_mX)
 {
     // ------------------------------------------------------------------------------------------
@@ -1875,7 +2221,7 @@ void Date::updateSigmaJeffreys(const double theta_mX)
     mSigmaTi.try_update(sqrt(V2), rate);
 }
 
-void Date::updateSigmaShrinkage(const double theta_mX, const double S02Theta_mX, const double AShrinkage)
+void Date::updateSigmaShrinkage(const double theta_mX, const double S02Theta_mX)
 {
     // ------------------------------------------------------------------------------------------
     //  Echantillonnage MH avec marcheur gaussien adaptatif sur le log de vi (vérifié)
@@ -1891,7 +2237,7 @@ void Date::updateSigmaShrinkage(const double theta_mX, const double S02Theta_mX,
 
     if (logV2 >= logVMin && logV2 <= logVMax) {
         const double x1 = exp(-mu * (V1 - V2) / (V1 * V2));
-        const double x2 = pow((S02Theta_mX + V1) / (S02Theta_mX + V2), AShrinkage + 1.0);
+        const double x2 = pow((S02Theta_mX + V1) / (S02Theta_mX + V2), 1.0 + 1.0);
         const double rate = x1 * sqrt(V1/V2) * x2 * V2 / V1 ; // (V2 / V1) est le jacobien!
 
         mSigmaTi.try_update(sqrt(V2), rate);
@@ -1903,8 +2249,7 @@ void Date::updateSigmaShrinkage(const double theta_mX, const double S02Theta_mX,
 }
 
 void Date::updateSigmaShrinkage0(const double theta_mX,
-                                const double S02Theta_mX,
-                                const double AShrinkage)
+                                const double S02Theta_mX)
 {
     // ---------------------------------------------------------
     // Target terms
@@ -1918,7 +2263,7 @@ void Date::updateSigmaShrinkage0(const double theta_mX,
     const double V1 = mSigmaTi.value() * mSigmaTi.value();
     const double logV1 = log10(V1);
 
-    double logV2;          // log10(V) proposé
+    double logV2 = 0;          // log10(V) proposé
     double V2;             // sigma² proposé (déduit de logV2)
 
     double log_proposal_ratio = 0.0; // log q(old|new) – log q(new|old)
@@ -1949,14 +2294,14 @@ void Date::updateSigmaShrinkage0(const double theta_mX,
 
         V2 = Generator::shrinkageUniforme(S02Theta_mX);
 
-        log_proposal_ratio = 0.0; // symétrique
+       // log_proposal_ratio = 0.0; // symétrique
 
         log_jacobian = 0;
         // Densité proposal q(V) ∝ (S0² + V)^(-(A+1))
         // donc log q(V) = -(A+1) * log(S0² + V) + C
-        const double log_q1 = -(AShrinkage + 1.0) * log(S02Theta_mX + V1);
+        const double log_q1 = -(1.0 + 1.0) * log(S02Theta_mX + V1);
 
-        const double log_q2 = -(AShrinkage + 1.0) * log(S02Theta_mX + V2);
+        const double log_q2 = -(1.0 + 1.0) * log(S02Theta_mX + V2);
         log_proposal_ratio = log_q1 - log_q2;
 
         log_rate = + 0.5*(log(V1)-log(V2)) + log_proposal_ratio;
@@ -1984,15 +2329,15 @@ void Date::updateSigmaShrinkage0(const double theta_mX,
 
         const double u2 = Generator::randomUniform();
 
-        V2 = S02Theta_mX * (pow(1.0 - u2, -1.0 / AShrinkage) - 1.0);
+        V2 = S02Theta_mX * (pow(1.0 - u2, -1.0 / 1.0) - 1.0);
 
         logV2 = log10(V2); // on repasse en log10
 
         // Densité proposal q(V) ∝ (S0² + V)^(-(A+1))
         // donc log q(V) = -(A+1) * log(S0² + V) + C
-        const double log_q1 = -(AShrinkage + 1.0) * log(S02Theta_mX + V1);
+        const double log_q1 = -(1.0 + 1.0) * log(S02Theta_mX + V1);
 
-        const double log_q2 = -(AShrinkage + 1.0) * log(S02Theta_mX + V2);
+        const double log_q2 = -(1.0 + 1.0) * log(S02Theta_mX + V2);
 
         // ratio log q(old|new) – log q(new|old)
         log_proposal_ratio = log_q1 - log_q2;
@@ -2016,7 +2361,7 @@ void Date::updateSigmaShrinkage0(const double theta_mX,
     const double log_x1 =  -mu * (V1 - V2) / (V1 * V2);
 
     // Prior shrinkage term
-    const double log_x2 = (AShrinkage + 1.0) *  (log(S02Theta_mX + V1) - log(S02Theta_mX + V2));
+    const double log_x2 = (1.0 + 1.0) *  (log(S02Theta_mX + V1) - log(S02Theta_mX + V2));
 
     // Jacobian du changement de variable V = sigma²  (log10 → V)
     // d log10(V) / dV = 1 / (V * ln(10))  →  log10(V) = log10(V) + 1
@@ -2035,97 +2380,15 @@ void Date::updateSigmaShrinkage0(const double theta_mX,
     mSigmaTi.try_update_log(sqrt(V2), log_rate);
 }
 
-// avec slice sampling
-/*
-void Date::updateSigmaShrinkage(const double theta_mX,
-                                const double S02Theta_mX,
-                                const double AShrinkage)
-{
-    constexpr double logVMin = -6.0;
-    constexpr double logVMax = 100.0;
-    constexpr double LN10 = 2.302585092994046;
 
-    // --- état courant ---
-    const double V1    = mSigmaTi.mX * mSigmaTi.mX;
-    const double logV1 = std::log10(V1);
-
-    const double mu =
-        std::pow(mTi.mX - (theta_mX - mDelta), 2) / 2.0;
-
-    // =====================================================
-    // Log densité cible en logV
-    // =====================================================
-    auto log_target = [&](double logV)
-    {
-        if (logV < logVMin || logV > logVMax)
-            return -std::numeric_limits<double>::infinity();
-
-        const double V = std::pow(10.0, logV);
-
-        return
-            - mu / V
-            - (AShrinkage + 1.0) * std::log(S02Theta_mX + V)
-            + 0.5 * std::log(V)          // <-- correction clé
-            + std::log(LN10);            // constante
-    };
-
-    // =====================================================
-    // Slice sampling
-    // =====================================================
-
-    const double logf0 = log_target(logV1);
-
-    // niveau horizontal
-    const double logy =
-        logf0 - Generator::exponentialeDistribution(1.0);
-
-    // largeur initiale (fixe robuste)
-    const double w = 1.0;
-
-    // intervalle initial
-    double L = logV1 - w * Generator::randomUniform();
-    double R = L + w;
-
-    // --- stepping out ---
-    while (L > logVMin && log_target(L) > logy)
-        L -= w;
-
-    while (R < logVMax && log_target(R) > logy)
-        R += w;
-
-    L = std::max(L, logVMin);
-    R = std::min(R, logVMax);
-
-    // --- shrinkage ---
-    double logV2;
-
-    while (true)
-    {
-        logV2 = L + (R - L) * Generator::randomUniform();
-
-        if (log_target(logV2) >= logy)
-            break;
-
-        if (logV2 < logV1)
-            L = logV2;
-        else
-            R = logV2;
-    }
-
-    const double V2 = std::pow(10.0, logV2);
-
-    mSigmaTi.accept_update(std::sqrt(V2));
-}
-*/
+#pragma mark update SigmaTi
 void Date::updateSigmaShrinkage_K(const double theta_mX,
-                                  const double S02Theta_mX,
-                                  const double AShrinkage)
+                                  const double S02Theta_mX)
 {
     const double mu = pow(mTi.value() - (theta_mX - mDelta), 2.) * 0.5;
     const double V1 = mSigmaTi.value() * mSigmaTi.value();
 
     double rapport = -1, V2;
-
 
     // ---------------------------------------------------------
     // Mixture weights (fixes ici, adaptables si voulu)
@@ -2155,12 +2418,11 @@ void Date::updateSigmaShrinkage_K(const double theta_mX,
         // q1 : Random Walk local (symétrique)
         // =========================================================
     else {
-        const int logVMin = -6;
+        const int logVMin = -100;
         const int logVMax = 100;
 
         const double logV2 = Generator::normalDistribution(log10(V1), mSigmaTi.mSigmaMH);
-        //const double mu_centre = 2. * mu;
-        //const double logV2 = log10(mu_centre) + Generator::normalDistribution(0, 5); // test
+
         V2 = pow(10, logV2);
 
         if (logV2 >= logVMin && logV2 <= logVMax) {
@@ -2168,7 +2430,7 @@ void Date::updateSigmaShrinkage_K(const double theta_mX,
             // Likelihood term
             //const double log_x1 =  -mu * (V1 - V2) / (V1 * V2);
 
-            const double x2 = pow((S02Theta_mX + V1) / (S02Theta_mX + V2), AShrinkage + 1.0);
+            const double x2 = pow((S02Theta_mX + V1) / (S02Theta_mX + V2), 1.0 + 1.0);
 
             rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1 ; // (V2 / V1) est le jacobien!
             mSigmaTi.try_update(sqrt(V2), rapport);
@@ -2180,9 +2442,10 @@ void Date::updateSigmaShrinkage_K(const double theta_mX,
 
 }
 
+
+// https://en.wikipedia.org/wiki/Lomax_distribution with alpha=1
 void Date::applySigmaShrinkage_K_tempering(const double theta_mX,
                                            const double S02Theta_mX,
-                                           const double AShrinkage,
                                            const double T)
 {
     const double mu = pow(mTi.value() - (theta_mX - mDelta), 2.) * 0.5;
@@ -2230,13 +2493,12 @@ void Date::applySigmaShrinkage_K_tempering(const double theta_mX,
         // Likelihood term
         //const double log_x1 =  -mu * (V1 - V2) / (V1 * V2);
 
-        const double x2 = pow((S02Theta_mX + V1) / (S02Theta_mX + V2), AShrinkage + 1.0);// a priori shrinkage
+        const double x2 = pow((S02Theta_mX + V1) / (S02Theta_mX + V2), 1.0 + 1.0);// a priori shrinkage
 
         double rate = x1 * sqrt(V1/V2) * x2 * V2 / V1 ; // (V2 / V1) est le jacobien!
 
         const double log_rate = log(rate) / T;
 
-        //if (MHAcceptanceTest_log(log_rate / T)) {
         if (MHAcceptanceTest(exp(log_rate) )) {
             mSigmaTi.setValue(sqrt(V2));
         }
@@ -2515,7 +2777,7 @@ CalibrationCurve generate_mixingCalibration(const std::vector<Date> &dates, cons
 
 #ifdef DEBUG
         for (auto&& d : dates) {
-            qDebug()<< "generate_mixing"<<d.getQStringName() << *d.mCalibration->mRepartition.crbegin();
+            qDebug()<< "[Date generate_mixingCalibration] "<< d.getQStringName() << *d.mCalibration->mRepartition.crbegin();
         }
 #endif
         // 2 - Creation of the cumulative distribution curves in the interval
@@ -2548,7 +2810,7 @@ CalibrationCurve generate_mixingCalibration(const std::vector<Date> &dates, cons
 #pragma mark SamplingFunction
 /**
  * @brief MH proposal = prior distribution
- * @remark best for EDM2
+ * @remark done for EDM1
  */
 void Date::Prior(const double theta_mX)
 {
@@ -2556,6 +2818,7 @@ void Date::Prior(const double theta_mX)
     const double rate = getLikelihood(tiNew) / getLikelihood(mTi.value());
 
     mTi.try_update(tiNew, rate);
+
 }
 
 void Date::applyPrior(const double theta_mX)
@@ -2570,7 +2833,7 @@ void Date::applyPrior(const double theta_mX)
 /**
  * @brief MH proposal = prior distribution
  * @brief identic as Prior but use getLikelyhoodArg, when plugin offer it
- * @remark best for EDM2
+ * @remark done for EDM1
  */
 void Date::PriorWithArg(const double theta_mX)
 {
@@ -2590,30 +2853,36 @@ void Date::PriorWithArg(const double theta_mX)
         + (newExponentiel - oldExponentiel);
 
     mTi.try_update_log(tiNew, static_cast<double>(logRate));
+
 }
 
 /**
  *  @brief Calculation of proposal density for time value t
+ *  loi mélange de densités calibré + gaussienne
  *
  */
 double Date::fProposalDensity(const double t, const double t0)
 {
-    const double tmin = mSettings.mTmin;
-    const double tmax = mSettings.mTmax;
-    double q1 = 0.0;
-
     const double tminCalib = mCalibration->mTmin;
     const double tmaxCalib = mCalibration->mTmax;
 
-    // ----q1------Defined only on Calibration range-----
-    if (t > tminCalib && t < tmaxCalib) {
-        q1 = mCalibration->interpolate(t);
-    }
+    // q_gaussian on R
+    const double tmin = mSettings.mTmin;
+    const double tmax = mSettings.mTmax;
 
     const double sigma = std::max(tmax - tmin, tmaxCalib - tminCalib) / 2;
-    const double q2 = dnorm(t, t0, sigma); //exp(-0.5* pow((t-t0)/ sigma, 2)) / (sigma*sqrt(2*M_PI));
+    const double q_gaussian = dnorm(t, t0, sigma);
 
-    return (mMixingLevel * q1 + (1 - mMixingLevel) * q2);
+    // q_calibrate , defined only on Calibration range-----
+    // outside study period q_calibrate = 0
+    if (t >= tminCalib && t <= tmaxCalib) {
+        const double q_calibrate = mCalibration->interpolate(t);
+        //const double q_calibrate = getLikelihood(t);
+
+        return (mMixingLevel * q_calibrate + (1 - mMixingLevel) * q_gaussian);
+    } 
+
+    return (1 - mMixingLevel) * q_gaussian;
 }
 
 /**
@@ -2622,45 +2891,47 @@ double Date::fProposalDensity(const double t, const double t0)
  */
 void Date::Inversion(const double theta_mX)
 {
-    const double u1 = Generator::randomUniform();
     double tiNew;
 
-    const double tminCalib = mCalibration->mTmin;
-
-    if (u1 < mMixingLevel) { // tiNew always in the study period
-        /*const double idx = vector_interpolate_idx_for_value(u1, mCalibration->mRepartition);*/
-        const double idx = interpolate_index(u1, mCalibration->mRepartition);
+   if (Generator::randomUniform() < mMixingLevel) { // tiNew always in the study period
+        const double tminCalib = mCalibration->mTmin;
+        const double u = Generator::randomUniform();
+        const double idx = interpolate_index(u, mCalibration->mRepartition);
         tiNew = tminCalib + idx * mCalibration->mStep;
 
     } else {
-        // -- gaussian
+        // -- gaussian -- tiNew can be outside the study period
         const double t0 = mTi.value();
         const double s = (mSettings.mTmax - mSettings.mTmin) / 2.0;
 
         tiNew = Generator::normalDistribution(t0, s);
     }
 
-    const double rate_1 = getLikelihood(tiNew) / getLikelihood(mTi.value());
+    const double rate_p1 = getLikelihood(tiNew) / getLikelihood(mTi.value());
 
-    const double rate_2 = exp((-0.5 / (mSigmaTi.value() * mSigmaTi.value())) *
+    const double rate_p2 = exp((-0.5 / (mSigmaTi.value() * mSigmaTi.value())) *
                           (pow(tiNew - (theta_mX - mDelta), 2) -
                            pow(mTi.value() - (theta_mX - mDelta), 2))
                           );
 
-    const double rate_3 = fProposalDensity(mTi.value(), tiNew) / fProposalDensity(tiNew, mTi.value());
+    // La loi instrumentale avec mélange de distribution Calibré-Gaussienne, n'est pas symétrique
+    // il faut faire le rapport q_xy/q_yx
 
-    mTi.try_update(tiNew, rate_1 * rate_2 * rate_3);
+    const double rate_q = fProposalDensity(mTi.value(), tiNew) / fProposalDensity(tiNew, mTi.value());
+
+    mTi.try_update(tiNew, rate_p1 * rate_p2 * rate_q);
+
 }
+
 void Date::applyInversion(const double theta_mX)
 {
-    const double u1 = Generator::randomUniform();
     double tiNew;
 
     const double tminCalib = mCalibration->mTmin;
 
-    if (u1 < mMixingLevel) { // tiNew always in the study period
-        /*const double idx = vector_interpolate_idx_for_value(u1, mCalibration->mRepartition);*/
-        const double idx = interpolate_index(u1, mCalibration->mRepartition);
+    if (Generator::randomUniform() < mMixingLevel) { // tiNew always in the study period
+        const double u = Generator::randomUniform();
+        const double idx = interpolate_index(u, mCalibration->mRepartition);
         tiNew = tminCalib + idx * mCalibration->mStep;
 
     } else {
@@ -2671,30 +2942,29 @@ void Date::applyInversion(const double theta_mX)
         tiNew = Generator::normalDistribution(t0, s);
     }
 
-    const double rate_1 = getLikelihood(tiNew) / getLikelihood(mTi.value());
+    const double rate_p1 = getLikelihood(tiNew) / getLikelihood(mTi.value());
 
-    const double rate_2 = exp((-0.5 / (mSigmaTi.value() * mSigmaTi.value())) *
+    const double rate_p2 = exp((-0.5 / (mSigmaTi.value() * mSigmaTi.value())) *
                               (pow(tiNew - (theta_mX - mDelta), 2) -
                                pow(mTi.value() - (theta_mX - mDelta), 2))
                               );
 
-    const double rate_3 = fProposalDensity(mTi.value(), tiNew) / fProposalDensity(tiNew, mTi.value());
-    if(MHAcceptanceTest(rate_1 * rate_2 * rate_3))
+    const double rate_q = fProposalDensity(mTi.value(), tiNew) / fProposalDensity(tiNew, mTi.value());
+
+    if(MHAcceptanceTest(rate_p1 * rate_p2 * rate_q))
         mTi.setValue(tiNew);
 }
 
 void Date::InversionWithArg(const double theta_mX)
 {
-    const double u1 = Generator::randomUniform();
     double tiNew;
 
     const double tminCalib = mCalibration->mTmin;
 
-    if (u1 < mMixingLevel) { // tiNew always in the study period
-        const double u2 = Generator::randomUniform();
-        const double idx = vector_interpolate_idx_for_value(u2, mCalibration->mRepartition);
+    if (Generator::randomUniform() < mMixingLevel) { // tiNew always in the study period
+        const double u = Generator::randomUniform();
+        const double idx = vector_interpolate_idx_for_value(u, mCalibration->mRepartition);
         tiNew = tminCalib + idx *mCalibration->mStep;
-
 
     } else {
         // -- gaussian
@@ -2713,33 +2983,18 @@ void Date::InversionWithArg(const double theta_mX)
     const long double logG_Rate = argNew.second - argOld.second;
     const long double logH_Rate = (-0.5l/powl(mSigmaTi.value(), 2.)) * (  powl(tiNew - (theta_mX - mDelta), 2.) - powl(mTi.value() - (theta_mX - mDelta), 2.) ); // modif 2020-09-28
 
-    const long double rate = sqrt(argOld.first/argNew.first) * exp(logG_Rate + logH_Rate);
+    const long double rate_p = sqrt(argOld.first/argNew.first) * exp(logG_Rate + logH_Rate);
 
-    const long double rate_PD = fProposalDensity(mTi.value(), tiNew) / fProposalDensity(tiNew, mTi.value());
+    const long double rate_q = fProposalDensity(mTi.value(), tiNew) / fProposalDensity(tiNew, mTi.value());
 
-    mTi.try_update(tiNew, static_cast<double>(rate * rate_PD));
+    mTi.try_update(tiNew, static_cast<double>(rate_p * rate_q));
 
 }
 
 
 /**
- * @brief MH proposal = Adaptatif Gaussian random walk, ti is defined on set R (real numbers)
- */
-
-/*
-void Date::MHAdaptGauss(const double theta_mX)
-{
-    const double tiNew = Generator::normalDistribution(mTi.mX, mTi.mSigmaMH);
-    double rate = getLikelihood(tiNew) / getLikelihood(mTi.mX);
-    rate *= exp((-0.5/(mSigmaTi.mX * mSigmaTi.mX)) * (   pow(tiNew - (theta_mX - mDelta), 2)
-                                                           - pow(mTi.mX - (theta_mX - mDelta), 2)
-                                                                 ));
-
-    mTi.try_update(tiNew, rate);
-}*/
-/**
  * @brief Metropolis‑Hastings adaptation with a Gaussian proposal.
- *
+ * MH proposal = Adaptatif Gaussian random walk, ti is defined on set R (real numbers)
  * La fonction travaille en log‑probabilité afin d’éviter les under‑/overflow
  * lorsqu’on manipule des rapports très petits ou très grands.
  *
@@ -2754,6 +3009,7 @@ void Date::MHAdaptGauss(const double theta_mX)
     /* ------------------------------------------------------------------
      * 2️⃣  Calcul du log‑rate (log‑acceptance ratio)
      * ------------------------------------------------------------------ */
+
     // 2.1 – log‑likelihood ratio
     const double likOld = getLikelihood(mTi.value());   // peut être 0 ou négatif ?
     const double likNew = getLikelihood(tiNew);
@@ -2765,6 +3021,7 @@ void Date::MHAdaptGauss(const double theta_mX)
     } else {
         logLikelihoodRatio = std::log(likNew) - std::log(likOld);
     }
+
     // 2.2 – log‑proposal ratio (gaussian random‑walk)
     const double sigma2 = mSigmaTi.value() * mSigmaTi.value();          // σ²
     const double mu     = theta_mX - mDelta;                 // centre de la loi a priori
@@ -2772,6 +3029,7 @@ void Date::MHAdaptGauss(const double theta_mX)
     const double diffOld = mTi.value() - mu;
     const double logProposalRatio = (-0.5 / sigma2) *
                                     (diffNew * diffNew - diffOld * diffOld);
+
     // 2.3 – log‑acceptance ratio (log‑rate)
     const double log_rate = logLikelihoodRatio + logProposalRatio;
     /* ------------------------------------------------------------------
@@ -2783,8 +3041,10 @@ void Date::MHAdaptGauss(const double theta_mX)
     //   mTi.try_update(tiNew, std::exp(log_rate));
     // Ici on utilise directement la version log‑rate.
     mTi.try_update_log(tiNew, log_rate);
+
+
 }
-void Date::applyMHAdaptGauss(const double theta_mX)
+void Date::applyMHAdaptGauss(const double theta_mX, const double T)
 {
     /* ------------------------------------------------------------------
      * 1️⃣  Proposition gaussienne autour de la valeur courante
@@ -2794,7 +3054,7 @@ void Date::applyMHAdaptGauss(const double theta_mX)
      * 2️⃣  Calcul du log‑rate (log‑acceptance ratio)
      * ------------------------------------------------------------------ */
     // 2.1 – log‑likelihood ratio
-    const double likOld = getLikelihood(mTi.value());   // peut être 0 ou négatif ?
+    const double likOld = getLikelihood(mTi.value());   // peut être 0?
     const double likNew = getLikelihood(tiNew);
     // Si l’une des vraisemblances est ≤ 0, le log n’est pas défini → rejet
     double logLikelihoodRatio;
@@ -2804,20 +3064,20 @@ void Date::applyMHAdaptGauss(const double theta_mX)
     } else {
         logLikelihoodRatio = std::log(likNew) - std::log(likOld);
     }
-    // 2.2 – log‑proposal ratio (gaussian random‑walk)
+    // 2.2 – log‑proposal ratio (gaussian Event)
     const double sigma2 = mSigmaTi.value() * mSigmaTi.value();          // σ²
     const double mu     = theta_mX - mDelta;                 // centre de la loi a priori
     const double diffNew = tiNew - mu;
     const double diffOld = mTi.value() - mu;
-    const double logProposalRatio = (-0.5 / sigma2) *
+    const double logEventRatio = (-0.5 / sigma2) *
                                     (diffNew * diffNew - diffOld * diffOld);
     // 2.3 – log‑acceptance ratio (log‑rate)
-    const double log_rate = logLikelihoodRatio + logProposalRatio;
+    const double log_rate = logLikelihoodRatio + logEventRatio;
     /* ------------------------------------------------------------------
      * 3️⃣  Mise à jour de la variable via la fonction log‑rate
      * ------------------------------------------------------------------ */
 
-    if(MHAcceptanceTest_log(log_rate))
+    if(MHAcceptanceTest_log(log_rate / T))
         mTi.setValue(tiNew);
 }
 
@@ -2826,26 +3086,6 @@ void Date::applyMHAdaptGauss(const double theta_mX)
  *
  * @brief identic as fMHSymGaussAdapt but use getLikelyhoodArg, when plugin offer it
  */
-
-/*void Date::MHAdaptGaussWithArg(const double theta_mX)//fMHSymGaussAdaptWithArg(Event *event)
-{
-    const double tiNew = Generator::normalDistribution(mTi.mX, mTi.mSigmaMH);
-
-    QPair<long double, long double> argOld, argNew;
-
-    argOld = getLikelihoodArg(mTi.mX);
-    argNew = getLikelihoodArg(tiNew);
-
-    const long double logG_Rate = argNew.second - argOld.second;
-    const long double logH_Rate = (-0.5 / (mSigmaTi.mX * mSigmaTi.mX)) * (  pow(tiNew - (theta_mX - mDelta), 2)
-                                                                      - pow(mTi.mX - (theta_mX - mDelta), 2)
-                                                                      );
-
-    const long double rate = sqrt(argOld.first / argNew.first) * exp(logG_Rate+logH_Rate);
-
-    mTi.try_update(tiNew, (double) rate);
-
-}*/
 
 void Date::MHAdaptGaussWithArg(const double theta_mX)
 {
@@ -2890,4 +3130,5 @@ void Date::MHAdaptGaussWithArg(const double theta_mX)
      * -------------------------------------------------------------- */
     // `try_update_log` attend le log‑rate (pas le taux lui‑même)
     mTi.try_update_log(tiNew, static_cast<double>(log_rate));
+
 }

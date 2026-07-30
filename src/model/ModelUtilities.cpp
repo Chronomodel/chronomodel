@@ -393,7 +393,7 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
                                                                                                                QString::number(bound->mPhases.size()),
                                                                                                                QString::number(bound->mConstraintsBwd.size()),
                                                                                                                QString::number(bound->mConstraintsFwd.size()))));
-            log += line(textRed(QObject::tr("- Fixed Value : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(bound->mFixed), DateUtils::getAppSettingsFormatStr() )));
+            log += line(textRed(QObject::tr("- Fixed Value : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(bound->value()), DateUtils::getAppSettingsFormatStr() )));
 
         } else {
             log += line(textBlue(QObject::tr("Event ( %1 / %2 ) : %3 ( %4 data, %5 phases,  %6 const. back.,  %7 const. fwd.)").arg(QString::number(i+1), QString::number(model->mEvents.size()), event->getQStringName(),
@@ -583,8 +583,9 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
                 HTMLText += line(textBlue(QObject::tr(" - Sigma_MH on Theta : %1").arg(stringForLocal(event->mTheta.mSigmaMH))));
             }
 
-            HTMLText += line(textBold(textBlue(QObject::tr(" - Shrinkage param. : %1").arg(DateUtils::convertToAppSettingsFormatStr(event->mS02Theta.value())))));
             if (event->mS02Theta.mLastMHAccepts.size()>2 && event->mS02Theta.mSamplerProposal!= MHVariable::eFixe) {
+                HTMLText += line(textBold(textBlue(QObject::tr(" - Shrinkage param. : %1").arg(stringForLocal(event->mS02Theta.value())))));
+
                 const auto acceptRate = event->mS02Theta.getCurrentAcceptRate();
                 const auto samplerType = event->mS02Theta.mSamplerProposal;
                 if (samplerType == MHVariable::eMHAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
@@ -594,9 +595,11 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
 
                 HTMLText += line(textBlue(QObject::tr(" - Sigma_MH on S02 : %1").arg(stringForLocal(event->mS02Theta.mSigmaMH))));
             }
-           // else {
-           //     HTMLText += line(textBlue(QObject::tr(" - Shrinkage param. : %1").arg(stringForLocal(event->mS02Theta.value()))));
+            else {
+                HTMLText += line(textBlue(QObject::tr(" - Shrinkage Beta param. = : %1").arg(stringForLocal(event->mBetaS02))));
+                HTMLText += line(textBlue(QObject::tr(" - Shrinkage param. = harmonic mean : %1").arg(stringForLocal(event->mS02Theta.value()))));
 
+            }
         }
 
         if (curveModel) {
@@ -896,11 +899,14 @@ QString ModelUtilities::EventS02ResultsHTML(const std::shared_ptr<Event> e)
     QString text;
 
     if (e->mS02Theta.mSamplerProposal == MHVariable::eFixe) {
-        text = line(textBold(textBlue(QObject::tr("Shrinkage param. = harmonic mean"))));
+       // text = line(textBold(textBlue(QObject::tr("Shrinkage param. = harmonic mean"))));
+        text += line(textGreen(QObject::tr("Shrinkage param. = harmonic mean : %1").arg(QString::number(e->mS02Theta.value()))));
+
 
     } else {
         text += line(textBold(textBlue(QObject::tr("Posterior Shrinkage param."))));
         text += line(textBlue(e->mS02Theta.resultsString("", nullptr)));
+
     }
     return text;
 }

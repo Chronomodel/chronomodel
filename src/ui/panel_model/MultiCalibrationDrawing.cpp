@@ -65,7 +65,7 @@ MultiCalibrationDrawing::MultiCalibrationDrawing(QWidget* parent):
     QWidget(parent),
     mVerticalSpacer (5),
     mGraphHeight (100),
-    mHeightForVisibleAxis (100),
+    mHeightForVisibleTicksAxis (100),
     mGraphFont (font()),
     mMouseOverCurve (true)
 {
@@ -169,7 +169,7 @@ void MultiCalibrationDrawing::updateLayout()
     const decltype(ColoredBar::mWidth) barWidth = withBar ? ColoredBar::mWidth : 0;
 
     QFontMetrics fm (font());
-    const bool axisVisible = (mGraphHeight >= mHeightForVisibleAxis);
+    const bool axisVisible = (mGraphHeight >= mHeightForVisibleTicksAxis);
 
     int ay = 0;
     int graphNo = 0;
@@ -274,7 +274,7 @@ void MultiCalibrationDrawing::updateLayout()
     const int barWidth = withBar ? ColoredBar::mWidth : 0;
 
     QFontMetrics fm(font());
-    const bool axisVisible = (mGraphHeight >= mHeightForVisibleAxis);
+    const bool axisVisible = (mGraphHeight >= mHeightForVisibleTicksAxis);
 
     int ay = 0;
     int graphNo = 0;

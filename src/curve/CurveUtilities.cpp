@@ -1429,10 +1429,11 @@ QDataStream &operator<<( QDataStream& stream, const MCMCSplineComposante& spline
     for (auto& v : splineComposante.vecGamma)
         stream << (double)v;
 
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
     stream << (quint32) splineComposante.vecVarG.size();
     for (auto& v : splineComposante.vecVarG)
         stream << (double)v;
-
+#endif
     return stream;
 }
 
@@ -1453,10 +1454,11 @@ QDataStream &operator>>( QDataStream& stream, MCMCSplineComposante& splineCompos
     splineComposante.vecGamma.resize(siz);
     std::generate_n(splineComposante.vecGamma.begin(), siz, [&stream, &v]{stream >> v; return v;});
 
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
     stream >> siz;
     splineComposante.vecVarG.resize(siz);
     std::generate_n(splineComposante.vecVarG.begin(), siz, [&stream, &v]{stream >> v; return v;});
-
+#endif
     return stream;
 };
 
@@ -2031,13 +2033,13 @@ DiagonalMatrixLD diagonal_influence_matrix(const SplineMatricesLD& matrices,
 
         if (mat_a < -eps) {
             // < 0
-            qDebug() << "[CurveUtilities::diagonal_influence_matrix] Oups mat_a = " << static_cast<double>(mat_a) << "< 0 force to 0" << "n=" << n;
+            qDebug() << "[CurveUtilities::diagonal_influence_matrix] Oups mat_a = " << static_cast<double>(mat_a) << " < 0 force to 0" << "n = " << n;
 
             mat_a = 0.0L;
         }
         else if (mat_a > 1.0L + eps) {
             // > 1
-            qDebug() << "[CurveUtilities::diagonal_influence_matrix] Oups mat_a = " << static_cast<double>(mat_a) << "> 1 force to 1" << "n=" << n;
+            qDebug() << "[CurveUtilities::diagonal_influence_matrix] Oups mat_a = " << static_cast<double>(mat_a) << " > 1 force to 1" << "  n= " << n;
 
             mat_a = 1.0L;
         }
@@ -2048,128 +2050,8 @@ DiagonalMatrixLD diagonal_influence_matrix(const SplineMatricesLD& matrices,
     return matA;
 }
 
-/*
-DiagonalMatrixD diagonal_influence_matrix(const SplineMatricesD& matrices,
-                                           const int nbBandes,
-                                           const std::pair<MatrixD, DiagonalMatrixD> &decomp,
-                                           const double lambda)
-{
-    const Index n = matrices.diagWInv.rows();
 
-    const MatrixD matB_1 = inverseMatSym_origin(decomp, nbBandes + 4, 1);
-
-    DiagonalMatrixD matQB_1QT(n);
-
-    // --- Extraire les trois diagonales de matQ (tridiagonale) dans des vecteurs contigus ---
-    std::vector<double> q_diag(n, 0.0L);
-    std::vector<double> q_sup(n > 1 ? n-1 : 0, 0.0L); // (i,i+1)
-    std::vector<double> q_sub(n > 1 ? n-1 : 0, 0.0L); // (i,i-1)
-
-    // Parcours efficace de la sparse matrix pour remplir diag/sup/sub
-    for (Index k = 0; k < matrices.matQ.outerSize(); ++k) {
-        for (typename SparseMatrix<double>::InnerIterator it(matrices.matQ, k); it; ++it) {
-            const Index i = it.row();
-            const Index j = it.col();
-            const double v = it.value();
-            if (i == j) {
-                q_diag[i] = v;
-
-            } else if (j == i+1) {
-                q_sup[i] = v;      // element (i,i+1) stored at index i
-
-            } else if (j+1 == i) {
-                q_sub[j] = v;      // element (i,i-1) => sub at index i-1 stored at j
-            }
-            // On suppose tridiagonale : autres éléments ignorés
-        }
-    }
-
-    // --- Extraire diagonales / bandes nécessaires de matB_1 (dense) ---
-    std::vector<double> B_diag(n, 0.0L);
-    std::vector<double> B_sup(n > 1 ? n-1 : 0, 0.0L);    // B(i,i+1)
-    std::vector<double> B_i1i1(n > 1 ? n-1 : 0, 0.0L);   // B(i-1,i-1) stocké à i-1 (utilisé pour lecture claire)
-    std::vector<double> B_i2(n > 2 ? n-2 : 0, 0.0L);     // B(i-1,i+1) stored at i-1 when needed
-
-    for (Index i = 0; i < n; ++i) {
-        B_diag[i] = matB_1(i, i);
-        if (i + 1 < n) {
-            B_sup[i] = matB_1(i, i+1);
-            B_i1i1[i] = matB_1(i, i); // same as B_diag but keep for clarity
-        }
-        if (i + 2 < n) {
-            // B(i, i+2) corresponds to matB_1(i, i+2) used when accessing B(i-1,i+1)
-            B_i2[i] = matB_1(i, i+2);
-        }
-    }
-    // Note: For B(i-1,i+1) we'll read B_i2[i-1] (i>=1 && i+1 < n => i-1 <= n-3 => valid)
-
-    // --- Calcul du diag matQB_1QT sans appels répétés à coeff() ---
-    // premier élément i = 0
-    if (n > 0) {
-        double term0 = q_diag[0]*q_diag[0]*B_diag[0];
-        if (n > 1) {
-            term0 += q_sup[0]*q_sup[0]*B_diag[1];
-            term0 += 2.0L * q_diag[0] * q_sup[0] * B_sup[0];
-        }
-        matQB_1QT.diagonal()[0] = term0; // utilisation Eigen API pour écrire le diag
-    }
-
-    // éléments intermédiaires 1 .. n-2
-    for (Index i = 1; i + 1 < n; ++i) {
-        // indices auxiliaires
-        const Index im1 = i - 1;
-        const Index ip1 = i + 1;
-
-        double a = q_sub[im1] * q_sub[im1] * B_diag[im1];   // q(i,i-1)^2 * B(i-1,i-1)
-        a += q_diag[i]*q_diag[i] * B_diag[i];               // q(i,i)^2 * B(i,i)
-        a += q_sup[i]*q_sup[i] * B_diag[ip1];               // q(i,i+1)^2 * B(i+1,i+1)
-
-        a += 2.0L * q_sub[im1] * q_diag[i] * B_sup[im1];    // 2*q(i,i-1)*q(i,i)*B(i-1,i)
-        // B(i-1,i+1) correspond à matB_1(i-1, i+1) -> stocké en B_i2[i-1]
-        if (im1 < static_cast<Index>( B_i2.size())) {
-            a += 2.0L * q_sub[im1] * q_sup[i] * B_i2[im1];
-        }
-        a += 2.0L * q_diag[i] * q_sup[i] * B_sup[i];        // 2*q(i,i)*q(i,i+1)*B(i,i+1)
-
-        matQB_1QT.diagonal()[i] = a;
-    }
-
-    // dernier élément i = n-1
-    if (n > 1) {
-        size_t i = n - 1;
-        double termN = q_sub[i-1]*q_sub[i-1]*B_diag[i-1];
-        termN += q_diag[i]*q_diag[i]*B_diag[i];
-        termN += 2.0L * q_sub[i-1] * q_diag[i] * B_sup[i-1];
-        matQB_1QT.diagonal()[i] = termN;
-    }
-
-    // --- Calcul matA diagonal avec clamp ---
-    DiagonalMatrixD matA(n);
-
-    for (Index i = 0; i < n; ++i) {
-        const double winv = matrices.diagWInv.diagonal()[i];
-        const double qb = matQB_1QT.diagonal()[i];
-        double mat_a = 1.0 - lambda * winv * qb;
-
-        if (mat_a < 0.0) {
-            qDebug() << "[CurveUtilities] diagonal_influence_matrix : Oups mat_a=" << mat_a << "< 0 change to 0" << "n=" << n;
-
-
-        }
-        else if (mat_a > 1.0) {
-            qDebug() << "[CurveUtilities] diagonal_influence_matrix : Oups mat_a="<< mat_a << "> 1 change to 1" << "n=" << n;
-
-            mat_a = 1.0;
-        }
-
-        matA.diagonal()[i] = mat_a;
-    }
-
-    return matA;
-}
-*/
-
-DiagonalMatrixD diagonal_influence_matrix(const SplineMatricesD& matrices,
+DiagonalMatrixD diagonal_influence_matrix( const SplineMatricesD& matrices,
                                            const int nbBandes,
                                            const std::pair<MatrixD, DiagonalMatrixD> &decomp,
                                            const double lambda)
@@ -2209,11 +2091,11 @@ DiagonalMatrixD diagonal_influence_matrix(const SplineMatricesD& matrices,
         double mat_a = 1.0 - lambda * winv * qb;
 
         if (mat_a < 0.0) {
-            std::cout << "[CurveUtilities] diagonal_influence_matrix : Oups mat_a=" << mat_a << "< 0 change to 0" << " n = " << n << std::endl;
+            std::cout << "[CurveUtilities] diagonal_influence_matrix : Oups mat_a = " << mat_a << "< 0 change to 0" << " n = " << n << std::endl;
             mat_a = 0.0;
         }
         else if (mat_a > 1.0) {
-            std::cout << "[CurveUtilities] diagonal_influence_matrix : Oups mat_a=" << mat_a << " > 1 change to 1" << " n = " << n<< std::endl;
+            std::cout << "[CurveUtilities] diagonal_influence_matrix : Oups mat_a = " << mat_a << " > 1 change to 1" << " n = " << n<< std::endl;
             mat_a = 1.0;
         }
 
@@ -2336,9 +2218,9 @@ MCMCSpline currentSpline (std::vector<std::shared_ptr<Event> > &events, const st
 
     const SplineResults sx = doSplineX(matrices, events, vecH, decomp, lambda); // Voir si matB est utile ???
     // Les erreurs sont égales sur les trois composantes X, Y, Z splineY.vecErrG = splineX.vecErrG =
-
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
      const std::vector<double> &vec_varG = calcul_spline_variance(matrices, events, decomp, lambda);
-   // showVector(vecVarG, "vecVarG");
+#endif
 
     // -- autre méthode pour varG, sans passer par l'inversion de B, en utilisant la résolution de l'équation
 
@@ -2420,9 +2302,9 @@ MCMCSpline currentSpline (std::vector<std::shared_ptr<Event> > &events, const st
     splineX.vecThetaReduced = vec_theta_red;
     splineX.vecG = std::move(sx.vecG);
     splineX.vecGamma = std::move(sx.vecGamma);
-
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
     splineX.vecVarG = vec_varG ; //vecVarG;
-
+#endif
     for (size_t i = 0; i < events.size(); i++) {
         events[i]->mGx = splineX.vecG[i];
     }
@@ -2446,8 +2328,9 @@ MCMCSpline currentSpline (std::vector<std::shared_ptr<Event> > &events, const st
             events[i]->mGy = splineY.vecG[i];
         }
         splineY.vecThetaReduced = vec_theta_red;
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
         splineY.vecVarG = vec_varG; //vecVarG;  // Les erreurs sont égales sur les trois composantes X, Y, Z splineY.vecErrG = splineX.vecErrG =
-
+#endif
         spline.splineY = std::move(splineY);
     }
 
@@ -2466,8 +2349,9 @@ MCMCSpline currentSpline (std::vector<std::shared_ptr<Event> > &events, const st
             events[i]->mGz = splineZ.vecG[i];
         }
         splineZ.vecThetaReduced= vec_theta_red;
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
         splineZ.vecVarG = vec_varG; //vecVarG;
-
+#endif
         spline.splineZ = std::move(splineZ);
     }
 
@@ -2522,12 +2406,13 @@ MCMCSpline currentSpline (std::vector<std::shared_ptr<Event> > &events, const st
 
     const SplineResults sx = doSplineX(matrices, events, vecH, decomp, lambda); //  matB est utile pour vec_gamma
     // Les erreurs sont égales sur les trois composantes X, Y, Z splineY.vecErrG = splineX.vecErrG =
-
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
      const std::vector<double> &vec_varG = calcul_spline_variance(matrices, events, decomp, lambda);
+
 //t1.display();
      // -- autre méthode pour varG, sans passer par l'inversion de B, en utilisant la résolution de l'équation
      // cette méthode fonctionne mais elle est beaucoup plus lente, car la décomposition est complète
-
+#endif
 
     // --------------------------------------------------------------
     //  Calcul de la spline g, g" pour chaque composante x y z + stockage
@@ -2538,8 +2423,9 @@ MCMCSpline currentSpline (std::vector<std::shared_ptr<Event> > &events, const st
     splineX.vecG = std::move(sx.vecG);
     splineX.vecGamma = std::move(sx.vecGamma);
 
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
     splineX.vecVarG = vec_varG ; //vecVarG;
-
+#endif
     for (size_t i = 0; i < events.size(); i++) {
         events[i]->mGx = splineX.vecG[i];
     }
@@ -2563,8 +2449,10 @@ MCMCSpline currentSpline (std::vector<std::shared_ptr<Event> > &events, const st
             events[i]->mGy = splineY.vecG[i];
         }
         splineY.vecThetaReduced = vec_theta_red;
-        splineY.vecVarG = vec_varG; //vecVarG;  // Les erreurs sont égales sur les trois composantes X, Y, Z splineY.vecErrG = splineX.vecErrG =
 
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
+        splineY.vecVarG = vec_varG; //vecVarG;  // Les erreurs sont égales sur les trois composantes X, Y, Z splineY.vecErrG = splineX.vecErrG =
+#endif
         spline.splineY = std::move(splineY);
     }
 
@@ -2583,7 +2471,10 @@ MCMCSpline currentSpline (std::vector<std::shared_ptr<Event> > &events, const st
             events[i]->mGz = splineZ.vecG[i];
         }
         splineZ.vecThetaReduced= vec_theta_red;
+
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
         splineZ.vecVarG = vec_varG; //vecVarG;
+#endif
 
         spline.splineZ = std::move(splineZ);
     }
@@ -2617,13 +2508,14 @@ MCMCSpline currentSpline_WI (std::vector<std::shared_ptr<Event>> &events, bool d
 
     // le calcul de l'erreur est influencé par VG qui induit 1/mW, utilisé pour fabriquer matrices->DiagWinv et calculer matrices->matQTW_1Q
     // Tout le calcul précédent ne change pas
-
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
     std::vector<double> vecVarG;
     //if (mCurveSettings.mUseErrMesure)
     if (use_error)
         vecVarG = calcul_spline_variance(spline_matrices, events, decomp, 0.); // Les erreurs sont égales sur les trois composantes X, Y, Z splineY.vecErrG = splineX.vecErrG =
     else
         vecVarG = std::vector(events.size(), 0.);
+#endif
     // --------------------------------------------------------------
     //  Calcul de la spline g, g" pour chaque composante x y z + stockage
     // --------------------------------------------------------------
@@ -2635,7 +2527,9 @@ MCMCSpline currentSpline_WI (std::vector<std::shared_ptr<Event>> &events, bool d
     splineX.vecG = std::move(sx.vecG);
     splineX.vecGamma = std::move(sx.vecGamma);
 
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
     splineX.vecVarG = vecVarG;
+#endif
 
     MCMCSpline spline;
     spline.splineX = std::move(splineX);
@@ -2651,8 +2545,10 @@ MCMCSpline currentSpline_WI (std::vector<std::shared_ptr<Event>> &events, bool d
         splineY.vecGamma = std::move(sy.vecGamma);
 
         splineY.vecThetaReduced = vec_theta_red;
-        splineY.vecVarG = vecVarG;  // Les erreurs sont égales sur les trois composantes X, Y, Z splineY.vecErrG = splineX.vecErrG =
 
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
+        splineY.vecVarG = vecVarG;  // Les erreurs sont égales sur les trois composantes X, Y, Z splineY.vecErrG = splineX.vecErrG =
+#endif
         spline.splineY = std::move(splineY);
     }
 
@@ -2669,7 +2565,11 @@ MCMCSpline currentSpline_WI (std::vector<std::shared_ptr<Event>> &events, bool d
         splineZ.vecGamma = std::move(sz.vecGamma);
 
         splineZ.vecThetaReduced = vec_theta_red;
+
+
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
         splineZ.vecVarG = vecVarG;
+#endif
 
         spline.splineZ = std::move(splineZ);
     }
@@ -2729,6 +2629,7 @@ double valeurG(const double t, const MCMCSplineComposante& spline, unsigned long
 //  par interpolation linéaire des erreurs entre les noeuds
 // ------------------------------------------------------------------
 //obsolete
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
 double valeurErrG(const double t, const MCMCSplineComposante& spline, unsigned& i0, Model &model)
 {
     const unsigned n = (unsigned) spline.vecThetaReduced.size();
@@ -2760,6 +2661,7 @@ double valeurErrG(const double t, const MCMCSplineComposante& spline, unsigned& 
 
     return errG;
 }
+#endif
 
 // dans RenCurve U-CMT-Routine_Spline Valeur_Gp // useless
 double valeurGPrime(const double t, const MCMCSplineComposante& spline, unsigned& i0, Model &model)
@@ -2842,6 +2744,7 @@ double valeurGSeconde(const double t, const MCMCSplineComposante& spline, Model&
  * @param tmin Temps réel minimum de la spline.
  * @param tmax Temps réel maximum de la spline.
  */
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
 void valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante &spline, double& G, double& varG, double& GP, double& GS, unsigned& i0, double tmin, double tmax)
 {
     constexpr double one_sixth = 1.0 / 6.0;
@@ -2895,6 +2798,10 @@ void valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante &spline, do
         //varG = spline.vecVarG.back() + k * dt + dt; // croissance quadratique
 
     } else {
+        // Sécurité pour la réinitialisation de l'index i0 si t recule
+        if (i0 >= n - 1 || tReduce < spline.vecThetaReduced[i0]) {
+            i0 = 0;
+        }
 
         for (; i0 < n-1; ++i0) {
             const t_reduceTime ti1 = spline.vecThetaReduced[i0];
@@ -2902,33 +2809,36 @@ void valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante &spline, do
 
 
             if ((tReduce >= ti1) && (tReduce < ti2)) {
+                const double h0 = ti2 - ti1;
+                const double u0 = tReduce - ti1;
+                const double v0 = ti2 - tReduce;
+
+
                 const double h = ti2 - ti1;
                 const double u = tReduce - ti1;
-                const double v = ti2 - tReduce;
+                const double v = h - u; // Fix 1: Annule la dérive de précision sur v
 
                 const double gi1 = spline.vecG[i0];
                 const double gi2 = spline.vecG[i0 + 1];
                 const double gamma1 = spline.vecGamma[i0];
                 const double gamma2 = spline.vecGamma[i0 + 1];
 
+                // 1. Valeur de la spline G(t)
+                G = (u * gi2 + v * gi1) / h
+                        - one_sixth * (u * v) * ((1.0 + u / h) * gamma2 + (1.0 + v / h) * gamma1);
 
-                // Spline value
-                G = ( u * gi2 + v * gi1 ) / h;
-                G -= one_sixth * (u * v) * ((1.0 + u / h) * gamma2 + (1.0 + v / h) * gamma1);
-
-                // Interpolated variance
-                const double err1 = sqrt(spline.vecVarG[i0]);
-                const double err2 = sqrt(spline.vecVarG[i0 + 1]);
+                // 2. Interpolation continue de l'écart-type -> variance
+                const double err1 = std::sqrt(spline.vecVarG[i0]);
+                const double err2 = std::sqrt(spline.vecVarG[i0 + 1]);
                 const double alpha = u / h;
+                const double err = err1 + alpha * (err2 - err1);
+                varG = err * err;
 
-                varG = err1 + alpha * (err2 - err1);
-                varG *= varG;
-
-                // First derivative
+                // 3. Dérivée première G'(t)
                 GP = ((gi2 - gi1) / h) - one_sixth * u * v * (gamma2 - gamma1) / h;
                 GP += one_sixth * (u - v) * ( (1.0 + u / h) * gamma2 + (1.0 + v / h) * gamma1);
 
-                // Second derivative
+                // 4. Dérivée seconde G''(t)
                 GS = (u * gamma2 + v * gamma1) / h;
 
                 break;
@@ -2943,6 +2853,120 @@ void valeurs_G_VarG_GP_GS(const double t, const MCMCSplineComposante &spline, do
 
 
 }
+#endif
+
+// utile pour fonction Silverman
+void valeurs_G_VarG_GP_GS(const double t, const SilvermanSpline &spline, double& G, double& varG, double& GP, double& GS, unsigned& i0, double tmin, double tmax)
+{
+    constexpr double one_sixth = 1.0 / 6.0;
+
+    const size_t n = spline.vecThetaReduced.size();
+    const double invDuration = 1.0 / (tmax - tmin);
+    const t_reduceTime tReduce =  (t - tmin) * invDuration;
+    const t_reduceTime t1 = spline.vecThetaReduced.front();
+    const t_reduceTime tn = spline.vecThetaReduced.back();
+
+    // The first derivative is always constant outside the interval [t1, tn].
+    if (tReduce <= t1) {
+       /* Code d'origine */
+        const t_reduceTime t2 = spline.vecThetaReduced[1];
+        double h = t2 - t1;
+        const double dt = t1 -tReduce;
+
+        // ValeurGPrime
+        GP = (spline.vecG[1] - spline.vecG[0]) / h - h * spline.vecGamma[1] * one_sixth;
+
+        // ValeurG
+        G = spline.vecG[0] - dt * GP;
+
+        // valeurErrG
+        varG = spline.vecVarG[0];
+
+        // valeurGSeconde
+        GS = 0.0;
+
+        // // croissance quadratique de la variance
+        //Hyperparamètre réglable selon la confiance dans l’extrapolation
+        //const double k = spline.vecVarG.back() / h; // h = dernier intervalle
+        //varG = spline.vecVarG.back() + k * dt + dt; // croissance quadratique
+
+
+    } else if (tReduce >= tn) {
+         // Code d'origine
+        const t_reduceTime tn1 = spline.vecThetaReduced[n-2];
+        const double h = tn - tn1;
+        const double dt = tReduce - tn;
+
+        GP = (spline.vecG[n-1] - spline.vecG[n-2]) / h + h * spline.vecGamma[n-2] * one_sixth;
+
+        G = spline.vecG[n-1] + dt * GP;
+
+        GS = 0.0;
+
+        // // croissance quadratique de la variance
+        //Hyperparamètre réglable selon la confiance dans l’extrapolation
+        //const double k = spline.vecVarG.back() / h; // h = dernier intervalle
+        //varG = spline.vecVarG.back() + k * dt + dt; // croissance quadratique
+
+    } else {
+        // Sécurité pour la réinitialisation de l'index i0 si t recule
+        if (i0 >= n - 1 || tReduce < spline.vecThetaReduced[i0]) {
+            i0 = 0;
+        }
+
+        for (; i0 < n-1; ++i0) {
+            const t_reduceTime ti1 = spline.vecThetaReduced[i0];
+            const t_reduceTime ti2 = spline.vecThetaReduced[i0 + 1];
+
+
+            if ((tReduce >= ti1) && (tReduce < ti2)) {
+                /*const double h0 = ti2 - ti1;
+                const double u0 = tReduce - ti1;
+                const double v0 = ti2 - tReduce;
+*/
+
+                const double h = ti2 - ti1;
+                const double u = tReduce - ti1;
+                const double v = h - u; // Fix 1: Annule la dérive de précision sur v
+
+                const double gi1 = spline.vecG[i0];
+                const double gi2 = spline.vecG[i0 + 1];
+                const double gamma1 = spline.vecGamma[i0];
+                const double gamma2 = spline.vecGamma[i0 + 1];
+
+                // 1. Valeur de la spline G(t)
+                G = (u * gi2 + v * gi1) / h
+                        - one_sixth * (u * v) * ((1.0 + u / h) * gamma2 + (1.0 + v / h) * gamma1);
+
+                // 2. Interpolation continue de l'écart-type -> variance
+                const double err1 = std::sqrt(spline.vecVarG[i0]);
+                const double err2 = std::sqrt(spline.vecVarG[i0 + 1]);
+                const double alpha = u / h;
+                const double err = err1 + alpha * (err2 - err1);
+                varG = err * err;
+
+                // 3. Dérivée première G'(t)
+                GP = ((gi2 - gi1) / h) - one_sixth * u * v * (gamma2 - gamma1) / h;
+                GP += one_sixth * (u - v) * ( (1.0 + u / h) * gamma2 + (1.0 + v / h) * gamma1);
+
+                // 4. Dérivée seconde G''(t)
+                GS = (u * gamma2 + v * gamma1) / h;
+
+                break;
+            }
+        }
+
+    }
+
+    // Rescale derivatives for original time domain
+    GP *= invDuration;
+    GS *= invDuration * invDuration;
+
+
+}
+
+
+
 /**
  * @brief Calcule la valeur de la spline (G), sa dérivée première (GP) et seconde (GS), à un instant t donné.
  *
@@ -2966,7 +2990,7 @@ void valeurs_G_GP_GS(const double t, const MCMCSplineComposante &spline, double&
     const t_reduceTime tn = spline.vecThetaReduced.back();
 
     // The first derivative is always constant outside the interval [t1,tn].
-    if (tReduce <= t1) {
+   if (tReduce <= t1) {
         const t_reduceTime t2 = spline.vecThetaReduced[1];
         const double h = t2 - t1;
 
@@ -2992,16 +3016,27 @@ void valeurs_G_GP_GS(const double t, const MCMCSplineComposante &spline, double&
 
 
     } else {
+        // Sécurité pour la recherche par i0
+        if (i0 >= n - 1 || tReduce < spline.vecThetaReduced[i0]) {
+            i0 = 0;
+        }
 
         for (; i0 < n-1; ++i0) {
             const t_reduceTime ti1 = spline.vecThetaReduced[i0];
             const t_reduceTime ti2 = spline.vecThetaReduced[i0 + 1];
 
 
-            if ((tReduce >= ti1) && (tReduce < ti2)) {
+            //if ((tReduce >= ti1) && (tReduce < ti2)) {
+            if (tReduce >= ti1 && (tReduce < ti2 )) {
+                /*const double h0 = ti2 - ti1;
+                const double u0 = tReduce - ti1;
+                const double v0 = ti2 - tReduce;
+                */
+
+
                 const double h = ti2 - ti1;
                 const double u = tReduce - ti1;
-                const double v = ti2 - tReduce;
+                const double v = h - u; // Fix 1: Annule la dérive de précision sur v
 
                 const double gi1 = spline.vecG[i0];
                 const double gi2 = spline.vecG[i0 + 1];
@@ -3015,13 +3050,20 @@ void valeurs_G_GP_GS(const double t, const MCMCSplineComposante &spline, double&
 
 
                 // First derivative
-                GP = ((gi2 - gi1) / h) - one_sixth * u * v * (gamma2 - gamma1) / h;
-                GP += one_sixth * (u - v) * ( (1.0 + u / h) * gamma2 + (1.0 + v / h) * gamma1);
+                //double GP0 = ((gi2 - gi1) / h) - one_sixth * u * v * (gamma2 - gamma1) / h;
+                //GP0 += one_sixth * (u - v) * ( (1.0 + u / h) * gamma2 + (1.0 + v / h) * gamma1);
 
+                // First derivative GP (Fix 2: Forme symétrique sans biais unilatéral)
+                const double slope = (gi2 - gi1) / h;
+                const double u_rel = u / h;
+                const double v_rel = v / h;
+
+                GP = slope + (h * one_sixth) * ( (3.0 * u_rel * u_rel - 1.0) * gamma2 - (3.0 * v_rel * v_rel - 1.0) * gamma1 );
                 // Second derivative
                 GS = (u * gamma2 + v * gamma1) / h;
 
                 break;
+
             }
         }
 
@@ -3181,7 +3223,7 @@ std::vector<double> calcul_spline_variance(const SplineMatricesLD& matrices, con
  * @param step
  * @return
  */
-std::vector<QMap<double, double>> composante_to_curve(MCMCSplineComposante spline_compo, double tmin, double tmax, double step)
+std::vector<QMap<double, double>> composante_to_curve(SilvermanSpline spline, double tmin, double tmax, double step)
 {
     QMap<double, double> curve;
     QMap<double, double> curve_plus;
@@ -3194,7 +3236,7 @@ std::vector<QMap<double, double>> composante_to_curve(MCMCSplineComposante splin
     unsigned i0 = 0;
     for (int i= 0; i < nb_pts ; ++i) {
         const double t = static_cast<double>(i) * step + tmin ;
-        valeurs_G_VarG_GP_GS(t, spline_compo, g, varG, gp, gs, i0, tmin, tmax);
+        valeurs_G_VarG_GP_GS(t, spline, g, varG, gp, gs, i0, tmin, tmax);
         curve[t] = g;
         curve_plus[t] = g + 1.96 * sqrt(varG);
         curve_moins[t] = g - 1.96 * sqrt(varG);
@@ -3647,7 +3689,7 @@ double compute_GCV_weighted(
     return gcv;
 }
 
-std::pair<MCMCSpline, std::pair<double, double>> do_spline_kernel_composante(const std::vector<double> &vec_t, const std::vector<double> &vec_X, const std::vector<double> &vec_X_err, double tmin, double tmax, SilvermanParam &sv, const std::vector<double> &vec_Y, const std::vector<double> &vec_Y_err, const std::vector<double> &vec_Z, const std::vector<double> &vec_Z_err)
+std::pair<SilvermanSpline3D, std::pair<double, double>> do_spline_kernel_composante(const std::vector<double> &vec_t, const std::vector<double> &vec_X, const std::vector<double> &vec_X_err, double tmin, double tmax, SilvermanParam &sv, const std::vector<double> &vec_Y, const std::vector<double> &vec_Y_err, const std::vector<double> &vec_Z, const std::vector<double> &vec_Z_err)
 {
     bool doY = (!vec_Y.empty() && vec_Z.empty());
     bool doYZ = (!vec_Y.empty() && !vec_Z.empty());
@@ -4026,9 +4068,9 @@ std::pair<MCMCSpline, std::pair<double, double>> do_spline_kernel_composante(con
     // --------------------------------------------------------------
     //  Calcul de la spline g, g" pour chaque composante x y z + stockage
     // --------------------------------------------------------------
-    MCMCSpline spline;
+    SilvermanSpline3D spline;
 
-    MCMCSplineComposante splineX, splineY, splineZ;
+    SilvermanSpline splineX, splineY, splineZ;
 
     splineX.vecThetaReduced = vec_theta_red;
     splineX.vecG = vec_G;
@@ -4088,292 +4130,193 @@ std::pair<MCMCSpline, std::pair<double, double>> do_spline_kernel_composante(con
 
 }
 
-std::pair<MCMCSpline, std::pair<double, double>> do_spline_composante(const std::vector<double> &vec_t, const std::vector<double> &vec_X, const std::vector<double> &vec_X_err, double tmin, double tmax, SilvermanParam& sv, const std::vector<double> &vec_Y, const std::vector<double> &vec_Y_err, const std::vector<double> &vec_Z, const std::vector<double> &vec_Z_err)
+
+std::pair<SilvermanSpline3D, std::pair<double, double>> do_spline_composante(const std::vector<double> &vec_t, const std::vector<double> &vec_X, const std::vector<double> &vec_X_err, double tmin, double tmax, SilvermanParam& sv, const std::vector<double> &vec_Y, const std::vector<double> &vec_Y_err, const std::vector<double> &vec_Z, const std::vector<double> &vec_Z_err)
 {
-    bool doY (!vec_Y.empty() && vec_Z.empty());
+    bool doY  (!vec_Y.empty() && vec_Z.empty());
     bool doYZ (!vec_Y.empty() && !vec_Z.empty());
 
-    std::vector<double> vec_tmp_t;
-    std::vector<double> vec_tmp_x, vec_tmp_y, vec_tmp_z;
+    // ── 1. Tri des données ────────────────────────────────────────────
+    std::vector<double> vec_tmp_t, vec_tmp_x, vec_tmp_y, vec_tmp_z;
     std::vector<double> vec_tmp_x_err, vec_tmp_y_err, vec_tmp_z_err;
-    // trie des temps et des données associées
+
     if (!std::is_sorted(vec_t.begin(), vec_t.end())) {
         std::vector<int> l_index = get_order(vec_t);
-
         for (int i : l_index) {
-            vec_tmp_t.push_back(vec_t.at(i));
-            vec_tmp_x.push_back(vec_X.at(i));
+            vec_tmp_t    .push_back(vec_t    .at(i));
+            vec_tmp_x    .push_back(vec_X    .at(i));
             vec_tmp_x_err.push_back(vec_X_err.at(i));
             if (doY || doYZ) {
-                vec_tmp_y.push_back(vec_Y.at(i));
+                vec_tmp_y    .push_back(vec_Y    .at(i));
                 vec_tmp_y_err.push_back(vec_Y_err.at(i));
             }
             if (doYZ) {
-                vec_tmp_z.push_back(vec_Z.at(i));
+                vec_tmp_z    .push_back(vec_Z    .at(i));
                 vec_tmp_z_err.push_back(vec_Z_err.at(i));
             }
         }
     } else {
-        vec_tmp_t = std::vector<double>(vec_t.begin(), vec_t.end()); //vec_t;
-        vec_tmp_x = std::vector<double>(vec_X.begin(), vec_X.end()); //vec_X;
-        vec_tmp_x_err = std::vector<double>(vec_X_err.begin(), vec_X_err.end()); //vec_X_err;
-        if (doY || doYZ) {
-            vec_tmp_y = std::vector<double>(vec_Y.begin(), vec_Y.end());
-            vec_tmp_y_err = std::vector<double>(vec_Y_err.begin(), vec_Y_err.end()); //vec_Y_err;
-        }
-        if (doYZ) {
-            vec_tmp_z = std::vector<double>(vec_Z.begin(), vec_Z.end()); //vec_Z;
-            vec_tmp_z_err = std::vector<double>(vec_Z_err.begin(), vec_Z_err.end()); //vec_Z_err;
-        }
+        vec_tmp_t     = vec_t;
+        vec_tmp_x     = vec_X;     vec_tmp_x_err = vec_X_err;
+        if (doY || doYZ) { vec_tmp_y = vec_Y; vec_tmp_y_err = vec_Y_err; }
+        if (doYZ)        { vec_tmp_z = vec_Z; vec_tmp_z_err = vec_Z_err; }
     }
-    // -- Preparation du vecteur points
-    int n_points = vec_X.size();
+
+    // ── 2. Y_mat (trié) ───────────────────────────────────────────────
+    int n_points = (int)vec_tmp_x.size();
+
+    ColumnVectorD x_vec(n_points), y_vec, z_vec;
+    for (int i = 0; i < n_points; ++i) x_vec(i) = vec_tmp_x[i];
+
     MatrixD Y_mat(n_points, 1);
-    // Construction du vecteur x
-    ColumnVectorD x_vec, y_vec, z_vec;
-
-    x_vec.resize(n_points);
-    for (int i = 0; i < n_points; ++i)
-        x_vec(i) = vec_tmp_x[i];
-
     Y_mat << x_vec;
 
     if (doY) {
+        y_vec.resize(n_points);
+        for (int i = 0; i < n_points; ++i) y_vec(i) = vec_tmp_y[i];
         Y_mat.resize(n_points, 2);
-        y_vec.resize(n_points);
-        for (int i = 0; i < n_points; ++i)
-            y_vec(i) = vec_tmp_y[i];
-
         Y_mat << x_vec, y_vec;
-
     } else if (doYZ) {
-        Y_mat.resize(n_points, 3);
-        y_vec.resize(n_points);
-        z_vec.resize(n_points);
+        y_vec.resize(n_points); z_vec.resize(n_points);
         for (int i = 0; i < n_points; ++i) {
             y_vec(i) = vec_tmp_y[i];
             z_vec(i) = vec_tmp_z[i];
         }
-
+        Y_mat.resize(n_points, 3);
         Y_mat << x_vec, y_vec, z_vec;
     }
 
-
-    //int n_components = Y_mat.cols();
-
-    long long j = 0;
-    DiagonalMatrixD W_1 (vec_X_err.size());
+    // ── 3. W_1 (trié) ────────────────────────────────────────────────
+    // FIX: utiliser vec_tmp_*_err partout (données triées)
+    DiagonalMatrixD W_1(n_points);
     W_1.setZero();
     if (sv.use_error_measure) {
-
-        if (doY) {
-            auto Y_err = vec_Y_err.begin();
-            for (auto &X_err : vec_tmp_x_err) {
-                const double Sy = pow(X_err, -2.0) + pow(*Y_err++, -2.0);
-                W_1.diagonal()[j++] = 2.0/ Sy;
+        for (int j = 0; j < n_points; ++j) {
+            if (doY) {
+                double Sy = pow(vec_tmp_x_err[j], -2.0) + pow(vec_tmp_y_err[j], -2.0);
+                W_1.diagonal()[j] = 2.0 / Sy;
+            } else if (doYZ) {
+                double Sy = pow(vec_tmp_x_err[j], -2.0)
+                          + pow(vec_tmp_y_err[j], -2.0)
+                          + pow(vec_tmp_z_err[j], -2.0);
+                W_1.diagonal()[j] = 3.0 / Sy;
+            } else {
+                W_1.diagonal()[j] = vec_tmp_x_err[j] * vec_tmp_x_err[j];
             }
         }
-        else if (doYZ) {
-            auto Y_err = vec_tmp_y_err.begin();
-            auto Z_err = vec_tmp_z_err.begin();
-            for (auto &X_err : vec_tmp_x_err) {
-                const double Sy = pow(X_err, -2.) + pow(*Y_err++, -2.0) + pow(*Z_err++, -2.0);
-                W_1.diagonal()[j++] = 3.0/ Sy;
-            }
-        }
-        else {
-            for (auto &X_err : vec_tmp_x_err) {
-                W_1.diagonal()[j++] = X_err * X_err;
-            }
-        }
-
     } else {
         W_1.setIdentity();
     }
 
-    DiagonalMatrixD I (n_points);
-    I.setZero();
-    I.setIdentity();
+    // ── 4. Nœuds réduits et h ────────────────────────────────────────
+    DiagonalMatrixD I(n_points); I.setIdentity();
 
-    // ---
-    std::vector<t_reduceTime> vecH;
-    std::vector<t_reduceTime> vec_theta_red;
-
-    for (auto t : vec_tmp_t) {
-        vec_theta_red.push_back((t-tmin)/(tmax-tmin));
-        //qDebug()<<"do spline compo t="<< t;
-    }
-
+    std::vector<t_reduceTime> vec_theta_red, vecH;
+    for (auto t : vec_tmp_t)
+        vec_theta_red.push_back((t - tmin) / (tmax - tmin));
     spread_theta_reduced(vec_theta_red);
+    for (auto it = vec_theta_red.begin(); it != std::prev(vec_theta_red.end()); ++it)
+        vecH.push_back(*std::next(it) - *it);
 
-    auto iter = vec_theta_red.begin();
-    for (; iter != std::prev(vec_theta_red.end()) ; iter++) {
-        vecH.push_back(*std::next(iter) -  *iter);
-    }
-    // doSpline utilise les Y des events
-    // => On le calcule ici pour la première composante (x)
-
+    // ── 5. Lambda + Vg ───────────────────────────────────────────────
     double lambda_cv, Vg;
     std::pair<double, double> lambda_Vg;
+
+    // Calcul matriciel commun (Q, R, A, Y_hat) — utilisé dans les deux branches
+    // pour Vg, puis réutilisé pour la spline finale.
+    const MatrixD R_mat = calculMatR_D(vecH);   // NB: renommé pour éviter conflit
+    const MatrixD Q_mat = calculMatQ_D(vecH);
+    const MatrixD Qt    = Q_mat.transpose();
+
+    // Lambda
     if (sv.lambda_process == SilvermanParam::lambda_type::Silverman) {
-        lambda_Vg = initLambdaSplineBySilverman(sv, vec_tmp_x, vec_tmp_x_err, vecH, vec_tmp_y, vec_tmp_y_err, vec_tmp_z, vec_tmp_z_err);
-        lambda_cv = lambda_Vg.first;
-
-        Vg = lambda_Vg.second;
-
+        lambda_Vg  = initLambdaSplineBySilverman2(sv, vec_tmp_x, vec_tmp_x_err, vecH,
+                                                   vec_tmp_y, vec_tmp_y_err,
+                                                   vec_tmp_z, vec_tmp_z_err);
+        lambda_cv  = lambda_Vg.first;
+        Vg         = lambda_Vg.second;
     } else {
         lambda_cv = pow(10., sv.log_lambda_value);
 
-        const SplineMatricesD& spline_matrices_tmp = prepare_calcul_spline_D(vecH, W_1);
+        // FIX: calcul de Vg avec Y_mat et W_1 triés (identique à la branche Silverman)
+        MatrixD B   = R_mat + lambda_cv * Qt * W_1 * Q_mat;
+        Eigen::LDLT<MatrixD> solverVg(B);
+        MatrixD B_1Qt   = solverVg.solve(Qt);
+        MatrixD QB_1Qt  = Q_mat * B_1Qt;
+        MatrixD A_vg    = I.toDenseMatrix() - lambda_cv * W_1 * QB_1Qt;
+        MatrixD Y_hat_vg = A_vg * Y_mat;
 
-
-        Vg = var_residual(vec_tmp_x, spline_matrices_tmp, vecH, lambda_cv);
-
-        if (doY) {
-            Vg += var_residual(vec_tmp_y, spline_matrices_tmp, vecH, lambda_cv);
-            Vg /= 2.;
-        } else if (doYZ) {
-            Vg += var_residual(vec_tmp_y, spline_matrices_tmp, vecH, lambda_cv) + var_residual(vec_tmp_z, spline_matrices_tmp, vecH, lambda_cv);
-            Vg /= 3.;
-        }
-
-
-    }
-    lambda_Vg = std::make_pair(lambda_cv, Vg);
-    qDebug()<<" end of cross_validation lambda : "<<lambda_cv<<" = 10E"<<log10(lambda_cv)<< " Vg="<< Vg <<"sqrt(Vg)"<<sqrt(Vg);
-
-    //  Spline final
-    // --- ancien calcul des slpines
-    const SplineMatricesD& spline_matrices = prepare_calcul_spline_D(vecH, W_1);
-
-    std::unique_ptr<std::pair<MatrixD, DiagonalMatrixD>> decomp;
-
-    if (lambda_cv != 0.0) {
-        decomp = std::make_unique<std::pair<MatrixD, DiagonalMatrixD>>(decomp_matB(spline_matrices, lambda_cv));
-
-    } else {
-        decomp = std::make_unique<std::pair<MatrixD, DiagonalMatrixD>>(decompositionCholesky(spline_matrices.matR.toDense(), 5, 1));
-    }
-
-
-    const SplineResults& sx = do_spline(vec_tmp_x, spline_matrices,  vecH, *decomp, lambda_cv);
-
-    // --- Pour calcul matriciel des splines
-    const MatrixD R = calculMatR_D(vecH);
-    const MatrixD Q = calculMatQ_D(vecH);
-    const MatrixD Qt =  Q.transpose();
-
-    MatrixD B = R + lambda_cv * Qt * W_1 * Q;
-    Eigen::LDLT<MatrixD> solver(B);
-    if (solver.info() != Success) {
-        std::cout << "[initLambdaSplineBySilverman] Calcul des splines finales" << std::endl;
-
-    }
-
-    MatrixD B_1Qt = solver.solve(Qt);
-    MatrixD QB_1Qt = Q * B_1Qt;
-
-    MatrixD A = I.toDenseMatrix() - lambda_cv * W_1 * QB_1Qt;// forme classique
-    MatrixD Y_hat = A * Y_mat ;// == sx.vecG
-
-    std::vector<double> varG;
-
-    if (lambda_cv == 0) {
-        if (sv.use_error_measure) {
-            varG = std::vector<double>(W_1.diagonal().begin(), W_1.diagonal().end());
-
+        double EDF = n_points - A_vg.trace();
+        if (EDF <= 0.0) {
+            std::cerr << "⚠️ EDF_residuel ≤ 0\n";
+            Vg = 0.0;
         } else {
-            varG =  std::vector<double>(W_1.size(), 0.0);
+            MatrixD Res = Y_mat - Y_hat_vg;
+            Vg = Res.squaredNorm() / (EDF * Y_mat.cols());
         }
-
-
-    } else {
-
-       if (false) {// Cas Erreur ré-évaluée suivant Silverman, Some aspect..., page 7
-           double trA = n_points - lambda_cv * (W_1 * QB_1Qt).trace();
-
-           std::vector<double> general_resi0;
-           {
-               const double DLEc = 1 - trA/ n_points ;
-
-               for (int i = 0 ; i < W_1.rows(); i++) {
-                   general_resi0.push_back(  ( Y_mat(i, 0) - Y_hat(i, 0))/ (sqrt(W_1.diagonal()[i])*sqrt(DLEc)) );
-               }
-           }
-
-
-           //const int k = 5; // Dans l'article utilisation de la valeur 5 ?? à addapter suivant les modèles
-           // définition adaptative de k
-           int k = std::max(2, std::min(10, int(std::round(0.05*n_points)))); // 5% de n, borné [2,10]
-           std::cout << "[initLambdaSplineBySilverman] reévaluation de varG, fenetre k  = " << k << std::endl;
-
-           for (int i = 0; i < n_points; ++i) {
-
-               int mi = std::max(0, i - k);
-               int ni = std::min(n_points, i + k + 1); // +1 car segment inclusif
-
-               double reestimat_W_1 = 0.;
-               for (int j = mi; j< ni; j++) {
-                   reestimat_W_1 += pow(general_resi0[j], 2);
-               }
-               double wi = W_1.diagonal()[i];
-               reestimat_W_1 *= wi;
-
-               reestimat_W_1 /= (ni-mi);
-
-               varG.push_back(A.diagonal()[i]  * reestimat_W_1);
-               //std::cout << A.diagonal()[i]  * reestimat_W_1 << std::endl;
-           }
-       } else {
-        //--
-         //  DiagonalMatrixD matA = diagonal_influence_matrix(spline_matrices, 1, *decomp, lambda_cv);
-        // Affectation de Vg pour l'affichage de l'erreur global
-           Eigen::VectorXd AVg = A.diagonal() * Vg;
-           varG.assign(AVg.data(), AVg.data() + AVg.size());
-
-       }
+        lambda_Vg = {lambda_cv, Vg};
     }
 
+    qDebug() << "[do_spline_composante] end of cross_validation lambda :" << lambda_cv
+             << "= 10E" << log10(lambda_cv) << "Vg=" << Vg << "sqrt(Vg)" << sqrt(Vg);
 
+    // ── 6. Spline finale (unique, identique dans les deux branches) ──
+    MatrixD B_final  = R_mat + lambda_cv * Qt * W_1 * Q_mat;
+    Eigen::LDLT<MatrixD> solver_final(B_final);
+    if (solver_final.info() != Eigen::Success)
+        std::cerr << "[do_spline_composante] ⚠️ LDLT solver failed for final spline\n";
 
+    MatrixD B_1Qt_f  = solver_final.solve(Qt);
+    MatrixD QB_1Qt_f = Q_mat * B_1Qt_f;
+    MatrixD A_final  = I.toDenseMatrix() - lambda_cv * W_1 * QB_1Qt_f;
+    MatrixD Y_hat    = A_final * Y_mat;
 
-    // --------------------------------------------------------------
-    //  Calcul de la spline g, g" pour chaque composante x y z + stockage
-    // --------------------------------------------------------------
-    MCMCSpline spline;
+    // ── 7. varG ──────────────────────────────────────────────────────
+    std::vector<double> varG;
+    if (lambda_cv == 0.0) {
+        if (sv.use_error_measure)
+            varG.assign(W_1.diagonal().begin(), W_1.diagonal().end());
+        else
+            varG.assign(n_points, 0.0);
+    } else {
+        Eigen::VectorXd AVg = A_final.diagonal() * Vg;
+        varG.assign(AVg.data(), AVg.data() + AVg.size());
+    }
 
-    MCMCSplineComposante splineX, splineY, splineZ;
+    // ── 8. Calcul de gamma par composante ────────────────────────────
+    // FIX: gamma calculé matriciellement pour chaque colonne de Y_mat,
+    //      sans appel à do_spline (qui utilisait les anciens vecteurs non-triés).
+    //
+    //  B * Gamma = Qt * Y_col   =>  Gamma = B^{-1} Qt Y_col
+    //  solver_final déjà factorisé sur B_final — on le réutilise.
 
+    auto solve_gamma = [&](const ColumnVectorD& Y_col) -> std::vector<double> {
+        ColumnVectorD rhs    = Qt * Y_col;
+        ColumnVectorD gamma  = solver_final.solve(rhs);
+        return std::vector<double>(gamma.data(), gamma.data() + gamma.size());
+    };
+
+    // ── 9. Remplissage du MCMCSpline ─────────────────────────────────
+    SilvermanSpline3D spline;
+    SilvermanSpline splineX, splineY, splineZ;
+
+    // X
     splineX.vecThetaReduced = vec_theta_red;
-    //splineX.vecG = std::move(sx.vecG);
-    splineX.vecG.assign(Y_hat.col(0).data(),
-                        Y_hat.col(0).data() + Y_hat.rows());
-    splineX.vecGamma = std::move(sx.vecGamma);
-
-    splineX.vecVarG = varG;
-
+    splineX.vecG    .assign(Y_hat.col(0).data(), Y_hat.col(0).data() + n_points);
+    splineX.vecGamma = solve_gamma(x_vec);
+    splineX.vecVarG  = varG;
 
     if (doY || doYZ) {
-        const SplineResults &sy = do_spline(vec_tmp_y, spline_matrices,  vecH, *decomp, lambda_cv);
-
         splineY.vecThetaReduced = vec_theta_red;
-        //splineY.vecG = std::move(sy.vecG);
-        splineY.vecG.assign(Y_hat.col(1).data(),
-                            Y_hat.col(1).data() + Y_hat.rows());
-        splineY.vecGamma = std::move(sy.vecGamma);
-
-        splineY.vecVarG = varG;
+        splineY.vecG    .assign(Y_hat.col(1).data(), Y_hat.col(1).data() + n_points);
+        splineY.vecGamma = solve_gamma(y_vec);
+        splineY.vecVarG  = varG;
 
         if (doYZ) {
-            const SplineResults &sz = do_spline(vec_tmp_z, spline_matrices,  vecH, *decomp, lambda_cv);
-
             splineZ.vecThetaReduced = vec_theta_red;
-            //splineZ.vecG = std::move(sz.vecG);
-            splineZ.vecG.assign(Y_hat.col(2).data(),
-                                Y_hat.col(2).data() + Y_hat.rows());
-            splineZ.vecGamma = std::move(sz.vecGamma);
-
-            splineZ.vecVarG = varG;
+            splineZ.vecG    .assign(Y_hat.col(2).data(), Y_hat.col(2).data() + n_points);
+            splineZ.vecGamma = solve_gamma(z_vec);
+            splineZ.vecVarG  = varG;
         }
     }
 
@@ -4381,9 +4324,8 @@ std::pair<MCMCSpline, std::pair<double, double>> do_spline_composante(const std:
     spline.splineY = std::move(splineY);
     spline.splineZ = std::move(splineZ);
 
-    return std::make_pair( spline, lambda_Vg);
+    return {spline, lambda_Vg};
 }
-
 
 long double cross_validation (const std::vector<t_matrix>& vec_Y, const SplineMatricesLD& matrices, const std::vector<t_reduceTime>& vecH, const double lambda)
 {
@@ -5115,18 +5057,15 @@ std::pair<double, double> initLambdaSplineByCV(const bool depth, const std::vect
             }
 
 
-            MCMCSplineComposante splineX;
+            SilvermanSpline splineX;
             splineX.vecThetaReduced = vec_theta_red;
             splineX.vecG = std::move(sx.vecG);
             splineX.vecGamma = std::move(sx.vecGamma);
 
             splineX.vecVarG = vecVarG;
 
-            /*for (int i = 0; i < events.size(); i++) {
-            events[i]->mGx = splineX.vecG[i];
-            }*/
 
-            MCMCSpline spline;
+            SilvermanSpline3D spline;
             spline.splineX = std::move(splineX);
 
             has_positif = hasPositiveGPrimeByDet(spline.splineX);
@@ -5153,7 +5092,7 @@ std::pair<double, double> initLambdaSplineByCV(const bool depth, const std::vect
 
 
 
-#pragma mark Silvermann
+#pragma mark Silverman
 
 std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam& sv, const std::vector<double>& vec_X, const std::vector<double>& vec_X_err, const std::vector<t_reduceTime> &vecH, const std::vector<double> &vec_Y, const std::vector<double> &vec_Y_err, const std::vector<double> &vec_Z, const std::vector<double> &vec_Z_err)
 {
@@ -5203,12 +5142,7 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam& sv, const 
     DiagonalMatrixD I (n);
     I.setZero();
     I.setIdentity();
-//--
 
-    //const SplineMatricesD& matrices_tmp = prepare_calcul_spline_D(vecH, W_1);
-
-
-//--
     MatrixD Y_mat(n, 1);
     // Construction du vecteur x
     ColumnVectorD x_vec, y_vec, z_vec;
@@ -5575,42 +5509,6 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam& sv, const 
     Vg /= Y_mat.cols(); // moyenne sur les composantes
     */
 
-    // --- test old code -- le 2025-11-21 -- Controle OK
-    /*{
-        std::unique_ptr<std::pair<MatrixD, DiagonalMatrixD>> decomp;
-
-        // Decomposition_Cholesky de matB en matL et matD
-        if (lambda_mini != 0.0) {
-            decomp = std::make_unique<std::pair<MatrixD, DiagonalMatrixD>>(decomp_matB(matrices_tmp, lambda_mini));
-
-        } else {
-            decomp = std::make_unique<std::pair<MatrixD, DiagonalMatrixD>>(decompositionCholesky(matrices_tmp.matR.toDense(), 5, 1));
-        }
-
-        //  Calcul de Mat_B = R + lambda * Qt * W-1 * Q
-
-        //Calcul seulement la diagonal de A
-        const DiagonalMatrixD diag_A = diagonal_influence_matrix(matrices_tmp, 1, *decomp, lambda_mini);
-
-
-        const long double trace_old = diag_A.toDenseMatrix().trace();// compensated_sum(matA);
-        std::cout << "[initLambdaSplineBySilverman] trace_old : "
-                  << trace_old << std::endl;
-
-
-        const SplineResults& sx = do_spline(vec_X, matrices_tmp,  vecH, *decomp, lambda_mini);
-        long double N = static_cast<long double>(vec_X.size());
-
-        long double res2 = 0.0L;
-        for (size_t i = 0; i < vec_X.size(); ++i) {
-            long double residual = static_cast<long double>(sx.vecG[i] - vec_X[i]);
-            res2 += residual * residual  ;
-        }
-        long double EDF = N - trace_old;
-
-        res2 /= EDF;
-         std::cout << "[initLambdaSplineBySilverman] res2= " << res2 << " Vg= " << Vg << std::endl;
-    }*/
 
     // ---
 
@@ -5618,6 +5516,933 @@ std::pair<double, double> initLambdaSplineBySilverman(SilvermanParam& sv, const 
 
     return std::make_pair(lambda_mini, Vg);
 
+}
+
+/*
+std::pair<double, double> initLambdaSplineBySilverman2(SilvermanParam& sv, const std::vector<double>& vec_X, const std::vector<double>& vec_X_err, const std::vector<t_reduceTime> &vecH, const std::vector<double> &vec_Y, const std::vector<double> &vec_Y_err, const std::vector<double> &vec_Z, const std::vector<double> &vec_Z_err)
+{
+    std::vector<double> GCV, CV;
+    std::vector<double> lambda_GCV, lambda_CV;
+    const bool doY = !vec_Y.empty() && vec_Z.empty();
+    const bool doYZ = !vec_Y.empty() && !vec_Z.empty();
+
+    long long i = 0;
+    DiagonalMatrixD W_1 (vec_X_err.size());
+    W_1.setZero();
+    if (sv.use_error_measure) {
+
+        if (doY) {
+            auto Y_err = vec_Y_err.begin();
+            for (auto &X_err : vec_X_err) {
+                const double Sy = pow(X_err, -2.0) + pow(*Y_err++, -2.0);
+                W_1.diagonal()[i++] = 2.0/ Sy;
+            }
+        }
+        else if (doYZ) {
+            auto Y_err = vec_Y_err.begin();
+            auto Z_err = vec_Z_err.begin();
+            for (auto &X_err : vec_X_err) {
+                const double Sy = pow(X_err, -2.) + pow(*Y_err++, -2.0) + pow(*Z_err++, -2.0);
+                W_1.diagonal()[i++] = 3.0/ Sy;
+            }
+        }
+        else {
+            for (auto &X_err : vec_X_err) {
+                W_1.diagonal()[i++] = X_err * X_err;
+            }
+        }
+
+    } else {
+        W_1.setIdentity();
+    }
+
+    // Pour calcul matriciel
+    const MatrixD R = calculMatR_D(vecH);
+
+    const MatrixD Q = calculMatQ_D(vecH);
+
+    const MatrixD Qt =  Q.transpose();
+    size_t n = vec_X.size();
+
+    DiagonalMatrixD I (n);
+    I.setZero();
+    I.setIdentity();
+
+    MatrixD Y_mat(n, 1);
+    // Construction du vecteur x
+    ColumnVectorD x_vec, y_vec, z_vec;
+
+    x_vec.resize(n);
+    for (size_t i = 0; i < n; ++i)
+        x_vec(i) = vec_X[i];
+
+    Y_mat << x_vec;
+
+    if (doY) {
+        Y_mat.resize(n, 2);
+        y_vec.resize(n);
+        for (size_t i = 0; i < n; ++i)
+            y_vec(i) = vec_Y[i];
+
+        Y_mat << x_vec, y_vec;
+
+    } else if (doYZ) {
+        Y_mat.resize(n, 3);
+        y_vec.resize(n);
+        z_vec.resize(n);
+        for (size_t i = 0; i < n; ++i) {
+            y_vec(i) = vec_Y[i];
+            z_vec(i) = vec_Z[i];
+        }
+
+        Y_mat << x_vec, y_vec, z_vec;
+    }
+
+    size_t n_points = Y_mat.rows();
+    size_t n_components = Y_mat.cols();
+
+    std::vector<double> lambdas;        // les λ testés
+    std::vector<double> GCV_vals;  // valeurs brutes GCV
+    std::vector<double> CV_vals;   // valeurs brutes CV
+    //std::vector<long double> REML_vals;   // valeurs brutes REML
+// ici
+    // ============================================================
+            // UNE SEULE décomposition propre généralisée, indépendante de λ
+            // M = Qᵀ W₁ Q  (symétrique définie positive)
+            // R            (symétrique semi-définie positive)
+            // On résout le problème généralisé : M U = R U diag(mu)
+            // ============================================================
+            MatrixD M = Qt * W_1 * Q;
+
+            // Sécurisation numérique des deux matrices (symétrie parfaite)
+            M = 0.5 * (M + M.transpose());
+            MatrixD R_stable = 0.5 * (R + R.transpose());
+
+            // On ajoute un Jitter minuscule sur la diagonale de R pour stabiliser le solveur
+            // sans altérer les données physiques.
+            R_stable.diagonal().array() += 1e-12 * R_stable.diagonal().mean();
+
+            // Solveur généralisé d'Eigen : Résout A * V = B * V * D
+            // Ici : M * U = R_stable * U * diag(mu)
+            Eigen::GeneralizedSelfAdjointEigenSolver<MatrixD> ges(M, R_stable);
+            if (ges.info() != Eigen::Success) {
+                std::cerr << "[Silverman] ⚠️ Décomposition propre généralisée échouée\n";
+                return {0.0, 0.0};
+            }
+
+            // Récupération des valeurs propres (µ) et vecteurs propres (U)
+            // Par construction de Eigen, Uᵀ * R_stable * U = I  (Exactement ce qu'il nous faut !)
+            const Eigen::VectorXd& mu = ges.eigenvalues();
+            const MatrixD U           = ges.eigenvectors();
+
+            // Projection de Y_mat dans la base propre
+            const MatrixD QtY   = Qt * Y_mat;          // (n-2) × n_components
+            const MatrixD UtQtY = U.transpose() * QtY; // (n-2) × n_components
+
+            // Pré-calcul de Q U et W₁ Q U (coûteux, fait une fois hors de la boucle)
+            const MatrixD QU   = Q * U;       // n × (n-2)
+            const MatrixD W1QU = W_1 * QU;    // n × (n-2)
+
+            // ============================================================
+            // Boucle sur λ — AUCUNE résolution linéaire, AUCUNE inversion !
+            // ============================================================
+            const int n_pts = static_cast<int>(n);
+            const int n_comp = static_cast<int>(n_components);
+
+            for (int exp100 = -1000; exp100 < 601; exp100 += 2) {
+
+                const double lambda = std::pow(10.0, exp100 / 100.0);
+
+                // ---- coefficients spectraux d_k = λ μₖ / (1 + λ μₖ) ----
+                // Changement de variable suite à l'inversion du problème généralisé
+                Eigen::VectorXd d(mu.size());
+                for (int k = 0; k < mu.size(); ++k) {
+                    // Si mu(k) est proche de 0, d(k) tend vers 0 (lissage pur)
+                    d(k) = (lambda * mu(k)) / (1.0 + lambda * mu(k));
+                }
+
+                // ---- trace(A) = n - Σ d_k ----
+                const double sum_d   = d.sum();
+                const double traceA  = n_pts - sum_d;
+
+                // ---- résidus (I-A)Y = QU * diag(d) * Uᵀ Qᵀ Y ----
+                MatrixD dUtQtY = UtQtY;
+                for (int k = 0; k < d.size(); ++k) {
+                    dUtQtY.row(k) *= d(k);
+                }
+                const MatrixD residuals = QU * dUtQtY; // n × n_components
+
+                // ---- GCV pondéré ----
+                double weighted_rss = 0.0;
+                for (int i = 0; i < n_pts; ++i) {
+                    const double w_ii = W_1.diagonal()[i];
+                    for (int j = 0; j < n_comp; ++j) {
+                        weighted_rss += residuals(i, j) * residuals(i, j) * w_ii;
+                    }
+                }
+                const double dle    = 1.0 - traceA / n_pts;
+                const double gcv_m  = (weighted_rss / (n_pts * n_comp)) / (dle * dle);
+
+                // ---- CV (LOOCV) ----
+                Eigen::VectorXd diagA = Eigen::VectorXd::Ones(n_pts);
+                for (int i = 0; i < n_pts; ++i) {
+                    for (int k = 0; k < d.size(); ++k) {
+                        diagA(i) -= d(k) * QU(i, k) * W1QU(i, k);
+                    }
+                }
+
+                double cv_m = 0.0;
+                bool cv_valid = true;
+                for (int i = 0; i < n_pts; ++i) {
+                    const double denom_cv = 1.0 - diagA(i); // Sécurité division par 0
+                    if (std::abs(denom_cv) < 1e-10) {
+                        cv_valid = false;
+                        break;
+                    }
+                    const double w_ii = W_1.diagonal()[i];
+                    for (int j = 0; j < n_comp; ++j) {
+                        const double err = residuals(i, j) / denom_cv;
+                        cv_m += err * err * w_ii;
+                    }
+                }
+
+                if (!cv_valid) continue;
+                cv_m /= (n_pts * n_comp);
+
+                lambdas.push_back(lambda);
+                GCV_vals.push_back(gcv_m);
+                CV_vals.push_back(cv_m);
+
+                sv.tab_GCV[lambda] = gcv_m;
+                sv.tab_CV[lambda]  = cv_m;
+            }
+// ici
+    // --------------------------------------------------
+    // Filtrage + recherche du min pour GCV et CV
+    // --------------------------------------------------
+    auto process_min = [&](std::vector<double> vals) {
+        // Supprimer zéros initiaux
+        auto it = std::find_if(vals.begin(), vals.end(),
+                               [](double v) { return v != 0.0; });
+        size_t nb_0 = std::distance(vals.begin(), it);
+        if (it != vals.begin())
+            vals.erase(vals.begin(), it);
+
+        // Filtre gaussien
+        //constexpr int padding_type = 1;
+        //double sigma_filter= vals.size() / 20.0;
+        //vals = gaussian_filter(vals, sigma_filter, padding_type);
+
+        // Recherche min
+        size_t idx_min = std::distance(vals.begin(),
+                                       std::min_element(vals.begin(), vals.end()));
+        idx_min += nb_0; // correction index après suppression zéros
+
+        return idx_min;
+    };
+
+    size_t idx_gcv = process_min(GCV_vals);
+    size_t idx_cv  = process_min(CV_vals);
+    //size_t idx_reml  = process_min(REML_vals);
+    auto best_lambda_gcv = lambdas[idx_gcv];
+    auto best_lambda_cv  = lambdas[idx_cv];
+    //best_lambda_reml  = lambdas[idx_reml];
+
+    std::cout << "[initLambdaSplineBySilverman]"
+              << "Lambda optimal (GCV) = " << best_lambda_gcv
+              << " GCV min = " << GCV_vals[idx_gcv] << std::endl;
+
+    std::cout << "[initLambdaSplineBySilverman]"
+              << "Lambda optimal (CV)  = " << best_lambda_cv
+              << " CV min  = " << CV_vals[idx_cv] << std::endl;
+
+
+    double lambda_mini;
+
+    if (idx_gcv > 0 && idx_gcv < static_cast<size_t>(lambdas.size() - 1)) {
+        // Solution évidente avec GCV
+        lambda_mini = best_lambda_gcv;
+        sv.comment = "GCV solution; ";
+
+    } else if (idx_cv > 0 && idx_cv < static_cast<size_t>(lambdas.size() - 1)) {
+        // Solution évidente avec CV
+        lambda_mini = best_lambda_cv;
+        sv.comment = "CV solution; ";
+
+    }  else {
+        // Pas de minimum clair
+        // Si CV diminue continûment vers λ→0, cela suggère qu’un lissage quasi nul (donc spline presque interpolante) est préféré.
+        // Si au contraire CV/GCV diminue quand  λ→∞, alors un lissage extrême (droite ou polynôme bas degré) est préféré.
+        if (GCV_vals.front() > GCV_vals.back()) {
+            lambda_mini = 1.0e20;  // Lin. regression
+            sv.comment = "No GCV solution; Linear Regression; ";
+        } else {
+            lambda_mini = 0.0;     // Interpolation spline
+            sv.comment = "No GCV solution; Spline Interpolation; ";
+        }
+    }
+
+    // matrice de projection (ou opérateur de lissage).
+    // Opération matricielle
+
+    MatrixD B = R + lambda_mini * Qt * W_1 * Q;
+
+    // ============================================
+    // 2 : Résolution avec régularisation
+    // ============================================
+    // Ajouter une petite régularisation si nécessaire
+    //const double epsilon = 1e-15 * B.diagonal().mean();
+    //B.diagonal().array() += epsilon;
+
+    MatrixD B_1Qt;
+
+    Eigen::SelfAdjointEigenSolver<MatrixD> es(B);
+    double cond_est = es.eigenvalues().maxCoeff() / es.eigenvalues().minCoeff();
+    if (cond_est > 1e12) { // lambda trop grand, instabilité
+        std::cout << "⚠️ instabilité" << std::endl;
+    }
+
+    Eigen::LDLT<MatrixD> solver(B);
+    if (solver.info() != Success) {
+        std::cout << " 🚀 considérer la valeur comme instable" << std::endl;
+        std::cout << "[initLambdaSplineBySilverman] Erreur dans la décomposition" << std::endl;
+
+        // Tentative de résolution avec long double
+        Eigen::LDLT<MatrixLD> solverLD(B.cast<long double>());
+        if (solverLD.info() != Success) {
+            std::cout << "[initLambdaSplineBySilverman] Erreur dans la décomposition LD" << std::endl;
+
+        }
+
+        B_1Qt = solverLD.solve(Qt.cast<long double>()).cast<double>(); // Conversion après vérification
+    } else {
+        B_1Qt = solver.solve(Qt); // Résoudre normalement si tout va bien
+    }
+
+    MatrixD QB_1Qt = Q * B_1Qt;
+
+    MatrixD A = I.toDenseMatrix() - lambda_mini * W_1 * QB_1Qt;// forme classique
+    MatrixD Y_hat = A * Y_mat;
+    // Calcul de la variance résiduelle
+
+    double Vg = 0.0;
+    double EDF_residuel = n_points - A.trace(); // EDF (effective degrees of freedom)
+    if (EDF_residuel <= 0) {
+        std::cerr << "⚠️ EDF_residuel ≤ 0, variance globale impossible à calculer\n";
+        Vg = 0.0; //ne bloque pas les calculs suivants
+    } else {
+        MatrixD Res = Y_mat - Y_hat;
+        Vg = Res.squaredNorm() / (EDF_residuel * Y_mat.cols());
+    }
+
+    // Même calcul, mais plus explicite
+
+    // ___
+
+    MatrixD Res = Y_mat - Y_hat;
+
+    double test_norm =
+    (
+        (I.toDenseMatrix() - A) * Y_mat - Res
+    ).norm();
+
+    std::cout << "test residual = "
+              << test_norm
+              << std::endl;
+
+    MatrixD residual_exact =
+        lambda_mini *
+        W_1 *
+        Q *
+        B_1Qt *
+        Y_mat;
+
+    Eigen::VectorXd d(mu.size());
+    for (int k = 0; k < mu.size(); ++k)
+        d(k) = (lambda_mini * mu(k)) / (1.0 + lambda_mini * mu(k));
+
+
+
+    // ---- résidus (I-A)Y = Q U diag(d) Uᵀ Qᵀ Y ----
+    // = QU * (d .* UtQtY)   colonne par colonne
+    MatrixD dUtQtY = UtQtY;
+    for (int k = 0; k < d.size(); ++k)
+        dUtQtY.row(k) *= d(k);
+
+    MatrixD residual_spectral =
+        QU * dUtQtY;
+
+    std::cout
+    << (residual_exact - residual_spectral).norm()
+    << std::endl;
+
+    // ---
+
+
+
+    return std::make_pair(lambda_mini, Vg);
+
+}
+*/
+
+
+
+std::pair<double, double> initLambdaSplineBySilverman2_old(
+    SilvermanParam& sv,
+    const std::vector<double>& vec_X,
+    const std::vector<double>& vec_X_err,
+    const std::vector<t_reduceTime>& vecH,
+    const std::vector<double>& vec_Y,
+    const std::vector<double>& vec_Y_err,
+    const std::vector<double>& vec_Z,
+    const std::vector<double>& vec_Z_err)
+{
+    std::vector<double> lambdas;
+    std::vector<double> GCV_vals;
+    std::vector<double> CV_vals;
+
+    const bool doY = !vec_Y.empty() && vec_Z.empty();
+    const bool doYZ = !vec_Y.empty() && !vec_Z.empty();
+
+    long long i = 0;
+    DiagonalMatrixD W_1(vec_X_err.size());
+    W_1.setZero();
+    if (sv.use_error_measure) {
+        if (doY) {
+            auto Y_err = vec_Y_err.begin();
+            for (auto &X_err : vec_X_err) {
+                const double Sy = pow(X_err, -2.0) + pow(*Y_err++, -2.0);
+                W_1.diagonal()[i++] = 2.0 / Sy;
+            }
+        }
+        else if (doYZ) {
+            auto Y_err = vec_Y_err.begin();
+            auto Z_err = vec_Z_err.begin();
+            for (auto &X_err : vec_X_err) {
+                const double Sy = pow(X_err, -2.) + pow(*Y_err++, -2.0) + pow(*Z_err++, -2.0);
+                W_1.diagonal()[i++] = 3.0 / Sy;
+            }
+        }
+        else {
+            for (auto &X_err : vec_X_err) {
+                W_1.diagonal()[i++] = X_err * X_err;
+            }
+        }
+    } else {
+        W_1.setIdentity();
+    }
+
+    const MatrixD R = calculMatR_D(vecH);
+    const MatrixD Q = calculMatQ_D(vecH);
+    const MatrixD Qt = Q.transpose();
+    size_t n = vec_X.size();
+
+    DiagonalMatrixD I(n);
+    I.setZero();
+    I.setIdentity();
+
+    MatrixD Y_mat(n, 1);
+    ColumnVectorD x_vec, y_vec, z_vec;
+
+    x_vec.resize(n);
+    for (size_t i = 0; i < n; ++i)
+        x_vec(i) = vec_X[i];
+
+    Y_mat << x_vec;
+
+    if (doY) {
+        Y_mat.resize(n, 2);
+        y_vec.resize(n);
+        for (size_t i = 0; i < n; ++i)
+            y_vec(i) = vec_Y[i];
+        Y_mat << x_vec, y_vec;
+    } else if (doYZ) {
+        Y_mat.resize(n, 3);
+        y_vec.resize(n);
+        z_vec.resize(n);
+        for (size_t i = 0; i < n; ++i) {
+            y_vec(i) = vec_Y[i];
+            z_vec(i) = vec_Z[i];
+        }
+        Y_mat << x_vec, y_vec, z_vec;
+    }
+
+    size_t n_points = Y_mat.rows();
+    size_t n_components = Y_mat.cols();
+
+    // ============================================================
+    // APPLICATION DE LA MÉTHODE SPECTRALE DE SILVERMAN (CORRIGÉE)
+    // ============================================================
+    MatrixD M = Qt * W_1 * Q;
+
+    M = 0.5 * (M + M.transpose());
+    MatrixD R_stable = 0.5 * (R + R.transpose());
+
+    // Le jitter empêche le crash si R est proche de la singularité
+    R_stable.diagonal().array() += 1e-12 * R_stable.diagonal().mean();
+
+    // On utilise le type par défaut BA_Cholesky pour résoudre : M * U = R * U * diag(mu)
+    Eigen::GeneralizedSelfAdjointEigenSolver<MatrixD> ges(M, R_stable);
+    if (ges.info() != Eigen::Success) {
+        std::cerr << "[Silverman] ⚠️ Décomposition propre généralisée échouée\n";
+        return {0.0, 0.0};
+    }
+
+    const Eigen::VectorXd& mu = ges.eigenvalues();
+    const MatrixD U           = ges.eigenvectors();
+
+    // Projection des données
+    const MatrixD QtY   = Qt * Y_mat;
+    const MatrixD UtQtY = U.transpose() * QtY;
+
+    const MatrixD QU   = Q * U;
+    const MatrixD W1QU = W_1 * QU;
+
+    const int n_pts = static_cast<int>(n);
+    const int n_comp = static_cast<int>(n_components);
+
+    // Boucle d'évaluation ultra-rapide des Lambdas
+    for (int exp100 = -1000; exp100 < 601; exp100 += 2) {
+        const double lambda = std::pow(10.0, exp100 / 100.0);
+
+        // FORMULE CORRIGÉE : Puisque M*U = R*U*mu, alors (R + lambda*M)^-1 s'exprime avec :
+        // d_k = 1.0 / (1.0 + lambda * mu_k)
+        Eigen::VectorXd d(mu.size());
+        Eigen::VectorXd omeg(mu.size());
+        for (int k = 0; k < mu.size(); ++k) {
+            d(k) = 1.0 / (1.0 + lambda * mu(k));
+            // Pour le calcul direct des résidus (I-A)Y :
+            omeg(k) = lambda * mu(k) / (1.0 + lambda * mu(k));
+        }
+
+
+        // trace(A) = n - (n-2) + \sum d_k = 2 + \sum d_k
+        const double traceA = 2.0 + d.sum(); // avant
+
+        // ── traceA correcte ──────────────────────────────────────────────
+        //const double traceA = n_pts - omeg.sum();
+
+        // Calcul exact des résidus de manière spectrale
+        MatrixD intermediate = UtQtY;
+        for (int k = 0; k < d.size(); ++k) {
+            intermediate.row(k) *= d(k);
+        }
+        const MatrixD residuals = lambda * W1QU * intermediate;
+
+        // ── Résidus (I−A)Y corrects ──────────────────────────────────────
+
+        /*for (int k = 0; k < (int)omeg.size(); ++k)
+            intermediate.row(k) *= omeg(k);          // ← omeg, pas d
+        const MatrixD residuals = W1QU * intermediate; // ← sans lambda devant
+*/
+
+        // GCV
+        double weighted_rss = 0.0;
+        for (int i = 0; i < n_pts; ++i) {
+            const double w_ii = W_1.diagonal()[i];
+            for (int j = 0; j < n_comp; ++j) {
+                weighted_rss += residuals(i, j) * residuals(i, j) * w_ii;
+            }
+        }
+        const double dle = 1.0 - traceA / n_pts;
+        const double gcv_m = (weighted_rss / (n_pts * n_comp)) / (dle * dle);
+        // ── GCV ──────────────────────────────────────────────────────────
+        /*double rss = residuals.squaredNorm();          // sans re-pondération W_1
+        const double dle = 1.0 - traceA / n_pts;
+        const double gcv_m = (rss / (n_pts * n_comp)) / (dle * dle);
+*/
+
+        // CV (LOOCV)
+       Eigen::VectorXd diagA = Eigen::VectorXd::Zero(n_pts);
+        for (int i = 0; i < n_pts; ++i) {
+            double sum_k = 0.0;
+            for (int k = 0; k < d.size(); ++k) {
+                sum_k += d(k) * QU(i, k) * W1QU(i, k);
+            }
+            diagA(i) = 1.0 - lambda * sum_k;
+        }
+        // ── diagA pour LOOCV ─────────────────────────────────────────────
+        /*Eigen::VectorXd diagA(n_pts);
+        for (int i = 0; i < n_pts; ++i) {
+            double s = 0.0;
+            for (int k = 0; k < (int)omeg.size(); ++k)
+                s += omeg(k) * W1QU(i, k) * QU(i, k);  // ← omeg, W1QU·QU
+            diagA(i) = 1.0 - s;
+        }
+        */
+        double cv_m = 0.0;
+        bool cv_valid = true;
+        for (int i = 0; i < n_pts; ++i) {
+            const double denom_cv = 1.0 - diagA(i);
+            if (std::abs(denom_cv) < 1e-10) {
+                cv_valid = false;
+                break;
+            }
+            const double w_ii = W_1.diagonal()[i];
+            for (int j = 0; j < n_comp; ++j) {
+                const double err = residuals(i, j) / denom_cv;
+                cv_m += err * err * w_ii;
+            }
+        }
+
+        if (!cv_valid) continue;
+        cv_m /= (n_pts * n_comp);
+
+        // ── CV (LOOCV) ───────────────────────────────────────────────────
+        /*double cv_m = 0.0;
+        bool cv_valid = true;
+        for (int i = 0; i < n_pts; ++i) {
+            const double h_ii = 1.0 - diagA(i);   // = levier A_ii
+            if (std::abs(h_ii) < 1e-10) { cv_valid = false; break; }
+            for (int j = 0; j < n_comp; ++j) {
+                const double err = residuals(i, j) / h_ii;
+                cv_m += err * err;                 // sans re-pondération W_1
+            }
+        }
+        if (!cv_valid) continue;
+        cv_m /= (n_pts * n_comp);*/
+
+
+        lambdas.push_back(lambda);
+        GCV_vals.push_back(gcv_m);
+        CV_vals.push_back(cv_m);
+
+        sv.tab_GCV[lambda] = gcv_m;
+        sv.tab_CV[lambda]  = cv_m;
+    }
+
+    // --------------------------------------------------
+    // Sélection du Minimum
+    // --------------------------------------------------
+    auto process_min = [&](const std::vector<double>& vals) {
+        if (vals.empty()) return size_t(0);
+        auto it = std::find_if(vals.begin(), vals.end(), [](double v) { return v != 0.0; });
+        size_t nb_0 = std::distance(vals.begin(), it);
+
+        std::vector<double> sub_vals(it, vals.end());
+        if (sub_vals.empty()) return size_t(0);
+
+        size_t idx_min = std::distance(sub_vals.begin(), std::min_element(sub_vals.begin(), sub_vals.end()));
+        return idx_min + nb_0;
+    };
+
+    size_t idx_gcv = process_min(GCV_vals);
+    size_t idx_cv  = process_min(CV_vals);
+
+    double best_lambda_gcv = lambdas[idx_gcv];
+    double best_lambda_cv  = lambdas[idx_cv];
+
+    std::cout << "[Silverman] Lambda (GCV) = " << best_lambda_gcv << " | Min = " << GCV_vals[idx_gcv] << std::endl;
+    std::cout << "[Silverman] Lambda (CV)  = " << best_lambda_cv  << " | Min = " << CV_vals[idx_cv] << std::endl;
+
+    double lambda_mini;
+    if (idx_gcv > 0 && idx_gcv < lambdas.size() - 1) {
+        lambda_mini = best_lambda_gcv;
+        sv.comment = "GCV solution; ";
+    } else if (idx_cv > 0 && idx_cv < lambdas.size() - 1) {
+        lambda_mini = best_lambda_cv;
+        sv.comment = "CV solution; ";
+    } else {
+        if (!GCV_vals.empty() && GCV_vals.front() > GCV_vals.back()) {
+            lambda_mini = 1.0e10;  // Lissage max (Régression linéaire)
+            sv.comment = "No GCV solution; Linear Regression; ";
+        } else {
+            lambda_mini = 1.0e-10; // Lissage min (Interpolation)
+            sv.comment = "No GCV solution; Spline Interpolation; ";
+        }
+    }
+
+    // ============================================================
+    // APPLICATION FINALE (VÉRIFICATION COMPATIBILITÉ)
+    // ============================================================
+    MatrixD B = R + lambda_mini * Qt * W_1 * Q;
+    MatrixD B_1Qt;
+
+    Eigen::LDLT<MatrixD> solver(B);
+    if (solver.info() != Eigen::Success) {
+        Eigen::LDLT<MatrixLD> solverLD(B.cast<long double>());
+        B_1Qt = solverLD.solve(Qt.cast<long double>()).cast<double>();
+    } else {
+        B_1Qt = solver.solve(Qt);
+    }
+
+    MatrixD QB_1Qt = Q * B_1Qt;
+    MatrixD A = I.toDenseMatrix() - lambda_mini * W_1 * QB_1Qt;
+    MatrixD Y_hat = A * Y_mat;
+
+    double Vg = 0.0;
+    double EDF_residuel = n_points - A.trace();
+    if (EDF_residuel <= 0) {
+        std::cerr << "⚠️ EDF_residuel ≤ 0, variance globale impossible\n";
+        Vg = 0.0;
+    } else {
+        MatrixD Res = Y_mat - Y_hat;
+        Vg = Res.squaredNorm() / (EDF_residuel * Y_mat.cols());
+    }
+
+    // Diagnostic de proximité et de conditionnement
+    double min_h = vecH[0]; // en supposant que vecH contient les intervalles de temps dt
+    for (size_t k = 1; k < vecH.size(); ++k) {
+        if (vecH[k] < min_h) min_h = vecH[k];
+    }
+
+    if (min_h < 1e-5) {
+        std::cout << "⚠️ [Silverman Diagnostic] ATTENTION : Points critiques détectés. "
+                  << "Intervalle minimum h = " << min_h << ". Risque d'overfitting élevé.\n";
+    }
+
+    double cond_mu = mu.maxCoeff() / (mu.minCoeff() + 1e-20);
+    if (cond_mu > 1e12) {
+        std::cout << "⚠️ [Silverman Diagnostic] Mauvais conditionnement spectral (" << cond_mu
+                  << "). Les critères GCV/CV risquent de choisir un lambda trop petit.\n";
+    }
+
+    return std::make_pair(lambda_mini, Vg);
+}
+
+std::pair<double, double> initLambdaSplineBySilverman2(
+    SilvermanParam& sv,
+    const std::vector<double>& vec_X,
+    const std::vector<double>& vec_X_err,
+    const std::vector<t_reduceTime>& vecH,
+    const std::vector<double>& vec_Y,
+    const std::vector<double>& vec_Y_err,
+    const std::vector<double>& vec_Z,
+    const std::vector<double>& vec_Z_err)
+{
+    std::vector<double> lambdas;
+    std::vector<double> GCV_vals;
+    std::vector<double> CV_vals;
+
+    const bool doY = !vec_Y.empty() && vec_Z.empty();
+    const bool doYZ = !vec_Y.empty() && !vec_Z.empty();
+
+    long long i = 0;
+    DiagonalMatrixD W_1(vec_X_err.size());
+    W_1.setZero();
+    if (sv.use_error_measure) {
+        if (doY) {
+            auto Y_err = vec_Y_err.begin();
+            for (auto &X_err : vec_X_err) {
+                const double Sy = pow(X_err, -2.0) + pow(*Y_err++, -2.0);
+                W_1.diagonal()[i++] = 2.0 / Sy;
+            }
+        }
+        else if (doYZ) {
+            auto Y_err = vec_Y_err.begin();
+            auto Z_err = vec_Z_err.begin();
+            for (auto &X_err : vec_X_err) {
+                const double Sy = pow(X_err, -2.) + pow(*Y_err++, -2.0) + pow(*Z_err++, -2.0);
+                W_1.diagonal()[i++] = 3.0 / Sy;
+            }
+        }
+        else {
+            for (auto &X_err : vec_X_err) {
+                W_1.diagonal()[i++] = X_err * X_err;
+            }
+        }
+    } else {
+        W_1.setIdentity();
+    }
+
+    const MatrixD R = calculMatR_D(vecH);
+    const MatrixD Q = calculMatQ_D(vecH);
+    const MatrixD Qt = Q.transpose();
+    size_t n = vec_X.size();
+
+    DiagonalMatrixD I(n);
+    I.setZero();
+    I.setIdentity();
+
+    MatrixD Y_mat(n, 1);
+    ColumnVectorD x_vec, y_vec, z_vec;
+
+    x_vec.resize(n);
+    for (size_t i = 0; i < n; ++i)
+        x_vec(i) = vec_X[i];
+
+    Y_mat << x_vec;
+
+    if (doY) {
+        Y_mat.resize(n, 2);
+        y_vec.resize(n);
+        for (size_t i = 0; i < n; ++i)
+            y_vec(i) = vec_Y[i];
+        Y_mat << x_vec, y_vec;
+    } else if (doYZ) {
+        Y_mat.resize(n, 3);
+        y_vec.resize(n);
+        z_vec.resize(n);
+        for (size_t i = 0; i < n; ++i) {
+            y_vec(i) = vec_Y[i];
+            z_vec(i) = vec_Z[i];
+        }
+        Y_mat << x_vec, y_vec, z_vec;
+    }
+
+    size_t n_pts = Y_mat.rows();
+    size_t n_comp = Y_mat.cols();
+
+    // ============================================================
+        // METHODE PAR DIAGONALE DIRECTE (100% SÛRE ET ULTRA-RAPIDE)
+        // ============================================================
+        const MatrixD QtW1Q = Qt * W_1 * Q;
+        const MatrixD QtY   = Qt * Y_mat;
+
+        // On pré-extrait les lignes de Q sous forme de vecteurs pour accélérer le calcul de la trace
+        std::vector<Eigen::VectorXd> Q_rows(n_pts);
+        for (size_t i = 0; i < n_pts; ++i) {
+            Q_rows[i] = Q.row(i).transpose();
+        }
+
+        // Boucle d'évaluation des Lambdas
+        for (int exp100 = -1000; exp100 < 601; exp100 += 2) {
+            const double lambda = std::pow(10.0, exp100 / 100.0);
+
+            // B = R + lambda * Q^T * W_1 * Q
+            MatrixD B = R + lambda * QtW1Q;
+
+            Eigen::LDLT<MatrixD> solver(B);
+            if (solver.info() != Eigen::Success) continue;
+
+            // 1. RÉSIDUS EN TEMPS LINÉAIRE O(n)
+            // On résout le système linéaire uniquement pour le vecteur de données
+            MatrixD B_inv_QtY = solver.solve(QtY);
+            MatrixD Y_hat = Y_mat - lambda * (W_1 * (Q * B_inv_QtY));
+            MatrixD residuals = Y_mat - Y_hat;
+            double rss = residuals.squaredNorm();
+
+            // 2. CALCUL DE LA TRACE ET DES LEVIERS EN O(n) VIA PRODUIT SCALAIRE
+            // Au lieu de multiplier Q (n x n-2) par B^-1 (n-2 x n-2) par Q^T (n-2 x n),
+            // On résout B^-1 * (ligne_i de Q) uniquement pour obtenir l'élément diagonal.
+            double traceA = 0.0;
+            Eigen::VectorXd diagA(n_pts);
+            const double* w_diag = W_1.diagonal().data();
+
+            for (size_t i = 0; i < n_pts; ++i) {
+                // Extraction de la i-ème ligne de Q (déjà pré-calculée pour la vitesse)
+                // solver.solve calcule la colonne correspondante de B^-1 * Q^T
+                Eigen::VectorXd B_inv_Qi = solver.solve(Q_rows[i]);
+
+                // L'élément diagonal de (Q * B^-1 * Q^T) est le produit scalaire de la ligne de Q avec cette colonne
+                double q_B_q = Q_rows[i].dot(B_inv_Qi);
+
+                // Formule exacte du levier h_ii
+                diagA(i) = 1.0 - lambda * w_diag[i] * q_B_q;
+            }
+            traceA = diagA.sum();
+
+            const double dle = 1.0 - traceA / n_pts;
+            if (dle <= 1e-5 || traceA < 1.99) continue;
+
+            const double gcv_m = (rss / (n_pts * n_comp)) / (dle * dle);
+
+            // 3. LOOCV (CROSS-VALIDATION)
+            double cv_m = 0.0;
+            bool cv_valid = true;
+            for (size_t i = 0; i < n_pts; ++i) {
+                const double h_ii = diagA(i);
+                const double denom_cv = 1.0 - h_ii;
+                if (std::abs(denom_cv) < 1e-5) { cv_valid = false; break; }
+                for (size_t j = 0; j < n_comp; ++j) {
+                    const double err = residuals(i, j) / denom_cv;
+                    cv_m += err * err;
+                }
+            }
+
+            if (!cv_valid) continue;
+            cv_m /= (n_pts * n_comp);
+
+            // Sauvegarde
+            lambdas.push_back(lambda);
+            GCV_vals.push_back(gcv_m);
+            CV_vals.push_back(cv_m);
+
+            sv.tab_GCV[lambda] = gcv_m;
+            sv.tab_CV[lambda]  = cv_m;
+        }
+    // --------------------------------------------------
+    // Sélection du Minimum
+    // --------------------------------------------------
+    auto process_min = [&](const std::vector<double>& vals) {
+        if (vals.empty()) return size_t(0);
+        auto it = std::find_if(vals.begin(), vals.end(), [](double v) { return v != 0.0; });
+        size_t nb_0 = std::distance(vals.begin(), it);
+
+        std::vector<double> sub_vals(it, vals.end());
+        if (sub_vals.empty()) return size_t(0);
+
+        size_t idx_min = std::distance(sub_vals.begin(), std::min_element(sub_vals.begin(), sub_vals.end()));
+        return idx_min + nb_0;
+    };
+
+    size_t idx_gcv = process_min(GCV_vals);
+    size_t idx_cv  = process_min(CV_vals);
+
+    double best_lambda_gcv = lambdas[idx_gcv];
+    double best_lambda_cv  = lambdas[idx_cv];
+
+    std::cout << "[Silverman] Lambda (GCV) = " << best_lambda_gcv << " | Min = " << GCV_vals[idx_gcv] << std::endl;
+    std::cout << "[Silverman] Lambda (CV)  = " << best_lambda_cv  << " | Min = " << CV_vals[idx_cv] << std::endl;
+
+    double lambda_mini;
+    if (idx_gcv > 0 && idx_gcv < lambdas.size() - 1) {
+        lambda_mini = best_lambda_gcv;
+        sv.comment = "GCV solution; ";
+    } else if (idx_cv > 0 && idx_cv < lambdas.size() - 1) {
+        lambda_mini = best_lambda_cv;
+        sv.comment = "CV solution; ";
+    } else {
+        if (!GCV_vals.empty() && GCV_vals.front() > GCV_vals.back()) {
+            lambda_mini = 1.0e10;  // Lissage max (Régression linéaire)
+            sv.comment = "No GCV solution; Linear Regression; ";
+        } else {
+            lambda_mini = 1.0e-10; // Lissage min (Interpolation)
+            sv.comment = "No GCV solution; Spline Interpolation; ";
+        }
+    }
+
+    // ============================================================
+    // APPLICATION FINALE (VÉRIFICATION COMPATIBILITÉ)
+    // ============================================================
+    MatrixD B = R + lambda_mini * Qt * W_1 * Q;
+    MatrixD B_1Qt;
+
+    Eigen::LDLT<MatrixD> solver(B);
+    if (solver.info() != Eigen::Success) {
+        Eigen::LDLT<MatrixLD> solverLD(B.cast<long double>());
+        B_1Qt = solverLD.solve(Qt.cast<long double>()).cast<double>();
+    } else {
+        B_1Qt = solver.solve(Qt);
+    }
+
+    MatrixD QB_1Qt = Q * B_1Qt;
+    MatrixD A = I.toDenseMatrix() - lambda_mini * W_1 * QB_1Qt;
+    MatrixD Y_hat = A * Y_mat;
+
+    double Vg = 0.0;
+    double EDF_residuel = n_pts - A.trace();
+    if (EDF_residuel <= 0) {
+        std::cerr << "⚠️ EDF_residuel ≤ 0, variance globale impossible\n";
+        Vg = 0.0;
+    } else {
+        MatrixD Res = Y_mat - Y_hat;
+        Vg = Res.squaredNorm() / (EDF_residuel * Y_mat.cols());
+    }
+
+    // Diagnostic de proximité et de conditionnement
+    double min_h = vecH[0]; // en supposant que vecH contient les intervalles de temps dt
+    for (size_t k = 1; k < vecH.size(); ++k) {
+        if (vecH[k] < min_h) min_h = vecH[k];
+    }
+
+    if (min_h < 1e-5) {
+        std::cout << "⚠️ [Silverman Diagnostic] ATTENTION : Points critiques détectés. "
+                  << "Intervalle minimum h = " << min_h << ". Risque d'overfitting élevé.\n";
+    }
+
+
+    return std::make_pair(lambda_mini, Vg);
 }
 
 /**
@@ -5667,6 +6492,7 @@ double var_residual(const std::vector<t_matrix>& vec_Y, const SplineMatricesLD& 
     return std::move(res);
 
 }
+
 double var_residual(const std::vector<double>& vec_Y, const SplineMatricesD& matrices, const std::vector<t_reduceTime>& vecH, const double lambda)
 {
     std::unique_ptr<std::pair<MatrixD, DiagonalMatrixD>> decomp;
@@ -5750,7 +6576,7 @@ std::vector<double> general_residual(const std::vector<t_matrix> &vec_Y,  const 
     return g_res;
 }
 
-bool  hasPositiveGPrimeByDet (const MCMCSplineComposante &splineComposante)
+bool hasPositiveGPrimeByDet (const MCMCSplineComposante &splineComposante)
 {
 
     for (unsigned long i= 0; i< splineComposante.vecThetaReduced.size()-1; i++) {
@@ -5801,24 +6627,68 @@ bool  hasPositiveGPrimeByDet (const MCMCSplineComposante &splineComposante)
                 return false;
         }
 
-
-        /*
-        if (a < 0) {
-            return false;
-
-        } else if ( t_i < t1_res && t1_res< t_i1) {
-            return false;
-
-        } else if ( t_i < t2_res && t2_res< t_i1) {
-            return false;
-        }
-*/
     }
 
     return true;
 }
 
-void spread_theta_reduced(std::vector<t_reduceTime> &sorted_t_red, t_reduceTime spread_span)
+bool hasPositiveGPrimeByDet (const SilvermanSpline &splineComposante)
+{
+
+    for (unsigned long i= 0; i< splineComposante.vecThetaReduced.size()-1; i++) {
+
+        const double t_i = splineComposante.vecThetaReduced.at(i);
+        const double t_i1 = splineComposante.vecThetaReduced.at(i+1);
+        const double hi = t_i1 - t_i;
+
+        const double gamma_i = splineComposante.vecGamma.at(i);
+        const double gamma_i1 = splineComposante.vecGamma.at(i+1);
+
+        const double g_i = splineComposante.vecG.at(i);
+        const double g_i1 = splineComposante.vecG.at(i+1);
+
+        const double a = (g_i1 - g_i) /hi;
+        const double b = (gamma_i1 - gamma_i) /(6*hi);
+        const double s = t_i + t_i1;
+        const double p = t_i * t_i1;
+        const double d = ( (t_i1 - 2*t_i)*gamma_i1 + (2*t_i1 - t_i)*gamma_i )/(6*hi);
+        // résolution équation
+
+        const double aDelta = 3* b;
+        const double bDelta = 2*d - 2*s*b;
+        const double cDelta = p*b - s*d + a;
+
+        const double delta = pow(bDelta, 2.) - 4*aDelta*cDelta;
+        if (delta < 0) {
+            if (aDelta < 0) // convexe
+                return false;
+            else           // concave
+                continue;
+        }
+
+        double t1_res = (-bDelta - sqrt(delta)) / (2*aDelta);
+        double t2_res = (-bDelta + sqrt(delta)) / (2*aDelta);
+
+        if (t1_res > t2_res)
+            std::swap(t1_res, t2_res);
+
+
+        if (aDelta > 0) { //C'est un maximum entre les solutions
+            if (!( t_i1 < t1_res || t2_res< t_i)) {
+                return false;
+            }
+
+        } else { //C'est un minimum entre les solutions
+            if ( !( t1_res < t_i && t_i1 < t2_res) )
+                return false;
+        }
+
+    }
+
+    return true;
+}
+/*
+ void spread_theta_reduced(std::vector<t_reduceTime> &sorted_t_red, t_reduceTime spread_span)
 {
     std::vector<t_reduceTime>::iterator it_first = sorted_t_red.end();
     std::vector<t_reduceTime>::iterator it_last = sorted_t_red.end();
@@ -5907,7 +6777,121 @@ void spread_theta_reduced(std::vector<t_reduceTime> &sorted_t_red, t_reduceTime 
     }
 
 }
+*/
+void spread_theta_reduced(std::vector<t_reduceTime> &sorted_t_red, t_reduceTime spread_span)
+{
+    // Sécurité : pas besoin d'étaler s'il y a moins de 2 éléments
+    if (sorted_t_red.size() < 2) return;
 
+    std::vector<t_reduceTime>::iterator it_first = sorted_t_red.end();
+    std::vector<t_reduceTime>::iterator it_last = sorted_t_red.end();
+    unsigned nbEgal = 0;
+
+    // ============================================================
+    // 1. LOGIQUE DE CALCUL DYNAMIQUE DU SPREAD_SPAN
+    // ============================================================
+    if (spread_span == 0.0) {
+        static t_reduceTime cachedSpreadSpan = 0.0;
+        if (cachedSpreadSpan == 0.0) {
+            const std::size_t n = sorted_t_red.size();
+            const double eps = std::numeric_limits<double>::epsilon(); // ~1e-16
+
+            // h_min tel que 1/h_min² reste dans la précision double
+            cachedSpreadSpan = std::sqrt(eps) * (double)n;  // ~1e-8 * n
+
+            // garde-fou haut : ne pas dépasser 1/10 de l'espacement moyen
+            cachedSpreadSpan = std::min(cachedSpreadSpan, 1.0 / (double)(n * 10));
+        }
+        spread_span = cachedSpreadSpan;
+    }
+
+    // ============================================================
+    // 2. LOGIQUE D'ARRÊT PRÉCOCE (EARLY EXIT VECTEUR PROPRE/EIGEN)
+    // ============================================================
+    double min_diff = std::numeric_limits<double>::max();
+    for (std::size_t i = 0; i < sorted_t_red.size() - 1; ++i) {
+        double delta = std::abs(sorted_t_red[i+1] - sorted_t_red[i]);
+        if (delta < min_diff) {
+            min_diff = delta;
+        }
+    }
+
+    // Si l'écart minimal est déjà supérieur au span, aucun étalement requis
+    if (min_diff > spread_span)
+        return;
+
+    // ============================================================
+    // 3. BOUCLE DE TRAITEMENT DES ÉGALITÉS ET DES PLATREAUX
+    // ============================================================
+    for (std::vector<t_reduceTime>::iterator it = sorted_t_red.begin(); it != sorted_t_red.end() - 1; it++) {
+
+        if (*std::next(it) - *it <= spread_span) {
+
+            if (it_first == sorted_t_red.end()) {
+                it_first = it;
+                it_last = it + 1;
+                nbEgal = 2;
+            } else {
+                it_last = it + 1;
+                ++nbEgal;
+            }
+
+        } else {
+            if (it_first != sorted_t_red.end()) {
+                // On sort d'une égalité, il faut répartir les dates entre les bornes
+                const t_reduceTime lowBound = it_first == sorted_t_red.begin() ? sorted_t_red.front() : *std::prev(it_first);
+                const t_reduceTime upBound = it == sorted_t_red.end() - 2 ? sorted_t_red.back() : *std::next(it);
+
+                t_reduceTime step = spread_span / (nbEgal - 1); // écart théorique
+                t_reduceTime min;
+
+                // Contrôle du débordement sur les valeurs encadrantes
+                if (it_first == sorted_t_red.begin()) {
+                    // Cas de l'égalité avec la première valeur de la liste
+                    min = *it;
+                } else {
+                    // On essaie de placer une moitié à gauche et l'autre moitié à droite
+                    min = *it - step * std::floor(nbEgal / 2.0);
+                    // Contrôle du débordement
+                    min = std::max(lowBound + step, min);
+                }
+
+                const double max = std::min(upBound - spread_span, *it + (double)(step * std::ceil(nbEgal / 2.0)));
+                step = (max - min) / (nbEgal - 1); // écart corrigé
+
+                std::vector<t_reduceTime>::iterator it_egal;
+                int count;
+                for (it_egal = it_first, count = 0; it_egal != it + 1; it_egal++, count++) {
+                    *it_egal = min + count * step;
+                }
+
+                // Fin de correction, prêt pour un nouveau groupe
+                it_first = sorted_t_red.end();
+            }
+        }
+    }
+
+    // ============================================================
+    // 4. TRAITEMENT DU CAS AUX LIMITES (FIN DU VECTEUR)
+    // ============================================================
+    if (it_first != sorted_t_red.end()) {
+        // On sort de la boucle alors qu'une égalité était en cours jusqu'au dernier élément
+        const t_matrix lowBound = *std::prev(it_first); // la première valeur à gauche non égale
+        const t_matrix max = sorted_t_red.back();
+
+        t_matrix step = spread_span / (nbEgal - 1.0); // écart théorique
+        const t_matrix min = std::max(lowBound + spread_span, max - step * (nbEgal - 1));
+
+        step = (max - min) / (nbEgal - 1); // écart corrigé
+
+        // Tout est réparti à gauche du maximum final
+        int count;
+        std::vector<t_reduceTime>::iterator it_egal;
+        for (it_egal = it_first, count = 0; it_egal != sorted_t_red.end(); it_egal++, count++) {
+            *it_egal = min + count * step;
+        }
+    }
+}
 /**
  * @brief get_order returns the indices that order the data in the vector
  * @param vec

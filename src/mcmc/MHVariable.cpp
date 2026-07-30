@@ -794,25 +794,69 @@ void MHVariable::load_stream_v337(QDataStream& stream)
 
 void MHVariable::load_stream_v338(QDataStream& stream)
 {
-    /* herited from MetropolisVariable*/
+    // -------------------------------------------------
+    // 1️⃣   Chargement de la partie de la classe de base
+    // -------------------------------------------------
     MetropolisVariable::load_stream_v338(stream);
 
     if (stream.status() != QDataStream::Ok) {
-        qDebug() << "[QtUtilities::load_stream_v330]  erreur de flux ; stream.status()=" << stream.status();
-        // throw std::runtime_error("Error reading from stream");
-        // return;
+        qDebug() << "[QtUtilities::load_stream_v338] erreur après MetropolisVariable::load_stream_v338"
+                 << stream.status() << stream.device()->errorString();
+        throw std::runtime_error("[MHVariable::load_stream_v338] Error reading base class data");
     }
-
-    qint64 l;
+    // -------------------------------------------------
+    // 2️⃣  Lecture de mLastMHAcceptsLength (qint64)
+    // -------------------------------------------------
+    qint64 l = 0;
     stream >> l;
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[QtUtilities::load_stream_v338] erreur lecture mLastMHAcceptsLength"
+                 << stream.status() << stream.device()->errorString();
+        throw std::runtime_error("[MHVariable::load_stream_v338] Error reading mLastMHAcceptsLength");
+    }
+    if (l < 0) {
+        qDebug() << "[QtUtilities::load_stream_v338] valeur négative pour mLastMHAcceptsLength:" << l;
+        throw std::runtime_error("[MHVariable::load_stream_v338] Invalid mLastMHAcceptsLength (negative)");
+    }
     mLastMHAcceptsLength = l;
 
+    // -------------------------------------------------
+    // 3️⃣  Chargement du conteneur nullable
+    // -------------------------------------------------
     load_container_nullable(stream, mHistoryAcceptRateMH);
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[QtUtilities::load_stream_v338] erreur lecture mHistoryAcceptRateMH"
+                 << stream.status() << stream.device()->errorString();
+        throw std::runtime_error("[MHVariable::load_stream_v338] Error reading mHistoryAcceptRateMH");
+    }
 
+    // -------------------------------------------------
+    // 4️⃣  Chargement du vecteur d'acceptations
+    // -------------------------------------------------
     load_container(stream, mLastMHAccepts);
-
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[QtUtilities::load_stream_v338] erreur lecture mLastMHAccepts"
+                 << stream.status() << stream.device()->errorString();
+        throw std::runtime_error("[MHVariable::load_stream_v338] Error reading mLastMHAccepts");
+    }
+    // -------------------------------------------------
+    // 5️⃣  Lecture de mSigmaMH
+    // -------------------------------------------------
     stream >> mSigmaMH;
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[QtUtilities::load_stream_v338] erreur lecture mSigmaMH"
+                 << stream.status() << stream.device()->errorString();
+        throw std::runtime_error("[MHVariable::load_stream_v338] Error reading mSigmaMH");
+    }
+    // -------------------------------------------------
+    // 6️⃣  Lecture de mSamplerProposal
+    // -------------------------------------------------
     stream >> mSamplerProposal;
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[QtUtilities::load_stream_v338] erreur lecture mSamplerProposal"
+                 << stream.status() << stream.device()->errorString();
+        throw std::runtime_error("[MHVariable::load_stream_v338] Error reading mSamplerProposal");
+    }
 
 }
 

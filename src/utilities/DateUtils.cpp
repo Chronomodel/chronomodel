@@ -130,10 +130,10 @@ QString DateUtils::dateFormatToString(const FormatDate format)
             return "Date Cal. B2K";
             break;
         case eBCAD:
-            return "BC/AD"; // "Before Christ" "Anno Domini"
+            return "BC/AD"; // "Before Christ / Anno Domini"
             break;
         case eBCECE:
-            return "BCE/CE"; // "Before Common Era" "Common Era"
+            return "BCE/CE"; // "Before Common Era / Common Era"
             break;
         case eKa:
             return "Age Ka"; // "Kiloannum"

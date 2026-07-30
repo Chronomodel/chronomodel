@@ -308,7 +308,7 @@ private:
     qreal mMarginLeft;
     qreal mMarginRight;
     qreal mGraphHeight;
-    qreal mHeightForVisibleAxis;
+    qreal mHeightForVisibleTicksAxis;
     // The scroll bar extent (width or height depending on the orientation)
     // depends on the native platform, and must be taken into account.
     const int mSbe = qApp->style()->pixelMetric(QStyle::PM_ScrollBarExtent);

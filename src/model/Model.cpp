@@ -57,6 +57,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QtCore/QStringList>
 #include <iostream>
 #include <ranges>
+#include <QDataStream>
+#include <QFile>
 
 #define NO_USE_THREAD
 #ifdef USE_THREAD
@@ -934,13 +936,13 @@ bool Model::isValid()
                 for (size_t k = 0; k<j; ++k) {
                     std::shared_ptr<Event> evt = branche_i.at(k);
                     if (evt->type() == Event::eBound) {
-                        lower = qMax(lower, dynamic_cast<Bound*>(evt.get())->mFixed);
+                        lower = qMax(lower, dynamic_cast<Bound*>(evt.get())->value());
 
                     }
                 }
                 // Update bound interval
 
-                if (bound->mFixed < lower)
+                if (bound->value() < lower)
                     throw QString(QObject::tr("The bound \" %1 \" has a fixed value inconsistent with previous bounds in chain!").arg(bound->getQStringName()));
 
                 // --------------------
@@ -950,11 +952,11 @@ bool Model::isValid()
                 for (size_t k = j+1; k<branche_i.size(); ++k) {
                     std::shared_ptr<Event> evt = branche_i.at(k);
                     if (evt->type() == Event::eBound) {
-                        upper = qMin(upper, dynamic_cast<Bound*>(evt.get())->mFixed);
+                        upper = qMin(upper, dynamic_cast<Bound*>(evt.get())->value());
                     }
                 }
                 // Update bound interval
-                if (bound->mFixed > upper)
+                if (bound->value() > upper)
                     throw QString(QObject::tr("The bound \" %1 \" has a fixed value inconsistent with next bounds in chain!").arg(bound->getQStringName()));
 
             }
@@ -977,7 +979,7 @@ bool Model::isValid()
         for (const auto& ev : phaseFrom->mEvents) {
             Bound* bound = dynamic_cast<Bound*>(ev.get());
             if (bound)
-                lower = qMax(lower, bound->mFixed);
+                lower = qMax(lower, bound->value());
 
         }
         double upper = double (mSettings.mTmax);
@@ -985,7 +987,7 @@ bool Model::isValid()
         for (const auto& ev : phaseTo->mEvents) {
             Bound* bound = dynamic_cast<Bound*>(ev.get());
             if (bound)
-                upper = qMin(upper, bound->mFixed);
+                upper = qMin(upper, bound->value());
 
             //bound = nullptr;
         }
@@ -1014,8 +1016,8 @@ bool Model::isValid()
                     Bound* bound = dynamic_cast<Bound*>(ev.get());
                     if (bound) {
                         boundFound = true;
-                        min = std::max(min, bound->mFixed);
-                        max = std::min(max, bound->mFixed);
+                        min = std::max(min, bound->value());
+                        max = std::min(max, bound->value());
 
                     }
                     //bound = nullptr;
@@ -1520,10 +1522,10 @@ void Model::generateTraceNumericalResults(const std::vector<ChainSpecs> &chains)
 
 
     std::ranges::for_each( mPhases, [chains](std::shared_ptr<Phase> phase) {
-        phase->mAlpha.MetropolisVariable::generateTraceNumericalResults(chains);
-        phase->mBeta.MetropolisVariable::generateTraceNumericalResults(chains);
+        phase->mAlpha.generateTraceNumericalResults(chains);
+        phase->mBeta.generateTraceNumericalResults(chains);
         // phase->mTau.generateNumericalResults(chains);
-        phase->mDuration.MetropolisVariable::generateTraceNumericalResults(chains);
+        phase->mDuration.generateTraceNumericalResults(chains);
     });
 
 
@@ -1534,7 +1536,7 @@ void Model::generateTraceNumericalResults(const std::vector<ChainSpecs> &chains)
 
 void Model::clearThreshold()
 {
-    mThreshold = -1.;
+    mThreshold = -1.0;
     std::ranges::for_each( mEvents, [](std::shared_ptr<Event> ev) {
          ev->mTheta.mThresholdUsed = -1.;
          ev->mS02Theta.mThresholdUsed = -1.;
@@ -2100,31 +2102,32 @@ void Model::saveToStream(QDataStream *out) const
 {
    // *out << quint32 (out->version());// we could add software version here << quint16(out.version());
    // *out << qApp->applicationVersion();
-    // -----------------------------------------------------
-    //  Write info
-    // -----------------------------------------------------
-    *out << static_cast<quint32> (mChains.size());
-    for (ChainSpecs ch : mChains) {
-        *out << ch.burnElapsedTime;
-        *out << ch.mAdaptElapsedTime;
-        *out << ch.mAcquisitionElapsedTime;
 
-        *out << quint32 (ch.mBatchIndex);
-        *out << quint32 (ch.mBatchIterIndex);
-        *out << quint32 (ch.mBurnIterIndex);
-        *out << quint32 (ch.mMaxBatchs);
-        *out << ch.mMixingLevel;
-        *out << quint32 (ch.mIterPerBatch);
-        *out << quint32 (ch.mIterPerBurn);
-        *out << quint32 (ch.mIterPerAquisition);
-        *out << quint32 (ch.mAquisitionIterIndex);
-        *out << unsigned (ch.mSeed);
-        *out << quint32 (ch.mThinningInterval);
-        *out << quint32 (ch.mRealyAccepted);
-        *out << quint32 (ch.mTotalIter);
-    }
+   // -------------------------------------------------
+   // 2️⃣  Write info (chains)
+   // -------------------------------------------------
+   *out << static_cast<quint32>(mChains.size());
+   for (const ChainSpecs &ch : mChains) {
+       *out << ch.burnElapsedTime;
+       *out << ch.mAdaptElapsedTime;
+       *out << ch.mAcquisitionElapsedTime;
+       *out << static_cast<quint32>(ch.mBatchIndex);
+       *out << static_cast<quint32>(ch.mBatchIterIndex);
+       *out << static_cast<quint32>(ch.mBurnIterIndex);
+       *out << static_cast<quint32>(ch.mMaxBatchs);
+       *out << ch.mMixingLevel;
+       *out << static_cast<quint32>(ch.mIterPerBatch);
+       *out << static_cast<quint32>(ch.mIterPerBurn);
+       *out << static_cast<quint32>(ch.mIterPerAquisition);
+       *out << static_cast<quint32>(ch.mAquisitionIterIndex);
+       *out << static_cast<quint32>(ch.mSeed);
+       *out << static_cast<quint32>(ch.mThinningInterval);
+       *out << static_cast<quint32>(ch.mRealyAccepted);
+       *out << static_cast<quint32>(ch.mTotalIter);
+       // ch.mIterDisplay n’est pas persistant (dérivé)
+   }
     // -----------------------------------------------------
-    //  Writing phase data
+    //  3️⃣ Writing phase data
     // -----------------------------------------------------
     for (const std::shared_ptr<Phase> &phase : mPhases) {
         *out << phase->mAlpha;
@@ -2161,7 +2164,7 @@ void Model::saveToStream(QDataStream *out) const
 
                 //mCalibration and mWiggleCalibration are saved in to *.cal file
 
-                *out << quint32 (d.mCalibHPD.size());
+                *out << static_cast<quint32>(d.mCalibHPD.size());
                 for (QMap<double, double>::const_iterator it = d.mCalibHPD.cbegin(); it!=d.mCalibHPD.cend();++it) {
                     *out << it.key();
                     *out << it.value();
@@ -2170,11 +2173,20 @@ void Model::saveToStream(QDataStream *out) const
 
         }
     }
+    // -------------------------------------------------
+    // 4️⃣  Logs
+    // -------------------------------------------------
     *out << mLogModel;
     *out << mLogInit;
     *out << mLogAdapt;
     *out << mLogResults;
-
+    // -------------------------------------------------
+    // 5️⃣  Flush (optionnel mais explicite)
+    // -------------------------------------------------
+    // 2️⃣  Flush du périphérique sous‑jacent, uniquement s’il s’agit d’un QFile
+    if (QFile *file = qobject_cast<QFile*>(out->device())) {
+        file->flush();               // QFile::flush() existe
+    }
 }
 
 
@@ -2738,41 +2750,50 @@ bool Model::loadFromStream_v338(QDataStream *in)
         //  Read info
         // -----------------------------------------------------
 
-        quint32 tmp32;
-        *in >> tmp32;
-
+        // -------------------------------------------------
+        // 3️⃣  Lire les chaînes
+        // -------------------------------------------------
+        quint32 chainCount = 0;
+        *in >> chainCount;
         if (in->status() != QDataStream::Ok) {
-            throw std::runtime_error("Failed to read variable tmp32");
+            qWarning() << "Erreur lecture du nombre de chaînes";
+            return false;
         }
         mChains.clear();
-        mChains.reserve(int (tmp32));
-        for (quint32 i=0 ; i<tmp32; ++i) {
+        mChains.reserve(static_cast<size_t>(chainCount));
+        for (quint32 i = 0; i < chainCount; ++i) {
             ChainSpecs ch;
             *in >> ch.burnElapsedTime;
             *in >> ch.mAdaptElapsedTime;
             *in >> ch.mAcquisitionElapsedTime;
 
-            *in >> ch.mBatchIndex;
-            *in >> ch.mBatchIterIndex;
-            *in >> ch.mBurnIterIndex;
-            *in >> ch.mMaxBatchs;
+            quint32 tmp;
+            *in >> tmp; ch.mBatchIndex = static_cast<decltype(ch.mBatchIndex)>(tmp);
+            *in >> tmp; ch.mBatchIterIndex = static_cast<decltype(ch.mBatchIterIndex)>(tmp);
+            *in >> tmp; ch.mBurnIterIndex = static_cast<decltype(ch.mBurnIterIndex)>(tmp);
+            *in >> tmp; ch.mMaxBatchs = static_cast<decltype(ch.mMaxBatchs)>(tmp);
             *in >> ch.mMixingLevel;
-            *in >> ch.mIterPerBatch;
-            *in >> ch.mIterPerBurn;
-            *in >> ch.mIterPerAquisition;
-            *in >> ch.mAquisitionIterIndex;
-            *in >> ch.mSeed;
-            *in >> ch.mThinningInterval;
-            *in >> ch.mRealyAccepted;
+            *in >> tmp; ch.mIterPerBatch = static_cast<decltype(ch.mIterPerBatch)>(tmp);
+            *in >> tmp; ch.mIterPerBurn = static_cast<decltype(ch.mIterPerBurn)>(tmp);
+            *in >> tmp; ch.mIterPerAquisition = static_cast<decltype(ch.mIterPerAquisition)>(tmp);
+            *in >> tmp; ch.mAquisitionIterIndex = static_cast<decltype(ch.mAquisitionIterIndex)>(tmp);
+            *in >> tmp; ch.mSeed = static_cast<decltype(ch.mSeed)>(tmp);
+            *in >> tmp; ch.mThinningInterval = static_cast<decltype(ch.mThinningInterval)>(tmp);
+            *in >> tmp; ch.mRealyAccepted = static_cast<decltype(ch.mRealyAccepted)>(tmp);
+            *in >> tmp; ch.mTotalIter = static_cast<decltype(ch.mTotalIter)>(tmp);
+            // champ dérivé
             ch.mIterDisplay = ch.mRealyAccepted;
-            *in >> ch.mTotalIter;
+            if (in->status() != QDataStream::Ok) {
+                qWarning() << "[Model::loadFromStream_v338] Erreur lecture chaîne n°" << i;
+                return false;
+            }
             mChains.push_back(ch);
         }
         if (in->status() != QDataStream::Ok) {
             throw std::runtime_error("Failed to read variable Chain");
         }
         // -----------------------------------------------------
-        //  Read phases data
+        // 4️⃣ Read phases data
         // -----------------------------------------------------
 
         for (std::shared_ptr<Phase> &p : mPhases) {
@@ -2783,89 +2804,93 @@ bool Model::loadFromStream_v338(QDataStream *in)
 
         }
         if (in->status() != QDataStream::Ok) {
-            throw std::runtime_error("Failed to read variable Phase");
+            qWarning() << "[Model::loadFromStream_v338] Erreur lecture phase";
+            return false;
+
         }
         // -----------------------------------------------------
-        //  Read events data
+        //  5️⃣ Read events data
         // -----------------------------------------------------
 
         for (std::shared_ptr<Event> &e : mEvents) {
             e->mTheta.load_stream(*in);
-            e->mS02Theta.load_stream(*in); // since 2023-06-01 v3.2.3
-        }
-        if (in->status() != QDataStream::Ok) {
-            throw std::runtime_error("Failed to read variable Event");
+            e->mS02Theta.load_stream(*in);
+            if (in->status() != QDataStream::Ok) {
+                qWarning() << "[Model::loadFromStream_v338] Erreur lecture event";
+                return false;
+            }
         }
         // -----------------------------------------------------
-        //  Read dates data
+        //  6️⃣ Read dates data
         // -----------------------------------------------------
 
         for (std::shared_ptr<Event> &event : mEvents) {
-            if (event->mType == Event::eDefault )
-                for (auto&& d : event->mDates) {
+            if (event->mType != Event::eDefault) continue;
 
-                    d.mTi.load_stream(*in);
-                    d.mSigmaTi.load_stream(*in);
-                    if (d.mDeltaType != Date::eDeltaNone)
-                        d.mWiggle.load_stream(*in);
+            for (auto&& d : event->mDates) {
 
-                    *in >> d.mDeltaFixed;
-                    *in >> d.mDeltaMin;
-                    *in >> d.mDeltaMax;
-                    *in >> d.mDeltaAverage;
-                    *in >> d.mDeltaError;
+                d.mTi.load_stream(*in);
+                d.mSigmaTi.load_stream(*in);
+                if (d.mDeltaType != Date::eDeltaNone)
+                    d.mWiggle.load_stream(*in);
 
-                    double tmp;
-                    *in >> tmp;
-                    d.setTminRefCurve(tmp);
-                    *in >> tmp;
-                    d.setTmaxRefCurve(tmp);
+                *in >> d.mDeltaFixed;
+                *in >> d.mDeltaMin;
+                *in >> d.mDeltaMax;
+                *in >> d.mDeltaAverage;
+                *in >> d.mDeltaError;
 
-                    d.mCalibration = & (getProject_ptr()->mCalibCurves[d.mUUID]);
+                double tmp;
+                *in >> tmp;
+                d.setTminRefCurve(tmp);
+                *in >> tmp;
+                d.setTmaxRefCurve(tmp);
 
-                    quint32 tmpUint32;
-                    *in >> tmpUint32;
-                    double tmpKey;
-                    double tmpValue;
-                    for (quint32 i= 0; i<tmpUint32; i++) {
-                        *in >> tmpKey;
-                        *in >> tmpValue;
-                        d.mCalibHPD[tmpKey]= tmpValue;
-                    }
-                    //#ifdef DEBUG
+                d.mCalibration = & (getProject_ptr()->mCalibCurves[d.mUUID]);
 
-                    const std::string toFind ("WID::"+ d.mUUID);
-
-                    if (d.mWiggleCalibration == nullptr || d.mWiggleCalibration->mVector.empty()) {
-                        qDebug()<<"[Model::restoreFromFile_v330] mWiggleCalibration vide";
-
-                    } else {
-                        d.mWiggleCalibration = & (getProject_ptr()->mCalibCurves[toFind]);
-                    }
-                    //#endif
+                // HPD map
+                quint32 hpSize = 0;
+                *in >> hpSize;
+                d.mCalibHPD.clear();
+                for (quint32 i = 0; i < hpSize; ++i) {
+                    double key, value;
+                    *in >> key >> value;
+                    d.mCalibHPD.insert(key, value);
                 }
-        }
-        if (in->status() != QDataStream::Ok) {
-            throw std::runtime_error("Failed to read variable Date");
+
+
+                const std::string toFind = "WID::" + d.mUUID;
+
+                if (d.mWiggleCalibration && !d.mWiggleCalibration->mVector.empty())
+                    d.mWiggleCalibration = &(getProject_ptr()->mCalibCurves[toFind]);
+                if (in->status() != QDataStream::Ok) {
+                    qWarning() << "[Model::loadFromStream_v338] Erreur lecture date";
+                    return false;
+                }
+            }
         }
 
+        // -------------------------------------------------
+        // 7️⃣  Logs
+        // -------------------------------------------------
         *in >> mLogModel;
         *in >> mLogInit;
         *in >> mLogAdapt;
         *in >> mLogResults;
 
         if (in->status() != QDataStream::Ok) {
-            throw std::runtime_error("Failed to read variable Log");
+            qWarning() << "[Model::loadFromStream_v338] Erreur lecture logs";
+            return false;
         }
         return true;
 
     }
     catch (const std::exception& e) {
-        std::cout << "[Model::loadFromStream_v330]  " << e.what() << std::endl;
+        std::cout << "[Model::loadFromStream_v338]  " << e.what() << std::endl;
         return false;
     }
     /*catch (...) {
-        std::cout << "[Model::loadFromStream_v330] Error " << std::endl;
+        std::cout << "[Model::loadFromStream_v338] Error " << std::endl;
         return false;
     }*/
 }

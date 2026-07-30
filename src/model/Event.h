@@ -95,7 +95,7 @@ public:
     MHVariable mTheta;
     MHVariable mS02Theta;
 
-    double mAShrinkage;
+    //double mAShrinkage;
     double mBetaS02;
     bool mInitialized;
 
@@ -216,20 +216,22 @@ public:
     double getThetaMaxRecursive_v3_old(const double defaultValue, const std::vector<Event* > &startEvents = std::vector<Event*>());
     double getThetaMaxRecursive_v3(double defaultValue, const std::vector<Event* > &startEvents = std::vector<Event*>());
 
-#ifdef THETA_MIXING_KERNEL
-    //virtual void updateTheta(const double tmin, const double tmax) {updateTheta_v6(tmin, tmax);};
-     virtual bool updateTheta(const double tmin, const double tmax) {return updateTheta_v6_mixing_kernel(tmin, tmax);};
-    //virtual void updateTheta(const double tmin, const double tmax) {updateExpansionCollapse(tmin, tmax);};
 
-#else
-    virtual void updateTheta(const double tmin, const double tmax) {updateTheta_v3(tmin, tmax);};
-#endif
+    //virtual void updateTheta(const double tmin, const double tmax) {updateTheta_v3_block(tmin, tmax);};
+    virtual void updateTheta(const double tmin, const double tmax) {updateTheta_v4(tmin, tmax);};
+    virtual void applyTheta(const double tmin, const double tmax, const double T) {applyTheta_v4(tmin, tmax, T);};
+
 
 
     void updateTheta_v3(const double tmin, const double tmax);
+    void updateTheta_v3_block(const double tmin, const double tmax);
+    void applyTheta_v3_block(const double tmin, const double tmax, const double T = 1);
 
 
-    void updateTheta_v4(const double tmin, const double tmax); // ,with mixing kernel
+    //void updateTheta_v4_old(const double tmin, const double tmax); // avec changement de variable x
+    void updateTheta_v4(const double tmin, const double tmax); // avec changement de variable x
+
+    void applyTheta_v4(const double tmin, const double tmax, const double T);
 
     /* // test avec mélange de densités
       void updateTheta_v4_mixing(const double tmin, const double tmax, const double rate_theta = 1.0);
@@ -251,25 +253,16 @@ public:
 
     void applyThetaProposal_v3(const double tmin, const double tmax);
 
-    /* obsolete
-     * void applyThetaPriorCDE(const double tmin, const double tmax);
-    void updateThetaPriorCDE(const double tmin, const double tmax);
-    */
+    //inline void updateS02Theta() {updateS02Theta_v4();}
+    void updateS02Theta_gamma();
 
-    /*obsolete
-    void updateThetaAndTiSigma(const double tmin, const double tmax);// ne fonctionne pas
+    void updateS02Theta_v338();
 
-    void moveVarianceExpansionCollapse(const double tmin, const double tmax, const double alpha = 0.7);
+    void updateS02Theta_v4();
 
-    void updateTheta_v41(const double tmin, const double tmax, const double rate_theta = 1.);
-    void updateTheta_v42(const double tmin, const double tmax, const double rate_theta = 1.);
-    */
-
-
-    void updateS02Theta();
-
-    void applyS02Theta(); // sans historique,
-    void applyS02Theta(double T); // sans historique, avec Tempering possible
+    inline void applyS02Theta() {applyS02Theta_v4();} ; // sans historique,
+    void applyS02Theta_v3();
+    void applyS02Theta_v4();
 
     double h_S02(const double S02);
 

@@ -1085,29 +1085,75 @@ BandedMatrix operator*(long double scalar, const BandedMatrix& matrix);
  std::ostream& operator<<(std::ostream& os, const BandedMatrix& matrix);
 
 #pragma mark Sparse Functions
+
+
  class SparseQuadraticFormSolver {
- private:
-     Eigen::SimplicialLDLT<SparseMatrixD> solver_;
-     long shift_;
-#ifdef DEBUG
-     bool is_factorized_;
-#endif
-     SparseMatrixD R_template_;
-
  public:
-     ColumnVectorD solve(const ColumnVectorD& rhs) const {
+     // -----------------------------------------------------------------
+     // 1️⃣  Constructeurs / destructeur
+     // -----------------------------------------------------------------
+
+     explicit SparseQuadraticFormSolver(long shift = 1)
+         : solver_(std::make_unique<Eigen::SimplicialLDLT<SparseMatrixD>>()) // Allocation
+         , shift_(shift)
 #ifdef DEBUG
-         assert(is_factorized_);
+         , is_factorized_(false)
 #endif
-         return solver_.solve(rhs);
+     {}
+
+     // Le solveur n’est pas copiable
+     SparseQuadraticFormSolver(const SparseQuadraticFormSolver&) = delete;
+     SparseQuadraticFormSolver& operator=(const SparseQuadraticFormSolver&) = delete;
+
+     // Constructeur de déplacement (Move)
+     SparseQuadraticFormSolver(SparseQuadraticFormSolver&& other) noexcept
+         : solver_(std::move(other.solver_))
+         , shift_(other.shift_)
+#ifdef DEBUG
+         , is_factorized_(other.is_factorized_)
+#endif
+         , R_template_(std::move(other.R_template_))
+     {
+         other.shift_ = 1;
+#ifdef DEBUG
+         other.is_factorized_ = false;
+#endif
      }
+
+     // Opérateur de déplacement (Move assignment)
+     SparseQuadraticFormSolver& operator=(SparseQuadraticFormSolver&& other) noexcept
+     {
+         if (this != &other) {
+             solver_          = std::move(other.solver_);
+             shift_           = other.shift_;
+             R_template_      = std::move(other.R_template_);
 #ifdef DEBUG
-      explicit SparseQuadraticFormSolver(long shift = 1) : shift_(shift), is_factorized_(false) {}
-#else
-      explicit SparseQuadraticFormSolver(long shift = 1) : shift_(shift) {}
+             is_factorized_   = other.is_factorized_;
+             other.is_factorized_ = false;
 #endif
+             other.shift_     = 1; // Valeur par défaut logique
+         }
+         return *this;
+     }
 
+     ~SparseQuadraticFormSolver() = default;
 
+     // -----------------------------------------------------------------
+     // 2️⃣  Interface publique
+     // -----------------------------------------------------------------
+
+     // Remplace les deux anciennes méthodes 'solve'
+     template <typename Derived>
+     auto solve(const Eigen::MatrixBase<Derived>& rhs) const
+     {
+#ifdef DEBUG
+         // solver_ est votre instance ou unique_ptr de SimplicialLDLT
+         assert(is_factorized_ && "Le solveur doit être factorisé avant l'appel à solve()");
+#endif
+         return solver_->solve(rhs);
+     }
+     void setShift(long shift) { shift_ = shift; }
+     long shift() const { return shift_; }
 
      /**
      * @brief Factorise la matrice R
@@ -1127,8 +1173,7 @@ BandedMatrix operator*(long double scalar, const BandedMatrix& matrix);
      /**
      * @brief Calcule les deux produits efficacement
      */
-     std::pair<SparseMatrixD, SparseMatrixD>
-     compute_both_products(const SparseMatrixD& Q);
+     std::pair<SparseMatrixD, SparseMatrixD> compute_both_products(const SparseMatrixD& Q);
 
  private:
      /**
@@ -1136,7 +1181,15 @@ BandedMatrix operator*(long double scalar, const BandedMatrix& matrix);
      */
      SparseMatrixD solve_with_padding(const SparseMatrixD& B);
 
+     // -----------------------------------------------------------------
+     // 3️⃣  Membres de données
+     // -----------------------------------------------------------------
+     std::unique_ptr<Eigen::SimplicialLDLT<SparseMatrixD>> solver_; // Enveloppe pour permettre le move
+     long                                                   shift_;
+#ifdef DEBUG
+     bool                                 is_factorized_;
+#endif
+     SparseMatrixD                        R_template_;
  };
-
 
 #endif // MATRIX_H

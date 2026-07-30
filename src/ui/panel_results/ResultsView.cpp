@@ -1200,7 +1200,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mCurvesScrollArea->setVisible(false);
 
     mGraphHeight = 4 * AppSettings::heigthUnit();
-    mHeightForVisibleAxis = mGraphHeight ;
+    mHeightForVisibleTicksAxis = mGraphHeight ;
 
     mMarker->raise();
 
@@ -2393,8 +2393,8 @@ void ResultsView::createByCurveGraph()
 
                     } else {
 
-                        evPts.Xmin = static_cast<Bound*>(event.get())->mFixed;
-                        evPts.Xmax = static_cast<Bound*>(event.get())->mFixed;
+                        evPts.Xmin = static_cast<Bound*>(event.get())->value();
+                        evPts.Xmax = static_cast<Bound*>(event.get())->value();
                         evPts.Ymin = pt_Ymin;
                         evPts.Ymax = pt_Ymax;
                         evPts.type = CurveRefPts::ePoint;
@@ -2766,8 +2766,8 @@ void ResultsView::updateCurveEventsPointX()
 
                 } else {
 
-                    evPts.Xmin = static_cast<Bound*>(event.get())->mFixed;
-                    evPts.Xmax = static_cast<Bound*>(event.get())->mFixed;
+                    evPts.Xmin = static_cast<Bound*>(event.get())->value();
+                    evPts.Xmax = static_cast<Bound*>(event.get())->value();
                     evPts.Ymin = pt_Ymin;
                     evPts.Ymax = pt_Ymax;
                     evPts.type = CurveRefPts::ePoint;
@@ -3000,8 +3000,8 @@ void ResultsView::updateCurveEventsPointXY()
 
                 } else {
 
-                    evPts.Xmin = static_cast<Bound*>(event.get())->mFixed;
-                    evPts.Xmax = static_cast<Bound*>(event.get())->mFixed;
+                    evPts.Xmin = static_cast<Bound*>(event.get())->value();
+                    evPts.Xmax = static_cast<Bound*>(event.get())->value();
                     evPts.Ymin = ptX_Ymin;
                     evPts.Ymax = ptX_Ymax;
                     evPts.type = CurveRefPts::ePoint;
@@ -3289,8 +3289,8 @@ void ResultsView::updateCurveEventsPointXYZ()
 
                 } else {
 
-                    evPts.Xmin = static_cast<Bound*>(event.get())->mFixed;
-                    evPts.Xmax = static_cast<Bound*>(event.get())->mFixed;
+                    evPts.Xmin = static_cast<Bound*>(event.get())->value();
+                    evPts.Xmax = static_cast<Bound*>(event.get())->value();
                     evPts.Ymin = ptX_Ymin;
                     evPts.Ymax = ptX_Ymax;
                     evPts.type = CurveRefPts::ePoint;
@@ -4008,12 +4008,11 @@ void ResultsView::updateScales()
     // -------------------------------------------------------
     // Graphic Option
     // -------------------------------------------------------
-    //double origin_height;
+
     if (mGraphListTab->currentIndex() == 2 )
-        mHeightForVisibleAxis = 20 * AppSettings::heigthUnit() / mByCurvesGraphs.size();
+        mHeightForVisibleTicksAxis = 20 * AppSettings::heigthUnit() / mByCurvesGraphs.size();
     else
-        mHeightForVisibleAxis = 4 * AppSettings::heigthUnit() ;
-    //mGraphHeight = GraphViewResults::mHeightForVisibleAxis;
+        mHeightForVisibleTicksAxis = 4 * AppSettings::heigthUnit() ;
 
     int zoom = 100;
     if (mZoomsH.find(key) != mZoomsH.end()) {
@@ -4028,7 +4027,7 @@ void ResultsView::updateScales()
     mZoomSlider->blockSignals(false);
 
     const double min = 2.0 * AppSettings::heigthUnit();
-    const double origin = mHeightForVisibleAxis;
+    const double origin = mHeightForVisibleTicksAxis;
 
     const double prop = zoom / 100.0;
     mGraphHeight = min + prop * (origin - min);
@@ -4038,7 +4037,7 @@ void ResultsView::updateScales()
     // -------------------------------------------------------
     QList<GraphViewResults*> graphs = currentGraphs(false);
     for (GraphViewResults*& graph : graphs) {
-        graph->setHeightForVisibleAxis(mHeightForVisibleAxis);
+        graph->setHeightForVisibleAxis(mHeightForVisibleTicksAxis);
         graph->setView(mRuler->mMin, mRuler->mMax, mResultCurrentMinT, mResultCurrentMaxT, mMajorScale, mMinorCountScale);
     }
 
@@ -5201,7 +5200,7 @@ int ResultsView::zoomToSlider(const double &zoom)
 void ResultsView::updateGraphsHeight()
 {
     const double min = 2 * AppSettings::heigthUnit();
-    double origin = mHeightForVisibleAxis;
+    double origin = mHeightForVisibleTicksAxis;
 
     const double prop = QLocale().toDouble(mZoomEdit->text()) / 100.0;
     mGraphHeight = min + prop * (origin - min);
@@ -6321,7 +6320,7 @@ void ResultsView::exportResults()
 
 void ResultsView::exportFullImage()
 {
-    bool printAxis = (mGraphHeight < mHeightForVisibleAxis);
+    bool printAxis = (mGraphHeight < mHeightForVisibleTicksAxis);
 
     QWidget* curWid (nullptr);
 

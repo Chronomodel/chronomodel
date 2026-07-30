@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2025
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -88,8 +88,12 @@ public:
     virtual bool loadFromStream(QDataStream *in)
     {
         //std::cout << "[ModelCurve::restoreFromFile] entering";
+       /* static const QSet<QString> compatible_version_339 = {
+            QStringLiteral("3.3.9")
+        };*/
         static const QSet<QString> compatible_version_338 = {
-            QStringLiteral("3.3.8")
+            QStringLiteral("3.3.8"),
+            QStringLiteral("3.3.9")
         };
         static const QSet<QString> compatible_version_335 = {
             QStringLiteral("3.3.5"),
@@ -178,7 +182,6 @@ public:
     };
     void memo_PosteriorG_XYZ(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted);
     void memo_PosteriorG_IDF(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted);
-    void memo_PosteriorG_IDF_old(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted);
 
 
 #endif
@@ -213,8 +216,6 @@ public slots:
 
 private:
     void settings_from_Json( const QJsonObject &json);
-
-    void valeurs_G_varG_on_i(const MCMCSplineComposante &spline, double &G, double &varG, unsigned long &i);
 
     friend class MCMCLoopCurve;
 

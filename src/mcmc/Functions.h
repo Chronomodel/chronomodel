@@ -46,6 +46,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QMap>
 #include <QVector>
 #include <cmath>
+#include <numbers>        // std::numbers::sqrt2
 
 #if PARALLEL
 #include <execution>
@@ -69,8 +70,9 @@ struct Quartiles
 // ------------------------------------------------------------------
 // Statistiques de la fonction
 // ------------------------------------------------------------------
-struct FunctionStat
+struct DensityStat
 {
+    type_data bandwidth_used = static_cast<type_data>(0.0);
     type_data max      = static_cast<type_data>(0.0);
     type_data mode     = static_cast<type_data>(0.0);
     type_data mean     = static_cast<type_data>(0.0);
@@ -83,6 +85,7 @@ struct FunctionStat
 // ------------------------------------------------------------------
 struct TraceStat
 {
+    bool updated = false;
     type_data min      = static_cast<type_data>(0.0);
     type_data max      = static_cast<type_data>(0.0);
     type_data mean     = static_cast<type_data>(0.0);
@@ -94,22 +97,23 @@ struct TraceStat
 // ------------------------------------------------------------------
 // Analyse combinée (fonction + trace)
 // ------------------------------------------------------------------
-struct DensityAnalysis
+struct PosteriorAnalysis
 {
-    FunctionStat funcAnalysis{};
+    DensityStat densityAnalysis{};
     TraceStat   traceAnalysis{};
+    double R_hat_Gelman_Rubin = 0.0;
     // constructeur qui met des NaN pour indiquer « non calculé »
-    DensityAnalysis()
+    PosteriorAnalysis()
     {
         // ----- fonction -----
-        funcAnalysis.max  = std::numeric_limits<type_data>::quiet_NaN();
-        funcAnalysis.mode = std::numeric_limits<type_data>::quiet_NaN();
-        funcAnalysis.mean = std::numeric_limits<type_data>::quiet_NaN();
-        funcAnalysis.std  = std::numeric_limits<type_data>::quiet_NaN();
+        densityAnalysis.max  = std::numeric_limits<type_data>::quiet_NaN();
+        densityAnalysis.mode = std::numeric_limits<type_data>::quiet_NaN();
+        densityAnalysis.mean = std::numeric_limits<type_data>::quiet_NaN();
+        densityAnalysis.std  = std::numeric_limits<type_data>::quiet_NaN();
         // les quartiles restent à 0.0 (ou vous pouvez les mettre à NaN aussi)
-        funcAnalysis.quartiles.Q1 = std::numeric_limits<type_data>::quiet_NaN();
-        funcAnalysis.quartiles.Q2 = std::numeric_limits<type_data>::quiet_NaN();
-        funcAnalysis.quartiles.Q3 = std::numeric_limits<type_data>::quiet_NaN();
+        densityAnalysis.quartiles.Q1 = std::numeric_limits<type_data>::quiet_NaN();
+        densityAnalysis.quartiles.Q2 = std::numeric_limits<type_data>::quiet_NaN();
+        densityAnalysis.quartiles.Q3 = std::numeric_limits<type_data>::quiet_NaN();
         // ----- trace -----
         traceAnalysis.min  = std::numeric_limits<type_data>::quiet_NaN();
         traceAnalysis.max  = std::numeric_limits<type_data>::quiet_NaN();
@@ -126,11 +130,11 @@ struct DensityAnalysis
 
 
 
-FunctionStat analyseFunction(const QMap<type_data, type_data> &fun);
-FunctionStat analyseFunction(const std::map<type_data, type_data> &fun);
+DensityStat analyseDensity(const QMap<type_data, type_data> &fun);
+DensityStat analyseDensity(const std::map<type_data, type_data> &fun);
 
-QString FunctionStatToString(const FunctionStat& analysis);
-QString densityAnalysisToString(const DensityAnalysis& analysis);
+QString densityStatToString(const DensityStat& analysis);
+QString posteriorAnalysisToString(const PosteriorAnalysis& analysis);
 
 // Standard Deviation of a vector of data
 
@@ -234,6 +238,14 @@ inline double log_dnorm(const double x, const double mu = 0.0, const double sigm
     return log_inv_sqrt_2pi - std::log(sigma) - 0.5 * z * z;
 }
 
+// Fonction utilitaire pour calculer la CDF d'une normale standard (Phi)
+// utiliser avec truncatedNormal pour réduction de support
+inline double normalCDF(double x)
+{
+    // 1 / sqrt(2) est une constante constexpr depuis C++20
+    static constexpr double inv_sqrt_2 = 1.0 / std::numbers::sqrt2;
+    return 0.5 * (1.0 + std::erf(x * inv_sqrt_2));
+}
 
 /**
  * Calcule ln( f(x | mu, sigma, df) ) pour une distribution de Student.
@@ -262,6 +274,10 @@ Quartiles quartilesForTrace(const std::vector<type_data> &trace);
 
 TraceStat traceStatistic(const QList<type_data> &trace);
 TraceStat traceStatistic(const std::vector<type_data> &trace);
+
+double gelmanRubin(const std::vector<std::vector<double>>& chains);
+std::vector<double> gelmanRubinMulti(
+    const std::vector<std::vector<std::vector<double>>>& chains);
 
 // QList<double> calculRepartition (const QList<double> &calib);
 QList<double> calculRepartition (const QMap<double, double> &calib);
@@ -602,5 +618,73 @@ QMap<double, double> gaussian_filter_simple(const QMap<double, double> &map, con
 
 std::vector<double> low_pass_filter(std::vector<double>& curve_input, const double Tc, const short padding_type = 0);
 
+#pragma mark EDM2
+inline double h_prior_EDM2 (const double theta, const double t_i, const double delta_i, const double x_i, const double S02)
+{
+    const double t_delta_theta = (t_i+delta_i) - theta;
+    const double t_delta_theta2 = t_delta_theta * t_delta_theta;
+
+    const double denom = t_delta_theta2 + S02*x_i;
+    const double denom2 = denom * denom;
+
+    return (S02 * abs(t_delta_theta) * x_i)/ denom2;
+}
+
+/**
+ * @brief Logarithme de la densité a‑priori h_prior_EDM2.
+ *
+ * La fonction renvoie -inf (std::numeric_limits<double>::infinity())
+ * si l’un des arguments rend le logarithme indéfini (ex. x_i ≤ 0,
+ * |t_i+δ_i-θ| = 0 ou denom ≤ 0).  Cela permet à l’algorithme M‑H de
+ * rejeter naturellement ces propositions.
+ *
+ * @param theta   paramètre θ
+ * @param t_i     temps étudié t_i
+ * @param delta_i décalage δ_i
+ * @param x_i     variable positive x_i
+ * @param S02     constante S0² (strictement positive)
+ * @return log( h_prior_EDM2(...) )
+ */
+inline double log_h_prior_EDM2 ( const double theta,
+                               const double t_i,
+                               const double delta_i,
+                               const double x_i,
+                               const double S02 )
+{
+    // -----------------------------------------------------------------
+    // 1. Vérifications de validité (évite log(≤0) → NaN)
+    // -----------------------------------------------------------------
+    if (S02 <= 0.0 || x_i <= 0.0) {
+        // S02 ou x_i non‑positif → densité nulle → log = -inf
+        return -std::numeric_limits<double>::infinity();
+    }
+
+    const double t_delta_theta = (t_i + delta_i) - theta;          // peut être négatif
+    const double abs_tdt      = std::abs(t_delta_theta);          // |t_i+δ_i-θ|
+    if (abs_tdt == 0.0) {
+        // le facteur |t_i+δ_i-θ| vaut 0 → h = 0 → log = -inf
+        return -std::numeric_limits<double>::infinity();
+    }
+
+    const double tdt_sq   = t_delta_theta * t_delta_theta;        // (t_i+δ_i-θ)²
+    const double denom    = tdt_sq + S02 * x_i;                    // toujours > 0 ici
+    if (denom <= 0.0) {
+        // cas pathologique (devrait jamais arriver avec S02>0, x_i>0)
+        return -std::numeric_limits<double>::infinity();
+    }
+
+    // -----------------------------------------------------------------
+    // 2. Calcul du log‑densité
+    // -----------------------------------------------------------------
+    const double log_S02   = std::log(S02);            // log(S0²)
+    const double log_abs   = std::log(abs_tdt);        // log|t_i+δ_i-θ|
+    const double log_xi    = std::log(x_i);            // log(x_i)
+    const double log_denom = std::log(denom);          // log( (t_i+δ_i-θ)² + S0²·x_i )
+
+    // log h = log(S02) + log|t_i+δ_i-θ| + log(x_i) - 2·log(denom)
+    const double log_h = log_S02 + log_abs + log_xi - 2.0 * log_denom;
+
+    return log_h;
+}
 
 #endif
