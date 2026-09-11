@@ -144,14 +144,21 @@ public:
             painter->setPen(QColor(120, 120, 120));
             
             if (dateOrigin == Date::eSingleDate) {
+#ifdef FIXEDPRIOR
+                painter->drawText(x + iconW, y + 2*mm + mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, tr("Plugin: %1").arg(plugin->getName()));
+#else
                 painter->drawText(x + iconW, y + 2*mm + mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, tr("Type : %1 | MCMC %2").arg(plugin->getName(), dateMethodStr));
+#endif
                 painter->drawText(x + iconW, y + 3*mm + 2*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, dateDesc);
 
                 painter->setPen(Painting::mainColorLight);
                 painter->drawText(x + iconW, y + 4*mm + 3*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, deltaDesc);
             } else {
+#ifdef FIXEDPRIOR
+                painter->drawText(x + iconW, y + 2*mm + mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, tr("Plugin: %1").arg(plugin->getName()));
+#else
                 painter->drawText(x + iconW, y + 2*mm + mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, tr("Type : %1 | MCMC %2").arg(plugin->getName(), dateMethodStr));
-                
+#endif
                 painter->drawText(x + iconW, y + 3*mm + 2*mh, w - iconW, mh, Qt::AlignLeft | Qt::AlignVCenter, "Combine Calcul");
             }
             if (!isValid) {

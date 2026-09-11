@@ -55,8 +55,8 @@ PluginF14CRefView::PluginF14CRefView(QWidget* parent):GraphViewRefAbstract(paren
     mGraph->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
     mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllTip);
 
-    mGraph->setXAxisMode(GraphView::eAllTicks);
-    mGraph->setYAxisMode(GraphView::eAllTicks);
+    mGraph->setXAxisMode(GraphView::AxisMode::eAllTicks);
+    mGraph->setYAxisMode(GraphView::AxisMode::eAllTicks);
     mGraph->setTipXLab("t");
     mGraph->setTipYLab("F14C");
     mGraph->autoAdjustYScale(true);

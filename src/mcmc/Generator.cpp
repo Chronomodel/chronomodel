@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -39,17 +39,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "Generator.h"
 
-#include <cmath>
 #include <ctgmath>
 
 #include <chrono>
 #include <QDebug>
 #include <QObject>
 
-// Mersenne Twister 19937 generator
-std::mt19937 Generator::sEngine (0);
-std::uniform_real_distribution<double> Generator::sDoubleUniformDistribution (0.0, 1.0);
-std::normal_distribution<double> Generator::sNormalDistribution(0.0, 1.0);
 
 std::default_random_engine CharGenerator (int(std::chrono::system_clock::now().time_since_epoch().count()));
 
@@ -62,75 +57,8 @@ c_UUID Generator::UUID;
 //http://xoroshiro.di.unimi.it/
 std::uint64_t Generator::xorshift64starSeed(35); /**< used with Generator::xorshift64star(void) */
 
-void Generator::initGenerator(const unsigned seed)
-{
-   sEngine.seed(seed);
-   sDoubleUniformDistribution.reset();
-   sNormalDistribution.reset();
-   //qDebug()<<"initGenerator seed"<<seed;
-   xorshift64starSeed = seed;
-}
-
-unsigned Generator::createSeed()
-{
-    // obtain a seed from the system clock:
-    // unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-
-    // http://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
-
-    //std::random_device rd;
-    //return rd();
-
-    //return rand() % 1000;
-    //return arc4random() % 1000; // invalide for Windows os
-
-    // Seed with a real random value, if available
-    std::random_device r;
-
-    // Choose a random mean between 1 and 6
-    std::mt19937 gen(r());
-    std::uniform_int_distribution<int> uniform_dist(1, 1000);
-    return uniform_dist(gen);
-}
 
 
-
-
-
-
-
-
-
-/**
- * @brief  Uniformly distributed random numbers with Box-Muller transform see: https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform
- *
- *  \f$ U_1 \in [0;1]\f$ and \f$ U_2 \in[0;1] \f$
- *
- *  \f$ Z_0=\sqrt{-2 \ln{U_1}} * cos(2  \Pi * U_2) \f$
- */
-double Generator::boxMuller()
-{
-    const double U1 = randomUniform();
-    const double U2 = randomUniform();
-    return sqrt(-2. * log(U1)) * cos(2. * M_PI * U2);
-    //checkFloatingPointException("boxMuller");
-}
-
-/* ol code
- double Generator::normalDistribution(const double mean, const double sigma)
-{
-    return mean + boxMuller() * sigma;
-}
-*/
-
-// obsolete
-/*
-  double Generator::shrinkage(const double variance, const double shrinkage)// à controler
-{
-   double x = std::sqrt(shrinkage) * boxMuller() + std::sqrt(1 - shrinkage) * boxMuller();
-   return x * std::sqrt(variance);
-}
-*/
 
 /** https://en.wikipedia.org/wiki/Xorshift
  *

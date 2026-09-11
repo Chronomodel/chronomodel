@@ -47,7 +47,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ModelCurve.h"
 #include "Event.h"
 #include "version.h"
-#include "Generator.h"
 
 #include <vector>
 
@@ -61,7 +60,39 @@ public:
     MCMCLoopCurve(std::shared_ptr<ModelCurve> model);
     ~MCMCLoopCurve();
 
+    // -----------------------------------------------------------------
+    //  Initialise le pointeur de fonction membre qui sera utilisé par
+    //  `update()`.
+    // -----------------------------------------------------------------
+    void setUpdateFunction(bool (MCMCLoopCurve::*fn)())
+    {
+        updateLoop = fn;
+    }
+
+
 protected:
+
+    // pointeur de fonction membre, initialisé à nullptr
+    // elle permet de basculer du mode update (lambda Bayesien) au mode interpolé (lambda=0)
+    bool (MCMCLoopCurve::*updateLoop)() = nullptr;
+
+    virtual QString calibrate();
+
+    virtual QString initialize();
+
+    virtual bool update()
+    {
+        return   (this->*updateLoop)();
+
+    }
+    virtual bool adapt(const int batchIndex);
+
+    virtual void recordBurnAdapt();
+    virtual void recordMH();
+    virtual void acquire();
+
+    virtual void finalize();
+
     // Variable for update function
 
     t_prob current_ln_h_YWI_3;
@@ -83,8 +114,6 @@ protected:
     std::pair<MatrixD, DiagonalMatrixD> current_decomp_QTQ_D;
     std::pair<MatrixD, DiagonalMatrixD> current_decomp_matB_D;
 
-
-    //t_prob try_ln_h_YWI_2, try_ln_h_YWI_3, try_ln_h_YWI_1_2;
     t_prob try_ln_h_YWI_3;
 
 
@@ -136,7 +165,6 @@ protected:
     std::vector<double> unclumpThetaReduit(const std::vector<std::shared_ptr<Event>>& events, double spreadSpan = 1e-8);
 
 
-    bool (MCMCLoopCurve::*updateLoop)();;
 #if VERSION_MAJOR == 3 && VERSION_MINOR == 2 && VERSION_PATCH == 1
 #pragma mark Version 3.2.1
 
@@ -163,15 +191,26 @@ protected:
 
     double event_MH_rate(Event* event, double try_theta);
 
+    QString initialize_interpolate_old();
+    bool update_interpolate_old();
+
 #pragma mark Version 3.3.9
+
     QString initialize_339();
-    bool update_339();
+
+    bool update_339_block();
     bool sampler_339();
     bool tempering_339(double T);
 
-    // Echantillonnage par block
-    bool sampler_339_block();
+    // Echantillonnage par bloc
+    bool sampler_339_block_2v(); //bloc de 2 variables : ti & theta
     bool tempering_339_block(double T);
+    bool sampler_339_block_4v(); // bloc de 4 variables : ti, delta, sigma_ti et theta
+
+    bool sampler_339_SingleSite();
+
+    QString initialize_interpolate_339();
+    bool update_interpolate_339();
 
 
 #elif VERSION_MAJOR == 4 && VERSION_MINOR >= 0 && VERSION_PATCH >= 0
@@ -184,25 +223,20 @@ protected:
 
 #endif
 #pragma mark Interpolate
-    QString initialize_interpolate();
-    bool update_interpolate();
+    inline QString initialize_interpolate()
+    {
+        return initialize_interpolate_339();
+    }
+
+    inline bool update_interpolate()
+    {
+        return update_interpolate_339();
+    }
 
     void test_depth(std::vector<std::shared_ptr<Event> > &events, const std::vector<t_reduceTime> &vecH, const SplineMatricesLD &matrices, const double lambda, double &rate, bool &ok);
 
 
-protected:
 
-    virtual QString calibrate();
-
-    virtual QString initialize();
-    virtual bool update();
-    virtual bool adapt(const int batchIndex);
-
-    virtual void recordBurnAdapt();
-    virtual void recordMH();
-    virtual void acquire();
-
-    virtual void finalize();
     
     
 private:
@@ -219,7 +253,7 @@ private:
 
 
      inline t_prob h_VG_Event(const std::shared_ptr<Event> &e, const double S02_Vg) const;
-     t_prob h_VG_Event(const double Vg, const double S02_Vg) const;
+     inline t_prob h_VG_Event(const double Vg, const double S02_Vg) const;
 
      t_prob h_S02_Vg(const std::vector<std::shared_ptr<Event> > &events, double S02_Vg) const;
 #ifdef KOMLAN
@@ -265,6 +299,8 @@ private:
                                       const double coef_n_points) const;
 
 public:
+    double sampleMuLambda(const double lambda_current) const;
+
     inline t_prob log_rate_h_lambda_X_339(const double old_lambda, const double prop_lambda, const unsigned int n_points)
     {
         return log_rate_h_lambda_339_impl(old_lambda, prop_lambda, n_points, 0.5);
@@ -299,7 +335,9 @@ public:
 
     // pour tempering, pas de tirage des Gx
     // obsolete
-    MCMCSpline applySpline(std::vector<std::shared_ptr<Event> > &lEvents, const SparseMatrixD &R, const MatrixD &R_1Qt, const SparseMatrixD& Q);
+    MCMCSpline applySpline(std::vector<std::shared_ptr<Event> > &lEvents, const MatrixD &R_1Qt);
+
+    MCMCSpline samplingSpline_interpolate(std::vector<std::shared_ptr<Event> > &Events, const SparseMatrixD &R, const SparseMatrixD& Q);
 
 
 

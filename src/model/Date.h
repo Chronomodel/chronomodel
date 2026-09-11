@@ -76,7 +76,7 @@ public:
     MHVariable mWiggle;
 
     double mDelta;
-    double mXi; // utiliser par le nouveau prior EDM2
+    double mXi; //  test changement de variable pour le nouveau prior EDM2 sur sigmaTi
 
    // MHVariable mZi;// test reparametrisation, ,ne marche pas
 
@@ -199,20 +199,29 @@ public:
         updateDelta_v3(theta);
     }
 
+    void updateSigma_Variance(const double theta,
+                              const double S02Theta);
+
+    void updateSigma_Shrinkage(const double theta,
+                          const double S02Theta);
+
+    void updateSigma_Log10(const double theta, const double S02Theta);
+
 #pragma mark Fonctions pour v4
     // fonction qui utilise mXi
 
-    void updateDelta_v4(const double theta, const double S02Theta);
+    /*void updateDelta_v4(const double theta, const double S02Theta);
     void applyDelta_v4(const double theta, const double S02Theta);
     void updateTi_v4(const double theta, const double S02Theta);
     void applyTi_v4(const double theta, const double S02Theta);
 
+    // obsolete
     inline void updateSigma_v4 (const double theta)
     { // mise à jour déterministe
-        const double t_delta_theta = abs((mTi.value() + mDelta) - theta);
-        mSigmaTi.setValue( t_delta_theta / sqrt(mXi) );
+       // const double t_delta_theta = abs((mTi.value() + mDelta) - theta);
+       // mSigmaTi.setValue( t_delta_theta / sqrt(mXi) );
     }
-
+*/
 #pragma mark Fonction General
 
     inline void updateTi(const double theta)
@@ -237,7 +246,9 @@ public:
 
     inline void updateSigma (const double theta, const double S02Theta)
     {
-        updateSigmaShrinkage_K(theta, S02Theta);
+        updateSigma_Shrinkage(theta, S02Theta);
+        //updateSigma_Variance(theta, S02Theta);
+        //updateSigma_Log10(theta, S02Theta);
     }
     inline void applySigma (const double theta, const double S02Theta)
     {
@@ -287,6 +298,8 @@ public:
     void updateSigmaShrinkage0(const double theta_mX, const double S02Theta_mX);
     void updateSigmaShrinkage(const double theta_mX, const double S02Theta_mX);
     void updateSigmaShrinkage_K(const double theta_mX, const double S02Theta_mX);
+
+    void updateSigmaWithX(const double theta, const double S02Theta);
 
 
     void setBandwidth(BandwidthType bwt, double bandwidth);

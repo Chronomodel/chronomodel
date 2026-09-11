@@ -1457,7 +1457,7 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
             json[STATE_COLOR_RED] = col.red();
             json[STATE_COLOR_GREEN] = col.green();
             json[STATE_COLOR_BLUE] = col.blue();
-            json[STATE_EVENT_SAMPLER] = MHVariable::eFixe;
+            json[STATE_EVENT_SAMPLER] = static_cast<int>(SamplerProposal::eFixe);
 
             json[STATE_ITEM_X] = e->scenePos().x() + EventCount * deltaX;
             json[STATE_ITEM_Y] = e->scenePos().y() + EventCount * deltaY;
@@ -1643,7 +1643,7 @@ QPair<QList<QPair<QString, Date>>, QList<QMap<QString, double>>> EventsScene::de
             QStringList dataTmp = dataStr.mid(1, dataStr.size() - 1);
             date.setName(eventName);
             date.mPlugin = nullptr;
-            date.mTi.mSamplerProposal = MHVariable::eDatePrior; //set but not used
+            date.mTi.mSamplerProposal = SamplerProposal::eDatePrior; //set but not used
 
             QJsonObject json;
             json.insert(STATE_EVENT_KNOWN_FIXED, csvLocal.toDouble(dataTmp.at(0)));

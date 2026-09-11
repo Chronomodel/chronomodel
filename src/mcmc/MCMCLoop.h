@@ -75,12 +75,15 @@ public:
     QString mAbortedReason;
     std::shared_ptr<ModelCurve> mModel;
 
-    enum State
+    enum class State : int
     {
-        eInit = 0,
-        eBurning = 1,
-        eAdapting = 2,
-        eAquisition = 3
+        eCalibrating = 0,   // avant toute chose
+        eSMC         = 1,   // simulation SMC
+        eInit        = 2,   // initialisation du MCMC
+        eBurning     = 3,   // burn‑in
+        eAdapting    = 4,   // adaptation du pas d’acceptation
+        eAcquisition = 5,   // collecte des échantillons
+        eFinalize    = 6    // calcul des stats
     };
 
 
@@ -108,17 +111,13 @@ protected:
 
     QString initialize_time();
     double SMC_score();
+    double log_SMC_score(double Tmin, double Tmax, double Xmin, double Xmax);
     virtual bool update() = 0;
     virtual bool learn() {return update();};
 
     //virtual void memo() = 0; // obsolete décomposer en recordBurnAdapt et acquire, pour la partie aquisition
     virtual void recordBurnAdapt() = 0;
     virtual void acquire() = 0;
-
-    // À surcharger dans la sous-classe pour itérer sur toutes les variables
-    /*virtual void recordForEmpiricalPrior();
-    virtual void buildEmpiricalPriors();*/
-
 
     virtual void recordMH() = 0;
 
@@ -131,5 +130,87 @@ protected:
     State mState;
 
 };
+
+
+class AnnealAwareEstimator
+{
+public:
+    void setSubSteps(int n) { mSubSteps = n; }
+
+    void addSample(qint64 dtNs, bool wasRegen, bool annealingEnabled)
+    {
+        constexpr double alpha = 0.1;
+
+        if (!wasRegen) {
+            mEmaNormal = (mEmaNormal < 0.0) ? (double)dtNs
+                                            : alpha * dtNs + (1.0 - alpha) * mEmaNormal;
+
+            if (annealingEnabled && !mSubStepSeededFromReal)   // 👈 garde-fou
+                mEmaSubStep = mEmaNormal;
+        }
+        else if (mSubSteps > 0) {
+            const double base = (mEmaNormal >= 0.0) ? mEmaNormal : 0.0;
+            const double perSub = std::max(0.0, (dtNs - base)) / mSubSteps;
+
+            if (!mSubStepSeededFromReal) {
+                // première vraie mesure : on remplace l'estimation a priori
+                mEmaSubStep = perSub;
+                mSubStepSeededFromReal = true;
+            } else {
+                mEmaSubStep = alpha * perSub + (1.0 - alpha) * mEmaSubStep;
+            }
+        }
+    }
+
+    qint64 estimateRemainingNs(qint64 t, qint64 N, qint64 R, bool regenApplies) const
+    {
+        if (mEmaNormal < 0.0) return 0;
+
+        const qint64 nRegen  = regenApplies ? countUpcomingRegen(std::max<qint64>(t, 1), N, R) : 0;
+        const qint64 nNormal = N - nRegen;
+
+        const double subCost   = (mEmaSubStep >= 0.0) ? mEmaSubStep : 0.0;
+        const double regenCost = mEmaNormal + mSubSteps * subCost;
+
+        return (qint64)(nNormal * mEmaNormal + nRegen * regenCost);
+    }
+
+private:
+    static qint64 countUpcomingRegen(qint64 t, qint64 N, qint64 R)
+    {
+        if (R <= 0 || N <= 0) return 0;
+        return (t + N - 1) / R - (t - 1) / R;
+    }
+
+    int    mSubSteps  = 0;
+    double mEmaNormal = -1.0;
+    double mEmaSubStep = -1.0;
+    bool   mSubStepSeededFromReal = false;   // 👈 bascule dès la 1ʳᵉ vraie mesure
+};
+
+inline int computeAnnealSubSteps(int max_expo_T, int dwell_steps_T0)
+{
+    int total = 0;
+    for (int e = max_expo_T; e >= 0; --e) {
+        const int dwell = std::max(1,
+                                   (int)std::ceil(dwell_steps_T0 / (1.0 + e)));
+        total += dwell;
+    }
+    return total;
+}
+
+inline qint64 countUpcomingRegen(qint64 t, qint64 N, qint64 R)
+{
+    // multiples de R dans [t, t+N-1]
+    if (R <= 0) return 0;
+    return (t + N - 1) / R - (t - 1) / R;
+}
+
+
+qint64 estimateGlobalRemainingNs(const std::vector<ChainSpecs>& chains,   // ou le type réel de mLoopChains
+                                 int currentChainIndex,
+                                 MCMCLoop::State state,
+                                 const AnnealAwareEstimator& est,
+                                 qint64 R);
 
 #endif

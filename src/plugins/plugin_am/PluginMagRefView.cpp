@@ -62,8 +62,8 @@ PluginMagRefView::PluginMagRefView(QWidget* parent):GraphViewRefAbstract(parent)
     mGraph->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
     mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllTip);
 
-    mGraph->setXAxisMode(GraphView::eAllTicks);
-    mGraph->setYAxisMode(GraphView::eAllTicks);
+    mGraph->setXAxisMode(GraphView::AxisMode::eAllTicks);
+    mGraph->setYAxisMode(GraphView::AxisMode::eAllTicks);
     mGraph->autoAdjustYScale(true);
     mGraph->setTipXLab("t");
     mGraph->setTipYLab("value");

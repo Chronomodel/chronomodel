@@ -180,9 +180,13 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent,
 
     QIntValidator* positiveValidatorRecu = new QIntValidator(this);
     positiveValidatorRecu->setRange(1, std::numeric_limits<int>::max());
+
+    QIntValidator* validatorRplus = new QIntValidator(this);
+    validatorRplus->setRange(0, std::numeric_limits<int>::max());
+
     mAnnealRecurrenceEdit  = new LineEdit(this);
     mAnnealRecurrenceEdit->setFixedSize(mEditW, mButH);
-    mAnnealRecurrenceEdit->setValidator(positiveValidatorRecu);
+    mAnnealRecurrenceEdit->setValidator(validatorRplus);
     mAnnealRecurrenceEdit->setAlignment(Qt::AlignCenter);
 
     mAnnealDwellEdit  = new LineEdit(this);
@@ -254,7 +258,7 @@ MCMCSettings MCMCSettingsDialog::getSettings()
 {
     const QLocale mLoc = QLocale();
     MCMCSettings settings;
-    const int UN = 1;
+    constexpr int UN = 1;
 
     settings.mNumChains          = qMax(UN, mNumProcEdit->text().toInt());
     settings.mIterPerBurn        = qMax(UN, mNumBurnEdit->text().toInt());
@@ -269,8 +273,8 @@ MCMCSettings MCMCSettingsDialog::getSettings()
                                        0.9999);
     settings.mSeeds              = QStringToQListUnsigned(mSeedsEdit->text(), ";");
     settings.mAnnealTemp         = mLoc.toDouble(mAnnealTempEdit->text());
-    settings.mAnnealRecurrence   = qMax(1, mAnnealRecurrenceEdit->text().toInt());
-    settings.mAnnealDwell        = qMax(1, mAnnealDwellEdit->text().toInt());
+    settings.mAnnealRecurrence   = qMax(0, mAnnealRecurrenceEdit->text().toInt());
+    settings.mAnnealDwell        = qMax(UN, mAnnealDwellEdit->text().toInt());
 
     return settings;
 }
@@ -529,8 +533,8 @@ void MCMCSettingsDialog::inputControl()
     }
 
     settings.mAnnealRecurrence = mAnnealRecurrenceEdit->text().toInt(&ok);
-    if (isValided && (!ok || settings.mAnnealRecurrence < 1)) {
-        errorMessage = tr("The annealing recurrence must be at least 1");
+    if (isValided && !ok ) {
+        //errorMessage = tr("The annealing recurrence must be at least 1");
         isValided   = false;
     }
 
@@ -550,13 +554,15 @@ void MCMCSettingsDialog::inputControl()
     QList<int> seedList;
     if (isValided) {
         seedList = QStringToQListInt(mSeedsEdit->text(), ";");
-        for (int seed : seedList) {
-            if (seed <= 0) {
+        // seedList doit être un conteneur indexable (ex. std::vector<int>)
+        for (int i = 0; i < seedList.size(); ++i) {
+            if (seedList[i] <= 0) {
                 errorMessage = tr("Each seed must be an integer, bigger than 0");
-                isValided   = false;
-                break;
+                isValided   = false;        // ou isValidated si le nom doit être corrigé
+                break;                      // on sort de la boucle dès la première erreur
             }
         }
+
     }
 
     if (isValided) {

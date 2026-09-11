@@ -137,11 +137,40 @@ struct c_UUID {
 
 class Generator
 {
+private:
+
+    inline static std::mt19937 sEngine{0};
+    inline static std::uniform_real_distribution<double> sDoubleUniformDistribution{0.0, 1.0};
+    inline static std::normal_distribution<double> sNormalDistribution{0.0, 1.0};
+
+    inline static unsigned int sSeed{0};
+
 public:
-    Generator();
+    Generator() noexcept { sSeed = 0; }
     virtual ~Generator();
-    static unsigned createSeed();
-    static void initGenerator (const unsigned seed);
+
+    static unsigned createSeed()
+    {
+        // Distribution uniforme sur l’intervalle [1, 100000]
+        static std::uniform_int_distribution<unsigned> dist(1, 100000);
+        return dist(Generator::sEngine);   // valeur aléatoire dans la plage demandée
+    }
+
+    static void initGenerator (const unsigned int seed)
+    {
+        sSeed = seed;
+
+        sEngine.seed(seed);
+        sDoubleUniformDistribution.reset();
+        sNormalDistribution.reset();
+
+        xorshift64starSeed = static_cast<std::uint64_t>(seed);
+
+    }
+    static unsigned int seed()
+    {
+        return sSeed;
+    }
 
     static inline double randomUniform(const double min = 0.0 , const double max = 1.0) noexcept
     {
@@ -154,7 +183,8 @@ public:
         return distribution(Generator::sEngine);
     }
 
-    //static double gaussByDoubleExp(const double mean, const double sigma, const double min, const double max) ;
+
+
     static inline double gaussByDoubleExp(const double mean, const double sigma, const double min, const double max)
     {
         // -----------------------------------------------------------------
@@ -269,7 +299,7 @@ public:
     }
 
     // Helper pour les queues (Exponentielle translatée)
-    static inline double sampleTail(double a, double b)
+    static inline double sampleTail_old(double a, double b)
     {
         // Preconditions : a > 0, b > a
         const double z = a * (b - a);               // produit qui apparaît dans exp(-z)
@@ -308,21 +338,21 @@ public:
 
 
     /**
- * @brief Générateur de distribution normale tronquée hautement optimisé.
- * * @details
- * Implémente une stratégie de rejet hybride pour garantir un taux d'acceptation
- * optimal (\f$ \approx 60-100\% \f$) même dans les cas critiques :
- * - **Intervalle étroit :** Rejet sur distribution uniforme (évite le blocage).
- * - **Queues de distribution :** Algorithme de Christian Robert (enveloppe exponentielle) 1995.
- * - **Centre de masse :** Utilisation de la normale standard (Zigghurat).
- * @param mu    Moyenne de la distribution originale.
- * @param sigma Écart-type de la distribution originale.
- * @param low   Borne inférieure de troncature.
- * @param high  Borne supérieure de troncature.
- *
- * * @return double Valeur échantillonnée dans l'intervalle [low, high].
- */
-    static inline double truncatedNormal(const double mu, const double sigma, double low, double high)
+     * @brief Générateur de distribution normale tronquée hautement optimisé.
+     * * @details
+     * Implémente une stratégie de rejet hybride pour garantir un taux d'acceptation
+     * optimal (\f$ \approx 60-100\% \f$) même dans les cas critiques :
+     * - **Intervalle étroit :** Rejet sur distribution uniforme (évite le blocage).
+     * - **Queues de distribution :** Algorithme de Christian Robert (enveloppe exponentielle) 1995.
+     * - **Centre de masse :** Utilisation de la normale standard (Zigghurat).
+     * @param mu    Moyenne de la distribution originale.
+     * @param sigma Écart-type de la distribution originale.
+     * @param low   Borne inférieure de troncature.
+     * @param high  Borne supérieure de troncature.
+     *
+     * * @return double Valeur échantillonnée dans l'intervalle [low, high].
+    */
+    static inline double truncatedNormal_old(const double mu, const double sigma, double low, double high)
     {
         // 1. Normalisation
         const double a = (low - mu) / sigma;
@@ -371,8 +401,114 @@ public:
 #endif
         return mu + x * sigma;
     }
+//--
+    static inline double sampleTail(double a, double b)
+    {
+        // 1️⃣ Taux optimal de Robert (1995)
+        const double lambda = 0.5 * (a + std::sqrt(a * a + 4.0));
+        const double delta = b - a;
+        const double z = lambda * delta;
 
+        // 2️⃣ Calcul ultra-stable de 1 - exp(-lambda * (b - a)) via log1p / expm1
+        double oneMinusExp;
+        if (z > 700.0) {
+            oneMinusExp = 1.0;
+        } else {
+            oneMinusExp = -std::expm1(-z);
+        }
+
+        while (true) {
+            const double u = Generator::randomUniform(); // U(0,1)
+
+            // 3️⃣ Tirage exponentiel tronqué dans [a, b] sans perte de précision
+            // x = a - (1/lambda) * log1p( -u * (1 - exp(-z)) )
+            const double arg = u * oneMinusExp;
+            const double logInner = (arg >= 1.0) ? -700.0 : std::log1p(-arg);
+
+            const double x = a - (1.0 / lambda) * logInner;
+
+            // 4️⃣ Accept-Reject de Robert : g(x) = exp(-0.5 * (x - lambda)^2)
+            const double diff = x - lambda;
+            const double v = Generator::randomUniform();
+
+            // Le ratio d'acceptation de Robert utilise (x - lambda), PAS (x - a)
+            if (std::log(v) <= -0.5 * diff * diff) {
+                return x; // Tirage parfaitement exact sur [a, b]
+            }
+        }
+    }
+
+    static inline double truncatedNormal(const double mu, const double sigma, double low, double high)
+    {
+        // 1. Normalisation
+        const double a = (low - mu) / sigma;
+        const double b = (high - mu) / sigma;
+
+        double x;
+
+        // --- CAS 1 : Queues excentrées à droite (a > 1.5) ---
+        // Traite le cas excentré en premier, QUEL QUE SOIT (b - a)
+        if (a > 1.5) {
+            x = sampleTail(a, b);
+        }
+        // --- CAS 2 : Queues excentrées à gauche (b < -1.5) ---
+        else if (b < -1.5) {
+            x = -sampleTail(-b, -a);
+        }
+        // --- CAS 3 : Intervalle très étroit dans la cloche centrale (|a| <= 1.5, |b| <= 1.5) ---
+        // Utilisation d'une proposition uniforme sécurisée pour éviter les boucles du rejet
+        else if ((b - a) < 0.1) {
+            const double mode = (a > 0.0) ? a : ((b < 0.0) ? b : 0.0);
+            const double log_max_dens = -0.5 * mode * mode;
+
+            while (true) {
+                x = a + (b - a) * Generator::randomUniform();
+                const double u = Generator::randomUniform();
+                if (std::log(u) <= (-0.5 * x * x - log_max_dens)) {
+                    break;
+                }
+            }
+        }
+        // --- CAS 4 : Centre de la cloche (Rejet simple direct) ---
+        // Taux d'acceptation très élevé (> 20%) sur [-1.5, 1.5]
+        else {
+            do {
+                x = Generator::normalDistribution();
+            } while (x < a || x > b);
+        }
+
+        const double res = mu + x * sigma;
+
+#ifdef DEBUG
+        if (res < low || res > high) {
+            std::cout << "[truncatedNormal] 🔄 "
+                      << " low = " << low << " high = " << high
+                      << ", res = " << res << " ❌ OUT OF BOUNDS"
+                      << std::endl;
+        }
+#endif
+
+        return res;
+    }
+
+//--
     static inline double gaussByBoxMuller(const double mean, const double sigma);
+
+    /**
+     * @brief  Uniformly distributed random numbers with Box-Muller transform see: https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform
+     *
+     *  \f$ U_1 \in [0;1]\f$ and \f$ U_2 \in[0;1] \f$
+     *
+     *  \f$ Z_0=\sqrt{-2 \ln{U_1}} * cos(2  \Pi * U_2) \f$
+    */
+    // Obsolete
+    static inline double boxMuller()
+    {
+        const double U1 = randomUniform();
+        const double U2 = randomUniform();
+        return sqrt(-2. * log(U1)) * cos(2. * M_PI * U2);
+    }
+
     //static double shrinkage (const double variance, const double shrinkage); // obsolete; à controler
 
     static double xorshift64star(void);
@@ -385,44 +521,77 @@ public:
 
     static c_UUID UUID;
 
-/**
- * @brief Génère une réalisation d'une loi de type Lomax (Pareto II) pour un paramètre de shrinkage.
+    /**
+ * @brief Draws a random variate from the Uniform Shrinkage distribution,
+ *        truncated to the interval [minV, maxV].
  *
- * Cette fonction implémente une inversion de la fonction de survie de la distribution Lomax
- * de paramètre d'échelle `shrinkage` (cas particulier α = 1).
- *
- * Elle génère une variable aléatoire selon :
+ * @details The Uniform Shrinkage distribution (Christen, 1994; Lanos & Philippe, 2015)
+ * has density
  * \f[
- * X = s \frac{1 - U}{U}, \quad U \sim \mathcal{U}(0,1)
+ *      p(x) = \frac{a}{(x+a)^2}, \qquad x \ge 0,
  * \f]
+ * where \f$a\f$ = @p shrinkage plays the role of the scale parameter \f$s_0^2\f$
+ * used as the prior on individual error variances \f$\sigma_i^2\f$ in the Event
+ * model (see Lanos & Philippe, "Event model: a robust Bayesian tool for
+ * chronological modeling", eq. (4)).
  *
- * ce qui est équivalent à une distribution de densité :
+ * Sampling is performed by exact inversion of the (truncated) CDF. Using the
+ * bijective change of variable
  * \f[
- * p(x) = \frac{s}{(x + s)^2}, \quad x \ge 0
+ *      u = \frac{a}{x+a} \quad\Longleftrightarrow\quad x = a\,\frac{1-u}{u},
  * \f]
+ * the bounds @p minV and @p maxV map to
+ * \f[
+ *      u_{max} = \frac{a}{minV + a}, \qquad u_{min} = \frac{a}{maxV + a},
+ * \f]
+ * and drawing \f$u \sim \mathcal U(u_{min}, u_{max})\f$ then setting
+ * \f$x = a(1-u)/u\f$ yields exactly the Uniform Shrinkage density renormalized
+ * on \f$[minV, maxV]\f$ — i.e. a true truncated sample, with no boundary atom
+ * (no clamping is needed downstream).
  *
- * @param shrinkage Paramètre d'échelle de la distribution (s > 0).
+ * @param shrinkage Scale parameter \f$a = s_0^2\f$ of the Uniform Shrinkage
+ *                  distribution. Must be strictly positive.
+ * @param minV      Lower bound of the truncation interval. Must satisfy
+ *                  \f$0 \le minV < maxV\f$.
+ * @param maxV      Upper bound of the truncation interval. Must satisfy
+ *                  \f$minV < maxV\f$.
  *
- * @return Une réalisation aléatoire suivant une loi Lomax(α = 1, scale = shrinkage).
+ * @return A random variate \f$x \in [minV, maxV]\f$ distributed according to
+ *         the Uniform Shrinkage density truncated to that interval.
  *
- * @note Cette paramétrisation utilise la fonction de survie pour l'inversion,
- * ce qui améliore la stabilité numérique pour les queues lourdes.
+ * @note This function is noexcept: it performs no validation of its arguments.
+ *       The caller is responsible for ensuring @p shrinkage > 0 and
+ *       0 <= minV < maxV.
  *
- * @warning La distribution a une queue lourde (loi en 1/x²), ce qui implique
- * des valeurs extrêmes rares mais potentiellement très grandes.
+ * @see Christen, J. A. (1994). Summarizing a set of radiocarbon determinations:
+ *      a robust approach. Applied Statistics, 43(3), 489-503.
+ * @see Lanos, P. and Philippe, A. Event model: a robust Bayesian tool for
+ *      chronological modeling, eq. (4).
  */
-    static inline double shrinkageUniforme(const double shrinkage)
+    static inline double shrinkageUniforme(const double shrinkage,
+                                           const double minV = 1e-12,
+                                           const double maxV = 1e10) noexcept
     {
-        const double u = Generator::randomUniform();
-        const double x = shrinkage * ((1 - u) / u);
-        return x;
+        // u_min <-> X = maxV ;  u_max <-> X = minV
+        const double u_min = shrinkage / (maxV + shrinkage);
+        const double u_max = shrinkage / (minV + shrinkage);
+        const double u     = Generator::randomUniform(u_min, u_max);
+        return shrinkage * ((1.0 - u) / u);
     }
+/*
+    static inline double shrinkageUniform(const double s02)
+    {
+        const double u = Generator::randomUniform(0, 1);
+        return (s02 * (1. - u) / u);
+    }
+ */
 
     static inline double gammaDistribution(const double alpha, const double beta) noexcept
     {
         std::gamma_distribution<double>  gamma(alpha, beta);
         return gamma(Generator::sEngine);
     }
+
     static inline double exponentialeDistribution(const double meanexp)
     {
         std::exponential_distribution<double> exponential(meanexp);
@@ -458,12 +627,6 @@ public:
         return mu + sigma * sNormalDistribution(Generator::sEngine);
     }
 
-private:
-    
-    static double boxMuller() ;
-    static std::mt19937 sEngine;
-    static std::uniform_real_distribution<double> sDoubleUniformDistribution;
-    static std::normal_distribution<double> sNormalDistribution;
 
     //https://en.wikipedia.org/wiki/Xorshift
 

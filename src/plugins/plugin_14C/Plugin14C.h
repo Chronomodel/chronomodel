@@ -69,8 +69,10 @@ public:
     bool doesCalibration() const override;
     bool wiggleAllowed() const override;
 
-    virtual MHVariable::SamplerProposal getDataMethod() const override;
-    virtual QList<MHVariable::SamplerProposal> allowedDataMethods() const override;
+#ifndef FIXEDPRIOR
+    virtual SamplerProposal getDataMethod() const override;
+    virtual QList<SamplerProposal> allowedDataMethods() const override;
+#endif
 
     QStringList csvColumns() const override;
     qsizetype csvMinColumns() const override;

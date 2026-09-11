@@ -70,9 +70,9 @@ GraphView::GraphView(QWidget* parent):
     mYAxisTicks(true),
     mYAxisSubTicks(true),
     mYAxisValues(true),
-    mXAxisMode(eAllTicks),
-    mYAxisMode(eAllTicks),
-    mOverflowArrowMode(eNone),
+    mXAxisMode(AxisMode::eAllTicks),
+    mYAxisMode(AxisMode::eAllTicks),
+    mOverflowArrowMode(OverflowDataArrowMode::eNone),
     mUpdateTimer(new QTimer(this)),
     mAutoAdjustYScale(false),
     mShowInfos(false),
@@ -358,7 +358,7 @@ void GraphView::changeXScaleDivision (const Scale& sc)
     changeXScaleDivision(sc.mark, sc.tip);
 }
 
-void GraphView::changeXScaleDivision (const double& major, const int& minor)
+void GraphView::changeXScaleDivision (double major, int minor)
 {
     setXScaleDivision(major, minor);
     repaintGraph();
@@ -378,21 +378,21 @@ void GraphView::setYAxisMode(AxisMode mode)
        // mAxisToolY.mMinMaxOnly = (mYAxisMode == eMinMax);
 
         switch (mYAxisMode) {
-        case eMinMax:
+        case AxisMode::eMinMax:
             showYAxisValues(false);
             showYAxisTicks(false);
             showYAxisSubTicks(false);
             mYAxisArrow = false;
             mAxisToolY.mShowText = true;
             break;
-        case eMinMaxHidden:
+        case AxisMode::eMinMaxHidden:
             showYAxisValues(false);
             showYAxisTicks(false);
             showYAxisSubTicks(false);
             mYAxisArrow = false;
             mAxisToolY.mShowText = false;
             break;
-        case eHidden:
+        case AxisMode::eHidden:
             showYAxisValues(false);
             showYAxisTicks(false);
             showYAxisSubTicks(false);
@@ -946,13 +946,13 @@ void GraphView::paintToDevice(QPaintDevice* device)
     /* mOverflowArrowMode, draw a arrow on the rigth or on the left
      * if the data are over the window (current min, current max)  */
 
-     if (mOverflowArrowMode != eNone) {
+     if (mOverflowArrowMode != OverflowDataArrowMode::eNone) {
          qreal arrowSize (7.);
          const qreal yo (mGraphHeight / 2.0) ;
          const QColor gradColDark(150, 150, 150);
          const QColor gradColLigth(190, 190, 190);
 
-         if (mOverflowArrowMode == eBothOverflow || mOverflowArrowMode == eUnderMin) {
+         if (mOverflowArrowMode == OverflowDataArrowMode::eBothOverflow || mOverflowArrowMode == OverflowDataArrowMode::eUnderMin) {
 
              type_data maxData = - std::numeric_limits<type_data>::max();
              for (auto& curve : mCurves)
@@ -981,7 +981,7 @@ void GraphView::paintToDevice(QPaintDevice* device)
              }
 
          }
-         if (mOverflowArrowMode == eBothOverflow || mOverflowArrowMode == eOverMax) {
+         if (mOverflowArrowMode == OverflowDataArrowMode::eBothOverflow || mOverflowArrowMode == OverflowDataArrowMode::eOverMax) {
              type_data minData = std::numeric_limits<type_data>::max();;
 
              for (auto& curve : mCurves) {
@@ -1481,7 +1481,7 @@ void GraphView::drawCurves(QPainter& painter)
 
                     const qreal rayPlot = 1.5*penWidth;
 
-                    QColor bg (getBackgroundColor());
+                    QColor bg (backgroundColor());
                     bg.setAlpha(100);
                     const QRectF border_h (xMinPlot - 1.0, yPlot - (penWidth + 1.0) / 2.0, xMaxPlot - xMinPlot + 1.0, penWidth + 1.0 );
                     const QRectF border_v (xPlot -(penWidth + 1.0) / 2.0, getYForValue(ymin, true) - (1+penWidth)/2., penWidth + 1.0, (getYForValue(ymax, true) - getYForValue(ymin, true)) + penWidth + 2.0 );
@@ -2815,15 +2815,6 @@ bool GraphView::saveAsSVG(const QString& fileName, const QString& graphTitle, co
     }
 
 }
-QString GraphView::getInfo(char sep)
-{
-    return mInfos.join(sep);// ( isShow() ? mInfos.join(sep) : "");
-}
-
-bool GraphView::isShow()
-{
-    return mShowInfos;
-}
 
 
 #pragma mark GraphTitle
@@ -2861,7 +2852,7 @@ GraphTitle::GraphTitle(QWidget *parent):
  * @param title
  * @param parent
  */
-GraphTitle:: GraphTitle(QString title, QWidget* parent):
+GraphTitle::GraphTitle(const QString& title, QWidget* parent):
     mTitle(title),
     mCommentTitle(""),
     mSubTitle(""),
@@ -2885,7 +2876,7 @@ GraphTitle:: GraphTitle(QString title, QWidget* parent):
     mSubTitleHeight = QFontMetrics(itaFont).height();
 }
 
-GraphTitle::GraphTitle(QString title, QColor titleBarColor, QWidget* parent):
+GraphTitle::GraphTitle(const QString& title, const QColor& titleBarColor, QWidget* parent):
     mTitle(title),
     mCommentTitle(""),
     mSubTitle(""),
@@ -2909,7 +2900,7 @@ GraphTitle::GraphTitle(QString title, QColor titleBarColor, QWidget* parent):
     mSubTitleHeight = QFontMetrics(itaFont).height();
 }
 
-GraphTitle::GraphTitle(QString title, QString subTitle, QWidget* parent):
+GraphTitle::GraphTitle(const QString& title, const QString& subTitle, QWidget* parent):
     mTitle(title),
     mCommentTitle(""),
     mSubTitle(subTitle),
@@ -2934,7 +2925,7 @@ GraphTitle::GraphTitle(QString title, QString subTitle, QWidget* parent):
 
 }
 
-GraphTitle::GraphTitle(QString title, QString subTitle, QColor backGround, QWidget* parent):
+GraphTitle::GraphTitle(const QString& title, const QString& subTitle, const QColor& backGround, QWidget* parent):
     mTitle(title),
     mSubTitle(subTitle),
     mBackgroundColor(backGround),
@@ -2955,7 +2946,7 @@ GraphTitle::GraphTitle(QString title, QString subTitle, QColor backGround, QWidg
     mSubTitleHeight = QFontMetrics(itaFont).height();
 }
 
-GraphTitle::GraphTitle(QString title, QString commentTitle, QString subTitle, QWidget* parent):
+GraphTitle::GraphTitle(const QString& title, const QString& commentTitle, const QString& subTitle, QWidget* parent):
     mTitle(title),
     mCommentTitle(commentTitle),
     mSubTitle(subTitle),
@@ -2978,12 +2969,7 @@ GraphTitle::GraphTitle(QString title, QString commentTitle, QString subTitle, QW
 }
 
 
-GraphTitle::~GraphTitle()
-{
-
-}
-
-qreal GraphTitle::height()
+qreal GraphTitle::height() const
 {
     if (!mTitle.text().isEmpty()) {
         if (!mSubTitle.text().isEmpty())

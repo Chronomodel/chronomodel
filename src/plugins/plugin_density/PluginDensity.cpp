@@ -103,20 +103,21 @@ bool PluginDensity::wiggleAllowed() const
 {
     return true;
 }
-
-MHVariable::SamplerProposal PluginDensity::getDataMethod() const
+#ifndef FIXEDPRIOR
+SamplerProposal PluginDensity::getDataMethod() const
 {
-    return MHVariable::eInversion;
+    return SamplerProposal::eLikelihood;
 }
 
-QList<MHVariable::SamplerProposal> PluginDensity::allowedDataMethods() const
+QList<SamplerProposal> PluginDensity::allowedDataMethods() const
 {
-    QList<MHVariable::SamplerProposal> methods;
-    methods.append(MHVariable::eDatePrior);
-    methods.append(MHVariable::eInversion);
-    methods.append(MHVariable::eMHAdaptGauss);
+    QList<SamplerProposal> methods;
+    methods.append(SamplerProposal::eDatePrior);
+    methods.append(SamplerProposal::eLikelihood);
+    methods.append(SamplerProposal::eRWAdaptGauss);
     return methods;
 }
+#endif
 
 QString PluginDensity::getDateDesc(const Date* date) const
 {

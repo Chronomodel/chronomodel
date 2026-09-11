@@ -52,9 +52,9 @@ Bound::Bound():
     setName(std::string("no Bound Name"));
     mType = eBound;
     mPointType = ePoint;
-    mTheta.mSamplerProposal = MHVariable::eFixe;
+    mTheta.mSamplerProposal = SamplerProposal::eFixe;
     mTheta.mSigmaMH = 1.;
-    mS02Theta.mSamplerProposal = MHVariable::eFixe;
+    mS02Theta.mSamplerProposal = SamplerProposal::eFixe;
 }
 
 Bound::Bound(const Bound& origin):
@@ -74,7 +74,7 @@ Bound::Bound(const QJsonObject& json):
                            json[STATE_COLOR_GREEN].toInt(),
                            json[STATE_COLOR_BLUE].toInt());
    
-    mTheta.mSamplerProposal= MHVariable::eFixe;
+    mTheta.mSamplerProposal= SamplerProposal::eFixe;
     mItemX = json[STATE_ITEM_X].toDouble();
     mItemY = json[STATE_ITEM_Y].toDouble();
     mIsSelected = json[STATE_IS_SELECTED].toBool();
@@ -100,9 +100,9 @@ Bound::Bound(const QJsonObject& json):
 
     mVg.mSupport = Support::eRp;
     mVg.mFormat = DateUtils::eNumeric;
-    mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    mVg.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
 
-    mS02Theta.mSamplerProposal = MHVariable::eFixe;
+    mS02Theta.mSamplerProposal = SamplerProposal::eFixe;
 }
 
 /** Copy assignment operator */
@@ -136,7 +136,7 @@ const Bound Bound::fromJson(const QJsonObject &json)
                     json[STATE_COLOR_GREEN].toInt(),
                     json[STATE_COLOR_BLUE].toInt());
 
-    bound.mTheta.mSamplerProposal= MHVariable::eFixe;
+    bound.mTheta.mSamplerProposal= SamplerProposal::eFixe;
     bound.mItemX = json[STATE_ITEM_X].toDouble();
     bound.mItemY = json[STATE_ITEM_Y].toDouble();
     bound.mIsSelected = json[STATE_IS_SELECTED].toBool();
@@ -162,9 +162,9 @@ const Bound Bound::fromJson(const QJsonObject &json)
 
     bound.mVg.mSupport = Support::eRp;
     bound.mVg.mFormat = DateUtils::eNumeric;
-    bound.mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    bound.mVg.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
 
-    bound.mS02Theta.mSamplerProposal = MHVariable::eFixe;
+    bound.mS02Theta.mSamplerProposal = SamplerProposal::eFixe;
     return bound;
 }
 
@@ -181,7 +181,7 @@ QJsonObject Bound::toJson() const
     json[STATE_COLOR_GREEN] = mColor.green();
     json[STATE_COLOR_BLUE] = mColor.blue();
 
-    json[STATE_EVENT_SAMPLER] = MHVariable::eFixe;
+    json[STATE_EVENT_SAMPLER] = static_cast<int>(SamplerProposal::eFixe);
     json[STATE_ITEM_X] = mItemX;
     json[STATE_ITEM_Y] = mItemY;
     json[STATE_IS_SELECTED] = mIsSelected;

@@ -1096,9 +1096,9 @@ BandedMatrix operator*(long double scalar, const BandedMatrix& matrix);
      explicit SparseQuadraticFormSolver(long shift = 1)
          : solver_(std::make_unique<Eigen::SimplicialLDLT<SparseMatrixD>>()) // Allocation
          , shift_(shift)
-#ifdef DEBUG
+
          , is_factorized_(false)
-#endif
+
      {}
 
      // Le solveur n’est pas copiable
@@ -1109,15 +1109,15 @@ BandedMatrix operator*(long double scalar, const BandedMatrix& matrix);
      SparseQuadraticFormSolver(SparseQuadraticFormSolver&& other) noexcept
          : solver_(std::move(other.solver_))
          , shift_(other.shift_)
-#ifdef DEBUG
+
          , is_factorized_(other.is_factorized_)
-#endif
+
          , R_template_(std::move(other.R_template_))
      {
          other.shift_ = 1;
-#ifdef DEBUG
+
          other.is_factorized_ = false;
-#endif
+
      }
 
      // Opérateur de déplacement (Move assignment)
@@ -1127,11 +1127,12 @@ BandedMatrix operator*(long double scalar, const BandedMatrix& matrix);
              solver_          = std::move(other.solver_);
              shift_           = other.shift_;
              R_template_      = std::move(other.R_template_);
-#ifdef DEBUG
-             is_factorized_   = other.is_factorized_;
+             is_factorized_   = other.is_factorized_;   // <-- sortir du #ifdef DEBUG
+
+             // Remettre l'objet source dans un état utilisable, pas seulement "propre en apparence"
+             other.solver_        = std::make_unique<Eigen::SimplicialLDLT<SparseMatrixD>>();
              other.is_factorized_ = false;
-#endif
-             other.shift_     = 1; // Valeur par défaut logique
+             other.shift_         = 1; // Valeur par défaut logique
          }
          return *this;
      }
@@ -1146,10 +1147,10 @@ BandedMatrix operator*(long double scalar, const BandedMatrix& matrix);
      template <typename Derived>
      auto solve(const Eigen::MatrixBase<Derived>& rhs) const
      {
-#ifdef DEBUG
+
          // solver_ est votre instance ou unique_ptr de SimplicialLDLT
          assert(is_factorized_ && "Le solveur doit être factorisé avant l'appel à solve()");
-#endif
+
          return solver_->solve(rhs);
      }
      void setShift(long shift) { shift_ = shift; }
@@ -1186,9 +1187,9 @@ BandedMatrix operator*(long double scalar, const BandedMatrix& matrix);
      // -----------------------------------------------------------------
      std::unique_ptr<Eigen::SimplicialLDLT<SparseMatrixD>> solver_; // Enveloppe pour permettre le move
      long                                                   shift_;
-#ifdef DEBUG
+
      bool                                 is_factorized_;
-#endif
+
      SparseMatrixD                        R_template_;
  };
 

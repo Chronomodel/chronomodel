@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -64,7 +64,7 @@ long double PluginUniform::getLikelihood(const double t, const QJsonObject &data
     const double min = data.value(DATE_UNIFORM_MIN_STR).toDouble();
     const double max = data.value(DATE_UNIFORM_MAX_STR).toDouble();
 
-    return (t >= min && t <= max) ? static_cast<long double>(1. / (max-min)) : 0.l;
+    return (t >= min && t <= max) ? static_cast<long double>(1.0 / (max-min)) : 0.0l;
 }
 
 QString PluginUniform::getName() const
@@ -86,21 +86,21 @@ bool PluginUniform::wiggleAllowed() const
 {
     return true;
 }
-
-MHVariable::SamplerProposal PluginUniform::getDataMethod() const
+#ifndef FIXEDPRIOR
+SamplerProposal PluginUniform::getDataMethod() const
 {
-    return MHVariable::eInversion;
+    return SamplerProposal::eLikelihood;
 }
 
-QList<MHVariable::SamplerProposal> PluginUniform::allowedDataMethods() const
+QList<SamplerProposal> PluginUniform::allowedDataMethods() const
 {
-    QList<MHVariable::SamplerProposal> methods;
-    methods.append(MHVariable::eDatePrior);
-    methods.append(MHVariable::eInversion); // since version v3.2.4
-    methods.append(MHVariable::eMHAdaptGauss);
+    QList<SamplerProposal> methods;
+    methods.append(SamplerProposal::eDatePrior);
+    methods.append(SamplerProposal::eLikelihood); // since version v3.2.4
+    methods.append(SamplerProposal::eRWAdaptGauss);
     return methods;
 }
-
+#endif
 QStringList PluginUniform::csvColumns() const
 {
     QStringList cols;

@@ -94,17 +94,19 @@ Model::Model(const QJsonObject& json):
     mNumberOfPhases(0),
     mNumberOfEvents(0),
     mNumberOfDates(0),
-    mThreshold(-1.),
+    mThreshold(-1.0),
     mBandwidthType(BandwidthType::eBWSJ),
-    mBandwidth(1),
     mFFTLength(1024),
-    mHActivity(1)
+    mHActivity(1.0)
 {
     // same code as fromJSON
     if (json.contains(STATE_SETTINGS)) {
         const QJsonObject settings = json.value(STATE_SETTINGS).toObject();
         mSettings = StudyPeriodSettings::fromJson(settings);
     }
+    auto tmin = mSettings.getTminFormated();
+    auto tmax = mSettings.getTmaxFormated();
+    mBandwidth = (tmax - tmin) / 1000.0;
 
     if (json.contains(STATE_MCMC)) {
         const QJsonObject mcmc = json.value(STATE_MCMC).toObject();
@@ -419,12 +421,9 @@ void Model::fromJson(const QJsonObject& json)
                 continue;
             QJsonObject JSONevent = it->toObject();
 
-       // for (const auto&& ev : events) {
-         //   const QJsonObject JSONevent = ev.toObject();
-
             if (JSONevent.value(STATE_EVENT_TYPE).toInt() == Event::eDefault) {
                 try {
-                    //Event* ev = new Event(JSONevent);
+
                     mEvents.push_back(std::make_shared<Event>(JSONevent));
                     mNumberOfDates += JSONevent.value(STATE_EVENT_DATES).toArray().size();
 
@@ -438,9 +437,8 @@ void Model::fromJson(const QJsonObject& json)
                     message.exec();
                 }
             } else {
-                //Bound* ek = new Bound(JSONevent);
                 mEvents.push_back(std::make_shared<Bound>(JSONevent));
-                //ek = nullptr;
+
             }
         }
     }
@@ -589,6 +587,20 @@ QString Model::getResultsLog() const
 void Model::generateResultsLog()
 {
     QString log;
+    auto totalTime = mChains[0].mAcquisitionElapsedTime
+                     + mChains[0].mAdaptElapsedTime
+                     + mChains[0].burnElapsedTime
+                     + mChains[0].mInitElapsedTime;
+
+    for (size_t j = 1 ; j < mChains.size(); j++) {
+        totalTime += mChains[j].mAcquisitionElapsedTime
+                     + mChains[j].mAdaptElapsedTime
+                     + mChains[j].burnElapsedTime
+                     + mChains[j].mInitElapsedTime;
+    }
+    log += line( QObject::tr("Total Elapsed time %1").arg(DHMS(totalTime)));
+    log += "<hr>";
+
     int i = 1;
     for (const auto& chain : mChains) {
         log += line( QObject::tr("Elapsed acquisition time %1 for chain %2").arg(DHMS(chain.mAcquisitionElapsedTime), QString::number(i)));
@@ -649,7 +661,7 @@ QList<QStringList> Model::getStats(const QLocale locale, const int precision, co
     // Events
     rows << QStringList();
     for (std::shared_ptr<Event>& event : mEvents) {
-        if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+        if (event->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
              QStringList l = event->mTheta.getResultsList(locale, precision);
              maxHpd = std::max(maxHpd, ((int)l.size() - 9) / 3);
              l.prepend(event->getQStringName());
@@ -666,7 +678,7 @@ QList<QStringList> Model::getStats(const QLocale locale, const int precision, co
     // Dates
     rows << QStringList();
     for (std::shared_ptr<Event>& event : mEvents) {
-        if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+        if (event->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
             for (size_t j = 0; j < event->mDates.size(); ++j) {
                 const Date& date = event->mDates[j];
 
@@ -1079,11 +1091,11 @@ void Model::generateCorrelations(const std::vector<ChainSpecs> &chains)
 
     for (const auto& event : mEvents ) {
 
-        if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+        if (event->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
             event->mTheta.generateCorrelations(chains);
         }
 
-        if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe) {
+        if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe) {
             event->mS02Theta.generateCorrelations(chains);
         }
 
@@ -1181,20 +1193,7 @@ void Model::setThresholdToAllModel(const double threshold)
     }
 }
 
-double Model::getThreshold() const
-{
-    return mThreshold;
-}
 
-double Model::getBandwidth() const
-{
-    return mBandwidth;
-}
-
-int Model::getFFTLength() const
-{
-    return mFFTLength;
-}
 
 #pragma mark Loop
 /*
@@ -1202,7 +1201,7 @@ int Model::getFFTLength() const
 {
     for (const auto& event : mEvents) {
        //--------------------- Memo Events -----------------------------------------
-       if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+       if (event->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
             event->mTheta.memo_accepted_state(i_chain);
 
             event->mS02Theta.memo_accepted_state(i_chain);
@@ -1218,7 +1217,47 @@ int Model::getFFTLength() const
     }
 }
 */
-void Model::initVariablesForChain()
+
+/**
+ * @brief Initialise les structures de stockage des paramètres pour chaque chaîne.
+ *
+ * Cette fonction prépare les conteneurs internes des différents objets
+ * (`Event`, `Date`, …) afin qu’ils puissent accueillir les statistiques
+ * d’acceptation de chaque chaîne MCMC.
+ *
+ * - **Taille du tampon d’acceptation** : le même `acceptBufferLen` est utilisé
+ *   pour toutes les chaînes et correspond à `mChains[0].mIterPerBatch`.
+ * - **Redimensionnement** : les vecteurs `mAcceptedStateCountByChain` sont
+ *   redimensionnés à la taille actuelle de `mChains` pour chaque
+ *   paramètre (`Theta`, `S02Theta`, `Ti`, `SigmaTi`, `Wiggle`).
+ * - **Longueur du tampon** : la longueur du tampon d’acceptation
+ *   (`mLastMHAcceptsLength`) est fixée à `acceptBufferLen` pour chaque
+ *   paramètre afin d’éviter des réallocations pendant les itérations.
+ *
+ * @note
+ *   Les appels à `clear()` et `reserve()` sont commentés car ils ne sont
+ *   pas nécessaires : le redimensionnement ci‑dessus suffit à garantir que
+ *   chaque chaîne possède son propre espace de comptage.
+ *
+ * @warning
+ *   La fonction suppose que `mChains` n’est pas vide ; sinon l’accès
+ *   `mChains[0]` provoquerait un comportement indéfini.
+ *
+ * @param[in,out] this  Instance du modèle (`Model`).
+ *                     Les membres modifiés sont :
+ *                     - `mEvents` (et leurs sous‑objets `mTheta`,
+ *                       `mS02Theta`, `mDates`…)
+ *                     - `mChains` (seulement la taille du tampon d’acceptation
+ *                       est lue, aucune modification directe)
+ *
+ * @return Aucun (fonction `void`).
+ *
+ * @see Model::setParametersForChain() – implémentation détaillée.
+ * @see Chain::mIterPerBatch – nombre d’itérations par lot, utilisé pour le
+ *      calcul de `acceptBufferLen`.
+ *
+ */
+void Model::setParametersForChain()
 {
     // Today we have the same acceptBufferLen for every chain
     const int acceptBufferLen =  mChains[0].mIterPerBatch;
@@ -1365,12 +1404,17 @@ void Model::generatePosteriorDensities(const std::vector<ChainSpecs> &chains, in
         event->mTheta.generateFormatedKDE(chains, fftLen, tmin, tmax);
 
         event->mS02Theta.setBandwidth(bwt, bandwidth);
-        event->mS02Theta.generateFormatedKDE(chains, fftLen, tmin, tmax);
+        const double S02Min = event->mS02Theta.mResults.traceAnalysis.min;
+        const double S02Max = event->mS02Theta.mResults.traceAnalysis.max;
+        event->mS02Theta.generateFormatedKDE(chains, fftLen, S02Min, S02Max);
 
        if (event->type() != Event::eBound) {
             for (auto&& d : event->mDates) {
                d.setBandwidth(bwt, bandwidth);
-               d.generateFormatedKDE(chains, fftLen, tmin, tmax);
+                const double TiMin = d.mTi.mResults.traceAnalysis.min;
+                const double TiMax = d.mTi.mResults.traceAnalysis.max;
+
+               d.generateFormatedKDE(chains, fftLen, TiMin, TiMax);
             }
        }
 
@@ -1399,10 +1443,10 @@ void Model::generateNumericalResults(const std::vector<ChainSpecs> &chains)
     std::thread thEvents ([this] (QList<ChainSpecs> chains)
     {
         for (const auto& event : mEvents) {
-            if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+            if (event->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
                 event->mTheta.generateNumericalResults(chains);
 
-                if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+                if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe)
                     event->mS02Theta.generateNumericalResults(chains);
 
                 for (auto&& date : event->mDates) {
@@ -1428,10 +1472,10 @@ void Model::generateNumericalResults(const std::vector<ChainSpecs> &chains)
 #else
 
     std::ranges::for_each( mEvents, [chains](std::shared_ptr<Event> event) {
-         if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+         if (event->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
             event->mTheta.generateNumericalResults(chains);
 
-            if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+            if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe)
                 event->mS02Theta.generateNumericalResults(chains);
 
             for (auto&& date : event->mDates) {
@@ -1468,10 +1512,10 @@ void Model::generateDensityNumericalResults(const std::vector<ChainSpecs> &chain
 #endif
 
     std::ranges::for_each( mEvents, [chains](std::shared_ptr<Event> event) {
-        if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+        if (event->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
             event->mTheta.generateDensityNumericalResults(chains);
 
-            if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+            if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe)
                 event->mS02Theta.generateDensityNumericalResults(chains);
 
             for (auto&& date : event->mDates) {
@@ -1505,10 +1549,10 @@ void Model::generateTraceNumericalResults(const std::vector<ChainSpecs> &chains)
 #endif
 
     std::ranges::for_each( mEvents, [chains](std::shared_ptr<Event> event) {
-        if (event->mTheta.mSamplerProposal != MHVariable::eFixe) {
+        if (event->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
             event->mTheta.generateTraceNumericalResults(chains);
 
-            if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+            if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe)
                 event->mS02Theta.generateTraceNumericalResults(chains);
 
             for (auto&& date : event->mDates) {
@@ -1567,10 +1611,10 @@ void Model::generateCredibility(const double thresh)
 
 
     for (const auto& ev : mEvents) {
-        if (ev->type() != Event::eBound)//(ev->mTheta.mSamplerProposal != MHVariable::eFixe)
+        if (ev->type() != Event::eBound)//(ev->mTheta.mSamplerProposal != SamplerProposal::eFixe)
             ev->mTheta.generateCredibility(thresh);
 
-        if (ev->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+        if (ev->mS02Theta.mSamplerProposal != SamplerProposal::eFixe)
             ev->mS02Theta.generateCredibility(thresh);
 
         if (ev->type() != Event::eBound) {
@@ -1625,9 +1669,9 @@ void Model::generateHPD(const double thresh)
 #endif
 
     /*for (const auto& event : mEvents) {
-        if (event->mTheta.mSamplerProposal != MHVariable::eFixe && event->type() != Event::eBound) {
+        if (event->mTheta.mSamplerProposal != SamplerProposal::eFixe && event->type() != Event::eBound) {
                 event->mTheta.generateHPD(thresh);
-            if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+            if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe)
                 event->mS02Theta.generateHPD(thresh);
 
             for (auto&& date : event->mDates) {
@@ -1640,11 +1684,11 @@ void Model::generateHPD(const double thresh)
 
     for (const auto& event : mEvents
                                  | std::views::filter([](const auto& ev) {
-                                       return ev->mTheta.mSamplerProposal != MHVariable::eFixe
+                                       return ev->mTheta.mSamplerProposal != SamplerProposal::eFixe
                                               && ev->type() != Event::eBound;
                                    })) {
         event->mTheta.generateHPD(thresh);
-        if (event->mS02Theta.mSamplerProposal != MHVariable::eFixe)
+        if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe)
             event->mS02Theta.generateHPD(thresh);
         for (auto&& date : event->mDates) {
             date.mTi.generateHPD(thresh);
@@ -1689,7 +1733,7 @@ void Model::generateTempo(const size_t gridLength)
         const int nRealyAccepted = std::accumulate(mChains.begin(), mChains.end(), 0, [](double sum, ChainSpecs chain){return  sum + chain.mIterDisplay;});
 
         for (const auto& ev : phase->mEvents) {
-            if (ev->mTheta.mSamplerProposal != MHVariable::eFixe) {
+            if (ev->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
 
                 const auto & rawtrace = *ev->mTheta.mAllAcquiredTrace;
                 concaAllTrace.resize(concaAllTrace.size() + rawtrace.size());
@@ -2248,7 +2292,7 @@ bool Model::loadFromStream_v323(QDataStream *in)
 
     for (std::shared_ptr<Event> &e : mEvents) {
         *in >> e->mTheta;
-        e->mS02Theta.mSamplerProposal = MHVariable::eFixe;
+        e->mS02Theta.mSamplerProposal = SamplerProposal::eFixe;
         *in >> e->mS02Theta; // since 2023-06-01 v3.2.3
     }
     // -----------------------------------------------------
@@ -2906,26 +2950,6 @@ bool Model::hasSelectedPhases()
     return std::any_of(mPhases.begin(), mPhases.end(), [](const std::shared_ptr<Phase> p){return p->mIsSelected;});
 }
 
-t_reduceTime Model::reduceTime(double t) const
-{
-    const long double tmin = static_cast<long double>(mSettings.mTmin);
-    const long double tmax = static_cast<long double>(mSettings.mTmax);
-    const long double tL = static_cast<long double>(t);
-    const long double denominator = tmax - tmin;
-
-#ifdef DEBUG
-    // Vérification de la stabilité numérique
-    if (std::abs(denominator) < std::numeric_limits<long double>::epsilon()) {
-        throw std::runtime_error("Erreur : Division par une valeur trop petite !");
-    }
-#endif
-
-    return static_cast<double>((tL - tmin) / denominator);
-}
-
-
-
-
 std::vector<t_reduceTime> Model::reduceTime(const std::vector<double> &vec_t) const
 {
     const long double tmin = static_cast<long double>(mSettings.mTmin);
@@ -2941,12 +2965,7 @@ std::vector<t_reduceTime> Model::reduceTime(const std::vector<double> &vec_t) co
     return res;
 }
 
-double Model::yearTime(t_reduceTime reduceTime)
-{
-    const double tmin = mSettings.mTmin;
-    const double tmax = mSettings.mTmax;
-    return reduceTime * (tmax - tmin) + tmin ;
-}
+
 
 QString Model::initializeTheta()
 {

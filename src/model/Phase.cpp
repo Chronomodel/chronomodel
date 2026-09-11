@@ -805,7 +805,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     const int nRealyAccepted = std::accumulate(model->mChains.begin(), model->mChains.end(), 0, [] (int sum, ChainSpecs c) {return sum + c.mIterDisplay;});
 
     for (const auto& ev : mEvents) {
-        if (ev->mTheta.mSamplerProposal != MHVariable::eFixe) {
+        if (ev->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
             //const auto &rawtrace = ev->mTheta.fullRunRawTrace(model->mChains);
             const auto& rawtrace = *ev->mTheta.mAllAcquiredTrace;
             std::copy_if(rawtrace.begin(), rawtrace.end(),

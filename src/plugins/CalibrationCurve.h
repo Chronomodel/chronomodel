@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -41,8 +41,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define CALIBRATIONCURVE_H
 
 
+#include "StdUtilities.h"
 #include <map>
 #include <string>
+#include <Generator.h>
 
 #include <QDataStream>
 #include <QDebug>
@@ -138,7 +140,8 @@ public:
     inline void setName(const std::string name) {_name = name;}
     inline void setName(const QString name) {_name = name.toStdString();}
 
-    double interpolate(double t) const {
+    double interpolate(double t) const
+    {
         // We need at least two points to interpolate
         if (mVector.size() < 2 || t <= mTmin) {
             //return mVector.first();
@@ -167,7 +170,9 @@ public:
             return 0.;
         }
     }
-    double repartition_interpolate(double t) const {
+
+    double repartition_interpolate(double t) const
+    {
         // We need at least two points to interpolate
         if (mRepartition.size() < 2 || t <= mTmin) {
             return *mRepartition.cbegin();
@@ -197,6 +202,34 @@ public:
             return 0.;
         }
     }
+
+    std::optional<double> sample_t() const noexcept
+    {
+        // -------------------------------------------------------------
+        // 1️⃣  Vérifications de pré‑condition
+        // -------------------------------------------------------------
+        if (mRepartition.empty() || mRepartition.size() < 2)
+            return std::nullopt;
+        // -------------------------------------------------------------
+        // 2️⃣  Valeur cible
+        // -------------------------------------------------------------
+        const double minR = mRepartition.front();
+        const double maxR = mRepartition.back();
+        const double target = Generator::randomUniform() * (maxR - minR) + minR;
+        // -------------------------------------------------------------
+        // 3️⃣  Indice réel (déjà interpolé) grâce à interpolate_index
+        // -------------------------------------------------------------
+        const double idx = interpolate_index(target, mRepartition);
+        // -------------------------------------------------------------
+        // 4️⃣  Interpolation du temps avec std::lerp
+        // -------------------------------------------------------------
+        const std::size_t n = mRepartition.size();               // nombre de points
+        const double fraction = idx / static_cast<double>(n - 1); // t ∈ [0,1]
+        // std::lerp(a, b, t) = a + t*(b-a)
+        const double sampled = std::lerp(mTmin, mTmax, fraction);
+        return sampled;
+    }
+
 private:
     std::string _name;
 };

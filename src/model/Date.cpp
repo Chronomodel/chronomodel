@@ -41,6 +41,8 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "CalibrationCurve.h"
 #include "Generator.h"
+#include "PluginAbstract.h"
+#include "StateKeys.h"
 #include "StdUtilities.h"
 #include "PluginManager.h"
 #include "PluginUniform.h"
@@ -74,8 +76,8 @@ Date::Date():
     mDeltaFixed(0.),
     mDeltaMin(-INFINITY),
     mDeltaMax(+INFINITY),
-    mDeltaAverage(0.),
-    mDeltaError(0.),
+    mDeltaAverage(0.0),
+    mDeltaError(0.0),
 
     mIsCurrent(false),
     mIsSelected(false),
@@ -91,12 +93,12 @@ Date::Date():
     mTi.setName("Ti of Date : " + mName);
     mTi.mSupport = Support::eR;
     mTi.mFormat = DateUtils::eUnknown;
-    mTi.mSamplerProposal = MHVariable::eDatePrior;
+    mTi.mSamplerProposal = SamplerProposal::eDatePrior;
 
     mSigmaTi.setName("SigmaTi of Date : " + mName);
     mSigmaTi.mSupport = Support::eRp;
     mSigmaTi.mFormat = DateUtils::eNumeric;
-    mSigmaTi.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    mSigmaTi.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
 
     mWiggle.setName("Wiggle of Date : " + mName);
     mWiggle.mSupport = Support::eR;
@@ -182,12 +184,12 @@ void Date::init()
     mTi.setName("Ti of Date : " + mName);
     mTi.mSupport = Support::eR;
     mTi.mFormat = DateUtils::eUnknown;
-    mTi.mSamplerProposal = MHVariable::eDatePrior;
+    mTi.mSamplerProposal = SamplerProposal::eDatePrior;
 
     mSigmaTi.setName("SigmaTi of Date : " + mName);
     mSigmaTi.mSupport = Support::eRp;
     mSigmaTi.mFormat = DateUtils::eNumeric;
-    mSigmaTi.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    mSigmaTi.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
 
     mWiggle.setName("Wiggle of Date : " + mName);
     mWiggle.mSupport = Support::eR;
@@ -457,12 +459,12 @@ void Date::fromJson(const QJsonObject& json)
     mTi.setName("Ti of Date : "+ mName);
     mTi.mSupport = Support::eR;
     mTi.mFormat = DateUtils::eUnknown;
-    mTi.mSamplerProposal = (MHVariable::SamplerProposal)json.value(STATE_DATE_SAMPLER).toInt();
+    mTi.mSamplerProposal = (SamplerProposal)json.value(STATE_DATE_SAMPLER).toInt();
 
-    if ((MHVariable::SamplerProposal)json.value(STATE_DATE_SAMPLER).toInt() == MHVariable::eFixe)
-        mSigmaTi.mSamplerProposal = MHVariable::eFixe;
+    if ((SamplerProposal)json.value(STATE_DATE_SAMPLER).toInt() == SamplerProposal::eFixe)
+        mSigmaTi.mSamplerProposal = SamplerProposal::eFixe;
     else
-        mSigmaTi.mSamplerProposal = MHVariable::eMHAdaptGauss;
+        mSigmaTi.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
     mSigmaTi.setName("Sigma of Date : "+ mName);
     mSigmaTi.mSupport = Support::eRp;
     mSigmaTi.mFormat = DateUtils::eNumeric;
@@ -505,7 +507,7 @@ QJsonObject Date::toJson() const
     else
         json[STATE_DATE_PLUGIN_ID] = -1;
 
-    json[STATE_DATE_SAMPLER] = mTi.mSamplerProposal;
+    json[STATE_DATE_SAMPLER] = static_cast<int>(mTi.mSamplerProposal);
     json[STATE_DATE_VALID] = mIsValid;
 
     json[STATE_DATE_DELTA_TYPE] = mDeltaType;
@@ -606,20 +608,25 @@ QString Date::getDesc() const
 }
 
 
-// Replaces the function ModelUtilities::getDeltaText(d))
 QString Date::getWiggleDesc() const
 {
     QString res;
       
     switch (mDeltaType) {
         case Date::eDeltaFixed:
-            res = "Wiggle = " + QString::number(mDeltaFixed);
+            res = "Fixed wiggle: " + QString::number(mDeltaFixed);
         break;
         case Date::eDeltaRange:
-            res = "Wiggle = U[" + QString::number(mDeltaMin) + " ; " + QString::number(mDeltaMax) + " ] " ;
+            res = QStringLiteral("Wiggle ~ U(%1, %2)")
+                      .arg(mDeltaMin)
+                      .arg(mDeltaMax);
+
         break;
         case Date::eDeltaGaussian:
-            res = "Wiggle = N(" + QString::number(mDeltaAverage) + " ; " + QString::number(mDeltaError) + " ) ";
+            res = "Wiggle ~ N(μ=" + QString::number(mDeltaAverage) +
+                  ", σ=" + QString::number(mDeltaError) + ")";
+
+
         break;
         case Date::eDeltaNone:
         default:
@@ -1062,121 +1069,84 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, std::shared_ptr<
             return;
             break;
                 
-                
+#pragma mark wiggle Gate
         case eDeltaRange:
         {
-            /* ----- FFT -----
-             * http://www.fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html#One_002dDimensional-DFTs-of-Real-Data
-             * https://jperalta.wordpress.com/2006/12/12/using-fftw3/
-             * https://dsp.stackexchange.com/questions/22145/perform-convolution-in-frequency-domain-using-fftw
-             */
+            const int inputSizeOld = (int)calibrationTemp.size();
+            const double origStep = mWiggleCalibration->mStep;
+            const double deltaSpan = mDeltaMax - mDeltaMin;// + 1.0;
 
-            const int inputSize = (int)calibrationTemp.size();
-
-            const double L = (mDeltaMax-mDeltaMin+1) / mWiggleCalibration->mStep;
-
-            const int gateSize = std::max(inputSize, int(L)) ;
-            const int paddingSize = 3*gateSize;
-
-            const int N = inputSize + 4*paddingSize;
-            const int NComplex = 2* (N/2)+1;
-
-            double *inputReal;
-            inputReal = new double [N];
-
-            fftw_complex *inputComplex;
-            inputComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
-
-            for (int i = 0; i< paddingSize; i++) {
-                inputReal[i] = 0.;
+            // 1. Recherche du rapport irréductible p/q = deltaSpan / origStep
+            const double R = deltaSpan / origStep;
+            int q = 1;
+            while (std::abs(std::round(R * q) - R * q) > 1e-5 && q < 1000) {
+                q++;
             }
-            for (int i = 0; i< inputSize; i++) {
-                inputReal[i+paddingSize] = calibrationTemp[i];
-            }
-            for (int i = inputSize+paddingSize; i< N; i++) {
-                inputReal[i] = 0.;
-            }
-            fftw_plan plan_input = fftw_plan_dft_r2c_1d(N, inputReal, inputComplex, FFTW_ESTIMATE);
-            fftw_execute(plan_input);
+            int p = static_cast<int>(std::round(R * q));
 
+            // 2. Facteur de sur-échantillonnage S pour avoir une bonne résolution
+            // (Par exemple : au moins 5 sous-points par origStep)
+            const int targetSubdivisions = 5;
+            const int S = std::max(1, static_cast<int>(std::ceil((double)targetSubdivisions / q)));
 
-            // ---- gate
-            double *gateReal;
-            gateReal = new double [N];
+            // M = sous-pas par origStep, K = sous-pas dans la porte
+            const int M = S * q;
+            const int K = S * p;
 
-            fftw_complex *gateComplex;
-            gateComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
+            // Le pas cible est exactement sous-multiple des deux grandeurs
+            const double targetStep = origStep / (double)M;
 
+            // 3. Rééchantillonnage sans erreur de phase
+            const double origDuration = (inputSizeOld - 1) * origStep;
+            const int N_in = static_cast<int>(std::round(origDuration / targetStep)) + 1;
 
-            for (int i = 0; i< (N-L)/2; i++) {
-                gateReal[i] = 0.;
-            }
-            for (int i = (N-L)/2; i< ((N+L)/2); i++) {
-                gateReal[i] = 1.;
-            }
-            for (int i = (N+L)/2 ; i< N; i++) {
-                gateReal[i] = 0.;
+            std::vector<double> f_resampled(N_in, 0.0);
+
+            for (int j = 0; j < N_in; ++j) {
+                // Division entière exacte pour retrouver l'indice d'origine
+                int idxLow = j / M;
+                int rem = j % M; // Reste exact
+
+                if (idxLow >= inputSizeOld - 1) {
+                    f_resampled[j] = calibrationTemp.back();
+                } else {
+                    // Fraction exacte sans arrondi flottant // crée un lissage des créneaux
+                   // double frac = (double)rem / (double)M;
+                   // f_resampled[j] = (1.0 - frac) * calibrationTemp[idxLow] + frac * calibrationTemp[idxLow + 1];
+                    // Nouveau code :
+                    f_resampled[j] = calibrationTemp[idxLow];
+                }
             }
 
-            fftw_plan plan_gate = fftw_plan_dft_r2c_1d(N, gateReal, gateComplex, FFTW_ESTIMATE);
-            fftw_execute(plan_gate);
+            // 4. Convolution exacte en O(N) avec porte de taille K
+            const int N_out = N_in + K - 1;
+            std::vector<double> outputReal(N_out, 0.0);
 
+            double runningSum = 0.0;
 
-            /*
-             * The value of inputComplex[i=0] is a constant of the offset of the signal
-             */
-
-            double *outputReal;
-            outputReal = new double [N];
-
-            fftw_complex *outputComplex;
-            outputComplex = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * NComplex);
-
-
-            for (int i= 0; i<NComplex; ++i) {
-                outputComplex[i][0] = gateComplex[i][0] * inputComplex[i][0] - gateComplex[i][1] * inputComplex[i][1];
-                outputComplex[i][1] = gateComplex[i][0] * inputComplex[i][1] + gateComplex[i][1] * inputComplex[i][0];
+            for (int j = 0; j < N_out; ++j) {
+                if (j < N_in) {
+                    runningSum += f_resampled[j];
+                }
+                if (j >= K) {
+                    runningSum -= f_resampled[j - K];
+                }
+                outputReal[j] = std::max(0.0, runningSum) * targetStep;
             }
 
-            fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, outputComplex, outputReal, FFTW_ESTIMATE);
-            fftw_execute(plan_output);
+            // 5. Mise à jour des bornes et sauvegarde
+            curve.clear();
+            curve.insert(curve.end(), outputReal.begin(), outputReal.end());
 
-            /*
-             * This code corresponds to the theoretical formula in Fourier space.
-             * But it does not work with uniform densities, because it does not handle the padding correctly.
-             * The problem also exists for densities with a very small support .
+            mWiggleCalibration->mStep = targetStep;
+            mWiggleCalibration->mVector = equal_areas(curve, targetStep, 1.0);
 
-             double factor;
-             for (int i(0); i<NComplex; ++i) {
-                 factor = sinc((double)i, L/(double)inputSize );
-
-                 outputComplex[i][0] = inputComplex[i][0]* factor;
-                 outputComplex[i][1] = inputComplex[i][1]* factor;
-             }
-
-              fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, outputComplex, outputReal, FFTW_ESTIMATE);
-              fftw_execute(plan_output);
-            */
-
-
-            for ( int i = 0; i < N ; i++) {
-                curve.push_back(outputReal[i]);
-            }
-
-            mWiggleCalibration->mVector = equal_areas(curve, mWiggleCalibration->mStep, 1.);
-
-            mWiggleCalibration->mTmin = minRefCurve - (double)(3*paddingSize +inputSize/2)* mWiggleCalibration->mStep + (mDeltaMin+mDeltaMax)/2.;
-            mWiggleCalibration->mTmax = mWiggleCalibration->mTmin + curve.size()* mWiggleCalibration->mStep;
-
-            fftw_destroy_plan(plan_input);
-            fftw_destroy_plan(plan_output);
-            fftw_free(inputComplex);
-            delete [] inputReal;
-            delete [] outputReal;
-            fftw_cleanup();
+            const double T_start = minRefCurve + mDeltaMin;
+            mWiggleCalibration->mTmin = T_start;
+            mWiggleCalibration->mTmax = T_start + (curve.size() - 1) * targetStep;
         }
         break;
-            
+#pragma mark wiggle Gaussian
         case eDeltaGaussian:
         {
             /* ----- FFT -----
@@ -1279,6 +1249,7 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, std::shared_ptr<
         v = (long double) (*itt );
 
         rep = lastRep;
+
         if (v != 0.l && lastV != 0.l)
             rep = lastRep + (long double) ( mWiggleCalibration->mStep) * (lastV + v) / 2.l;
 
@@ -1287,7 +1258,6 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, std::shared_ptr<
         lastRep = rep;
     }
 
-    mWiggleCalibration->mRepartition = stretch_vector(mWiggleCalibration->mRepartition, 0.0, 1.0);
 
     /* ------------------------------------------------------------------
      * Restrict the calib and repartition vectors to where data are
@@ -1295,30 +1265,35 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, std::shared_ptr<
     if (*mWiggleCalibration->mRepartition.crbegin() > 0.0) {
 
         const double threshold = threshold_limit;// 0.00001;
-        /*const int minIdx = int (floor(vector_interpolate_idx_for_value(double(threshold * lastRep), mWiggleCalibration->mRepartition)));
-        const int maxIdx = int (ceil(vector_interpolate_idx_for_value(double((1.0 - threshold) * lastRep), mWiggleCalibration->mRepartition)));*/
+        const int n = static_cast<int>(mWiggleCalibration->mRepartition.size());
+        const int minIdx = std::clamp(int (floor(interpolate_index(double(threshold * lastRep), mWiggleCalibration->mRepartition))) - 1, 0, n - 1);
+        const int maxIdx = std::clamp(int (ceil(interpolate_index(double((1.0 - threshold) * lastRep), mWiggleCalibration->mRepartition))) + 1, minIdx, n - 1);;
 
-        const int minIdx = int (floor(interpolate_index(double(threshold * lastRep), mWiggleCalibration->mRepartition)));
-        const int maxIdx = int (ceil(interpolate_index(double((1.0 - threshold) * lastRep), mWiggleCalibration->mRepartition)));
+        if (maxIdx > minIdx) {
+            const double tminCal = mWiggleCalibration->mTmin + minIdx * mWiggleCalibration->mStep;
+            const double tmaxCal = mWiggleCalibration->mTmin + maxIdx * mWiggleCalibration->mStep;
 
-        const double tminCal = mWiggleCalibration->mTmin + minIdx * mWiggleCalibration->mStep;
-        const double tmaxCal = mWiggleCalibration->mTmin + maxIdx * mWiggleCalibration->mStep;
+            // Truncate both functions where data live
 
-        // Truncate both functions where data live
-        //mWiggleCalibration->mVector = mWiggleCalibration->mVector.mid(minIdx, (maxIdx - minIdx) + 1);
-        //mWiggleCalibration->mRepartition = mWiggleCalibration->mRepartition.mid(minIdx, (maxIdx - minIdx) + 1);
-        mWiggleCalibration->mVector.assign(mWiggleCalibration->mVector.begin() + minIdx, mWiggleCalibration->mVector.begin()+(maxIdx + 1));
-        mWiggleCalibration->mRepartition.assign(mWiggleCalibration->mRepartition.begin()+minIdx, mWiggleCalibration->mRepartition.begin()+(maxIdx + 1));
+            mWiggleCalibration->mVector.assign(mWiggleCalibration->mVector.begin() + minIdx, mWiggleCalibration->mVector.begin()+ maxIdx);
+            mWiggleCalibration->mRepartition.assign(mWiggleCalibration->mRepartition.begin()+minIdx, mWiggleCalibration->mRepartition.begin()+ maxIdx);
 
-        // Stretch repartition curve so it goes from 0 to 1
-        mWiggleCalibration->mRepartition = stretch_vector(mWiggleCalibration->mRepartition, 0., 1.);
+            // Stretch repartition curve so it goes from 0 to 1
+            mWiggleCalibration->mRepartition = stretch_vector(mWiggleCalibration->mRepartition, 0.0, 1.0);
 
-        // Approximation : even if the calib has been truncated, we consider its area to be = 1
-        mWiggleCalibration->mVector = equal_areas(mWiggleCalibration->mVector, mWiggleCalibration->mStep, 1.);
+            // Approximation : even if the calib has been truncated, we consider its area to be = 1
+            mWiggleCalibration->mVector = equal_areas(mWiggleCalibration->mVector, mWiggleCalibration->mStep, 1.0);
 
-        mWiggleCalibration->mTmin = tminCal;
-        mWiggleCalibration->mTmax = tmaxCal;
+            mWiggleCalibration->mTmin = tminCal;
+            mWiggleCalibration->mTmax = tmaxCal;
 
+        } else {
+            std::cout << "[" << __func__ << "] ‼️ Error in restricting the calibration and repartition vectors" << std::endl;
+
+        }
+
+    } else {
+        mWiggleCalibration->mRepartition = stretch_vector(mWiggleCalibration->mRepartition, 0.0, 1.0);
     }
 
     mWiggleCalibration->mMap = vector_to_map(mWiggleCalibration->mVector, mWiggleCalibration->mTmin, mWiggleCalibration->mTmax, mWiggleCalibration->mStep);
@@ -1495,6 +1470,7 @@ void Date::setBandwidth(BandwidthType bwt, double bandwidth)
 
 void Date::generateFormatedKDE(const std::vector<ChainSpecs>& chains, const int fftLen, const double tmin, const double tmax)
 {
+
     mTi.generateFormatedKDE(chains, fftLen, tmin, tmax);
     mSigmaTi.generateFormatedKDE(chains, fftLen);
 
@@ -1547,8 +1523,8 @@ QPixmap Date::generateUnifThumb(const StudyPeriodSettings &settings)
             graph.setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
             graph.setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
 
-            graph.setXAxisMode(GraphView::eHidden);
-            graph.setYAxisMode(GraphView::eHidden);
+            graph.setXAxisMode(GraphView::AxisMode::eHidden);
+            graph.setYAxisMode(GraphView::AxisMode::eHidden);
 
             const QColor color = mPlugin->getColor();
 
@@ -1642,8 +1618,8 @@ QPixmap Date::generateCalibThumb(const StudyPeriodSettings& settings)
 
         graph.setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
         graph.setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
-        graph.setXAxisMode(GraphView::eHidden);
-        graph.setYAxisMode(GraphView::eHidden);
+        graph.setXAxisMode(GraphView::AxisMode::eHidden);
+        graph.setYAxisMode(GraphView::AxisMode::eHidden);
         graph.showYAxisLine(false);
 
 
@@ -1725,7 +1701,9 @@ void Date::updateDate_v3(const double theta, const double S02Theta)
     updateTi_v3(theta);
 
     updateDelta_v3(theta, S02Theta);
-    updateSigmaShrinkage_K(theta, S02Theta);
+   // updateSigmaShrinkage_K(theta, S02Theta);
+    mSigmaTi.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
+    updateSigma_Log10(theta, S02Theta);
 
     updateWiggle();
 }
@@ -1733,13 +1711,13 @@ void Date::updateDate_v3(const double theta, const double S02Theta)
 void Date::applyTi_v3(const double theta)
 {
     switch (mTi.mSamplerProposal) {
-    case MHVariable::eDatePrior:
+    case SamplerProposal::eDatePrior:
         applyPrior(theta);
         break;
-    case MHVariable::eMHAdaptGauss:
+    case SamplerProposal::eRWAdaptGauss:
         applyMHAdaptGauss(theta);
         break;
-    case MHVariable::eInversion:
+    case SamplerProposal::eLikelihood:
     default:
         applyInversion(theta);
         break;
@@ -1748,26 +1726,9 @@ void Date::applyTi_v3(const double theta)
 // Utilise Xi
 //Obsolete
 
-
+/*
 void Date::updateTi_v4(const double theta, const double S02Theta)
 {
-    /*
-     double try_ti;
-      if (Generator::randomUniform() < mMixingLevel) { // try_ti always in the study period
-        const double tminCalib = mCalibration->mTmin;
-        const double u = Generator::randomUniform();
-        const double idx = interpolate_index(u, mCalibration->mRepartition);
-        try_ti = tminCalib + idx * mCalibration->mStep;
-
-    } else {
-        // -- gaussian -- try_ti can be outside the study period
-        const double t0 = mTi.value();
-        const double s = (mSettings.mTmax - mSettings.mTmin) / 2.0;
-        try_ti = Generator::normalDistribution(t0, s);
-    }
-    const double rate_q = fProposalDensity(mTi.value(), try_ti) / fProposalDensity(try_ti, mTi.value());
-
-    */
 
     const double try_ti = Generator::normalDistribution(mTi.value(), mTi.mSigmaMH);
     const double rate_q = 1.0;
@@ -2003,22 +1964,22 @@ void Date::applyTi_v4(const double theta, const double S02Theta)
 
 
 }
-
+*/
 // identique à updateDate, mais sans mémorisation des valeurs
 
 void Date::applyDateProposal_v3(const double theta, const double S02Theta)
 {
     switch (mTi.mSamplerProposal) {
-    case MHVariable::eDatePrior:
+    case SamplerProposal::eDatePrior:
         applyPrior(theta);
         break;
 
      // only case with acceptation rate, because we use sigmaMH :
-    case MHVariable::eMHAdaptGauss:
+    case SamplerProposal::eRWAdaptGauss:
         applyMHAdaptGauss(theta);
         break;
 
-    case MHVariable::eInversion:
+    case SamplerProposal::eLikelihood:
     default:
         applyInversion(theta);
         break;
@@ -2092,6 +2053,8 @@ void Date::initDelta()
     mWiggle.mLastMHAccepts.clear();
 }
 
+
+// C'est un tirage pour un MCMC Gibbs en utilisant le Prior Event
 void Date::updateDelta_v3(const double theta, const double )
 {
     const double lambda_i = theta - mTi.value();
@@ -2121,6 +2084,7 @@ void Date::updateDelta_v3(const double theta, const double )
     }
 }
 
+/*
 void Date::updateDelta_v4(const double theta, const double S02Theta)
 {
     double try_delta;
@@ -2154,9 +2118,6 @@ void Date::updateDelta_v4(const double theta, const double S02Theta)
     }
 
 }
-
-
-
 
 // fonction identique à updateDelta_v4 car il n'y a pas de memo
 void Date::applyDelta_v4(const double theta, const double S02Theta)
@@ -2192,6 +2153,7 @@ void Date::applyDelta_v4(const double theta, const double S02Theta)
     }
 
 }
+*/
 
 // obsolete
 void Date::updateSigmaJeffreys(const double theta_mX)
@@ -2382,6 +2344,7 @@ void Date::updateSigmaShrinkage0(const double theta_mX,
 
 
 #pragma mark update SigmaTi
+/*
 void Date::updateSigmaShrinkage_K(const double theta_mX,
                                   const double S02Theta_mX)
 {
@@ -2441,7 +2404,201 @@ void Date::updateSigmaShrinkage_K(const double theta_mX,
     mSigmaTi.reject_update();
 
 }
+*/
 
+//----- test
+// Sigma tiré par adaptation directement en variance
+// Ca marche
+
+void Date::updateSigma_Variance(const double theta,
+                                const double S02Theta)
+{
+    const double diff = mTi.value() - (theta - mDelta);
+    const double mu = 0.5 * diff * diff;
+
+    const double V1 = mSigmaTi.value() * mSigmaTi.value();
+    const double tau = mSigmaTi.mSigmaMH; // Écart-type du saut
+
+    const double VMin = 1e-20;
+    const double VMax = 1e20; // Borne sup raisonnable pour la variance
+
+    // 1. Proposition tronquée sur [VMin, VMax] centrée en V1
+    const double V2 = Generator::truncatedNormal(V1, tau, VMin, VMax);
+
+    // 2. Terme de vraisemblance : -mu * (1/V2 - 1/V1)
+    const double log_vraisemblance = -mu * (V1 - V2) / (V1 * V2);
+
+    // 3. Prior 1/sigma_t (soit V^(-1/2))
+    const double log_prior_sigma = 0.5 * (std::log(V1) - std::log(V2));
+
+    // 4. Prior Shrinkage : ((s02 + V1) / (s02 + V2))^2
+    const double log_prior_shrinkage = 2.0 * (std::log(S02Theta + V1) - std::log(S02Theta + V2));
+
+    // 5. Correction de Hastings pour la proposition tronquée : log( q(V1|V2) / q(V2|V1) )
+    // Z(center, tau) = CDF((VMax - center)/tau) - CDF((VMin - center)/tau)
+    const double log_q_ratio = std::log(normalCDF((VMax - V1) / tau) - normalCDF((VMin - V1) / tau))
+                               - std::log(normalCDF((VMax - V2) / tau) - normalCDF((VMin - V2) / tau));
+
+    // Log-rate global
+    const double log_rate = log_vraisemblance + log_prior_sigma + log_prior_shrinkage + log_q_ratio;
+
+    mSigmaTi.try_update_log(std::sqrt(V2), log_rate);
+}
+
+
+
+// Echantillonnage Indépendante via shrinkageUniforme
+void Date::updateSigma_Shrinkage(const double theta,
+                                 const double S02Theta)
+{
+    const double diff = mTi.value() - (theta - mDelta);
+    const double mu = 0.5 * diff * diff;
+    const double V1 = mSigmaTi.value() * mSigmaTi.value();
+
+    //  Indépendante via shrinkageUniforme
+    const double VMin = 1e-120;
+    const double VMax = 1e100;
+
+    const double V2 = Generator::shrinkageUniforme(S02Theta);
+
+    if (V2 > VMin && V2 < VMax) {
+        const double log_likelihood_diff = -mu * (V1 - V2) / (V1 * V2);
+        const double log_prior_diff = 0.5 * (std::log(V1) - std::log(V2));
+
+        const double log_rate = log_likelihood_diff + log_prior_diff;
+        mSigmaTi.try_update_log(std::sqrt(V2), log_rate);
+        return;
+    }
+
+    mSigmaTi.reject_update();
+}
+
+//Marche adaptatif  en log10(V) pour Gibbs
+void Date::updateSigma_Log10(const double theta, const double S02Theta)
+{
+    mSigmaTi.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
+    const double diff = mTi.value() + mDelta - theta;
+    const double mu = 0.5 * diff * diff;
+    const double V1 = mSigmaTi.value() * mSigmaTi.value();
+
+    const double logVMin = -20.0;
+    const double logVMax = 20.0;
+
+    const double log10_V1 = std::log10(V1);
+    const double log10_V2 = Generator::normalDistribution(log10_V1, mSigmaTi.mSigmaMH);
+
+    if (log10_V2 >= logVMin && log10_V2 <= logVMax) {
+        const double V2 = std::pow(10.0, log10_V2);
+
+        // 1. Terme de vraisemblance : -mu * (1/V2 - 1/V1)
+        const double log_vraisemblance = -mu * (V1 - V2) / (V1 * V2);
+
+        // 2. Terme du prior 1/sigma_t (soit V^(-1/2))
+        const double log_prior_sigma = 0.5 * (std::log(V1) - std::log(V2));
+
+        // 3. Terme de prior Shrinkage : ((s02 + V1) / (s02 + V2))^2
+        const double log_prior_shrinkage = 2.0 * (std::log(S02Theta + V1) - std::log(S02Theta + V2));
+
+        // 4. Jacobien de la proposition
+        const double log_jacobian = std::log(V2) - std::log(V1);
+
+        // Log-rate global de MH
+        const double log_rate = log_vraisemblance + log_prior_sigma + log_prior_shrinkage + log_jacobian;
+
+        mSigmaTi.try_update_log(std::sqrt(V2), log_rate);
+        return;
+    }
+
+    mSigmaTi.reject_update();
+}
+
+void Date::updateSigmaShrinkage_K(const double theta_mX,
+                                  const double S02Theta_mX)
+{
+    const double diff = mTi.value() - (theta_mX - mDelta);
+    const double mu = 0.5 * diff * diff;
+    double V1 = mSigmaTi.value() * mSigmaTi.value();
+
+    constexpr double w1 = 1.; // Poids pour mélange (désactivé ici)
+    const double u = Generator::randomUniform();
+
+    if (u < w1) {
+        // Branche 1 : Indépendante via shrinkageUniforme
+        const double V2 = Generator::shrinkageUniforme(S02Theta_mX, 1e-100, 1e100);
+
+        const double log_likelihood_diff = -mu * (V1 - V2) / (V1 * V2);
+        const double log_prior_diff = 0.5 * (std::log(V1) - std::log(V2));
+
+        const double log_rate = log_likelihood_diff + log_prior_diff;
+        mSigmaTi.try_update_log(std::sqrt(V2), log_rate);
+        return;
+
+    }
+    else {
+        mSigmaTi.mSamplerProposal = SamplerProposal::eRWAdaptGauss; // test ici
+        // Branche 2 : Marche aléatoire en log10(V)
+        const double logVMin = -100.0;
+        const double logVMax = 100.0;
+
+        const double log10_V1 = std::log10(V1);
+        const double log10_V2 = Generator::normalDistribution(log10_V1, mSigmaTi.mSigmaMH);
+
+        if (log10_V2 >= logVMin && log10_V2 <= logVMax) {
+            const double V2 = std::pow(10.0, log10_V2);
+
+            // 1. Terme de vraisemblance : -mu * (1/V2 - 1/V1)
+            const double log_vraisemblance = -mu * (V1 - V2) / (V1 * V2);
+
+            // 2. Terme du prior 1/sigma_t (soit V^(-1/2))
+            const double log_prior_sigma = 0.5 * (std::log(V1) - std::log(V2));
+
+            // 3. Terme de prior Shrinkage : ((s02 + V1) / (s02 + V2))^2
+            const double log_prior_shrinkage = 2.0 * (std::log(S02Theta_mX + V1) - std::log(S02Theta_mX + V2));
+
+            // 4. Jacobien : dV/dy = V (y = ln V), donc facteur V2/V1 dans le ratio
+            const double log_jacobian = std::log(V2) - std::log(V1);
+
+            // Log-rate global de MH
+            const double log_rate = log_vraisemblance + log_prior_sigma + log_prior_shrinkage + log_jacobian;
+
+            mSigmaTi.try_update_log(std::sqrt(V2), log_rate);
+            return;
+        }
+    }
+
+    mSigmaTi.reject_update();
+}
+
+void Date::updateSigmaWithX(const double theta, const double S02Theta)
+{
+    // --- Marcheur sur x_i (variable auxiliaire), diff fixé pour cette itération ---
+    const double diff = mTi.value() - (theta - mDelta);
+
+    // x1 = état courant de la chaîne pour x_i (PAS dérivé de diff — même piège qu'avant à éviter)
+    const double x1 = mXi;
+
+    // Proposition indépendante : Gamma(shape=1/2, rate=1/2) => scale = 1/rate = 2.0
+    const double x2 = Generator::gammaDistribution(0.5, 2.0);
+
+    if (x2 > 0.0) {
+        const double denom1 = diff * diff + S02Theta * x1;
+        const double denom2 = diff * diff + S02Theta * x2;
+
+        // Le morceau x^{-1/2} e^{-x/2} s'annule avec la proposition : il ne reste que ceci
+        const double log_rate = (std::log(x2) - 2.0 * std::log(denom2))
+                                - (std::log(x1) - 2.0 * std::log(denom1));
+
+        if (MHAcceptanceTest_log(log_rate)) {
+            mXi = x2;
+        }
+    }
+
+    // Valeur déterministe de σ²_ti à partir de l'état accepté de x_i
+    //const double sigmaTi2 = (diff * diff) / (2.0 * mXi);
+    double sigmaTiFloor2 = 0.1 * S02Theta; /* ex: fraction du s_i de calibration ou de S02Theta */;
+    const double sigmaTi2 = std::max((diff * diff) / (2.0 * mXi), sigmaTiFloor2);
+    mSigmaTi.accept_update(std::sqrt(sigmaTi2)); // pas de MH ici — pure transformation
+}
 
 // https://en.wikipedia.org/wiki/Lomax_distribution with alpha=1
 void Date::applySigmaShrinkage_K_tempering(const double theta_mX,
@@ -2518,7 +2675,7 @@ void Date::updateSigmaShrinkage_K(const Event* event)
     const double V1 = mSigmaTi.mX * mSigmaTi.mX;
 
     double rapport = -1, V2;
-    if (mTi.mSamplerProposal != MHVariable::eMHAdaptGauss) {
+    if (mTi.mSamplerProposal != SamplerProposal::eRWAdaptGauss) {
         const double VMin = 0.;
         const double VMax = 1.E+10;
 
@@ -2686,16 +2843,16 @@ void Date::autoSetTiSampler(const bool bSet)
     if (bSet && mPlugin!= nullptr && mPlugin->withLikelihoodArg() && mOrigin == eSingleDate) {
          //   if (false) {
         switch (mTi.mSamplerProposal) {
-            case MHVariable::eDatePrior:
+            case SamplerProposal::eDatePrior:
                 updateti = &Date::PriorWithArg;
                 break;
             
-            case MHVariable::eInversion:
+            case SamplerProposal::eLikelihood:
                 updateti = &Date::InversionWithArg;
                 break;
             
                 // only case with acceptation rate, because we use sigmaMH :
-            case MHVariable::eMHAdaptGauss: //old version is eMHSymGaussAdapt = 5
+            case SamplerProposal::eRWAdaptGauss: //old version is eMHSymGaussAdapt = 5
                 updateti = &Date::MHAdaptGaussWithArg;
                 break;
 
@@ -2707,16 +2864,16 @@ void Date::autoSetTiSampler(const bool bSet)
 
     } else {
         switch (mTi.mSamplerProposal) {
-            case MHVariable::eDatePrior:
+            case SamplerProposal::eDatePrior:
             updateti = &Date::Prior;//old name fMHSymetric;
                 break;
             
-            case MHVariable::eInversion:
+            case SamplerProposal::eLikelihood:
                 updateti = &Date::Inversion;
                 break;
             
                 // only case with acceptation rate, because we use sigmaMH :
-            case MHVariable::eMHAdaptGauss:
+            case SamplerProposal::eRWAdaptGauss:
                 updateti = &Date::MHAdaptGauss;
                 break;
             
@@ -2733,7 +2890,7 @@ CalibrationCurve generate_mixingCalibration(const std::vector<Date> &dates, cons
     CalibrationCurve mixing_calib;
     if (dates.size() == 1) {
         //mixing_calib = dates.at(0).mWiggleCalibration != nullptr ? *dates.at(0).mWiggleCalibration  :  *dates.at(0).mCalibration;
-        if (dates.at(0).mWiggleCalibration != nullptr ) {
+        if (dates.at(0).mDeltaType != Date::eDeltaNone ) {
             mixing_calib = *dates.at(0).mWiggleCalibration;
 
         } else {
@@ -2755,7 +2912,7 @@ CalibrationCurve generate_mixingCalibration(const std::vector<Date> &dates, cons
         long double unionStep = INFINITY;
 
         for (auto&& d : dates) {
-            if (d.mWiggleCalibration != nullptr && !d.mWiggleCalibration->mVector.empty() ) {
+            if (d.mDeltaType != Date::eDeltaNone && d.mWiggleCalibration != nullptr && !d.mWiggleCalibration->mVector.empty() ) {
                 unionTmin = std::min(unionTmin, (long double)d.mWiggleCalibration->mTmin);
                 unionTmax = std::max(unionTmax, (long double)d.mWiggleCalibration->mTmax);
                 unionStep = std::min(unionStep, (long double) d.mWiggleCalibration->mStep);
@@ -2866,12 +3023,8 @@ double Date::fProposalDensity(const double t, const double t0)
     const double tminCalib = mCalibration->mTmin;
     const double tmaxCalib = mCalibration->mTmax;
 
-    // q_gaussian on R
-    const double tmin = mSettings.mTmin;
-    const double tmax = mSettings.mTmax;
-
-    const double sigma = std::max(tmax - tmin, tmaxCalib - tminCalib) / 2;
-    const double q_gaussian = dnorm(t, t0, sigma);
+    const double s = std::max((mSettings.mTmax - mSettings.mTmin), tmaxCalib - tminCalib) / 2;
+    const double q_gaussian = dnorm(t, t0, s);
 
     // q_calibrate , defined only on Calibration range-----
     // outside study period q_calibrate = 0
@@ -2889,70 +3042,74 @@ double Date::fProposalDensity(const double t, const double t0)
  *  @brief MH proposal = Distribution of Calibrated date, t_i is defined on set R (real numbers)
  *  @brief simulation according to uniform shrinkage with s parameter
  */
-void Date::Inversion(const double theta_mX)
+void Date::Inversion(const double theta)
 {
-    double tiNew;
+    double ti_prop;
+    const double ti_old = mTi.value();
+
+    const double tminCalib = mCalibration->mTmin;
+    const double tmaxCalib = mCalibration->mTmax;
 
    if (Generator::randomUniform() < mMixingLevel) { // tiNew always in the study period
-        const double tminCalib = mCalibration->mTmin;
+
         const double u = Generator::randomUniform();
         const double idx = interpolate_index(u, mCalibration->mRepartition);
-        tiNew = tminCalib + idx * mCalibration->mStep;
+        ti_prop = tminCalib + idx * mCalibration->mStep;
 
     } else {
         // -- gaussian -- tiNew can be outside the study period
-        const double t0 = mTi.value();
-        const double s = (mSettings.mTmax - mSettings.mTmin) / 2.0;
 
-        tiNew = Generator::normalDistribution(t0, s);
+        const double s = (std::max((mSettings.mTmax - mSettings.mTmin), tmaxCalib-tminCalib)/2) ;
+
+        ti_prop = Generator::normalDistribution(ti_old, s);
     }
 
-    const double rate_p1 = getLikelihood(tiNew) / getLikelihood(mTi.value());
+    const double rate_p1 = getLikelihood(ti_prop) / getLikelihood(ti_old);
 
     const double rate_p2 = exp((-0.5 / (mSigmaTi.value() * mSigmaTi.value())) *
-                          (pow(tiNew - (theta_mX - mDelta), 2) -
-                           pow(mTi.value() - (theta_mX - mDelta), 2))
+                          (pow(ti_prop - (theta - mDelta), 2) -
+                           pow(ti_old - (theta - mDelta), 2))
                           );
 
     // La loi instrumentale avec mélange de distribution Calibré-Gaussienne, n'est pas symétrique
     // il faut faire le rapport q_xy/q_yx
 
-    const double rate_q = fProposalDensity(mTi.value(), tiNew) / fProposalDensity(tiNew, mTi.value());
+    const double rate_q = fProposalDensity(ti_old, ti_prop) / fProposalDensity(ti_prop, ti_old);
 
-    mTi.try_update(tiNew, rate_p1 * rate_p2 * rate_q);
+    mTi.try_update(ti_prop, rate_p1 * rate_p2 * rate_q);
 
 }
 
 void Date::applyInversion(const double theta_mX)
 {
-    double tiNew;
+    double ti_prop;
 
     const double tminCalib = mCalibration->mTmin;
 
     if (Generator::randomUniform() < mMixingLevel) { // tiNew always in the study period
         const double u = Generator::randomUniform();
         const double idx = interpolate_index(u, mCalibration->mRepartition);
-        tiNew = tminCalib + idx * mCalibration->mStep;
+        ti_prop = tminCalib + idx * mCalibration->mStep;
 
     } else {
         // -- gaussian
         const double t0 = mTi.value();
         const double s = (mSettings.mTmax - mSettings.mTmin) / 2.0;
 
-        tiNew = Generator::normalDistribution(t0, s);
+        ti_prop = Generator::normalDistribution(t0, s);
     }
 
-    const double rate_p1 = getLikelihood(tiNew) / getLikelihood(mTi.value());
+    const double rate_p1 = getLikelihood(ti_prop) / getLikelihood(mTi.value());
 
     const double rate_p2 = exp((-0.5 / (mSigmaTi.value() * mSigmaTi.value())) *
-                              (pow(tiNew - (theta_mX - mDelta), 2) -
+                              (pow(ti_prop - (theta_mX - mDelta), 2) -
                                pow(mTi.value() - (theta_mX - mDelta), 2))
                               );
 
-    const double rate_q = fProposalDensity(mTi.value(), tiNew) / fProposalDensity(tiNew, mTi.value());
+    const double rate_q = fProposalDensity(mTi.value(), ti_prop) / fProposalDensity(ti_prop, mTi.value());
 
     if(MHAcceptanceTest(rate_p1 * rate_p2 * rate_q))
-        mTi.setValue(tiNew);
+        mTi.setValue(ti_prop);
 }
 
 void Date::InversionWithArg(const double theta_mX)
@@ -2960,6 +3117,7 @@ void Date::InversionWithArg(const double theta_mX)
     double tiNew;
 
     const double tminCalib = mCalibration->mTmin;
+    const double tmaxCalib = mCalibration->mTmax;
 
     if (Generator::randomUniform() < mMixingLevel) { // tiNew always in the study period
         const double u = Generator::randomUniform();
@@ -2968,8 +3126,8 @@ void Date::InversionWithArg(const double theta_mX)
 
     } else {
         // -- gaussian
-        const double t0 =(mSettings.mTmax + mSettings.mTmin) / 2.0;
-        const double s = (mSettings.mTmax - mSettings.mTmin) / 2.0;
+        const double t0 = mTi.value(); //(mSettings.mTmax + mSettings.mTmin) / 2.0;
+        const double s = (std::max((mSettings.mTmax - mSettings.mTmin), tmaxCalib-tminCalib)/2) ;//(mSettings.mTmax - mSettings.mTmin) / 2.0;
 
         tiNew = Generator::normalDistribution(t0, s);
 

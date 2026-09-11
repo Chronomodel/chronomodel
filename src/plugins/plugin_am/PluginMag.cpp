@@ -171,9 +171,7 @@ long double PluginMag::Likelihood(const double t, const QJsonObject &data) const
         break;
 
     case eID:
-        //mesureIncl = incl;
         errorI = alpha95 / 2.448l;
-        //mesureDecl = decl;
         errorD = alpha95 / (2.448l * cosl(incl * rad));
 
         // Étalonnage directionnel : I et D
@@ -302,20 +300,21 @@ bool PluginMag::wiggleAllowed() const
     return false;
 }
 
-MHVariable::SamplerProposal PluginMag::getDataMethod() const
+#ifndef FIXEDPRIOR
+SamplerProposal PluginMag::getDataMethod() const
 {
-    return MHVariable::eInversion;
+    return SamplerProposal::eLikelihood;
 }
 
-QList<MHVariable::SamplerProposal> PluginMag::allowedDataMethods() const
+QList<SamplerProposal> PluginMag::allowedDataMethods() const
 {
-    QList<MHVariable::SamplerProposal> methods;
-    methods.append(MHVariable::eDatePrior);
-    methods.append(MHVariable::eInversion);
-    methods.append(MHVariable::eMHAdaptGauss);
+    QList<SamplerProposal> methods;
+    methods.append(SamplerProposal::eDatePrior);
+    methods.append(SamplerProposal::eLikelihood);
+    methods.append(SamplerProposal::eRWAdaptGauss);
     return methods;
 }
-
+#endif
 QString PluginMag::getDateDesc(const Date* date) const
 {
     Q_ASSERT(date);

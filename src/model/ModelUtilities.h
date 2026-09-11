@@ -40,6 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef MODELUTILITIES_H
 #define MODELUTILITIES_H
 
+#include "CalibrationCurve.h"
 #include "ModelCurve.h"
 #include "Date.h"
 #include "Event.h"
@@ -97,7 +98,105 @@ std::string html_to_plain_text(const std::string &html);
 QString html_to_plain_text(const QString &html);
 
 
-double sample_in_repartition(std::shared_ptr<CalibrationCurve> calibrateCurve, const double min, const double max);
+/**
+ * @brief  Tire un temps aléatoire dans la répartition, en respectant les
+ *         bornes `tMin` / `tMax`.
+ *
+ * @param calibrateCurve  Courbe de calibration contenant la répartition.
+ * @param tMin            Borne inférieure souhaitée (peut être > mTmin).
+ * @param tMax            Borne supérieure souhaitée (peut être < mTmax).
+ *
+ * @return std::optional<double>  Valeur tirée ou `std::nullopt` si la
+ *                                 répartition est vide / trop petite.
+ *
+ * @note   La fonction est `noexcept`.  En cas d’échec d’interpolation,
+ *         on retombe sur un tirage uniforme dans `[tMin,tMax]`.
+ */
+inline std::optional<double> sample_in_repartition(
+    const std::shared_ptr<CalibrationCurve>& calibrateCurve,
+    double tMin,
+    double tMax) noexcept
+{
+    // -------------------------------------------------------------
+    // 0️⃣  Vérifications de base
+    // -------------------------------------------------------------
+    if (!calibrateCurve || calibrateCurve->mRepartition.empty()
+        || calibrateCurve->mRepartition.size() < 2)
+        return std::nullopt;                     // rien à faire
+    const double unionTmin = calibrateCurve->mTmin;
+    const double unionTmax = calibrateCurve->mTmax;
+    const std::size_t n   = calibrateCurve->mRepartition.size();
+    const double unionStep = (unionTmax - unionTmin) / static_cast<double>(n - 1);
+    // -------------------------------------------------------------
+    // 1️⃣  Cas où l’intervalle demandé est complètement hors du domaine
+    // -------------------------------------------------------------
+    if (unionTmax < tMin || tMax < unionTmin) {
+        // On renvoie un tirage gaussien centré sur le milieu du domaine,
+        // avec un sigma au moins égal à la moitié de la largeur du domaine.
+        const double mean  = (unionTmax + unionTmin) * 0.5;
+        const double sigma = std::max(unionStep,
+                                      (unionTmax - unionTmin) * 0.5);
+        return Generator::gaussByDoubleExp(mean, sigma, tMin, tMax);
+    }
+    // -------------------------------------------------------------
+    // 2️⃣  On restreint l’intervalle à l’intersection avec le domaine
+    // -------------------------------------------------------------
+    const double effectiveMin = std::max(unionTmin, tMin);
+    const double effectiveMax = std::min(unionTmax, tMax);
+    // Interpolation de la CDF aux deux extrémités de l’intervalle
+    const double minRepartition = calibrateCurve->repartition_interpolate(effectiveMin);
+    const double maxRepartition = calibrateCurve->repartition_interpolate(effectiveMax);
+    // -----------------------------------------------------------------
+    // 3️⃣  Gestion d’une zone à densité nulle (ex. entre deux pics)
+    // -----------------------------------------------------------------
+    if (minRepartition >= maxRepartition) {
+        // La densité est nulle sur l’intervalle → on retourne un tirage
+        // uniforme direct dans [tMin,tMax].
+        return Generator::randomUniform(tMin, tMax);
+    }
+    // -----------------------------------------------------------------
+    // 4️⃣  Tirage d’une valeur de la CDF dans la sous‑portion voulue
+    // -----------------------------------------------------------------
+    const double value = Generator::randomUniform(minRepartition, maxRepartition);
+    // -----------------------------------------------------------------
+    // 5️⃣  Conversion CDF → indice (interpolation dans le tableau)
+    // -----------------------------------------------------------------
+    // On limite la recherche d’indice aux indices qui correspondent à
+    // `effectiveMin` et `effectiveMax` afin d’éviter une recherche sur tout
+    // le tableau (gain de performances).
+    const std::size_t idxInfStart = static_cast<std::size_t>(
+        std::floor( (effectiveMin - unionTmin) / unionStep ));
+    const std::size_t idxSupStart = static_cast<std::size_t>(
+        std::ceil( (effectiveMax - unionTmin) / unionStep ));
+
+    const double idx = interpolate_index_range(value,
+                                               calibrateCurve->mRepartition,
+                                               idxInfStart,
+                                               idxSupStart);
+
+
+    // -----------------------------------------------------------------
+    // 6️⃣  Interpolation temps ↔ indice avec std::lerp
+    // -----------------------------------------------------------------
+    // `idx` varie de 0 à n‑1 → on le normalise en t ∈ [0,1]
+    const double tNorm = idx / static_cast<double>(n - 1);
+    const double t     = std::lerp(unionTmin, unionTmax, tNorm);
+    // -----------------------------------------------------------------
+    // 7️⃣  Validation finale : on s’assure que le résultat est bien dans
+    //     l’intervalle demandé.  Si ce n’est pas le cas (arrondis, etc.),
+    //     on retombe sur un tirage uniforme.
+    // -----------------------------------------------------------------
+    if (t >= tMin && t <= tMax)
+        return t;
+    // (optionnel) : on peut logger le dépassement en mode DEBUG
+#ifdef DEBUG
+    if (t < tMin)
+        qDebug() << "[" << __func__ <<"] t < tMin :" << t << tMin;
+    else
+        qDebug() << "[" << __func__ <<"] t > tMax :" << t << tMax;
+#endif
+    return Generator::randomUniform(tMin, tMax);
+}
 
 void sampleInCumulatedRepartition_thetaFixe (std::shared_ptr<Event> event, const StudyPeriodSettings &settings);
 double sample_in_Repartition_date_fixe(const Date &d, const StudyPeriodSettings& settings);

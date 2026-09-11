@@ -40,12 +40,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
-
 #include "Project.h"
 #include "Singleton.h"
 #include "SwitchAction.h"
 
+#include <QMainWindow>
 #include <QUndoStack>
 #include <QUndoView>
 #include <QDockWidget>
@@ -117,9 +116,6 @@ public slots:
     void setAppSettings();
     void updateAppSettings();
 
-  //  void toggleUndo() {undo_action = !undo_action;};
-  //  void toggleRedo() {redo_action = !redo_action;};
-
     void setAppFilesSettings();
     void openManual();
     void openWebsite();
@@ -132,8 +128,10 @@ public slots:
 
     void rebuildExportCurve();
     void changeEventsColor();
+#ifndef FIXEDPRIOR
     void changeEventsMethod();
     void changeDatesMethod();
+#endif
     void selectAllEvents();
     void selectEventInSelectedPhases();
     void selectEventWithString();
@@ -176,7 +174,6 @@ private:
 
     QAction* mProjectSaveAction;
     QAction* mProjectSaveAsAction;
-   // QAction* mProjectExportAction;
 
     QAction* mMCMCSettingsAction;
     QAction* mRunAction;
@@ -199,8 +196,10 @@ private:
     QAction* mRescaleCurveAction;
 
     QAction* mEventsColorAction;
+#ifndef FIXEDPRIOR
     QAction* mEventsMethodAction;
     QAction* mDatesMethodAction;
+#endif
     QList<QAction*> mDatesActions;
 
     QAction* mHelpAction;

@@ -171,19 +171,21 @@ bool PluginF14C::wiggleAllowed() const
     return true;
 }
 
-MHVariable::SamplerProposal PluginF14C::getDataMethod() const
+#ifndef FIXEDPRIOR
+SamplerProposal PluginF14C::getDataMethod() const
 {
-    return MHVariable::eInversion;
+    return SamplerProposal::eLikelihood;
 }
 
-QList<MHVariable::SamplerProposal> PluginF14C::allowedDataMethods() const
+QList<SamplerProposal> PluginF14C::allowedDataMethods() const
 {
-    QList<MHVariable::SamplerProposal> methods;
-    methods.append(MHVariable::eDatePrior);
-    methods.append(MHVariable::eInversion);
-    methods.append(MHVariable::eMHAdaptGauss);
+    QList<SamplerProposal> methods;
+    methods.append(SamplerProposal::eDatePrior);
+    methods.append(SamplerProposal::eLikelihood);
+    methods.append(SamplerProposal::eRWAdaptGauss);
     return methods;
 }
+#endif
 
 QString PluginF14C::getDateDesc(const Date* date) const
 {

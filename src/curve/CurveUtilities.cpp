@@ -2868,7 +2868,7 @@ void valeurs_G_VarG_GP_GS(const double t, const SilvermanSpline &spline, double&
 
     // The first derivative is always constant outside the interval [t1, tn].
     if (tReduce <= t1) {
-       /* Code d'origine */
+
         const t_reduceTime t2 = spline.vecThetaReduced[1];
         double h = t2 - t1;
         const double dt = t1 -tReduce;
@@ -2885,14 +2885,8 @@ void valeurs_G_VarG_GP_GS(const double t, const SilvermanSpline &spline, double&
         // valeurGSeconde
         GS = 0.0;
 
-        // // croissance quadratique de la variance
-        //Hyperparamètre réglable selon la confiance dans l’extrapolation
-        //const double k = spline.vecVarG.back() / h; // h = dernier intervalle
-        //varG = spline.vecVarG.back() + k * dt + dt; // croissance quadratique
-
-
     } else if (tReduce >= tn) {
-         // Code d'origine
+
         const t_reduceTime tn1 = spline.vecThetaReduced[n-2];
         const double h = tn - tn1;
         const double dt = tReduce - tn;
@@ -2902,11 +2896,6 @@ void valeurs_G_VarG_GP_GS(const double t, const SilvermanSpline &spline, double&
         G = spline.vecG[n-1] + dt * GP;
 
         GS = 0.0;
-
-        // // croissance quadratique de la variance
-        //Hyperparamètre réglable selon la confiance dans l’extrapolation
-        //const double k = spline.vecVarG.back() / h; // h = dernier intervalle
-        //varG = spline.vecVarG.back() + k * dt + dt; // croissance quadratique
 
     } else {
         // Sécurité pour la réinitialisation de l'index i0 si t recule
@@ -2920,11 +2909,6 @@ void valeurs_G_VarG_GP_GS(const double t, const SilvermanSpline &spline, double&
 
 
             if ((tReduce >= ti1) && (tReduce < ti2)) {
-                /*const double h0 = ti2 - ti1;
-                const double u0 = tReduce - ti1;
-                const double v0 = ti2 - tReduce;
-*/
-
                 const double h = ti2 - ti1;
                 const double u = tReduce - ti1;
                 const double v = h - u; // Fix 1: Annule la dérive de précision sur v
@@ -2957,15 +2941,10 @@ void valeurs_G_VarG_GP_GS(const double t, const SilvermanSpline &spline, double&
         }
 
     }
-
     // Rescale derivatives for original time domain
     GP *= invDuration;
     GS *= invDuration * invDuration;
-
-
 }
-
-
 
 /**
  * @brief Calcule la valeur de la spline (G), sa dérivée première (GP) et seconde (GS), à un instant t donné.
@@ -3028,12 +3007,6 @@ void valeurs_G_GP_GS(const double t, const MCMCSplineComposante &spline, double&
 
             //if ((tReduce >= ti1) && (tReduce < ti2)) {
             if (tReduce >= ti1 && (tReduce < ti2 )) {
-                /*const double h0 = ti2 - ti1;
-                const double u0 = tReduce - ti1;
-                const double v0 = ti2 - tReduce;
-                */
-
-
                 const double h = ti2 - ti1;
                 const double u = tReduce - ti1;
                 const double v = h - u; // Fix 1: Annule la dérive de précision sur v
@@ -3281,7 +3254,7 @@ SplineResults do_spline(const std::vector<t_matrix>& vec_Y, const SplineMatrices
 
 
     } catch(...) {
-        qCritical() << "[do_Spline] : Caught Exception!\n";
+        qCritical() << "[" << __func__ << "] : Caught Exception!\n";
     }
 
     return spline;
@@ -3309,7 +3282,7 @@ SplineResults do_spline(const std::vector<double>& vec_Y, const SplineMatricesD&
 
 
     } catch(...) {
-        qCritical() << "[do_Spline] : Caught Exception!\n";
+        qCritical() << "[ " << __func__ << "] : Caught Exception!\n";
     }
 
     return spline;

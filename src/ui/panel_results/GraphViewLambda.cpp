@@ -65,7 +65,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
 
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
-    mGraph->setOverArrow(GraphView::eNone);
+    mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
     mGraph->reserveCurves(6);
 
     QPen defaultPen;
@@ -85,15 +85,15 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(nullptr);
         mGraph->setBackgroundColor(QColor(230, 230, 230));
-        mGraph->setOverArrow(GraphView::eBothOverflow);
+        mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eBothOverflow);
 
         //mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
         //mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
 
         mGraph->autoAdjustYScale(true);
 
-        mGraph->setXAxisMode(GraphView::eAllTicks);
-        mGraph->setYAxisMode(GraphView::eHidden);
+        mGraph->setXAxisMode(GraphView::AxisMode::eAllTicks);
+        mGraph->setYAxisMode(GraphView::AxisMode::eHidden);
 
 
         mTitle = tr("Smoothing");
@@ -146,7 +146,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
         mGraph->setTipYLab("Smoothing");
         mGraph->setFormatFunctX(nullptr);
         mTitle = tr("Smoothing Trace");
-        if (model->mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
+        if (model->mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe)
             generateTraceCurves(mChains, &(model->mLambdaSpline));
         else
             mGraph->resetNothingMessage();
@@ -159,7 +159,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
         mGraph->setTipYLab("Rate");
         mGraph->setFormatFunctX(nullptr);
         mTitle = tr("Smoothing Acceptation");
-        if (model->mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
+        if (model->mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe)
             generateAcceptCurves(mChains, &(model->mLambdaSpline));
         else
             mGraph->resetNothingMessage();
@@ -172,7 +172,7 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
         mGraph->mLegendX = "";
         mGraph->setFormatFunctX(nullptr);
         mTitle = tr("Smoothing Autocorrelation");
-        if (model->mLambdaSpline.mSamplerProposal != MHVariable::eFixe) {
+        if (model->mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe) {
             generateCorrelCurves(mChains, &(model->mLambdaSpline));
             mGraph->setXScaleDivision(10, 10);
         }
@@ -192,20 +192,13 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
 
     if (mCurrentTypeGraph == ePostDistrib)  {
         mGraph->setTipYLab("");
-        
-        /*mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
-        mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
-        mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
 
-        for (unsigned i = 0; i<mShowChainList.size(); ++i) {
-            mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList.at(i));
-        }*/
 
         QStringList curvesToShow;
 
         if (mShowAllChains) {
             curvesToShow << "Post Distrib All Chains" << "HPD All Chains";
-            if (mShowVariableList.contains(eCredibility))
+            if (mShowList.contains(eCredibility))
                 curvesToShow << "Credibility All Chains";
 
         }
@@ -257,7 +250,7 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
 
         mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
         mGraph->setYAxisSupport(AxisTool::AxisSupport::eMin_Max);
-        mGraph->setYAxisMode(GraphView::eMinMaxHidden);
+        mGraph->setYAxisMode(GraphView::AxisMode::eMinMaxHidden);
         mGraph->showInfos(false);
         mGraph->autoAdjustYScale(true);
     }
@@ -286,7 +279,7 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
         mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
         mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
 
-        mGraph->setYAxisMode(GraphView::eMinMax );
+        mGraph->setYAxisMode(GraphView::AxisMode::eMinMax );
         mGraph->showInfos(false);
         mGraph->clearInfos();
         mGraph->autoAdjustYScale(false);
@@ -322,7 +315,7 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
           mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
           mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
 
-          mGraph->setYAxisMode(GraphView::eMinMax);
+          mGraph->setYAxisMode(GraphView::AxisMode::eMinMax);
           mGraph->showInfos(false);
           mGraph->clearInfos();
           mGraph->autoAdjustYScale(false); // do  repaintGraph()

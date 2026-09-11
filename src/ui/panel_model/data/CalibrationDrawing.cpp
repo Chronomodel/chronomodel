@@ -213,7 +213,7 @@ void CalibrationDrawing::updateLayout()
     mCalibGraph->setGeometry(0, mCalibComment->y() + mCalibComment->height() + mVerticalSpacer, width(), calibH);
     mCalibGraph->setMarginRight(marginRight);
     mCalibGraph->setMarginBottom(fm.ascent() * 2.2);
-    mCalibGraph->setYAxisMode(GraphView::eMinMaxHidden);
+    mCalibGraph->setYAxisMode(GraphView::AxisMode::eMinMaxHidden);
    // mCalibGraph->autoAdjustYScale(true); //ici
 
     if (mMouseOverCurve) {

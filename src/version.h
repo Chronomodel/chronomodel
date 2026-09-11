@@ -17,3 +17,5 @@
 #define KOMLAN_no
 
 #define THETA_MH_no // version 2 dans curve
+
+#define FIXEDPRIOR // Pour version 3.3.9, utilisateur ne choisit plus les apriori

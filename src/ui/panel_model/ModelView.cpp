@@ -894,7 +894,7 @@ void ModelView::createEventKnownInPlace()
             json[STATE_COLOR_RED] = col.red();
             json[STATE_COLOR_GREEN] = col.green();
             json[STATE_COLOR_BLUE] = col.blue();
-            json[STATE_EVENT_SAMPLER] = MHVariable::eFixe;
+            json[STATE_EVENT_SAMPLER] = static_cast<int>(SamplerProposal::eFixe);
 
             QList<QGraphicsView*> gviews = mEventsScene->views();
             double x = 0, y = 0;

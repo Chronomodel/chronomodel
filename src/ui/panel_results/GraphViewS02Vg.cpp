@@ -65,7 +65,7 @@ void GraphViewS02Vg::generateCurves(const graph_t typeGraph, const QList<variabl
 
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
-    mGraph->setOverArrow(GraphView::eNone);
+    mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
     mGraph->reserveCurves(6);
 
     QPen defaultPen;
@@ -85,15 +85,15 @@ void GraphViewS02Vg::generateCurves(const graph_t typeGraph, const QList<variabl
         mGraph->setFormatFunctX(nullptr);
         mGraph->setFormatFunctY(nullptr);
         mGraph->setBackgroundColor(QColor(230, 230, 230));
-        mGraph->setOverArrow(GraphView::eBothOverflow);
+        mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eBothOverflow);
 
         //mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
         //mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
 
         mGraph->autoAdjustYScale(true);
 
-        mGraph->setXAxisMode(GraphView::eAllTicks);
-        mGraph->setYAxisMode(GraphView::eHidden);
+        mGraph->setXAxisMode(GraphView::OverflowDataArrowMode::eAllTicks);
+        mGraph->setYAxisMode(GraphView::OverflowDataArrowMode::eHidden);
 
 
 
@@ -207,7 +207,7 @@ void GraphViewS02Vg::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
         if (mShowAllChains) {
             curvesToShow << "Post Distrib All Chains" << "HPD All Chains";
-            if (mShowVariableList.contains(eCredibility))
+            if (mShowList.contains(eCredibility))
                 curvesToShow << "Credibility All Chains";
 
         }

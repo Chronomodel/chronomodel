@@ -943,7 +943,7 @@ bool Project::load(const QString &path, bool force)
         }
 
         // -------------------- VÉRIFICATION DE COMPATIBILITÉ DES DATES --------------------
-        qDebug() << "[Project::load] begin checkDatesCompatibility";
+        qDebug() << "[ " << __func__ << "] begin checkDatesCompatibility";
 
         loadingState = checkDatesCompatibility(loadingState, isCorrected);
         qDebug() << "[Project::load] end checkDatesCompatibility";
@@ -2391,7 +2391,7 @@ void Project::resetMCMC()
 
         for (int i = 0; i < events.size(); ++i) {
             QJsonObject event = events.at(i).toObject();
-            event[STATE_EVENT_SAMPLER] = int (MHVariable::eDoubleExp);
+            event[STATE_EVENT_SAMPLER] = int (SamplerProposal::eDoubleExp);
 
             QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
             for (int j = 0; j < dates.size(); ++j) {
@@ -2822,7 +2822,7 @@ void Project::updateSelectedEventsColor(const QColor& color)
     }
 }
 
-void Project::updateSelectedEventsMethod(MHVariable::SamplerProposal sp)
+void Project::updateSelectedEventsMethod(SamplerProposal sp)
 {
     // Create a copy of the current state to modify.
     QJsonObject stateNext = mState;
@@ -2836,7 +2836,7 @@ void Project::updateSelectedEventsMethod(MHVariable::SamplerProposal sp)
 
         // If the event is selected, update its sampler method.
         if (eventObj.value(STATE_IS_SELECTED).toBool()) {
-            eventObj[STATE_EVENT_SAMPLER] = sp;
+            eventObj[STATE_EVENT_SAMPLER] = static_cast<int>(sp);
             events[i] = eventObj;
             modified = true;
         }
@@ -2850,7 +2850,7 @@ void Project::updateSelectedEventsMethod(MHVariable::SamplerProposal sp)
     }
 }
 
-void Project::updateSelectedEventsDataMethod(MHVariable::SamplerProposal sp, const QString& pluginId)
+void Project::updateSelectedEventsDataMethod(SamplerProposal sp, const QString& pluginId)
 {
     QJsonArray events = mState.value(STATE_EVENTS).toArray();
     bool modified = false;
@@ -2866,7 +2866,7 @@ void Project::updateSelectedEventsDataMethod(MHVariable::SamplerProposal sp, con
 
                 // Update the sampler if the plugin ID matches.
                 if (date[STATE_DATE_PLUGIN_ID].toString() == pluginId) {
-                    date[STATE_DATE_SAMPLER] = sp;
+                    date[STATE_DATE_SAMPLER] = static_cast<int>(sp);
                     dates[j] = date;
                     modified = true;
                 }
@@ -2916,15 +2916,18 @@ Date Project::createDateFromPlugin(PluginAbstract* plugin)
         DateDialog dialog(qApp->activeWindow());
         PluginFormAbstract* form = plugin->getForm();
         dialog.setForm(form);
+#ifndef FIXEDPRIOR
         dialog.setDataMethod(plugin->getDataMethod());
-
+#endif
         if (dialog.exec() == QDialog::Accepted) {
             if (form->isValid()) {
                 date.mPlugin = plugin;
                 date.mData = form->getData();
 
                 date.setName(dialog.getName());
+#ifndef FIXEDPRIOR
                 date.mTi.mSamplerProposal = dialog.getMethod();
+#endif
                 date.mDeltaType = dialog.getDeltaType();
                 date.mDeltaFixed = dialog.getDeltaFixed();
                 date.mDeltaMin = dialog.getDeltaMin();
@@ -3007,27 +3010,31 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
          * eFixe = -1,  //<  use with Type==eBound
          * eDoubleExp = 0, //<  The default method
          * eEventPrior = 1,
-         * eMHAdaptGauss = 2,
+         * eRWAdaptGauss = 2,
          */
         if (event.find(STATE_EVENT_METHOD) != event.end()) {
+#ifndef FIXEDPRIOR
             switch (event.value(STATE_EVENT_METHOD).toInt()) {
             case -1 :
-                event[STATE_EVENT_SAMPLER] = MHVariable::eFixe;
+                event[STATE_EVENT_SAMPLER] = static_cast<int>(SamplerProposal::eFixe);
                 break;
             case 0 :
-                event[STATE_EVENT_SAMPLER] = MHVariable::eDoubleExp;
+                event[STATE_EVENT_SAMPLER] = static_cast<int>(SamplerProposal::eDoubleExp);
                 break;
             case 1 :
-                event[STATE_EVENT_SAMPLER] = MHVariable::eEventPrior;
+                event[STATE_EVENT_SAMPLER] = static_cast<int>(SamplerProposal::eEventPrior);
                 break;
             case 2:
-                event[STATE_EVENT_SAMPLER] = MHVariable::eMHAdaptGauss;
+                event[STATE_EVENT_SAMPLER] = static_cast<int>(SamplerProposal::eRWAdaptGauss);
                 break;
 
             }
+#endif
             event.remove(STATE_EVENT_METHOD);
         }
-
+#ifdef FIXEDPRIOR // since version 3.3.9
+        event[STATE_EVENT_SAMPLER] = static_cast<int>(SamplerProposal::eEventPrior);
+#endif
         // Since v 3.1.4
         if (event.find("YInc") != event.end()) {
             event[STATE_EVENT_X_INC_DEPTH] = event.value("YInc").toDouble();
@@ -3095,27 +3102,32 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
 
 
             if (date.find(STATE_DATE_METHOD) != date.end()) { // since version 3.0
+#ifndef FIXEDPRIOR
                 switch (date.value(STATE_DATE_METHOD).toInt()) {
                 case 0 :
-                    date[STATE_DATE_SAMPLER] = MHVariable::eDatePrior; // = 3
+                    date[STATE_DATE_SAMPLER] = static_cast<int>(SamplerProposal::eDatePrior); // = 3
                     break;
                 case 1 :
-                    date[STATE_DATE_SAMPLER] = MHVariable::eInversion; // = 4
+                    date[STATE_DATE_SAMPLER] = static_cast<int>(SamplerProposal::eLikelihood); // = 4
                     break;
                 case 2:
-                    date[STATE_DATE_SAMPLER] = MHVariable::eMHAdaptGauss; // =2
+                    date[STATE_DATE_SAMPLER] = static_cast<int>(SamplerProposal::eRWAdaptGauss); // =2
                     break;
                 default: // old version is eMHSymGaussAdapt = 5
-                    date[STATE_DATE_SAMPLER] = MHVariable::eMHAdaptGauss;
+                    date[STATE_DATE_SAMPLER] = static_cast<int>(SamplerProposal::eRWAdaptGauss);
                     break;
 
                 }
+#endif
                 date.remove(STATE_DATE_METHOD);
             }
 
+#ifdef FIXEDPRIOR
+            date[STATE_DATE_SAMPLER] = static_cast<int>(SamplerProposal::eLikelihood);
+#else
             if (date.value(STATE_DATE_SAMPLER).toInt()>4 || date.value(STATE_DATE_SAMPLER).toInt()< 2 )
-                date[STATE_DATE_SAMPLER] = MHVariable::eMHAdaptGauss;
-            // etc...
+                date[STATE_DATE_SAMPLER] = static_cast<int>(SamplerProposal::eRWAdaptGauss);
+#endif
 
             // -----------------------------------------------------------
             //  Check the date compatibility with the plugin version
@@ -3138,24 +3150,27 @@ QJsonObject Project::checkDatesCompatibility(QJsonObject state, bool& isCorrecte
                 }
 
                 if (subdate.find(STATE_DATE_METHOD) == date.end()) { // since version 3.0
+#ifdef FIXEDPRIOR // since version 3.3.9
+                    subdate[STATE_DATE_SAMPLER] = static_cast<int>(SamplerProposal::eLikelihood);
+#else
                     switch (subdate.value(STATE_DATE_METHOD).toInt()) {
                     case 0 :
-                        subdate[STATE_DATE_SAMPLER] = MHVariable::eDatePrior;
+                        subdate[STATE_DATE_SAMPLER] = static_cast<int>(SamplerProposal::eDatePrior);
                         break;
                     case 1 :
-                        subdate[STATE_DATE_SAMPLER] = MHVariable::eInversion;
+                        subdate[STATE_DATE_SAMPLER] = static_cast<int>(SamplerProposal::eLikelihood);
                         break;
                     case 2:
-                        subdate[STATE_DATE_SAMPLER] = MHVariable::eMHAdaptGauss;
+                        subdate[STATE_DATE_SAMPLER] = static_cast<int>(SamplerProposal::eRWAdaptGauss);
                         break;
                     default: // old version is eMHSymGaussAdapt = 5
-                        date[STATE_DATE_SAMPLER] = MHVariable::eMHAdaptGauss;
+                        subdate[STATE_DATE_SAMPLER] = static_cast<int>(SamplerProposal::eRWAdaptGauss);
                         break;
                     }
-
+#endif
                     subdate.remove(STATE_DATE_METHOD);
                 }
-                
+
                 subdates[k] = subdate;
             }
             date[STATE_DATE_SUB_DATES] = subdates;
@@ -3222,8 +3237,11 @@ void Project::updateDate(int eventId, int dateIndex)
                         date[STATE_DATE_DATA] = form->getData();
 
                         date[STATE_NAME] = dialog.getName();
-                        date[STATE_DATE_SAMPLER] = dialog.getMethod();
-
+#ifdef FIXEDPRIOR
+                        date[STATE_DATE_SAMPLER] = static_cast<int>(SamplerProposal::eLikelihood);
+#else
+                        date[STATE_DATE_SAMPLER] = static_cast<int>(dialog.getMethod());
+#endif
                         date[STATE_DATE_DELTA_TYPE] = dialog.getDeltaType();
                         date[STATE_DATE_DELTA_FIXED] = dialog.getDeltaFixed();
                         date[STATE_DATE_DELTA_MIN] = dialog.getDeltaMin();

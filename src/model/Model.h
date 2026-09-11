@@ -129,10 +129,31 @@ public:
     void initNodeEvents(); // use in MCMCLoopChrono::initialize()
     QString initializeTheta();
 
-    t_reduceTime reduceTime(double t) const;
+    virtual t_reduceTime reduceTime(const double t) const
+    {
+        const long double tmin = static_cast<long double>(mSettings.mTmin);
+        const long double tmax = static_cast<long double>(mSettings.mTmax);
+        const long double tL = static_cast<long double>(t);
+        const long double denominator = tmax - tmin;
+
+#ifdef DEBUG
+        // Vérification de la stabilité numérique
+        if (std::abs(denominator) < std::numeric_limits<long double>::epsilon()) {
+            throw std::runtime_error(" [Model::reduceTime] Erreur : Division par une valeur trop petite !");
+        }
+#endif
+
+        return static_cast<double>((tL - tmin) / denominator);
+    }
+
     std::vector<t_reduceTime> reduceTime(const std::vector<double> &vec_t) const;
 
-    double yearTime(t_reduceTime reduceTime);
+    inline double yearTime(const t_reduceTime reduceTime) const
+    {
+        const double tmin = mSettings.mTmin;
+        const double tmax = mSettings.mTmax;
+        return reduceTime * (tmax - tmin) + tmin ;
+    }
 
     virtual void saveToStream(QDataStream* out) const ;
 
@@ -148,10 +169,21 @@ public:
     // Only trace needed for this :
     virtual void generateCorrelations(const std::vector<ChainSpecs>& chains);
 
-    double getThreshold() const;
-    double getBandwidth() const;
-    int getFFTLength() const;
 
+    double getThreshold() const
+    {
+        return mThreshold;
+    }
+
+    double getBandwidth() const
+    {
+        return mBandwidth;
+    }
+
+    int getFFTLength() const
+    {
+        return mFFTLength;
+    }
     virtual void setThreshold(const double threshold);
     void setBandwidth(BandwidthType bwt, const double bandwidth);
     void setFFTLength(int FFTLength);
@@ -189,7 +221,7 @@ public:
 
 #pragma mark Loop
    // virtual void memo_accepted_state(const unsigned i_chain);
-    virtual void initVariablesForChain();
+    virtual void setParametersForChain();
 
 
 

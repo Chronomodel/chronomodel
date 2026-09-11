@@ -763,12 +763,12 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
             calibGraph->setRangeX(mTminDisplay, mTmaxDisplay);
             calibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
             calibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
-            calibGraph->setOverArrow(GraphView::eNone);
+            calibGraph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
 
 
             calibGraph->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
             calibGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
-            calibGraph->setYAxisMode(GraphView::eHidden);
+            calibGraph->setYAxisMode(GraphView::AxisMode::eHidden);
             calibGraph->showYAxisLine(false);
 
             graphList.append(calibGraph);
@@ -877,7 +877,7 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                     calibGraph->setCurrentX(mTminDisplay, mTmaxDisplay);
                     calibGraph->changeXScaleDivision(mMajorScale, mMinorScale);
 
-                    calibGraph->setYAxisMode(GraphView::eHidden);
+                    calibGraph->setYAxisMode(GraphView::AxisMode::eHidden);
                     calibGraph->showYAxisLine(false);
 
                 }
@@ -957,7 +957,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             graph3->setRangeX(mTminDisplay, mTmaxDisplay);
             graph3->setCurrentX(mTminDisplay, mTmaxDisplay);
             graph3->changeXScaleDivision(mMajorScale, mMinorScale);
-            graph3->setOverArrow(GraphView::eNone);
+            graph3->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
             graph3->setTipXLab("t");
 
 
@@ -966,7 +966,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
             graph3->autoAdjustYScale(true);
 
-            graph3->setYAxisMode(GraphView::eAllTicks);
+            graph3->setYAxisMode(GraphView::AxisMode::eAllTicks);
             graph3->showYAxisSubTicks(true);
             graph3->setTipYLab(cs.Z_short_name());
 
@@ -986,7 +986,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             graph2->setRangeX(mTminDisplay, mTmaxDisplay);
             graph2->setCurrentX(mTminDisplay, mTmaxDisplay);
             graph2->changeXScaleDivision(mMajorScale, mMinorScale);
-            graph2->setOverArrow(GraphView::eNone);
+            graph2->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
             graph2->setTipXLab("t");
 
             graph2->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
@@ -994,7 +994,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
 
             graph2->autoAdjustYScale(true);
 
-            graph2->setYAxisMode(GraphView::eAllTicks);
+            graph2->setYAxisMode(GraphView::AxisMode::eAllTicks);
             graph2->showYAxisSubTicks(true);
             graph2->setTipYLab(cs.Y_short_name());
             graph2->setMarginTop(graph2->fontMetrics().height()/2.);
@@ -1018,7 +1018,7 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
             graph1->setCurrentX(mTminDisplay, mTmaxDisplay);
             //graph1->changeXScaleDivision(mMajorScale, mMinorScale);
             graph1->setXScaleDivision(mMajorScale, mMinorScale);
-            graph1->setOverArrow(GraphView::eNone);
+            graph1->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
             graph1->setTipXLab("t");
 
 
@@ -1425,11 +1425,11 @@ MultiCalibrationDrawing* MultiCalibrationView::scatterPlot(const double thres)
                 const double min_plot = Ymin - 0.05*(Ymax-Ymin);
                 const double max_plot = Ymax + 0.05*(Ymax-Ymin);
                 graph1->setRangeY(min_plot, max_plot);
-                graph1->setYAxisMode(GraphView::eMinMaxHidden);
+                graph1->setYAxisMode(GraphView::AxisMode::eMinMaxHidden);
 
             } else {
                 graph1->autoAdjustYScale(true);
-                graph1->setYAxisMode(GraphView::eAllTicks);
+                graph1->setYAxisMode(GraphView::AxisMode::eAllTicks);
 
             }
             graph1->showYAxisSubTicks(processType != CurveSettings::eProcess_None);
@@ -1551,7 +1551,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             graph3->setRangeX(mTminDisplay, mTmaxDisplay);
             graph3->setCurrentX(mTminDisplay, mTmaxDisplay);
             graph3->changeXScaleDivision(mMajorScale, mMinorScale);
-            graph3->setOverArrow(GraphView::eNone);
+            graph3->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
             graph3->setTipXLab("t");
 
             graph3->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
@@ -1559,7 +1559,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 
             graph3->autoAdjustYScale(true);
 
-            graph3->setYAxisMode(GraphView::eAllTicks);
+            graph3->setYAxisMode(GraphView::AxisMode::eAllTicks);
             graph3->showYAxisSubTicks(true);
             graph3->setTipYLab(cs.Z_short_name());
 
@@ -1580,7 +1580,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             graph2->setRangeX(mTminDisplay, mTmaxDisplay);
             graph2->setCurrentX(mTminDisplay, mTmaxDisplay);
             graph2->changeXScaleDivision(mMajorScale, mMinorScale);
-            graph2->setOverArrow(GraphView::eNone);
+            graph2->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
             graph2->setTipXLab("t");
 
             graph2->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
@@ -1588,7 +1588,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 
             graph2->autoAdjustYScale(true);
 
-            graph2->setYAxisMode(GraphView::eAllTicks);
+            graph2->setYAxisMode(GraphView::AxisMode::eAllTicks);
             graph2->showYAxisSubTicks(true);
             graph2->setTipYLab(cs.Y_short_name());
             graph2->setMarginTop(graph2->fontMetrics().height()/2.);
@@ -1611,7 +1611,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             graph1->setRangeX(mTminDisplay, mTmaxDisplay);
             graph1->setCurrentX(mTminDisplay, mTmaxDisplay);
             graph1->changeXScaleDivision(mMajorScale, mMinorScale);
-            graph1->setOverArrow(GraphView::eNone);
+            graph1->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
             graph1->setTipXLab("t");
 
             graph1->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
@@ -1619,7 +1619,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
 
             graph1->autoAdjustYScale(true);
 
-            graph1->setYAxisMode( processType == CurveSettings::eProcess_None ? GraphView::eMinMaxHidden: GraphView::eAllTicks);
+            graph1->setYAxisMode( processType == CurveSettings::eProcess_None ? GraphView::AxisMode::eMinMaxHidden: GraphView::AxisMode::eAllTicks);
             graph1->showYAxisSubTicks(processType != CurveSettings::eProcess_None);
 
             graph1->setTipYLab(cs.X_short_name());
@@ -2234,7 +2234,7 @@ MultiCalibrationDrawing* MultiCalibrationView::fitPlot(const double thres)
             graph1->addInfo(spline_info);
             graph1->showInfos(true);
 
-            graph1->setYAxisMode( processType == CurveSettings::eProcess_None ? GraphView::eMinMaxHidden: GraphView::eAllTicks);
+            graph1->setYAxisMode( processType == CurveSettings::eProcess_None ? GraphView::AxisMode::eMinMaxHidden: GraphView::AxisMode::eAllTicks);
             graph1->showYAxisSubTicks(processType != CurveSettings::eProcess_None);
         break;
     }
@@ -2660,94 +2660,6 @@ void MultiCalibrationView::exportImage()
     mDrawing->showMarker();
 }
 
-/*
-void MultiCalibrationView::exportFullImage()
-{
-    bool printAxis = (mGraphHeight < mHeightForVisibleTicksAxis);
-    QFontMetricsF fmAxe (mDrawing->font());
-
-    QWidget* widgetExport = mDrawing->getGraphWidget();
-
-    int minDeltaPix = 3; //same value as GraphView::mStepMinWidth
-    widgetExport->setFont(mDrawing->font());
-
-
-    // --------------------------------------------------------------------
-
-    AxisWidget* axisWidget = nullptr;
-    QLabel* axisLegend = nullptr;
-
-    int axeHeight = int ( fmAxe.ascent() * 2.2);
-    int legendHeight = int (1.5 * (fmAxe.descent() + fmAxe.ascent()));
-
-    if (printAxis) {
-        widgetExport->resize(widgetExport->width(), widgetExport->height() + axeHeight + legendHeight);
-
-        DateConversion f = nullptr;
-
-        constexpr int graphShift = 5; // the same name and the same value as MultiCalibrationDrawing::updateLayout()
-        axisWidget = new AxisWidget(f, widgetExport);
-        axisWidget->setFont(mDrawing->font());
-        axisWidget->mMarginLeft = mMarginLeft;
-        axisWidget->mMarginRight = mMarginRight ;
-
-        //qDebug()<<"multiCal Export"<<mMajorScale << mMinorScale;
-        axisWidget->setScaleDivision(mMajorScale, mMinorScale);
-        axisWidget->updateValues(int (widgetExport->width() - axisWidget->mMarginLeft - axisWidget->mMarginRight -ColoredBar::mWidth - graphShift), minDeltaPix, mTminDisplay, mTmaxDisplay);
-
-        //axisWidget->mShowText = true;
-        axisWidget->setAutoFillBackground(true);
-        axisWidget->mShowSubs = true;
-        axisWidget->mShowSubSubs = true;
-        axisWidget->mShowArrow = true;
-        axisWidget->mShowText = true;
-        axisWidget->setGeometry(ColoredBar::mWidth + graphShift, widgetExport->height() - axeHeight, widgetExport->width() - ColoredBar::mWidth - graphShift, axeHeight);
-
-        axisWidget->raise();
-        axisWidget->setVisible(true);
-
-        QString legend = DateUtils::getAppSettingsFormatStr();
-
-        axisLegend = new QLabel(legend, widgetExport);
-
-        axisLegend->setGeometry(0, widgetExport->height() - axeHeight - legendHeight, widgetExport->width() - 10, legendHeight);
-
-        axisLegend->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        axisLegend->raise();
-        axisLegend->setVisible(true);
-    }
-
-    QFileInfo fileInfo = saveWidgetAsImage(widgetExport,
-                                           QRect(0, 0, widgetExport->width() , widgetExport->height()),
-                                           tr("Save graph image as..."),
-                                           MainWindow::getInstance()->getCurrentPath());
-
-    // Delete additional widgets if necessary :
-    if (printAxis) {
-        if (axisWidget) {
-            axisWidget->setParent(nullptr);
-            delete axisWidget;
-            axisWidget = nullptr;
-        }
-        if (axisLegend) {
-            axisLegend->setParent(nullptr);
-            delete axisLegend;
-            axisLegend = nullptr;
-        }
-        widgetExport->resize(widgetExport->width() ,widgetExport->height() - axeHeight - legendHeight);
-    } else
-        widgetExport->resize(widgetExport->width() ,widgetExport->height() - legendHeight);
-
-    widgetExport = nullptr;
-    // Revert to default display :
-
-    if (fileInfo.isFile())
-        MainWindow::getInstance()->setCurrentPath(fileInfo.dir().absolutePath());
-
-    updateLayout();
-}
-*/
-
 void MultiCalibrationView::exportFullImage()
 {
     const bool printAxis = (mGraphHeight < mHeightForVisibleTicksAxis);
@@ -2960,8 +2872,8 @@ void MultiCalibrationView::exportResults()
                 break;
             }
         }
-        header <<"Data type" << "Data Name" << "Data Description" << "MAP" << "Mean" << "Std";
-        header <<"Q1" <<"Q2" << "Q3"<<"HPD total %";
+        header << "Data type" << "Data Name" << "Data Description" << "MAP" << "Mean" << "Std";
+        header << "Q1" <<"Q2" << "Q3"<< "HPD total %";
 
         int maxHpd = 2;
         QList<double> curveParam;
@@ -2973,8 +2885,8 @@ void MultiCalibrationView::exportResults()
             QStringList curveParamList;
             if (isCurve) {
                 curveParam = Event::curveParametersFromJsonEvent(ev, processType);
-                for (auto param : curveParam) {
-                    curveParamList.append(QLocale().toString(param));
+                for (int i = 0; i <curveParam.size(); i++) {
+                    curveParamList.append(QLocale().toString(curveParam[i]));
                 }
             }
 

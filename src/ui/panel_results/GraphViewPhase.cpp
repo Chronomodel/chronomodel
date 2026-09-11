@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2025
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -47,8 +47,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "DateUtils.h"
 #include "ModelUtilities.h"
 
-// Constructor / Destructor
-
 GraphViewPhase::GraphViewPhase(QWidget* parent):
     GraphViewResults(parent),
     mPhase(nullptr)
@@ -83,16 +81,16 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
     QColor color = mPhase->mColor;
 
     QString resultsHTML = tr("Nothing to Display");
-    if (mCurrentVariableList.contains(eBeginEnd)) {
+    if (mShowList.contains(eBeginEnd)) {
         resultsHTML = ModelUtilities::phaseResultsHTML(mPhase);
 
-    } else if (mCurrentVariableList.contains(eTempo)) {
+    } else if (mShowList.contains(eTempo)) {
         resultsHTML = ModelUtilities::tempoResultsHTML(mPhase);
 
-    } else if (mCurrentVariableList.contains(eDuration)) {
+    } else if (mShowList.contains(eDuration)) {
         resultsHTML = ModelUtilities::durationResultsHTML(mPhase);
 
-    } else if (mCurrentVariableList.contains(eActivity)) {
+    } else if (mShowList.contains(eActivity)) {
         resultsHTML = ModelUtilities::activityResultsHTML(mPhase);
     }
 
@@ -111,7 +109,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
      *
      * ------------------------------------------------  */
     if (typeGraph == ePostDistrib) {
-        if (mCurrentVariableList.contains(eBeginEnd)) {
+        if (mShowList.contains(eBeginEnd)) {
             graph_density();
             mGraph->reserveCurves(5 + 2*mChains.size());
 
@@ -187,7 +185,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
                 }
 
 
-        } else if (mCurrentVariableList.contains(eTempo)) {
+        } else if (mShowList.contains(eTempo)) {
 
             if (!mPhase->mTempo.empty()) {
                 graph_density();
@@ -219,7 +217,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
             }
 
 
-        } else if (mCurrentVariableList.contains(eActivity)) {
+        } else if (mShowList.contains(eActivity)) {
 
             if (!mPhase->mActivity.empty()) {
                 graph_density();
@@ -257,9 +255,9 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
 
             }
 
-        } else if (mCurrentVariableList.contains(eDuration)) {
+        } else if (mShowList.contains(eDuration)) {
             //graph_density();
-            mGraph->setOverArrow(GraphView::eBothOverflow);
+            mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eBothOverflow);
 
             mGraph->setTipYLab("");
             mGraph->setTipXLab("d");
@@ -271,8 +269,8 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
 
             mGraph->autoAdjustYScale(true);
 
-            mGraph->setXAxisMode(GraphView::eAllTicks);
-            mGraph->setYAxisMode(GraphView::eHidden);
+            mGraph->setXAxisMode(GraphView::AxisMode::eAllTicks);
+            mGraph->setYAxisMode(GraphView::AxisMode::eHidden);
 
             // ------------------------------------------------------------
             //  Add zones outside study period
@@ -289,7 +287,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
             mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
             mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
 
-            mGraph->setYAxisMode(GraphView::eMinMaxHidden);
+            mGraph->setYAxisMode(GraphView::AxisMode::eMinMaxHidden);
             mTitle = tr("Phase Duration : %1").arg(mPhase->getQStringName());
 
             if (mPhase->mDuration.fullHisto().size() > 0) {
@@ -336,7 +334,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
      *  - Q3 End i
      * ------------------------------------------------ */
     else if (typeGraph == eTrace) {
-        if (mCurrentVariableList.contains(eBeginEnd)) {
+        if (mShowList.contains(eBeginEnd)) {
             graph_trace();
             mGraph->reserveCurves(2);
 
@@ -344,7 +342,7 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
             generateTraceCurves(mChains, &(mPhase->mBeta), "End");
             mGraph->autoAdjustYScale(true);
 
-        } else if (mCurrentVariableList.contains(eDuration)) {
+        } else if (mShowList.contains(eDuration)) {
             graph_trace();
             mGraph->reserveCurves(1);
             mTitle = tr("Phase Duration : %1").arg(mPhase->getQStringName());
@@ -397,26 +395,12 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      * ------------------------------------------------*/
     if (mCurrentTypeGraph == ePostDistrib) {
 
-        if (mCurrentVariableList.contains(eBeginEnd)) {
-            //const bool showCredibility = mShowVariableList.contains(eCredibility);
-
-            /*mGraph->setCurveVisible("Post Distrib Begin All Chains", mShowAllChains);
-            mGraph->setCurveVisible("Post Distrib End All Chains", mShowAllChains);
-            mGraph->setCurveVisible("HPD Begin All Chains", mShowAllChains);
-            mGraph->setCurveVisible("HPD End All Chains", mShowAllChains);
-
-            mGraph->setCurveVisible("Time Range", mShowAllChains && showCredibility);
-
-            for (auto i=0; i<mShowChainList.size(); ++i) {
-                mGraph->setCurveVisible("Post Distrib Begin Chain " + QString::number(i), mShowChainList.at(i));
-                mGraph->setCurveVisible("Post Distrib End Chain " + QString::number(i), mShowChainList.at(i));
-            }*/
-
+        if (mShowList.contains(eBeginEnd)) {
             QStringList curvesToShow;
 
             if (mShowAllChains) {
                 curvesToShow << "Post Distrib Begin All Chains"<< "Post Distrib End All Chains" << "HPD Begin All Chains" << "HPD End All Chains" ;
-                if (mShowVariableList.contains(eCredibility))
+                if (mShowList.contains(eCredibility))
                     curvesToShow << "Time Range";
 
             }
@@ -431,21 +415,14 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setCurveVisible(curvesToShow, true);
         }
 
-        else if (mCurrentVariableList.contains(eDuration)) {
+        else if (mShowList.contains(eDuration)) {
             const GraphCurve* duration = mGraph->getCurve("Post Distrib All Chains");
 
             if ( duration && !duration->mData.isEmpty()) {
-                /*const bool showCredibility = mShowVariableList.contains(eCredibility);
-                mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
-                mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
-                mGraph->setCurveVisible("Credibility All Chains", showCredibility && mShowAllChains);
-
-                for (auto i=0; i<mShowChainList.size(); ++i)
-                    mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList.at(i));*/
                 QStringList curvesToShow;
                 if (mShowAllChains) {
                     curvesToShow << "Post Distrib All Chains" << "HPD All Chains";
-                    if (mShowVariableList.contains(eCredibility))
+                    if (mShowList.contains(eCredibility))
                         curvesToShow << "Credibility All Chains";
 
                 }
@@ -455,44 +432,36 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             }
 
         }
-        else if (mCurrentVariableList.contains(eTempo)) {
+        else if (mShowList.contains(eTempo)) {
             // With variable eTempo there is no choice of "chain", it must be "all chains"
             const GraphCurve* tempo = mGraph->getCurve("Post Distrib All Chains");
 
             if ( tempo && !tempo->mData.isEmpty()) {
-                /*const bool showError = mShowVariableList.contains(eError);
+                /*const bool showError = mShowList.contains(eError);
                 mGraph->setCurveVisible("Post Distrib All Chains", true);
                 mGraph->setCurveVisible("Post Distrib Env All Chains", showError);*/
 
                 QStringList curvesToShow;
                 curvesToShow << "Post Distrib All Chains";
-                if (mShowVariableList.contains(eError))
+                if (mShowList.contains(eError))
                     curvesToShow << "Post Distrib Env All Chains";
 
                 mGraph->setCurveVisible(curvesToShow, true);
             }
 
         }
-        else if (mCurrentVariableList.contains(eActivity)) {
+        else if (mShowList.contains(eActivity)) {
             // With variable eActivity there is no choice of "chain", it must be "all chains"
             const GraphCurve* Activity = mGraph->getCurve("Post Distrib All Chains");
 
             if ( Activity && !Activity->mData.isEmpty()) {
 
-                const bool showError = mShowVariableList.contains(eError);
-                /*mGraph->setCurveVisible("Post Distrib All Chains", true);
-                mGraph->setCurveVisible("Post Distrib Env All Chains", showError);
-
-                // Activity Uniform
-                const bool showActivityUnif = mShowVariableList.contains(eActivityUnif);
-                mGraph->setCurveVisible("Post Distrib Unif Mean", showActivityUnif);*/
-
-
+                const bool showError = mShowList.contains(eError);
                 QStringList curvesToShow;
                 curvesToShow << "Post Distrib All Chains";
                 if (showError)
                     curvesToShow << "Post Distrib Env All Chains";
-                if (mShowVariableList.contains(eActivityUnif))
+                if (mShowList.contains(eActivityUnif))
                     curvesToShow << "Post Distrib Unif Mean";
 
                 mGraph->setCurveVisible(curvesToShow, true);
@@ -533,7 +502,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      *  - Duration Q3 i
      * ------------------------------------------------ */
     else if (mCurrentTypeGraph == eTrace) {
-        /*if (mCurrentVariableList.contains(eBeginEnd)) {
+        /*if (mShowList.contains(eBeginEnd)) {
 
             for (int i = 0; i<mShowChainList.size(); ++i) {
                 mGraph->setCurveVisible("Begin Trace " + QString::number(i), mShowChainList.at(i));
@@ -553,7 +522,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->showInfos(false);
             mGraph->autoAdjustYScale(true);
 
-        } else if (mCurrentVariableList.contains(eDuration)) {
+        } else if (mShowList.contains(eDuration)) {
 
             for (int i = 0; i<mShowChainList.size(); ++i) {
                 mGraph->setCurveVisible("Duration Trace " + QString::number(i), mShowChainList.at(i));
@@ -570,7 +539,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         }*/
         QStringList curvesToShow;
 
-        if (mCurrentVariableList.contains(eBeginEnd)) {
+        if (mShowList.contains(eBeginEnd)) {
             for (int i = 0; i < mShowChainList.size(); ++i) {
                 if (mShowChainList.at(i)) {
                     curvesToShow << QString("Begin Trace %1").arg(i)
@@ -586,11 +555,11 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setCurveVisible(curvesToShow, true);
             mGraph->setTipXLab(tr("Iteration"));
             mGraph->setTipYLab("t");
-            mGraph->setYAxisMode(GraphView::eMinMaxHidden);
+            mGraph->setYAxisMode(GraphView::AxisMode::eMinMaxHidden);
             mGraph->showInfos(false);
             mGraph->autoAdjustYScale(true);
 
-        } else if (mCurrentVariableList.contains(eDuration)) {
+        } else if (mShowList.contains(eDuration)) {
             for (int i = 0; i < mShowChainList.size(); ++i) {
                 if (mShowChainList.at(i)) {
                     curvesToShow << QString("Duration Trace %1").arg(i)
@@ -602,7 +571,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             mGraph->setCurveVisible(curvesToShow, true);
             mGraph->setTipXLab(tr("Iteration"));
             mGraph->setTipYLab("t");
-            mGraph->setYAxisMode(GraphView::eMinMaxHidden);
+            mGraph->setYAxisMode(GraphView::AxisMode::eMinMaxHidden);
             mGraph->showInfos(false);
             mGraph->autoAdjustYScale(true);
         }

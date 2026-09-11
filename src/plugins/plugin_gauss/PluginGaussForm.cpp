@@ -276,7 +276,7 @@ void PluginGaussForm::validOK()
 {
     bool ok = mErrorEdit->hasAcceptableInput() &&  mAverageEdit->hasAcceptableInput();
     if (ok && mEquationRadio->isChecked()) {
-        bool oka,okb;
+        bool oka, okb;
         const QLocale locale;
         const double a = locale.toDouble(mAEdit->text(),&oka);
         if(a == 0)

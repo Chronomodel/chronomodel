@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -42,6 +42,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QDialog>
 #include <QJsonObject>
+#include <QtGui/qvalidator.h>
+#include <QtWidgets/qlineedit.h>
+
+#include "version.h"
 #include "Date.h"
 
 class QLineEdit;
@@ -58,6 +62,51 @@ class Button;
 class QLabel;
 class HelpWidget;
 
+// ---------------------------------------------------------------------
+//  WiggleValidator.h
+// ---------------------------------------------------------------------
+
+class WiggleValidator : public QValidator
+{
+    Q_OBJECT
+public:
+    explicit WiggleValidator(QObject *parent = nullptr);
+
+    /*  Les radios et les edits sont passés après construction (dans
+        DateDialog::DateDialog) afin d’éviter les dépendances circulaires.   */
+    void setRadios(QRadioButton *fixed,
+                   QRadioButton *range,
+                   QRadioButton *gauss);
+    void setEdits(QLineEdit *fixedEdit,
+                  QLineEdit *minEdit,
+                  QLineEdit *maxEdit,
+                  QLineEdit *avgEdit,
+                  QLineEdit *errEdit);
+
+    /*  Méthode obligatoire de QValidator  */
+    State validate(QString &input, int &pos) const override;
+
+    /*  Retourne le même résultat que la méthode validate() mais
+        sans avoir besoin du paramètre « input » (pratique dans
+        checkWiggle()).                                            */
+    bool isWiggleValid() const;
+
+private:
+
+    // pointeurs vers les contrôles (non‑possédés)
+    QRadioButton *mFixedRadio  = nullptr;
+    QRadioButton *mRangeRadio  = nullptr;
+    QRadioButton *mGaussRadio  = nullptr;
+
+    QLineEdit    *mFixedEdit   = nullptr;
+    QLineEdit    *mMinEdit     = nullptr;
+    QLineEdit    *mMaxEdit     = nullptr;
+    QLineEdit    *mAvgEdit     = nullptr;
+    QLineEdit    *mErrEdit     = nullptr;
+
+    mutable bool mLastResult = true;   // mémorise le dernier état (pour isWiggleValid())
+};
+
 
 class DateDialog: public QDialog
 {
@@ -68,17 +117,39 @@ public:
 
     void setDate(const QJsonObject& date);
     void setForm(PluginFormAbstract* form);
-    void setDataMethod(MHVariable::SamplerProposal sp);
 
-    QString getName() const;
-    MHVariable::SamplerProposal getMethod() const;
+
+#ifndef FIXEDPRIOR
+    void setDataMethod(SamplerProposal sp);
+    SamplerProposal getMethod() const;
+#endif
+
     Date::DeltaType getDeltaType() const;
-    double getDeltaFixed() const;
-    double getDeltaMin() const;
-    double getDeltaMax() const;
-    double getDeltaAverage() const;
-    double getDeltaError() const;
 
+    QString getName() const
+    {
+        return mNameEdit->text();
+    }
+    double getDeltaFixed() const
+    {
+        return sLocale.toDouble(mDeltaFixedEdit->text());
+    }
+    double getDeltaMin() const
+    {
+        return sLocale.toDouble(mDeltaMinEdit->text());
+    }
+    double getDeltaMax() const
+    {
+        return sLocale.toDouble(mDeltaMaxEdit->text());
+    }
+    double getDeltaAverage() const
+    {
+        return sLocale.toDouble(mDeltaAverageEdit->text());
+    }
+    double getDeltaError() const
+    {
+        return sLocale.toDouble(mDeltaErrorEdit->text());
+    }
     void setWiggleEnabled(bool enabled);
 
 protected:
@@ -106,9 +177,10 @@ public:
     QCheckBox* mAdvancedCheck;
     QGroupBox* mAdvancedWidget;
 
+#ifndef FIXEDPRIOR
     QLabel* mMethodLab;
     QComboBox* mMethodCombo;
-
+#endif
 
     QLabel* mWiggleLab;
     QRadioButton* mDeltaNoneRadio;
@@ -135,11 +207,17 @@ public:
     int mButW;
     int mButH;
     int mComboH;
+private:
+    static QLocale sLocale;
+    QDoubleValidator *mValidator_R;
 
     bool mWiggleEnabled;
 
     QVBoxLayout* mLayout;
     QDialogButtonBox* mButtonBox;
 };
+
+
+
 
 #endif

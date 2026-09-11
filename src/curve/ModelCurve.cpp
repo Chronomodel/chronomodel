@@ -52,13 +52,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <qdatastream.h>
 #include <qapplication.h>
 
-
 #include <math.h>
-
 
 ModelCurve::ModelCurve():
     Model(),
     mLambdaSpline(),
+    mMu_Lambda(3),
 
 #ifdef KOMLAN
     mSO2Vg_beta(0),
@@ -73,13 +72,13 @@ ModelCurve::ModelCurve():
     mLambdaSpline.setName(std::string("LambdaSpline of Curve"));
     mLambdaSpline.mSupport = Support::eR;
     mLambdaSpline.mFormat = DateUtils::eNumeric;
-    mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    mLambdaSpline.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
 
 #ifdef KOMLAN
     mS02Vg.setName(std::string("S02 on Vg of Curve"));
     mS02Vg.mSupport = MetropolisVariable::eRp;
     mS02Vg.mFormat = DateUtils::eNumeric;
-    mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    mS02Vg.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
 #endif
 
 }
@@ -87,6 +86,7 @@ ModelCurve::ModelCurve():
 ModelCurve::ModelCurve(const QJsonObject& json):
     Model(json),
     mLambdaSpline(),
+    mMu_Lambda(3),
 #ifdef KOMLAN
     mSO2Vg_beta(0),
 #else
@@ -99,13 +99,13 @@ ModelCurve::ModelCurve(const QJsonObject& json):
     mLambdaSpline.setName(std::string("LambdaSpline of Curve"));
     mLambdaSpline.mSupport = Support::eR;
     mLambdaSpline.mFormat = DateUtils::eNumeric;
-    mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    mLambdaSpline.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
 
 #ifdef KOMLAN
     mS02Vg.setName(std::string("S02 on Vg of Curve"));
     mS02Vg.mSupport = MetropolisVariable::eRp;
     mS02Vg.mFormat = DateUtils::eNumeric;
-    mS02Vg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    mS02Vg.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
 #endif
     settings_from_Json(json);
 
@@ -113,7 +113,7 @@ ModelCurve::ModelCurve(const QJsonObject& json):
 
 ModelCurve::~ModelCurve()
 {
-    qDebug() << "[ModelCurve::~ModelCurve]";
+    qDebug() << "[ " << __func__ << " ]";
 }
 
 QJsonObject ModelCurve::toJson() const
@@ -265,34 +265,34 @@ void ModelCurve::settings_from_Json(const QJsonObject &json)
 
     for (std::shared_ptr<Event> &event: mEvents) {
         if (event->type() ==  Event::eBound)
-            event->mTheta.mSamplerProposal = MHVariable::eFixe;
+            event->mTheta.mSamplerProposal = SamplerProposal::eFixe;
 
         else if (event->type() ==  Event::eDefault) {
                 if (is_curve && mCurveSettings.mTimeType == CurveSettings::eModeFixed) {
-                    event->mTheta.mSamplerProposal = MHVariable::eFixe;
+                    event->mTheta.mSamplerProposal = SamplerProposal::eFixe;
                     for (Date &d : event->mDates) {
-                        d.mTi.mSamplerProposal = MHVariable::eFixe;
-                        d.mSigmaTi.mSamplerProposal = MHVariable::eFixe;
+                        d.mTi.mSamplerProposal = SamplerProposal::eFixe;
+                        d.mSigmaTi.mSamplerProposal = SamplerProposal::eFixe;
                     }
                 }
 
         }
 
         if (mCurveSettings.mVarianceType == CurveSettings::eModeFixed)
-            event->mVg.mSamplerProposal = MHVariable::eFixe;
+            event->mVg.mSamplerProposal = SamplerProposal::eFixe;
 
         else if (event->mPointType == Event::eNode)
-            event->mVg.mSamplerProposal = MHVariable::eFixe;
+            event->mVg.mSamplerProposal = SamplerProposal::eFixe;
         else
-            event->mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+            event->mVg.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
 
     }
 
     mLambdaSpline.setName(std::string("LambdaSpline of Curve"));
     if (mCurveSettings.mLambdaSplineType == CurveSettings::eModeFixed)
-        mLambdaSpline.mSamplerProposal = MHVariable::eFixe;
+        mLambdaSpline.mSamplerProposal = SamplerProposal::eFixe;
     else
-        mLambdaSpline.mSamplerProposal = MHVariable::eMHAdaptGauss;
+        mLambdaSpline.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
 
     compute_XYZ = mCurveSettings.mProcessType == CurveSettings::eProcess_Vector ||
                 mCurveSettings.mProcessType == CurveSettings::eProcess_Spherical ||
@@ -599,7 +599,7 @@ bool ModelCurve::loadFromStream_v338(QDataStream* in)
         return true;
 
     } catch (...) {
-        std::cout << "[loadFromStream_v338] error" << std::endl;
+        std::cout << "[" << __func__ << "] error" << std::endl;
         return false;
     }
 
@@ -659,6 +659,71 @@ void ModelCurve::saveMapToFile(QFile *file, const QString csvSep, const CurveMap
     file->close();
 }
 
+
+void ModelCurve::saveSplinesToFile(QFile *file, const QString csvSep) const
+{
+    // Protection
+    if (mSplinesTrace.empty() || mSplinesTrace[0].splineX.vecG.empty())
+        return;
+
+    QTextStream output(file);
+    const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
+    output << "# " << version << "\n";
+
+    // 1. Détection correcte des composantes Y et Z
+    const bool withY = !mSplinesTrace[0].splineY.vecG.empty();
+    const bool withZ = !mSplinesTrace[0].splineZ.vecG.empty();
+
+    // 2. En-tête (Header)
+    QStringList header;
+    header << "Theta" << "Theta_reduice" << "Gx" << "Gamma_x";
+    if (withY) {
+        header << "Gy" << "Gamma_y";
+        if (withZ) {
+            header << "Gz" << "Gamma_z";
+        }
+    }
+    output << header.join(csvSep) << "\n";
+
+    // 3. Écriture des données
+    for (size_t i = 0; i < mSplinesTrace.size(); ++i) {
+        const auto& trace = mSplinesTrace[i];
+        const size_t numIters = trace.splineX.vecG.size();
+
+        for (size_t iter = 0; iter < numIters; ++iter) {
+            const double reduiceT = trace.splineX.vecThetaReduced[iter];
+            const auto Gx = trace.splineX.vecG[iter];
+            const auto gammax = trace.splineX.vecGamma[iter];
+            const auto theta = yearTime(reduiceT);
+
+            QStringList row;
+            row << stringForCSV(theta, true)
+                << stringForCSV(reduiceT, true)
+                << stringForCSV(Gx, true)
+                << stringForCSV(gammax, true);
+
+            if (withY && iter < trace.splineY.vecG.size()) {
+                const auto Gy = trace.splineY.vecG[iter];
+                const auto gammay = trace.splineY.vecGamma[iter];
+                row << stringForCSV(Gy, true)
+                    << stringForCSV(gammay, true);
+
+                if (withZ && iter < trace.splineZ.vecG.size()) {
+                    const auto Gz = trace.splineZ.vecG[iter];
+                    const auto gammaz = trace.splineZ.vecGamma[iter];
+                    row << stringForCSV(Gz, true)
+                        << stringForCSV(gammaz, true);
+                }
+            }
+
+            output << row.join(csvSep) << "\n"; // Saut de ligne après CHAQUE point
+        }
+    }
+
+    file->close();
+}
+
+
 void ModelCurve::updateFormatSettings()
 {
     Model::updateFormatSettings();
@@ -702,7 +767,7 @@ void ModelCurve::generatePosteriorDensities(const std::vector<ChainSpecs> &chain
 
     if (is_curve) {
         for (std::shared_ptr<Event> &event : mEvents) {
-            if (event->mVg.mSamplerProposal != MHVariable::eFixe) {
+            if (event->mVg.mSamplerProposal != SamplerProposal::eFixe) {
                 event->mVg.setBandwidth(bwt, bandwidth);
                 event->mVg.generateFormatedKDE(chains, fftLen);
             }
@@ -711,7 +776,7 @@ void ModelCurve::generatePosteriorDensities(const std::vector<ChainSpecs> &chain
         mLambdaSpline.generateFormatedKDE(chains, fftLen);
 
 #ifdef KOMLAN
-        if (mS02Vg.mSamplerProposal != MHVariable::eFixe) {
+        if (mS02Vg.mSamplerProposal != SamplerProposal::eFixe) {
             mS02Vg.setBandwidth(bwt, bandwidth);
             mS02Vg.generateFormatedKDE(chains, fftLen);
         }
@@ -730,13 +795,13 @@ void ModelCurve::generateCorrelations(const std::vector<ChainSpecs> &chains)
     Model::generateCorrelations(chains);
     if (is_curve) {
         for (auto&& event : mEvents )
-            if (event->mVg.mSamplerProposal != MHVariable::eFixe)
+            if (event->mVg.mSamplerProposal != SamplerProposal::eFixe)
                 event->mVg.generateCorrelations(chains);
 
-        if (mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
+        if (mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe)
             mLambdaSpline.generateCorrelations(chains);
 #ifdef KOMLAN
-        if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
+        if (mS02Vg.mSamplerProposal != SamplerProposal::eFixe)
             mS02Vg.generateCorrelations(chains);
 #endif
 
@@ -752,13 +817,13 @@ void ModelCurve::generateDensityNumericalResults(const std::vector<ChainSpecs> &
 
     if (is_curve) {
         for (std::shared_ptr<Event>& event : mEvents) {
-            if (event->mVg.mSamplerProposal != MHVariable::eFixe)
+            if (event->mVg.mSamplerProposal != SamplerProposal::eFixe)
                 event->mVg.generateDensityNumericalResults(chains);
         }
-        if (mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
+        if (mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe)
             mLambdaSpline.generateDensityNumericalResults(chains);
 #ifdef KOMLAN
-        if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
+        if (mS02Vg.mSamplerProposal != SamplerProposal::eFixe)
             mS02Vg.generateDensityNumericalResults(chains);
 #endif
     }
@@ -769,13 +834,13 @@ void ModelCurve::generateTraceNumericalResults(const std::vector<ChainSpecs> &ch
 
     if (is_curve) {
         for (std::shared_ptr<Event>& event : mEvents) {
-            if (event->mVg.mSamplerProposal != MHVariable::eFixe)
+            if (event->mVg.mSamplerProposal != SamplerProposal::eFixe)
                 event->mVg.generateTraceNumericalResults(chains);
         }
-        if (mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
+        if (mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe)
             mLambdaSpline.generateTraceNumericalResults(chains);
 #ifdef KOMLAN
-        if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
+        if (mS02Vg.mSamplerProposal != SamplerProposal::eFixe)
             mS02Vg.generateTraceNumericalResults(chains);
 #endif
     }
@@ -807,13 +872,13 @@ void ModelCurve::generateCredibility(const double thresh)
 
     if (getProject_ptr()->isCurve()) {
         for (const auto& event : mEvents) {
-            if (event->mVg.mSamplerProposal != MHVariable::eFixe)
+            if (event->mVg.mSamplerProposal != SamplerProposal::eFixe)
                 event->mVg.generateCredibility(thresh);
         }
         mLambdaSpline.generateCredibility(thresh);
 
 #ifdef KOMLAN
-        if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
+        if (mS02Vg.mSamplerProposal != SamplerProposal::eFixe)
             mS02Vg.generateCredibility(thresh);
 #endif
 
@@ -830,15 +895,15 @@ void ModelCurve::generateHPD(const double thresh)
     if (getProject_ptr()->isCurve()) {
         for (const auto& event : mEvents) {
             if (event->pointType() != Event::eNode) {
-                if (event->mVg.mSamplerProposal != MHVariable::eFixe)
+                if (event->mVg.mSamplerProposal != SamplerProposal::eFixe)
                     event->mVg.generateHPD(thresh);
             }
         };
 
-        if (mLambdaSpline.mSamplerProposal != MHVariable::eFixe)
+        if (mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe)
             mLambdaSpline.generateHPD(thresh);
 #ifdef KOMLAN
-        if (mS02Vg.mSamplerProposal != MHVariable::eFixe)
+        if (mS02Vg.mSamplerProposal != SamplerProposal::eFixe)
             mS02Vg.generateHPD(thresh);
 #endif
 
@@ -1000,17 +1065,17 @@ void ModelCurve::memo_accepted_state(const unsigned i_chain)
     if (getProject_ptr()->isCurve()) {
 
         for (auto&& event : mEvents) {
-            if (event->mVg.mSamplerProposal != MHVariable::eFixe) {
+            if (event->mVg.mSamplerProposal != SamplerProposal::eFixe) {
                 event->mVg.memo_accepted_state(i_chain);
             }
         }
 
         // On stocke le log10 de Lambda Spline pour afficher les résultats a posteriori
-        if (mLambdaSpline.mSamplerProposal != MHVariable::eFixe) {
+        if (mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe) {
             mLambdaSpline.memo_accepted_state(i_chain);
         }
 #ifdef KOMLAN
-        if (mS02Vg.mSamplerProposal != MHVariable::eFixe) {
+        if (mS02Vg.mSamplerProposal != SamplerProposal::eFixe) {
             mS02Vg.memo_accepted_state(i_chain);
         }
 #endif
@@ -1019,50 +1084,92 @@ void ModelCurve::memo_accepted_state(const unsigned i_chain)
 */
 
 /**
- * Idem Chronomodel + initialisation des variables aléatoires VG (events) et Lambda Spline (global)
- * TODO : initialisation des résultats g(t), g'(t), g"(t)
+ * @brief Initialise les structures de stockage des paramètres spécifiques aux courbes.
+ *
+ * Cette surcharge de <code>Model::setParametersForChain()</code> effectue d’abord
+ * l’initialisation générique (appel à la version de la classe de base) puis
+ * prépare les conteneurs additionnels qui ne sont pertinents que pour les
+ * modèles de type « courbe » (détectés via <code>Project::isCurve()</code>).
+ *
+ * Les actions réalisées sont les suivantes :
+ *
+ * - **Accept‑buffer commun** : le même <code>acceptBufferLen</code> (défini par
+ *   <code>mChains[0].mIterPerBatch</code>) est utilisé pour toutes les chaînes.
+ * - **Paramètre de vitesse de croissance <code>Vg</code>** : le champ
+ *   <code>mVg.mLastMHAcceptsLength</code> est mis à jour pour chaque
+ *   <code>Event</code>.  Le redimensionnement du vecteur de comptage
+ *   (<code>mNbValuesAccepted</code>) est commenté car il n’est pas nécessaire
+ *   dans le flux actuel.
+ * - **Spline de lambda** : le même tampon d’acceptation est appliqué à
+ *   <code>mLambdaSpline</code>.
+ * - **Variance du bruit <code>S02Vg</code>** (défini uniquement sous le flag
+ *   <code>KOMLAN</code>) : on redimensionne le vecteur de comptage et on réserve
+ *   le tampon d’acceptation.
+ *
+ * @note
+ *   Le code commenté (appel à <code>clear()</code>, <code>reserve()</code>,
+ *   <code>mNbValuesAccepted.resize()</code>, etc.) a été conservé pour
+ *   référence ; il peut être réactivé si une réallocation explicite devient
+ *   nécessaire.
+ *
+ * @warning
+ *   La fonction suppose que <code>mChains</code> n’est pas vide.  Un accès
+ *   direct à <code>mChains.at(0)</code> déclenchera une exception
+ *   <code>std::out_of_range</code> si le vecteur est vide.
+ *
+ * @param[in,out] this  Instance de <code>ModelCurve</code>.  Les membres modifiés
+ *                      sont :
+ *                      - <code>mEvents[i].mVg</code>
+ *                      - <code>mLambdaSpline</code>
+ *                      - <code>mS02Vg</code> (uniquement si <code>KOMLAN</code>
+ *                        est défini)
+ *
+ * @return Aucun (fonction <code>void</code>).
+ *
+ * @see Model::setParametersForChain() – implémentation de la classe de base.
+ * @see Project::isCurve() – condition qui active l’initialisation spécifique.
  */
-void ModelCurve::initVariablesForChain()
+void ModelCurve::setParametersForChain()
 {
-    Model::initVariablesForChain();
+    Model::setParametersForChain();
 
     if (getProject_ptr()->isCurve()) {
-    // today we have the same acceptBufferLen for every chain
-    const int acceptBufferLen =  mChains.at(0).mIterPerBatch;
-    /*int initReserve = 0;
+        // today we have the same acceptBufferLen for every chain
+        const int acceptBufferLen =  mChains.at(0).mIterPerBatch;
+        /*int initReserve = 0;
 
     for (auto& c: mChains) {
         initReserve += ( 1 + (c.mMaxBatchs*c.mIterPerBatch) + c.mIterPerBurn + (c.mIterPerAquisition/c.mThinningInterval) );
     }
     */
-    for (std::shared_ptr<Event>& event : mEvents) {
-        //event->mVg.clear();
-        //event->mVg.reserve(initReserve);
-        //event->mVg.mNbValuesAccepted.resize(mChains.size());
+        for (std::shared_ptr<Event>& event : mEvents) {
+            //event->mVg.clear();
+            //event->mVg.reserve(initReserve);
+            //event->mVg.mNbValuesAccepted.resize(mChains.size());
 
-        //event->mVg.mLastMHAccepts.reserve(acceptBufferLen);
-        event->mVg.mLastMHAcceptsLength = acceptBufferLen;
-    }
+            //event->mVg.mLastMHAccepts.reserve(acceptBufferLen);
+            event->mVg.mLastMHAcceptsLength = acceptBufferLen;
+        }
 
-    //mLambdaSpline.clear();
-    //mLambdaSpline.reserve(initReserve);
-    //mLambdaSpline.mNbValuesAccepted.resize(mChains.size());
+        //mLambdaSpline.clear();
+        //mLambdaSpline.reserve(initReserve);
+        //mLambdaSpline.mNbValuesAccepted.resize(mChains.size());
 
-    //mLambdaSpline.mLastMHAccepts.reserve(acceptBufferLen);
-    mLambdaSpline.mLastMHAcceptsLength = acceptBufferLen;
+        //mLambdaSpline.mLastMHAccepts.reserve(acceptBufferLen);
+        mLambdaSpline.mLastMHAcceptsLength = acceptBufferLen;
 
 #ifdef KOMLAN
-    mS02Vg.mNbValuesAccepted.resize(mChains.size());
-    mS02Vg.mLastMHAccepts.reserve(acceptBufferLen);
-    mS02Vg.mLastMHAcceptsLength = acceptBufferLen;
+        mS02Vg.mNbValuesAccepted.resize(mChains.size());
+        mS02Vg.mLastMHAccepts.reserve(acceptBufferLen);
+        mS02Vg.mLastMHAcceptsLength = acceptBufferLen;
 #endif
 
 
-    // Ré-initialisation du stockage des splines
-    //mSplinesTrace.clear();
+        // Ré-initialisation du stockage des splines
+        //mSplinesTrace.clear();
 
-    // Ré-initialisation des résultats
-    //mPosteriorMeanGByChain.clear();
+        // Ré-initialisation des résultats
+        //mPosteriorMeanGByChain.clear();
     }
 }
 

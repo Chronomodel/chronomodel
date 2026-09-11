@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -41,6 +41,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define EVENTPROPERTIESVIEW_H
 
 #include "Button.h"
+#include "version.h"
 
 #include <QCheckBox>
 #include <QWidget>
@@ -143,17 +144,21 @@ private:
     QWidget* mBoundView;
 
     QLabel* mNameLab;
-    QLabel* mColorLab;
-    QLabel* mMethodLab;
 
+    QLabel* mColorLab;
     QLineEdit* mNameEdit;
     ColorPicker* mColorPicker;
+
+#ifndef FIXEDPRIOR
+    int mComboBoxHeight;
+
+    QLabel* mMethodLab;
     QComboBox* mMethodCombo;
     QLabel* mMethodInfo;
+#endif
 
     DatesList* mDatesList;
     QList<Button*> mPluginButs;
-    //QList<std::unique_ptr<Button>> mPluginButs;
 
     Button* mDeleteBut;
     Button* mRecycleBut;
@@ -171,9 +176,7 @@ private:
     int mButtonWidth;
     int mButtonHeigth;
 
-    int mLineEditHeight;
-
-    int mComboBoxHeight;
+    int mLineEditHeight;  
 
     CurveWidget* mCurveWidget;
 

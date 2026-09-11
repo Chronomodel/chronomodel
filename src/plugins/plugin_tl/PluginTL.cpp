@@ -147,21 +147,21 @@ bool PluginTL::wiggleAllowed() const
 {
     return false;
 }
-
-MHVariable::SamplerProposal PluginTL::getDataMethod() const
+#ifndef FIXEDPRIOR
+SamplerProposal PluginTL::getDataMethod() const
 {
-    return MHVariable::eDatePrior;
+    return SamplerProposal::eDatePrior;
 }
 
-QList<MHVariable::SamplerProposal> PluginTL::allowedDataMethods() const
+QList<SamplerProposal> PluginTL::allowedDataMethods() const
 {
-    QList<MHVariable::SamplerProposal> methods;
-    methods.append(MHVariable::eDatePrior);
-    methods.append(MHVariable::eInversion);
-    methods.append(MHVariable::eMHAdaptGauss);
+    QList<SamplerProposal> methods;
+    methods.append(SamplerProposal::eDatePrior);
+    methods.append(SamplerProposal::eLikelihood);
+    methods.append(SamplerProposal::eRWAdaptGauss);
     return methods;
 }
-
+#endif
 QStringList PluginTL::csvColumns() const
 {
     QStringList cols;

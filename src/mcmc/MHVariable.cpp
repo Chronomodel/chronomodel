@@ -39,21 +39,23 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "MHVariable.h"
 #include "QtUtilities.h"
-#include "Generator.h"
 
 #include <QDebug>
 
 #define NoneStr QObject::tr("No Proposal")
 #define FixeStr QObject::tr("Fixed value")
+#define PriorStr QObject::tr("Proposal: Prior")
+#define AdaptiveGaussianStr QObject::tr("Proposal: Adaptive Gaussian random walk")
 
-#define MHAdaptGaussStr QObject::tr("Proposal : Adapt. Gaussian random walk")
 // Only for Event
-#define BoxMullerStr QObject::tr("Proposal : Gaussian (Event Prior)")
-#define DoubleExpStr QObject::tr("Proposal : Double-Exponential")
+//#define EventPriorStr QObject::tr("Proposal : Gaussian (Event Prior)")
+#define EventPriorStr QObject::tr("Proposal: Event Prior")
+#define DoubleExpStr QObject::tr("Proposal: Double-Exponential")
 // Only for Date
-#define MHDatePriorStr QObject::tr("Proposal : Gaussian (Date Prior)")
-#define InversionStr QObject::tr("Proposal : Distribution of Calibrated Date")
-//#define MHSymGaussAdaptStr QObject::tr("Adapt. Gaussian random walk") // Obsolete
+//#define DatePriorStr QObject::tr("Proposal: Gaussian (Date Prior)")
+#define DatePriorStr QObject::tr("Proposal: Date Prior")
+//#define LikelihoodStr QObject::tr("Proposal: Distribution of Calibrated Date")
+#define LikelihoodStr QObject::tr("Proposal: Date likelihood")
 
 /** Default constructor */
 MHVariable::MHVariable():
@@ -64,7 +66,7 @@ MHVariable::MHVariable():
     mMHAcceptcountSinceAquire(),
     mGlobalAcceptationPerCent(0.0),
     mHistoryAcceptRateMH(std::make_shared<std::vector<double>>()),
-    mSamplerProposal(eDoubleExp)
+    mSamplerProposal(SamplerProposal::eNone)
 {
 }
 
@@ -115,7 +117,7 @@ MHVariable::MHVariable(const MetropolisVariable& origin):
     mMHAcceptcountSinceAquire(),
     mGlobalAcceptationPerCent(0.0),
     mHistoryAcceptRateMH(std::make_shared<std::vector<double>>()),
-    mSamplerProposal(eDoubleExp)
+    mSamplerProposal(SamplerProposal::eNone)
 {
 #ifdef DEBUG
     if (mHistoryAcceptRateMH->empty()) {
@@ -130,200 +132,15 @@ MHVariable::~MHVariable()
 
 }
 
-/**
- * @brief MHVariable::tryUpdate
- * @param x : Value proposed and, if applicable, accepted
- * @param rate : Force reject with rate < 0 or accept with rate = 2.
- * @ref https://fr.wikipedia.org/wiki/Algorithme_de_Metropolis-Hastings
- * @return
- */
-bool MHVariable::try_update(const double x, const double rate)
-{
-    bool accepted = MHAcceptanceTest(rate);
 
-    // --------------------------------------------------------------
-    //  1️⃣  Mise à jour de la valeur si accepted
-    // --------------------------------------------------------------
-    if (accepted) {
-        mX = x;
-    }
-    // --------------------------------------------------------------
-    //  2️⃣  Historique
-    // --------------------------------------------------------------
-    if (mLastMHAccepts.size() == mLastMHAcceptsLength) {
-        // La fenêtre est pleine → on enlève l'élément le plus ancien
-        mLastMHAccepts.pop_front();
-    }
 
-    mLastMHAccepts.push_back(accepted);
 
-    return accepted;
 
-}
-/** -----------------------------------------------------------------
-*  Implémentation « log‑rate »
-*  Identique à test_update_log, mais ici on ne donne pas la valeur courante
-* -----------------------------------------------------------------
-*/
-bool MHVariable::try_update_log(const double x, const double log_rate)
-{
-    // ------------------------------------------------------------------
-    // 1️⃣  Gestion de l’historique pour le taux d'acceptation
-    // ------------------------------------------------------------------
-    if (mLastMHAccepts.size() == mLastMHAcceptsLength) {
-        // La fenêtre est pleine → on enlève l'élément le plus ancien
-        mLastMHAccepts.pop_front();
-    }
-    bool accepted = false;
-    // ------------------------------------------------------------------
-    // 2️⃣  Cas pathologiques (NaN, -inf, etc.)
-    // ------------------------------------------------------------------
-    if (std::isnan(log_rate) || log_rate == -INFINITY) {
-        // log_rate = -inf ↔ rate = 0  → rejet systématique
-        accepted = false;
-#ifdef DEBUG
-       /* if (std::isnan(log_rate))
-            std::cerr << "[MHVariable::try_update_log] log_rate = NaN -> reject : " << mName << '\n';
-        else {
-            std::cerr << "[MHVariable::try_update_log] log_rate = -inf -> reject : " << mName << '\n';
-        }*/
-#endif
-    }
-    // ------------------------------------------------------------------
-    // 3️⃣  Acceptation forcée (rate ≥ 1 ↔ log_rate ≥ 0)
-    // ------------------------------------------------------------------
-    else if (log_rate >= 0.0) {
-        // cela couvre le cas spécial rate==2 (log(2) ≈ 0.693) ainsi que tout
-        // r > 1.  Le comportement « force accept » est donc conservé.
-        accepted = true;
-    }
-    // ------------------------------------------------------------------
-    // 4️⃣  Acceptation probabiliste (0 < rate < 1 ↔ log_rate < 0)
-    // ------------------------------------------------------------------
-    else {
-        // u ~ Uniform(0,1)  →  log(u) ∈ (‑∞,0)
-        const double u = Generator::randomUniform();          // 0 < u < 1
-        const double log_u = std::log(u);       // toujours négatif
-        accepted = (log_u < log_rate);          // équivalent à u < exp(log_rate)
-#ifdef DEBUG
-        if (u == 0.0)
-            std::cerr << "[MHVariable::try_update_log] uniform == 0\n";
-#endif
-    }
-    // ------------------------------------------------------------------
-    // 5️⃣  Mise à jour de l’état et de l’historique
-    // ------------------------------------------------------------------
-    if (accepted) mX = x;
-    mLastMHAccepts.push_back(accepted);
-    return accepted;
-}
-/**
- * @brief MHVariable::test_update determines whether to accept a new value for mX based on a given acceptance rate.
- *
- * This function implements a Metropolis-Hastings acceptance criterion. It compares the rate
- * (typically, the ratio of the target distribution at try_value to current_value) against
- * a uniformly distributed random number to decide whether to accept the new value.
- *
- * - If the rate is 1.0 or higher, the new value (try_value) is unconditionally accepted.
- * - If the rate is within [0.0, 1.0), a random number is generated and compared to the rate to decide acceptance.
- * - If the rate is less than 0.0, the new value is rejected outright.
- * - The function maintains a history of the last few acceptance/rejection outcomes in mLastMHAccepts.
- *
- * @param current_value The current value of the variable.
- * @param try_value The proposed new value to be tested.
- * @param rate The acceptance rate, typically the ratio pi(try_value)/pi(current_value).
- * @return bool True if the new value is accepted, false otherwise.
- */
-bool MHVariable::test_update(const double current_value, const double try_value, const double rate)
-{
 
-    bool accepted = MHAcceptanceTest(rate);
-    // --------------------------------------------------------------
-    //  1️⃣  Mise à jour de la valeur
-    // --------------------------------------------------------------
-    mX = accepted ? try_value : current_value;
 
-    // --------------------------------------------------------------
-    //  2️⃣  Historique
-    // --------------------------------------------------------------
-    if (mLastMHAccepts.size() == mLastMHAcceptsLength) {
-        // La fenêtre est pleine → on enlève l'élément le plus ancien
-        mLastMHAccepts.pop_front();
-    }
 
-    mLastMHAccepts.push_back(accepted);
 
-    return accepted;
-}
 
-/*======================================================================
- *  Implémentation principale – travaille en log‑espace
- *  Identique à try_update_log, mais ici on donne la valeur courante
- *====================================================================*/
-
-bool MHVariable::test_update_log(double current_value,
-                                 double try_value,
-                                 double log_rate)
-{
-    bool accepted = MHAcceptanceTest_log(log_rate);
-    // --------------------------------------------------------------
-    //  1️⃣  Mise à jour de la valeur
-    // --------------------------------------------------------------
-    mX = accepted ? try_value : current_value;
-
-    // --------------------------------------------------------------
-    //  2️⃣  Historique
-    // --------------------------------------------------------------
-    if (mLastMHAccepts.size() == mLastMHAcceptsLength) {
-        // La fenêtre est pleine → on enlève l'élément le plus ancien
-        mLastMHAccepts.pop_front();
-    }
-
-    mLastMHAccepts.push_back(accepted);
-
-    return accepted;
-}
-
-/**
- * @brief MHVariable::accept_update force setting mX with the value of x.
- * And append a true value to mLastAccept
- * @param x
- */
-void MHVariable::accept_update(const double x)
-{
-    // --------------------------------------------------------------
-    //  1️⃣  Mise à jour de la valeur
-    // --------------------------------------------------------------
-    mX = x;
-
-    // --------------------------------------------------------------
-    //  2️⃣  Historique
-    // --------------------------------------------------------------
-    if (mLastMHAccepts.size() == mLastMHAcceptsLength) {
-        // La fenêtre est pleine → on enlève l'élément le plus ancien
-        mLastMHAccepts.pop_front();
-    }
-
-    mLastMHAccepts.push_back(true);
-
-}
-
-/**
- * @brief MHVariable::reject_update no update of mX, but append a false value to mLastAccept
- */
-void MHVariable::reject_update()
-{
-    // --------------------------------------------------------------
-    //  1️⃣ Historique
-    // --------------------------------------------------------------
-    if (mLastMHAccepts.size() == mLastMHAcceptsLength) {
-        // La fenêtre est pleine → on enlève l'élément le plus ancien
-        mLastMHAccepts.pop_front();
-    }
-
-    mLastMHAccepts.push_back(false);
-
-}
 /**
  * @brief MHVariable::adapt
  * @param coef_min value [0; 1], default 0.42
@@ -428,12 +245,53 @@ bool MHVariable::adapt(double coef_min, double coef_max,
         C’est la condition de compacité (Andrieu & Moulines, 2006)
         indispensable pour garantir l’ergodicité de la chaîne adaptative.
         */
+#ifdef DEBUG_no
+        std::cout << " mSigmaMH=" << mSigmaMH << std::endl;
+        if (mSigmaMH < sigma_min) {
+            // On dépasse la borne inférieure → on la corrige
+            qWarning() << "[" << __func__ << "]"
+                       << "mSigmaMH (" << mSigmaMH << ") < sigma_min ("
+                       << sigma_min << "); clamping to sigma_min.";
+            mSigmaMH = sigma_min;
+        }
+        if (mSigmaMH > sigma_max) {
+            // On dépasse la borne supérieure → on la corrige
+            qWarning() << "[" << __func__ << "]"
+                       << "mSigmaMH (" << mSigmaMH << ") > sigma_max ("
+                       << sigma_max << "); clamping to sigma_max.";
+            mSigmaMH = sigma_max;
+        }
+#else
         if (mSigmaMH < sigma_min) mSigmaMH = sigma_min;
         if (mSigmaMH > sigma_max) mSigmaMH = sigma_max;
-
+#endif
         stillAdapted = false; // on a effectivement adapté
     }
     return stillAdapted;
+}
+
+bool MHVariable::adapt_Robbins_Monro(size_t batchIndex,
+                       double targetAcceptRate,
+                       double sigma_min, double sigma_max,
+                       double c, double kappa, double t0)
+{
+    // Pas de Robbins-Monro décroissant
+    const double gamma_t = c / std::pow(static_cast<double>(batchIndex) + t0, kappa);
+    const double acceptRate = getCurrentAcceptRate();
+
+    // Correction continue sur l'échelle log10
+    const double log10_sigma = std::log10(mSigmaMH) + gamma_t * (acceptRate - targetAcceptRate);
+    mSigmaMH = std::pow(10.0, log10_sigma);
+
+    // Containment (bornage)
+    bool clamped = false;
+    if (mSigmaMH < sigma_min) { mSigmaMH = sigma_min; clamped = true; }
+    if (mSigmaMH > sigma_max) { mSigmaMH = sigma_max; clamped = true; }
+
+    // Indispensable : réinitialisation des compteurs pour le batch suivant
+    //resetBatchAcceptanceCounters();
+
+    return !clamped;
 }
 
 void MHVariable::clear()
@@ -509,23 +367,9 @@ MHVariable& MHVariable::operator=(const MHVariable& origin)
     return *this;
 }
 
-double MHVariable::getCurrentAcceptRate() const
-{
-    if (mLastMHAccepts.empty())
-        return 0.0;
-
-    std::size_t trueCount = std::count(mLastMHAccepts.begin(),
-                                       mLastMHAccepts.end(),
-                                       true);
-    return static_cast<double>(trueCount) / mLastMHAccepts.size();
 
 
-}
 
-void MHVariable::saveCurrentAcceptRate()
-{
-    mHistoryAcceptRateMH->push_back(100. * getCurrentAcceptRate());
-}
 
 std::vector<double> MHVariable::acceptationForChain(const std::vector<ChainSpecs> &chains, size_t index)
 {
@@ -583,7 +427,7 @@ void MHVariable::generateDensityNumericalResults(const std::vector<ChainSpecs>& 
     MetropolisVariable::generateDensityNumericalResults(chains);
 }
 
-// Peu être fait une fois à la sortie des iterations
+// Peut être fait une fois à la sortie des iterations
 void MHVariable::generateTraceNumericalResults(const std::vector<ChainSpecs>& chains)
 {
     MetropolisVariable::generateTraceNumericalResults(chains);
@@ -593,7 +437,7 @@ void MHVariable::generateTraceNumericalResults(const std::vector<ChainSpecs>& ch
 
 QString MHVariable::resultsString(const QString &noResultMessage, const QString &unit) const
 {
-    if (mSamplerProposal != MHVariable::eFixe) {
+    if (mSamplerProposal != SamplerProposal::eFixe) {
         const QString result = MetropolisVariable::resultsString(noResultMessage, unit);
         const QString globalTxt = stringForLocal(mGlobalAcceptationPerCent);
 
@@ -606,34 +450,37 @@ QString MHVariable::resultsString(const QString &noResultMessage, const QString 
 }
 
 
-QString MHVariable::getSamplerProposalText(const MHVariable::SamplerProposal sp)
+QString MHVariable::getSamplerProposalText(const SamplerProposal sp)
 {
     switch (sp) {
-    case MHVariable::eNone:
+    case SamplerProposal::eNone:
         return NoneStr;
         break;
-    case MHVariable::eFixe:
+    case SamplerProposal::eFixe:
         return FixeStr;
         break;
+    case SamplerProposal::ePrior:
+        return PriorStr;
+        break;
     // Event
-    case MHVariable::eMHAdaptGauss:
-        return MHAdaptGaussStr;
+    case SamplerProposal::eRWAdaptGauss:
+        return AdaptiveGaussianStr;
         break;
 
-    case MHVariable::eEventPrior:
-        return BoxMullerStr;
+    case SamplerProposal::eEventPrior:
+        return EventPriorStr;
         break;
 
-    case MHVariable::eDoubleExp:
+    case SamplerProposal::eDoubleExp:
         return DoubleExpStr;
         break;
 
     // Data
-    case MHVariable::eInversion:
-        return InversionStr;
+    case SamplerProposal::eLikelihood:
+        return LikelihoodStr;
         break;
-    case MHVariable::eDatePrior:
-        return MHDatePriorStr;
+    case SamplerProposal::eDatePrior:
+        return DatePriorStr;
         break;
 
     default:
@@ -643,31 +490,33 @@ QString MHVariable::getSamplerProposalText(const MHVariable::SamplerProposal sp)
     }
 }
 
-MHVariable::SamplerProposal MHVariable::getSamplerProposalFromText(const QString& text)
+SamplerProposal MHVariable::getSamplerProposalFromText(const QString& text)
 {
-    if (text == MHAdaptGaussStr)
-        return MHVariable::eMHAdaptGauss;
+    if (text == AdaptiveGaussianStr)
+        return SamplerProposal::eRWAdaptGauss;
 
-    else if (text == BoxMullerStr)
-        return MHVariable::eEventPrior;
+    else if (text == EventPriorStr)
+        return SamplerProposal::eEventPrior;
 
     else if (text == DoubleExpStr)
-        return MHVariable::eDoubleExp;
+        return SamplerProposal::eDoubleExp;
 
-    else if (text == InversionStr)
-        return MHVariable::eInversion;
+    else if (text == LikelihoodStr)
+        return SamplerProposal::eLikelihood;
 
-    else if (text == MHDatePriorStr)
-        return MHVariable::eDatePrior;
+    else if (text == DatePriorStr)
+        return SamplerProposal::eDatePrior;
 
     else if (text == FixeStr)
-        return MHVariable::eFixe;
+        return SamplerProposal::eFixe;
 
     else if (text == NoneStr)
-        return MHVariable::eNone;
+        return SamplerProposal::eNone;
+    else if (text == PriorStr)
+        return SamplerProposal::ePrior;
     else {
         // ouch... what to do ???
-        return MHVariable::eMHAdaptGauss;
+        return SamplerProposal::eRWAdaptGauss;
     }
 }
 

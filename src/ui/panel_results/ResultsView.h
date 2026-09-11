@@ -183,6 +183,7 @@ protected:
     inline bool isCurve();
     void createOptionsWidget();
 
+    void updateShowList();
 
 public slots:
 
@@ -200,9 +201,10 @@ private slots:
     // ------------------------------------------------
     //  Graphs / Curves / Controls
     // ------------------------------------------------
-    void updateMainVariable();
-    void createGraphs();
 
+    void applyShowList();
+
+    void createGraphs();
 
     void updateCurvesToShow();
     /**
@@ -554,8 +556,10 @@ private:
     //  Useful Variables
     // ----------------------------------------
     GraphViewResults::graph_t mCurrentTypeGraph;
-    QList<GraphViewResults::variable_t> mCurrentVariableList;
+
+    QList<GraphViewResults::variable_t> mShowList;
     GraphViewResults::variable_t mMainVariable;
+
     bool mHasPhases;
     double mHpdThreshold; // [0 : 100]%
     // ----------------------------------------

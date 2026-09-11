@@ -1101,19 +1101,22 @@ void showVector(const std::vector<double> &m, const std::string& str)
  */
 void SparseQuadraticFormSolver::factorize(const SparseMatrixD& R)
 {
+    if (!solver_) {
+        throw std::runtime_error("[SparseQuadraticFormSolver::factorize] solver_ is null — object was moved-from without reinitialization");
+    }
     R_template_ = R; // Garder une copie pour les dimensions
 
     const auto n_center = R.rows() - 2 * shift_;
     SparseMatrixD R_center = R.block(shift_, shift_, n_center, n_center);
 
     solver_->compute(R_center); // effectue la factorisation LDLT
-#ifdef DEBUG
+
     if (solver_->info() != Eigen::Success) {
         throw std::runtime_error("[SparseQuadraticFormSolver::factorize] LDLT factorization failed");
     }
 
     is_factorized_ = true;
-#endif
+
 }
 
 /**

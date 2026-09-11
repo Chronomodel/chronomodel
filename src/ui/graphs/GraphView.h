@@ -37,8 +37,7 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#ifndef GRAPHVIEW_H
-#define GRAPHVIEW_H
+#pragma once
 
 #include "GraphViewAbstract.h"
 #include "GraphCurve.h"
@@ -57,464 +56,419 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QPicture>
 #include <QElapsedTimer>
 #include <QTimer>
+#include <QMap>
+#include <QList>
+#include <vector>
 
-class GraphView: public GraphViewAbstract
+/*======================================================================
+   CLASS GraphView
+======================================================================*/
+class GraphView : public GraphViewAbstract
 {
     Q_OBJECT
 
 public:
 
-    enum AxisMode
-    {
+    enum class AxisMode : int {
         eHidden = 0,
         eMinMax = 1,
         eMinMaxHidden = 2,
         eMainTicksOnly = 3,
         eAllTicks = 4
     };
-    enum OverflowDataArrowMode
-    {
-        eNone = 0,
-        eBothOverflow = 1,
-        eUnderMin = 2,
-        eOverMax = 3
+
+    /**  Flèches affichées lorsqu’une donnée déborde de l’axe X. */
+    enum class OverflowDataArrowMode : int {
+        eNone          = 0,   ///< aucune flèche
+        eBothOverflow  = 1,   ///< flèches aux deux extrémités
+        eUnderMin      = 2,   ///< flèche sous la valeur minimale
+        eOverMax       = 3    ///< flèche au-dessus de la valeur maximale
     };
 
 
-    GraphView(QWidget* parent = nullptr);
-    explicit GraphView(const GraphView &graph, QWidget *parent= nullptr);
+    /*------------------------------------------------------------------
+       Constructeurs / destructeur
+    ------------------------------------------------------------------*/
+    explicit GraphView( QWidget* parent = nullptr );
+    explicit GraphView( const GraphView& other, QWidget* parent = nullptr );
+    ~GraphView() override;
 
-    void copyFrom(const GraphView &graph);
-    virtual ~GraphView();
+    /*------------------------------------------------------------------
+       Copie d’un GraphView existant
+    ------------------------------------------------------------------*/
+    void copyFrom( const GraphView& other );
 
-    inline void setInfo(const QString& info)
+    /*------------------------------------------------------------------
+       Gestion des informations affichées (texte libre)
+    ------------------------------------------------------------------*/
+    inline void setInfo( const QString& info )
     {
         mInfos.clear();
-        mInfos.append(info);
-    };
-
-    QString getInfo(char sep = '|');
-    bool isShow();
-
-    inline void setBackgroundColor(const QColor& color)
-    {
-        mBackgroundColor = color;
+        mInfos.append( info );
     }
 
-    inline QColor getBackgroundColor() const
-    {
-        return mBackgroundColor;
-    }
+    QString getInfo(char sep = '|' ) const { return mInfos.join(sep); }
+    bool isShow() const { return mShowInfos; }
 
-    inline void addInfo(const QString& info)
-    {
-        mInfos << info;
-    }
 
-    inline void clearInfos()
-    {
-        mInfos.clear();
-    }
+    inline void addInfo( const QString& info )   { mInfos << info; }
+    inline void clearInfos()                     { mInfos.clear(); }
+    inline void showInfos( bool show )           { mShowInfos = show; }
 
-    inline void showInfos(bool show)
-    {
-        mShowInfos = show;
-    }
+    /*------------------------------------------------------------------
+       Couleur de fond & message « nothing »
+    ------------------------------------------------------------------*/
+    inline void   setBackgroundColor( const QColor& c ) { mBackgroundColor = c; }
+    inline QColor backgroundColor()               const { return mBackgroundColor; }
 
-    inline void setNothingMessage(const QString& message)
-    {
-        mNothingMessage = message;
-    }
+    inline void setNothingMessage( const QString& msg ) { mNothingMessage = msg; }
+    inline void resetNothingMessage()                  { mNothingMessage = tr( "Nothing to display" ); }
 
-    inline void resetNothingMessage()
-    {
-        mNothingMessage = tr("Nothing to display");
-    }
+    /*------------------------------------------------------------------
+       Paramètres d’affichage des axes (setters « no‑action »)
+    ------------------------------------------------------------------*/
+    inline void showXAxisLine( bool v )      { mXAxisLine      = v; }
+    inline void showXAxisArrow( bool v )     { mXAxisArrow     = v; }
+    inline void showXAxisTicks( bool v )     { mXAxisTicks     = v; }
+    inline void showXAxisSubTicks( bool v )  { mXAxisSubTicks  = v; }
+    inline void showXAxisValues( bool v )    { mXAxisValues    = v; }
 
-    // Just Setter no action
-    inline void showXAxisLine(bool show)
-    {
-        mXAxisLine = show;
+    inline void showYAxisLine( bool v )      { mYAxisLine      = v; }
+    inline void showYAxisArrow( bool v )     { mYAxisArrow     = v; }
+    inline void showYAxisTicks( bool v )     { mYAxisTicks     = v; }
+    inline void showYAxisSubTicks( bool v )  { mYAxisSubTicks  = v; }
+    inline void showYAxisValues( bool v )    { mYAxisValues    = v; }
 
-    }
-    inline void showXAxisArrow(bool show)
-    {
-        mXAxisArrow = show;
-    }
-    inline void showXAxisTicks(bool show)
-    {
-        mXAxisTicks = show;
-    }
-    inline void showXAxisSubTicks(bool show)
-    {
-        mXAxisSubTicks = show;
-    }
-    inline void showXAxisValues(bool show)
-    {
-        mXAxisValues = show;
-    }
-
-    inline void showYAxisLine(bool show)
-    {
-        mYAxisLine = show;
-    }
-    inline void showYAxisArrow(bool show)
-    {
-        mYAxisArrow = show;
-    }
-    inline void showYAxisTicks(bool show)
-    {
-        mYAxisTicks = show;
-    }
-    inline void showYAxisSubTicks(bool show)
-    {
-        mYAxisSubTicks = show;
-    }
-    inline void showYAxisValues(bool show)
-    {
-        mYAxisValues = show;
-    }
-
-    void setXAxisMode(AxisMode mode)
+    /*------------------------------------------------------------------
+       Modes d’axes
+    ------------------------------------------------------------------*/
+    inline void setXAxisMode( AxisMode mode )
     {
         mXAxisMode = mode;
-        mAxisToolX.mShowText = (mXAxisMode != eHidden);
+        mAxisToolX.mShowText = (mode != AxisMode::eHidden);
     }
+    void setYAxisMode( AxisMode mode );
 
-    inline void setXAxisSupport(AxisTool::AxisSupport support)
-    {
-        mAxisToolX.mSupport = support;
-    }
-    inline void setYAxisSupport(AxisTool::AxisSupport support)
-    {
-        mAxisToolY.mSupport = support;
-    }
+    /*------------------------------------------------------------------
+       Support d’axes (bottom / left / …)
+    ------------------------------------------------------------------*/
+    inline void setXAxisSupport( AxisTool::AxisSupport s ) { mAxisToolX.mSupport = s; }
+    inline void setYAxisSupport( AxisTool::AxisSupport s ) { mAxisToolY.mSupport = s; }
 
-    void setYAxisMode(AxisMode mode);
+    /*------------------------------------------------------------------
+       Flèches de débordement
+    ------------------------------------------------------------------*/
 
-    inline void setOverArrow(OverflowDataArrowMode mode)
+    inline void setOverArrow( OverflowDataArrowMode mode )
     {
         mOverflowArrowMode = mode;
     }
 
-    /**
-     * @brief If active is true, the current view automaticaly adjust Y axis on the next paint.
-     */
-    inline void autoAdjustYScale(bool active)
-    {
-        mAutoAdjustYScale = active;
-    }
-
-    inline bool autoAdjustY() const
-    {
-        return mAutoAdjustYScale;
-    }
-
+    /*------------------------------------------------------------------
+       Ajustement automatique de l’échelle Y
+    ------------------------------------------------------------------*/
+    inline void autoAdjustYScale( bool active ) { mAutoAdjustYScale = active; }
+    inline bool autoAdjustY() const               { return mAutoAdjustYScale; }
     void adjustYScale();
 
-   // void setRendering(Rendering render);
-   // Rendering getRendering();
-    void setGraphFont(const QFont& font);
+    /*------------------------------------------------------------------
+       Fontes, épaisseur et opacité des courbes
+    ------------------------------------------------------------------*/
+    void setGraphFont( const QFont& f );
 
-    /**
-     * @brief GraphView::setCurvesThickness, set mThickness without repaint
-     * @param value
-    */
-    inline void setCurvesThickness(int value)
-    {
-        mThickness = value;
-    }
-    void updateCurvesThickness(int value);
-    inline int getGraphsThickness() const
-    {
-        return mThickness;
-    }
+    inline void setCurvesThickness( int v ) { mThickness = v; }
+    void updateCurvesThickness( int v );
+    inline int  curvesThickness() const    { return mThickness; }
 
-    inline void setCurvesOpacity(int value)
-    {
-        mOpacity = value;
-    }
-    void updateCurvesOpacity(int value);
+    inline void setCurvesOpacity( int v ) { mOpacity = v; }
+    void updateCurvesOpacity( int v );
 
-    inline void setCanControlOpacity(bool can)
-    {
-        mCanControlOpacity = can;
-    }
-    // Manage Curves
+    inline void setCanControlOpacity( bool v ) { mCanControlOpacity = v; }
 
-    void add_curve(const GraphCurve& curve);
+    /*------------------------------------------------------------------
+       Gestion des courbes
+    ------------------------------------------------------------------*/
+    void add_curve( const GraphCurve& c );
     inline bool has_curves() const
     {
-        return ((mCurves.size() != 0) || (mZones.size() != 0)) ;
+        return !mCurves.isEmpty() || !mZones.isEmpty();
     }
 
-    void removeCurve(const QString& name);
+    void removeCurve( const QString& name );
     void removeAllCurves();
-    void reserveCurves(const int size);
-    void squeezeCurves() {mCurves.squeeze();};
-    void setCurveVisible(const QString& name, const bool visible);
-    void setCurveVisible(const QStringList& names, const bool visible);
-    void setCurveVisible(std::initializer_list<const char*> names, const bool visible);
+    void reserveCurves( int n );
+    inline void squeezeCurves() { mCurves.squeeze(); }
 
-    GraphCurve* getCurve(const QString& name);
-    const QList<GraphCurve>& getCurves() const;
-    int numCurves() const;
+    void setCurveVisible( const QString& name, bool visible );
+    void setCurveVisible( const QStringList& names, bool visible );
+    void setCurveVisible( std::initializer_list<const char*> names, bool visible );
 
-    inline bool has_points() const {return (refPoints.size() != 0) ;}
-    inline CurveRefPts* get_refPoint(int i) {return &refPoints[i];}
-    void set_points(const std::vector<CurveRefPts> refPts) {refPoints = refPts;};
-    void add_point(const CurveRefPts refPt) {refPoints.push_back(refPt);};
-    inline void insert_points(const std::vector<CurveRefPts> refPts) {refPoints.insert(refPoints.end(), refPts.begin(), refPts.end());};
-    void set_points_visible(const QString &name, const bool visible);
+    GraphCurve*               getCurve( const QString& name );
+    const QList<GraphCurve>&  getCurves() const;
+    int                       numCurves() const;
 
-    void add_zone(const GraphZone& zone);
-
-    // Set value formatting functions
-    inline void setFormatFunctX(DateConversion f)
+    /*------------------------------------------------------------------
+       Points de référence (tool‑tips)
+    ------------------------------------------------------------------*/
+    inline bool has_points() const                     { return !refPoints.empty(); }
+    inline CurveRefPts* get_refPoint( int i )          { return &refPoints[i]; }
+    void set_points( const std::vector<CurveRefPts>& pts ) { refPoints = pts; }
+    void add_point( const CurveRefPts& pt )                { refPoints.push_back( pt ); }
+    inline void insert_points( const std::vector<CurveRefPts>& pts )
     {
-        mUnitFunctionX = f;
+        refPoints.insert( refPoints.end(), pts.begin(), pts.end() );
     }
+    void set_points_visible( const QString& name, bool visible );
 
-    inline void setFormatFunctY(DateConversion f)
-    {
-        mUnitFunctionY = f;
-    }
+    /*------------------------------------------------------------------
+       Zones (ex. zones de couleur sous le graphe)
+    ------------------------------------------------------------------*/
+    void add_zone( const GraphZone& z );
 
-    inline void setXScaleDivision(const Scale& sc)
-    {
-        mAxisToolX.setScaleDivision(sc);
-    }
-    inline void setXScaleDivision(const double& major, const int& minorCount)
-    {
-        mAxisToolX.setScaleDivision(major, minorCount);
-    }
+    /*------------------------------------------------------------------
+       Fonctions de formatage des axes (conversion dates ↔ valeurs)
+    ------------------------------------------------------------------*/
+    inline void setFormatFunctX( DateConversion f ) { mUnitFunctionX = f; }
+    inline void setFormatFunctY( DateConversion f ) { mUnitFunctionY = f; }
 
-    inline void setYScaleDivision(const Scale& sc)
-    {
-        mAxisToolY.setScaleDivision(sc);
-    }
-    inline void setYScaleDivision(const double& major, const int& minorCount)
-    {
-        mAxisToolY.setScaleDivision(major, minorCount);
-    }
+    /*------------------------------------------------------------------
+       Division de l’échelle (major / minor)
+    ------------------------------------------------------------------*/
+    inline void setXScaleDivision( const Scale& s )               { mAxisToolX.setScaleDivision( s ); }
+    inline void setXScaleDivision( double major, int minorCnt )   { mAxisToolX.setScaleDivision( major, minorCnt ); }
 
-    // Paint
+    inline void setYScaleDivision( const Scale& s )               { mAxisToolY.setScaleDivision( s ); }
+    inline void setYScaleDivision( double major, int minorCnt )   { mAxisToolY.setScaleDivision( major, minorCnt ); }
 
-    void paintToDevice(QPaintDevice* device);
-    inline void forceRefresh() {
+    /*------------------------------------------------------------------
+       Export / sauvegarde
+    ------------------------------------------------------------------*/
+    bool saveAsSVG( const QString& fileName,
+                   const QString& svgTitle,
+                   const QString& svgDescription,
+                   bool withVersion,
+                   int versionHeight = 20 );
+
+    /*------------------------------------------------------------------
+       Tool‑tips
+    ------------------------------------------------------------------*/
+    void setTipXLab( const QString& lab );
+    void setTipYLab( const QString& lab );
+
+    /*------------------------------------------------------------------
+       Méthodes graphique
+    ------------------------------------------------------------------*/
+    /** Dessine le graphe sur n’importe quel QPaintDevice (PDF, image, …). */
+    void paintToDevice( QPaintDevice* device );
+
+    /** Forçage d’un rafraîchissement immédiat. */
+    inline void forceRefresh()
+    {
         repaintGraph();
     }
-    // Save
-
-    bool saveAsSVG(const QString& fileName, const QString& svgTitle, const QString& svgDescrition, const bool withVersion, const int versionHeight = 20);
-
-    // ToolTips
-
-    void setTipXLab(const QString& lab);
-    void setTipYLab(const QString& lab);
 
 public slots:
+    void zoomX( type_data min, type_data max );
 
-    void zoomX(const type_data min, const type_data max);
+    void exportCurrentDensities( const QString& defaultPath,
+                                const QLocale& locale,
+                                const QString& csvSep,
+                                double step = 1.0 ) const;
 
-    void exportCurrentDensities(const QString& defaultPath, const QLocale& locale, const QString& csvSep, double step = 1.0) const;
-    void exportCurrentVectorCurves(const QString& defaultPath, const QLocale& locale, const QString& csvSep, bool writeInRows, int offset = 0) const;
+    void exportCurrentVectorCurves( const QString& defaultPath,
+                                   const QLocale& locale,
+                                   const QString& csvSep,
+                                   bool writeInRows,
+                                   int offset = 0 ) const;
 
-    void exportCurrentCurves(const QString& defaultPath, const QLocale locale, const QString& csvSep, double step = 1.0, QString graph_title = "") const;
-    void exportReferenceCurves(const QString& defaultPath, const QLocale locale = QLocale::English, const QString& csvSep = ",", double step = 1.0, QString filename = "", const double threshold = 95.0, bool isHPD = false) const;
+    void exportCurrentCurves( const QString& defaultPath,
+                             const QLocale locale,
+                             const QString& csvSep,
+                             double step = 1.0,
+                             QString graphTitle = "" ) const;
 
-    void changeXScaleDivision (const Scale& sc);
-    void changeXScaleDivision (const double& major, const int& minor);
+    void exportReferenceCurves( const QString& defaultPath,
+                               const QLocale locale = QLocale::English,
+                               const QString& csvSep = ",",
+                               double step = 1.0,
+                               QString fileName = "",
+                               double threshold = 95.0,
+                               bool isHPD = false ) const;
 
-
+    void changeXScaleDivision( const Scale& sc );
+    void changeXScaleDivision( double major, int minor );
 
 
 protected:
+    /*------------------------------------------------------------------
+       Méthodes de mise à jour et de dessin
+    ------------------------------------------------------------------*/
     void adaptMarginBottom();
+    void updateGraphSize( qreal w, qreal h );
 
-    void updateGraphSize(qreal w, qreal h);
+    QPainterPath makePath( const QMap<double,double>& map, bool showBorder ) const;
+    void         drawCurves( QPainter& p );
+    void         drawMap( const GraphCurve& c, QPainter& p );
+    QPainterPath makeSubShape( const QMap<double,double>& inf,
+                              const QMap<double,double>& sup ) const;
+    void         drawShape( const GraphCurve& c, QPainter& p );
+    void         drawDensity( const GraphCurve& c, QPainter& p );
 
-    QPainterPath makePath (const QMap<double, double>& map, const bool showBorder) const;
-
-    void drawCurves(QPainter& painter);
-    void drawMap(const GraphCurve& curve, QPainter& painter);
-    QPainterPath makeSubShape(const QMap<double, double>& mapInf, const QMap<double, double>& mapSup) const;
-    void drawShape(const GraphCurve& curve, QPainter& painter);
-    void drawDensity(const GraphCurve& curve, QPainter& painter);
-
-    void resizeEvent(QResizeEvent*) override;
-
-    void paintEvent(QPaintEvent*) override;
-    void repaintGraph() override;
+    /*------------------------------------------------------------------
+       Événements Qt
+    ------------------------------------------------------------------*/
+    void resizeEvent( QResizeEvent* ) override;
+    void paintEvent( QPaintEvent* )   override;
+    void repaintGraph()               override;
     void updateRasterCache();
     void drawTooltip();
 
-    void enterEvent(QEnterEvent* e) override;
-    void leaveEvent(QEvent* e) override;
-    void mouseMoveEvent(QMouseEvent* e) override;
+    void enterEvent( QEnterEvent* ) override;
+    void leaveEvent( QEvent* )      override;
+    void mouseMoveEvent( QMouseEvent* ) override;
 
-    void autoUpdate(); // Méthode d'update
+    void autoUpdate();   // mise à jour automatique via timer
 
-protected:
 
+protected:   // ---------- membres protégés ----------
     AxisTool mAxisToolX;
     AxisTool mAxisToolY;
-    qreal mStepMinWidth;
+    qreal    mStepMinWidth = 0.0;
 
-    bool mXAxisLine;
-    bool mXAxisArrow;
-    bool mXAxisTicks;
-    bool mXAxisSubTicks;
-    bool mXAxisValues;
+    // visibilité des éléments d’axes
+    bool mXAxisLine      = true;
+    bool mXAxisArrow     = true;
+    bool mXAxisTicks     = true;
+    bool mXAxisSubTicks  = false;
+    bool mXAxisValues    = true;
 
-    bool mYAxisLine;
-    bool mYAxisArrow;
-    bool mYAxisTicks;
-    bool mYAxisSubTicks;
-    bool mYAxisValues;
+    bool mYAxisLine      = true;
+    bool mYAxisArrow     = true;
+    bool mYAxisTicks     = true;
+    bool mYAxisSubTicks  = false;
+    bool mYAxisValues    = true;
 
-    AxisMode mXAxisMode;
-    AxisMode mYAxisMode;
-    OverflowDataArrowMode mOverflowArrowMode;
+    AxisMode               mXAxisMode = AxisMode::eAllTicks;
+    AxisMode               mYAxisMode = AxisMode::eAllTicks;
+    OverflowDataArrowMode  mOverflowArrowMode = OverflowDataArrowMode::eNone;
 
-    QPicture mVectorCache;      // Cache vectoriel (qualité)
-    QPixmap mRasterCache;       // Cache raster (performance)
+    // caches graphiques
+    QPicture mVectorCache;   // qualité vectorielle
+    QPixmap  mRasterCache;   // performance raster
 
     QElapsedTimer mLastFastPaint;
-    bool mIsScrolling = false;
-    bool mCacheValid = false;  // Indique si mRasterCache est à jour
-    QTimer* mUpdateTimer; // Timer pour la mise à jour automatique
+    bool          mIsScrolling = false;
+    bool          mCacheValid  = false;
+    QTimer*       mUpdateTimer = nullptr;   // mise à jour automatique
 
-    bool mAutoAdjustYScale;
+    bool mAutoAdjustYScale = false;
 
-    bool mShowInfos;
+    // informations affichées sous le graphe
+    bool        mShowInfos = false;
     QStringList mInfos;
 
     QString mNothingMessage;
 
-    QColor mBackgroundColor;
-    int mThickness;
-    int mOpacity;
-    bool mCanControlOpacity;
+    // apparence générale
+    QColor mBackgroundColor = Qt::white;
+    int    mThickness       = 1;
+    int    mOpacity         = 255;
+    bool   mCanControlOpacity = false;
 
+    // tool‑tip
     QRectF  mTipRect;
-    qreal  mTipX;
-    qreal  mTipY;
-    QString  mTipXLab;
-    QString  mTipYLab;
-    QString  mTipComment;
-    qreal  mTipWidth;
-    qreal  mTipHeight;
-    bool  mTipVisible;
-    bool  mUseTip;
+    qreal   mTipX = 0.0, mTipY = 0.0;
+    QString mTipXLab, mTipYLab, mTipComment;
+    qreal   mTipWidth = 0.0, mTipHeight = 0.0;
+    bool    mTipVisible = false;
+    bool    mUseTip = false;
 
+    // données graphiques
     QList<GraphCurve> mCurves;
-    QList<GraphZone> mZones;
+    QList<GraphZone>  mZones;
 
-    QPainter mPrevPainter;
+    QPainter mPrevPainter;   // utilisé pour le cache raster
 
-    qreal mBottomSpacer;
+    qreal mBottomSpacer = 0.0;
 
-public:
+public:   // ---------- membres publics ----------
     QString mLegendX;
     QString mLegendY;
     std::vector<CurveRefPts> refPoints;
 
-private:
-    DateConversion mUnitFunctionX;
-    DateConversion mUnitFunctionY;
-
+private:   // ---------- membres privés ----------
+    DateConversion mUnitFunctionX = nullptr;
+    DateConversion mUnitFunctionY = nullptr;
 };
 
-
-
-class GraphTitle: public GraphViewAbstract
+/*======================================================================
+   CLASS GraphTitle – titre et sous‑titre du graphe
+======================================================================*/
+class GraphTitle : public GraphViewAbstract
 {
     Q_OBJECT
+
 protected:
-    qreal mTitleHeight;
-    qreal mSubTitleHeight;
+    qreal        mTitleHeight = 0.0;
+    qreal        mSubTitleHeight = 0.0;
 
-    QStaticText mTitle;
-    QStaticText mCommentTitle;
-    QStaticText mSubTitle;
-    QColor mBackgroundColor;
-    QColor mTitleBarColor;
+    QStaticText  mTitle;
+    QStaticText  mCommentTitle;
+    QStaticText  mSubTitle;
 
-    bool mAutoAdjustTitleHeight;
-    bool mAutoAdjustSubTitleHeight;
+    QColor       mBackgroundColor = Qt::white;
+    QColor       mTitleBarColor   = Qt::gray;
+
+    bool mAutoAdjustTitleHeight    = true;
+    bool mAutoAdjustSubTitleHeight = true;
 
 public:
-    GraphTitle(QWidget* parent = nullptr);
-    virtual ~GraphTitle();
+    explicit GraphTitle( QWidget* parent = nullptr );
+    ~GraphTitle() override = default;
 
-    explicit GraphTitle(QString title, QWidget* parent = nullptr);
-    explicit GraphTitle(QString title, QColor titleBarColor, QWidget* parent);
+    explicit GraphTitle( const QString& title, QWidget* parent = nullptr );
+    explicit GraphTitle( const QString& title, const QColor& titleBarColor, QWidget* parent = nullptr );
 
-    explicit GraphTitle(QString title, QString subTitle, QWidget* parent = nullptr);
-    explicit GraphTitle(QString title, QString subTitle, QColor backGround, QWidget* parent = nullptr);
+    explicit GraphTitle( const QString& title, const QString& subTitle, QWidget* parent = nullptr );
+    explicit GraphTitle( const QString& title, const QString& subTitle,
+                        const QColor& backGround, QWidget* parent = nullptr );
 
-    explicit GraphTitle(QString title, QString commentTitle, QString subTitle, QWidget* parent = nullptr);
+    explicit GraphTitle( const QString& title, const QString& commentTitle,
+                        const QString& subTitle, QWidget* parent = nullptr );
 
-    void paintEvent(QPaintEvent*);
-    void repaintGraph();
+    void paintEvent( QPaintEvent* ) override;
+    void repaintGraph() override;
 
-    inline void setTitle(const QString& title)
-    {
-        mTitle.setText(title);
-    };
-    inline void setSubTitle(const QString& subTitle)
-    {
-        mSubTitle.setText(subTitle);
-    };
-    inline void setBackGroundColor(const QColor& color)
-    {
-        mBackgroundColor = color;
-    };
-    inline void setTitleBarColor(const QColor& color)
-    {
-        mTitleBarColor = color;
-    };
+    // -----------------------------------------------------------------
+    //   Setters / getters
+    // -----------------------------------------------------------------
+    inline void setTitle( const QString& t )          { mTitle.setText( t ); }
+    inline void setSubTitle( const QString& t )       { mSubTitle.setText( t ); }
+    inline void setBackGroundColor( const QColor& c)  { mBackgroundColor = c; }
+    inline void setTitleBarColor( const QColor& c )   { mTitleBarColor = c; }
 
-    inline void setTitleHeight(const qreal h)
+    inline void setTitleHeight( qreal h )
     {
         mTitleHeight = h;
         mAutoAdjustTitleHeight = false;
-    };
-    inline qreal titleHeight() const
-    {
-        return mTitleHeight;
-    };
+    }
+    inline qreal titleHeight() const { return mTitleHeight; }
 
-    inline void setSubTitleHeight(const qreal h) {
+    inline void setSubTitleHeight( qreal h )
+    {
         mSubTitleHeight = h;
         mAutoAdjustSubTitleHeight = false;
-    };
-    inline qreal subTitleHeight() const
-    {
-        return mSubTitleHeight;
     }
+    inline qreal subTitleHeight() const { return mSubTitleHeight; }
 
-    void setAutoAdjustTitleHeight(bool adjust) {mAutoAdjustTitleHeight = adjust;};
-    void setAutoAdjustSubTitleHeight(bool adjust) {mAutoAdjustSubTitleHeight = adjust;};
-    bool autoAdjustTitleHeight() {return mAutoAdjustTitleHeight;};
-    inline bool autoAdjustSubTitleHeight()const
-    {
-        return mAutoAdjustSubTitleHeight;
-    };
+    inline void setAutoAdjustTitleHeight( bool a )    { mAutoAdjustTitleHeight = a; }
+    inline void setAutoAdjustSubTitleHeight( bool a ) { mAutoAdjustSubTitleHeight = a; }
+    inline bool autoAdjustTitleHeight()   const { return mAutoAdjustTitleHeight; }
+    inline bool autoAdjustSubTitleHeight() const { return mAutoAdjustSubTitleHeight; }
 
-    qreal height();
+    qreal height() const;
 
-    inline bool isTitle() const
-    {
-        return !mTitle.text().isEmpty();
-    };
-    inline bool withTitle() const
-    {
-        return !mSubTitle.text().isEmpty();
-    };
+    inline bool isTitle()   const { return !mTitle.text().isEmpty(); }
+    inline bool withTitle() const { return !mSubTitle.text().isEmpty(); }
 };
 
-
-
-#endif

@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -37,116 +37,254 @@ The fact that you are presently reading this means that you have had
 knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
-#ifndef GRAPHVIEWABSTRACT_H
-#define GRAPHVIEWABSTRACT_H
+#pragma once
 
+// ---------------------------------------------------------------------
+//   Includes
+// ---------------------------------------------------------------------
 #include <QWidget>
-#include <qglobal.h>
 #include <QPainterPath>
-//#include <QtWidgets>
+#include <QtGlobal>          // pour qreal
+#include <algorithm>         // std::clamp, std::max, std::lerp
+#include <type_traits>       // std::is_floating_point_v
 
-#define BLANK_SPACE_ON_TOP 5. //Space used to draw the credibility bar
-#define BLANK_SPACE_ON_RIGHT 5.
+// ---------------------------------------------------------------------
+//   Constantes (remplace les macros)
+// ---------------------------------------------------------------------
+inline constexpr qreal BLANK_SPACE_ON_TOP   = 5.0;   // espace réservé à la barre de crédibilité
+inline constexpr qreal BLANK_SPACE_ON_RIGHT = 5.0;
 
-typedef double type_data;
+// ---------------------------------------------------------------------
+//   Types génériques
+// ---------------------------------------------------------------------
+using type_data = double;
 
-class GraphViewAbstract:public QWidget
+// ---------------------------------------------------------------------
+//   Fonctions utilitaires (inline, constexpr quand c’est possible)
+// ---------------------------------------------------------------------
+/**
+ * @brief Retourne la valeur proportionnelle d’un paramètre.
+ *
+ * @tparam T   type numérique (float, double, …). Doit être un type flottant.
+ * @param value          valeur à convertir
+ * @param valMin,valMax   intervalle source
+ * @param Pmin,Pmax       intervalle cible
+ * @param resultInBounds  si true, le résultat est limité à [Pmin,Pmax]
+ * @return valeur proportionnelle (ou bornée)
+ */
+template <typename T>
+    requires std::is_floating_point_v<T>
+inline constexpr T valueForProportion( T value,
+                                      T valMin, T valMax,
+                                      T Pmin,   T Pmax,
+                                      bool resultInBounds )
+{
+    const T proportion = (value - valMin) / (valMax - valMin);
+    const T v          = std::lerp( Pmin, Pmax, proportion );
+
+    return resultInBounds ? std::clamp( v, Pmin, Pmax ) : v;
+}
+
+// ---------------------------------------------------------------------
+//   Classe principale
+// ---------------------------------------------------------------------
+class GraphViewAbstract : public QWidget
 {
     Q_OBJECT
 
 public:
-    GraphViewAbstract(QWidget* parent = nullptr);
-    virtual ~GraphViewAbstract();
+    // -----------------------------------------------------------------
+    //   Construction / Destruction
+    // -----------------------------------------------------------------
+    explicit GraphViewAbstract( QWidget* parent = nullptr );
+    virtual ~GraphViewAbstract() = default;
 
-#pragma mark Getters
-    bool parameterChange() const;
-    type_data rangeX() const;
-    type_data rangeY() const;
-    type_data getCurrentMaxX() const;
-    type_data getCurrentMinX() const;
+    // -----------------------------------------------------------------
+    //   Getters (const, [[nodiscard]])
+    // -----------------------------------------------------------------
+    [[nodiscard]] inline type_data rangeX() const noexcept { return mMaxX - mMinX; }
+    [[nodiscard]] inline type_data rangeY() const noexcept { return mMaxY - mMinY; }
 
-    type_data minimumX() const;
-    type_data maximumX() const;
-    type_data minimumY() const;
-    type_data maximumY() const;
+    [[nodiscard]] inline type_data currentMinX() const noexcept { return mCurrentMinX; }
+    [[nodiscard]] inline type_data currentMaxX() const noexcept { return mCurrentMaxX; }
 
-    qreal marginLeft() const;
-    qreal marginRight() const;
-    qreal marginTop() const;
-    qreal marginBottom() const;
+    [[nodiscard]] inline type_data minimumX() const noexcept { return mMinX; }
+    [[nodiscard]] inline type_data maximumX() const noexcept { return mMaxX; }
+    [[nodiscard]] inline type_data minimumY() const noexcept { return mMinY; }
+    [[nodiscard]] inline type_data maximumY() const noexcept { return mMaxY; }
 
- #pragma mark Setters
+    [[nodiscard]] inline qreal marginLeft()   const noexcept { return mMarginLeft;   }
+    [[nodiscard]] inline qreal marginRight()  const noexcept { return mMarginRight;  }
+    [[nodiscard]] inline qreal marginTop()    const noexcept { return mMarginTop;    }
+    [[nodiscard]] inline qreal marginBottom() const noexcept { return mMarginBottom; }
 
-    void setPrevParameter();
+    // -----------------------------------------------------------------
+    //   Setters (inline, protection contre les changements inutiles)
+    // -----------------------------------------------------------------
+    inline void setGraphHeight( qreal h ) noexcept { mGraphHeight = h; }
 
-    virtual void setRangeX(const type_data aMinX, const type_data aMaxX);
-    virtual void setCurrentX(const type_data aMinX, const type_data aMaxX);
-    virtual void setRangeY(const type_data aMinY, const type_data aMaxY);
+    inline void setRangeX( type_data minX, type_data maxX ) noexcept
+    {
+        mMinX = minX;
+        mMaxX = maxX;
+    }
 
-    void setMinimumX(const type_data aMinX);
-    void setMaximumX(const type_data aMaxX);
-    void setMinimumY(const type_data aMinY);
-    void setMaximumY(const type_data aMaxY);
+    inline void setCurrentX( type_data minX, type_data maxX ) noexcept
+    {
+        mCurrentMinX = minX;
+        mCurrentMaxX = maxX;
+    }
 
-    void setGraphHeight(const qreal h) {mGraphHeight = h;};
+    /** @brief Définit la plage Y en évitant min == max et en vérifiant la cohérence. */
+    inline void setRangeY( type_data minY, type_data maxY )
+    {
+        if ( minY == maxY ) {
+            mMinY = minY - type_data(1.0);
+            mMaxY = maxY + type_data(1.0);
+        }
+        else {
+            mMinY = minY;
+            mMaxY = maxY;
+        }
+    }
 
-    void setMarginLeft(const qreal aMarginLeft);
-    void setMarginRight(const qreal aMarginRight);
-    void setMarginTop(const qreal aMarginTop);
-    void setMarginBottom(const qreal aMarginBottom);
-    void setMargins(const qreal aMarginLeft, const qreal aMarginRight, const qreal aMarginTop, const qreal aMarginBottom);
+    // Setters simples (avec test d’égalité)
+    inline void setMinimumX( type_data v ) noexcept { if (mMinX != v) mMinX = v; }
+    inline void setMaximumX( type_data v ) noexcept { if (mMaxX != v) mMaxX = v; }
+    inline void setMinimumY( type_data v ) noexcept { if (mMinY != v) mMinY = v; }
+    inline void setMaximumY( type_data v ) noexcept { if (mMaxY != v) mMaxY = v; }
+
+    inline void setMarginLeft  ( qreal v ) noexcept { if (mMarginLeft   != v) mMarginLeft   = v; }
+    inline void setMarginRight ( qreal v ) noexcept { if (mMarginRight  != v) mMarginRight  = v; }
+    inline void setMarginTop   ( qreal v ) noexcept { if (mMarginTop    != v) mMarginTop    = v; }
+    inline void setMarginBottom( qreal v ) noexcept { if (mMarginBottom != v) mMarginBottom = v; }
+
+    inline void setMargins( qreal left, qreal right, qreal top, qreal bottom ) noexcept
+    {
+        mMarginLeft   = left;
+        mMarginRight  = right;
+        mMarginTop    = top;
+        mMarginBottom = bottom;
+    }
+
+    /** @brief Mémorise les paramètres courants afin de pouvoir détecter un changement. */
+    inline void storeCurrentParameters() noexcept
+    {
+        mPrevMarginLeft   = mMarginLeft;
+        mPrevMarginRight  = mMarginRight;
+        mPrevMarginTop    = mMarginTop;
+        mPrevMarginBottom = mMarginBottom;
+        mPrevCurrentMinX  = mCurrentMinX;
+        mPrevCurrentMaxX  = mCurrentMaxX;
+        mPrevGraphWidth   = mGraphWidth;
+        mPrevGraphHeight  = mGraphHeight;
+    }
+
+    /** @brief Indique si l’un des paramètres graphiques a changé depuis le dernier appel à `storeCurrentParameters()`. */
+    [[nodiscard]] inline bool parametersChanged() const noexcept
+    {
+        const bool unchanged =
+            (mMarginLeft   == mPrevMarginLeft)   && (mMarginRight  == mPrevMarginRight) &&
+            (mMarginTop    == mPrevMarginTop)    && (mMarginBottom == mPrevMarginBottom) &&
+            (mCurrentMinX  == mPrevCurrentMinX)  && (mCurrentMaxX  == mPrevCurrentMaxX) &&
+            (mGraphWidth   == mPrevGraphWidth)   && (mGraphHeight  == mPrevGraphHeight);
+
+        return !unchanged;
+    }
 
 protected:
+    // -----------------------------------------------------------------
+    //   Méthodes utilitaires de conversion (coordonnées ↔ valeurs)
+    // -----------------------------------------------------------------
+    /**
+     * @brief Convertit une valeur de donnée en position X du graphe.
+     * @param value          valeur à convertir
+     * @param constrainResult si true, la position est bornée dans le cadre du graphe
+     */
+    [[nodiscard]] inline qreal getXForValue( type_data value,
+                                            bool constrainResult = true ) const noexcept
+    {
+        return mMarginLeft + valueForProportion( value,
+                                                mCurrentMinX,
+                                                mCurrentMaxX,
+                                                0.0,
+                                                std::max( 0.0, mGraphWidth - BLANK_SPACE_ON_RIGHT ),
+                                                constrainResult );
+    }
+
+    [[nodiscard]] inline type_data getValueForX( qreal x,
+                                                bool constrainResult = true ) const noexcept
+    {
+        const qreal xFromSide = x - mMarginLeft;
+        return valueForProportion( static_cast<type_data>(xFromSide),
+                                  0.0,
+                                  std::max( 0.0, mGraphWidth - BLANK_SPACE_ON_RIGHT ),
+                                  mCurrentMinX,
+                                  mCurrentMaxX,
+                                  constrainResult );
+    }
+
+    [[nodiscard]] inline qreal getYForValue( type_data value,
+                                            bool constrainResult = true ) const noexcept
+    {
+        const type_data yFromBase = valueForProportion( value,
+                                                       mMinY,
+                                                       mMaxY,
+                                                       0.0,
+                                                       std::max( 0.0, static_cast<type_data>(mGraphHeight) - BLANK_SPACE_ON_TOP ),
+                                                       constrainResult );
+        return mGraphHeight + mMarginTop - static_cast<qreal>(yFromBase);
+    }
+
+    [[nodiscard]] inline type_data getValueForY( qreal y,
+                                                bool constrainResult = true ) const noexcept
+    {
+        const qreal yFromBase = mMarginTop + mGraphHeight - y;
+        return valueForProportion( static_cast<type_data>(yFromBase),
+                                  0.0,
+                                  std::max( 0.0, static_cast<type_data>(mGraphHeight) - BLANK_SPACE_ON_TOP ),
+                                  mMinY,
+                                  mMaxY,
+                                  constrainResult );
+    }
+
+    // -----------------------------------------------------------------
+    //   Méthode pure à implémenter par les classes dérivées
+    // -----------------------------------------------------------------
     virtual void repaintGraph() = 0;
 
-    virtual qreal getXForValue(const type_data aValue, const bool aConstainResult = true) const;
-    virtual type_data getValueForX(const qreal x, const bool aConstainResult = true) const;
-    virtual qreal getYForValue(const type_data aValue, const bool aConstainResult = true) const;
-    virtual type_data getValueForY(const qreal y, const bool aConstainResult = true) const;
-
-protected:
+    // -----------------------------------------------------------------
+    //   Données membres (protected → accessibles aux classes dérivées)
+    // -----------------------------------------------------------------
     QPainterPath mPainterPath;
 
-    type_data   mCurrentMinX;
-    type_data   mCurrentMaxX;
+    // Dimensions du graphe (en pixels)
+    qreal mGraphWidth  = 0.0;
+    qreal mGraphHeight = 0.0;
 
-    qreal		mGraphWidth;
-    qreal		mGraphHeight;
+    // Marges autour du graphe
+    qreal mMarginLeft   = 0.0;
+    qreal mMarginRight  = 0.0;
+    qreal mMarginTop    = 0.0;
+    qreal mMarginBottom = 0.0;
 
-    qreal		mMarginLeft;
-    qreal		mMarginRight;
-    qreal		mMarginTop;
-    qreal		mMarginBottom;
+    // Plages de données (valeurs réelles)
+    type_data mMinX = 0.0, mMaxX = 0.0;
+    type_data mMinY = 0.0, mMaxY = 0.0;
 
-    type_data	mMinX;
-    type_data	mMaxX;
-    type_data	mMinY;
-    type_data	mMaxY;
+    // Plage affichée courante (utile pour le zoom/pan)
+    type_data mCurrentMinX = 0.0, mCurrentMaxX = 0.0;
 
-    // previous parameter
-    qreal		mPrevGraphWidth;
-    qreal		mPrevGraphHeight;
-
-    qreal		mPrevMarginLeft;
-    qreal		mPrevMarginRight;
-    qreal		mPrevMarginTop;
-    qreal		mPrevMarginBottom;
-
-    type_data   mPrevCurrentMinX;
-    type_data   mPrevCurrentMaxX;
-
+    // -----------------------------------------------------------------
+    //   Sauvegarde des paramètres précédents (pour détecter les changements)
+    // -----------------------------------------------------------------
+    qreal      mPrevGraphWidth   = 0.0;
+    qreal      mPrevGraphHeight  = 0.0;
+    qreal      mPrevMarginLeft   = 0.0;
+    qreal      mPrevMarginRight  = 0.0;
+    qreal      mPrevMarginTop    = 0.0;
+    qreal      mPrevMarginBottom = 0.0;
+    type_data  mPrevCurrentMinX  = 0.0;
+    type_data  mPrevCurrentMaxX  = 0.0;
 };
 
-template <typename T>
-inline T valueForProportion(const T value, const T valMin, const T valMax, const T Pmin, const T Pmax, const bool resultInBounds)
-{
-    T v2 = std::lerp(Pmin, Pmax, (value - valMin) / (valMax - valMin));
-
-    if (resultInBounds)
-        return std::clamp(v2, Pmin, Pmax);
-    else
-        return v2;
-}
-
-
-#endif

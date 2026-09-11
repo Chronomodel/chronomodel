@@ -43,17 +43,17 @@ message("-------------------------------------------")
 CONFIG(debug, debug|release) {
         BUILD_DIR=build/debug
         DEFINES += DEBUG # to validate all #ifdef DEBUG in all file
-	message("Running qmake : Debug")
-	macx{
-		REAL_DESTDIR=Debug
-	}
+        message("Running qmake : Debug")
+        macx{
+                REAL_DESTDIR=Debug
+        }
 } else {
         BUILD_DIR=build/release
-	message("Running qmake : Release")
+        message("Running qmake : Release")
         DEFINES += QT_NO_DEBUG_OUTPUT # to disable qDebug()
-	macx{
-		REAL_DESTDIR=Release
-	}
+        macx{
+                REAL_DESTDIR=Release
+        }
 }
 message("-------------------------------------------")
 
@@ -250,13 +250,13 @@ CONFIG(debug, debug|release) {
 #########################################
 macx{
     message("MacOSX specific settings")
-	# Icon file
+        # Icon file
         macx:ICON = $$PRO_PATH/icon/Chronomodel.icns
 
 
-	# This is the SDK used to compile : change it to whatever latest version of mac you are using.
-	# to determine which version of the macOS SDK is installed with xcode? type on a terminal
-	# xcodebuild -showsdks
+        # This is the SDK used to compile : change it to whatever latest version of mac you are using.
+        # to determine which version of the macOS SDK is installed with xcode? type on a terminal
+        # xcodebuild -showsdks
 
         #  Désactive les fonctions dépréciées avant Qt 6.0
         DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000
@@ -270,13 +270,13 @@ macx{
 
         message("QMAKE_MACOSX_DEPLOYMENT_TARGET = $$QMAKE_MACOSX_DEPLOYMENT_TARGET")
 
-	# Define a set of resources to deploy inside the bundle :
-	RESOURCES_FILES.path = Contents/Resources
+        # Define a set of resources to deploy inside the bundle :
+        RESOURCES_FILES.path = Contents/Resources
         # RESOURCES_FILES.files += $$PRO_PATH/deploy/Calib // used for older version <3.1.6
         RESOURCES_FILES.files += $$PRO_PATH/deploy/ABOUT.html
         RESOURCES_FILES.files += $$PRO_PATH/deploy/Chronomodel.png
         #RESOURCES_FILES.files += $$PRO_PATH/icon/Chronomodel.icns
-	QMAKE_BUNDLE_DATA += RESOURCES_FILES
+        QMAKE_BUNDLE_DATA += RESOURCES_FILES
 
        # Supprimez explicitement la référence à AGL, elle est inutile
        #LIBS -= -framework AGL
@@ -296,7 +296,7 @@ macx{
 # Windows specific settings
 #########################################
 win32{
-	# Resource file (Windows only)
+        # Resource file (Windows only)
         message("WIN specific settings")
         QMAKESPEC = win32-g++ #win32-msvc  # for 32-bit and 64-bit
         RC_ICONS = $$PRO_PATH/icon/Chronomodel.ico
@@ -371,12 +371,12 @@ DEFINES += "USE_PLUGIN_DENSITY=$${USE_PLUGIN_DENSITY}"
 #########################################
 message("----- FFTW -----")
 macx{
-	# IMPORTANT NOTE :
-	# We use FFTW 3.2.2 on Mac to support Mac OS X versions from 10.7.
-	# We provide FFTW.3.2.2.dmg if you want to install it on your system, but this is not necessary!
-	# The generated XCode project will locate FFTW files in the project directory and statically link against it.
+        # IMPORTANT NOTE :
+        # We use FFTW 3.2.2 on Mac to support Mac OS X versions from 10.7.
+        # We provide FFTW.3.2.2.dmg if you want to install it on your system, but this is not necessary!
+        # The generated XCode project will locate FFTW files in the project directory and statically link against it.
 
-	# this is to include fftw.h in the code :
+        # this is to include fftw.h in the code :
 
         # FFTW 3.3.11 - universal (x86_64 + arm64)
         INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.3.11_uni/mac/include
@@ -391,17 +391,17 @@ macx{
 
 
 
-	# If we were deploying FFTW as a dynamic library, we should :
-	# - Move all files from "lib/FFTW/mac/dylib" to "lib/FFTW/mac"
-	# - Uncomment the lines below to copy dylib files to the bundle
-	# - We may also need to call install_name_tool on both dylib and chronomodel executable.
-	#	This has not been tested, so use otool -L path/to/dylib/files to check dependencies
+        # If we were deploying FFTW as a dynamic library, we should :
+        # - Move all files from "lib/FFTW/mac/dylib" to "lib/FFTW/mac"
+        # - Uncomment the lines below to copy dylib files to the bundle
+        # - We may also need to call install_name_tool on both dylib and chronomodel executable.
+        #	This has not been tested, so use otool -L path/to/dylib/files to check dependencies
 
-	#FFTW_FILES.path = Contents/Frameworks
-	#FFTW_FILES.files += $$PRO_PATH/deploy/mac/FFTW/libfftw3f.dylib
-	#QMAKE_BUNDLE_DATA += FFTW_FILES
-	#QMAKE_POST_LINK += install_name_tool -id @executable_path/../Frameworks/libfftw3f.dylib $$PRO_PATH/deploy/mac/FFTW/libfftw3f.dylib
-	#QMAKE_POST_LINK += install_name_tool -change old/path @executable_path/../Frameworks/libfftw3f.3.dylib $$PRO_PATH/Release/Chronomodel.app/Contents/MacOS/Chronomodel;
+        #FFTW_FILES.path = Contents/Frameworks
+        #FFTW_FILES.files += $$PRO_PATH/deploy/mac/FFTW/libfftw3f.dylib
+        #QMAKE_BUNDLE_DATA += FFTW_FILES
+        #QMAKE_POST_LINK += install_name_tool -id @executable_path/../Frameworks/libfftw3f.dylib $$PRO_PATH/deploy/mac/FFTW/libfftw3f.dylib
+        #QMAKE_POST_LINK += install_name_tool -change old/path @executable_path/../Frameworks/libfftw3f.3.dylib $$PRO_PATH/Release/Chronomodel.app/Contents/MacOS/Chronomodel;
 }
 
 win32{
@@ -476,6 +476,7 @@ HEADERS += src/MainController.h \
     src/ui/panel_model/MultiCalibrationDrawing.h \
     src/ui/panel_model/MultiplotColorDialog.h \
     src/ui/panel_results/GraphViewS02Vg.h \
+    src/utilities/FFTWThread.h \
     src/utilities/Matrix.h \
     src/version.h
 HEADERS += src/AppSettings.h
@@ -515,34 +516,34 @@ HEADERS += src/plugins/PluginSettingsViewAbstract.h
 HEADERS += src/plugins/RefCurve.h
 
 equals(USE_PLUGIN_TL, 1){
-	HEADERS += src/plugins/plugin_tl/PluginTL.h
-	HEADERS += src/plugins/plugin_tl/PluginTLForm.h
-	HEADERS += src/plugins/plugin_tl/PluginTLRefView.h
-	HEADERS += src/plugins/plugin_tl/PluginTLSettingsView.h
+        HEADERS += src/plugins/plugin_tl/PluginTL.h
+        HEADERS += src/plugins/plugin_tl/PluginTLForm.h
+        HEADERS += src/plugins/plugin_tl/PluginTLRefView.h
+        HEADERS += src/plugins/plugin_tl/PluginTLSettingsView.h
 }
 equals(USE_PLUGIN_14C, 1){
-	HEADERS += src/plugins/plugin_14C/Plugin14C.h
-	HEADERS += src/plugins/plugin_14C/Plugin14CForm.h
-	HEADERS += src/plugins/plugin_14C/Plugin14CRefView.h
+        HEADERS += src/plugins/plugin_14C/Plugin14C.h
+        HEADERS += src/plugins/plugin_14C/Plugin14CForm.h
+        HEADERS += src/plugins/plugin_14C/Plugin14CRefView.h
         HEADERS += src/plugins/plugin_14C/Plugin14CSettingsView.h
 }
 equals(USE_PLUGIN_GAUSS, 1){
-	HEADERS += src/plugins/plugin_gauss/PluginGauss.h
-	HEADERS += src/plugins/plugin_gauss/PluginGaussForm.h
-	HEADERS += src/plugins/plugin_gauss/PluginGaussRefView.h
+        HEADERS += src/plugins/plugin_gauss/PluginGauss.h
+        HEADERS += src/plugins/plugin_gauss/PluginGaussForm.h
+        HEADERS += src/plugins/plugin_gauss/PluginGaussRefView.h
         HEADERS += src/plugins/plugin_gauss/PluginGaussSettingsView.h
 }
 equals(USE_PLUGIN_AM, 1){
-	HEADERS += src/plugins/plugin_am/PluginMag.h
-	HEADERS += src/plugins/plugin_am/PluginMagForm.h
-	HEADERS += src/plugins/plugin_am/PluginMagRefView.h
+        HEADERS += src/plugins/plugin_am/PluginMag.h
+        HEADERS += src/plugins/plugin_am/PluginMagForm.h
+        HEADERS += src/plugins/plugin_am/PluginMagRefView.h
         HEADERS += src/plugins/plugin_am/PluginMagSettingsView.h
 }
 equals(USE_PLUGIN_UNIFORM, 1){
-	HEADERS += src/plugins/plugin_uniform/PluginUniform.h
-	HEADERS += src/plugins/plugin_uniform/PluginUniformForm.h
-	HEADERS += src/plugins/plugin_uniform/PluginUniformRefView.h
-	HEADERS += src/plugins/plugin_uniform/PluginUniformSettingsView.h
+        HEADERS += src/plugins/plugin_uniform/PluginUniform.h
+        HEADERS += src/plugins/plugin_uniform/PluginUniformForm.h
+        HEADERS += src/plugins/plugin_uniform/PluginUniformRefView.h
+        HEADERS += src/plugins/plugin_uniform/PluginUniformSettingsView.h
 }
 equals(USE_PLUGIN_F14C, 1){
     HEADERS += src/plugins/plugin_F14C/PluginF14C.h
@@ -809,5 +810,5 @@ SOURCES += src/utilities/DoubleValidator.cpp
 SOURCES += src/utilities/DateUtils.cpp
 
 DISTFILES += icon/Chronomodel.ico
-#\ # Chronomodel.rc \
+
 

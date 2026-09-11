@@ -172,7 +172,7 @@ QString DateUtils::convertToAppSettingsFormatStr(const double valueToFormat, con
 
 double DateUtils::convertToAppSettingsFormat(const double &valueToFormat)
 {
-    return DateUtils::convertToFormat(valueToFormat, AppSettings::mFormatDate); //getAppSettingsFormat() = AppSettings::mFormatDate
+    return DateUtils::convertToFormat(valueToFormat, AppSettings::mFormatDate);
 }
 
 QString DateUtils::convertFromAppSettingsFormatStr(const double formattedValue)

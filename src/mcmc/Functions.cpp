@@ -268,7 +268,7 @@ type_data std_Koening(const QList<type_data> &data)
 //qDebug() << "std_Koening comparaison calcul Knuth" << sqrt(variance) << result.std;
 
     if (variance < 0) {
-        qDebug() << "WARNING : in std_Koening() negative variance found : " << variance<<" force return 0";
+        qDebug() << "WARNING : in std_Koening() negative variance found : " << variance <<" force return 0";
         return (type_data)0.;
     }
 
@@ -285,7 +285,7 @@ type_data std_Koening(const QList<type_data> &data)
  * @param data
  * @return
  */
-double variance_Knuth(const QList<double> &data)
+double variance_pop_Knuth(const QList<double> &data)
 {
     unsigned n = 0;
     double mean = 0.0;
@@ -302,7 +302,8 @@ double variance_Knuth(const QList<double> &data)
 
 }
 
-double variance_Knuth(const std::vector<double> &data)
+//  Variance de population (n) → correspond à C++ original avec / n
+double variance_pop_Knuth(const std::vector<double> &data)
 {
     unsigned n = 0;
     double mean = 0.0;
@@ -319,7 +320,7 @@ double variance_Knuth(const std::vector<double> &data)
 
 }
 
-double variance_Knuth(const std::vector<t_matrix> &data)
+double variance_pop_Knuth(const std::vector<t_matrix> &data)
 {
     unsigned n = 0;
     t_matrix mean = 0.0;
@@ -336,7 +337,7 @@ double variance_Knuth(const std::vector<t_matrix> &data)
 
 }
 
-double variance_Knuth(const std::vector<int> &data)
+double variance_pop_Knuth(const std::vector<int> &data)
 {
     int n = 0;
     double mean = 0.;
@@ -400,6 +401,7 @@ void mean_variance_Knuth(const std::vector<double> &data, double &mean, double &
     variance /= n;
 }
 
+// Variance d'échantillon (n-1) comme R sd()
 double std_unbiais_Knuth (const QList<double> &data)
 {
     unsigned n = 0;
@@ -413,7 +415,7 @@ double std_unbiais_Knuth (const QList<double> &data)
         variance +=  (x - previousMean)*(x - mean);
     }
 
-    return sqrt(variance/static_cast<double>(n-1)); // unbiais
+    return sqrt(variance/static_cast<double>(n-1)); // unbiais // ✔️ n-1 comme R sd()
 
 }
 
@@ -452,6 +454,7 @@ double std_unbiais_Knuth(const std::vector<int>& data)
 
 }
 
+// Variance d'échantillon (n-1)
 void mean_std_unbiais_Knuth(const std::vector<int>& data, double& mean, double& std)
 {
     int n = 0;
@@ -698,40 +701,10 @@ const std::pair<double, double> linear_regression(const std::vector<double> &dat
  */
 TraceStat traceStatistic(const QList<type_data> &trace)
 {
-    TraceStat result;
-    if (trace.size() == 1) {
-        result.mean = trace.at(0);
-        result.std = 0.0; // unbiais
+    // Conversion
+    std::vector<type_data> vectorTrace(trace.begin(), trace.end());
 
-        result.min = trace.at(0);
-        result.max = trace.at(0);
-
-        result.quartiles.Q1 = trace.at(0);
-        result.quartiles.Q2 = trace.at(0);
-        result.quartiles.Q3 = trace.at(0);
-
-        return result;
-    }
-
-    int n = 0;
-    type_data mean = 0.0;
-    type_data variance = 0.0;
-
-    for (const auto& x : trace) {
-        n++;
-        double previousMean = mean;
-        mean += (x - previousMean)/n;
-        variance += (x - previousMean)*(x - mean);
-    }
-    result.mean = mean;
-    result.std = sqrt(variance/(n-1)); // unbiais
-
-    auto minMax = std::minmax_element(trace.begin(), trace.end());
-    result.min = std::move(*minMax.first);
-    result.max = std::move(*minMax.second);
-
-    result.quartiles = quartilesForTrace(trace);
-    return result;
+    return traceStatistic(vectorTrace);
 }
 
 TraceStat traceStatistic(const std::vector<type_data> &trace)
@@ -753,7 +726,7 @@ TraceStat traceStatistic(const std::vector<type_data> &trace)
         result.quartiles.Q3 = 0;
 
 #ifdef DEBUG
-        std::cout << "[traceStatistic] trace is empty " << std::endl;
+        std::cout << "[" << __func__ << "] trace is empty " << std::endl;
 #endif
         return result;
     }
@@ -788,31 +761,27 @@ TraceStat traceStatistic(const std::vector<type_data> &trace)
     //std::vector<double> trace_test = {-302.802378232761,-301.150887447416,-292.206458429254,-299.647458042877,-299.353561324195,-291.424675065584,-297.695418970054,-306.325306173033,-303.434264259468,-302.2283098505,-293.879591012803,-298.200930864713,-297.99614274703,-299.446586420274,-302.77920567377,-291.065434315985,-297.510747608854,-309.833085783148,-296.493220492182,-302.36395703864,-305.339118529934,-301.089874573291,-305.130022241536,-303.644456146456,-303.125196339246,-308.433466553712,-295.811064777527,-299.233134410817,-305.69068468506,-293.73092539465,-297.867678892616,-301.475357414961,-295.524371694775,-295.609332562335,-295.892094591813,-296.5567987295,-297.230411732312,-300.309558552884,-301.5298133187,-301.902355005062,-303.473534894603,-301.039586390098,-306.326981757841,-289.155220173307,-293.960190008475,-305.615542916017,-302.014424176495,-302.333276768116,-296.100174408318,-300.416845332359,301.266592569974,299.857266223256,299.785647713543,306.843011420072,298.871145071704,307.582353022148,292.256235978849,302.92306874818,300.619271219223,301.07970784372,301.898197413799,297.488382734453,298.333963081653,294.907123084465,294.641043867622,301.517643207021,302.241048893147,300.265021133653,304.611337339399,310.250423428136,297.544844169717,288.454155621796,305.028692622311,296.453996187088,296.559956917663,305.127856848483,298.576134964745,293.896411438727,300.906517398746,299.305543187805,300.028820929499,301.926402005632,298.146699841038,303.221882742594,298.897567190906,301.658909819578,305.484195065747,302.175907454169,298.370342072344,305.744038092255,304.967519279811,302.74198479754,301.193658675557,296.860469619803,306.80326224265,296.998702064264,310.936664965083,307.663053130926,298.821498204498,294.867895498466};
 
     // N(0,1) doit donné  "h SJ_ste 0.491017490078519" et  "h SJ_dpi 0.485152825792427"
-    //std::vector<double> trace_test = {-0.710406563699301,0.25688370915653,-0.246691878462374,-0.347542599397733,-0.951618567265016,-0.0450277248089203,-0.784904469457076,-1.66794193658814,-0.380226520287762,0.918996609060766,-0.575346962608392,0.607964322225033,-1.61788270828916,-0.0555619655245394,0.519407203943462,0.301153362166714,0.105676194148943,-0.640706008305376,-0.849704346033582,-1.02412879060491,0.117646597100126,-0.947474614184802,-0.490557443700668,-0.256092192198247,1.84386200523221,-0.651949901695459,0.235386572284857,0.0779608495637108,-0.961856634130129,-0.0713080861235987,1.44455085842335,0.451504053079215,0.0412329219929399,-0.422496832339625,-2.05324722154052,1.13133721341418,-1.46064007092482,0.739947510877334,1.90910356921748,-1.4438931609718,0.701784335374711,-0.262197489402468,-1.57214415914549,-1.51466765378175,-1.60153617357459,-0.530906522170303,-1.4617555849959,0.687916772975828,2.10010894052567,-1.28703047603518};
+    // std::vector<double> trace_test = {-0.710406563699301,0.25688370915653,-0.246691878462374,-0.347542599397733,-0.951618567265016,-0.0450277248089203,-0.784904469457076,-1.66794193658814,-0.380226520287762,0.918996609060766,-0.575346962608392,0.607964322225033,-1.61788270828916,-0.0555619655245394,0.519407203943462,0.301153362166714,0.105676194148943,-0.640706008305376,-0.849704346033582,-1.02412879060491,0.117646597100126,-0.947474614184802,-0.490557443700668,-0.256092192198247,1.84386200523221,-0.651949901695459,0.235386572284857,0.0779608495637108,-0.961856634130129,-0.0713080861235987,1.44455085842335,0.451504053079215,0.0412329219929399,-0.422496832339625,-2.05324722154052,1.13133721341418,-1.46064007092482,0.739947510877334,1.90910356921748,-1.4438931609718,0.701784335374711,-0.262197489402468,-1.57214415914549,-1.51466765378175,-1.60153617357459,-0.530906522170303,-1.4617555849959,0.687916772975828,2.10010894052567,-1.28703047603518};
+    // std::cout << " bw_SJ_ste(trace_test) = " << bw_SJ_ste(trace_test) << " doit donné  0.491017490078519\n";
+
 #ifdef DEBUG_no
     Chronometer t ("h_sj_ste");
-    std::cout << "[traceStatistic] debut calcul h_sj_ste  " << std::endl;
+    std::cout << "["<<__func__ << "] debut calcul h_sj_ste  " << std::endl;
 #endif
     const double h_sj_ste = bw_SJ_ste(trace);
 
 #ifdef DEBUG_no
     t.display();
-    std::cout << "[traceStatistic] fin calcul h_sj_ste  " << std::endl;
+    std::cout << "["<<__func__ << "] fin calcul h_sj_ste  " << std::endl;
 
 #endif
+
     //double h_sj_dpi = bw_SJ_dpi(trace);   // rapide
     //double h_sj_ste = bw_SJ_ste(trace);   // plus précis
     //h = h_sj_ste;
 
+    const double h_nrd0 = bw_nrd0(trace);
 
-    const double h_nrd0 = bw_nrd0(trace);//0.9 * result.std * pow(trace.size(), -0.2);
-    // std::cout << "SJ-DPI = " << h_sj_dpi << "\n";
-    //std::cout << "SJ-STE = " << h_sj_ste << "\n";
-    //double scaleFactor = scale_factor(trace);
-    //double coef_Si_equi = h_sj_ste / (scaleFactor * pow(trace.size(), -0.2) );
-
-    //std::cout <<" (h_sj_ste) Bandwidth  = " << h_sj_ste<< " coef equivalent=" << coef_Si_equi  << '\n';
-    //result.bdw = coef_Si_equi;
     result.bw_SJ   = h_sj_ste;
     result.bw_nrd0 = h_nrd0;
 
@@ -829,10 +798,12 @@ double gelmanRubin0(const std::vector<std::vector<double>>& chains)
     const int M = chains.size();
     if (M < 2)
         return 0.0;
+
     const int N = chains[0].size();
     for (const auto& c : chains)
         if ((int)c.size() != N)
             throw std::invalid_argument("[Function::gelmanRubin] Toutes les chaînes doivent avoir la même longueur");
+
     if (N < 2)
         return 0.0;
 
@@ -891,16 +862,21 @@ struct WelfordStats {
 
     // Fusion de deux accumulateurs (Chan 1979)
     static WelfordStats merge(const WelfordStats& a, const WelfordStats& b) {
+        if (a.count == 0 && b.count == 0) return WelfordStats{};
+        if (a.count == 0) return b;
+        if (b.count == 0) return a;
         WelfordStats r;
         r.count = a.count + b.count;
         double delta = b.mean - a.mean;
-        r.mean = (a.count * a.mean + b.count * b.mean) / r.count;
+        //r.mean = (a.count * a.mean + b.count * b.mean) / r.count;
+        r.mean = a.mean + delta * b.count / r.count;
         r.M2   = a.M2 + b.M2 + delta * delta * a.count * b.count / r.count;
         return r;
     }
 
     double variance() const { return M2 / (count - 1); }
 };
+
 // version accélérer avec knuth et la formule de Chan (WelfordStats)
 double gelmanRubin(const std::vector<std::vector<double>>& chains)
 {
@@ -954,8 +930,9 @@ double gelmanRubin(const std::vector<std::vector<double>>& chains)
         W += chain_var[m];
     W /= M;
 
-    if (W < 1e-15)       return 1.0;
-    if (B < 1e-15 * W)   return 1.0;
+    if (W < 1e-15 && B < 1e-15) return 1.0;   // chaînes toutes constantes et identiques : cas trivial
+    if (W < 1e-15)               return std::numeric_limits<double>::infinity(); // W→0 mais B≠0 : chaînes bloquées sur des valeurs différentes → non-convergence sévère
+    if (B < 1e-15 * W)           return 1.0;
 
     double V_hat = ((N - 1.0) / N) * W + ((M + 1.0) / (M * N)) * B;
     return std::sqrt(V_hat / W);
@@ -982,14 +959,174 @@ std::vector<double> gelmanRubinMulti(
     return r_hats;
 }
 
-
-
-double shrinkageUniform(const double s02)
+#pragma mark splitRhatVehtari
+// -------------------------------------------------------------
+//  Inverse de la CDF normale standard (algorithme d'Acklam),
+//  affinée par un pas de Newton. Précision ~1e-9, largement
+//  suffisante pour une transformation en scores normaux.
+// -------------------------------------------------------------
+double invNormalCDF(double p)
 {
-    const double u = Generator::randomUniform(0, 1);
-    return (s02 * (1. - u) / u);
+    static const double a[] = {-3.969683028665376e+01,  2.209460984245205e+02,
+                               -2.759285104469687e+02,  1.383577518672690e+02,
+                               -3.066479806614716e+01,  2.506628277459239e+00};
+    static const double b[] = {-5.447609879822406e+01,  1.615858368580409e+02,
+                               -1.556989798598866e+02,  6.680131188771972e+01,
+                               -1.328068155288572e+01};
+    static const double c[] = {-7.784894002430293e-03, -3.223964580411365e-01,
+                               -2.400758277161838e+00, -2.549732539343734e+00,
+                               4.374664141464968e+00,  2.938163982698783e+00};
+    static const double d[] = { 7.784695709041462e-03,  3.224671290700398e-01,
+                               2.445134137142996e+00,  3.754408661907416e+00};
+
+    if (p <= 0.0) return -std::numeric_limits<double>::infinity();
+    if (p >= 1.0) return  std::numeric_limits<double>::infinity();
+
+    const double p_low  = 0.02425;
+    const double p_high = 1.0 - p_low;
+    double q, r, x;
+
+    if (p < p_low) {
+        q = std::sqrt(-2.0 * std::log(p));
+        x = (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
+            ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1.0);
+    } else if (p <= p_high) {
+        q = p - 0.5;
+        r = q * q;
+        x = (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q /
+            (((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1.0);
+    } else {
+        q = std::sqrt(-2.0 * std::log(1.0 - p));
+        x = -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
+            ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1.0);
+    }
+
+    // Raffinement Newton (recommandé par Acklam pour une précision ~1e-9)
+    const double e = 0.5 * std::erfc(-x / std::sqrt(2.0)) - p;
+    const double u = e * std::sqrt(2.0 * M_PI) * std::exp(x * x / 2.0);
+    return x - u / (1.0 + x * u / 2.0);
 }
 
+// -------------------------------------------------------------
+//  Rangs moyens (fractional ranking, gère les ex-aequo comme
+//  R : rank(x, ties.method = "average"))
+// -------------------------------------------------------------
+static std::vector<double> averageRanks(const std::vector<double>& v)
+{
+    const int S = static_cast<int>(v.size());
+    std::vector<int> idx(S);
+    std::iota(idx.begin(), idx.end(), 0);
+    std::sort(idx.begin(), idx.end(), [&](int i, int j) { return v[i] < v[j]; });
+
+    std::vector<double> ranks(S);
+    int i = 0;
+    while (i < S) {
+        int j = i;
+        while (j + 1 < S && v[idx[j + 1]] == v[idx[i]]) ++j;
+        const double avg_rank = 0.5 * ((i + 1) + (j + 1)); // rangs 1-based
+        for (int k = i; k <= j; ++k)
+            ranks[idx[k]] = avg_rank;
+        i = j + 1;
+    }
+    return ranks;
+}
+
+// -------------------------------------------------------------
+//  Transformation en scores normaux (Blom) : z = Phi^-1((rang - 3/8)/(S - 1/4))
+// -------------------------------------------------------------
+static std::vector<double> rankNormalize(const std::vector<double>& pooled)
+{
+    const int S = static_cast<int>(pooled.size());
+    const std::vector<double> ranks = averageRanks(pooled);
+    std::vector<double> z(S);
+    for (int i = 0; i < S; ++i)
+        z[i] = invNormalCDF((ranks[i] - 3.0 / 8.0) / (static_cast<double>(S) - 1.0 / 4.0));
+    return z;
+}
+
+/**
+ * @brief Split-Rhat rang-normalisé et replié, suivant Vehtari, Gelman,
+ *        Simpson, Carpenter & Bürkner (2021), "Rank-normalization, folding,
+ *        and localization: An improved R-hat for assessing convergence of
+ *        MCMC", Bayesian Analysis.
+ *
+ * @details
+ *   1. Chaque chaîne est coupée en deux moitiés (2M demi-chaînes), ce qui
+ *      rend le diagnostic sensible à une dérive à l'intérieur d'une même
+ *      chaîne (non-stationnarité que le Rhat classique sur chaînes entières
+ *      ne détecte pas).
+ *   2. "Bulk-Rhat" : Rhat classique (réutilise gelmanRubin) calculé sur les
+ *      valeurs rang-normalisées — robuste aux queues lourdes / distributions
+ *      non gaussiennes, contrairement au Rhat classique sur les valeurs brutes.
+ *   3. "Tail-Rhat" : même procédure sur les valeurs repliées autour de la
+ *      médiane globale (|x - médiane|) — détecte une non-convergence des
+ *      queues/variances même quand les moyennes ont déjà convergé.
+ *   4. Rhat final = max(bulk-Rhat, tail-Rhat).
+ *
+ * @param chains  M chaînes de même longueur N (N >= 4 requis pour un split
+ *                significatif).
+ * @return Le split-Rhat rang-normalisé et replié.
+ */
+double splitRhatVehtari(const std::vector<std::vector<double>>& chains)
+{
+    const int M = static_cast<int>(chains.size());
+    if (M < 1) return std::numeric_limits<double>::infinity();
+    const int N = static_cast<int>(chains[0].size());
+    for (const auto& c : chains)
+        if (static_cast<int>(c.size()) != N)
+            throw std::invalid_argument("Toutes les chaînes doivent avoir la même longueur");
+    if (N < 4)
+        throw std::invalid_argument("Chaque chaîne doit contenir au moins 4 valeurs pour un split-Rhat");
+
+    // 1) Split : chaque chaîne -> 2 demi-chaînes de longueur floor(N/2)
+    //    (l'échantillon central est ignoré si N est impair — convention
+    //    standard, identique à celle du package R 'posterior')
+    const int Nh = N / 2;
+    std::vector<std::vector<double>> halves;
+    halves.reserve(2 * M);
+    for (const auto& c : chains) {
+        halves.emplace_back(c.begin(), c.begin() + Nh);
+        halves.emplace_back(c.end() - Nh, c.end());
+    }
+    const int S = 2 * M * Nh;
+
+    // 2) Pool global (pour rangs et médiane)
+    std::vector<double> pooled;
+    pooled.reserve(S);
+    for (const auto& h : halves)
+        pooled.insert(pooled.end(), h.begin(), h.end());
+
+    std::vector<double> sorted_pooled = pooled;
+    std::sort(sorted_pooled.begin(), sorted_pooled.end());
+    const double median = (S % 2)
+                              ? sorted_pooled[S / 2]
+                              : 0.5 * (sorted_pooled[S / 2 - 1] + sorted_pooled[S / 2]);
+
+    // 3) Bulk : rang-normalisation directe
+    const std::vector<double> z_bulk = rankNormalize(pooled);
+    std::vector<std::vector<double>> bulk_halves(2 * M, std::vector<double>(Nh));
+    for (int i = 0, off = 0; i < 2 * M; ++i)
+        for (int j = 0; j < Nh; ++j)
+            bulk_halves[i][j] = z_bulk[off++];
+
+    // 4) Tail : repliement autour de la médiane, puis rang-normalisation
+    std::vector<double> folded(S);
+    for (int i = 0; i < S; ++i)
+        folded[i] = std::abs(pooled[i] - median);
+    const std::vector<double> z_tail = rankNormalize(folded);
+    std::vector<std::vector<double>> tail_halves(2 * M, std::vector<double>(Nh));
+    for (int i = 0, off = 0; i < 2 * M; ++i)
+        for (int j = 0; j < Nh; ++j)
+            tail_halves[i][j] = z_tail[off++];
+
+    // 5) Rhat classique sur chaque ensemble transformé
+    const double rhat_bulk = gelmanRubin(bulk_halves);
+    const double rhat_tail = gelmanRubin(tail_halves);
+
+    return std::max(rhat_bulk, rhat_tail);
+}
+
+#pragma mark STAT
 /**
  * @brief Return a text from a DensityStat
  * @see DensityStat
@@ -1024,8 +1161,45 @@ QString posteriorAnalysisToString(const PosteriorAnalysis &analysis)
 {
     QString result (QObject::tr("No data"));
     if (analysis.densityAnalysis.std >= 0.) {
+        QString rhat_color, rhat_status, rhat_display;
+        double rhat = analysis.R_hat;
 
-        result = "<i>" + QObject::tr("Trace Stat.")  + "</i><br>";
+        if (rhat == 0.0) {
+            rhat_color   = "black";
+            rhat_status  = QObject::tr("❓One Chain");
+            rhat_display = "-";
+        } else if (!std::isfinite(rhat)) {
+            rhat_color   = "red";
+            rhat_status  = QObject::tr("❌ Not converged (chains stuck)");
+            rhat_display = QString::fromUtf8("∞");
+        } else if (rhat < 1.01) {
+            rhat_color   = "green";
+            rhat_status  = QObject::tr("✅ Satisfactory convergence");
+            rhat_display = QString::number(rhat, 'f', 4);
+        } else if (rhat < 1.1) {
+            rhat_color   = "orange";
+            rhat_status  = QObject::tr("⚠️ Insufficient convergence");
+            rhat_display = QString::number(rhat, 'f', 4);
+        } else {
+            rhat_color   = "red";
+            rhat_status  = QObject::tr("❌ Not converged");
+            rhat_display = QString::number(rhat, 'f', 4);
+        }
+
+        //result = "<i>"
+        //         + QString("<span style='color:%1'>").arg(rhat_color)
+        //         + QObject::tr("Split R\xCC\x82 (rank-normalized) = %1 (%2)")
+        //               .arg(rhat_display, rhat_status)
+        //         + "</span>"
+        //         + "</i><br>";
+
+        result = "<i>"
+                 + QString("<span style='color:%1'>").arg(rhat_color)
+                 + QObject::tr("R\xCC\x82 = %1 %2").arg(rhat_display, rhat_status)
+                 + "</span>"
+                 + "</i>";
+
+        result += "<br><i>" + QObject::tr("Trace Stat.")  + "</i><br>";
         result += QObject::tr("Mean = %1  ;  Std = %2").arg( stringForLocal(analysis.traceAnalysis.mean),
                                                             stringForLocal(analysis.traceAnalysis.std)) + "<br>";
         result += QObject::tr("Q1 = %1  ;  Q2 (Median) = %2  ;  Q3 = %3 ").arg( stringForLocal(analysis.traceAnalysis.quartiles.Q1),
@@ -1033,37 +1207,18 @@ QString posteriorAnalysisToString(const PosteriorAnalysis &analysis)
                                                                                stringForLocal(analysis.traceAnalysis.quartiles.Q3)) + "<br>";
         result += QObject::tr("min = %1  ;  max  = %2 ").arg( stringForLocal(analysis.traceAnalysis.min),
                                                              stringForLocal(analysis.traceAnalysis.max)) + "<br>";
+        if (analysis.traceAnalysis.bw_SJ == analysis.traceAnalysis.bw_nrd0) {
+            result += "<br><span style=\"color:orange;\">" + QObject::tr("Warning: Sample is too sparse") + "<br>";
+            result += QObject::tr("Sheather-Jones bandwidth = %1  ").arg( stringForLocal(analysis.traceAnalysis.bw_SJ)) + "</span><br>";
 
-        result += "<br>" + QObject::tr("Sheather-Jones bandwidth = %1  ").arg( stringForLocal(analysis.traceAnalysis.bw_SJ))+ "<br>";
-        result += QObject::tr("Silverman's rule of thumb bandwidth = %1  ").arg( stringForLocal(analysis.traceAnalysis.bw_nrd0))+ "<br>";
-
-        QString rhat_color, rhat_status;
-        double rhat = analysis.R_hat_Gelman_Rubin;
-
-        if (rhat == 0) {
-            rhat_color  = "black";
-            rhat_status = QObject::tr("One Chain");
-        } else if (rhat < 1.01) {
-            rhat_color  = "green";
-            rhat_status = QObject::tr("Satisfactory convergence");
-        } else if (rhat < 1.1) {
-            rhat_color  = "orange";
-            rhat_status = QObject::tr("Insufficient convergence");
         } else {
-            rhat_color  = "red";
-            rhat_status = QObject::tr("Not converged");
+             result += "<br>" + QObject::tr("Sheather-Jones bandwidth = %1  ").arg( stringForLocal(analysis.traceAnalysis.bw_SJ)) + "<br>";
         }
 
-        result += "<br><i>"
-                  + QString("<span style='color:%1'>").arg(rhat_color)
-                  + QObject::tr("Gelman-Rubin R_hat = %1 (%2)")
-                        .arg(rhat, 0, 'f', 4)
-                        .arg(rhat_status)
-                  + "</span>"
-                  + "</i><br>";
+        result += QObject::tr("Silverman's rule of thumb bandwidth = %1  ").arg( stringForLocal(analysis.traceAnalysis.bw_nrd0)) + "<br>";
 
 
-        //result += "<br><i>" + QObject::tr("Density Stat.") + "</i><br>";
+
     }
 
     result += "<br>" + densityStatToString(analysis.densityAnalysis) + "<br>";
@@ -5620,12 +5775,6 @@ QMap<double, double> gaussian_filter(QMap<double, double> &map, const double sig
     for (auto [key, value] : map.asKeyValueRange()) {
         curve_input.push_back(value);
     }
-
-    /* ----- FFT -----
-        http://www.fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html#One_002dDimensional-DFTs-of-Real-Data
-        https://jperalta.wordpress.com/2006/12/12/using-fftw3/
-    */
-
 
 
     //qDebug() <<"filtre Gaussian";

@@ -97,8 +97,10 @@ public:
     QIcon getIcon() const override;
     bool doesCalibration() const override;
     bool wiggleAllowed() const override;
-    MHVariable::SamplerProposal getDataMethod() const override;
-    QList<MHVariable::SamplerProposal> allowedDataMethods() const override;
+ #ifndef FIXEDPRIOR
+    SamplerProposal getDataMethod() const override;
+    QList<SamplerProposal> allowedDataMethods() const override;
+#endif
     QStringList csvColumns() const override;
     QJsonObject fromCSV(const QStringList &list, const QLocale &csvLocale) const override;
     QStringList toCSV(const QJsonObject &data, const QLocale &csvLocale) const override;

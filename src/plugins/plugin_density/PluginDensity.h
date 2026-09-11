@@ -66,9 +66,10 @@ public:
     QIcon getIcon() const override;
     bool doesCalibration() const override;
     bool wiggleAllowed() const override;
-
-    MHVariable::SamplerProposal getDataMethod() const override;
-    QList<MHVariable::SamplerProposal> allowedDataMethods() const override;
+#ifndef FIXEDPRIOR
+    SamplerProposal getDataMethod() const override;
+    QList<SamplerProposal> allowedDataMethods() const override;
+#endif
     QString csvHelp() const override;
     QStringList csvColumns() const override;
     qsizetype csvMinColumns() const override;

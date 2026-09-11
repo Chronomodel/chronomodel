@@ -51,6 +51,10 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 extern QString res_file_version;// used when loading
 
+// Avec μ=3, l'écart-type (0.866c) est même plus grand que la moyenne (0.5c)
+// — signe d'une distribution très étalée où "la moyenne" n'est pas franchement représentative d'un point typique.
+//constexpr int mu_lambda = 3;
+
 class ModelCurve: public std::enable_shared_from_this<ModelCurve>, public Model
 {
 public:
@@ -58,6 +62,7 @@ public:
 
     MHVariable mLambdaSpline;
     double mC_lambda;
+    double mMu_Lambda;
 
 #ifdef KOMLAN
     MHVariable mS02Vg;
@@ -125,7 +130,7 @@ public:
             return loadFromStream_v328(in);
 
         else {
-            std::cout << "[ModelCurve::loadFromStream] 📚 version not compatible " << res_file_version.toStdString();
+            std::cout << "[" << __func__ << "] 📚 version not compatible " << res_file_version.toStdString();
             return false;
         }
     };
@@ -207,12 +212,12 @@ public:
 
 public slots:
     void saveMapToFile(QFile *file, const QString csvSep, const CurveMap &map);
-
+    void saveSplinesToFile(QFile *file, const QString csvSep) const;
 
 
 #pragma mark Loop
     //void memo_accepted_state(const unsigned i_chain);
-    void initVariablesForChain();
+    void setParametersForChain();
 
 private:
     void settings_from_Json( const QJsonObject &json);

@@ -88,7 +88,32 @@ const double gammaActivity[] = {1.0,-1.0,0.00501257,0.0589032,0.140868,0.222072,
                                 0.923573,0.924442,0.925292,0.926123,0.926936,0.927731,0.928509,0.92927,0.930016,0.930746,0.93146,0.932161,0.932846,0.933519,
                                 0.934178,0.934824,0.935457,0.936079,0.936688,0.937286,0.937873,0.938449,0.939014,0.939569,0.940114,0.940649,0.941175,0.941691,
                                 0.942199,0.942698,0.943188,0.94367,0.944144,0.94461,0.945068,0.945519,0.945962,0.946398,0.946828,0.94725,0.947666,0.948075,
-                                0.948478,0.948875,0.949265,0.94965,0.950029,0.950402,0.95077,0.951132,0.95149,0.951841,0.952188,0.95253,0.952867,0.953199, 0.953527,0.95385,0.954168,0.954483,0.954793,0.955098,0.9554,0.955697,0.955991,0.956281,0.956567,0.956849,0.957128,0.957403, 0.957674,0.957943,0.958207,0.958469,0.958727,0.958982,0.959234,0.959483,0.959728,0.959971,0.960211,0.960448,0.960682,0.960914,  0.961143,0.961369,0.961592,0.961813,0.962031,0.962247,0.962461,0.962672,0.962881,0.963087,0.963291,0.963493,0.963693,0.96389,  0.964085,0.964279,0.96447,0.964659,0.964846,0.965031,0.965214,0.965396,0.965575,0.965753,0.965929,0.966103,0.966275,0.966445, 0.966614,0.966781,0.966946,0.96711,0.967272,0.967433,0.967592,0.967749,0.967905,0.968059,0.968212,0.968364,0.968514,0.968663,  0.96881,0.968956,0.9691,0.969243,0.969385,0.969526,0.969665,0.969803,0.96994,0.970075,0.970209,0.970343,0.970474,0.970605, 0.970735,0.970863,0.97099,0.971117,0.971242,0.971366,0.971489,0.971611,0.971732,0.971852,0.97197,0.972088,0.972205,0.972321, 0.972436,0.97255,0.972663,0.972775,0.972886,0.972996,0.973106,0.973214,0.973322,0.973429,0.973535,0.97364,0.973744,0.973847, 0.97395,0.974052,0.974153,0.974253,0.974353,0.974451,0.974549,0.974647,0.974743,0.974839,0.974934,0.975028,0.975122,0.975214, 0.975307,0.975398,0.975489,0.975579,0.975669,0.975758,0.975846,0.975933,0.97602,0.976106,0.976192,0.976277,0.976362,0.976446,  0.976529,0.976612,0.976694,0.976775,0.976856,0.976937,0.977017,0.977096,0.977174,0.977253,0.97733,0.977408,0.977484,0.97756,  0.977636,0.977711,0.977786,0.97786,0.977933,0.978006,0.978079,0.978151,0.978223,0.978294,0.978365,0.978435,0.978505,0.978574, 0.978643,0.978712,0.97878,0.978847,0.978914,0.978981,0.979048,0.979114,0.979179,0.979244,0.979309,0.979373,0.979437,0.9795,0.979564, 0.979626,0.979689,0.979751,0.979812,0.979873,0.979934,0.979995,0.980055,0.980115,0.980174,0.980233,0.980292,0.98035,0.980408, 0.980466,0.980523,0.98058,0.980637,0.980693,0.980749,0.980805,0.98086,0.980915,0.98097,0.981024,0.981078,0.981132,0.981185,0.981239, 0.981291,0.981344,0.981396,0.981448,0.9815,0.981551,0.981602,0.981653,0.981704,0.981754,0.981804,0.981854,0.981903,0.981953,  0.982001,0.98205,0.982099,0.982147,0.982195,0.982242,0.98229,0.982337,0.982384,0.98243,0.982477,0.982523,0.982569,0.982614,0.98266, 0.982705,0.98275,0.982794,0.982839,0.982883,0.982927,0.982971,0.983015,0.983058,0.983101,0.983144,0.983187,0.983229,0.983271,0.983314,0.983355,0.983397,0.983438,0.98348,0.983521,0.983561,0.983602,0.983642,0.983683,0.983723,0.983762,0.983802,0.983841,0.983881,0.98392,0.983959,0.983997,0.984036,0.984074,0.984112,0.98415,0.984188,0.984225,0.984263,0.9843,0.984337,0.984374,0.984411,0.984447,0.984484,0.98452,0.984556,0.984592,0.984627,0.984663,0.984698,0.984733,0.984768,0.984803,0.984838,0.984873,0.984907,0.984941,0.984975,0.985009,0.985043,0.985076,0.98511,0.985143,0.985177,0.98521,0.985242,0.985275,0.985308,0.98534,0.985372,0.985405,0.985437,0.985469,0.9855,0.985532,0.985563,0.985595,0.985626,0.985657,0.985688,0.985719,0.985749,0.98578,0.98581,0.98584,0.985871,0.985901,0.985931,0.98596,0.98599,0.986019,0.986049,0.986078,0.986107,0.986136,0.986165,0.986194,0.986223,0.986251,0.986279,0.986308,0.986336,0.986364,0.986392,0.98642,0.986448,0.986475,0.986503,0.98653,0.986557,0.986584,0.986612,0.986638,0.986665,0.986692,0.986719,0.986745,0.986772};
+                                0.948478,0.948875,0.949265,0.94965,0.950029,0.950402,0.95077,0.951132,0.95149,0.951841,0.952188,0.95253,0.952867,0.953199,
+                                0.953527,0.95385,0.954168,0.954483,0.954793,0.955098,0.9554,0.955697,0.955991,0.956281,0.956567,0.956849,0.957128,0.957403,
+                                0.957674,0.957943,0.958207,0.958469,0.958727,0.958982,0.959234,0.959483,0.959728,0.959971,0.960211,0.960448,0.960682,0.960914,
+                                0.961143,0.961369,0.961592,0.961813,0.962031,0.962247,0.962461,0.962672,0.962881,0.963087,0.963291,0.963493,0.963693,0.96389,
+                                0.964085,0.964279,0.96447,0.964659,0.964846,0.965031,0.965214,0.965396,0.965575,0.965753,0.965929,0.966103,0.966275,0.966445,
+                                0.966614,0.966781,0.966946,0.96711,0.967272,0.967433,0.967592,0.967749,0.967905,0.968059,0.968212,0.968364,0.968514,0.968663,
+                                0.96881,0.968956,0.9691,0.969243,0.969385,0.969526,0.969665,0.969803,0.96994,0.970075,0.970209,0.970343,0.970474,0.970605,
+                                0.970735,0.970863,0.97099,0.971117,0.971242,0.971366,0.971489,0.971611,0.971732,0.971852,0.97197,0.972088,0.972205,0.972321,
+                                0.972436,0.97255,0.972663,0.972775,0.972886,0.972996,0.973106,0.973214,0.973322,0.973429,0.973535,0.97364,0.973744,0.973847,
+                                0.97395,0.974052,0.974153,0.974253,0.974353,0.974451,0.974549,0.974647,0.974743,0.974839,0.974934,0.975028,0.975122,0.975214,
+                                0.975307,0.975398,0.975489,0.975579,0.975669,0.975758,0.975846,0.975933,0.97602,0.976106,0.976192,0.976277,0.976362,0.976446,
+                                0.976529,0.976612,0.976694,0.976775,0.976856,0.976937,0.977017,0.977096,0.977174,0.977253,0.97733,0.977408,0.977484,0.97756,
+                                0.977636,0.977711,0.977786,0.97786,0.977933,0.978006,0.978079,0.978151,0.978223,0.978294,0.978365,0.978435,0.978505,0.978574,
+                                0.978643,0.978712,0.97878,0.978847,0.978914,0.978981,0.979048,0.979114,0.979179,0.979244,0.979309,0.979373,0.979437,0.9795,0.979564,
+                                0.979626,0.979689,0.979751,0.979812,0.979873,0.979934,0.979995,0.980055,0.980115,0.980174,0.980233,0.980292,0.98035,0.980408,
+                                0.980466,0.980523,0.98058,0.980637,0.980693,0.980749,0.980805,0.98086,0.980915,0.98097,0.981024,0.981078,0.981132,0.981185,0.981239,
+                                0.981291,0.981344,0.981396,0.981448,0.9815,0.981551,0.981602,0.981653,0.981704,0.981754,0.981804,0.981854,0.981903,0.981953,
+                                0.982001,0.98205,0.982099,0.982147,0.982195,0.982242,0.98229,0.982337,0.982384,0.98243,0.982477,0.982523,0.982569,0.982614,0.98266,
+                                0.982705,0.98275,0.982794,0.982839,0.982883,0.982927,0.982971,0.983015,0.983058,0.983101,0.983144,0.983187,0.983229,0.983271,0.983314,
+                                0.983355,0.983397,0.983438,0.98348,0.983521,0.983561,0.983602,0.983642,0.983683,0.983723,0.983762,0.983802,0.983841,0.983881,0.98392,
+                                0.983959,0.983997,0.984036,0.984074,0.984112,0.98415,0.984188,0.984225,0.984263,0.9843,0.984337,0.984374,0.984411,0.984447,0.984484,
+                                0.98452,0.984556,0.984592,0.984627,0.984663,0.984698,0.984733,0.984768,0.984803,0.984838,0.984873,0.984907,0.984941,0.984975,0.985009,
+                                0.985043,0.985076,0.98511,0.985143,0.985177,0.98521,0.985242,0.985275,0.985308,0.98534,0.985372,0.985405,0.985437,0.985469,0.9855,
+                                0.985532,0.985563,0.985595,0.985626,0.985657,0.985688,0.985719,0.985749,0.98578,0.98581,0.98584,0.985871,0.985901,0.985931,0.98596,0.98599,
+                                0.986019,0.986049,0.986078,0.986107,0.986136,0.986165,0.986194,0.986223,0.986251,0.986279,0.986308,0.986336,0.986364,0.986392,0.98642,
+                                0.986448,0.986475,0.986503,0.98653,0.986557,0.986584,0.986612,0.986638,0.986665,0.986692,0.986719,0.986745,0.986772};
 
 int compareStrings(const std::string &s1, const std::string &s2);
 std::string removeZeroAtRight(std::string str);
@@ -112,7 +137,7 @@ std::map<double, double> equal_areas(const std::map<double, double> &mapToModify
 
 QList<double> equal_areas(const QList<double> &data, const double step, const double area);
 QList<float> equal_areas(const QList<float> &data, const float step, const float area);
-std::vector<double> equal_areas(const std::vector<double>& data, const float step, const float area);
+std::vector<double> equal_areas(const std::vector<double>& data, const double step, const double area);
 
 
 QMap<float, float> vector_to_map(const QList<float> &data, const float min, const float max, const float step);
@@ -448,186 +473,196 @@ T vector_interpolate_idx_for_value(const T value, const Container<T> &vector, de
  * @return Un indice (type @p IndexT) où la valeur serait située.
  *         Si la valeur est hors du domaine, on renvoie 0 ou size‑1.
  */
-/*
-template <class Container,
-         class ValueT = typename Container::value_type,
-         class IndexT = double>
-IndexT interpolate_index(const ValueT& value,
-                         const Container& data,
-                         std::size_t idxInfStart = 0,
-                         std::size_t idxSupStart = static_cast<std::size_t>(-1))
-{
-    static_assert(std::is_floating_point<ValueT>::value,
-                  "ValueT must be a floating‑point type");
-    static_assert(std::is_arithmetic<IndexT>::value,
-                  "IndexT must be an arithmetic type");
 
-    const std::size_t n = data.size();
+
+
+
+/**
+ * @brief  Retourne l’indice (réel, de type IndexT) correspondant à la
+ *         position interpolée de @p value dans le tableau @p data.
+ *
+ * La fonction suppose que @p data est **croissant** (ou non‑décroissant)
+ * et qu’il possède un accès aléatoire (`operator[]`) ainsi qu’une taille
+ * (`size()`).
+ *
+ * @tparam Container   Conteneur indexable (ex. std::vector, std::array…)
+ * @tparam ValueT      Type des valeurs stockées – doit être flottant.
+ * @tparam IndexT      Type de l’indice retourné – doit être arithmétique.
+ *
+ * @param value          Valeur à interpoler.
+ * @param data           Tableau trié contenant les valeurs de référence.
+ *
+ * @return IndexT       Indice réel (peut être non entier) où se situe
+ *                       @p value dans le domaine de @p data.
+ *
+ * @note   La fonction est `noexcept` et renvoie toujours un indice valide.
+ */
+ template <std::ranges::random_access_range Container,
+                      typename ValueT  = std::ranges::range_value_t<Container>,
+                      typename IndexT  = double>
+ requires std::floating_point<ValueT> && std::is_arithmetic_v<IndexT>
+constexpr IndexT
+interpolate_index(const ValueT&    value,
+                  const Container&  data) noexcept
+
+{
+    const std::size_t n = std::ranges::size(data);
     assert(n > 0 && "Container must not be empty");
 
-    // -----------------------------------------------------------------
-    // Gestion des bornes du domaine
-    // -----------------------------------------------------------------
+    // -------------------------------------------------------------
+    // 1️⃣  Gestion des bornes du domaine (clamp)
+    // -------------------------------------------------------------
     if (value <= data.front())
         return static_cast<IndexT>(0);
     if (value >= data.back())
         return static_cast<IndexT>(n - 1);
 
-    // -----------------------------------------------------------------
-    // Initialisation des indices de recherche
-    // -----------------------------------------------------------------
-    std::size_t idxInf = idxInfStart;
-    std::size_t idxSup = (idxSupStart == static_cast<std::size_t>(-1))
-                             ? n - 1
-                             : idxSupStart;
+    // -------------------------------------------------------------
+    // 2️⃣  Recherche du premier élément >= value (lower_bound)
+    // -------------------------------------------------------------
+    const auto itSup = std::ranges::lower_bound(data, value);
+    std::size_t idxSup = static_cast<std::size_t>(itSup - std::ranges::begin(data));
 
-    // -----------------------------------------------------------------
-    // Recherche binaire (dichotomie)
-    // -----------------------------------------------------------------
-    while (idxSup - idxInf > 1) {
-        const std::size_t idxMid = idxInf + (idxSup - idxInf) / 2;
-        const ValueT      valMid = data[idxMid];
+    // Si lower_bound renvoie end(), on était exactement à la fin → on
+    // se place sur le dernier intervalle.
+    if (idxSup == n) idxSup = n - 1;
 
-        if (value < valMid) {
-            idxSup = idxMid;
-        } else if (value > valMid) {
-            idxInf = idxMid;
-        } else {                     // valeur exactement égale à valMid
-            idxInf = idxMid;
-            idxSup = idxMid;
-            break;
-        }
-    }
+    // idxInf est l’indice immédiatement inférieur (ou égal) à value.
+    std::size_t idxInf = (idxSup == 0) ? 0 : idxSup - 1;
 
-    // -----------------------------------------------------------------
-    // Gestion du plateau (valeurs identiques à cause de la précision)
-    // -----------------------------------------------------------------
-    // epsilon adapté à la précision du type flottant
+    // -------------------------------------------------------------
+    // 3️⃣  Gestion d’un éventuel plateau (valeurs identiques)
+    // -------------------------------------------------------------
     const ValueT eps = std::numeric_limits<ValueT>::epsilon() *
-                       std::max<ValueT>({std::abs(value),
+                       std::max<ValueT>({ std::abs(value),
                                          std::abs(data[idxInf]),
-                                         std::abs(data[idxSup])});
+                                         std::abs(data[idxSup]) });
 
-    // Étendre à gauche tant que les valeurs sont « égales »
-    std::size_t left = idxInf;
-    while (left > 0 && std::abs(data[left] - data[left - 1]) <= eps)
-        --left;
-
-    // Étendre à droite tant que les valeurs sont « égales »
-    std::size_t right = idxSup;
-    while (right + 1 < n && std::abs(data[right] - data[right + 1]) <= eps)
-        ++right;
-
-    // Si tout le plateau couvre la zone recherchée, on renvoie son centre
-    if (std::abs(data[left] - data[right]) <= eps) {
-        return static_cast<IndexT>(left + right) / static_cast<IndexT>(2);
-    }
-
-    // -----------------------------------------------------------------
-    // Interpolation linéaire entre les bords du plateau
-    // -----------------------------------------------------------------
-    const ValueT vL = data[left];
-    const ValueT vR = data[right];
-
-    // t ∈ [0,1] représente la position relative de «value» entre vL et vR
-    const ValueT t = (value - vL) / (vR - vL);
-
-    // Calcul de l’indice réel (peut être non entier)
-    const IndexT idx = static_cast<IndexT>(left) +
-                       static_cast<IndexT>(t) * static_cast<IndexT>(right - left);
-
-    return idx;
-}
-*/
-
-template <class Container,
-         class ValueT = typename Container::value_type,
-         class IndexT = double>
-IndexT interpolate_index(const ValueT& value,
-                         const Container& data,
-                         std::size_t idxInfStart = 0,
-                         std::size_t idxSupStart = static_cast<std::size_t>(-1))
-{
-    static_assert(std::is_floating_point<ValueT>::value,
-                  "ValueT must be a floating‑point type");
-    static_assert(std::is_arithmetic<IndexT>::value,
-                  "IndexT must be an arithmetic type");
-
-    const std::size_t n = data.size();
-    assert(n > 0 && "Container must not be empty");
-
-    // -----------------------------------------------------------------
-    // Gestion des bornes du domaine
-    // -----------------------------------------------------------------
-    if (value <= data.front())
-        return static_cast<IndexT>(0);
-    if (value >= data.back())
-        return static_cast<IndexT>(n - 1);
-
-    // -----------------------------------------------------------------
-    // Initialisation des indices de recherche
-    // -----------------------------------------------------------------
-    std::size_t idxInf = idxInfStart;
-    std::size_t idxSup = (idxSupStart == static_cast<std::size_t>(-1))
-                             ? n - 1
-                             : idxSupStart;
-
-    // -----------------------------------------------------------------
-    // Recherche binaire (dichotomie)
-    // -----------------------------------------------------------------
-    while (idxSup - idxInf > 1) {
-        const std::size_t idxMid = idxInf + (idxSup - idxInf) / 2;
-        const ValueT      valMid = data[idxMid];
-
-        if (value < valMid) {
-            idxSup = idxMid;
-        } else if (value > valMid) {
-            idxInf = idxMid;
-        } else {                     // valeur exactement égale à valMid
-            idxInf = idxMid;
-            idxSup = idxMid;
-            break;
-        }
-    }
-
-    // -----------------------------------------------------------------
-    // Epsilon adapté à la précision du type flottant
-    // -----------------------------------------------------------------
-    const ValueT eps = std::numeric_limits<ValueT>::epsilon() *
-                       std::max<ValueT>({std::abs(value),
-                                         std::abs(data[idxInf]),
-                                         std::abs(data[idxSup])});
-
-    // -----------------------------------------------------------------
-    // Avancer idxInf jusqu'au bord droit de son plateau
-    // (la dichotomie peut laisser idxInf au milieu d'une zone plate)
-    // La dichotomie garantit déjà data[idxSup] > value, il n'y a donc
-    // pas besoin de corriger idxSup.
-    // -----------------------------------------------------------------
+    // Avance idxInf tant que les points suivants sont « plateau ».
     while (idxInf + 1 < idxSup &&
            std::abs(data[idxInf + 1] - data[idxInf]) <= eps)
         ++idxInf;
 
-    // -----------------------------------------------------------------
-    // Interpolation linéaire
-    // -----------------------------------------------------------------
+    // -------------------------------------------------------------
+    // 4️⃣  Interpolation linéaire (avec std::lerp)
+    // -------------------------------------------------------------
     const ValueT vL = data[idxInf];
     const ValueT vR = data[idxSup];
 
-    // Sécurité : si les deux bornes sont identiques (plateau total)
-    // on renvoie le centre
+    // Si on se trouve sur un plateau complet, on renvoie le centre.
     if (std::abs(vR - vL) <= eps)
         return static_cast<IndexT>(idxInf + idxSup) / static_cast<IndexT>(2);
 
-    // t ∈ [0,1] : position relative de value entre vL et vR
+    // Facteur t ∈ [0,1] – position relative de value entre vL et vR.
     const ValueT t = (value - vL) / (vR - vL);
 
-    // Indice réel interpolé
-    const IndexT idx = static_cast<IndexT>(idxInf) +
-                       static_cast<IndexT>(t) *
-                           static_cast<IndexT>(idxSup - idxInf);
+    // Interpolation de l’indice réel grâce à std::lerp.
+    // std::lerp(a,b,t) = a + t*(b-a)  (sans overflow intermédiaire)
+    const IndexT idx = std::lerp(static_cast<IndexT>(idxInf),
+                                 static_cast<IndexT>(idxSup),
+                                 static_cast<IndexT>(t));
 
     return idx;
+}
+
+/**
+ * @brief  Retourne l’indice (réel) correspondant à la position interpolée de
+ *         @p value dans le conteneur @p data, en limitant la recherche aux
+ *         indices [idxInfStart , idxSupStart].
+ *
+ * @tparam Container   Conteneur random‑access et sized (ex. std::vector,
+ *                     std::array, std::span…).
+ * @tparam ValueT      Type des valeurs stockées – doit être flottant.
+ * @tparam IndexT      Type de l’indice retourné – doit être arithmétique.
+ *
+ * @param value          Valeur à interpoler.
+ * @param data           Tableau trié contenant les valeurs de référence.
+ * @param idxInfStart    Indice **inférieur** de la zone de recherche
+ *                       (inclusif).  Par défaut 0.
+ * @param idxSupStart    Indice **supérieur** de la zone de recherche
+ *                       (inclusif).  La valeur spéciale
+ *                       `static_cast<std::size_t>(-1)` indique « utiliser
+ *                       la fin du conteneur ».
+ *
+ * @return IndexT       Indice réel (peut être non entier) où se situe
+ *                       @p value dans le domaine de @p data.
+ *
+ * @note   La fonction est `noexcept`.
+ */
+template <std::ranges::random_access_range Container,
+         typename ValueT  = std::ranges::range_value_t<Container>,
+         typename IndexT  = double>
+    requires std::floating_point<ValueT> && std::is_arithmetic_v<IndexT>
+constexpr IndexT
+interpolate_index_range(const ValueT&      value,
+                  const Container&  data,
+                  std::size_t        idxInfStart = 0,
+                  std::size_t        idxSupStart = static_cast<std::size_t>(-1)) noexcept
+{
+    const std::size_t n = std::ranges::size(data);
+    assert(n > 0 && "Container must not be empty");
+    // -------------------------------------------------------------
+    // 1️⃣  Gestion des bornes du domaine (clamp)
+    // -------------------------------------------------------------
+    if (value <= data.front())
+        return static_cast<IndexT>(0);
+    if (value >= data.back())
+        return static_cast<IndexT>(n - 1);
+    // -------------------------------------------------------------
+    // 2️⃣  Normalisation des indices de recherche
+    // -------------------------------------------------------------
+    const std::size_t idxInf = idxInfStart;                     // déjà vérifié par l’appelant
+    const std::size_t idxSup = (idxSupStart == static_cast<std::size_t>(-1))
+                                   ? n - 1
+                                   : idxSupStart;
+    // On s’assure que les bornes sont cohérentes (au pire on les corrige)
+    const std::size_t lo = std::min(idxInf, idxSup);
+    const std::size_t hi = std::max(idxInf, idxSup);
+    // -------------------------------------------------------------
+    // 3️⃣  Sous‑range correspondant à [lo , hi] (inclusif)
+    // -------------------------------------------------------------
+    // `std::ranges::subrange` travaille avec des itérateurs ; on crée
+    // des itérateurs pointant sur les éléments `lo` et `hi+1`.
+    auto first = std::ranges::begin(data) + static_cast<std::ptrdiff_t>(lo);
+    auto last  = std::ranges::begin(data) + static_cast<std::ptrdiff_t>(hi + 1);
+    // -------------------------------------------------------------
+    // 4️⃣  Recherche du premier élément >= value dans le sous‑range
+    // -------------------------------------------------------------
+    const auto itSup = std::ranges::lower_bound(first, last, value);
+    std::size_t idxSupFound = static_cast<std::size_t>(itSup - std::ranges::begin(data));
+    // Si `lower_bound` a renvoyé `last`, cela signifie que `value` est
+    // strictement supérieure à tous les éléments du sous‑range → on le
+    // place sur le dernier indice du sous‑range.
+    if (itSup == last)
+        idxSupFound = hi;
+    // L’indice inférieur est immédiatement avant `idxSupFound`
+    std::size_t idxInfFound = (idxSupFound == 0) ? 0 : idxSupFound - 1;
+    // -------------------------------------------------------------
+    // 5️⃣  Gestion d’un plateau (valeurs identiques)
+    // -------------------------------------------------------------
+    const ValueT eps = std::numeric_limits<ValueT>::epsilon() *
+                       std::max<ValueT>({ std::abs(value),
+                                         std::abs(data[idxInfFound]),
+                                         std::abs(data[idxSupFound]) });
+    // Avance idxInfFound tant que les points suivants forment un plateau.
+    while (idxInfFound + 1 < idxSupFound &&
+           std::abs(data[idxInfFound + 1] - data[idxInfFound]) <= eps)
+        ++idxInfFound;
+    // -------------------------------------------------------------
+    // 6️⃣  Interpolation linéaire (avec std::lerp)
+    // -------------------------------------------------------------
+    const ValueT vL = data[idxInfFound];
+    const ValueT vR = data[idxSupFound];
+    // Cas d’un plateau complet : on renvoie le centre de l’intervalle.
+    if (std::abs(vR - vL) <= eps)
+        return static_cast<IndexT>(idxInfFound + idxSupFound) /
+               static_cast<IndexT>(2);
+    // Facteur t ∈ [0,1] – position relative de `value` entre vL et vR.
+    const ValueT t = (value - vL) / (vR - vL);
+    // Interpolation de l’indice réel grâce à std::lerp.
+    return std::lerp(static_cast<IndexT>(idxInfFound),
+                     static_cast<IndexT>(idxSupFound),
+                     static_cast<IndexT>(t));
 }
 
 template <typename T, typename U>
@@ -1026,59 +1061,10 @@ inline double diff_erf(double a, double b,
  * @return z-score \f$z_{\alpha/2}\f$, ou NaN si alpha est invalide.
  *  * https://en.wikipedia.org/wiki/Standard_score
  */
+
 [[nodiscard]] inline double zScore(double alpha) noexcept
 {
-    if (alpha <= 0.0 || alpha >= 1.0) {
-        return std::numeric_limits<double>::quiet_NaN();
-    }
-
-    // Convertit alpha en probabilité cumulée
-    const double p = 1.0 - alpha / 2.0;
-
-    // Coefficients de l’approximation rationnelle (Peter J. Acklam, 2003)
-    static const double a1 = -3.969683028665376e+01;
-    static const double a2 =  2.209460984245205e+02;
-    static const double a3 = -2.759285104469687e+02;
-    static const double a4 =  1.383577518672690e+02;
-    static const double a5 = -3.066479806614716e+01;
-    static const double a6 =  2.506628277459239e+00;
-
-    static const double b1 = -5.447609879822406e+01;
-    static const double b2 =  1.615858368580409e+02;
-    static const double b3 = -1.556989798598866e+02;
-    static const double b4 =  6.680131188771972e+01;
-    static const double b5 = -1.328068155288572e+01;
-
-    static const double c1 = -7.784894002430293e-03;
-    static const double c2 = -3.223964580411365e-01;
-    static const double c3 = -2.400758277161838e+00;
-    static const double c4 = -2.549732539343734e+00;
-    static const double c5 =  4.374664141464968e+00;
-    static const double c6 =  2.938163982698783e+00;
-
-    static const double d1 =  7.784695709041462e-03;
-    static const double d2 =  3.224671290700398e-01;
-    static const double d3 =  2.445134137142996e+00;
-    static const double d4 =  3.754408661907416e+00;
-
-    const double plow  = 0.02425;
-    const double phigh = 1 - plow;
-
-    double q, r;
-    if (p < plow) {
-        q = std::sqrt(-2 * std::log(p));
-        return (((((c1*q+c2)*q+c3)*q+c4)*q+c5)*q+c6) /
-               ((((d1*q+d2)*q+d3)*q+d4)*q+1);
-    } else if (p <= phigh) {
-        q = p - 0.5;
-        r = q * q;
-        return (((((a1*r+a2)*r+a3)*r+a4)*r+a5)*r+a6)*q /
-               (((((b1*r+b2)*r+b3)*r+b4)*r+b5)*r+1);
-    } else {
-        q = std::sqrt(-2 * std::log(1 - p));
-        return -(((((c1*q+c2)*q+c3)*q+c4)*q+c5)*q+c6) /
-               ((((d1*q+d2)*q+d3)*q+d4)*q+1);
-    }
+    return invNormalCDF(alpha);
 }
 
 
@@ -1428,7 +1414,22 @@ inline double S6(const std::vector<double>& x, double h) {
 // Règle pratique : M = première puissance de 2 >= max(1024, n/100)
 inline int chooseFFtSize(int n) {
     int M = 1024;
-    while (M < n / 100) M <<= 1;  // doublement jusqu'à n/100
+    constexpr int MAX_M = 65536; // Plafond pour éviter un M démesuré sur de la big data
+
+    while (M < n / 100 && M < MAX_M) {
+        M <<= 1;  // doublement jusqu'à n/100
+    }
+    return M;
+}
+inline int chooseFFtSize2(double range, double h, int minM = 1024)
+{
+    // Nombre de points nécessaires pour que delta <= h / 3
+    const double requiredM = 3.0 * range / h;
+
+    int M = minM;
+    while (M < requiredM) {
+        M <<= 1; // Puissance de 2 suivante
+    }
     return M;
 }
 
@@ -1491,37 +1492,14 @@ static double theta44_gauss(double sigma, int n) {
     return 3.0 / (16.0 * std::sqrt(M_PI) * std::pow(sigma, 9) * n);
 }
 */
-// ================================================================
-//  Bandwidths pilotes a et b (étape 1 de SJ)
-//  Reproduit R : scale = min(sd, IQR/1.349)
-// ================================================================
 
-inline double iqr_vec(std::vector<double> x) {
-    std::sort(x.begin(), x.end());
-    int n = x.size();
-    // interpolation linéaire comme R
-    auto quantile = [&](double p) {
-        double h = (n - 1) * p;
-        int lo = (int)h;
-        int hi = lo + 1;
-        if (hi >= n) return x[n-1];
-        return x[lo] + (h - lo) * (x[hi] - x[lo]);
-    };
-    return quantile(0.75) - quantile(0.25);
-}
 
-/* inline double scale_factor(const std::vector<double>& x) {
-    const double s  = std::sqrt(var_vec(x));
-    const double iq = iqr_vec(x) / 1.349;
-    // Si IQR nul, on replie sur l'écart-type seul
-    return (iq > 0.0) ? std::min(s, iq) : s;
-}*/
 inline double scale_factor(const std::vector<double>& x) {
-    const double s  = std_Knuth(x);
-    auto Q = quantilesType(x, 8, 0.25);
-    const double iq = (Q.Q3 - Q.Q1)/1.349;
+    const double s  = std_unbiais_Knuth(x);
+    auto Q = quantilesType(x, 7, 0.25); // R utilise le type 7 ici pour IQR()
+    const double iqr = (Q.Q3 - Q.Q1) / 1.349;
     // Si IQR nul, on replie sur l'écart-type seul
-    return (iq > 0.0) ? std::min(s, iq) : s;
+    return (iqr > 0.0) ? std::min(s, iqr) : s;
 }
 
 // ================================================================
@@ -1576,7 +1554,7 @@ double bw_SJ_dpi(const std::vector<double>& x);
 
     return h - std::pow(c1 / absDenom, 0.2);
 }*/
-inline double sj_equation(double h,
+/*inline double sj_equation(double h,
                           const std::vector<double>& x,
                           double alpha2,
                           double c1,
@@ -1596,7 +1574,25 @@ inline double sj_equation(double h,
         return std::numeric_limits<double>::quiet_NaN();
 
     return h - std::pow(c1 / denom, 0.2);  // plus de abs()
-}
+}*/
+
+inline double sj_equation(double h,
+                          const std::vector<double>& xn,
+                          double alpha2, double c1, int M)
+{
+    // gamma(h) = alpha2 * h^(5/7)
+    double gamma = alpha2 * std::pow(h, 5.0 / 7.0);
+
+    // Évaluation de S4(gamma)
+    double s4 = S4_fft(xn, gamma, M);
+
+    // Sécurité numérique : S4 doit être strictement positif.
+    if (s4 <= 0.0) return std::numeric_limits<double>::quiet_NaN();
+
+    // L'équation standard : h - ( R(K) / (n * S4(gamma)) )^(1/5) = 0
+    // c1 contient déjà R(K) / n (où R(K) = 1/(2*sqrt(pi)) pour une gaussienne)
+    return h - std::pow(c1 / s4, 0.2);
+};
 
 // Bisection pour résoudre l'équation STE (comme uniroot dans R)
 template <typename F>
@@ -1612,7 +1608,6 @@ double bisect(F f, double a, double b, double tol, int max_iter)
         const double m  = 0.5 * (a + b);
         const double fm = f(m);
 
-        // Point dégénéré : S4_fft a échoué, on resserre prudemment
         if (std::isnan(fm)) {
             if (fa > 0.0) b = m;
             else          a = m;
@@ -1782,156 +1777,44 @@ inline double schedule_power(double sigma, double T,
     return sigma * std::pow(ratio, p);          // sigma_T = sigma * (T/T_max)^p
 }
 
-#pragma mark  Cache thread‑local
+
 /**
- * @file    FFTWThreadCache.hpp
- * @brief   Cache de plans FFTW thread‑local.
+ * @brief Calcule la variance pondérée intra-mode d'un signal
  *
- * Cette classe fournit un accès simple à des plans FFTW (type *r2c*) qui sont
- * créés une seule fois **par thread** et détruits automatiquement à la fin du
- * thread grâce au destructeur du cache interne.
+ * Cette fonction analyse un signal composé de deux vecteurs : x (valeurs) et f (fréquences/intensités).
+ * Elle identifie les modes ou îlots significatifs en utilisant un seuil basé sur la valeur maximale
+ * du vecteur f, puis calcule une variance pondérée qui reflète la variabilité intra-mode.
  *
- * L’utilisation typique consiste à appeler `FFTWThreadCache::forward(M)` chaque
- * fois que l’on a besoin d’un plan de taille `M`.  Le premier appel dans le
- * thread crée le plan (avec `FFTW_MEASURE`), les appels suivants réutilisent le
- * même objet, ce qui évite le coût élevé de création/destruction répété.
+ * @param x Vecteur des valeurs observées (par exemple, des positions ou des intensités)
+ * @param f Vecteur des fréquences ou intensités correspondantes (utilisé pour identifier les modes)
+ * @return double La variance pondérée intra-mode calculée, ou 1.0 si aucun mode n'est détecté
  *
- * @author  Votre Nom <votre.email@exemple.com>
- * @date    2026‑06‑16
- * @version 1.0
- *
- * @note    FFTW doit être compilé avec le support multithread
- *          (`--enable-threads` ou `--enable-openmp`).  L’initialisation globale
- *          de FFTW ( `fftw_init_threads()` + `fftw_plan_with_nthreads(...)` )
- *          doit être effectuée **avant** le premier appel à cette classe.
- *
- * @see     fftw_plan_dft_r2c_1d()
- * @see     fftw_destroy_plan()
- * @see     fftw_init_threads()
- * @see     fftw_plan_with_nthreads()
+ * @note Le seuil pour la détection des modes est fixé à 1% de la valeur maximale de f
+ * @note Les modes sont définis comme les régions où f[i] > seuil
+ * @note La variance intra-mode est calculée pour chaque mode individuel, puis pondérée
+ *       par le poids du mode pour donner une variance globale
  */
-class FFTWThreadCache
-{
-public:
-    /**
-     * @brief   Retourne un plan FFTW « forward » (real‑to‑complex) de taille @p M.
-     *
-     * Le plan est stocké dans un cache **thread‑local**.  La première fois que
-     * la fonction est appelée dans un thread donné, le plan est créé avec
-     * `FFTW_MEASURE`.  Les appels suivants renvoient le même objet, sans frais
-     * supplémentaire.
-     *
-     * @param[in] M  Taille de la transformée (nombre de points dans le domaine
-     *               temporel).  La valeur doit être strictement positive.
-     *
-     * @return  Un handle `fftw_plan` valide que l’on peut passer à
-     *          `fftw_execute_dft_r2c()` ou à d’autres fonctions d’exécution.
-     *
-     * @throw std::runtime_error  Si la création du plan échoue (par ex.
-     *                             allocation insuffisante ou erreur interne de
-     *                             FFTW).
-     *
-     * @note    Le plan est détruit automatiquement lorsque le thread se termine
-     *          grâce au destructeur de `PlanCache`.  Il n’est **pas** nécessaire
-     *          d’appeler `fftw_destroy_plan()` manuellement.
-     *
-     * @since   1.0
-     */
-    static fftw_plan forward(int M)
-    {
-        thread_local PlanCache cache;   ///< cache propre à chaque thread
-        return cache.get(M);
-    }
+double computeIntraModeVariance(const std::vector<double>& x, const std::vector<double>& f) ;
 
-private:
-    // Appelé une seule fois dans main() avant fftw_cleanup_threads()
-    static std::mutex& planMutex() {
-        static std::mutex m;  // ← static à durée de vie garantie (Meyers singleton)
-        return m;
-    }
-    /**
-     * @brief   Structure interne qui stocke les plans FFTW d’un thread.
-     *
-     * Chaque instance de `PlanCache` possède une map `std::unordered_map<int,
-     * fftw_plan>` où la clé est la taille du tableau (`M`) et la valeur le plan
-     * correspondant.  Le destructeur parcourt la map et libère chaque plan avec
-     * `fftw_destroy_plan()`.
-     *
-     * @note    Cette structure n’est jamais exposée à l’extérieur de la classe
-     *          `FFTWThreadCache`; elle sert uniquement de conteneur privé.
-     *
-     * @since   1.0
-     */
-    struct PlanCache
-    {
-        /** @brief  Map <taille, plan> gérée par le thread. */
-        std::unordered_map<int, fftw_plan> map;
+/**
+ * @brief Calcule la variance la plus petite parmi les modes détectés
+ *
+ * Cette fonction analyse un signal composé de deux vecteurs : x (valeurs) et f (fréquences/intensités).
+ * Elle identifie les modes ou îlots significatifs en utilisant un seuil basé sur la valeur maximale
+ * du vecteur f, puis retourne la variance la plus faible parmi tous les modes détectés.
+ *
+ * @param x Vecteur des valeurs observées (par exemple, des positions ou des intensités)
+ * @param f Vecteur des fréquences ou intensités correspondantes (utilisé pour identifier les modes)
+ * @return double La variance la plus petite parmi les modes détectés, ou 1.0 si aucun mode n'est détecté
+ *
+ * @note Le seuil pour la détection des modes est fixé à 1% de la valeur maximale de f
+ * @note Les modes sont définis comme les régions où f[i] > seuil
+ * @note La fonction retourne la variance minimale parmi tous les modes identifiés
+ */
+std::optional<double> computeIntraModeVarianceMin(const std::vector<double>& x, const std::vector<double>& f,
+                                                  size_t minPointsPerMode = 1);
 
-        /**
-         * @brief   Retourne (ou crée) le plan FFTW de taille @p M.
-         *
-         * Si un plan pour la taille demandée existe déjà dans la map, il est
-         * renvoyé immédiatement.  Sinon, un nouveau plan est créé avec
-         * `fftw_plan_dft_r2c_1d()` en mode `FFTW_MEASURE`, stocké dans la map,
-         * puis retourné.
-         *
-         * @param[in] M  Taille de la transformée.
-         *
-         * @return  Un handle `fftw_plan` valide.
-         *
-         * @throw std::runtime_error  Si la création du plan échoue.
-         *
-         * @warning  La fonction alloue temporairement deux buffers (`tmp_in`,
-         *           `tmp_out`) avec `fftw_malloc`.  En cas d’exception, ces
-         *           buffers sont libérés avant de propager l’erreur.
-         *
-         * @since   1.0
-         */
-        fftw_plan get(int M)
-        {
-            auto it = map.find(M);
-            if (it != map.end())
-                return it->second;               // plan déjà présent
 
-            // ✅ mutex global pour la création du plan
-            fftw_plan p;
-            {
-                static std::mutex fftw_plan_mutex;
-                std::lock_guard<std::mutex> lock(FFTWThreadCache::planMutex());
-
-                double*       tmp_in  = static_cast<double*>(
-                    fftw_malloc(M * sizeof(double)));
-                fftw_complex* tmp_out = static_cast<fftw_complex*>(
-                    fftw_malloc((M/2+1) * sizeof(fftw_complex)));
-
-                p = fftw_plan_dft_r2c_1d(M, tmp_in, tmp_out, FFTW_MEASURE);
-
-                fftw_free(tmp_in);
-                fftw_free(tmp_out);
-            }
-            if (!p)
-                throw std::runtime_error("FFTW forward plan creation failed");
-
-            map[M] = p;                           // mémorisation dans le cache
-            return p;
-        }
-
-        /**
-         * @brief   Destructeur : libère tous les plans détenus par le thread.
-         *
-         * Le destructeur est invoqué automatiquement lorsque le thread se
-         * termine (ou à la fin du programme pour le thread principal).  Chaque
-         * plan stocké dans `map` est détruit avec `fftw_destroy_plan()`.
-         *
-         * @since   1.0
-         */
-        ~PlanCache() {
-            for (auto& [M, plan] : map)
-                fftw_destroy_plan(plan);
-            map.clear();
-        }
-    };
-};
-
+double log_diff_cdf(double a, double b);
 
 #endif

@@ -55,7 +55,7 @@ public:
     void updateColor(const QColor& color);
 
     void generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList);
-    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& variableList);
+    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showList);
 
 private:
     Date* mDate;

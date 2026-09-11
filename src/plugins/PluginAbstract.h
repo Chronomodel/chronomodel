@@ -45,6 +45,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "RefCurve.h"
 #include "StateKeys.h"
 #include "StdUtilities.h"
+#include "version.h"
 
 #include <QObject>
 #include <QJsonObject>
@@ -214,8 +215,14 @@ public:
     virtual QIcon getIcon() const = 0;
     virtual bool doesCalibration() const = 0;
     virtual bool wiggleAllowed() const = 0;
-    virtual MHVariable::SamplerProposal getDataMethod() const = 0;
-    virtual QList<MHVariable::SamplerProposal> allowedDataMethods() const = 0;
+
+#ifdef FIXEDPRIOR
+    SamplerProposal getDataMethod() const { return SamplerProposal::eLikelihood;}
+#else
+    virtual SamplerProposal getDataMethod() const = 0;
+    virtual QList<SamplerProposal> allowedDataMethods() const = 0;
+#endif
+
     virtual QString csvHelp() const{return QString();}
     virtual QStringList csvColumns() const{return QStringList();}
     virtual qsizetype csvMinColumns() const {return csvColumns().size();}

@@ -311,12 +311,13 @@ void MainWindow::createActions()
     //-----------------------------------------------------------------
     mEventsColorAction = new QAction(tr("Selected Events: Change Colour"), this);
     connect(mEventsColorAction, &QAction::triggered, this, &MainWindow::changeEventsColor);
-
+#ifndef FIXEDPRIOR
     mEventsMethodAction = new QAction(tr("Selected Events: Change Event MCMC"), this);
     connect(mEventsMethodAction, &QAction::triggered, this, &MainWindow::changeEventsMethod);
 
     mDatesMethodAction = new QAction(tr("Selected Events: Change Data MCMC"), this);
     connect(mDatesMethodAction, &QAction::triggered, this, &MainWindow::changeDatesMethod);
+#endif
 
     mSelectEventsAction = new QAction(tr("Select All Events of the Selected Phases"), this);
     connect(mSelectEventsAction, &QAction::triggered, this, &MainWindow::selectEventInSelectedPhases);
@@ -421,8 +422,11 @@ void MainWindow::createMenus()
     mActionsMenu->addAction(mSelectEventsAction);
     mActionsMenu->addSeparator();
     mActionsMenu->addAction(mEventsColorAction);
+
+#ifndef FIXEDPRIOR
     mActionsMenu->addAction(mEventsMethodAction);
     mActionsMenu->addAction(mDatesMethodAction);
+#endif
     mActionsMenu->addSeparator();
 
     for (int i=0; i<mDatesActions.size(); ++i)
@@ -1183,32 +1187,35 @@ void MainWindow::rebuildExportCurve()
                 auto& ev = curveModel->mEvents[i];
                 // Initialisation et copie pour mTheta
                 ev->mTheta.is_curve_filtering = true;
-                copyFilteredData(ev->mTheta.mAllAcquiredTrace, ev->mTheta.mDisplayAcquiredTrace, index_to_memo);
+                if (ev->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
 
-                // Initialisation et copie pour mS02Theta
-                ev->mS02Theta.is_curve_filtering = true;
-                copyFilteredData(ev->mS02Theta.mAllAcquiredTrace, ev->mS02Theta.mDisplayAcquiredTrace, index_to_memo);
+                    copyFilteredData(ev->mTheta.mAllAcquiredTrace, ev->mTheta.mDisplayAcquiredTrace, index_to_memo);
 
-                // mise à jour des dates
-                for (auto& d : ev->mDates) {
-                    d.mTi.is_curve_filtering = true;
-                    copyFilteredData(d.mTi.mAllAcquiredTrace, d.mTi.mDisplayAcquiredTrace, index_to_memo);
+                    // Initialisation et copie pour mS02Theta
+                    ev->mS02Theta.is_curve_filtering = true;
+                    copyFilteredData(ev->mS02Theta.mAllAcquiredTrace, ev->mS02Theta.mDisplayAcquiredTrace, index_to_memo);
 
-                    d.mSigmaTi.is_curve_filtering = true;
-                    copyFilteredData(d.mSigmaTi.mAllAcquiredTrace, d.mSigmaTi.mDisplayAcquiredTrace, index_to_memo);
+                    // mise à jour des dates
+                    for (auto& d : ev->mDates) {
+                        d.mTi.is_curve_filtering = true;
+                        copyFilteredData(d.mTi.mAllAcquiredTrace, d.mTi.mDisplayAcquiredTrace, index_to_memo);
+
+                        d.mSigmaTi.is_curve_filtering = true;
+                        copyFilteredData(d.mSigmaTi.mAllAcquiredTrace, d.mSigmaTi.mDisplayAcquiredTrace, index_to_memo);
+                    }
                 }
 
             }
             if (curveModel->is_curve) {
                 for (size_t i = 0; i<curveModel->Model::mEvents.size(); ++i) {
                     auto& ev = curveModel->mEvents[i];
-                    if (ev->mVg.mSamplerProposal != MHVariable::eFixe) {
+                    if (ev->mVg.mSamplerProposal != SamplerProposal::eFixe) {
                         ev->mVg.is_curve_filtering = true;
                         copyFilteredData(ev->mVg.mAllAcquiredTrace, ev->mVg.mDisplayAcquiredTrace, index_to_memo);
                     }
 
                 }
-                if (curveModel->mLambdaSpline.mSamplerProposal != MHVariable::eFixe) {
+                if (curveModel->mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe) {
                     curveModel->mLambdaSpline.is_curve_filtering = true;
                     copyFilteredData(curveModel->mLambdaSpline.mAllAcquiredTrace, curveModel->mLambdaSpline.mDisplayAcquiredTrace, index_to_memo);
                 }
@@ -1236,13 +1243,13 @@ void MainWindow::rebuildExportCurve()
             if (curveModel->is_curve) {
                 for (size_t i = 0; i<curveModel->Model::mEvents.size(); ++i) {
                     auto& ev = curveModel->mEvents[i];
-                    if (ev->mVg.mSamplerProposal != MHVariable::eFixe) {
+                    if (ev->mVg.mSamplerProposal != SamplerProposal::eFixe) {
                         ev->mVg.is_curve_filtering = false;
                         ev->mVg.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
                     }
 
                 }
-                if (curveModel->mLambdaSpline.mSamplerProposal != MHVariable::eFixe) {
+                if (curveModel->mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe) {
                     curveModel->mLambdaSpline.is_curve_filtering = false;
                     curveModel->mLambdaSpline.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
                 }
@@ -1272,15 +1279,16 @@ void MainWindow::changeEventsColor()
 
 }
 
+#ifndef FIXEDPRIOR
 void MainWindow::changeEventsMethod()
 {
     if (!mProject || mProject->isCurve())
         return;
 
     QStringList opts;
-    opts.append(MHVariable::getSamplerProposalText(MHVariable::eMHAdaptGauss));
-    opts.append(MHVariable::getSamplerProposalText(MHVariable::eEventPrior));
-    opts.append(MHVariable::getSamplerProposalText(MHVariable::eDoubleExp));
+    opts.append(MHVariable::getSamplerProposalText(SamplerProposal::eRWAdaptGauss));
+    opts.append(MHVariable::getSamplerProposalText(SamplerProposal::eEventPrior));
+    opts.append(MHVariable::getSamplerProposalText(SamplerProposal::eDoubleExp));
 
     bool ok;
     QString methodStr = QInputDialog::getItem(qApp->activeWindow(),
@@ -1288,10 +1296,11 @@ void MainWindow::changeEventsMethod()
                                           tr("Change Event MCMC"),
                                           opts, 0, false, &ok);
     if (ok && !methodStr.isEmpty()) {
-        MHVariable::SamplerProposal method = MHVariable::getSamplerProposalFromText(methodStr);
+        SamplerProposal method = MHVariable::getSamplerProposalFromText(methodStr);
         mProject->updateSelectedEventsMethod(method);
     }
 }
+
 
 void MainWindow::changeDatesMethod()
 {
@@ -1310,23 +1319,23 @@ void MainWindow::changeDatesMethod()
                                              opts, 0, false, &ok);
     if (ok) {
         opts.clear();
-        opts.append(MHVariable::getSamplerProposalText(MHVariable::eDatePrior));
-        opts.append(MHVariable::getSamplerProposalText(MHVariable::eInversion));
-        opts.append(MHVariable::getSamplerProposalText(MHVariable::eMHAdaptGauss));
+        opts.append(MHVariable::getSamplerProposalText(SamplerProposal::eDatePrior));
+        opts.append(MHVariable::getSamplerProposalText(SamplerProposal::eLikelihood));
+        opts.append(MHVariable::getSamplerProposalText(SamplerProposal::eRWAdaptGauss));
 
         QString methodStr = QInputDialog::getItem(qApp->activeWindow(),
                                                   tr("Change Data MCMC"),
                                                   tr("Change Data MCMC"),
                                                   opts, 0, false, &ok);
         if (ok && !methodStr.isEmpty()) {
-            MHVariable::SamplerProposal method = MHVariable::getSamplerProposalFromText(methodStr);
+            SamplerProposal method = MHVariable::getSamplerProposalFromText(methodStr);
             PluginAbstract* plugin =PluginManager::getPluginFromName(pluginName);
             QString pluginId = plugin->getId();
             mProject->updateSelectedEventsDataMethod(method, pluginId);
         }
     }
 }
-
+#endif
 void MainWindow::doGroupedAction()
 {
     if (!mProject)
@@ -1500,9 +1509,12 @@ void MainWindow::clearInterface()
     mResetMCMCAction->setEnabled(false);
 
     mSelectEventsAction->setEnabled(false);
+
     mEventsColorAction->setEnabled(false);
+#ifndef FIXEDPRIOR
     mEventsMethodAction->setEnabled(false);
     mDatesMethodAction->setEnabled(false);
+#endif
     for (auto&& act : mDatesActions)
         act->setEnabled(false);
 
@@ -1533,8 +1545,10 @@ void MainWindow::activateInterface(bool activate)
 
     mSelectEventsAction->setEnabled(activate);
     mEventsColorAction->setEnabled(activate);
+#ifndef FIXEDPRIOR
     mEventsMethodAction->setEnabled(activate && mProject->isCurve());
     mDatesMethodAction->setEnabled(activate);
+#endif
     for (auto&& act : mDatesActions)
         act->setEnabled(activate);
 
@@ -1591,7 +1605,9 @@ void MainWindow::mcmcFinished()
 
 void MainWindow::noResult()
 {
+#ifndef FIXEDPRIOR
     mEventsMethodAction->setEnabled(!mProject->isCurve());
+#endif
     mRescaleCurveAction->setEnabled(false);
 
     mViewLogAction -> setEnabled(false);

@@ -269,25 +269,7 @@ std::vector<std::shared_ptr<Event>> ModelUtilities::unsortEvents(const std::vect
     return results;
 }
 
-/*
-QString ModelUtilities::getMCMCSettingsLog(const std::shared_ptr<ModelCurve> model)
-{
-    QString log;
-    log += QObject::tr("Number of chain %1").arg(QString::number(model->mMCMCSettings.mNumChains)) + "<br>";
-    log += QObject::tr("Number of burn-in iterations : %1").arg(QString::number(model->mMCMCSettings.mIterPerBurn)) + "<br>";
-    log += QObject::tr("Number of Max batches : %1").arg(QString::number(model->mMCMCSettings.mMaxBatches)) + "<br>";
-    log += QObject::tr("Number of iterations per batches : %1").arg(QString::number(model->mMCMCSettings.mIterPerBatch)) + "<br>";
-    log += QObject::tr("Number of running iterations : %1").arg(QString::number(model->mMCMCSettings.mIterPerAquisition)) + "<br>";
-    log += QObject::tr("Thinning Interval : %1").arg(QString::number(model->mMCMCSettings.mThinningInterval)) + "<br>";
-    log += QObject::tr("Mixing level : %1").arg(QString::number(model->mMCMCSettings.mMixingLevel)) + "<br>";
 
-    log += QObject::tr("Anneal Init. Temp. : %1").arg(QString::number(model->mMCMCSettings.mAnnealTemp)) + "<br>";
-    log += QObject::tr("Anneal Recurrrence : %1").arg(QString::number(model->mMCMCSettings.mAnnealRecurrence)) + "<br>";
-    log += QObject::tr("Anneal Dwell : %1").arg(QString::number(model->mMCMCSettings.mAnnealDwell)) + "<br>";
-
-    return log;
-}
-*/
 QString ModelUtilities::getMCMCSettingsLog(const std::shared_ptr<ModelCurve> model)
 {
     const auto& s = model->mMCMCSettings;
@@ -380,9 +362,9 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
     QString log;
     // Study period
     QLocale locale = QLocale();
-    log += line(textBold(textBlack(QObject::tr("Prior Study Period : [ %1 : %2 ] %3").arg(locale.toString(model->mSettings.getTminFormated()), locale.toString(model->mSettings.getTmaxFormated()), DateUtils::getAppSettingsFormatStr() ))));
-    log += line(textOrange(QObject::tr("Number of Phase  : %1").arg(QString::number(model->mPhases.size()))));
-    log += line(textBlue(QObject::tr("Number of Event  : %1").arg(QString::number(model->mEvents.size()))));
+    log += line(textBold(textBlack(QObject::tr("Prior Study Period: [ %1 : %2 ] %3").arg(locale.toString(model->mSettings.getTminFormated()), locale.toString(model->mSettings.getTmaxFormated()), DateUtils::getAppSettingsFormatStr() ))));
+    log += line(textOrange(QObject::tr("Number of Phase: %1").arg(QString::number(model->mPhases.size()))));
+    log += line(textBlue(QObject::tr("Number of Event: %1").arg(QString::number(model->mEvents.size()))));
     log += "<hr>";
 
     int i = 0;
@@ -393,7 +375,7 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
                                                                                                                QString::number(bound->mPhases.size()),
                                                                                                                QString::number(bound->mConstraintsBwd.size()),
                                                                                                                QString::number(bound->mConstraintsFwd.size()))));
-            log += line(textRed(QObject::tr("- Fixed Value : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(bound->value()), DateUtils::getAppSettingsFormatStr() )));
+            log += line(textRed(QObject::tr("- Fixed Value: %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(bound->value()), DateUtils::getAppSettingsFormatStr() )));
 
         } else {
             log += line(textBlue(QObject::tr("Event ( %1 / %2 ) : %3 ( %4 data, %5 phases,  %6 const. back.,  %7 const. fwd.)").arg(QString::number(i+1), QString::number(model->mEvents.size()), event->getQStringName(),
@@ -401,50 +383,56 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
                                                                                                                          QString::number(event->mPhases.size()),
                                                                                                                          QString::number(event->mConstraintsBwd.size()),
                                                                                                                          QString::number(event->mConstraintsFwd.size()))
-                                 + "<br>" + QObject::tr("- MCMC %1").arg(MHVariable::getSamplerProposalText(event->mTheta.mSamplerProposal))));
-            log += "<br>" + line(textBlue(QObject::tr("BetaS02 of Event  : %1").arg(QString::number(event->mBetaS02))));
+                                 + "<br>" + QObject::tr("- %1").arg(MHVariable::getSamplerProposalText(event->mTheta.mSamplerProposal))));
+            log += "<br>" + line(textBlue(QObject::tr("BetaS02 of Event: %1").arg(QString::number(event->mBetaS02))));
+            if (event->mS02Theta.mSamplerProposal == SamplerProposal::eFixe) {
+                log += line(textBlue(QObject::tr("- S02Theta Fixed: %1 (EDM1)").arg(DateUtils::convertToAppSettingsFormatStr(event->mS02Theta.value()) )));
+
+            } else {
+                log += line(textBlue(QObject::tr("- S02Theta: %1").arg(MHVariable::getSamplerProposalText(event->mS02Theta.mSamplerProposal))));
+            }
         }
 
         if (model->is_curve) {
             switch (model->mCurveSettings.mProcessType) {
             case CurveSettings::eProcess_Univariate:
-                log += line(textGreen(QObject::tr("- Measure : %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
+                log += line(textGreen(QObject::tr("- Measure: %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
                     break;
             case CurveSettings::eProcess_Depth:
-                log += line(textGreen(QObject::tr("- Depth : %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
+                log += line(textGreen(QObject::tr("- Depth: %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
                 break;
             case CurveSettings::eProcess_Field:
-                log += line(textGreen(QObject::tr("- Field : %1 ±  %2").arg(stringForLocal(event->mZField), stringForLocal(event->mS_ZField))));
+                log += line(textGreen(QObject::tr("- Field: %1 ±  %2").arg(stringForLocal(event->mZField), stringForLocal(event->mS_ZField))));
                 break;
             case CurveSettings::eProcess_Inclination:
-                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
+                log += line(textGreen(QObject::tr("- Inclination: %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
                 break;
             case CurveSettings::eProcess_Declination:
-                log += line(textGreen(QObject::tr("- Declination : %1 ; Inclination %2 ±  %3").arg(stringForLocal(event->mYDec), stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
+                log += line(textGreen(QObject::tr("- Declination: %1 ; Inclination %2 ±  %3").arg(stringForLocal(event->mYDec), stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
                 break;
 
             case CurveSettings::eProcess_2D:
-                log += line(textGreen(QObject::tr("- X : %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
-                log += line(textGreen(QObject::tr("- Y : %1 ±  %2").arg(stringForLocal(event->mYDec), stringForLocal(event->mS_Y))));
+                log += line(textGreen(QObject::tr("- X: %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
+                log += line(textGreen(QObject::tr("- Y: %1 ±  %2").arg(stringForLocal(event->mYDec), stringForLocal(event->mS_Y))));
                 break;
             case CurveSettings::eProcess_3D:
-                log += line(textGreen(QObject::tr("- X : %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
-                log += line(textGreen(QObject::tr("- Y : %1 ±  %2")).arg(stringForLocal(event->mYDec), stringForLocal(event->mS_Y)));
-                log += line(textGreen(QObject::tr("- Z : %1 ±  %2").arg(stringForLocal(event->mZField), stringForLocal(event->mS_ZField))));
+                log += line(textGreen(QObject::tr("- X: %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
+                log += line(textGreen(QObject::tr("- Y: %1 ±  %2")).arg(stringForLocal(event->mYDec), stringForLocal(event->mS_Y)));
+                log += line(textGreen(QObject::tr("- Z: %1 ±  %2").arg(stringForLocal(event->mZField), stringForLocal(event->mS_ZField))));
                 break;
 
             case CurveSettings::eProcess_Spherical:
-                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
-                log += line(textGreen(QObject::tr("- Declination : %1").arg(stringForLocal(event->mYDec))));
+                log += line(textGreen(QObject::tr("- Inclination: %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
+                log += line(textGreen(QObject::tr("- Declination: %1").arg(stringForLocal(event->mYDec))));
                 break;
             case CurveSettings::eProcess_Unknwon_Dec:
-                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
+                log += line(textGreen(QObject::tr("- Inclination: %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
                 log += line(textGreen(QObject::tr("- Field : %1").arg(stringForLocal(event->mYDec))));
                 break;
             case CurveSettings::eProcess_Vector:
-                log += line(textGreen(QObject::tr("- Inclination : %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
-                log += line(textGreen(QObject::tr("- Declination : %1").arg(stringForLocal(event->mYDec))));
-                log += line(textGreen(QObject::tr("- Field : %1 ±  %2").arg(stringForLocal(event->mZField), stringForLocal(event->mS_ZField))));
+                log += line(textGreen(QObject::tr("- Inclination: %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
+                log += line(textGreen(QObject::tr("- Declination: %1").arg(stringForLocal(event->mYDec))));
+                log += line(textGreen(QObject::tr("- Field: %1 ±  %2").arg(stringForLocal(event->mZField), stringForLocal(event->mS_ZField))));
                 break;
             default:
                 break;
@@ -454,14 +442,12 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
         int j = 0;
         for (auto&& date : event->mDates) {
             log += "<br>";
-            log += line(textBlack(QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j+1), QString::number(event->mDates.size()), date.getQStringName())
-                                  + "<br>" + QObject::tr("- Type : %1").arg(date.mPlugin->getName())
+            log += line(textBlack(QObject::tr("Data ( %1 / %2 ): %3").arg(QString::number(j+1), QString::number(event->mDates.size()), date.getQStringName())
+                                  + "<br>" + QObject::tr("- Plugin: %1").arg(date.mPlugin->getName())
                                   + "<br>" + QObject::tr("- MCMC %1").arg(MHVariable::getSamplerProposalText(date.mTi.mSamplerProposal))
-                                  + "<br>" + QObject::tr("- Params : %1").arg(date.getDesc()))
-                        + (date.mDeltaType != Date::eDeltaNone ? textBlack("<br> - "+ date.getWiggleDesc()): ""));
-            /*if (date.mDeltaType != Date::eDeltaNone) {
-                log += line(textBlack("<br>"+ date.getWiggleDesc()));
-            }*/
+                                  + "<br>" + QObject::tr("- Parameters: %1").arg(date.getDesc()))
+                        + (date.mDeltaType != Date::eDeltaNone ? textBlue("<br> - "+ date.getWiggleDesc()): ""));
+
             ++j;
         }
         log += "<hr>";
@@ -470,7 +456,7 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
 
     i = 0;
     for (auto &&phase : model->mPhases) {
-        log += line(textOrange(QObject::tr("Phase ( %1 / %2 ) : %3 ( %4 events, %5 const. back., %6 const. fwd.)").arg(QString::number(i+1), QString::number(model->mPhases.size()), phase->getQStringName(),
+        log += line(textOrange(QObject::tr("Phase ( %1 / %2 ): %3 ( %4 events, %5 const. back., %6 const. fwd.)").arg(QString::number(i+1), QString::number(model->mPhases.size()), phase->getQStringName(),
                                                                                                               QString::number(phase->mEvents.size()),
                                                                                                               QString::number(phase->mConstraintsPrevPhases.size()),
                                                                                                               QString::number(phase->mConstraintsNextPhases.size()))
@@ -572,10 +558,10 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
         }  else {
             HTMLText += line(textBold(textBlue(QObject::tr("Event ( %1 / %2 ) : %3").arg(QString::number(i), QString::number(model->mEvents.size()), event->getQStringName()))));
             HTMLText += line(textBold(textBlue(QObject::tr(" - Theta : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(event->mTheta.value()), DateUtils::getAppSettingsFormatStr()))));
-            if (event->mTheta.mLastMHAccepts.size()>2 && event->mTheta.mSamplerProposal!= MHVariable::eFixe) {
+            if (event->mTheta.mLastMHAccepts.size()>2 && event->mTheta.mSamplerProposal!= SamplerProposal::eFixe) {
                 const auto acceptRate = event->mTheta.getCurrentAcceptRate();
                 const auto samplerType = event->mTheta.mSamplerProposal;
-                if (samplerType == MHVariable::eMHAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
+                if (samplerType == SamplerProposal::eRWAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
                     HTMLText += line(textBlue(QObject::tr(". . . . . Current Acceptance Rate : ") + textBold(textRed(stringForLocal(acceptRate*100.) + " %"))  + " (" + MHVariable::getSamplerProposalText(samplerType)) + ")");
                 else
                     HTMLText += line(textBlue(QObject::tr(". . . . . Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(acceptRate*100.), MHVariable::getSamplerProposalText(samplerType))));
@@ -583,12 +569,12 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
                 HTMLText += line(textBlue(QObject::tr(" - Sigma_MH on Theta : %1").arg(stringForLocal(event->mTheta.mSigmaMH))));
             }
 
-            if (event->mS02Theta.mLastMHAccepts.size()>2 && event->mS02Theta.mSamplerProposal!= MHVariable::eFixe) {
+            if (event->mS02Theta.mLastMHAccepts.size()>2 && event->mS02Theta.mSamplerProposal!= SamplerProposal::eFixe) {
                 HTMLText += line(textBold(textBlue(QObject::tr(" - Shrinkage param. : %1").arg(stringForLocal(event->mS02Theta.value())))));
 
                 const auto acceptRate = event->mS02Theta.getCurrentAcceptRate();
                 const auto samplerType = event->mS02Theta.mSamplerProposal;
-                if (samplerType == MHVariable::eMHAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
+                if (samplerType == SamplerProposal::eRWAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
                     HTMLText += line(textBlue(QObject::tr("     Current Acceptance Rate : ") + textBold(textRed(stringForLocal(acceptRate*100.) + " %"))  + " (" + MHVariable::getSamplerProposalText(samplerType)) + ")");
                 else
                     HTMLText += line(textBlue(QObject::tr("     Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(acceptRate*100.), MHVariable::getSamplerProposalText(samplerType))));
@@ -604,10 +590,10 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
 
         if (curveModel) {
             HTMLText += line(textGreen(QObject::tr(" - Std gi : %1").arg(stringForLocal(sqrt(event->mVg.value())))));
-            if (event->mVg.mLastMHAccepts.size()>2  && event->mVg.mSamplerProposal!= MHVariable::eFixe) {
+            if (event->mVg.mLastMHAccepts.size()>2  && event->mVg.mSamplerProposal!= SamplerProposal::eFixe) {
                 const auto acceptRate = event->mVg.getCurrentAcceptRate();
                 const auto samplerType = event->mVg.mSamplerProposal;
-                if (samplerType == MHVariable::eMHAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
+                if (samplerType == SamplerProposal::eRWAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
                     HTMLText += line(textGreen(QObject::tr(". . . . . Current Acceptance Rate : ") + textBold(textRed(stringForLocal(acceptRate*100.) + " %"))  + " (" + MHVariable::getSamplerProposalText(samplerType)) + ")");
                 else
                     HTMLText += line(textGreen(QObject::tr(". . . . . Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(acceptRate*100.), MHVariable::getSamplerProposalText(samplerType))));
@@ -653,12 +639,12 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
 
             HTMLText += line(textBold(textBlack(QObject::tr("Data ( %1 / %2 ) : %3").arg(QString::number(j), QString::number(event->mDates.size()), date.getQStringName()))));
             HTMLText += line(textBlack(QObject::tr(" - ti : %1 %2").arg(DateUtils::convertToAppSettingsFormatStr(date.mTi.value()), DateUtils::getAppSettingsFormatStr())));
-            if (date.mTi.mSamplerProposal == MHVariable::eDatePrior) {
+            if (date.mTi.mSamplerProposal == SamplerProposal::eDatePrior) {
                 if (date.mTi.mLastMHAccepts.size()>2) {
                     const auto acceptRate = date.mTi.getCurrentAcceptRate();
                     const auto samplerType = date.mTi.mSamplerProposal;
 
-                    if (samplerType == MHVariable::eMHAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
+                    if (samplerType == SamplerProposal::eRWAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
                         HTMLText += line(textBlack(QObject::tr(". . . . . Current Acceptance Rate : ") + textBold(textRed(stringForLocal(acceptRate*100.) + " %"))  + " (" + MHVariable::getSamplerProposalText(samplerType)) + ")");
                     else
                         HTMLText += line(textBlack(QObject::tr(". . . . . Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(acceptRate*100.), MHVariable::getSamplerProposalText(samplerType))));
@@ -671,7 +657,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
             if (date.mSigmaTi.mLastMHAccepts.size()>2) {
                 const auto acceptRate = date.mSigmaTi.getCurrentAcceptRate();
                 const auto samplerType = date.mSigmaTi.mSamplerProposal;
-                if (samplerType == MHVariable::eMHAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
+                if (samplerType == SamplerProposal::eRWAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
                     HTMLText += line(textBlack(QObject::tr(". . . . . Current Acceptance Rate : ") + textBold(textRed(stringForLocal(acceptRate*100.) + " %"))  + " (" + MHVariable::getSamplerProposalText(samplerType)) + ")");
                 else
                     HTMLText += line(textBlack(QObject::tr(". . . . . Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(acceptRate*100.), MHVariable::getSamplerProposalText(samplerType))));
@@ -720,7 +706,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
         HTMLText += textBold(textGreen(QObject::tr("Curve"))) + "<br>";
         HTMLText += "<hr>";
         HTMLText +=  line(textGreen(QObject::tr("Shrinkage parameter for Smoothing Prior: %1").arg(QLocale().toString(model->mC_lambda, 'G', 2))));
-        if (model->mLambdaSpline.mSamplerProposal == MHVariable::eFixe) {
+        if (model->mLambdaSpline.mSamplerProposal == SamplerProposal::eFixe) {
             HTMLText +=  line(textGreen(QObject::tr("Fixed Smoothing : 10E%1").arg(QLocale().toString(log10(model->mLambdaSpline.value()), 'G', 2))));
 
         } else {
@@ -728,7 +714,7 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
             if (model->mLambdaSpline.mLastMHAccepts.size() > 2) {
                 const auto acceptRate = model->mLambdaSpline.getCurrentAcceptRate();
                 const auto samplerType = model->mLambdaSpline.mSamplerProposal;
-                if (samplerType == MHVariable::eMHAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
+                if (samplerType == SamplerProposal::eRWAdaptGauss && (acceptRate > 0.46 || acceptRate < 0.42) )
                     HTMLText += line(textGreen(QObject::tr(". . . . . Current Acceptance Rate : ") + textBold(textRed(stringForLocal(acceptRate*100.) + " %"))  + " (" + MHVariable::getSamplerProposalText(samplerType)) + ")");
                 else
                     HTMLText += line(textGreen(QObject::tr(". . . . . Current Acceptance Rate : %1 % (%2)").arg(stringForLocal(acceptRate*100.), MHVariable::getSamplerProposalText(samplerType))));
@@ -753,7 +739,7 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const std::shared_ptr<Mod
     QString text = line(textBold(textBlack(QObject::tr("Data : %1").arg(d->getQStringName())))) + "<br>";
     text += line(textBold(textBlack(QObject::tr("Posterior calib. date"))));
 
-    if (d->mTi.mSamplerProposal != MHVariable::eFixe && model != nullptr) {
+    if (d->mTi.mSamplerProposal != SamplerProposal::eFixe && model != nullptr) {
 
         short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTi.mFormatedHPD, model);
         switch (position) {
@@ -782,7 +768,7 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const double tmin_formate
     QString text = line(textBold(textBlack(QObject::tr("Data : %1").arg(d->getQStringName())))) + "<br>";
     text += line(textBold(textBlack(QObject::tr("Posterior calib. date"))));
 
-    if (d->mTi.mSamplerProposal != MHVariable::eFixe) {
+    if (d->mTi.mSamplerProposal != SamplerProposal::eFixe) {
 
         short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTi.mFormatedHPD, tmin_formated, tmax_formated);
         switch (position) {
@@ -844,7 +830,7 @@ QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const b
     }
 
     if (model && model->is_curve) {
-        if (e->mVg.mSamplerProposal == MHVariable::eFixe) {
+        if (e->mVg.mSamplerProposal == SamplerProposal::eFixe) {
             text += "<br>" + line(textBold(textGreen(QObject::tr("Curve : Std gi"))));
             text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mBurnAdaptTrace->at(0)))));
 
@@ -881,7 +867,7 @@ QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const b
     }
 
     if (with_curve) {
-        if (e->mVg.mSamplerProposal == MHVariable::eFixe) {
+        if (e->mVg.mSamplerProposal == SamplerProposal::eFixe) {
             text += "<br>" + line(textBold(textGreen(QObject::tr("Curve : Std gi"))));
             text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mBurnAdaptTrace->at(0)))));
 
@@ -898,7 +884,7 @@ QString ModelUtilities::EventS02ResultsHTML(const std::shared_ptr<Event> e)
     Q_ASSERT(e);
     QString text;
 
-    if (e->mS02Theta.mSamplerProposal == MHVariable::eFixe) {
+    if (e->mS02Theta.mSamplerProposal == SamplerProposal::eFixe) {
        // text = line(textBold(textBlue(QObject::tr("Shrinkage param. = harmonic mean"))));
         text += line(textGreen(QObject::tr("Shrinkage param. = harmonic mean : %1").arg(QString::number(e->mS02Theta.value()))));
 
@@ -923,7 +909,7 @@ QString ModelUtilities::VgResultsHTML(const std::shared_ptr<Event> e)
         text += line(textBold(textBlue(QObject::tr("Event : %1").arg(e->getQStringName()))));
     }
 
-    if (e->mVg.mSamplerProposal == MHVariable::eFixe) {
+    if (e->mVg.mSamplerProposal == SamplerProposal::eFixe) {
         text += line(textBold(textGreen(QObject::tr("Curve : Std gi"))));
         text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mBurnAdaptTrace->at(0)))));
 
@@ -1094,10 +1080,10 @@ QString ModelUtilities::curveResultsHTML(const std::shared_ptr<ModelCurve> model
 
     text += line(textGreen(QObject::tr(" - Number of Ref. points = %1").arg(model->mEvents.size())));
 
-    if (model->mLambdaSpline.mSamplerProposal == MHVariable::eFixe  && model->mCurveSettings.mLambdaSplineType != CurveSettings::eInterpolation) {
+    if (model->mLambdaSpline.mSamplerProposal == SamplerProposal::eFixe  && model->mCurveSettings.mLambdaSplineType != CurveSettings::eInterpolation) {
         text += line(textGreen(QObject::tr("Lambda Spline; Fixed value = 10E%1").arg(QString::number(model->mCurveSettings.mLambdaSpline))));
 
-    } else if (model->mLambdaSpline.mSamplerProposal == MHVariable::eFixe && model->mCurveSettings.mLambdaSplineType == CurveSettings::eInterpolation) {
+    } else if (model->mLambdaSpline.mSamplerProposal == SamplerProposal::eFixe && model->mCurveSettings.mLambdaSplineType == CurveSettings::eInterpolation) {
         text += line(textGreen(QObject::tr("- Lambda Spline; Interpolation Fixed value = %1").arg(QString::number(0))));
 
     }else {
@@ -1171,11 +1157,11 @@ QString ModelUtilities::curveResultsHTML(const std::shared_ptr<ModelCurve> model
 QString ModelUtilities::lambdaResultsHTML(const std::shared_ptr<ModelCurve> model)
 {
     QString text;
-    if (model->mLambdaSpline.mSamplerProposal == MHVariable::eFixe  && model->mCurveSettings.mLambdaSplineType != CurveSettings::eInterpolation) {
+    if (model->mLambdaSpline.mSamplerProposal == SamplerProposal::eFixe  && model->mCurveSettings.mLambdaSplineType != CurveSettings::eInterpolation) {
         text = line(textBold(textGreen(QObject::tr("Smoothing"))));
         text += line(textGreen(QObject::tr("Fixed value : 10E%1").arg(QString::number( model->mCurveSettings.mLambdaSpline))));
 
-    } else if (model->mLambdaSpline.mSamplerProposal == MHVariable::eFixe && model->mCurveSettings.mLambdaSplineType == CurveSettings::eInterpolation) {
+    } else if (model->mLambdaSpline.mSamplerProposal == SamplerProposal::eFixe && model->mCurveSettings.mLambdaSplineType == CurveSettings::eInterpolation) {
         text = line(textBold(textGreen(QObject::tr("Smoothing"))));
         text += line(textGreen(QObject::tr("Interpolation Fixed value : %1").arg(QString::number(0))));
 
@@ -1189,7 +1175,7 @@ QString ModelUtilities::S02VgResultsHTML(const std::shared_ptr<ModelCurve> model
 {
     QString text;
 #ifdef KOMLAN
-    if (model->mS02Vg.mSamplerProposal == MHVariable::eFixe ) {
+    if (model->mS02Vg.mSamplerProposal == SamplerProposal::eFixe ) {
         text = line(textBold(textGreen(QObject::tr("S02Vg"))));
         text += line(textGreen(QObject::tr("Fixed value : 10E%1").arg(QString::number( model->mS02Vg.mBurnAdaptTrace->at(0)))));
 
@@ -1316,77 +1302,7 @@ short ModelUtilities::HPDOutsideSudyPeriod(const std::map<double, double> &hpd, 
 }
 
 
-double sample_in_repartition (std::shared_ptr<CalibrationCurve> calibrateCurve, const double min, const double max)
-{
-    const double unionTmin = calibrateCurve->mTmin;
-    const double unionTmax = calibrateCurve->mTmax;
-    const double unionStep = (unionTmax-unionTmin)/ (calibrateCurve->mRepartition.size()-1);
 
-    // Early exit conditions: completely outside range
-    if (unionTmax < min || max < unionTmin) {
-        return Generator::gaussByDoubleExp(
-            (unionTmax + unionTmin) / 2.,
-            std::max(unionStep, (unionTmax - unionTmin) / 2.),
-            min, max
-            );
-    }
-
-     else {
-        // Interpolate repartition values
-        double minRepartition = calibrateCurve->repartition_interpolate(std::max(unionTmin, min));
-        double maxRepartition = calibrateCurve->repartition_interpolate(std::min(unionTmax, max));
-        const int rep_idx_max = static_cast<int>(calibrateCurve->mRepartition.size()) - 1;
-
-
-        // Check for zero density region. We are between two peaks, the density is zero.
-        if (minRepartition >= maxRepartition) {
-           // qDebug() <<" [sample_in_repartition] minRepartition >= maxRepartition"<<minRepartition<<maxRepartition<< std::max(unionTmin, min)<<std::min(unionTmax, max);
-            return Generator::randomUniform(min, max);
-        }
-        // Generate random value in repartition range
-        const double value = Generator::randomUniform(minRepartition, maxRepartition);
-
-        auto clampProp = [&](double val) {
-            return std::clamp(
-                (val - unionTmin) / (unionTmax - unionTmin) * rep_idx_max,
-                0.0,
-                static_cast<double>(rep_idx_max)
-                );
-        };
-
-        const int idxUnder = floor(clampProp(min));
-        const int idxUpper = floor(clampProp(max));
-
-        if (idxUpper == idxUnder)
-            return Generator::randomUniform(min, max);
-
-        /*double idx = vector_interpolate_idx_for_value(value, calibrateCurve->mRepartition, idxUnder, idxUpper);*/
-        double idx = interpolate_index(value, calibrateCurve->mRepartition, idxUnder, idxUpper);
-
-        double t = unionTmin + idx * unionStep;
-        // Du fait de l'arrondi de idxUnder et idxUpper, la dichotomie peut donner une valeur de t en dehors de l'intervale.
-        // Cela arrive souvent quant l'espace entre les deux index est faible
-
-
-        // Final range validation
-        if (t >= min && t <= max) {
-            return t;
-        }
-
-#ifdef DEBUG
-        if (t > max) {
-            qDebug() <<" [ModelUtilities::sample_in_repartition] t>max" << t << max << "Generator::randomUniform(min, max)";
-
-        } else if (t<min) {
-            qDebug() <<" [ModelUtilities::sample_in_repartition] t<min" << t << min <<" Generator::randomUniform(min, max)";
-
-        }
-#endif
-        // Fallback to uniform sampling if interpolation fails
-        return Generator::randomUniform(min, max);
-
-    }
-}
 
 
 void sampleInCumulatedRepartition_thetaFixe (std::shared_ptr<Event> event, const StudyPeriodSettings& settings)
@@ -1440,7 +1356,6 @@ double sample_in_Repartition_date_fixe (const Date& d, const StudyPeriodSettings
         return Generator::randomUniform(settings.mTmin, settings.mTmax);
     }
 
-
     const long double step_long = (t_max_long - t_min_long)  / static_cast<double>(n - 1);
 
     // Calcul de l'indice d'interpolation
@@ -1449,11 +1364,6 @@ double sample_in_Repartition_date_fixe (const Date& d, const StudyPeriodSettings
     const double idx = interpolate_index(targetValue, repartition);
     const double sampled = d.mCalibration->mTmin + idx * step_long;
     return std::clamp(sampled, settings.mTmin, settings.mTmax);
-
-    //return std::clamp(settings.mTmin, static_cast<double>(t_min_long + idx * step_long), settings.mTmax);
-
-
-
 }
 
 std::string html_to_plain_text(const std::string &html)

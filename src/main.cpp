@@ -143,7 +143,7 @@ void customMessageHandler(QtMsgType type,
 
 int main(int argc, char *argv[])
 {
-    qInstallMessageHandler(customMessageHandler);
+   // qInstallMessageHandler(customMessageHandler);
 
     // Macros détaillées possibles (définies si vectorisation spécifique présente)
 #if defined(EIGEN_VECTORIZE_SSE)
@@ -295,6 +295,7 @@ int main(int argc, char *argv[])
     } catch (const std::exception& e) {
         // Logger l'exception critique
         qCritical() << "Standard exception caught:" << e.what();
+
     } catch (...) {
         // Logger une exception inconnue
         qCritical() << "Unknown exception caught";

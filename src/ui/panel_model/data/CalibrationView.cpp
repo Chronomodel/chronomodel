@@ -176,8 +176,8 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):
     mCalibGraph->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
     mCalibGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
 
-    mCalibGraph->setXAxisMode(GraphView::eAllTicks);
-    mCalibGraph->setYAxisMode(GraphView::eHidden);
+    mCalibGraph->setXAxisMode(GraphView::AxisMode::eAllTicks);
+    mCalibGraph->setYAxisMode(GraphView::AxisMode::eHidden);
     mCalibGraph->setMouseTracking(true);
 
     mResultsText = new QTextEdit(this);
@@ -341,6 +341,7 @@ void CalibrationView::updateGraphs()
 
         if (mDate.mIsValid) {
             const std::map<double, double> &calibToShow = mDate.getFormatedCalibToShow();
+            //const std::map<double, double> &calibToShow = mDate.getFormatedWiggleCalibMap();// inverdsion
             GraphCurve calibCurve = densityCurve(calibToShow, "Calibration", penColor);
             calibCurve.mVisible = true;
             QFontMetrics fm (mCalibGraph->font());
@@ -351,7 +352,9 @@ void CalibrationView::updateGraphs()
             GraphCurve calibWiggleCurve;
 
             if (mDate.mDeltaType != Date::eDeltaNone) {
-                const std::map<double, double> &wiggleCalibMap =  mDate.getFormatedWiggleCalibToShow();
+                //const std::map<double, double> &wiggleCalibMap =  mDate.getFormatedWiggleCalibToShow();
+                const std::map<double, double> &wiggleCalibMap =  mDate.getFormatedWiggleCalibMap();
+                //const std::map<double, double> &wiggleCalibMap = mDate.getFormatedCalibToShow(); // inversion
                 const std::map<double, double> &calibWiggle = normalize_map(wiggleCalibMap, map_max(calibCurve.mData).value());
                 calibWiggleCurve = densityCurve(calibWiggle, "Wiggle", Qt::blue, Qt::DashLine, Qt::NoBrush);
                 calibWiggleCurve.mVisible = true;

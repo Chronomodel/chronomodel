@@ -57,12 +57,11 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 GraphViewResults::GraphViewResults(QWidget* parent):
     QWidget(parent),
     mCurrentTypeGraph(ePostDistrib),
-    mCurrentVariableList(QList<variable_t>(eThetaEvent)),
     mTitle("No Title"),
     mItemColor(Painting::borderDark),
     mShowAllChains(true),
     mShowChainList(),
-    mShowVariableList(eThetaEvent),
+    mShowList(QList<variable_t>(eThetaEvent)),
     mStatHTMLText("Nothing to display"),
     mShowNumResults(false),
     mIsSelected(false),
@@ -76,7 +75,7 @@ GraphViewResults::GraphViewResults(QWidget* parent):
     mTopShift(0),
     mGraphFont()
 {
-    mHeightForVisibleTicksAxis = int (4 * AppSettings::heigthUnit());
+    mHeightForVisibleTicksAxis = int (5 * AppSettings::heigthUnit());
     setMouseTracking(true);
 
     mGraph = new GraphView(this);
@@ -97,7 +96,7 @@ GraphViewResults::GraphViewResults(QWidget* parent):
     mGraph->showYAxisValues(true);
 
     //mGraph->setXAxisMode(GraphView::eAllTicks);
-    mGraph->setYAxisMode(GraphView::eMinMax);
+    mGraph->setYAxisMode(GraphView::AxisMode::eMinMax);
 
     mGraph->setMargins(50, 10, 5, mGraphFont.pointSize() * 2.2); // make setMarginRight seMarginLeft ...
     mGraph->setRangeY(0, 1);
@@ -114,18 +113,6 @@ GraphViewResults::GraphViewResults(QWidget* parent):
     palette_BW.setColor(QPalette::WindowText, Qt::black);
     mStatArea->setPalette(palette_BW);
 
-    //mStatArea->setFontFamily(mGraphFont.family());
-    //mStatArea->setFontPointSize(mGraphFont.pointSizeF());*/
-
-
-
-    //mStatArea->setVisible(false);
-    //mStatArea->setReadOnly(true);
-   // mStatArea->setAutoFillBackground(true);
-    //mStatArea.setFrameStyle(QFrame::NoFrame); // Enlève le cadre
-    // Compense le bug de Qt sous windows qui fait apparaitre une barre au milieu
-   // mStatArea->setStyleSheet("QTextEdit { border: 1px solid gray; }");
-
     /* OverLaySelect must be created after mGraph, because it must be refresh after/over the graph
     */
     mOverLaySelect = new Overlay (this);
@@ -138,17 +125,17 @@ GraphViewResults::~GraphViewResults()
 
 }
 
-void GraphViewResults::generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList)
+void GraphViewResults::generateCurves(const graph_t typeGraph, const QList<variable_t>& showList)
 {
     mCurrentTypeGraph = typeGraph;
-    mCurrentVariableList = variableList;
+    mShowList = showList;
 }
 
-void GraphViewResults::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showVariableList)
+void GraphViewResults::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showList)
 {
     mShowAllChains = showAllChains;
     mShowChainList = showChainList;
-    mShowVariableList = showVariableList;
+    mShowList = showList;
 
 }
 
@@ -338,13 +325,13 @@ void GraphViewResults::saveGraphData(double threshold) const
     else if (mCurrentTypeGraph == eCorrel)
         mGraph->exportCurrentVectorCurves( MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, false, 0);
 
-    else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eTempo))
+    else if (mCurrentTypeGraph == ePostDistrib && mShowList.contains(eTempo))
         mGraph->exportCurrentCurves( MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, mSettings.mStep, mTitle);
 
-    else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eActivity))
+    else if (mCurrentTypeGraph == ePostDistrib && mShowList.contains(eActivity))
         mGraph->exportCurrentCurves( MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep, mSettings.mStep, mTitle);
 
-    else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eG)) {
+    else if (mCurrentTypeGraph == ePostDistrib && mShowList.contains(eG)) {
         QMessageBox messageBox;
         messageBox.setWindowTitle(tr("Save Curve"));
         messageBox.setText(tr("Would you like to export the curve in reference format (calibration curve) or in graphic format?"));
@@ -363,11 +350,11 @@ void GraphViewResults::saveGraphData(double threshold) const
         }
         else return;
 
-    } else if (mCurrentTypeGraph == ePostDistrib && mShowVariableList.contains(eGP)) {
+    } else if (mCurrentTypeGraph == ePostDistrib && mShowList.contains(eGP)) {
         mGraph->exportCurrentCurves( MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  0, mTitle);
 
     }    // All visible curves are saved in the same file, the credibility bar is not save
-    else if (mCurrentTypeGraph == ePostDistrib && !mShowVariableList.contains(eG))
+    else if (mCurrentTypeGraph == ePostDistrib && !mShowList.contains(eG))
         mGraph->exportCurrentDensities( MainWindow::getInstance()->getCurrentPath(), csvLocal, csvSep,  mSettings.mStep);
 
 }
@@ -449,12 +436,12 @@ void GraphViewResults::updateLayout()
 
     if (mGraph->has_curves()) {
         const QFontMetricsF fm (mGraphFont);
-        const bool axisVisible = (graph_h >= mHeightForVisibleTicksAxis);
+        const bool axisVisible = (graph_h >= mHeightForVisibleTicksAxis - mTopShift);
 
         mGraph->showXAxisValues(axisVisible);
         mGraph->showXAxisTicks(axisVisible);
 
-        const bool showXAxisLine = (graph_h >= (mHeightForVisibleTicksAxis*0.5));
+        const bool showXAxisLine = (graph_h >= ((mHeightForVisibleTicksAxis- mTopShift)*0.5));
         mGraph->showXAxisLine(showXAxisLine);
         mGraph->showYAxisLine(showXAxisLine);
 
@@ -495,7 +482,7 @@ void GraphViewResults::paintEvent(QPaintEvent* )
 
     QPainter p(this);
 
-    p.fillRect(rect(), mGraph->getBackgroundColor());
+    p.fillRect(rect(), mGraph->backgroundColor());
     p.setFont(fontTitle);
 
     p.setPen(Qt::black);
@@ -675,14 +662,14 @@ void GraphViewResults::graph_reset()
     mGraph->showInfos(false);
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
-    mGraph->setOverArrow(GraphView::eNone);
+    mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
     mGraph->setFormatFunctX(nullptr);
     mGraph->setFormatFunctY(nullptr);
 }
 
 void GraphViewResults::graph_density()
 {
-    mGraph->setOverArrow(GraphView::eBothOverflow);
+    mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eBothOverflow);
 
     mGraph->setTipYLab("");
     mGraph->setTipXLab("t");
@@ -694,8 +681,8 @@ void GraphViewResults::graph_density()
 
     mGraph->autoAdjustYScale(true);
 
-    mGraph->setXAxisMode(GraphView::eAllTicks);
-    mGraph->setYAxisMode(GraphView::eHidden);
+    mGraph->setXAxisMode(GraphView::AxisMode::eAllTicks);
+    mGraph->setYAxisMode(GraphView::AxisMode::eHidden);
     // ------------------------------------------------------------
     //  Add zones outside study period
     // ------------------------------------------------------------
@@ -709,7 +696,7 @@ void GraphViewResults::graph_density()
 
 void GraphViewResults::graph_trace()
 {
-    mGraph->setOverArrow(GraphView::eNone);
+    mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
     mGraph->mLegendX = tr("Iterations");
 
     mGraph->setTipXLab(tr("Iteration"));
@@ -718,21 +705,21 @@ void GraphViewResults::graph_trace()
     mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
     mGraph->setYAxisSupport(AxisTool::AxisSupport::eMin_Max);
 
-    mGraph->setYAxisMode(GraphView::eMinMaxHidden);
+    mGraph->setYAxisMode(GraphView::AxisMode::eMinMaxHidden);
 
     mGraph->autoAdjustYScale(true);
 }
 
 void GraphViewResults::graph_acceptation()
 {
-    mGraph->setOverArrow(GraphView::eNone);
+    mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
     mGraph->mLegendX = tr("Iterations");
     mGraph->setTipXLab(tr("Iteration"));
     mGraph->setTipYLab(tr("Rate"));
 
     mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
     mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
-    mGraph->setYAxisMode(GraphView::eMinMaxHidden );
+    mGraph->setYAxisMode(GraphView::AxisMode::eMinMaxHidden );
 
     mGraph->autoAdjustYScale(false);
     mGraph->setRangeY(0, 100);
@@ -740,12 +727,12 @@ void GraphViewResults::graph_acceptation()
 
 void GraphViewResults::graph_correlation()
 {
-    mGraph->setOverArrow(GraphView::eNone);
+    mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
     mGraph->setTipXLab("h");
     mGraph->setTipYLab(tr("Value"));
     mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
     mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllTip);
-    mGraph->setYAxisMode(GraphView::eMinMaxHidden);
+    mGraph->setYAxisMode(GraphView::AxisMode::eMinMaxHidden);
 
     mGraph->autoAdjustYScale(false);
     mGraph->setRangeY(-1, 1);

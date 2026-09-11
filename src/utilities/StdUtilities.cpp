@@ -38,6 +38,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "StdUtilities.h"
+#include "FFTWThread.h"
 
 #include <QtGlobal>
 
@@ -45,10 +46,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <cstdlib>
 #include <fenv.h>
 #include <QObject>
+#include <iomanip>
+#include <random>
 #include <thread>
 #include <valarray>
 #include <iterator>
-#include <fftw3.h>
+//#include <fftw3.h>
 
 using namespace std;
 
@@ -394,34 +397,30 @@ QList<float> equal_areas(const QList<float>& data, const float step, const float
     return result;
 }
 
-std::vector<double> equal_areas(const std::vector<double>& data, const float step, const float area)
+std::vector<double> equal_areas(const std::vector<double>& data, const double step, const double area)
 {
     if (data.empty())
         return {};
 
-    long double srcArea (0.l);
+    long double srcArea = 0.l;
     long double lastV = data.at(0);
 
-    for (auto&& value : data) {
-        const long double v = value;
-
-        if (lastV>0.l && v>0.l)
-            srcArea += (lastV+v)/2.l * (long double)step;
-
+    for (std::size_t i = 1; i < data.size(); ++i) {
+        const long double v = data[i];
+        if (lastV > 0.l && v > 0.l)
+            srcArea += (lastV + v) / 2.l * (long double)step;
         lastV = v;
     }
 
-    const long double invProp =srcArea / area;
+    const long double invProp = srcArea / area;
     std::vector<double> result;
-
-    std::vector<double>::const_iterator cIter = data.cbegin();
-    while (cIter != data.cend() ) {
-        result.push_back(double (*cIter / invProp));
-        ++cIter;
-    }
+    result.reserve(data.size());
+    for (const double d : data)
+        result.push_back(double(d / invProp));
 
     return result;
 }
+
 
 QMap<double, double> vector_to_map(const QList<double>& data, const double min, const double max, const double step)
 {
@@ -2129,85 +2128,13 @@ double S6_fft(const std::vector<double>& x, double h, int M)
 }
 */
 // ─── Fonction générique ───────────────────────────────────────────────────────
-// power    : puissance de omega dans l'intégrale (4 pour S4, 6 pour S6)
-// padding  : multiplicateur de h pour le padding de grille (3.0 pour S4, 10.0 pour S6)
-// finalizer: lambda qui normalise le résultat final
-template<typename Finalizer>
-static double Sn_fft_impl0(const std::vector<double>& x, double h, int M,
-                          int power, double padding, Finalizer finalizer)
-{
-    const int    n    = static_cast<int>(x.size());
-    const double xmin = *std::min_element(x.begin(), x.end());
-    const double xmax = *std::max_element(x.begin(), x.end());
-
-    // 1. Grille avec padding
-    const double a     = xmin - padding * h;
-    const double b     = xmax + padding * h;
-    const double delta = (b - a) / static_cast<double>(M);
-
-    // 2. Allocation et binning linéaire
-    std::unique_ptr<double[], decltype(&fftw_free)>
-        grid(static_cast<double*>(fftw_malloc(M * sizeof(double))), fftw_free);
-    std::fill(grid.get(), grid.get() + M, 0.0);
-
-    for (int i = 0; i < n; ++i) {
-        const double z    = (x[i] - a) / delta;
-        const int    k    = static_cast<int>(std::floor(z));
-        const double frac = z - static_cast<double>(k);
-        if (k >= 0 && k < M - 1) {
-            grid[k]     += (1.0 - frac);
-            grid[k + 1] += frac;
-        }
-    }
-
-
-    // 3. FFT Forward
-    const int complexSize = M / 2 + 1;
-    std::unique_ptr<fftw_complex[], decltype(&fftw_free)>
-        spectrum(static_cast<fftw_complex*>(
-                     fftw_malloc(complexSize * sizeof(fftw_complex))), fftw_free);
-
-    fftw_plan plan;
-#pragma omp critical(FFTW_PLAN_ZONE)
-    { plan = fftw_plan_dft_r2c_1d(M, grid.get(), spectrum.get(), FFTW_ESTIMATE); }
-    if (!plan) return 0.0;
-    fftw_execute(plan);
-#pragma omp critical(FFTW_PLAN_ZONE)
-    { fftw_destroy_plan(plan); }
-
-    // 4. Intégration fréquentielle
-    const double dOmega = 2.0 * M_PI / (static_cast<double>(M) * delta);
-    double sum = 0.0;
-    // Dans la boucle d'intégration de Sn_fft_impl
-    for (int k = 0; k < complexSize; ++k) {
-        const double omega  = static_cast<double>(k) * dOmega;
-        const double re     = spectrum[k][0];
-        const double im     = spectrum[k][1];
-        //double mod2         = re * re + im * im;
-        double mod2 = (re * re + im * im) / delta * delta;
-
-        // Correction biais binning linéaire (noyau triangulaire → sinc²)
-        if (k > 0) {
-            const double arg   = omega * delta / (2.0 * M_PI);
-            const double sincv = std::sin(M_PI * arg) / (M_PI * arg);
-            mod2 /= (sincv * sincv * sincv * sincv);  // sinc^4
-        }
-
-        const double gauss  = std::exp(-0.5 * omega * omega * h * h);
-        const double weight = (k == 0 || k == M / 2) ? 1.0 : 2.0;
-        sum += weight * std::pow(omega, power) * gauss * mod2;
-    }
-
-    // 5. Normalisation finale (déléguée à l'appelant)
-    return finalizer(sum, dOmega, n);
-}
 
 
 // -------------------------------------------------------------
 //  Sn_fft_impl – version thread‑safe, plan thread‑local
 // -------------------------------------------------------------
 template<typename Finalizer>
-static double Sn_fft_impl(const std::vector<double>& x,
+static double Sn_fft_impl0(const std::vector<double>& x,
                           double h,
                           int M,
                           int power,
@@ -2274,31 +2201,159 @@ static double Sn_fft_impl(const std::vector<double>& x,
     return finalizer(sum, dOmega, n);
 }
 
-
-
-// ─── Wrappers publics ────────────────────────────────────────────────────────
-double S4_fft(const std::vector<double>& x, double h, int M)
+// -------------------------------------------------------------
+//  Sn_fft_impl – version thread‑safe, plans et buffers réutilisés
+// -------------------------------------------------------------
+// -------------------------------------------------------------
+//  Sn_fft_impl – version thread-safe, plans et buffers réutilisés
+// -------------------------------------------------------------
+template<typename Finalizer>
+static double Sn_fft_impl(const std::vector<double>& x,
+                          double h,
+                          int M,
+                          int power,
+                          double padding,
+                          Finalizer finalizer)
 {
-    return Sn_fft_impl(x, h, M, 4, 6.0,  // 3→6
-                       [](double sum, double dOmega, int n) -> double {
-                           return sum * dOmega / (2.0 * M_PI * (double)n * (double)n);
-                       });
+    const int    n    = static_cast<int>(x.size());
+    const double xmin = *std::min_element(x.begin(), x.end());
+    const double xmax = *std::max_element(x.begin(), x.end());
+
+    // CORRECTION 1 : Padding large.
+    // Puisque x est préalablement standardisé (xn), l'écart-type est ~1.
+    // Ajouter 4 de chaque côté permet au noyau gaussien de s'atténuer à 0
+    // et évite l'aliasing périodique de la FFT.
+    //const double a     = xmin - 4.0;
+    //const double b     = xmax + 4.0;
+    const double a     = xmin - padding;
+    const double b     = xmax + padding;
+    const double delta = (b - a) / static_cast<double>(M);
+
+    auto buffers = FFTWThreadCache::get_buffers(M);
+    double* grid = buffers.grid;
+    fftw_complex* spectrum = buffers.spectrum;
+
+    std::fill(grid, grid + M, 0.0);
+
+    for (int i = 0; i < n; ++i) {
+        const double z    = (x[i] - a) / delta;
+        const int    k    = static_cast<int>(std::floor(z));
+        const double frac = z - static_cast<double>(k);
+        if (k < 0 || k >= M) continue;
+
+        if (k < M - 1) {
+            grid[k]     += (1.0 - frac);
+            grid[k + 1] += frac;
+        } else {
+            grid[k] += 1.0;
+        }
+    }
+
+    const int complexSize = M / 2 + 1;
+
+    fftw_plan plan_fwd = FFTWThreadCache::forward(M);
+    fftw_execute_dft_r2c(plan_fwd, grid, spectrum);
+
+    const double dOmega = 2.0 * M_PI / (b - a); // Équivalent à 2pi / (M*delta)
+    double sum = 0.0;
+
+    for (int k = 0; k < complexSize; ++k) {
+        const double omega = static_cast<double>(k) * dOmega;
+        const double re    = spectrum[k][0];
+        const double im    = spectrum[k][1];
+
+        // CORRECTION 2 : NE PAS diviser par M.
+        // FFTW renvoie Sum(x_j). Pour k=0, re=n. mod2 = n^2.
+        // La normalisation finale divisera par n^2.
+        double mod2 = (re * re + im * im);
+
+        // Correction pour le binning linéaire (Sinc^4)
+        if (k > 0) {
+            // arg vaut exactement k / M (plus stable numériquement calculé ainsi)
+            const double arg   = static_cast<double>(k) / static_cast<double>(M);
+            const double sincv = std::sin(M_PI * arg) / (M_PI * arg);
+            mod2 /= (sincv * sincv * sincv * sincv);
+        }
+
+        const double gauss  = std::exp(-0.5 * omega * omega * h * h);
+        const double weight = (k == 0 || k == M / 2) ? 1.0 : 2.0; // Poids pour symétrie R2C
+
+        sum += weight * std::pow(omega, power) * gauss * mod2;
+    }
+
+    // Le ratio attendu se gère maintenant parfaitement via les wrappers
+    return finalizer(sum, dOmega, n);
 }
 
+// ─── Wrappers publics pour bw_SJ_ste ──────────────────────────────────
+
+double S4_fft(const std::vector<double>& x, double h, int M)
+{
+    return Sn_fft_impl(x, h, M, 4, 6.0,
+                       [](double sum, double dOmega, int n) -> double {
+                           return sum * dOmega
+                                  / (2.0 * M_PI * (double)n * (double)n);
+                       });
+}
 double S6_fft(const std::vector<double>& x, double h, int M)
 {
     return Sn_fft_impl(x, h, M, 6, 10.0,
                        [](double sum, double dOmega, int n) -> double {
-                           return -sum * dOmega / (2.0 * M_PI * static_cast<double>(n) * static_cast<double>(n));
+                           return -sum * dOmega   // ✔️ avec le signe -
+                                  / (2.0 * M_PI * (double)n * (double)n );
                        });
 }
 
+/**
+ * @brief Calcule la largeur de bande (bandwidth) optimale par la méthode
+ *        Sheather-Jones "solve-the-equation" (SJ-ste) pour l'estimation de
+ *        densité par noyau gaussien.
+ *
+ * @details
+ * Implémente l'algorithme de Sheather & Jones (1991), équivalent à
+ * `bw.SJ(x, method = "ste")` sous R. Le principe :
+ *   -# Normaliser les données par une échelle robuste @c sigma (SJ est
+ *      invariant par changement d'échelle : @f$ h(x) = \sigma \cdot h(x/\sigma) @f$),
+ *      afin de stabiliser les calculs numériques.
+ *   -# Estimer les fonctionnelles de rugosité @f$\hat\psi_4@f$ (via @c S4_fft,
+ *      largeur pilote @c g1) et @f$\hat\psi_6@f$ (via @c S6_fft, largeur pilote
+ *      @c g2) par convolution FFT.
+ *   -# En déduire le coefficient @c alpha2 = 1.357 * (t44 / -t24)^(1/7), qui relie
+ *      la largeur pilote de l'étape 2 à la largeur cible @c h dans l'équation
+ *      à résoudre (@c sj_equation).
+ *   -# Balayer l'intervalle @f$[0.05\,h_{max},\,2\,h_{max}]@f$ (échelle log) pour
+ *      détecter tous les changements de signe de l'équation SJ, raffiner
+ *      chaque intervalle détecté, puis extraire la racine par bissection
+ *      (@c bisect) dans chacun.
+ *   -# Parmi les racines trouvées, retenir celle la plus proche (en échelle
+ *      log) de la règle du pouce de Silverman @c h_ref_n, puis la dénormaliser
+ *      en la multipliant par @c sigma.
+ *
+ * En cas de rugosité nulle, d'absence de changement de signe détecté, ou
+ * d'échec de la bissection, la fonction se replie sur la largeur de bande de
+ * Silverman (@f$0.9 \cdot \sigma \cdot n^{-1/5}@f$) comme valeur par défaut.
+ *
+ * @param x         Échantillon de données (doit contenir au moins 2 valeurs).
+ * @param tol       Tolérance de convergence pour la bissection sur chaque
+ *                  intervalle raffiné.
+ * @param max_iter  Nombre maximal d'itérations de bissection autorisées.
+ *
+ * @return La largeur de bande SJ-ste estimée, dans l'échelle originale de @p x.
+ *         Retourne la largeur de Silverman @f$\sigma \cdot h_{ref,n}@f$ en cas
+ *         de repli (données trop clairsemées, pas de racine trouvée, etc.).
+ *
+ * @note Le calcul est parallélisé (OpenMP) sur l'évaluation de la grille de
+ *       balayage, le raffinement des intervalles et la bissection.
+ *
+ * @see Sheather, S. J. and Jones, M. C. (1991), "A reliable data-based
+ *      bandwidth selection method for kernel density estimation",
+ *      Journal of the Royal Statistical Society, Series B, 53, 683-690.
+ */
 double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
 {
-
     const std::size_t n  = x.size();
-    const double      nd = static_cast<double>(n);
-    const double sigma   = scale_factor(x);
+    const double     nd  = static_cast<double>(n);
+    const double  sigma  = scale_factor(x);
 
     // -----------------------------------------------------------------
     // Normalisation : on travaille sur x/sigma
@@ -2311,45 +2366,87 @@ double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
 
     // Tout le calcul SJ sur xn (sigma_xn ≈ 1)
     const double sigma_n = scale_factor(xn);
+
     const double h_ref_n = 0.9 * sigma_n * std::pow(nd, -0.2);
+
+    double nrd0 = bw_nrd0(x);
+
     const int    M       = chooseFFtSize(n);
 
     const double g1 = 1.24 * sigma_n * std::pow(nd, -1.0/7.0);
     const double g2 = 1.23 * sigma_n * std::pow(nd, -1.0/9.0);
 
-    const double t44 = S4_fft(xn, g1, M);
-    const double t24 = S6_fft(xn, g2, M);
+    const double t44 = S4_fft(xn, g1, M); // Sera maintenant positif et correct
+    const double t24 = S6_fft(xn, g2, M); // Sera maintenant négatif et correct
 
     if (std::abs(t44) < 1e-15 || std::abs(t24) < 1e-15)
-        return sigma * h_ref_n;
+        return nrd0;
 
-    //double alpha2 = 1.357 * std::pow(std::abs(t24 / t44), 1.0/7.0);
-    double alpha2 = 1.357 * std::pow(std::abs(t44 / t24), 1.0/7.0);
-    //const double c1     = 1.0 / (2.0 * std::sqrt(M_PI) * nd);
-    const double RK = 1.0 / (2.0 * std::sqrt(M_PI)); // R(K)
-    const double c1 = RK / nd; // Car mu2(K) = 1
+    constexpr double div1_7 = 1.0 / 7.0;
+    // Note : t24 est négatif, -t44 est négatif -> le ratio est positif.
+    double alpha2 = 1.357 * std::pow(t44 / (-t24), div1_7);
 
+    const double RK = 1.0 / (2.0 * std::sqrt(M_PI));
+    const double c1 = RK / nd;
+
+    // Instanciation de la fonction lambda
     auto eq = [&](double h){ return sj_equation(h, xn, alpha2, c1, M); };
 
-    // -----------------------------------------------------------------
-    // Balayage logarithmique sur données normalisées
-    // -----------------------------------------------------------------
-    //const double lo_abs  = 1e-4 * h_ref_n;
-    //const double hi_abs  = 10.0 * h_ref_n;
-    //const int    n_scan  = 100;
-    // -----------------------------------------------------------------
-    // Bornes conformes à l'implémentation R (bw.SJ)
-    // -----------------------------------------------------------------
-    const double lo_abs = 0.001 * h_ref_n;  // R descend rarement en dessous de 0.1 * h_ref
+    // Bornes de recherche (identiques à R)
+   /* const double hmax   = 1.144 * sigma_n * std::pow(nd, -0.2);
+    const double lo_abs = 0.1 * hmax; // On peut descendre un peu plus bas que 0.1 par sécurité
+    const double hi_abs = 1.5  * hmax;
+*/
+#ifdef DEBUG_no
+    {
+        // Pour avoir une solution, il faut que le signe change entre eq(lo) et eq(hi)
+        // 1️⃣  Évaluation
+        const double lo_val = eq(lo_abs);
+        const double hi_val = eq(hi_abs);
 
-    // IMPORTANT : hi_abs ne devrait pas dépasser 2.0 pour des données normalisées.
-    // Si hi_abs est trop grand (ex: 10 * h_ref), vous tombez dans la zone de "sur-lissage"
-    // où S4 devient nul, créant la racine parasite à 54.
-    const double hi_abs = 2.0;
-    const int n_scan = 100;
+        // 2️⃣  Affichage formaté (10 décimales, vous pouvez ajuster)
+        const auto sign_to_string = [](auto value) -> std::string {
+            if (value > 0)
+                return "➕ Positive";
+            if (value < 0)
+                return "➖ Negative";
+            return "0";
+        };
 
-    const double log_lo = std::log(lo_abs);
+        std::cout << std::fixed << std::setprecision(10);
+        std::cout << "eq(lo) = " << lo_val << "  [" << sign_to_string(lo_val) << "]\n";
+        std::cout << "eq(hi) = " << hi_val << "  [" << sign_to_string(hi_val) << "]\n";
+
+        // 3️⃣  Vérifications de « nombre réel »
+        bool lo_finite = std::isfinite(lo_val);
+        bool hi_finite = std::isfinite(hi_val);
+        if (!lo_finite) {
+            std::cerr << "❌  Erreur : eq(lo) n’est pas un nombre réel (NaN ou ±inf).\n";
+        }
+        if (!hi_finite) {
+            std::cerr << "❌  Erreur : eq(hi) n’est pas un nombre réel (NaN ou ±inf).\n";
+        }
+
+        // 4️⃣  Vérification du changement de signe
+        bool opposite_sign = (std::signbit(lo_val) != std::signbit(hi_val));
+        if (lo_finite && hi_finite && opposite_sign) {
+            std::cout << "✅  Succès : les deux valeurs sont réelles et ont des signes opposés → racine encadrée.\n";
+        }
+        else if (lo_finite && hi_finite && !opposite_sign) {
+            std::cerr << "⚠️  Attention : les deux valeurs sont réelles mais **n’ont pas** de signes opposés.\n"
+                      << "    → La méthode de recherche de racine ne garantit pas qu’une racine se trouve entre les bornes.\n";
+        }
+        else {
+            std::cerr << "🚫  Test échoué : impossible de conclure sur l’existence d’une racine.\n";
+        }
+    }
+#endif
+    // Garde-fous pour éviter une dérive absurde des bornes
+ // -- //
+
+  /*  const double log_lo = std::log(lo_abs);
     const double log_hi = std::log(hi_abs);
+
 
     std::vector<double> grid(n_scan + 1);
     for (int k = 0; k <= n_scan; k++)
@@ -2369,8 +2466,64 @@ double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
     }
 
     if (brackets.empty())
-        return sigma * h_ref_n;
+        return nrd0;
+*/
 
+    // Bornes de recherche initiales (identiques à R, mais adaptatives)
+    const double hmax = 1.144 * sigma_n * std::pow(nd, -0.2);
+    double lo_abs = 0.1 * hmax;
+    double hi_abs = hmax;
+
+    // Garde-fous pour éviter une dérive absurde des bornes
+    const double lo_floor = 1e-20 * hmax;
+    const double hi_ceil  = 50.0 * hmax;
+
+    const int n_scan       = 50;
+    constexpr int max_expand = 50; // R autorise 99 essais, mais chaque essai ici coûte un scan de 50 pts
+
+    std::vector<std::pair<double,double>> brackets;
+
+    for (int itry = 0; ; ++itry) {
+        const double log_lo = std::log(lo_abs);
+        const double log_hi = std::log(hi_abs);
+
+        std::vector<double> grid(n_scan + 1);
+        for (int k = 0; k <= n_scan; k++)
+            grid[k] = std::exp(log_lo + k * (log_hi - log_lo) / n_scan);
+
+        std::vector<double> evals(n_scan + 1);
+#pragma omp parallel for schedule(dynamic)
+        for (int k = 0; k <= n_scan; k++)
+            evals[k] = eq(grid[k]);
+
+        brackets.clear();
+        for (int k = 0; k < n_scan; k++) {
+            if (std::isnan(evals[k]) || std::isnan(evals[k+1])) continue;
+            if (evals[k] * evals[k+1] < 0.0)
+                brackets.push_back({grid[k], grid[k+1]});
+        }
+
+        if (!brackets.empty())
+            break; // racine(s) encadrée(s), on sort
+
+        if (itry >= max_expand)
+            break; // échec définitif -> repli sur nrd0 plus bas
+
+        // Aucun changement de signe : élargir l'intervalle, alterné comme
+        // dans R (bw.SJ) — tantôt hi_abs monte, tantôt lo_abs descend.
+        if (itry % 2 == 0)
+            hi_abs = std::min(hi_abs * 1.2, hi_ceil); // même coefficient que R
+        else
+            lo_abs = std::max(lo_abs / 1.2, lo_floor);
+
+        // Si les deux bornes ont atteint leurs limites de sécurité sans
+        // succès, inutile de continuer à boucler pour rien.
+        if (lo_abs <= lo_floor && hi_abs >= hi_ceil)
+            break;
+    }
+
+    if (brackets.empty())
+        return nrd0;
     // -----------------------------------------------------------------
     // Raffinement + bissection
     // -----------------------------------------------------------------
@@ -2397,7 +2550,7 @@ double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
     }
 
     if (fine_brackets.empty())
-        return sigma * h_ref_n;
+        return nrd0;
 
     const int nb = static_cast<int>(fine_brackets.size());
     std::vector<double> roots(nb, std::numeric_limits<double>::quiet_NaN());
@@ -2422,8 +2575,10 @@ double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
             best      = root;
         }
     }
+
+
     if (std::isnan(best))
-        return sigma * h_ref_n;
+        return nrd0;
 
     // -----------------------------------------------------------------
     // Dénormalisation : h_réel = sigma * h_normalisé
@@ -2432,129 +2587,214 @@ double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
 
 }
 
-
+/**
+ * @brief Calcule la bande passante selon la règle de Silverman (nrd0)
+ *
+ * Cette fonction implémente la méthode nrd0 de Silverman pour estimer
+ * la bande passante optimale pour l'estimation de densité kernel.
+ *
+ * @param x Vecteur de données d'entrée
+ * @return La bande passante calculée selon la règle de Silverman
+ *
+ * @note La formule utilisée est : 0.9 * sigma * n^(-0.2)
+ *       où sigma est l'écart-type échelonné (min(sd, IQR/1.349))
+ *       et n est le nombre d'observations
+ *
+ * @see scale_factor()
+ */
 double bw_nrd0(const std::vector<double>& x)
 {
     const double nd    = static_cast<double>(x.size());
-    const double sigma = scale_factor(x);  // min(sd, IQR/1.349)
+    const double sigma = scale_factor(x);  // min(sd, IQR/1.349) // ✔️ n-1 comme R sd()
 
     // Si IQR=0, scale_factor retourne sd — garanti positif
     return 0.9 * sigma * std::pow(nd, -0.2);
 }
-/*
-double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
+
+
+double computeIntraModeVariance(const std::vector<double>& x, const std::vector<double>& f)
 {
-    const std::size_t n  = x.size();
-    const double      nd = static_cast<double>(n);
-    const double sigma   = scale_factor(x);
-    const double h_ref   = 0.9 * sigma * std::pow(nd, -0.2);
-    const int    M       = chooseFFtSize(n);
+    const double maxVal = *std::max_element(f.begin(), f.end());
+    const double threshold = 0.01 * maxVal; // Seuil à 1% du pic max
 
-    // -----------------------------------------------------------------
-    // Pilotes initiaux (S4 et S6 lancés en parallèle)
-    // -----------------------------------------------------------------
-    double t44 = 0.0, t24 = 0.0;
+    double totalWeight = 0.0;
+    double weightedVarSum = 0.0;
 
-#pragma omp parallel sections
-    {
-#pragma omp section
-        { t44 = S4_fft(x, 1.24 * sigma * std::pow(nd, -1.0 / 7.0), M); }
+    size_t i = 0;
+    const size_t n = f.size();
 
-#pragma omp section
-        { t24 = S6_fft(x, 1.23 * sigma * std::pow(nd, -1.0 / 9.0), M); }
-    }
+    while (i < n) {
+        if (f[i] > threshold) {
+            // Début d'un mode/ilot
+            double w_k = 0.0;
+            double sumX = 0.0;
+            double sumX2 = 0.0;
 
-    if (std::abs(t44) < 1e-15 || std::abs(t24) < 1e-15)
-        return h_ref;
+            while (i < n && f[i] > threshold) {
+                w_k += f[i];
+                sumX += x[i] * f[i];
+                sumX2 += x[i] * x[i] * f[i];
+                i++;
+            }
 
-    const double alpha2 = 1.357 * std::pow(std::abs(t24 / t44), 1.0 / 7.0);
-    const double c1     = 1.0 / (2.0 * std::sqrt(M_PI) * nd);
+            if (w_k > 0.0) {
+                double mu_k = sumX / w_k;
+                double var_k = (sumX2 / w_k) - (mu_k * mu_k);
 
-    auto eq = [&](double h) { return sj_equation(h, x, alpha2, c1, M); };
-
-    // -----------------------------------------------------------------
-    // Étape 1 : balayage grossier (10 points) — parallélisé
-    // -----------------------------------------------------------------
-    const double log_lo = std::log(1e-4 * h_ref);
-    const double log_hi = std::log(10.0 * h_ref);
-
-    constexpr int N_COARSE = 10;
-    std::array<double, N_COARSE + 1> cgrid, cevals;
-
-    for (int k = 0; k <= N_COARSE; k++)
-        cgrid[k] = std::exp(log_lo + k * (log_hi - log_lo) / N_COARSE);
-
-#pragma omp parallel for schedule(dynamic)
-    for (int k = 0; k <= N_COARSE; k++)
-        cevals[k] = eq(cgrid[k]);
-
-    // Collecter les intervalles suspects (changement de signe)
-    std::vector<std::pair<double,double>> coarse_brackets;
-    for (int k = 0; k < N_COARSE; k++) {
-        if (std::isnan(cevals[k]) || std::isnan(cevals[k + 1])) continue;
-        if (cevals[k] * cevals[k + 1] < 0.0)
-            coarse_brackets.push_back({cgrid[k], cgrid[k + 1]});
-    }
-
-    if (coarse_brackets.empty())
-        return h_ref;
-
-    // -----------------------------------------------------------------
-    // Étape 2 : raffinement local (10 points par intervalle suspect)
-    // -----------------------------------------------------------------
-    std::vector<std::pair<double,double>> fine_brackets;
-
-    for (auto& [a, b] : coarse_brackets) {
-        constexpr int N_FINE = 10;
-        std::array<double, N_FINE + 1> fgrid, fevals;
-
-        const double flog_lo = std::log(a);
-        const double flog_hi = std::log(b);
-
-        for (int k = 0; k <= N_FINE; k++)
-            fgrid[k] = std::exp(flog_lo + k * (flog_hi - flog_lo) / N_FINE);
-
-#pragma omp parallel for schedule(dynamic)
-        for (int k = 0; k <= N_FINE; k++)
-            fevals[k] = eq(fgrid[k]);
-
-        for (int k = 0; k < N_FINE; k++) {
-            if (std::isnan(fevals[k]) || std::isnan(fevals[k + 1])) continue;
-            if (fevals[k] * fevals[k + 1] < 0.0)
-                fine_brackets.push_back({fgrid[k], fgrid[k + 1]});
+                weightedVarSum += w_k * var_k;
+                totalWeight += w_k;
+            }
+        } else {
+            i++;
         }
     }
 
-    if (fine_brackets.empty())
-        return h_ref;
+    return (totalWeight > 0.0) ? (weightedVarSum / totalWeight) : 1.0;
+}
 
-    // -----------------------------------------------------------------
-    // Étape 3 : bissection sur chaque intervalle fin — parallélisée
-    // -----------------------------------------------------------------
-    const int nb = static_cast<int>(fine_brackets.size());
-    std::vector<double> roots(nb, std::numeric_limits<double>::quiet_NaN());
+/**
+ * @brief Calcule la variance la plus petite parmi les modes détectés
+ *
+ * Cette fonction analyse un signal composé de deux vecteurs : x (valeurs) et f (fréquences/intensités).
+ * Elle identifie les modes ou îlots significatifs en utilisant un seuil basé sur la valeur maximale
+ * du vecteur f, puis retourne la variance la plus faible parmi tous les modes détectés.
+ *
+ * @param x Vecteur des valeurs observées (par exemple, des positions ou des intensités)
+ * @param f Vecteur des fréquences ou intensités correspondantes (utilisé pour identifier les modes)
+ * @return double La variance la plus petite parmi les modes détectés, ou 1.0 si aucun mode n'est détecté
+ *
+ * @note Le seuil pour la détection des modes est fixé à 1% de la valeur maximale de f
+ * @note Les modes sont définis comme les régions où f[i] > seuil
+ * @note La fonction retourne la variance minimale parmi tous les modes identifiés
+ */
 
-#pragma omp parallel for schedule(dynamic)
-    for (int i = 0; i < nb; i++) {
-        const double root = bisect(eq, fine_brackets[i].first,
-                                   fine_brackets[i].second, tol, max_iter);
-        if (!std::isnan(root) && root > 0.0)
-            roots[i] = root;
-    }
+/*double computeIntraModeVarianceMin(const std::vector<double>& x, const std::vector<double>& f)
+{
+    const double maxVal = *std::max_element(f.begin(), f.end());
+    const double threshold = 0.01 * maxVal; // Seuil à 1% du pic max
 
-    // Sélection de la racine la plus proche de h_ref en log-scale
-    double best      = std::numeric_limits<double>::quiet_NaN();
-    double best_dist = std::numeric_limits<double>::max();
+    double minVariance = std::numeric_limits<double>::max(); // Initialisation à une grande valeur
+    bool foundMode = false;
 
-    for (double root : roots) {
-        if (std::isnan(root)) continue;
-        const double dist = std::abs(std::log(root / h_ref));
-        if (dist < best_dist) {
-            best_dist = dist;
-            best      = root;
+    size_t i = 0;
+    const size_t n = f.size();
+
+    while (i < n) {
+        if (f[i] > threshold) {
+            // Début d'un mode/ilot
+            double w_k = 0.0;
+            double sumX = 0.0;
+            double sumX2 = 0.0;
+
+            while (i < n && f[i] > threshold) {
+                w_k += f[i];
+                sumX += x[i] * f[i];
+                sumX2 += x[i] * x[i] * f[i];
+                i++;
+            }
+
+            if (w_k > 0.0) {
+                double mu_k = sumX / w_k;
+                double var_k = (sumX2 / w_k) - (mu_k * mu_k);
+
+                // Mettre à jour la variance minimale
+                if (var_k < minVariance) {
+                    minVariance = var_k;
+                }
+                foundMode = true;
+            }
+        } else {
+            i++;
         }
     }
 
-    return std::isnan(best) ? h_ref : best;
+    return foundMode ? minVariance : 1.0;
 }
 */
+
+
+std::optional<double> computeIntraModeVarianceMin(const std::vector<double>& x, const std::vector<double>& f,
+                                                  size_t minPointsPerMode)
+{
+    const double maxVal = *std::max_element(f.begin(), f.end());
+    const double threshold = 0.05 * maxVal; // Seuil à 1% du pic max
+    double minVariance = std::numeric_limits<double>::max();
+    bool foundMode = false;
+    size_t i = 0;
+    const size_t n = f.size();
+
+    while (i < n) {
+        if (f[i] > threshold) {
+            // Début d'un mode/ilot : calcul de variance pondérée
+            // via l'algorithme de Welford (stable numériquement,
+            // évite la cancellation catastrophique de E[X²]-E[X]²).
+            double w_k = 0.0;
+            double mean = 0.0;
+            double M2 = 0.0;
+            size_t count = 0;
+
+            while (i < n && f[i] > threshold) {
+                const double w = f[i];
+                const double xi = x[i];
+                w_k += w;
+                const double delta = xi - mean;
+                mean += (w / w_k) * delta;
+                M2 += w * delta * (xi - mean);
+                ++count;
+                ++i;
+            }
+
+            if (w_k > 0.0 && count >= minPointsPerMode) {
+                double var_k = M2 / w_k;
+                // Filet de sécurité : jamais négatif (erreurs d'arrondi résiduelles)
+                var_k = std::max(var_k, 0.0);
+
+                if (var_k < minVariance) {
+                    minVariance = var_k;
+                }
+                foundMode = true;
+            }
+        } else {
+            ++i;
+        }
+    }
+
+    return foundMode ? std::optional<double>(minVariance) : std::nullopt;
+}
+
+
+// Calcule log(CDF(b) - CDF(a)) de manière numériquement stable sur R entier
+double log_diff_cdf(double a, double b)
+{
+    if (a >= b) return -std::numeric_limits<double>::infinity();
+
+    const double cdf_a = normalCDF(a);
+    const double cdf_b = normalCDF(b);
+    const double diff = cdf_b - cdf_a;
+
+    // Si pas de sous-flux flottant, calcul direct
+    if (diff > 1e-300) {
+        return std::log(diff);
+    }
+
+    // --- Traitement des queues de distribution (Underflow) ---
+    // 1. Queue à droite : ti_avg >> max (a et b très grands positivement)
+    if (a > 5.0) {
+        // log(Q(a) - Q(b)) ≈ log(Q(a)) + log(1 - Q(b)/Q(a))
+        // Approximation de Mill pour log(Q(x)) : -x^2/2 - log(x) - 0.5*log(2*pi)
+        const double log_Qa = -0.5 * a * a - std::log(a) - 0.9189385332046727;
+        const double log_Qb = -0.5 * b * b - std::log(b) - 0.9189385332046727;
+        return log_Qa + std::log1p(-std::exp(log_Qb - log_Qa));
+    }
+
+    // 2. Queue à gauche : ti_avg << min (a et b très grands négativement)
+    if (b < -5.0) {
+        // CDF(x) = Q(-x)
+        const double log_CDFa = -0.5 * a * a - std::log(-a) - 0.9189385332046727;
+        const double log_CDFb = -0.5 * b * b - std::log(-b) - 0.9189385332046727;
+        return log_CDFb + std::log1p(-std::exp(log_CDFa - log_CDFb));
+    }
+
+    // Sécurité ultime pour cas extrêmes
+    return -700.0;
+}

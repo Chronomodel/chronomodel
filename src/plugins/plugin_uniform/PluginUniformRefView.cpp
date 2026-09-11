@@ -52,8 +52,8 @@ PluginUniformRefView::PluginUniformRefView(QWidget* parent):GraphViewRefAbstract
     mGraph->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
     mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
 
-    mGraph->setXAxisMode(GraphView::eAllTicks);
-    mGraph->setYAxisMode(GraphView::eAllTicks);
+    mGraph->setXAxisMode(GraphView::AxisMode::eAllTicks);
+    mGraph->setYAxisMode(GraphView::AxisMode::eAllTicks);
     mGraph->setTipXLab("t");
     mGraph->setTipYLab("age");
     mGraph->autoAdjustYScale(true);

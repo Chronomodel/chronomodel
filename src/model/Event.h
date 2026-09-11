@@ -218,8 +218,8 @@ public:
 
 
     //virtual void updateTheta(const double tmin, const double tmax) {updateTheta_v3_block(tmin, tmax);};
-    virtual void updateTheta(const double tmin, const double tmax) {updateTheta_v4(tmin, tmax);};
-    virtual void applyTheta(const double tmin, const double tmax, const double T) {applyTheta_v4(tmin, tmax, T);};
+    virtual void updateTheta(const double tmin, const double tmax) {updateTheta_v3(tmin, tmax);};
+    virtual void applyTheta(const double tmin, const double tmax, const double T) {applyTheta_v3_block(tmin, tmax, T);};
 
 
 
@@ -229,9 +229,9 @@ public:
 
 
     //void updateTheta_v4_old(const double tmin, const double tmax); // avec changement de variable x
-    void updateTheta_v4(const double tmin, const double tmax); // avec changement de variable x
+    //void updateTheta_v4(const double tmin, const double tmax); // avec changement de variable x
 
-    void applyTheta_v4(const double tmin, const double tmax, const double T);
+    //void applyTheta_v4(const double tmin, const double tmax, const double T);
 
     /* // test avec mélange de densités
       void updateTheta_v4_mixing(const double tmin, const double tmax, const double rate_theta = 1.0);
@@ -260,11 +260,12 @@ public:
 
     void updateS02Theta_v4();
 
-    inline void applyS02Theta() {applyS02Theta_v4();} ; // sans historique,
+    inline void applyS02Theta() {applyS02Theta_v3();} ; // sans historique,
     void applyS02Theta_v3();
-    void applyS02Theta_v4();
+    //void applyS02Theta_v4();
 
     double h_S02(const double S02);
+    double log_h_S02(const double S02) const;
 
     void generateFormatedKDE(const std::vector<ChainSpecs> &chains, const int fftLen, const double tmin, const double tmax);
 

@@ -176,25 +176,28 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
             // ---- Wiggle
 
             //  Post Distrib All Chains
-            const std::map<double, double> &normPostWiggleChain = mDate->mWiggle.mFormatedKDE.size() == 1 ? std::map<double, double> {{mDate->mWiggle.mFormatedKDE.begin()->first, max_formatedCalib}} : mDate->mWiggle.mFormatedKDE;
+            const bool with_wiggle = (mDate->mDeltaType != Date::eDeltaNone);
 
-            const GraphCurve &curveWiggle = densityCurve( normPostWiggleChain,
-                                                          "Wiggle Post Distrib All Chains",
-                                                          mItemColor,
-                                                          Qt::DashLine,
-                                                          Qt::NoBrush);
-            mGraph->add_curve(curveWiggle);
+            if(with_wiggle) {
+                const std::map<double, double> &normPostWiggleChain = mDate->mWiggle.mFormatedKDE.size() == 1 ? std::map<double, double> {{mDate->mWiggle.mFormatedKDE.begin()->first, max_formatedCalib}} : mDate->mWiggle.mFormatedKDE;
 
-            // Calibration
-            const std::map<double, double> &formatedWiggle = mDate->getFormatedWiggleCalibToShow();
+                const GraphCurve &curveWiggle = densityCurve( normPostWiggleChain,
+                                                             "Wiggle Post Distrib All Chains",
+                                                             mItemColor,
+                                                             Qt::DashLine,
+                                                             Qt::NoBrush);
+                mGraph->add_curve(curveWiggle);
 
-            const GraphCurve &curveWiggleCal = densityCurve(formatedWiggle,
-                                                        "Wiggle Calibration",
-                                                        QColor(150, 150, 150),
-                                                        Qt::DashLine,
-                                                        Qt::NoBrush);
-            mGraph->add_curve(curveWiggleCal);
+                // Wiggle Calibration
+                const std::map<double, double> &formatedWiggle = mDate->getFormatedWiggleCalibToShow();
 
+                const GraphCurve &curveWiggleCal = densityCurve(formatedWiggle,
+                                                                "Wiggle Calibration",
+                                                                QColor(150, 150, 150),
+                                                                Qt::DashLine,
+                                                                Qt::NoBrush);
+                mGraph->add_curve(curveWiggleCal);
+            }
 
             // Credibility (must be the last created curve because uses yMax!
             GraphCurve curveCred = topLineSection(mDate->mTi.mFormatedCredibility,
@@ -215,7 +218,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
             graph_density();
             mGraph->removeAllCurves(); // delete default zones made by graph_density()
             mGraph->mLegendX = "";
-            mGraph->setOverArrow(GraphView::eNone);
+            mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
             mTitle = tr("Individual Std : %1").arg(mDate->getQStringName());
 
             //  Post Distrib All Chains
@@ -246,7 +249,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
                                                             "Credibility All Chains",
                                                             color);
             mGraph->add_curve(curveCred);
-            mGraph->setYAxisMode(GraphView::eHidden);
+            mGraph->setYAxisMode(GraphView::AxisMode::eHidden);
         }
 
     }
@@ -262,10 +265,10 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
     else if (typeGraph == eTrace) {
         graph_trace();
 
-        if (variableList.contains(eDataTi) && mDate->mTi.mSamplerProposal!= MHVariable::eFixe) {
+        if (variableList.contains(eDataTi) && mDate->mTi.mSamplerProposal!= SamplerProposal::eFixe) {
             generateTraceCurves(mChains, &mDate->mTi);
 
-        } else if (variableList.contains(eSigma) && mDate->mSigmaTi.mSamplerProposal!= MHVariable::eFixe) {
+        } else if (variableList.contains(eSigma) && mDate->mSigmaTi.mSamplerProposal!= SamplerProposal::eFixe) {
                 mTitle = tr("Individual Log10(Std) : %1").arg(mDate->getQStringName());
                 generateLogTraceCurves(mChains, &mDate->mSigmaTi);
                 //generateTraceCurves(mChains, &mDate->mSigmaTi);
@@ -282,11 +285,11 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
     else if (typeGraph == eAccept) {
         graph_acceptation();
 
-        if (variableList.contains(eDataTi) && mDate->mTi.mSamplerProposal != MHVariable::eFixe) {
+        if (variableList.contains(eDataTi) && mDate->mTi.mSamplerProposal != SamplerProposal::eFixe) {
             //mTitle = tr("Data : %1").arg(mDate->getQStringName());// default title
             generateAcceptCurves(mChains, &mDate->mTi);
 
-        } else if (variableList.contains(eSigma) && mDate->mSigmaTi.mSamplerProposal != MHVariable::eFixe) {
+        } else if (variableList.contains(eSigma) && mDate->mSigmaTi.mSamplerProposal != SamplerProposal::eFixe) {
             mTitle = tr("Individual Std : %1").arg(mDate->getQStringName());
             generateAcceptCurves(mChains, &mDate->mSigmaTi);
         }
@@ -303,10 +306,10 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
     else if (typeGraph == eCorrel) {
         graph_correlation();
 
-        if (variableList.contains(eDataTi) && mDate->mTi.mSamplerProposal != MHVariable::eFixe) {
+        if (variableList.contains(eDataTi) && mDate->mTi.mSamplerProposal != SamplerProposal::eFixe) {
             generateCorrelCurves(mChains, &mDate->mTi);
 
-        } else if (variableList.contains(eSigma) && mDate->mSigmaTi.mSamplerProposal != MHVariable::eFixe) {
+        } else if (variableList.contains(eSigma) && mDate->mSigmaTi.mSamplerProposal != SamplerProposal::eFixe) {
                 mTitle = tr("Individual Std : %1").arg(mDate->getQStringName());
                 generateCorrelCurves(mChains, &mDate->mSigmaTi);
         }
@@ -315,9 +318,9 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
 
 }
 
-void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t> &variableList)
+void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t> &showList)
 {
-    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, variableList);
+    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showList);
 
     /* --------------------First Tab : Posterior distrib.------------*/
 
@@ -332,56 +335,56 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
          *  - Wiggle
          * ------------------------------------------------
          */
-        if (variableList.contains(eDataTi)) {
+        if (mShowList.contains(eDataTi)) {
 
-            /*const bool showCalib = variableList.contains(eDataCalibrate);
-            const bool showWiggle = variableList.contains(eDataWiggle);
-            mGraph->setCurveVisible("Post Distrib All Chains", mShowAllChains);
-            mGraph->setCurveVisible("Wiggle Post Distrib All Chains", mShowAllChains && showWiggle);
-            mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
-            mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));
-            mGraph->setCurveVisible("Calibration", showCalib);
-            mGraph->setCurveVisible("Wiggle Calibration", showWiggle && showCalib);
-            for (int i = 0; i<mShowChainList.size(); ++i) {
-                mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
-                mGraph->setCurveVisible("Wiggle Post Distrib Chain " + QString::number(i), mShowChainList[i] && showWiggle);
-            }*/
-            //---
-            const bool showCalib = variableList.contains(eDataCalibrate);
-            const bool showWiggle = variableList.contains(eDataWiggle);
-            const bool showCredibility = mShowVariableList.contains(eCredibility);
+            const bool showCalib = mShowList.contains(eDataCalibrate);
+            const bool showWiggle = mShowList.contains(eDataWiggle);
+            const bool showCredibility = mShowList.contains(eCredibility);
 
             QStringList curvesToShow;
 
+            if (showCalib) {
+
+                if (showWiggle) {
+                    curvesToShow << "Wiggle Calibration";
+                }
+                else
+                {
+                    curvesToShow << "Calibration";
+                }
+            }
+
             if (mShowAllChains) {
-                curvesToShow << "Post Distrib All Chains" << "HPD All Chains";
+
                 if (showWiggle) {
                     curvesToShow << "Wiggle Post Distrib All Chains";
+
+                }
+                else {
+                    curvesToShow << "Post Distrib All Chains" << "HPD All Chains";
                 }
                 if (showCredibility) {
                     curvesToShow << "Credibility All Chains";
                 }
             }
 
-            if (showCalib) {
-                curvesToShow << "Calibration";
-                if (showWiggle) {
-                    curvesToShow << "Wiggle Calibration";
-                }
-            }
-
             // Ajouter les chaînes individuelles
             for (int i = 0; i < mShowChainList.size(); ++i) {
                 if (mShowChainList[i]) {
-                    curvesToShow << QString("Post Distrib Chain %1").arg(i);
+
                     if (showWiggle) {
                         curvesToShow << QString("Wiggle Post Distrib Chain %1").arg(i);
+
+                    } else {
+                        curvesToShow << QString("Post Distrib Chain %1").arg(i);
+
                     }
                 }
             }
 
             mGraph->setCurveVisible(curvesToShow, true);
         }
+
         /* ------------------------------------------------
          *  Possible Curves :
          *  - Sigma
@@ -389,21 +392,13 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
          *  -- Post Distrib Chain i
          * ------------------------------------------------
          */
-        else if (variableList.contains(eSigma)) {
-            /*mGraph->setCurveVisible("Post Distrib all Chains", mShowAllChains);
-            for (int i = 0; i<mShowChainList.size(); ++i) {
-                mGraph->setCurveVisible("Post Distrib Chain " + QString::number(i), mShowChainList[i]);
-                mGraph->setCurveVisible("Wiggle Post Distrib Chain " + QString::number(i), mShowChainList[i]);
-            }
-
-            mGraph->setCurveVisible("HPD All Chains", mShowAllChains);
-            mGraph->setCurveVisible("Credibility All Chains", mShowAllChains && mShowVariableList.contains(eCredibility));*/
+        else if (showList.contains(eSigma)) {
 
             QStringList curvesToShow;
 
             if (mShowAllChains) {
                 curvesToShow << "Post Distrib all Chains" << "HPD All Chains";
-                if (mShowVariableList.contains(eCredibility)) {
+                if (mShowList.contains(eCredibility)) {
                     curvesToShow << "Credibility All Chains";
                 }
             }
@@ -431,15 +426,10 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
      * ------------------------------------------------
      */
     else if (mCurrentTypeGraph == eTrace) {
-        /*for (int i = 0; i<mShowChainList.size(); ++i) {
-            mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Q1 " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList.at(i));
-        }*/
+
         QStringList curvesToShow;
         for (int j = 0; j < mShowChainList.size(); ++j) {
-            if (mShowChainList.at(j)) {
+            if (mShowChainList[j]) {
                 curvesToShow << QString("Trace %1").arg(j);
                 curvesToShow << QString("Q1 %1").arg(j);
                 curvesToShow << QString("Q2 %1").arg(j);
@@ -468,14 +458,10 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
      * ------------------------------------------------
      */
     else if (mCurrentTypeGraph == eCorrel) {
-        /*for (int i = 0; i<mShowChainList.size(); ++i) {
-            mGraph->setCurveVisible("Correl " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Correl Limit Lower " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Correl Limit Upper " + QString::number(i), mShowChainList.at(i));
-        }*/
+
         QStringList curvesToShow;
         for (int j = 0; j < mShowChainList.size(); ++j) {
-            if (mShowChainList.at(j)) {
+            if (mShowChainList[j]) {
                 curvesToShow << QString("Correl %1").arg(j);
                 curvesToShow << QString("Correl Limit Lower %1").arg(j);
                 curvesToShow << QString("Correl Limit Upper %1").arg(j);

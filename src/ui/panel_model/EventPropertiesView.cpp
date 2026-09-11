@@ -64,7 +64,9 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mButtonWidth(50),
     mButtonHeigth(50),
     mLineEditHeight(25),
-    mComboBoxHeight(25),
+#ifndef FIXEDPRIOR
+    mComboBoxHeight(25), // since of mMethodCombo
+#endif
     mCurveEnabled(false)
 {
     minimumHeight = 0;
@@ -87,20 +89,23 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mColorLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mColorPicker = new ColorPicker(Qt::black, mTopView);
 
+#ifndef FIXEDPRIOR
     mMethodLab = new QLabel(tr("MCMC"), mTopView);
     mMethodLab->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mMethodCombo = new QComboBox(mTopView);
-    mMethodInfo = new QLabel(MHVariable::getSamplerProposalText(MHVariable::eEventPrior), mTopView);
+    mMethodInfo = new QLabel(MHVariable::getSamplerProposalText(SamplerProposal::eEventPrior), mTopView);
 
-    mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eDoubleExp));
-    mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eEventPrior));
-    mMethodCombo->addItem(MHVariable::getSamplerProposalText(MHVariable::eMHAdaptGauss));
+    mMethodCombo->addItem(MHVariable::getSamplerProposalText(SamplerProposal::eDoubleExp));
+    mMethodCombo->addItem(MHVariable::getSamplerProposalText(SamplerProposal::eEventPrior));
+    mMethodCombo->addItem(MHVariable::getSamplerProposalText(SamplerProposal::eRWAdaptGauss));
     mMethodCombo->setCurrentIndex(1);
-    
+    connect(mMethodCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &EventPropertiesView::updateEventSampler);
+
+
+#endif
     connect(mNameEdit, &QLineEdit::editingFinished, this, &EventPropertiesView::updateEventName);
     connect(mColorPicker, &ColorPicker::colorChanged, this, &EventPropertiesView::updateEventColor);
-    connect(mMethodCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &EventPropertiesView::updateEventSampler);
-    
+
     // Field curve parameter
 
     QPalette palette_lab;
@@ -260,8 +265,8 @@ EventPropertiesView::EventPropertiesView(QWidget* parent, Qt::WindowFlags flags)
     mKnownGraph->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
     mKnownGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
 
-    mKnownGraph->setXAxisMode(GraphView::eMinMax);
-    mKnownGraph->setYAxisMode(GraphView::eMinMax);
+    mKnownGraph->setXAxisMode(GraphView::AxisMode::eMinMax);
+    mKnownGraph->setYAxisMode(GraphView::AxisMode::eMinMax);
 
     connect(mDatesList, &DatesList::itemSelectionChanged, this, &EventPropertiesView::updateCombineAvailability);
     connect(mKnownFixedEdit, &QLineEdit::textEdited, this, &EventPropertiesView::updateKnownFixed);
@@ -390,11 +395,11 @@ void EventPropertiesView::updateEvent()
         const CurveSettings &settings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
 
         mCurveEnabled = (settings.mProcessType != CurveSettings::eProcess_None);
-        
+#ifndef FIXEDPRIOR
         mMethodLab->setVisible(type == Event::eDefault);
         mMethodCombo->setVisible( !mCurveEnabled && (type == Event::eDefault));
         mMethodInfo->setVisible( mCurveEnabled && (type == Event::eDefault));
-        
+#endif
         // Y1 contient l'inclinaison. Elle est toujours nécessaire en sphérique et vectoriel.
         // En univarié, elle n'est nécessaire que pour les variables d'étude : inclinaison ou déclinaison.
         bool showXEdit, showYEdit, showZEdit, showYErr;
@@ -494,17 +499,17 @@ void EventPropertiesView::updateEvent()
 
         if (type == Event::eDefault) {
             //mMethodCombo->setCurrentIndex(mEventObj.value(STATE_EVENT_SAMPLER).toInt());
-            
-            if (mEventObj.value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eDoubleExp)
+#ifndef FIXEDPRIOR
+            if (mEventObj.value(STATE_EVENT_SAMPLER).toInt() == static_cast<int>(SamplerProposal::eDoubleExp))
                 mMethodCombo->setCurrentIndex(0);
 
             else
-                if (mEventObj.value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eEventPrior)
+                if (mEventObj.value(STATE_EVENT_SAMPLER).toInt() == static_cast<int>(SamplerProposal::eEventPrior))
                     mMethodCombo->setCurrentIndex(1);
 
-            else if (mEventObj.value(STATE_EVENT_SAMPLER).toInt() == MHVariable::eMHAdaptGauss)
+            else if (mEventObj.value(STATE_EVENT_SAMPLER).toInt() == static_cast<int>(SamplerProposal::eRWAdaptGauss))
                 mMethodCombo->setCurrentIndex(2);
-
+#endif
 
             //       qDebug() << "[EventPropertiesView::updateEvent] mEvent mOrigin"  << mEvent.value(STATE_EVENT_DATES).toArray().at(0).toObject().value(STATE_DATE_ORIGIN).toInt();
             mDatesList->setEvent(mEventObj);
@@ -563,20 +568,20 @@ void EventPropertiesView::updateEventSampler(int index)
     if (mEventObj.value(STATE_EVENT_SAMPLER).toInt() == index)
         return;
 
-    MHVariable::SamplerProposal sp = MHVariable::eDoubleExp;
+    SamplerProposal sp = SamplerProposal::eDoubleExp;
     switch (index) {
     case 0 :
-        sp = MHVariable::eDoubleExp;
+        sp = SamplerProposal::eDoubleExp;
         break;
     case 1 :
-        sp = MHVariable::eEventPrior;
+        sp = SamplerProposal::eEventPrior;
         break;
     case 2 :
-        sp = MHVariable::eMHAdaptGauss;
+        sp = SamplerProposal::eRWAdaptGauss;
         break;
     }
 
-    mEventObj[STATE_EVENT_SAMPLER] = sp;
+    mEventObj[STATE_EVENT_SAMPLER] = static_cast<int>(sp);
     MainWindow::getInstance()->updateEvent(mEventObj, Project::ReasonId::EventMethodUpdated);
 }
 
@@ -928,8 +933,14 @@ void EventPropertiesView::updateLayout()
 
     QFontMetrics fm (font());
     const int margin = 10;
+#ifdef FIXEDPRIOR
+    int shiftMax (qMax(fm.horizontalAdvance(mNameLab->text()), fm.horizontalAdvance(mColorLab->text())) );
 
+#else
     int shiftMax (qMax(fm.horizontalAdvance(mNameLab->text()), qMax(fm.horizontalAdvance(mColorLab->text()), fm.horizontalAdvance(mMethodLab->text()) )) );
+
+#endif
+
     shiftMax = shiftMax + 2*margin;
     const int editWidth  = width() - shiftMax;
     const int labeltWidth = width() - editWidth - 2*margin;
@@ -1027,7 +1038,14 @@ void EventPropertiesView::updateLayout()
         // in EventPropertiesView coordinates
         mBoundView->resize(0, 0);
 
+#ifdef FIXEDPRIOR
+        // ----------------------------------
+        //  Top View Height
+        // ----------------------------------
+        topViewHeight += margin;
+#else
         mMethodLab->setGeometry(margin, mColorPicker->y() + mColorPicker->height() + margin, labeltWidth, mLineEditHeight);
+
         if (withCurve) {
             mMethodCombo->setGeometry(0 , 0, 0, 0);
             mMethodInfo ->setGeometry(shiftMax , mMethodLab->y(), editWidth - margin, mComboBoxHeight);
@@ -1035,20 +1053,23 @@ void EventPropertiesView::updateLayout()
             mMethodCombo->setGeometry(shiftMax , mMethodLab->y(), editWidth - margin, mComboBoxHeight);
             mMethodInfo ->setGeometry(0 , 0, 0, 0);
         }
-
-        
         // ----------------------------------
         //  Top View Height
         // ----------------------------------
         topViewHeight += mComboBoxHeight + 2*margin;
-
+#endif
+        
         mTopView->resize(width(), topViewHeight + ((CurveHeight > 0) ? CurveHeight + margin : 0));
         
         // ----------------------------------
         //  Curve event data
         // ----------------------------------
+#ifdef FIXEDPRIOR
+        mCurveWidget->setGeometry(margin, mColorPicker->y() + mColorPicker->height() + margin, width() - 2*margin, CurveHeight);
+#else
         mCurveWidget->setGeometry(margin, mMethodLab->y() + mMethodLab->height() + margin, width() - 2*margin, CurveHeight);
-        
+#endif
+
         mEventView->setGeometry(0, mTopView->height(), width(), height() - mTopView->height());
 
          //in mEventView coordinates
@@ -1064,7 +1085,7 @@ void EventPropertiesView::updateLayout()
         }
 
         y = listRect.y() + listRect.height();
-        const int w  = mButtonWidth;
+        const int w = mButtonWidth;
         const int h = mButtonHeigth;
 
         mCalibBut->setGeometry(0, y, w, butPluginHeigth);

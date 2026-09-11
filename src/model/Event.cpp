@@ -102,19 +102,24 @@ Event::Event():
     mTheta.setName(std::string("Theta of Event : ") + mName);
     mTheta.mSupport = Support::eBounded;
     mTheta.mFormat = DateUtils::eUnknown;
+
+#ifdef FIXEDPRIOR
+    mTheta.mSamplerProposal = SamplerProposal::eEventPrior;
+#else
     if (AppSettings::mEventModel == EventModelType::EDM2 )
-        mTheta.mSamplerProposal = MHVariable::eMHAdaptGauss;
+        mTheta.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
     else
-        mTheta.mSamplerProposal = MHVariable::eDoubleExp;
+        mTheta.mSamplerProposal = SamplerProposal::eDoubleExp;
+#endif
 
     mS02Theta.setName(std::string("S02Theta of Event : ") + mName);
     mS02Theta.mSupport = Support::eRpStar;
     mS02Theta.mFormat = DateUtils::eNumeric;
 
     if (AppSettings::mEventModel == EventModelType::EDM2 )
-        mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
+        mS02Theta.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
     else
-        mS02Theta.mSamplerProposal = MHVariable::eFixe;
+        mS02Theta.mSamplerProposal = SamplerProposal::eFixe;
 
 
     // Item initial position :
@@ -133,7 +138,7 @@ Event::Event():
     mVg.setName("Vg of Event : " + mName);
     mVg.mSupport = Support::eRpStar;
     mVg.mFormat = DateUtils::eNumeric;
-    mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    mVg.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
 
 }
 
@@ -170,7 +175,12 @@ Event::Event (const QJsonObject& json):
     mIsCurrent = json.value(STATE_IS_CURRENT).toBool();
 
     mTheta.setName(std::string("Theta of Event : ") + mName);
-    mTheta.mSamplerProposal = MHVariable::SamplerProposal (json.value(STATE_EVENT_SAMPLER).toInt());
+#ifdef FIXEDPRIOR
+    mTheta.mSamplerProposal = SamplerProposal::eEventPrior;
+#else
+    mTheta.mSamplerProposal = SamplerProposal (json.value(STATE_EVENT_SAMPLER).toInt());
+#endif
+
     mTheta.mSupport = Support::eBounded;
     mTheta.mFormat = DateUtils::eUnknown;
     mTheta.mSigmaMH = 1.;
@@ -178,16 +188,16 @@ Event::Event (const QJsonObject& json):
     mVg.setName(std::string("VG of Event : ") + mName);
     mVg.mSupport = Support::eRpStar;
     mVg.mFormat = DateUtils::eNumeric;
-    mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    mVg.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
 
     mS02Theta.setName(std::string("SO2Theta of Event : ") + mName);
     mS02Theta.mSupport = Support::eRpStar;
     mS02Theta.mFormat = DateUtils::eNumeric;
 
     if (AppSettings::mEventModel == EventModelType::EDM2 )
-        mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
+        mS02Theta.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
     else
-        mS02Theta.mSamplerProposal = MHVariable::eFixe;
+        mS02Theta.mSamplerProposal = SamplerProposal::eFixe;
 
 
     mPhasesIds = QStringToStdVectorInt(json.value(STATE_EVENT_PHASE_IDS).toString());
@@ -499,7 +509,12 @@ Event const Event::fromJson(const QJsonObject& json)
     event.mIsCurrent = json.value(STATE_IS_CURRENT).toBool();
 
     event.mTheta = MHVariable();
-    event.mTheta.mSamplerProposal = MHVariable::SamplerProposal (json.value(STATE_EVENT_SAMPLER).toInt());
+#ifdef FIXEDPRIOR
+    event.mTheta.mSamplerProposal = SamplerProposal::eEventPrior;
+#else
+    event.mTheta.mSamplerProposal = SamplerProposal (json.value(STATE_EVENT_SAMPLER).toInt());
+#endif
+
     event.mTheta.setName("Theta of Event : "+ event.name());
 
     event.mS02Theta = MHVariable();
@@ -507,16 +522,16 @@ Event const Event::fromJson(const QJsonObject& json)
     event.mS02Theta.mSupport = Support::eRpStar;
 
     if (AppSettings::mEventModel == EventModelType::EDM2 )
-        event.mS02Theta.mSamplerProposal = MHVariable::eMHAdaptGauss;
+        event.mS02Theta.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
     else
-        event.mS02Theta.mSamplerProposal = MHVariable::eFixe;
+        event.mS02Theta.mSamplerProposal = SamplerProposal::eFixe;
 
 
     event.mVg = MHVariable();
     event.mVg.setName("VG of Event : " + event.name());
     event.mVg.mSupport = Support::eRpStar;
     event.mVg.mFormat = DateUtils::eNumeric;
-    event.mVg.mSamplerProposal = MHVariable::eMHAdaptGauss;
+    event.mVg.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
 
     event.mPhasesIds = QStringToStdVectorInt(json.value(STATE_EVENT_PHASE_IDS).toString());
 
@@ -558,7 +573,7 @@ QJsonObject Event::toJson() const
     json[STATE_COLOR_RED] = mColor.red();
     json[STATE_COLOR_GREEN] = mColor.green();
     json[STATE_COLOR_BLUE] = mColor.blue();
-    json[STATE_EVENT_SAMPLER] = mTheta.mSamplerProposal;
+    json[STATE_EVENT_SAMPLER] = static_cast<int>(mTheta.mSamplerProposal);
 
     json[STATE_ITEM_X] = mItemX;
     json[STATE_ITEM_Y] = mItemY;
@@ -1751,7 +1766,7 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
     } else {
         switch(mTheta.mSamplerProposal)
         {
-        case MHVariable::eDoubleExp:
+        case SamplerProposal::eDoubleExp:
         {
             try {
                 double try_theta = Generator::gaussByDoubleExp(ti_avg, sigma, min, max);
@@ -1766,46 +1781,25 @@ void Event::updateTheta_v3(const double tmin, const double tmax)
         }
 
             // Event Prior
-        case MHVariable::eEventPrior:
+        case SamplerProposal::eEventPrior:
         {
-            /* double theta;
-
-            long long counter = 0.;
-            do {
-                theta = Generator::normalDistribution(ti_avg, sigma);
-                ++counter;
-                if (counter == 100000000)
-                    throw QObject::tr("No MCMC solution could be found using event method %1 for event named %2 ( %3  trials done)").arg(MHVariable::getSamplerProposalText(mTheta.mSamplerProposal), getQStringName(), QString::number(counter));
-
-            } while(theta < min || theta > max);
-            */
-
             double try_theta = Generator::truncatedNormal(ti_avg, sigma, min, max);
-            //double try_theta = Generator::gaussByDoubleExp(ti_avg, sigma, min, max);
             mTheta.accept_update(try_theta);
             break;
         }
 
-        case MHVariable::eMHAdaptGauss:
+        case SamplerProposal::eRWAdaptGauss:
         {
             // MH: The only case where the acceptance rate makes sense, since we use sigma MH :
             double try_theta = Generator::normalDistribution(mTheta.value(), mTheta.mSigmaMH);
-            double rate = 0.0;
-            if (try_theta >= min && try_theta <= max) {
-                double diff1 = try_theta - ti_avg;
-                double diff2 = mTheta.value() - ti_avg;
-                rate = -0.5 * (diff1*diff1 - diff2*diff2) / (sigma*sigma);
 
+            if (try_theta < min || try_theta > max) {
+                mTheta.reject_update();
+                break;
             }
-#ifdef DEBUG
-            if (try_theta <min  || max < try_theta) {
-                std::cout << "[updateTheta_v3] 🔄 " << mName
-                          << " min = " << min << " max = " << max
-                          << ", theta = " << try_theta
-                          << ((min < try_theta && try_theta < max) ? "✅ YES" : "❌ NO")
-                          << std::endl;
-            }
-#endif
+            double diff1 = try_theta - ti_avg;
+            double diff2 = mTheta.value() - ti_avg;
+            double rate = -0.5 * (diff1*diff1 - diff2*diff2) / (sigma*sigma);
             mTheta.try_update_log(try_theta, rate);
             break;
         }
@@ -1833,16 +1827,16 @@ void Event::updateTheta_v3_block(const double tmin, const double tmax)
     for (auto&& date : mDates )   {
 
         switch (date.mTi.mSamplerProposal) {
-        case MHVariable::eDatePrior:
+        case SamplerProposal::eDatePrior:
             date.Prior(mTheta.value());
             break;
 
             // only case with acceptation rate, because we use sigmaMH :
-        case MHVariable::eMHAdaptGauss:
+        case SamplerProposal::eRWAdaptGauss:
             date.MHAdaptGauss(mTheta.value());
             break;
 
-        case MHVariable::eInversion:
+        case SamplerProposal::eLikelihood:
         default:
             date.Inversion(mTheta.value());
             break;
@@ -1950,16 +1944,16 @@ void Event::applyTheta_v3_block(const double tmin, const double tmax, const doub
     for (auto&& date : mDates )   {
 
         switch (date.mTi.mSamplerProposal) {
-        case MHVariable::eDatePrior:
+        case SamplerProposal::eDatePrior:
             date.applyPrior(mTheta.value());
             break;
 
             // only case with acceptation rate, because we use sigmaMH :
-        case MHVariable::eMHAdaptGauss:
+        case SamplerProposal::eRWAdaptGauss:
             date.applyMHAdaptGauss(mTheta.value());
             break;
 
-        case MHVariable::eInversion:
+        case SamplerProposal::eLikelihood:
         default:
             date.applyInversion(mTheta.value());
             break;
@@ -2031,6 +2025,7 @@ void Event::applyTheta_v3_block(const double tmin, const double tmax, const doub
 }
 // à faire
 // avec changement de variable, apparition de x_i
+/*
 void Event::updateTheta_v4(const double tmin, const double tmax)
 {
     for (auto&& date : mDates )   {
@@ -2081,7 +2076,6 @@ void Event::updateTheta_v4(const double tmin, const double tmax)
 
 }
 
-
 void Event::applyTheta_v4(const double tmin, const double tmax, const double T)
 {
     for (auto&& date : mDates )   {
@@ -2115,7 +2109,7 @@ void Event::applyTheta_v4(const double tmin, const double tmax, const double T)
     }
 
 }
-
+*/
 
 /**
  * @brief Met à jour le paramètre \f$\theta\f$ d’un événement en mode *tempering*.
@@ -2374,7 +2368,7 @@ void Event::applyThetaProposal_v3(const double tmin, const double tmax)
     } else {
         switch(mTheta.mSamplerProposal)
         {
-        case MHVariable::eDoubleExp:
+        case SamplerProposal::eDoubleExp:
         {
             try {
                 double theta_try = Generator::gaussByDoubleExp(ti_avg, sigma, min, max);
@@ -2388,14 +2382,14 @@ void Event::applyThetaProposal_v3(const double tmin, const double tmax)
         }
 
             // Event Prior
-        case MHVariable::eEventPrior:
+        case SamplerProposal::eEventPrior:
         {
             double theta_try = Generator::truncatedNormal(ti_avg, sigma, min, max);
             mTheta.setValue(theta_try);
             break;
         }
 
-        case MHVariable::eMHAdaptGauss:
+        case SamplerProposal::eRWAdaptGauss:
         {
             // MH: The only case where the acceptance rate makes sense, since we use sigma MH :
             double theta_try = Generator::normalDistribution(mTheta.value(), mTheta.mSigmaMH);
@@ -2431,237 +2425,7 @@ void Event::applyThetaProposal_v3(const double tmin, const double tmax)
 
 
 }
-/*
-void Event::applyThetaPriorCDE(const double tmin, const double tmax)
-{
-    for (auto&& date : mDates )   {
-        const double u1 = Generator::randomUniform();
-        double tiNew;
 
-        const double tminCalib = date.mCalibration->mTmin;
-
-        if (u1 <  date.mMixingLevel) { // tiNew always in the study period
-            const double idx = interpolate_index(u1, date.mCalibration->mRepartition);
-            tiNew = tminCalib + idx * date.mCalibration->mStep;
-
-        } else {
-            // -- gaussian
-            const double t0 = date.mTi.mX;
-            const double s = (tmax - tmin) / 2.0;
-
-            tiNew = Generator::normalDistribution(t0, s);
-        }
-
-        const double rate_1 = date.getLikelihood(tiNew) / date.getLikelihood(date.mTi.mX);
-
-        const double rate_2 = exp((-0.5 / (date.mSigmaTi.mX * date.mSigmaTi.mX)) *
-                                  (pow(tiNew - (mTheta.value() - date.mDelta), 2) -
-                                   pow(date.mTi.mX - (mTheta.value() - date.mDelta), 2))
-                                  );
-
-        const double rate_3 = date.fProposalDensity(date.mTi.mX, tiNew) / date.fProposalDensity(tiNew, date.mTi.mX);
-
-        double rate = rate_1 * rate_2 * rate_3;
-        if (MHAcceptanceTest(rate)) {
-            date.mTi.setValue(tiNew);
-        }
-
-
-        date.updateDelta(mTheta.value()); // pas de memo
-
-        date.applySigmaShrinkage_K_tempering(mTheta.value(), mS02Theta.value(), mAShrinkage, 1.0);
-
-        date.updateWiggle(); // mise à jour déterministe, pas de tiragedate.updateDate(event->mTheta.mX, event->mS02Theta.mX, event->mAShrinkage);
-
-    }
-
-    const double min = getThetaMin(tmin);
-    const double max = getThetaMax(tmax);
-
-    if (min > max)
-        throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(getQStringName(), QString::number(min), QString::number(max));
-
-    // -------------------------------------------------------------------------------------------------
-    //  Evaluer theta.
-    //  Le cas Wiggle est inclus ici car on utilise une formule générale.
-    //  On est en "wiggle" si au moins une des mesures a un delta > 0.
-    // -------------------------------------------------------------------------------------------------
-
-    double sum_p = 0.0;
-    double sum_t = 0.0;
-
-    for (auto&& date: mDates) {
-        const double variance  = pow(date.mSigmaTi.mX, 2.);
-        sum_t += (date.mTi.mX + date.mDelta) / variance;
-        sum_p += 1. / variance;
-    }
-    const double ti_avg = sum_t / sum_p;
-    const double sigma = 1.0 / sqrt(sum_p);
-
-    if (min == max) {
-        double theta_try = min;
-        mTheta.setValue(theta_try);
-
-    } else {
-        // Tirage d'une valeur candidate directement depuis l'a priori empirique
-        const double theta_try = mTheta.sampleFromEmpiricalPrior(min, max);
-
-        // Ratio MH : la proposition n'est pas symétrique → corriger par q(x|x')/q(x'|x)
-        const double q_forward  = mTheta.evalEmpiricalPrior(theta_try);  // q(x'|x)
-        const double q_backward = mTheta.evalEmpiricalPrior(mTheta.value()); // q(x|x')
-
-        const double rate = (dnorm(theta_try, ti_avg, sigma) / dnorm(mTheta.value(), ti_avg, sigma))
-                             * (q_backward / q_forward);                   // correction
-            // test MH
-        const bool accepted = MHAcceptanceTest(rate);
-
-        if (accepted)
-            mTheta.setValue(theta_try);
-
-    }
-
-}
-
-void Event::updateThetaPriorCDE(const double tmin, const double tmax)
-{
-    for (auto&& date : mDates) {
-
-        const double u1 = Generator::randomUniform();
-        double tiNew;
-
-        const double tminCalib = date.mCalibration->mTmin;
-
-        if (u1 <  date.mMixingLevel) { // tiNew always in the study period
-            const double idx = interpolate_index(u1, date.mCalibration->mRepartition);
-            tiNew = tminCalib + idx * date.mCalibration->mStep;
-
-        } else {
-            // -- gaussian
-            const double t0 = date.mTi.mX;
-            const double s = (tmax - tmin) / 2.0;
-
-            tiNew = Generator::normalDistribution(t0, s);
-        }
-
-        const double rate_1 = date.getLikelihood(tiNew) / date.getLikelihood(date.mTi.mX);
-
-        const double rate_2 = exp((-0.5 / (date.mSigmaTi.mX * date.mSigmaTi.mX)) *
-                                  (pow(tiNew - (mTheta.value() - date.mDelta), 2) -
-                                   pow(date.mTi.mX - (mTheta.value() - date.mDelta), 2))
-                                  );
-
-        const double rate_3 = date.fProposalDensity(date.mTi.mX, tiNew) / date.fProposalDensity(tiNew, date.mTi.mX);
-
-        double rate = rate_1 * rate_2 * rate_3;
-        date.mTi.try_update(tiNew, rate);
-
-        // ____
-
-        date.updateDelta(mTheta.value()); // pas de memo
-        // ______
-
-        double V1 = date.mSigmaTi.value()*date.mSigmaTi.value();
-
-        const double mu = pow(date.mTi.mX - (mTheta.value() - date.mDelta), 2.) * 0.5;
-
-
-        //const double logV2 = Generator::truncatedNormal(log10(V1), mSigmaTi.mSigmaMH, logVMin, logVMax);
-        //const double mu_centre = 2. * mu;
-        //const double logV2 = log10(mu_centre) + Generator::normalDistribution(0, 5); // test
-        //double V2 = pow(10, logV2);
-
-        double V_try = date.mSigmaTi.sampleFromEmpiricalPrior(0, 100000);
-
-        const double x1 = exp(-mu * (V1 - V_try) / (V1 * V_try));
-        // Likelihood term
-        //const double log_x1 =  -mu * (V1 - V2) / (V1 * V2);
-
-        const double x2 = pow((mS02Theta.value() + V1) / (mS02Theta.value() + V_try), mAShrinkage + 1.0);// a priori shrinkage
-
-        rate = x1 * sqrt(V1/V_try) * x2;// * V_try / V1 ; // (V2 / V1) est le jacobien!
-
-
-        // Proposition : y* ~ empiricalPrior, x* = y*²
-        //const double y_proposed  = sampleFromEmpiricalPrior(min, max);
-        const double x_proposed  = V_try * V_try;
-
-        // Valeur courante
-        const double y_current   = std::sqrt(V1);
-
-        // Densités de proposition dans l'espace de y
-        const double q_forward   = date.mSigmaTi.evalEmpiricalPrior(V_try);  // q(y*|y)
-        const double q_backward  = date.mSigmaTi.evalEmpiricalPrior(V1);   // q(y|y*)
-
-        // Jacobiens : dx/dy = 2y
-        const double jac_proposed = 2.0 * V_try;
-        const double jac_current  = 2.0 * V1;    // |dx/dy|
-
-        //         L(x*)      prior(x*)     q(y|y*)         jac_current
-        // α =  ────────── × ──────────── × ─────────── × ───────────────
-        //         L(x)        prior(x)     q(y*|y)        jac_proposed
-        //
-        // Les jacobiens convertissent q de l'espace y vers l'espace x
-
-        const double alpha = (rate)
-                             * (date.mSigmaTi.evalEmpiricalPrior(x_proposed) / date.mSigmaTi.evalEmpiricalPrior(V1))
-                             * (q_backward / q_forward)
-                             * (jac_current / jac_proposed);
-
-
-
-        date.mSigmaTi.try_update(sqrt(V_try), rate);
-
-        //date.applySigmaShrinkage_K_tempering(mTheta.value(), mS02Theta.value(), mAShrinkage, 1);
-
-        date.updateWiggle(); // mise à jour déterministe, pas de tirage date.updateDate(event->mTheta.mX, event->mS02Theta.mX, event->mAShrinkage);
-
-    }
-    const double min = getThetaMin(tmin);
-    const double max = getThetaMax(tmax);
-
-    if (min > max)
-        throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(getQStringName(), QString::number(min), QString::number(max));
-
-    // -------------------------------------------------------------------------------------------------
-    //  Evaluer theta.
-    //  Le cas Wiggle est inclus ici car on utilise une formule générale.
-    //  On est en "wiggle" si au moins une des mesures a un delta > 0.
-    // -------------------------------------------------------------------------------------------------
-
-    double sum_p = 0.0;
-    double sum_t = 0.0;
-
-    for (auto&& date: mDates) {
-        const double variance  = pow(date.mSigmaTi.mX, 2.);
-        sum_t += (date.mTi.mX + date.mDelta) / variance;
-        sum_p += 1. / variance;
-    }
-    const double ti_avg = sum_t / sum_p;
-    const double sigma = 1.0 / sqrt(sum_p);
-
-    if (min == max) {
-        double theta_try = min;
-        mTheta.accept_update(theta_try);
-
-    } else {
-        // Tirage d'une valeur candidate directement depuis l'a priori empirique
-        const double theta_try = mTheta.sampleFromEmpiricalPrior(min, max);
-        //std::cout << mTheta.mName << " " << theta_try << std::endl;
-
-        // Ratio MH : la proposition n'est pas symétrique → corriger par q(x|x')/q(x'|x)
-        const double q_forward  = mTheta.evalEmpiricalPrior(theta_try);  // q(x'|x)
-        const double q_backward = mTheta.evalEmpiricalPrior(mTheta.value()); // q(x|x')
-
-        const double rate = (dnorm(theta_try, ti_avg, sigma) / dnorm(mTheta.value(), ti_avg, sigma))
-                            * (q_backward / q_forward);                   // correction
-        // test MH
-        mTheta.try_update(theta_try, rate);
-
-
-    }
-
-}
-*/
 
 void Event::generateFormatedKDE(const std::vector<ChainSpecs> &chains, const int fftLen, const double tmin, const double tmax)
 {
@@ -2681,34 +2445,87 @@ void Event::generateFormatedKDE(const std::vector<ChainSpecs> &chains, const int
     }
 }
 
-
 // Echantillonnage de S02Theta par un marcheur adaptatif
+// ----------------------------------------------------
+// Cette version ajoute une protection contre les valeurs « NaN » qui
+// pourraient apparaître à n’importe quelle étape du calcul.  Dès qu’un
+// NaN est détecté, on génère un avertissement via `qWarning()` et on
+// quitte la fonction sans mettre à jour l’état de l’événement.
 void Event::updateS02Theta_v338()
 {
-
     try {
-        const double logVMin = -100.0;
-        const double logVMax = 100.0;
+        // -----------------------------------------------------------------
+        // 1️⃣  Paramètres de la loi tronquée
+        // -----------------------------------------------------------------
+        constexpr double logVMin = -20.0;
+        constexpr double logVMax =  20.0;
 
-        const double logV2 = Generator::truncatedNormal(log10(mS02Theta.value()) , mS02Theta.mSigmaMH, logVMin, logVMax );
-        const double V2 = pow(10.0, logV2);
+        // -----------------------------------------------------------------
+        // 2️⃣  Génération d’une valeur candidate V2
+        // -----------------------------------------------------------------
+        const double logV2 = Generator::truncatedNormal(
+            std::log10(mS02Theta.value()),
+            mS02Theta.mSigmaMH,
+            logVMin,
+            logVMax );
 
-        const double current_h_S02 = h_S02(mS02Theta.value()); // h_S02() comporte le jacobien!
+        // Protection NaN sur logV2
+        if (std::isnan(logV2)) {
+            qWarning() << "[" << __func__ << "] logV2 is NaN – aborting update.";
+            return;
+        }
 
-        const double try_h_S02 = h_S02(V2);
+        const double V2 = std::pow(10.0, logV2);
 
-        const double rate = try_h_S02 / current_h_S02;
+        // Protection NaN sur V2
+        if (std::isnan(V2)) {
+            qWarning() << "[" << __func__ << "] V2 is NaN – aborting update.";
+            return;
+        }
 
-        mS02Theta.try_update(V2, rate);
+        // -----------------------------------------------------------------
+        // 3️⃣  Calcul du jacobien (h_S02) pour la valeur courante et la
+        //     valeur candidate
+        // -----------------------------------------------------------------
 
-    }  catch (...) {
-        qWarning() << "[Event::updateS02Theta] mW = 0";
+        const double current_log_h_S02 = log_h_S02(mS02Theta.value());   // h_S02() comporte le jacobien!
+        const double try_log_h_S02    = log_h_S02(V2);
+
+        // Protection NaN sur les jacobiens
+        if (std::isnan(current_log_h_S02) || std::isnan(try_log_h_S02)) {
+            qWarning() << "[" << __func__ << "] h_S02 returned NaN (current: "
+                       << current_log_h_S02 << ", try: " << try_log_h_S02 << " ) – aborting update.";
+            return;
+        }
+
+        // -----------------------------------------------------------------
+        // 4️⃣  Ratio de probabilité (Metropolis‑Hastings)
+        // -----------------------------------------------------------------
+        const double log_rate = try_log_h_S02 - current_log_h_S02;
+
+        // Protection NaN sur le taux d’acceptation
+        if (std::isnan(log_rate)) {
+            qWarning() << "[" << __func__ << "] log_rate is NaN try_log_h_S02 - current_log_h_S02 – aborting update.";
+            return;
+        }
+
+        // -----------------------------------------------------------------
+        // 5️⃣  Mise à jour de la variable d’état
+        // -----------------------------------------------------------------
+        mS02Theta.try_update_log(V2, log_rate);
+
+    } catch (const std::exception& e) {
+        // Gestion explicite des exceptions standard
+        qWarning() << "[" << __func__ << "] std::exception caught:" << e.what();
+    } catch (...) {
+        // Gestion de toute autre exception (ex. division par zéro, overflow, …)
+        qWarning() << "[" << __func__ << "] unknown exception – aborting update.";
     }
-
 }
 
 // On tire SO2 suivant la loi inverse gamma qui est l'apriori de SO2
 // il reste le rapport sur l'apriori EDM2
+/*
 void Event::updateS02Theta_v4()
 {
     // ---------------------------------------------------------------------
@@ -2742,7 +2559,7 @@ void Event::updateS02Theta_v4()
         // ---------------------------------------------------------------------
         constexpr double alpha_gamma = 1;   // shape
         const double beta_gamma  = mBetaS02;   // scale  (β > 0)
-        const double teta_gamma  = 1.0/mBetaS02;
+        const double teta_gamma  = 1.0 / mBetaS02;
         // compteur d’itérations
         auto logGammaPrior = [&](double y) -> double
         {
@@ -2787,6 +2604,7 @@ void Event::updateS02Theta_v4()
     }
 
 }
+*/
 
 // Echantillonnage de S02Theta par une gammaDistribution
 void Event::updateS02Theta_gamma()
@@ -2831,7 +2649,7 @@ void Event::updateS02Theta_gamma()
         mS02Theta.try_update(V2, rate);
 
     }  catch (...) {
-        qWarning() << "[Event::updateS02Theta_gamma] mW = 0";
+        qWarning() << "[" << __func__ << "] mW = 0";
     }
 
 }
@@ -2845,24 +2663,50 @@ void Event::applyS02Theta_v3()
         const double logV2 = Generator::truncatedNormal(log10(mS02Theta.value()) , mS02Theta.mSigmaMH, logVMin, logVMax );
         const double V2 = pow(10.0, logV2);
 
-        const double current_h_S02 = h_S02(mS02Theta.value()); // h_S02() comporte le jacobien!
 
-        const double try_h_S02 = h_S02(V2);
+        // -----------------------------------------------------------------
+        // 3️⃣  Calcul du jacobien (h_S02) pour la valeur courante et la
+        //     valeur candidate
+        // -----------------------------------------------------------------
 
-        const double rate = try_h_S02 / current_h_S02;
+        const double current_log_h_S02 = log_h_S02(mS02Theta.value());   // h_S02() comporte le jacobien!
+        const double try_log_h_S02    = log_h_S02(V2);
 
-        if (MHAcceptanceTest(rate)) {
+        // Protection NaN sur les jacobiens
+        if (std::isnan(current_log_h_S02) || std::isnan(try_log_h_S02)) {
+            qWarning() << "[" << __func__ << "] h_S02 returned NaN (current: "
+                       << current_log_h_S02 << ", try: " << try_log_h_S02 << " ) – aborting update.";
+            return;
+        }
+
+        // -----------------------------------------------------------------
+        // 4️⃣  Ratio de probabilité (Metropolis‑Hastings)
+        // -----------------------------------------------------------------
+        const double log_rate = try_log_h_S02 - current_log_h_S02;
+
+        // Protection NaN sur le taux d’acceptation
+        if (std::isnan(log_rate)) {
+            qWarning() << "[" << __func__ << "] log_rate is NaN try_log_h_S02 - current_log_h_S02 – aborting update.";
+            return;
+        }
+
+        // -----------------------------------------------------------------
+        // 5️⃣  Mise à jour de la variable d’état
+        // -----------------------------------------------------------------
+
+        if (MHAcceptanceTest_log(log_rate)) {
             mS02Theta.setValue(V2);
         }
 
 
     }  catch (...) {
-        qWarning() << "[Event::applyS02Theta_v3] Error";
+        qWarning() << "[" << __func__ << "] Error";
     }
 
 }
 
 //Obsolete, utilise mXi
+/*
 void Event::applyS02Theta_v4()
 {
     // Attention beta dans wiki = 1/beta dans la fonction gammaDistribution
@@ -2880,43 +2724,11 @@ void Event::applyS02Theta_v4()
     }
 
 }
+*/
 
 double Event::h_S02(const double S02)
 {
-     /* schoolbook algo*/
- /*   const double alpha = 1. ;
 
-    const double beta = 1.004680139*(1 - exp(- 0.0000847244 * pow(sqrt_S02_harmonique, 2.373548593)));
-
-    const double prior = pow(1. / S02, alpha) * expl(- beta / S02);
-
-    const double a = 1. ;
-
-
-    double prod_h = 1.;
-    for (auto& d : mDates) {
-        prod_h *= pow((S02/(S02 + pow(d.mSigmaTi.mX, 2))), a + 1.) / S02;
-    }
-
-    // memory leak and slower !! ??
-    // const double prod_h (std::accumulate(mDates.begin(), mDates.end(), 1., [S02, a] (double prod, Date d){return prod * (pow((S02/(S02 + pow(d.mSigmaTi.mX, 2.))), a + 1.) / S02);}));
-
-    return prior * prod_h;
- */
-
-// Code optimization
-
-    //const double beta = 1.004680139*(1 - exp(- 0.0000847244 * pow(sqrt_S02_harmonique, 2.373548593)));
-/*
-    double h1 = exp(- mBetaS02 / S02) / S02;
-
-    for (auto& d : mDates) {
-        h1 *= pow((S02/(S02 + pow(d.mSigmaTi.value(), 2))), 2.0);
-    }
-   h1 = std::move(h1 / pow(S02, mDates.size()));
-
-*/
- //--
    const double S02_squared = S02 * S02;
    // 1. Initialisation simplifiée de h
    double h = exp(-mBetaS02 / S02);
@@ -2943,14 +2755,68 @@ double Event::h_S02(const double S02)
 
        // Multiplication par le terme complet (S02^2 / denominator_squared)
        h *= S02_squared / denominator_squared;
+       if (std::isnan(h)) {
+           qWarning() << "[" << __func__ << "][Obsolete] h is NaN d.mSigmaTi.value() = " << d.mSigmaTi.value() << "betaS02=" << mBetaS02 << " S02=" << S02 << d.name();
 
+       }
+       if (h == 0.0) {
+           qWarning() << "[" << __func__ << "][Obsolete] (h == 0.0) d.mSigmaTi.value() = " << d.mSigmaTi.value() << "betaS02=" << mBetaS02 << " S02=" << S02 << d.name();
+
+       }
        // 5. Ajout de la division finale (1 / S02^N) en multipliant par 1/S02
        // à chaque itération (1 / S02)^N = (1 / S02) * (1 / S02) ... N fois
        h *= S02_inv;
    }
-  // qDebug() << " h1=" << h1 << "h=" << h;
+
    // 6. Pas de post-calcul nécessaire.
    return h;
 
 }
 
+//===================================================================
+//  Logarithme de h_S02
+//  Retourne log( h_S02(S02) )  =  ln( h_S02(S02) )
+//===================================================================
+double Event::log_h_S02(const double S02) const
+{
+    // Protection contre les valeurs non valides
+    if (S02 <= 0.0) {
+        qWarning() << "[" << __func__ << "] S02 <= 0 (S02 =" << S02 << ")";
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+
+    // 1. Terme provenant de exp(-mBetaS02 / S02)
+    //    ln( exp(-mBetaS02 / S02) ) = -mBetaS02 / S02
+    double log_h = -mBetaS02 / S02;
+
+    // 2. Terme initial « 1 / S02 » (première multiplication par S02_inv)
+    //    ln(1 / S02) = -ln(S02)
+    log_h -= std::log(S02);
+
+    // 3. Boucle sur les dates
+    //    À chaque itération on multiplie h par
+    //        (S02² / (S02 + σ_i²)²) * (1 / S02)
+    //    Ce qui, en log, donne
+    //        2·ln(S02) - 2·ln(S02 + σ_i²) - ln(S02)
+    //    =  ln(S02) - 2·ln(S02 + σ_i²)
+    for (const auto& d : mDates) {
+        const double sigmaTi_sq = d.mSigmaTi.value() * d.mSigmaTi.value();
+
+        // ln(S02)  (le facteur S02 provenant du carré)
+        log_h += std::log(S02);
+
+        // -2·ln(S02 + σ_i²)  (le dénominateur)
+        const double denom = S02 + sigmaTi_sq;
+        if (denom <= 0.0) {
+            qWarning() << "[" << __func__ << "] (S02 + sigma²) <= 0 "
+                       << "sigmaTi² =" << sigmaTi_sq << " S02 =" << S02
+                       << d.name();
+            return std::numeric_limits<double>::quiet_NaN();
+        }
+        log_h -= 2.0 * std::log(denom);
+    }
+
+    // 4. Aucun post‑calcul n’est nécessaire : on a déjà tout
+    //    intégré dans la somme logarithmique.
+    return log_h;
+}

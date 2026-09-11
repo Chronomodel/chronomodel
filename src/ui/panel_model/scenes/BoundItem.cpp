@@ -108,8 +108,8 @@ void BoundItem::setEvent(const QJsonObject& eventObj, const QJsonObject& setting
         graph->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
         graph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
 
-        graph->setXAxisMode(GraphView::eHidden);
-        graph->setYAxisMode(GraphView::eHidden);
+        graph->setXAxisMode(GraphView::AxisMode::eHidden);
+        graph->setYAxisMode(GraphView::AxisMode::eHidden);
 
         //---------------------
 

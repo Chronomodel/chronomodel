@@ -55,8 +55,8 @@ PluginDensityRefView::PluginDensityRefView(QWidget* parent):GraphViewRefAbstract
     mGraph->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
     mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
 
-    mGraph->setXAxisMode(GraphView::eAllTicks);
-    mGraph->setYAxisMode(GraphView::eAllTicks);
+    mGraph->setXAxisMode(GraphView::AxisMode::eAllTicks);
+    mGraph->setYAxisMode(GraphView::AxisMode::eAllTicks);
     mGraph->autoAdjustYScale(true);
     mGraph->setTipXLab("t");
     mGraph->setTipYLab("x");

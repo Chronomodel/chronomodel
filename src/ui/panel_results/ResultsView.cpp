@@ -104,7 +104,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mMarginRight(40),
 
     mCurrentTypeGraph(GraphViewResults::ePostDistrib),
-    mCurrentVariableList(GraphViewResults::eThetaEvent),
+    mShowList(GraphViewResults::eThetaEvent),
     mMainVariable(GraphViewResults::eThetaEvent),
     mHasPhases(false),
     mHpdThreshold(95.0),
@@ -313,8 +313,8 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     // -----------------------------------------------------------------
     mCurvesGroup = new QWidget();
 
-    auto threshold_str = stringForLocal(mHpdThreshold);
-    mCurveGRadio = new RadioButton(tr("Curve (at %1% Level)").arg(threshold_str), mCurvesGroup);
+    QString threshold_str =  QLocale().toString(mHpdThreshold, 'f', 2) + "%";
+    mCurveGRadio = new RadioButton(tr("Curve (at %1 Level)").arg(threshold_str), mCurvesGroup);
     mCurveGRadio->setFixedHeight(h_Radio);
     mCurveGRadio->setChecked(true);
 
@@ -339,7 +339,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mCurveEventsPointsCheck->setChecked(false);
 
     // G Prime Button
-    mCurveGPRadio = new RadioButton(tr("Speed of Change (Derivative) (at %1% Level)").arg(threshold_str), mCurvesGroup);
+    mCurveGPRadio = new RadioButton(tr("Speed of Change (Derivative) (at %1 Level)").arg(threshold_str), mCurvesGroup);
     mCurveGPRadio->setFixedHeight(h_Radio);
 
     mCurveGPGaussCheck = new CheckBox(tr("Gauss Envelope"), mCurvesGroup);
@@ -409,13 +409,13 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     connect(mActivityRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
     connect(mDurationRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
 
-    connect(mDataCalibCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
-    connect(mWiggleCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mDataCalibCheck, &CheckBox::clicked, this, &ResultsView::applyShowList);
+    connect(mWiggleCheck, &CheckBox::clicked, this, &ResultsView::applyShowList);
 
     connect(mEventsStatCheck, &CheckBox::clicked, this, &ResultsView::showStats);
 
-    connect(mErrCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
-    connect(mActivityUnifCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mErrCheck, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
+    connect(mActivityUnifCheck, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
 
     connect(mPhasesStatCheck, &CheckBox::clicked, this, &ResultsView::showStats);
     connect(mCurveStatCheck, &CheckBox::clicked, this, &ResultsView::showStats);
@@ -425,15 +425,15 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     connect(mCurveGSRadio, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
     connect(mLambdaRadio, &CheckBox::clicked, this, &ResultsView::applyCurrentVariable);
 
-    connect(mCurveErrorCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
-    connect(mCurveHpdCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
-    connect(mCurveMapCheck, &CheckBox::clicked, this,  &ResultsView::updateCurvesToShow);
-    connect(mCurveEventsPointsCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
-    connect(mCurveDataPointsCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mCurveErrorCheck, &CheckBox::clicked, this, &ResultsView::applyShowList);
+    connect(mCurveHpdCheck, &CheckBox::clicked, this, &ResultsView::applyShowList);
+    connect(mCurveMapCheck, &CheckBox::clicked, this,  &ResultsView::applyShowList);
+    connect(mCurveEventsPointsCheck, &CheckBox::clicked, this, &ResultsView::applyShowList);
+    connect(mCurveDataPointsCheck, &CheckBox::clicked, this, &ResultsView::applyShowList);
 
-    connect(mCurveGPGaussCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
-    connect(mCurveGPHpdCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
-    connect(mCurveGPMapCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mCurveGPGaussCheck, &CheckBox::clicked, this, &ResultsView::applyShowList);
+    connect(mCurveGPHpdCheck, &CheckBox::clicked, this, &ResultsView::applyShowList);
+    connect(mCurveGPMapCheck, &CheckBox::clicked, this, &ResultsView::applyShowList);
 
     // -----------------------------------------------------------------
     //  Graph List tab (has to be created after mResultsGroup and mTempoGroup)
@@ -1125,11 +1125,6 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
 
     const qreal layoutWidthBy4 = (layoutWidth - 4*internSpacing)/4.;
 
-   /* mImageSaveBut->setFixedHeight(33);
-    mImageClipBut->setFixedHeight(33);
-    mResultsClipBut->setFixedHeight(33);
-    mDataSaveBut->setFixedHeight(33);*/
-
     mImageSaveBut->setGeometry(0, 0, layoutWidthBy4, 33);
     mImageClipBut->setGeometry(mImageSaveBut->x()+mImageSaveBut->width() + internSpacing, 0, layoutWidthBy4, 33);
     mResultsClipBut->setGeometry(mImageClipBut->x()+mImageClipBut->width() + internSpacing, 0, layoutWidthBy4, 33);
@@ -1241,7 +1236,7 @@ void ResultsView::clearResults()
     mZoomsX.clear();
     mZoomsY.clear();
     mZoomsZ.clear();
-    mCurrentVariableList.clear();
+    mShowList.clear();
     mScalesT.clear();
 
 }
@@ -1268,19 +1263,19 @@ void ResultsView::initModel()
     mAllChainsCheck->setChecked(true);
 
     mCurrentTypeGraph = GraphViewResults::ePostDistrib;
-    mCurrentVariableList.clear();
+    mShowList.clear();
 
     mRangeThresholdEdit->resetText(95.0);
 
     mHpdThreshold = model->getThreshold();
-    auto threshold_str = stringForLocal(mHpdThreshold) + "%";
-    mCurveGRadio->setText(tr("Curve (at %1% Level)").arg(threshold_str));
+    QString threshold_str =  QLocale().toString(mHpdThreshold, 'f', 2) + "%";
+    mCurveGRadio->setText(tr("Curve (at %1 Level)").arg(threshold_str));
 
     mThresholdEdit->resetText(mHpdThreshold);
     mHActivityEdit->resetText(model->mHActivity);
 
     mFFTLenCombo->setCurrentText(stringForLocal(model->getFFTLength()));
-    // mettre à jour le bandwidtType
+    // mettre à jour le bandwidthType
 
     mBandwidthJSRadio->blockSignals(true);
     mBandwidthNrd0Radio->blockSignals(true);
@@ -1413,8 +1408,8 @@ void ResultsView::initModel()
         mMainVariable = GraphViewResults::eThetaEvent;
         mGraphListTab->setTab(0, false);
     }
-    updateMainVariable();
-    mCurrentVariableList.append(mMainVariable);
+    updateShowList();
+    mShowList.append(mMainVariable);
 
     updateOptionsWidget();
     createGraphs(); // do GraphViewResults::updateLayout == paint
@@ -1427,8 +1422,8 @@ void ResultsView::applyAppSettings()
 {
     auto model = getModel_ptr();
 
-    auto threshold_str = stringForLocal(model->getThreshold());
-    mCurveGRadio->setText(tr("Curve (at %1% Level)").arg(threshold_str));
+    QString threshold_str =  QLocale().toString(model->getThreshold(), 'f', 2) + "%";
+    mCurveGRadio->setText(tr("Curve (at %1 Level)").arg(threshold_str));
 
     mRangeThresholdEdit->setText(stringForLocal(95.0));
     mThresholdEdit->setText(stringForLocal(model->getThreshold()));
@@ -1642,9 +1637,9 @@ void ResultsView::applyGraphListTab()
 }
 
 
-void ResultsView::updateMainVariable()
+void ResultsView::updateShowList()
 {
-    mCurrentVariableList.clear();
+    mShowList.clear();
 
     // Check the current tab name and update the main variable accordingly.
     QString currentTabName = mGraphListTab->currentName();
@@ -1653,13 +1648,13 @@ void ResultsView::updateMainVariable()
         if (mEventThetaRadio->isChecked()) {
             mMainVariable = GraphViewResults::eThetaEvent;
             if (mEventsDatesUnfoldCheck->isChecked()) {
-                mCurrentVariableList.append(GraphViewResults::eDataTi);
+                mShowList.append(GraphViewResults::eDataTi);
 
                 if (mDataCalibCheck->isChecked())
-                    mCurrentVariableList.append(GraphViewResults::eDataCalibrate);
+                    mShowList.append(GraphViewResults::eDataCalibrate);
 
                 if (mWiggleCheck->isChecked())
-                    mCurrentVariableList.append(GraphViewResults::eDataWiggle);
+                    mShowList.append(GraphViewResults::eDataWiggle);
 
             }
 
@@ -1678,100 +1673,99 @@ void ResultsView::updateMainVariable()
         if (mBeginEndRadio->isChecked()) {
             mMainVariable = GraphViewResults::eBeginEnd;
 
-            if (mPhasesEventsUnfoldCheck->isChecked()) {
-                mCurrentVariableList.append(GraphViewResults::eThetaEvent);
-
-                if (mPhasesDatesUnfoldCheck->isChecked()) {
-                    mCurrentVariableList.append(GraphViewResults::eDataTi);
-
-                }
-            }
-
-
-        }  else if (mTempoRadio->isChecked()) {
+        } else if (mTempoRadio->isChecked()) {
             mMainVariable = GraphViewResults::eTempo;
 
-            if (mPhasesEventsUnfoldCheck->isChecked()) {
-                mCurrentVariableList.append(GraphViewResults::eThetaEvent);
-
-                if (mPhasesDatesUnfoldCheck->isChecked()) {
-                    mCurrentVariableList.append(GraphViewResults::eDataTi);
-
-                }
-              }
-
-
-        } else  if (mActivityRadio->isChecked()) {
+        } else if (mActivityRadio->isChecked()) {
             mMainVariable = GraphViewResults::eActivity;
 
+        } else if (mDurationRadio->isChecked()) {
+            mMainVariable = GraphViewResults::eDuration;
+        }
+
+        // Bloc commun pour tous les cas sauf mDurationRadio
+        if (mMainVariable != GraphViewResults::eDuration) {
             if (mPhasesEventsUnfoldCheck->isChecked()) {
-                mCurrentVariableList.append(GraphViewResults::eThetaEvent);
+                mShowList.append(GraphViewResults::eThetaEvent);
 
                 if (mPhasesDatesUnfoldCheck->isChecked()) {
-                    mCurrentVariableList.append(GraphViewResults::eDataTi);
+                    mShowList.append(GraphViewResults::eDataTi);
 
+                    if (mDataCalibCheck->isChecked() || mWiggleCheck->isChecked()) {
+                        if (mDataCalibCheck->isChecked())
+                            mShowList.append(GraphViewResults::eDataCalibrate);
+
+                        if (mWiggleCheck->isChecked())
+                            mShowList.append(GraphViewResults::eDataWiggle);
+
+                    } else {
+                        mShowList.append(GraphViewResults::eDataCalibrate);
+                    }
                 }
             }
-
-        } else  if (mDurationRadio->isChecked()) {
-            mMainVariable = GraphViewResults::eDuration;
-
         }
+
 
     } else if (currentTabName == tr("Curves")) {
 
         if (mLambdaRadio->isChecked()) {
             mMainVariable = GraphViewResults::eLambda;
-#ifdef KOMLAN
-        } else if (mS02VgRadio->isChecked()) {
-            mMainVariable = GraphViewResults::eS02Vg;
-#endif
+
         } else if (mCurveGRadio->isChecked()) {
             mMainVariable = GraphViewResults::eG;
             if (mCurveErrorCheck->isChecked())
-                mCurrentVariableList.append(GraphViewResults::eGGauss);
+                mShowList.append(GraphViewResults::eGGauss);
 
             if (mCurveHpdCheck->isChecked())
-                mCurrentVariableList.append(GraphViewResults::eGHpd);
+                mShowList.append(GraphViewResults::eGHpd);
 
             if (mCurveMapCheck->isChecked())
-                mCurrentVariableList.append(GraphViewResults::eMap);
+                mShowList.append(GraphViewResults::eMap);
 
             if (mCurveEventsPointsCheck->isChecked())
-                mCurrentVariableList.append(GraphViewResults::eGEventsPts);
+                mShowList.append(GraphViewResults::eGEventsPts);
 
             if (mCurveDataPointsCheck->isChecked())
-                mCurrentVariableList.append(GraphViewResults::eGDatesPts);
+                mShowList.append(GraphViewResults::eGDatesPts);
 
         } else if (mCurveGPRadio->isChecked()) {
             mMainVariable = GraphViewResults::eGP;
 
             if (mCurveGPHpdCheck->isChecked())
-                mCurrentVariableList.append(GraphViewResults::eGPHpd);
+                mShowList.append(GraphViewResults::eGPHpd);
 
             if (mCurveGPMapCheck->isChecked())
-                mCurrentVariableList.append(GraphViewResults::eGPMap);
+                mShowList.append(GraphViewResults::eGPMap);
 
             if (mCurveGPGaussCheck->isChecked())
-                mCurrentVariableList.append(GraphViewResults::eGP);
+                mShowList.append(GraphViewResults::eGPGauss);
 
 
         } else if (mCurveGSRadio->isChecked()) {
             mMainVariable = GraphViewResults::eGS;
         }
 
+
     }
+
     // Set the current graph type to Posterior distribution.
     mCurrentTypeGraph = GraphViewResults::ePostDistrib;
     mGraphTypeTabs->setTab(0, false);
 
     // Append the main variable to the current variable list.
-    mCurrentVariableList.append(mMainVariable);
+    mShowList.append(mMainVariable);
+}
+
+void ResultsView::applyShowList()
+{
+    mShowList.clear();
+    updateShowList();
+    updateCurvesToShow();
 }
 
 void ResultsView::applyCurrentVariable()
 {
-    updateMainVariable();
+    updateShowList();
     createGraphs();
 
     updateOptionsWidget();
@@ -1965,7 +1959,7 @@ void ResultsView::createGraphs()
     if (getModel_ptr() == nullptr) {
         return;
     }
-    updateMainVariable();
+  //  updateMainVariable(); <- ICI
 
     if (mGraphListTab->currentName() == tr("Events")) {
         createByEventsGraphs();
@@ -2345,7 +2339,7 @@ void ResultsView::createByCurveGraph()
                         }
                         dataPerEvent.push_back(nb_dataPts);
 
-                        if (event->mTheta.mSamplerProposal == MHVariable::eFixe) {
+                        if (event->mTheta.mSamplerProposal == SamplerProposal::eFixe) {
                             evPts.Xmin =  event->mTheta.mBurnAdaptTrace->at(0);
                             evPts.Xmax =  event->mTheta.mBurnAdaptTrace->at(0);
                             evPts.Ymin = pt_Ymin;
@@ -2718,7 +2712,7 @@ void ResultsView::updateCurveEventsPointX()
                     }
                     dataPerEvent.push_back(nb_dataPts);
 
-                    if (event->mTheta.mSamplerProposal == MHVariable::eFixe) {
+                    if (event->mTheta.mSamplerProposal == SamplerProposal::eFixe) {
                         evPts.Xmin =  event->mTheta.mBurnAdaptTrace->at(0);
                         evPts.Xmax =  event->mTheta.mBurnAdaptTrace->at(0);
                         evPts.Ymin = pt_Ymin;
@@ -2935,7 +2929,7 @@ void ResultsView::updateCurveEventsPointXY()
                     }
                     dataPerEvent.push_back(nb_dataPts);
 
-                    if (event->mTheta.mSamplerProposal == MHVariable::eFixe) {
+                    if (event->mTheta.mSamplerProposal == SamplerProposal::eFixe) {
                         evPts.Xmin =  event->mTheta.mBurnAdaptTrace->at(0);
                         evPts.Xmax =  event->mTheta.mBurnAdaptTrace->at(0);
                         evPts.Ymin = ptX_Ymin;
@@ -3209,7 +3203,7 @@ void ResultsView::updateCurveEventsPointXYZ()
                     }
                     dataPerEvent.push_back(nb_dataPts);
 
-                    if (event->mTheta.mSamplerProposal == MHVariable::eFixe) {
+                    if (event->mTheta.mSamplerProposal == SamplerProposal::eFixe) {
                         evPts.Xmin =  event->mTheta.mBurnAdaptTrace->at(0);
                         evPts.Xmax =  event->mTheta.mBurnAdaptTrace->at(0);
                         evPts.Ymin = ptX_Ymin;
@@ -3430,8 +3424,8 @@ void ResultsView::generateCurves()
 
     int i = 0;
     for (GraphViewResults*& graphView : listGraphs) {
-        graphView->generateCurves(GraphViewResults::graph_t(mCurrentTypeGraph), mCurrentVariableList);
-        if (mCurrentVariableList.contains(GraphViewResults::eG))
+        graphView->generateCurves(GraphViewResults::graph_t(mCurrentTypeGraph), mShowList);
+        if (mShowList.contains(GraphViewResults::eG))
             graphView->setTipYLab(str_tip.at(i++));
     }
 
@@ -3556,7 +3550,11 @@ void ResultsView::updateCurvesToShow()
     //  Find the currently selected list of graphs
     // --------------------------------------------------------
     QList<GraphViewResults*> listGraphs = currentGraphs(false);
-    QList<GraphViewResults::variable_t> showVariableList;
+    QList<GraphViewResults::variable_t> showList;
+
+    const bool showStat = mCurveStatCheck->isChecked();
+    mShowList.append(GraphViewResults::eStat);
+
     // --------------------------------------------------------
     //  Options for "Curves"
     // --------------------------------------------------------
@@ -3566,7 +3564,7 @@ void ResultsView::updateCurvesToShow()
             && !mS02VgRadio->isChecked()
 #endif
             ) {
-
+/*
         if (mCurveGRadio->isChecked()) {
             showVariableList.append(GraphViewResults::eG);
 
@@ -3603,7 +3601,9 @@ void ResultsView::updateCurvesToShow()
        if (mCurveGSRadio->isChecked())
             showVariableList.append(GraphViewResults::eGS);
 
-       const bool showStat = mCurveStatCheck->isChecked();
+       */
+
+
 
         // --------------------------------------------------------
         //  Update Graphs with selected options
@@ -3626,7 +3626,7 @@ void ResultsView::updateCurvesToShow()
             if (graph->title() == graphName) {
                 Scale scaleX;
                 scaleX.findOptimalMark(mResultCurrentMinX, mResultCurrentMaxX, 10);
-                graphCurve->updateCurvesToShowForG(showAllChains, showChainList, showVariableList, scaleX);
+                graphCurve->updateCurvesToShowForG(showAllChains, showChainList, mShowList, scaleX);
             }
 
             if (model->displayY() ) {
@@ -3640,7 +3640,7 @@ void ResultsView::updateCurvesToShow()
                 if (graph->title() == graphName) {
                     Scale scaleY;
                     scaleY.findOptimalMark(mResultCurrentMinY, mResultCurrentMaxY, 10);
-                    graphCurve->updateCurvesToShowForG(showAllChains, showChainList, showVariableList, scaleY);
+                    graphCurve->updateCurvesToShowForG(showAllChains, showChainList, mShowList, scaleY);
                 }
 
                 if (model->displayZ()) {
@@ -3654,7 +3654,7 @@ void ResultsView::updateCurvesToShow()
                     if (graph->title() == graphName) {
                         Scale scaleZ;
                         scaleZ.findOptimalMark(mResultCurrentMinZ, mResultCurrentMaxZ, 10);
-                        graphCurve->updateCurvesToShowForG(showAllChains, showChainList, showVariableList, scaleZ);
+                        graphCurve->updateCurvesToShowForG(showAllChains, showChainList, mShowList, scaleZ);
                     }
 
                 }
@@ -3664,7 +3664,11 @@ void ResultsView::updateCurvesToShow()
         }
         return;
 
-    } else if ((mGraphListTab->currentName() == tr("Curves")) && mLambdaRadio->isChecked()) {
+    }
+
+    // même code que updatemiainVariable ??
+    /*
+    else if ((mGraphListTab->currentName() == tr("Curves")) && mLambdaRadio->isChecked()) {
         if (mCredibilityCheck->isChecked())
             showVariableList.append(GraphViewResults::eCredibility);
         showVariableList.append(GraphViewResults::eLambda);
@@ -3767,13 +3771,16 @@ void ResultsView::updateCurvesToShow()
     else { // it's curves !!
 
     }
-    const bool showStat = mEventsStatCheck->isChecked();
+    */
+
+   // const bool showStat = mEventsStatCheck->isChecked();
+
     // --------------------------------------------------------
     //  Update Graphs with selected options
     // --------------------------------------------------------
     for (GraphViewResults*& graph : listGraphs) {
         graph->setShowNumericalResults(showStat);
-        graph->updateCurvesToShow(showAllChains, showChainList, showVariableList);
+        graph->updateCurvesToShow(showAllChains, showChainList, mShowList);
     }
 
 }
@@ -4008,11 +4015,15 @@ void ResultsView::updateScales()
     // -------------------------------------------------------
     // Graphic Option
     // -------------------------------------------------------
-
-    if (mGraphListTab->currentIndex() == 2 )
+    double min;
+    if (mGraphListTab->currentIndex() == 2 ) {
         mHeightForVisibleTicksAxis = 20 * AppSettings::heigthUnit() / mByCurvesGraphs.size();
-    else
-        mHeightForVisibleTicksAxis = 4 * AppSettings::heigthUnit() ;
+        min = 10.0 * AppSettings::heigthUnit();
+
+    } else {
+        mHeightForVisibleTicksAxis = 5 * AppSettings::heigthUnit() ;
+        min = 2 * AppSettings::heigthUnit();
+    }
 
     int zoom = 100;
     if (mZoomsH.find(key) != mZoomsH.end()) {
@@ -4026,7 +4037,6 @@ void ResultsView::updateScales()
     mZoomSlider->setValue(zoom);
     mZoomSlider->blockSignals(false);
 
-    const double min = 2.0 * AppSettings::heigthUnit();
     const double origin = mHeightForVisibleTicksAxis;
 
     const double prop = zoom / 100.0;
@@ -5199,7 +5209,13 @@ int ResultsView::zoomToSlider(const double &zoom)
 
 void ResultsView::updateGraphsHeight()
 {
-    const double min = 2 * AppSettings::heigthUnit();
+    double min = 2 * AppSettings::heigthUnit();
+
+    if (mGraphListTab->currentIndex() == 2 )
+        min = 10 * AppSettings::heigthUnit() / mByCurvesGraphs.size();
+    else
+        min = 2 * AppSettings::heigthUnit() ;
+
     double origin = mHeightForVisibleTicksAxis;
 
     const double prop = QLocale().toDouble(mZoomEdit->text()) / 100.0;
@@ -5806,7 +5822,7 @@ void ResultsView::applyBandwidth()
     // Valeurs par défaut – elles ne seront utilisées que si
     // l’on a bien déterminé le type de bande passante.
     BandwidthType bwt = BandwidthType::eBWSJ;   // valeur « par défaut » (au cas où)
-    double       bandwidth = 1.0;                // même chose
+    double       bandwidth =  1.0;                // même chose
 
     // -----------------------------------------------------------------
     // 1️⃣  Détermination du type choisi par l’utilisateur
@@ -5846,8 +5862,8 @@ void ResultsView::applyThreshold()
         const double threshold = QLocale().toDouble(mThresholdEdit->text());
 
         mHpdThreshold = threshold;
-        auto threshold_str = stringForLocal(mHpdThreshold) + "%";
-        mCurveGRadio->setText(tr("Curve (at %1% Level)").arg(threshold_str));
+        QString threshold_str =  QLocale().toString(mHpdThreshold, 'f', 2) + "%";
+        mCurveGRadio->setText(tr("Curve (at %1 Level)").arg(threshold_str));
 
         getModel_ptr()->setThreshold(threshold);
 
@@ -6107,6 +6123,34 @@ void ResultsView::saveAsImage()
     }
 }
 
+
+// ------------------------------------------------------------
+// Helper : écrit un fichier HTML contenant les informations
+// communes (version, nom du projet) et le texte fourni.
+// ------------------------------------------------------------
+static void writeHtmlLog(const QString &filePath,
+                         const QString &version,
+                         const QString &projectName,
+                         const QString &logText)
+{
+    QFile file(filePath);
+    if (!file.open(QFile::WriteOnly | QFile::Truncate))
+        return;                     // ou gérer l’erreur comme vous le souhaitez
+
+    QTextStream out(&file);
+    out << "<!DOCTYPE html>" << Qt::endl
+        << "<html>"           << Qt::endl
+        << "<body>"           << Qt::endl
+        << "<h2>" << version      << "</h2>" << Qt::endl
+        << "<h2>" << projectName  << "</h2>" << Qt::endl
+        << "<hr>" << Qt::endl
+        << logText << Qt::endl
+        << "</body>"          << Qt::endl
+        << "</html>"          << Qt::endl;
+
+    // le fichier sera fermé automatiquement à la destruction de `file`
+}
+
 /**
  * @brief ResultsView::exportResults export result into several files
  *
@@ -6114,6 +6158,7 @@ void ResultsView::saveAsImage()
 void ResultsView::exportResults()
 {
     auto model = getModel_ptr();
+
     if (model) {
 
         const QString csvSep = AppSettings::mCSVCellSeparator;
@@ -6123,6 +6168,7 @@ void ResultsView::exportResults()
         csvLocal.setNumberOptions(QLocale::OmitGroupSeparator);
 
         const QString currentPath = MainWindow::getInstance()->getCurrentPath();
+        // répertoire de destination
         const QString dirPath = QFileDialog::getSaveFileName(qApp->activeWindow(),
                                                         tr("Export to directory..."),
                                                        currentPath);//,
@@ -6140,79 +6186,40 @@ void ResultsView::exportResults()
             dir.mkpath("."); // Crée le répertoire
 
             // copy tabs ------------------------------------------
-            const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
-            const QString projectName = tr("Project filename : %1").arg(MainWindow::getInstance()->getNameProject()) + "<br>";
+            const QString headerVersion = qApp->applicationName() + " " + qApp->applicationVersion();
+            const QString headerProject = tr("Project filename : %1").arg(MainWindow::getInstance()->getNameProject()) + "<br>";
 
-            QFile file(dirPath + "/Log_Model_Description.html");
-            if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-                QTextStream output(&file);
-                output<<"<!DOCTYPE html>"<< Qt::endl;
-                output<<"<html>"<< Qt::endl;
-                output<<"<body>"<< Qt::endl;
 
-                output<<"<h2>"<< version << "</h2>" << Qt::endl;
-                output<<"<h2>"<< projectName+ "</h2>" << Qt::endl;
-                output<<"<hr>";
-                output<<model->getModelLog();
 
-                output<<"</body>"<< Qt::endl;
-                output<<"</html>"<< Qt::endl;
-            }
-            file.close();
+            // ------------------------------------------------------------
+            // Utilisation du helper pour les différents logs
+            // ------------------------------------------------------------
 
-            file.setFileName(dirPath + "/Log_MCMC_Initialization.html");
 
-            if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-                QTextStream output(&file);
-                output<<"<!DOCTYPE html>"<< Qt::endl;
-                output<<"<html>"<< Qt::endl;
-                output<<"<body>"<< Qt::endl;
+            // 1. Log du modèle
+            writeHtmlLog(dirPath + "/Log_Model_Description.html",
+                         headerVersion,
+                         headerProject,
+                         model->getModelLog());
 
-                output<<"<h2>"<< version << "</h2>" << Qt::endl;
-                output<<"<h2>"<< projectName+ "</h2>" << Qt::endl;
-                output<<"<hr>";
-                output<<model->getInitLog();
+            // 2. Log d'initialisation MCMC
+            writeHtmlLog(dirPath + "/Log_MCMC_Initialization.html",
+                         headerVersion,
+                         headerProject,
+                         model->getInitLog());
 
-                output<<"</body>"<< Qt::endl;
-                output<<"</html>"<< Qt::endl;
-            }
-            file.close();
+            // 3. Log d'adaptation MCMC
+            writeHtmlLog(dirPath + "/Log_MCMC_Adaptation.html",
+                         headerVersion,
+                         headerProject,
+                         model->getAdaptLog());
 
-            file.setFileName(dirPath + "/Log_MCMC_Adaptation.html");
+            // 4. Statistiques de la distribution a posteriori
+            writeHtmlLog(dirPath + "/Log_Posterior_Distrib_Stats.html",
+                         headerVersion,
+                         headerProject,
+                         model->getResultsLog());
 
-            if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-                QTextStream output(&file);
-                output<<"<!DOCTYPE html>"<< Qt::endl;
-                output<<"<html>"<< Qt::endl;
-                output<<"<body>"<< Qt::endl;
-
-                output<<"<h2>"<< version << "</h2>" << Qt::endl;
-                output<<"<h2>"<< projectName+ "</h2>" << Qt::endl;
-                output<<"<hr>";
-                output<<model->getAdaptLog();
-
-                output<<"</body>"<< Qt::endl;
-                output<<"</html>"<< Qt::endl;
-            }
-            file.close();
-
-            file.setFileName(dirPath + "/Log_Posterior_Distrib_Stats.html");
-
-            if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-                QTextStream output(&file);
-                output<<"<!DOCTYPE html>"<< Qt::endl;
-                output<<"<html>"<< Qt::endl;
-                output<<"<body>"<< Qt::endl;
-
-                output<<"<h2>"<< version << "</h2>" << Qt::endl;
-                output<<"<h2>"<< projectName+ "</h2>" << Qt::endl;
-                output<<"<hr>";
-                output<<model->getResultsLog();
-
-                output<<"</body>"<< Qt::endl;
-                output<<"</html>"<< Qt::endl;
-            }
-            file.close();
 
             const QList<QStringList> stats = model->getStats(csvLocal, precision, true);
             saveCsvTo(stats, dirPath + "/Synthetic_Stats_Table.csv", csvSep, true);
@@ -6234,85 +6241,105 @@ void ResultsView::exportResults()
             if (getProject_ptr()->isCurve()) {
                 // first Map G
                 const auto list_names = model->getCurvesName();
+                QFile file(dirPath);
+                if (!file.open(QFile::WriteOnly | QFile::Truncate))
+                        return;                     // gére l’erreur
 
-                file.setFileName(dirPath + "/Curve_" + list_names.at(0) + "_Map.csv");
+                // --------------   Saving Curve Map
+                try {
 
-                if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-                    model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gx.mapG);
-
-                }
-
-                if (model->displayY()) {
-                    file.setFileName(dirPath + "/Curve" + list_names.at(1) + "_Map.csv");
+                    file.setFileName(dirPath + "/Curve_" + list_names.at(0) + "_Map.csv");
 
                     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-                        model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gy.mapG);
-                        file.close();
+                        model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gx.mapG);
+
                     }
 
-                    if (model->displayZ()) {
-                        file.setFileName(dirPath + "/Curve" + list_names.at(2) + "_Map.csv");
+                    if (model->displayY()) {
+                        file.setFileName(dirPath + "/Curve" + list_names.at(1) + "_Map.csv");
 
                         if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-                            model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gz.mapG);
+                            model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gy.mapG);
                             file.close();
                         }
+
+                        if (model->displayZ()) {
+                            file.setFileName(dirPath + "/Curve" + list_names.at(2) + "_Map.csv");
+
+                            if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+                                model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gz.mapG);
+                                file.close();
+                            }
+                        }
+
                     }
-
+                } catch (...) {
+                    std::cout << "[" << __func__ << "] Saving Curve Map : Caught Exception! " << file.fileName().toStdString() << std::endl;
                 }
-
                 // --------------   Saving Curve Ref
 
-
-                model->exportMeanGComposanteToReferenceCurves(model->mPosteriorMeanG.gx, dirPath + "/Curve_" + list_names.at(0) + "_Gauss_ref.csv", QLocale::English, ",");
-                model->exportMeanGPComposanteToReferenceCurves(model->mPosteriorMeanG.gx,dirPath +  "/Curve_" + list_names.at(0) + "_GP_Gauss_ref.csv", QLocale::English, ",");
-
-                model->exportHpdGComposanteToReferenceCurves(model->mPosteriorMeanG.gx, dirPath + "/Curve_" + list_names.at(0) + "_Hpd_ref.csv", QLocale::English, ",");
-                model->exportHpdGPComposanteToReferenceCurves(model->mPosteriorMeanG.gx, dirPath + "/Curve_" + list_names.at(0) + "_GP_Hpd_ref.csv", QLocale::English, ",");
-
-                // Second Map GP
-
-                file.setFileName(dirPath + "/Curve_" + list_names.at(0) + "_GP_Map.csv");
-
-                if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-                    model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gx.mapGP);
-
-                }
+                try {
 
 
-                if (model->displayY()) {
-                    model->exportMeanGComposanteToReferenceCurves(model->mPosteriorMeanG.gy,dirPath +  "/Curve_" + list_names.at(1) + "_Gauss_ref.csv", QLocale::English, ",");
-                    model->exportMeanGPComposanteToReferenceCurves(model->mPosteriorMeanG.gy,  dirPath + "/Curve_" + list_names.at(1) + "_GP_Gauss_ref.csv", QLocale::English, ",");
+                    model->exportMeanGComposanteToReferenceCurves(model->mPosteriorMeanG.gx, dirPath + "/Curve_" + list_names.at(0) + "_Gauss_ref.csv", QLocale::English, ",");
+                    model->exportMeanGPComposanteToReferenceCurves(model->mPosteriorMeanG.gx,dirPath +  "/Curve_" + list_names.at(0) + "_GP_Gauss_ref.csv", QLocale::English, ",");
 
-                    model->exportHpdGComposanteToReferenceCurves(model->mPosteriorMeanG.gy, dirPath + "/Curve_" + list_names.at(0) + "__Hpd_ref.csv", QLocale::English, ",");
-                    model->exportHpdGPComposanteToReferenceCurves(model->mPosteriorMeanG.gy, dirPath + "/Curve_" + list_names.at(0) + "_GP_Hpd_ref.csv", QLocale::English, ",");
+                    model->exportHpdGComposanteToReferenceCurves(model->mPosteriorMeanG.gx, dirPath + "/Curve_" + list_names.at(0) + "_Hpd_ref.csv", QLocale::English, ",");
+                    model->exportHpdGPComposanteToReferenceCurves(model->mPosteriorMeanG.gx, dirPath + "/Curve_" + list_names.at(0) + "_GP_Hpd_ref.csv", QLocale::English, ",");
 
+                    // Second Map GP
 
-                    file.setFileName(dirPath + "/Curve" + list_names.at(1) + "_GP_Map.csv");
+                    file.setFileName(dirPath + "/Curve_" + list_names.at(0) + "_GP_Map.csv");
 
                     if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-                        model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gy.mapGP);
-                        file.close();
+                        model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gx.mapGP);
+
                     }
 
-                    if (model->displayZ()) {
-                        model->exportMeanGComposanteToReferenceCurves(model->mPosteriorMeanG.gz, dirPath +"/Curve_" + list_names.at(2) + "_Gauss_ref.csv", QLocale::English, ",");
-                        model->exportMeanGPComposanteToReferenceCurves(model->mPosteriorMeanG.gz, dirPath +"/Curve_" + list_names.at(2) + "_GP_Gauss_ref.csv", QLocale::English, ",");
 
-                        model->exportHpdGComposanteToReferenceCurves(model->mPosteriorMeanG.gz, dirPath +"/Curve_" + list_names.at(0) + "_Hpd_ref.csv", QLocale::English, ",");
-                        model->exportHpdGPComposanteToReferenceCurves(model->mPosteriorMeanG.gz, dirPath +"/Curve_" + list_names.at(0) + "_GP_Hpd_ref.csv", QLocale::English, ",");
+                    if (model->displayY()) {
+                        model->exportMeanGComposanteToReferenceCurves(model->mPosteriorMeanG.gy,dirPath +  "/Curve_" + list_names.at(1) + "_Gauss_ref.csv", QLocale::English, ",");
+                        model->exportMeanGPComposanteToReferenceCurves(model->mPosteriorMeanG.gy,  dirPath + "/Curve_" + list_names.at(1) + "_GP_Gauss_ref.csv", QLocale::English, ",");
+
+                        model->exportHpdGComposanteToReferenceCurves(model->mPosteriorMeanG.gy, dirPath + "/Curve_" + list_names.at(0) + "__Hpd_ref.csv", QLocale::English, ",");
+                        model->exportHpdGPComposanteToReferenceCurves(model->mPosteriorMeanG.gy, dirPath + "/Curve_" + list_names.at(0) + "_GP_Hpd_ref.csv", QLocale::English, ",");
 
 
-                        file.setFileName(dirPath + "/Curve" + list_names.at(2) + "_GP_Map.csv");
+                        file.setFileName(dirPath + "/Curve" + list_names.at(1) + "_GP_Map.csv");
 
                         if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-                            model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gz.mapGP);
+                            model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gy.mapGP);
                             file.close();
                         }
+
+                        if (model->displayZ()) {
+                            model->exportMeanGComposanteToReferenceCurves(model->mPosteriorMeanG.gz, dirPath +"/Curve_" + list_names.at(2) + "_Gauss_ref.csv", QLocale::English, ",");
+                            model->exportMeanGPComposanteToReferenceCurves(model->mPosteriorMeanG.gz, dirPath +"/Curve_" + list_names.at(2) + "_GP_Gauss_ref.csv", QLocale::English, ",");
+
+                            model->exportHpdGComposanteToReferenceCurves(model->mPosteriorMeanG.gz, dirPath +"/Curve_" + list_names.at(0) + "_Hpd_ref.csv", QLocale::English, ",");
+                            model->exportHpdGPComposanteToReferenceCurves(model->mPosteriorMeanG.gz, dirPath +"/Curve_" + list_names.at(0) + "_GP_Hpd_ref.csv", QLocale::English, ",");
+
+
+                            file.setFileName(dirPath + "/Curve" + list_names.at(2) + "_GP_Map.csv");
+
+                            if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+                                model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gz.mapGP);
+                                file.close();
+                            }
+                        }
+
                     }
 
+                } catch (...) {
+                    std::cout << "[" << __func__ << "] Saving Curve Ref : Caught Exception! " << file.fileName().toStdString() << std::endl;
                 }
+                // --------------   Saving Curve Splines
+                try {
+                    file.setFileName(dirPath + "/Curve_" + list_names.at(0) + "_Splines.csv");
+                    model->saveSplinesToFile(&file, csvSep);
 
+                } catch (...) {std::cout << "[" << __func__ << "] Saving Curve Ref : Caught Exception! " << file.fileName().toStdString() << std::endl;
+                }
             }
         }
     }
@@ -6379,18 +6406,18 @@ void ResultsView::exportFullImage()
         axisWidget->setVisible(true);
 
         QString legend = "";
-        if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && ( mCurrentVariableList.contains(GraphViewResults::eBeginEnd) ||
-                                                                     mCurrentVariableList.contains(GraphViewResults::eThetaEvent) ||
-                                                                     mCurrentVariableList.contains(GraphViewResults::eActivity)||
-                                                                     mCurrentVariableList.contains(GraphViewResults::eG) ||
-                                                                     mCurrentVariableList.contains(GraphViewResults::eGP) ||
-                                                                     mCurrentVariableList.contains(GraphViewResults::eGS)) )
+        if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && ( mShowList.contains(GraphViewResults::eBeginEnd) ||
+                                                                     mShowList.contains(GraphViewResults::eThetaEvent) ||
+                                                                     mShowList.contains(GraphViewResults::eActivity)||
+                                                                     mShowList.contains(GraphViewResults::eG) ||
+                                                                     mShowList.contains(GraphViewResults::eGP) ||
+                                                                     mShowList.contains(GraphViewResults::eGS)) )
             legend = DateUtils::getAppSettingsFormatStr();
 
         else if (mCurrentTypeGraph == GraphViewResults::eTrace || mCurrentTypeGraph == GraphViewResults::eAccept)
             legend = "Iterations";
 
-        else if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && mCurrentVariableList.contains(GraphViewResults::eDuration))
+        else if (mCurrentTypeGraph == GraphViewResults::ePostDistrib && mShowList.contains(GraphViewResults::eDuration))
             legend = "Years";
 
 
@@ -6454,45 +6481,45 @@ bool ResultsView::isCurve()
 GraphViewResults::variable_t ResultsView::getMainVariable() const
 {
 
-    if (mCurrentVariableList.contains(GraphViewResults::eThetaEvent))
+    if (mShowList.contains(GraphViewResults::eThetaEvent))
         return GraphViewResults::eThetaEvent;
 
-    else if (mCurrentVariableList.contains(GraphViewResults::eS02))
+    else if (mShowList.contains(GraphViewResults::eS02))
         return GraphViewResults::eS02;
 
 
 #ifdef KOMLAN
-    else if (mCurrentVariableList.contains(GraphViewResults::eS02Vg))
+    else if (mShowList.contains(GraphViewResults::eS02Vg))
         return GraphViewResults::eS02Vg;
 #endif
-    else if (mCurrentVariableList.contains(GraphViewResults::eSigma))
+    else if (mShowList.contains(GraphViewResults::eSigma))
         return GraphViewResults::eSigma;
 
-    else if (mCurrentVariableList.contains(GraphViewResults::eVg))
+    else if (mShowList.contains(GraphViewResults::eVg))
         return GraphViewResults::eVg;
 
-    else if (mCurrentVariableList.contains(GraphViewResults::eBeginEnd))
+    else if (mShowList.contains(GraphViewResults::eBeginEnd))
         return GraphViewResults::eBeginEnd;
 
-    else if (mCurrentVariableList.contains(GraphViewResults::eTempo))
+    else if (mShowList.contains(GraphViewResults::eTempo))
         return GraphViewResults::eTempo;
 
-    else if (mCurrentVariableList.contains(GraphViewResults::eActivity))
+    else if (mShowList.contains(GraphViewResults::eActivity))
         return GraphViewResults::eActivity;
 
-    else if (mCurrentVariableList.contains(GraphViewResults::eDuration))
+    else if (mShowList.contains(GraphViewResults::eDuration))
         return GraphViewResults::eDuration;
 
-    else if (mCurrentVariableList.contains(GraphViewResults::eG))
+    else if (mShowList.contains(GraphViewResults::eG))
         return GraphViewResults::eG;
 
-    else if (mCurrentVariableList.contains(GraphViewResults::eGP))
+    else if (mShowList.contains(GraphViewResults::eGP))
         return GraphViewResults::eGP;
 
-    else if (mCurrentVariableList.contains(GraphViewResults::eGS))
+    else if (mShowList.contains(GraphViewResults::eGS))
         return GraphViewResults::eGS;
 
-    else if (mCurrentVariableList.contains(GraphViewResults::eLambda))
+    else if (mShowList.contains(GraphViewResults::eLambda))
         return GraphViewResults::eLambda;
 
     else

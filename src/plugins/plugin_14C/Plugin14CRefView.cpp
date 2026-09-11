@@ -55,8 +55,8 @@ Plugin14CRefView::Plugin14CRefView(QWidget* parent):GraphViewRefAbstract(parent)
     mGraph->setXAxisSupport(AxisTool::AxisSupport::eMin_Max);
     mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllTip);
 
-    mGraph->setXAxisMode(GraphView::eAllTicks);
-    mGraph->setYAxisMode(GraphView::eAllTicks);
+    mGraph->setXAxisMode(GraphView::AxisMode::eAllTicks);
+    mGraph->setYAxisMode(GraphView::AxisMode::eAllTicks);
     mGraph->setTipXLab("t");
     mGraph->setTipYLab("age");
     mGraph->autoAdjustYScale(true);

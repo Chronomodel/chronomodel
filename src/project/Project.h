@@ -293,8 +293,8 @@ public:
 
     void unselectedAllInState(QJsonObject &state);
     void updateSelectedEventsColor(const QColor &color);
-    void updateSelectedEventsMethod(MHVariable::SamplerProposal sp);
-    void updateSelectedEventsDataMethod(MHVariable::SamplerProposal sp, const QString &pluginId);
+    void updateSelectedEventsMethod(SamplerProposal sp);
+    void updateSelectedEventsDataMethod(SamplerProposal sp, const QString &pluginId);
     void updateAllDataInSelectedEvents(const QHash<QString, QVariant> &groupedAction);
 
     void selectAllEvents();

@@ -122,20 +122,21 @@ bool PluginGauss::wiggleAllowed() const
 {
     return true;
 }
-
-MHVariable::SamplerProposal PluginGauss::getDataMethod() const
+#ifndef FIXEDPRIOR
+SamplerProposal PluginGauss::getDataMethod() const
 {
-    return MHVariable::eDatePrior;
+    return SamplerProposal::eDatePrior;
 }
 
-QList<MHVariable::SamplerProposal> PluginGauss::allowedDataMethods() const
+QList<SamplerProposal> PluginGauss::allowedDataMethods() const
 {
-    QList<MHVariable::SamplerProposal> methods;
-    methods.append(MHVariable::eDatePrior);
-    methods.append(MHVariable::eInversion);
-    methods.append(MHVariable::eMHAdaptGauss);
+    QList<SamplerProposal> methods;
+    methods.append(SamplerProposal::eDatePrior);
+    methods.append(SamplerProposal::eLikelihood);
+    methods.append(SamplerProposal::eRWAdaptGauss);
     return methods;
 }
+#endif
 
 QString PluginGauss::getDateDesc(const Date* date) const
 {
@@ -148,7 +149,11 @@ QString PluginGauss::getDateDesc(const Date* date) const
 
         const QString mode = data[DATE_GAUSS_MODE_STR].toString();
 
-        result += QObject::tr("Mean = %1  ±  %2").arg(QLocale().toString(data[DATE_GAUSS_AGE_STR].toDouble()), QLocale().toString(data[DATE_GAUSS_ERROR_STR].toDouble()));
+        result += QObject::tr("N(μ= %1 , σ= %2)")
+                      .arg(QLocale().toString(data[DATE_GAUSS_AGE_STR].toDouble()),
+                           QLocale().toString(data[DATE_GAUSS_ERROR_STR].toDouble()));
+        // ----------------------------------------------------
+
 
         if (mode == DATE_GAUSS_MODE_NONE) {
             result += " (No calibration)";
@@ -563,7 +568,7 @@ double computeMinStepFromRefCurve(const QMap<double, double>& refData, const QJs
     ordered_pts.erase(std::unique(ordered_pts.begin(), ordered_pts.end()), ordered_pts.end());
 
     if (ordered_pts.empty()) {
-        qDebug() << "[PluginGauss::computeMinStepFromRefCurve] step = INFINITY";
+        qDebug() << "[" << __func__ << "] step = INFINITY";
         return INFINITY;
     }
 
@@ -573,7 +578,7 @@ double computeMinStepFromRefCurve(const QMap<double, double>& refData, const QJs
     }
 
     if (min_dif_mean == 0) {
-        qDebug() << "[PluginGauss::computeMinStepFromRefCurve] step = 0";
+        qDebug() << "[" << __func__ << "] step = 0";
         return INFINITY;
     }
 
@@ -632,7 +637,7 @@ double PluginGauss::getMinStepRefsCurve(const QJsonObject &data)
     if (cacheCurveName() != refCurve) {
         auto it = mRefCurves.constFind(refCurve);
         if (it == mRefCurves.constEnd()) {
-            qDebug() << "PluginF14C::getMinStepRefsCurve() unknown curve" << refCurve;
+            qDebug() << "[" << __func__ << "] unknown curve" << refCurve;
             return INFINITY;
         }
         curve = &it.value();                         // no copy
@@ -647,7 +652,7 @@ double PluginGauss::getMinStepRefsCurve(const QJsonObject &data)
 
     auto stepRes = std::min({ stepMean, stepInf, stepSup });
     if (stepRes == 0) {
-        qDebug()<<"[PluginGauss::getMinStepRefsCurve] step = INFINITY";
+        qDebug() << "[" << __func__ << "] step = INFINITY";
         return INFINITY;
     }
 
@@ -708,20 +713,6 @@ bool PluginGauss::isDateValid(const QJsonObject& data, const StudyPeriodSettings
 {
     const QString mode = data.value(DATE_GAUSS_MODE_STR).toString();
     bool valid = true;
-   /* const auto tminMax = getTminTmaxRefsCurve(data);
-    const double new_step = (tminMax.second - tminMax.first)/5.;
-    bool valid =  settings.mStep <= new_step;
-    if (!valid) {
-        QMessageBox message(QMessageBox::Critical,
-                            qApp->applicationName() + " " + qApp->applicationVersion(),
-                            QString("PluginGauss: invalid Age = %1 and Error = %2 \n Definition of the calibration curve insufficient, decrease the step below %3").arg( QString::number(data.value(DATE_GAUSS_AGE_STR).toDouble()),
-                                                                                                                  QString::number(data.value(DATE_GAUSS_ERROR_STR).toDouble()),
-                                                                                                                  QString::number(new_step)    ),
-                            QMessageBox::Ok,
-                            qApp->activeWindow());
-        message.exec();
-    }
-*/
 
     long double v = 0.l;
     long double lastV = 0.l;

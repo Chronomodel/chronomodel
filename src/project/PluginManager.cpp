@@ -39,6 +39,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "PluginManager.h"
 
+#include "PluginAbstract.h"
 #include "PluginMag.h"
 #include "PluginTL.h"
 #include "Plugin14C.h"

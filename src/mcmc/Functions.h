@@ -101,7 +101,7 @@ struct PosteriorAnalysis
 {
     DensityStat densityAnalysis{};
     TraceStat   traceAnalysis{};
-    double R_hat_Gelman_Rubin = 0.0;
+    double R_hat = 0.0;
     // constructeur qui met des NaN pour indiquer « non calculé »
     PosteriorAnalysis()
     {
@@ -138,15 +138,15 @@ QString posteriorAnalysisToString(const PosteriorAnalysis& analysis);
 
 // Standard Deviation of a vector of data
 
-double variance_Knuth(const QList<double> &data);
-double variance_Knuth(const std::vector<double> &data);
-double variance_Knuth(const std::vector<t_matrix> &data);
-double variance_Knuth(const std::vector<int> &data);
+double variance_pop_Knuth(const QList<double> &data);
+double variance_pop_Knuth(const std::vector<double> &data);
+double variance_pop_Knuth(const std::vector<t_matrix> &data);
+double variance_pop_Knuth(const std::vector<int> &data);
 
 type_data std_Koening(const QList<type_data> &data);
-inline double std_Knuth(const QList<double> &data) {return sqrt(variance_Knuth(data));};
-inline double std_Knuth(const std::vector<double> &data) {return sqrt(variance_Knuth(data));};
-inline double std_Knuth(const std::vector<int> &data) {return sqrt(variance_Knuth(data));};
+inline double std_Knuth(const QList<double> &data) {return sqrt(variance_pop_Knuth(data));};
+inline double std_Knuth(const std::vector<double> &data) {return sqrt(variance_pop_Knuth(data));};
+inline double std_Knuth(const std::vector<int> &data) {return sqrt(variance_pop_Knuth(data));};
 
 
 void mean_variance_Knuth(const std::vector<double> &data, double &mean, double &variance);
@@ -166,8 +166,6 @@ std::vector<double> autocorrelation_schoolbook(const std::vector<double> &trace,
 QList<double> autocorrelation_by_convol(const QList<double> &trace, const int hmax=40);
 
 const std::pair<double, double> linear_regression(const std::vector<double>& dataX, const std::vector<double>& dataY);
-
-double shrinkageUniform(const double s02);
 
 /**
  * @brief Évalue la densité de probabilité de la loi normale (fonction de Gauss).
@@ -246,6 +244,7 @@ inline double normalCDF(double x)
     static constexpr double inv_sqrt_2 = 1.0 / std::numbers::sqrt2;
     return 0.5 * (1.0 + std::erf(x * inv_sqrt_2));
 }
+double invNormalCDF(double p);
 
 /**
  * Calcule ln( f(x | mu, sigma, df) ) pour une distribution de Student.
@@ -278,6 +277,8 @@ TraceStat traceStatistic(const std::vector<type_data> &trace);
 double gelmanRubin(const std::vector<std::vector<double>>& chains);
 std::vector<double> gelmanRubinMulti(
     const std::vector<std::vector<std::vector<double>>>& chains);
+
+double splitRhatVehtari(const std::vector<std::vector<double>>& chains);
 
 // QList<double> calculRepartition (const QList<double> &calib);
 QList<double> calculRepartition (const QMap<double, double> &calib);

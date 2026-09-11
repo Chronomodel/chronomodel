@@ -332,9 +332,9 @@ void MultiCalibrationDrawing::updateLayout()
                 graph->showXAxisSubTicks(true);
 
                 if (graph->getCurve("Calibration"))
-                    graph->setOverArrow(GraphView::eBothOverflow);
+                    graph->setOverArrow(GraphView::OverflowDataArrowMode::eBothOverflow);
                 else
-                    graph->setOverArrow(GraphView::eNone);
+                    graph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
 
                 graph->setFont(font());
                 graph->setTipXLab("t");

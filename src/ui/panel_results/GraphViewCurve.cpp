@@ -53,7 +53,7 @@ GraphViewCurve::GraphViewCurve(QWidget *parent):GraphViewResults(parent)
     setMainColor(Painting::borderDark);
     mGraph->setBackgroundColor(QColor(210, 210, 210));
     mGraph->autoAdjustYScale(false);
-    mGraph->setYAxisMode(GraphView::eAllTicks);
+    mGraph->setYAxisMode(GraphView::AxisMode::eAllTicks);
 }
 
 GraphViewCurve::~GraphViewCurve()
@@ -78,9 +78,9 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
 
     mGraph->clearInfos();
     mGraph->resetNothingMessage();
-    mGraph->setOverArrow(GraphView::eBothOverflow);
+    mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eBothOverflow);
     mGraph->setTipXLab("t");
-    mGraph->setYAxisMode(GraphView::eAllTicks);
+    mGraph->setYAxisMode(GraphView::AxisMode::eAllTicks);
     mGraph->autoAdjustYScale(false);
     mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
     mGraph->setFormatFunctX(nullptr);
@@ -100,7 +100,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
     const double threshold = getModel_ptr()->mThreshold;
     const double z_score = zScore(1.0 - threshold * 0.01); // Pour 95% z = 1.96
 
-    if (mCurrentVariableList.contains(eG)) {
+    if (mShowList.contains(eG)) {
         std::vector<CurveRefPts> curveEventsPoints;
 
         // installation des points de ref
@@ -290,7 +290,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
             curveGInf_Data.insert(t, mComposanteG.vecG[idx] - z_score * sqrt(mComposanteG.vecVarG[idx]));
 
 
-            for (int i = 0; i<mComposanteGChains.size(); ++i) {
+            for (int i = 0; i < mComposanteGChains.size(); ++i) {
                 curveG_Data_i[i].insert(t, mComposanteGChains.at(i).vecG[idx]);
                 curveGInf_Data_i[i].insert(t, mComposanteGChains.at(i).vecG[idx] - z_score * sqrt(mComposanteGChains.at(i).vecVarG[idx]));
                 curveGSup_Data_i[i].insert(t, mComposanteGChains.at(i).vecG[idx] + z_score * sqrt(mComposanteGChains.at(i).vecVarG[idx]));
@@ -311,7 +311,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
         mGraph->add_curve(curveHPDEnv);
 
         QColor envColor_i;
-        for (int i = 0; i<mComposanteGChains.size(); ++i) {
+        for (int i = 0; i < mComposanteGChains.size(); ++i) {
 
             const GraphCurve &curveG_i = FunctionCurve(curveG_Data_i[i], "G Mean Chain " + QString::number(i),
                                                Painting::chainColors[i]);
@@ -333,7 +333,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
         mGraph->insert_points(curveDataPoints);
     }
 
-    else if (mCurrentVariableList.contains(eGP)) {
+    else if (mShowList.contains(eGP)) {
 
         GraphCurve curveMap;
         curveMap.mName = "G Prime Map";
@@ -520,11 +520,11 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
 
         }
         mGraph->setTipYLab("Rate");
-        mGraph->setYAxisMode(GraphView::eAllTicks);
+        mGraph->setYAxisMode(GraphView::AxisMode::eAllTicks);
         mGraph->autoAdjustYScale(false);
 
 
-    } else if (mCurrentVariableList.contains(eGS)) {
+    } else if (mShowList.contains(eGS)) {
 
         QMap<type_data, type_data> GS_Data;
         for (size_t idx = 0; idx < mComposanteG.vecGS.size() ; ++idx) {
@@ -566,7 +566,7 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
     // From GraphViewResults::updateCurvesToShow
     mShowAllChains = showAllChains;
     mShowChainList = showChainList;
-    mShowVariableList = showVariableList;
+    mShowList = showVariableList;
     
     const bool showG = showVariableList.contains(eG);
     const bool showGGauss = showVariableList.contains(eGGauss);

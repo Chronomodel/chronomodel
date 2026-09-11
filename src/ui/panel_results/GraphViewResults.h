@@ -175,12 +175,12 @@ public:
         eCorrel,
         eFunction
     };
+
     enum variable_t{
         eBeginEnd,
         eThetaEvent,
 
         eS02,
-
 
 #ifdef KOMLAN
         eS02Vg,
@@ -200,7 +200,8 @@ public:
         eGP, eGPGauss, eGPHpd, eGPMap,
         eGS,
 
-        eLambda
+        eLambda,
+        eStat
 
     };
 
@@ -212,7 +213,7 @@ protected:
 
     GraphView* mGraph;
     graph_t mCurrentTypeGraph;
-    QList<variable_t> mCurrentVariableList;
+
 
     QString mTitle;
 
@@ -220,7 +221,10 @@ protected:
 
     bool mShowAllChains;
     QList<bool> mShowChainList;
-    QList<variable_t> mShowVariableList;
+
+    // QList<variable_t> mShowList;
+    // QList<variable_t> mShowList;
+    QList<variable_t> mShowList;
 
     ScrollableLabel* mStatArea;
     QString mStatHTMLText;
@@ -299,7 +303,7 @@ public:
     GraphView *getGraph() const;
     inline QList<variable_t> getCurrentVariables() const
     {
-        return mCurrentVariableList;
+        return mShowList;
     }
     inline graph_t getCurrentType() const
     {
@@ -331,12 +335,12 @@ public:
 
     // This method is used to recreate all curves in mGraph.
     // It is vitual because we want a different behavior in sub-classes (GraphViewDate, GraphViewEvent and GraphViewPhase)
-    virtual void generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList);
+    virtual void generateCurves(const graph_t typeGraph, const QList<variable_t> &showList);
 
     // This method is used to update visible existing curves in mGraph.
     // It is vitual because we want a different behavior in suclasses (GraphViewDate, GraphViewEvent and GraphViewPhase)
     //virtual void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
-    virtual void updateCurvesToShow(bool showAllChains, const QList<bool> &showChainList, const QList<variable_t> &showVariableList);
+    virtual void updateCurvesToShow(bool showAllChains, const QList<bool> &showChainList, const QList<variable_t> &showList);
 
 
     inline void changeYScaleDivision(const Scale &sc)

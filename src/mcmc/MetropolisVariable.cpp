@@ -44,8 +44,9 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "QtUtilities.h"
 #include "Functions.h"
 #include "DateUtils.h"
+#include "FFTWThread.h"
+//#include "fftw3.h"
 
-#include "fftw3.h"
 
 #include <QDebug>
 #include <algorithm>
@@ -510,7 +511,8 @@ void MetropolisVariable::generateBufferForHisto(double* input,
 }
 
 // le bandwidth est calculé avant par les stats sur la trace
-std::map<double, double> MetropolisVariable::generateKDE(const std::vector<double>& dataSrc, const int fftLen, const double tmin, const double tmax)
+
+/*std::map<double, double> MetropolisVariable::generateKDE(const std::vector<double>& dataSrc, const int fftLen, const double tmin, const double tmax)
 {
 
     mfftLenUsed = fftLen;
@@ -613,7 +615,90 @@ std::map<double, double> MetropolisVariable::generateKDE(const std::vector<doubl
 
     return result;
 }
+*/
+std::map<double, double> MetropolisVariable::generateKDE(const std::vector<double>& dataSrc, const int fftLen, const double tmin, const double tmax)
+{
+    mfftLenUsed = fftLen;
+    mtmaxUsed = tmax;
+    mtminUsed = tmin;
 
+    std::map<double, double> result;
+
+    const auto N = dataSrc.size();
+    if (N == 0) {
+        return result;
+    }
+
+    if (N == 1 || mResults.traceAnalysis.std == 0.0) {
+        result.emplace(dataSrc.at(0), 1.0);
+        return result;
+    }
+
+    const double bandwidth = mBandwidth > 0 ? mBandwidth : 1.0;
+
+    const double a = range_min_value(dataSrc) - 4.0 * bandwidth;
+    const double b = range_max_value(dataSrc) + 4.0 * bandwidth;
+
+    // --- Buffers et plans réutilisés (thread-local) ---
+    auto buffers = FFTWThreadCache::get_buffers(fftLen);
+    double* input = buffers.grid;
+    fftw_complex* spectrum = buffers.spectrum;
+
+    // Génération du buffer
+    generateBufferForHisto(input, dataSrc, fftLen, a, b);
+
+    // --- FFT Forward (r2c) ---
+    fftw_plan plan_forward = FFTWThreadCache::forward(fftLen);
+    fftw_execute_dft_r2c(plan_forward, input, spectrum);
+
+    // --- Filtrage spectral ---
+    const int complexSize = fftLen / 2 + 1;
+    const double factor_base = 2.0 * M_PI / (b - a);
+
+    for (int i = 0; i < complexSize; ++i) {
+        const double s = factor_base * static_cast<double>(i);
+        const double factor = std::exp(-0.5 * s * s * bandwidth * bandwidth);
+
+        spectrum[i][0] *= factor; // Partie réelle
+        spectrum[i][1] *= factor; // Partie imaginaire
+    }
+
+    // --- FFT Backward (c2r) ---
+    fftw_plan plan_backward = FFTWThreadCache::backward(fftLen);
+    fftw_execute_dft_c2r(plan_backward, spectrum, input);
+
+    // Calcul des bornes selon le support
+    double tBegin = a, tEnd = b;
+    switch (mSupport) {
+    case eRp:
+    case eRpStar:
+        tBegin = 0.0;
+        break;
+    case eRm:
+    case eRmStar:
+        tEnd = 0.0;
+        break;
+    case eBounded:
+        tBegin = tmin;
+        tEnd = tmax;
+        break;
+    case eR:
+        break;
+    }
+
+    // Construction du résultat (intervalle [a, b[)
+    const double delta = (b - a) / static_cast<double>(fftLen);
+    for (int i = 0; i < fftLen; ++i) {
+        const double t = a + static_cast<double>(i) * delta;
+        result[t] = std::max(0.0, input[i]);
+    }
+
+    // Normalisation
+    result = getMapDataInRange(result, tBegin, tEnd);
+    result = equal_areas(result, 1.0);
+
+    return result;
+}
 
 void MetropolisVariable::generateFormatedKDE(const std::vector<ChainSpecs> &chains, const int fftLen, const double tmin, const double tmax)
 {
@@ -749,7 +834,7 @@ void MetropolisVariable::generateCorrelations(const std::vector<ChainSpecs> &cha
 /* --------------------------------------------------------------
    1️⃣  generateDensityNumericalResults
    -------------------------------------------------------------- */
-    void MetropolisVariable::generateDensityNumericalResults(const std::vector<ChainSpecs> &chains)
+void MetropolisVariable::generateDensityNumericalResults(const std::vector<ChainSpecs> &chains)
 {
     // ----- Résultats globaux (concatenation de toutes les chaînes) -----
     if (mFormatedKDE.empty())
@@ -757,19 +842,6 @@ void MetropolisVariable::generateCorrelations(const std::vector<ChainSpecs> &cha
     mResults.densityAnalysis = analyseDensity(mFormatedKDE);
     mResults.densityAnalysis.bandwidth_used = mBandwidth;
 
-    // ----- Résultats *par chaîne* (densité) -----
-    // useless
-    // 1️⃣  S’assurer que le vecteur possède exactement le bon nombre d’éléments
-    /*
-    if (mChainsResults.size() != mChainsKDE.size())
-        mChainsResults.resize(mChainsKDE.size());   // crée des objets « vide »
-
-    // 2️⃣  Remplir uniquement le champ densityAnalysis (densité)
-    for (size_t i = 0; i < mChainsKDE.size(); ++i) {
-        mChainsResults[i].densityAnalysis = analyseDensity(mChainsKDE[i]);
-        // on ne touche pas à traceAnalysis → il garde la valeur déjà présente
-    }
-    */
 }
 
 /* --------------------------------------------------------------
@@ -805,31 +877,41 @@ void MetropolisVariable::generateTraceNumericalResults(const std::vector<ChainSp
         // -----------------------------------------------------------------
         // On crée un vecteur de vecteurs de la même taille que le nombre de chaînes.
         // Chaque sous‑vecteur contiendra les `sizeMin` derniers éléments de la trace.
-        std::vector<std::vector<double>> chainForGR(chains.size());
+        std::vector<std::vector<double>> chainForRhat(chains.size());
         for (std::size_t chain_index = 0; chain_index < chains.size(); ++chain_index) {
             // Récupère la trace complète de la chaîne courante
             std::vector<double> fullTrace = runRawTraceForChain(chains, chain_index);
 
             // Sécurité : on s’assure que sizeMin ne dépasse pas la longueur réelle
             // de la trace (cela ne devrait pas arriver si mRealyAccepted est correct).
-            if (sizeMin > static_cast<int>(fullTrace.size())) {
+            //if (sizeMin > static_cast<int>(fullTrace.size())) {
                 // Gestion d’erreur simple – on peut lancer une exception,
                 // afficher un message, ou ajuster sizeMin.
-                throw std::runtime_error("sizeMin > longueur de la trace pour la chaîne "
-                                         + std::to_string(chain_index));
-            }
+             //   throw std::runtime_error("sizeMin > longueur de la trace pour la chaîne "
+               //                          + std::to_string(chain_index));
+            //}
             // Copie les `sizeMin` derniers éléments dans le vecteur dédié.
             // L’intervalle [end‑sizeMin, end) contient exactement sizeMin éléments.
-            chainForGR[chain_index] = std::vector<double>(fullTrace.end() - sizeMin,
+            chainForRhat[chain_index] = std::vector<double>(fullTrace.end() - sizeMin,
                                                           fullTrace.end());
         }
         // À ce stade, `chainForGR` contient les sous‑chaînes prêtes à être
         // utilisées dans le calcul de l’indice de Gelman‑Rubin.
-        const double R_hat = gelmanRubin(chainForGR);
-        mResults.R_hat_Gelman_Rubin = R_hat;
+        //const double R_hat = gelmanRubin(chainForRhat);
+        double R_hat = 0.0;
+        if (chains.size() >= 2) {
+            try {
+                R_hat = splitRhatVehtari(chainForRhat);
+
+            } catch (const std::invalid_argument&) {
+                // chaînes trop courtes pour un split (N < 4) : on retombe sur "indéterminé"
+                R_hat = 0.0;
+            }
+        }
+        mResults.R_hat = R_hat;
 
     } else {
-        mResults.R_hat_Gelman_Rubin = 1.0;
+        mResults.R_hat = 1.0;
     }
 
     mResults.traceAnalysis = traceStatistic(trace);   // analyse du trace global
@@ -957,7 +1039,7 @@ QString MetropolisVariable::resultsString(const QString &noResultMessage, const 
     if (mFormatedKDE.empty())
         return noResultMessage;
 
-    QString result = "<br>" + posteriorAnalysisToString(mResults) + "<br>";
+    QString result = posteriorAnalysisToString(mResults) + "<br>";
 
     result += "<i>"+ QObject::tr("Probabilities") + " </i><br>";
 
