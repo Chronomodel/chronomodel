@@ -843,6 +843,49 @@ void ModelCurve::generateTraceNumericalResults(const std::vector<ChainSpecs> &ch
         if (mS02Vg.mSamplerProposal != SamplerProposal::eFixe)
             mS02Vg.generateTraceNumericalResults(chains);
 #endif
+
+
+        std::vector<double> Rhat;
+        std::vector<double> ESS;
+        for (size_t i = 0; i<mEvents.size(); i++) {
+          const auto& event = mEvents[i];
+                if (event->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
+                    Rhat.push_back(event->mTheta.mResults.RhatESS.rHat);
+                    ESS.push_back(std::min(event->mTheta.mResults.RhatESS.bulkESS,
+                                           event->mTheta.mResults.RhatESS.tailESS));
+
+                    if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe) {
+                        Rhat.push_back( event->mS02Theta.mResults.RhatESS.rHat);
+                        ESS.push_back(std::min(event->mS02Theta.mResults.RhatESS.bulkESS,
+                                               event->mS02Theta.mResults.RhatESS.tailESS));
+                    }
+                    for (auto&& date : event->mDates) {
+                        Rhat.push_back(date.mTi.mResults.RhatESS.rHat);
+                        ESS.push_back(std::min(date.mTi.mResults.RhatESS.bulkESS,
+                                               date.mTi.mResults.RhatESS.tailESS));
+
+                        Rhat.push_back(date.mSigmaTi.mResults.RhatESS.rHat);
+                        ESS.push_back(std::min(date.mSigmaTi.mResults.RhatESS.bulkESS,
+                                               date.mSigmaTi.mResults.RhatESS.tailESS));
+                    }
+                }
+
+            if (event->mVg.mSamplerProposal != SamplerProposal::eFixe) {
+                Rhat.push_back(event->mVg.mResults.RhatESS.rHat);
+                ESS.push_back(std::min(event->mVg.mResults.RhatESS.bulkESS,
+                                       event->mVg.mResults.RhatESS.tailESS));
+            }
+        }
+
+       if (mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe) {
+            Rhat.push_back(mLambdaSpline.mResults.RhatESS.rHat);
+            ESS.push_back(std::min(mLambdaSpline.mResults.RhatESS.bulkESS,
+                                   mLambdaSpline.mResults.RhatESS.tailESS));
+        }
+
+       // On écrase l'ancienne valeur produite par Model::generateTraceNumericalResults(chains);
+       mConvergenceSummary = MCMCDiagnostic::computeConvergenceSummary(Rhat, ESS);
+
     }
 }
 void ModelCurve::clearThreshold()

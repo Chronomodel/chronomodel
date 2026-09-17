@@ -104,6 +104,8 @@ private:
     void createMenus();
     void createToolBars();
 
+    QIcon iconWithStatusBadge(const QIcon& baseIcon, const QColor& badgeColor, int size = -1);
+
 public slots:
     void newProject();
     void openProject();

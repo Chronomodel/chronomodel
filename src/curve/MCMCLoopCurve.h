@@ -208,6 +208,7 @@ protected:
     bool sampler_339_block_4v(); // bloc de 4 variables : ti, delta, sigma_ti et theta
 
     bool sampler_339_SingleSite();
+    bool sampler_339_SingleSite_bloc_delta(); //test
 
     QString initialize_interpolate_339();
     bool update_interpolate_339();

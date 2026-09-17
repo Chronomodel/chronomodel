@@ -790,341 +790,6 @@ TraceStat traceStatistic(const std::vector<type_data> &trace)
     return result;
 }
 
-#pragma mark Gelman Rubin
-
-// chains[m][n] = n-ième échantillon de la chaîne m
-double gelmanRubin0(const std::vector<std::vector<double>>& chains)
-{
-    const int M = chains.size();
-    if (M < 2)
-        return 0.0;
-
-    const int N = chains[0].size();
-    for (const auto& c : chains)
-        if ((int)c.size() != N)
-            throw std::invalid_argument("[Function::gelmanRubin] Toutes les chaînes doivent avoir la même longueur");
-
-    if (N < 2)
-        return 0.0;
-
-    // 1. Moyennes par chaîne
-    std::vector<double> chain_mean(M);
-    for (int m = 0; m < M; ++m)
-        chain_mean[m] = std::accumulate(chains[m].begin(), chains[m].end(), 0.0) / N;
-
-    // 2. Moyenne globale
-    double grand_mean = std::accumulate(chain_mean.begin(), chain_mean.end(), 0.0) / M;
-
-    // 3. Variance inter-chaînes B
-    double B = 0.0;
-    for (int m = 0; m < M; ++m) {
-        double d = chain_mean[m] - grand_mean;
-        B += d * d;
-    }
-    B *= static_cast<double>(N) / (M - 1);
-
-    // 4. Variance intra-chaîne W
-    double W = 0.0;
-    for (int m = 0; m < M; ++m) {
-        double s2 = 0.0;
-        for (int n = 0; n < N; ++n) {
-            double d = chains[m][n] - chain_mean[m];
-            s2 += d * d;
-        }
-        W += s2 / (N - 1);
-    }
-    W /= M;
-
-    // Cas dégénérés
-    if (W < 1e-15)        // chaînes constantes
-        return 1.0;
-    if (B < 1e-15 * W)   // chaînes indiscernables
-        return 1.0;
-
-    // 5. Variance marginale estimée
-    double V_hat = ((N - 1.0) / N) * W + ((M + 1.0) / (M * N)) * B;
-
-    // 6. R-hat
-    return std::sqrt(V_hat / W);
-}
-
-
-struct WelfordStats {
-    double mean = 0.0, M2 = 0.0;
-    int    count = 0;
-
-    void update(double x) {
-        ++count;
-        double delta = x - mean;
-        mean += delta / count;
-        M2   += delta * (x - mean);
-    }
-
-    // Fusion de deux accumulateurs (Chan 1979)
-    static WelfordStats merge(const WelfordStats& a, const WelfordStats& b) {
-        if (a.count == 0 && b.count == 0) return WelfordStats{};
-        if (a.count == 0) return b;
-        if (b.count == 0) return a;
-        WelfordStats r;
-        r.count = a.count + b.count;
-        double delta = b.mean - a.mean;
-        //r.mean = (a.count * a.mean + b.count * b.mean) / r.count;
-        r.mean = a.mean + delta * b.count / r.count;
-        r.M2   = a.M2 + b.M2 + delta * delta * a.count * b.count / r.count;
-        return r;
-    }
-
-    double variance() const { return M2 / (count - 1); }
-};
-
-// version accélérer avec knuth et la formule de Chan (WelfordStats)
-double gelmanRubin(const std::vector<std::vector<double>>& chains)
-{
-    const int M = chains.size();
-    if (M < 2) return 0.0;
-    const int N = chains[0].size();
-    for (const auto& c : chains)
-        if ((int)c.size() != N)
-            throw std::invalid_argument("Toutes les chaînes doivent avoir la même longueur");
-    if (N < 2) return 0.0;
-
-    std::vector<double> chain_mean(M);
-    std::vector<double> chain_var(M);
-
-    // Parallélisation sur N par chaîne (M chaînes séquentielles)
-    for (int m = 0; m < M; ++m) {
-        const auto& ch = chains[m];
-        WelfordStats global;
-
-#pragma omp parallel
-        {
-            WelfordStats local;
-
-#pragma omp for schedule(static) nowait
-            for (int n = 0; n < N; ++n)
-                local.update(ch[n]);
-
-#pragma omp critical
-            global = WelfordStats::merge(global, local);
-        }
-
-        chain_mean[m] = global.mean;
-        chain_var[m]  = global.variance();
-    }
-
-    // Moyenne globale et variance inter B
-    double grand_mean = 0.0;
-    for (int m = 0; m < M; ++m)
-        grand_mean += chain_mean[m];
-    grand_mean /= M;
-
-    double B = 0.0;
-    for (int m = 0; m < M; ++m) {
-        double d = chain_mean[m] - grand_mean;
-        B += d * d;
-    }
-    B *= static_cast<double>(N) / (M - 1);
-
-    double W = 0.0;
-    for (int m = 0; m < M; ++m)
-        W += chain_var[m];
-    W /= M;
-
-    if (W < 1e-15 && B < 1e-15) return 1.0;   // chaînes toutes constantes et identiques : cas trivial
-    if (W < 1e-15)               return std::numeric_limits<double>::infinity(); // W→0 mais B≠0 : chaînes bloquées sur des valeurs différentes → non-convergence sévère
-    if (B < 1e-15 * W)           return 1.0;
-
-    double V_hat = ((N - 1.0) / N) * W + ((M + 1.0) / (M * N)) * B;
-    return std::sqrt(V_hat / W);
-}
-
-// Version multi-paramètres : retourne un R-hat par paramètre
-// chains[m][n][p] = paramètre p, échantillon n, chaîne m
-std::vector<double> gelmanRubinMulti(
-    const std::vector<std::vector<std::vector<double>>>& chains)
-{
-    const int M = chains.size();
-    const int N = chains[0].size();
-    const int P = chains[0][0].size();
-
-    std::vector<std::vector<double>> param_chains(M, std::vector<double>(N));
-    std::vector<double> r_hats(P);
-
-    for (int p = 0; p < P; ++p) {
-        for (int m = 0; m < M; ++m)
-            for (int n = 0; n < N; ++n)
-                param_chains[m][n] = chains[m][n][p];
-        r_hats[p] = gelmanRubin(param_chains);
-    }
-    return r_hats;
-}
-
-#pragma mark splitRhatVehtari
-// -------------------------------------------------------------
-//  Inverse de la CDF normale standard (algorithme d'Acklam),
-//  affinée par un pas de Newton. Précision ~1e-9, largement
-//  suffisante pour une transformation en scores normaux.
-// -------------------------------------------------------------
-double invNormalCDF(double p)
-{
-    static const double a[] = {-3.969683028665376e+01,  2.209460984245205e+02,
-                               -2.759285104469687e+02,  1.383577518672690e+02,
-                               -3.066479806614716e+01,  2.506628277459239e+00};
-    static const double b[] = {-5.447609879822406e+01,  1.615858368580409e+02,
-                               -1.556989798598866e+02,  6.680131188771972e+01,
-                               -1.328068155288572e+01};
-    static const double c[] = {-7.784894002430293e-03, -3.223964580411365e-01,
-                               -2.400758277161838e+00, -2.549732539343734e+00,
-                               4.374664141464968e+00,  2.938163982698783e+00};
-    static const double d[] = { 7.784695709041462e-03,  3.224671290700398e-01,
-                               2.445134137142996e+00,  3.754408661907416e+00};
-
-    if (p <= 0.0) return -std::numeric_limits<double>::infinity();
-    if (p >= 1.0) return  std::numeric_limits<double>::infinity();
-
-    const double p_low  = 0.02425;
-    const double p_high = 1.0 - p_low;
-    double q, r, x;
-
-    if (p < p_low) {
-        q = std::sqrt(-2.0 * std::log(p));
-        x = (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
-            ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1.0);
-    } else if (p <= p_high) {
-        q = p - 0.5;
-        r = q * q;
-        x = (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q /
-            (((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1.0);
-    } else {
-        q = std::sqrt(-2.0 * std::log(1.0 - p));
-        x = -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
-            ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1.0);
-    }
-
-    // Raffinement Newton (recommandé par Acklam pour une précision ~1e-9)
-    const double e = 0.5 * std::erfc(-x / std::sqrt(2.0)) - p;
-    const double u = e * std::sqrt(2.0 * M_PI) * std::exp(x * x / 2.0);
-    return x - u / (1.0 + x * u / 2.0);
-}
-
-// -------------------------------------------------------------
-//  Rangs moyens (fractional ranking, gère les ex-aequo comme
-//  R : rank(x, ties.method = "average"))
-// -------------------------------------------------------------
-static std::vector<double> averageRanks(const std::vector<double>& v)
-{
-    const int S = static_cast<int>(v.size());
-    std::vector<int> idx(S);
-    std::iota(idx.begin(), idx.end(), 0);
-    std::sort(idx.begin(), idx.end(), [&](int i, int j) { return v[i] < v[j]; });
-
-    std::vector<double> ranks(S);
-    int i = 0;
-    while (i < S) {
-        int j = i;
-        while (j + 1 < S && v[idx[j + 1]] == v[idx[i]]) ++j;
-        const double avg_rank = 0.5 * ((i + 1) + (j + 1)); // rangs 1-based
-        for (int k = i; k <= j; ++k)
-            ranks[idx[k]] = avg_rank;
-        i = j + 1;
-    }
-    return ranks;
-}
-
-// -------------------------------------------------------------
-//  Transformation en scores normaux (Blom) : z = Phi^-1((rang - 3/8)/(S - 1/4))
-// -------------------------------------------------------------
-static std::vector<double> rankNormalize(const std::vector<double>& pooled)
-{
-    const int S = static_cast<int>(pooled.size());
-    const std::vector<double> ranks = averageRanks(pooled);
-    std::vector<double> z(S);
-    for (int i = 0; i < S; ++i)
-        z[i] = invNormalCDF((ranks[i] - 3.0 / 8.0) / (static_cast<double>(S) - 1.0 / 4.0));
-    return z;
-}
-
-/**
- * @brief Split-Rhat rang-normalisé et replié, suivant Vehtari, Gelman,
- *        Simpson, Carpenter & Bürkner (2021), "Rank-normalization, folding,
- *        and localization: An improved R-hat for assessing convergence of
- *        MCMC", Bayesian Analysis.
- *
- * @details
- *   1. Chaque chaîne est coupée en deux moitiés (2M demi-chaînes), ce qui
- *      rend le diagnostic sensible à une dérive à l'intérieur d'une même
- *      chaîne (non-stationnarité que le Rhat classique sur chaînes entières
- *      ne détecte pas).
- *   2. "Bulk-Rhat" : Rhat classique (réutilise gelmanRubin) calculé sur les
- *      valeurs rang-normalisées — robuste aux queues lourdes / distributions
- *      non gaussiennes, contrairement au Rhat classique sur les valeurs brutes.
- *   3. "Tail-Rhat" : même procédure sur les valeurs repliées autour de la
- *      médiane globale (|x - médiane|) — détecte une non-convergence des
- *      queues/variances même quand les moyennes ont déjà convergé.
- *   4. Rhat final = max(bulk-Rhat, tail-Rhat).
- *
- * @param chains  M chaînes de même longueur N (N >= 4 requis pour un split
- *                significatif).
- * @return Le split-Rhat rang-normalisé et replié.
- */
-double splitRhatVehtari(const std::vector<std::vector<double>>& chains)
-{
-    const int M = static_cast<int>(chains.size());
-    if (M < 1) return std::numeric_limits<double>::infinity();
-    const int N = static_cast<int>(chains[0].size());
-    for (const auto& c : chains)
-        if (static_cast<int>(c.size()) != N)
-            throw std::invalid_argument("Toutes les chaînes doivent avoir la même longueur");
-    if (N < 4)
-        throw std::invalid_argument("Chaque chaîne doit contenir au moins 4 valeurs pour un split-Rhat");
-
-    // 1) Split : chaque chaîne -> 2 demi-chaînes de longueur floor(N/2)
-    //    (l'échantillon central est ignoré si N est impair — convention
-    //    standard, identique à celle du package R 'posterior')
-    const int Nh = N / 2;
-    std::vector<std::vector<double>> halves;
-    halves.reserve(2 * M);
-    for (const auto& c : chains) {
-        halves.emplace_back(c.begin(), c.begin() + Nh);
-        halves.emplace_back(c.end() - Nh, c.end());
-    }
-    const int S = 2 * M * Nh;
-
-    // 2) Pool global (pour rangs et médiane)
-    std::vector<double> pooled;
-    pooled.reserve(S);
-    for (const auto& h : halves)
-        pooled.insert(pooled.end(), h.begin(), h.end());
-
-    std::vector<double> sorted_pooled = pooled;
-    std::sort(sorted_pooled.begin(), sorted_pooled.end());
-    const double median = (S % 2)
-                              ? sorted_pooled[S / 2]
-                              : 0.5 * (sorted_pooled[S / 2 - 1] + sorted_pooled[S / 2]);
-
-    // 3) Bulk : rang-normalisation directe
-    const std::vector<double> z_bulk = rankNormalize(pooled);
-    std::vector<std::vector<double>> bulk_halves(2 * M, std::vector<double>(Nh));
-    for (int i = 0, off = 0; i < 2 * M; ++i)
-        for (int j = 0; j < Nh; ++j)
-            bulk_halves[i][j] = z_bulk[off++];
-
-    // 4) Tail : repliement autour de la médiane, puis rang-normalisation
-    std::vector<double> folded(S);
-    for (int i = 0; i < S; ++i)
-        folded[i] = std::abs(pooled[i] - median);
-    const std::vector<double> z_tail = rankNormalize(folded);
-    std::vector<std::vector<double>> tail_halves(2 * M, std::vector<double>(Nh));
-    for (int i = 0, off = 0; i < 2 * M; ++i)
-        for (int j = 0; j < Nh; ++j)
-            tail_halves[i][j] = z_tail[off++];
-
-    // 5) Rhat classique sur chaque ensemble transformé
-    const double rhat_bulk = gelmanRubin(bulk_halves);
-    const double rhat_tail = gelmanRubin(tail_halves);
-
-    return std::max(rhat_bulk, rhat_tail);
-}
 
 #pragma mark STAT
 /**
@@ -1160,44 +825,99 @@ QString densityStatToString(const DensityStat &analysis)
 QString posteriorAnalysisToString(const PosteriorAnalysis &analysis)
 {
     QString result (QObject::tr("No data"));
+
     if (analysis.densityAnalysis.std >= 0.) {
-        QString rhat_color, rhat_status, rhat_display;
-        double rhat = analysis.R_hat;
+        using namespace MCMCDiagnostic;
+        // --- Rhat : mêmes règles qu'avant (0.0 -> une seule chaîne, non fini -> chaînes
+        //     bloquées), mais seuil "Insuffisant" aligné sur Threshold::RhatWarning (1.05,
+        //     au lieu de 1.1) pour rester cohérent avec computeConvergenceSummary ---
+        auto rhatColor = [](double rhat) -> QString {
+            if (rhat == 0.0)                    return "black";
+            if (!std::isfinite(rhat))           return "red";
+            if (rhat < Threshold::RhatGood)     return "green";
+            if (rhat < Threshold::RhatWarning)  return "orange";
+            return "red";
+        };
 
-        if (rhat == 0.0) {
-            rhat_color   = "black";
-            rhat_status  = QObject::tr("❓One Chain");
-            rhat_display = "-";
-        } else if (!std::isfinite(rhat)) {
-            rhat_color   = "red";
-            rhat_status  = QObject::tr("❌ Not converged (chains stuck)");
-            rhat_display = QString::fromUtf8("∞");
-        } else if (rhat < 1.01) {
-            rhat_color   = "green";
-            rhat_status  = QObject::tr("✅ Satisfactory convergence");
-            rhat_display = QString::number(rhat, 'f', 4);
-        } else if (rhat < 1.1) {
-            rhat_color   = "orange";
-            rhat_status  = QObject::tr("⚠️ Insufficient convergence");
-            rhat_display = QString::number(rhat, 'f', 4);
-        } else {
-            rhat_color   = "red";
-            rhat_status  = QObject::tr("❌ Not converged");
-            rhat_display = QString::number(rhat, 'f', 4);
-        }
+        auto rhatStatus = [](double rhat) -> QString {
+            if (rhat == 0.0)                    return QObject::tr("❓One Chain");
+            if (!std::isfinite(rhat))           return QObject::tr("❌ Not converged (chains stuck)");
+            if (rhat < Threshold::RhatGood)     return QObject::tr("✅ Satisfactory convergence");
+            if (rhat < Threshold::RhatWarning)  return QObject::tr("⚠️ Insufficient convergence");
+            return QObject::tr("❌ Not converged");
+        };
+        auto rhatDisplay = [](double rhat) -> QString {
+            if (rhat == 0.0)          return "-";
+            if (!std::isfinite(rhat)) return QString::fromUtf8("∞");
+            return QString::number(rhat, 'f', 4);
+        };
 
-        //result = "<i>"
-        //         + QString("<span style='color:%1'>").arg(rhat_color)
-        //         + QObject::tr("Split R\xCC\x82 (rank-normalized) = %1 (%2)")
-        //               .arg(rhat_display, rhat_status)
-        //         + "</span>"
-        //         + "</i><br>";
+        // --- ESS : même principe à 3 paliers (+ cas non calculable, ex. variable
+        //     dégénérée/fixée où var+ ~ 0) ---
+        auto essColor = [](double ess) -> QString {
+            if (!std::isfinite(ess))          return "black";
+            if (ess < Threshold::EssWarning)  return "red";
+            if (ess < Threshold::EssGood)     return "orange";
+            return "green";
+        };
+        auto essStatus = [](double ess) -> QString {
+            if (!std::isfinite(ess))          return QObject::tr("❓ Not calculable");
+            if (ess < Threshold::EssWarning)  return QObject::tr("❌ Too low");
+            if (ess < Threshold::EssGood)     return QObject::tr("⚠️ Insufficient (&lt; 400)");
+            return QObject::tr("✅ Satisfactory");
+        };
+        auto essDisplay = [](double ess) -> QString {
+            if (!std::isfinite(ess)) return "-";
+            return QString::number(ess, 'f', 0);
+        };
 
-        result = "<i>"
-                 + QString("<span style='color:%1'>").arg(rhat_color)
-                 + QObject::tr("R\xCC\x82 = %1 %2").arg(rhat_display, rhat_status)
+        const double rhat    = analysis.RhatESS.rHat;
+        const double bulkESS = analysis.RhatESS.bulkESS;
+        const double tailESS = analysis.RhatESS.tailESS;
+
+        // 1.  Définir le style du paragraphe (pas de marge, inter‑ligne réduit)
+        QString paragraphStyle = "margin:0; line-height:0.9;";
+
+        // 2.  Construire le texte HTML
+       /* result = "<i style='line-height:0.9;'>"
+                 + QString("<span style='color:%1'>").arg(rhatColor(rhat))
+                 + QObject::tr("R\xCC\x82 = %1 %2")
+                       .arg(rhatDisplay(rhat), rhatStatus(rhat))
+                 + "</span><br>"
+                 + QString("<span style='color:%1'>").arg(essColor(bulkESS))
+                 + QObject::tr("ESS bulk = %1 %2")
+                       .arg(essDisplay(bulkESS), essStatus(bulkESS))
+                 + "</span><br>"
+                 + QString("<span style='color:%1'>").arg(essColor(tailESS))
+                 + QObject::tr("ESS tail = %1 %2")
+                       .arg(essDisplay(tailESS), essStatus(tailESS))
                  + "</span>"
-                 + "</i>";
+                 + "</i>";*/
+// --
+        const bool allGood = (rhatColor(rhat)   == "green")
+                             && (essColor(bulkESS) == "green")
+                             && (essColor(tailESS) == "green");
+
+        if (allGood) {
+            result = "<i><span style='color:green'>"
+                     + QObject::tr("R\xCC\x82 = %1  ·  ESS bulk = %2  ·  ESS tail = %3  ✅")
+                           .arg(rhatDisplay(rhat), essDisplay(bulkESS), essDisplay(tailESS))
+                     + "</span></i>";
+        } else {
+            result = "<i>"
+                     + QString("<span style='color:%1'>").arg(rhatColor(rhat))
+                     + QObject::tr("R\xCC\x82 = %1 %2").arg(rhatDisplay(rhat), rhatStatus(rhat))
+                     + "</span><br>"
+                     + QString("<span style='color:%1'>").arg(essColor(bulkESS))
+                     + QObject::tr("ESS bulk = %1 %2").arg(essDisplay(bulkESS), essStatus(bulkESS))
+                     + "</span><br>"
+                     + QString("<span style='color:%1'>").arg(essColor(tailESS))
+                     + QObject::tr("ESS tail = %1 %2").arg(essDisplay(tailESS), essStatus(tailESS))
+                     + "</span>"
+                     + "</i>";
+        }
+//---
+
 
         result += "<br><i>" + QObject::tr("Trace Stat.")  + "</i><br>";
         result += QObject::tr("Mean = %1  ;  Std = %2").arg( stringForLocal(analysis.traceAnalysis.mean),

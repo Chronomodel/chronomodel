@@ -65,8 +65,6 @@ protected:
 
     };
 
-
-    //virtual bool update() {return update_v3();};
     virtual bool adapt(const int batchIndex);
 
     virtual void recordBurnAdapt();
@@ -75,8 +73,9 @@ protected:
 
     virtual void finalize();
 
-    // Echantillonneur Gibbs sur toutes les variables
+    // Echantillonneur Gibbs sur toutes les variables, comme v2
     bool update_v3();
+    void sampler_Gibbs(std::vector<std::shared_ptr<Event>> &events);
 
     //bool update_v4_simulated_annealing(); // avec changement de variable xi
 
@@ -88,16 +87,25 @@ protected:
     void sampler_339_SingleSite(std::vector<std::shared_ptr<Event>> &events); // fonctionne
 
     void sampler_339_SingleSite_bloc(std::vector<std::shared_ptr<Event>> &events); // fonctionne
+
+    void sampler_339_SingleSite_bloc_delta(std::vector<std::shared_ptr<Event>> &events); // avec shift bloc
+
+    double hmcSampleTheta_temporal(double theta0, long double mu, long double P,
+                            double min, double max,
+                                   int L, double epsilon);
     void sampler_339_SingleSite_bloc_2(std::vector<std::shared_ptr<Event>> &events);
 
     void sampler_339_3v(std::vector<std::shared_ptr<Event> > &events);
     void sampler_339_Couple(std::vector<std::shared_ptr<Event> > &events);
 
 
+    void sampler_339_SingleSite_SliceSampling(std::vector<std::shared_ptr<Event>> &events); // trop lent
+    void sampler_339_SingleSite_NonCentered(std::vector<std::shared_ptr<Event>> &events);
 
     void sampler_naif(std::vector<std::shared_ptr<Event>> &events);
 
     void tempering_339(std::vector<std::shared_ptr<Event> > &events, double T);
+    void tempering_339_ti_marg(std::vector<std::shared_ptr<Event> > &events, double T);
 
     bool update_v4();
 

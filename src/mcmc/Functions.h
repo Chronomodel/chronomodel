@@ -42,6 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "DateUtils.h"
 #include "Matrix.h"
+#include "MetropolisVariable.h"
 
 #include <QMap>
 #include <QVector>
@@ -54,78 +55,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #else
 #define PAR
 #endif
-
-typedef double type_data;
-
-// ------------------------------------------------------------------
-// Quartiles
-// ------------------------------------------------------------------
-struct Quartiles
-{
-    type_data Q1 = static_cast<type_data>(0.0);
-    type_data Q2 = static_cast<type_data>(0.0);
-    type_data Q3 = static_cast<type_data>(0.0);
-};
-
-// ------------------------------------------------------------------
-// Statistiques de la fonction
-// ------------------------------------------------------------------
-struct DensityStat
-{
-    type_data bandwidth_used = static_cast<type_data>(0.0);
-    type_data max      = static_cast<type_data>(0.0);
-    type_data mode     = static_cast<type_data>(0.0);
-    type_data mean     = static_cast<type_data>(0.0);
-    type_data std      = static_cast<type_data>(0.0);
-    Quartiles quartiles{};
-};
-
-// ------------------------------------------------------------------
-// Statistiques de la trace
-// ------------------------------------------------------------------
-struct TraceStat
-{
-    bool updated = false;
-    type_data min      = static_cast<type_data>(0.0);
-    type_data max      = static_cast<type_data>(0.0);
-    type_data mean     = static_cast<type_data>(0.0);
-    type_data std      = static_cast<type_data>(0.0);
-    type_data bw_SJ      = static_cast<type_data>(0.0);
-    type_data bw_nrd0      = static_cast<type_data>(0.0);
-    Quartiles quartiles{};
-};
-// ------------------------------------------------------------------
-// Analyse combinée (fonction + trace)
-// ------------------------------------------------------------------
-struct PosteriorAnalysis
-{
-    DensityStat densityAnalysis{};
-    TraceStat   traceAnalysis{};
-    double R_hat = 0.0;
-    // constructeur qui met des NaN pour indiquer « non calculé »
-    PosteriorAnalysis()
-    {
-        // ----- fonction -----
-        densityAnalysis.max  = std::numeric_limits<type_data>::quiet_NaN();
-        densityAnalysis.mode = std::numeric_limits<type_data>::quiet_NaN();
-        densityAnalysis.mean = std::numeric_limits<type_data>::quiet_NaN();
-        densityAnalysis.std  = std::numeric_limits<type_data>::quiet_NaN();
-        // les quartiles restent à 0.0 (ou vous pouvez les mettre à NaN aussi)
-        densityAnalysis.quartiles.Q1 = std::numeric_limits<type_data>::quiet_NaN();
-        densityAnalysis.quartiles.Q2 = std::numeric_limits<type_data>::quiet_NaN();
-        densityAnalysis.quartiles.Q3 = std::numeric_limits<type_data>::quiet_NaN();
-        // ----- trace -----
-        traceAnalysis.min  = std::numeric_limits<type_data>::quiet_NaN();
-        traceAnalysis.max  = std::numeric_limits<type_data>::quiet_NaN();
-        traceAnalysis.mean = std::numeric_limits<type_data>::quiet_NaN();
-        traceAnalysis.std  = std::numeric_limits<type_data>::quiet_NaN();
-        // idem pour les quartiles de la trace
-        traceAnalysis.quartiles.Q1 = std::numeric_limits<type_data>::quiet_NaN();
-        traceAnalysis.quartiles.Q2 = std::numeric_limits<type_data>::quiet_NaN();
-        traceAnalysis.quartiles.Q3 = std::numeric_limits<type_data>::quiet_NaN();
-    }
-};
-
 
 
 
@@ -274,12 +203,12 @@ Quartiles quartilesForTrace(const std::vector<type_data> &trace);
 TraceStat traceStatistic(const QList<type_data> &trace);
 TraceStat traceStatistic(const std::vector<type_data> &trace);
 
-double gelmanRubin(const std::vector<std::vector<double>>& chains);
+/*double gelmanRubin(const std::vector<std::vector<double>>& chains);
 std::vector<double> gelmanRubinMulti(
     const std::vector<std::vector<std::vector<double>>>& chains);
 
 double splitRhatVehtari(const std::vector<std::vector<double>>& chains);
-
+*/
 // QList<double> calculRepartition (const QList<double> &calib);
 QList<double> calculRepartition (const QMap<double, double> &calib);
 std::vector<double> calculRepartition(const std::map<double, double>  &calib);

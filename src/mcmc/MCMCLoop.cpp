@@ -245,14 +245,14 @@ QString MCMCLoop::initialize_time()
         if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
 
             for (std::shared_ptr<Event> uEvent : unsortedEvents) {
-#ifdef FIXEDPRIOR
-                uEvent->mTheta.mSamplerProposal = SamplerProposal::eEventPrior;
-#endif
+
                 emit stepProgressed(++Ni);
                 emit setMessage(tr("Initializing Event : %1 / %2").arg(QString::number(Ni), QString::number(N)));
 
                 if (uEvent->mType == Event::eDefault) {
-
+#ifdef FIXEDPRIOR
+                    uEvent->mTheta.mSamplerProposal = SamplerProposal::eEventPrior;
+#endif
                     mModel->initNodeEvents();
                     const double min = uEvent->getThetaMinRecursive_v3(tminPeriod);
                     mModel->initNodeEvents();

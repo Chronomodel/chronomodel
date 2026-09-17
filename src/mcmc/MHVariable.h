@@ -164,6 +164,8 @@ enum class SamplerProposal : int
     eDatePrior   = 3,
     eLikelihood   = 4,
     ePrior       = 5,
+
+    eSliceSampling = 6,
     // eMHSymGaussAdapt = 5   // (commenté – valeur dupliquée)
 };
 

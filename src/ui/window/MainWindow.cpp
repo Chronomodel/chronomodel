@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2025
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -1601,6 +1601,17 @@ void MainWindow::mcmcFinished()
     // Tell the views to update
     mProjectView->initResults();
 
+    QColor color;
+    switch (mProject->mModel->mConvergenceSummary.status) {
+    case MCMCDiagnostic::ConvergenceStatus::eGood:    color = QColor(0x2e, 0xcc, 0x71); break; // vert
+    case MCMCDiagnostic::ConvergenceStatus::eWarning: color = QColor(0xf3, 0x9c, 0x12); break; // orange
+    case MCMCDiagnostic::ConvergenceStatus::eBad:     color = QColor(0xe7, 0x4c, 0x3c); break; // rouge
+    default:
+        mViewResultsAction->setIcon(QIcon(":results_p.png"));
+        return;
+    }
+    mViewResultsAction->setIcon(iconWithStatusBadge(QIcon(":results_p.png"), color));
+
 }
 
 void MainWindow::noResult()
@@ -1610,9 +1621,11 @@ void MainWindow::noResult()
 #endif
     mRescaleCurveAction->setEnabled(false);
 
-    mViewLogAction -> setEnabled(false);
-    mViewResultsAction -> setEnabled(false);
-    mViewResultsAction -> setChecked(false);
+    mViewLogAction->setEnabled(false);
+    mViewResultsAction->setEnabled(false);
+    mViewResultsAction->setChecked(false);
+    mViewResultsAction->setIcon(QIcon(":results_p.png")); // suppression du badge de convergence
+
     if (mProjectView->mResultsView)
         mProjectView->mResultsView->clearResults();
 
@@ -1622,4 +1635,32 @@ void MainWindow::noResult()
         mProject->mModel->clear();
     }
 
+}
+
+// Dans un fichier utilitaire, ou en méthode privée de MainWindow
+QIcon MainWindow::iconWithStatusBadge(const QIcon& baseIcon, const QColor& badgeColor, int size)
+{
+    if (size <= 0) {
+        const QList<QSize> sizes = baseIcon.availableSizes();
+        size = sizes.isEmpty() ? 64 : sizes.first().width(); // 32 = repli si l'icône n'expose aucune taille (ex: SVG)
+    }
+
+    QPixmap basePixmap = baseIcon.pixmap(size, size);
+
+    QPixmap composed(basePixmap.size());
+    composed.fill(Qt::transparent);
+
+    QPainter painter(&composed);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.drawPixmap(0, 0, basePixmap);
+
+    const int badgeDiam = qRound(size * 0.4);
+    const QRectF badgeRect(size - badgeDiam - 1, size - badgeDiam - 1, badgeDiam, badgeDiam);
+
+    painter.setPen(QPen(Qt::white, 1.2));
+    painter.setBrush(badgeColor);
+    painter.drawEllipse(badgeRect);
+
+    painter.end();
+    return QIcon(composed);
 }

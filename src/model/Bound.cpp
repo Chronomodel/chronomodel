@@ -136,7 +136,7 @@ const Bound Bound::fromJson(const QJsonObject &json)
                     json[STATE_COLOR_GREEN].toInt(),
                     json[STATE_COLOR_BLUE].toInt());
 
-    bound.mTheta.mSamplerProposal= SamplerProposal::eFixe;
+    bound.mTheta.mSamplerProposal = SamplerProposal::eFixe;
     bound.mItemX = json[STATE_ITEM_X].toDouble();
     bound.mItemY = json[STATE_ITEM_Y].toDouble();
     bound.mIsSelected = json[STATE_IS_SELECTED].toBool();

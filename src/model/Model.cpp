@@ -606,6 +606,40 @@ void Model::generateResultsLog()
         log += line( QObject::tr("Elapsed acquisition time %1 for chain %2").arg(DHMS(chain.mAcquisitionElapsedTime), QString::number(i)));
         ++i;
     }
+
+    log += "<hr>";
+    QString convergenceColor;
+    switch (mConvergenceSummary.status) {
+    case MCMCDiagnostic::ConvergenceStatus::eGood:
+        convergenceColor = QStringLiteral("#2e7d32"); // vert
+        break;
+    case MCMCDiagnostic::ConvergenceStatus::eWarning:
+        convergenceColor = QStringLiteral("#f9a825"); // orange/ambre
+        break;
+    case MCMCDiagnostic::ConvergenceStatus::eBad:
+        convergenceColor = QStringLiteral("#c62828"); // rouge
+        break;
+    }
+
+    log += line(QObject::tr("<span style=\"color:%1; font-weight:bold;\">%2</span>")
+                    .arg(convergenceColor, mConvergenceSummary.label));
+
+    log += line(QObject::tr("R\xCC\x82 : max = %1, mean = %2 (%3/%4 variable(s) ≥ Threshold, %5 %)")
+                    .arg(mConvergenceSummary.maxRHat, 0, 'f', 4)
+                    .arg(mConvergenceSummary.meanRHat, 0, 'f', 4)
+                    .arg(mConvergenceSummary.nAboveGoodThreshold)
+                    .arg(mConvergenceSummary.nVariables)
+                    .arg(mConvergenceSummary.fractionAboveGoodThreshold * 100., 0, 'f', 2));
+
+    if (mConvergenceSummary.hasEss) {
+        log += line(QObject::tr("ESS : min = %1, mean = %2 (%3/%4 variable(s) &lt; Threshold,  %5 %)")
+                        .arg(mConvergenceSummary.minESS, 0, 'f', 0)
+                        .arg(mConvergenceSummary.meanESS, 0, 'f', 0)
+                        .arg(mConvergenceSummary.nBelowGoodEssThreshold)
+                        .arg(mConvergenceSummary.nEssVariables)
+                        .arg(mConvergenceSummary.fractionBelowGoodEssThreshold * 100., 0, 'f', 2));
+    }
+
     log += "<hr>";
     std::ranges::for_each(mPhases, [&log](std::shared_ptr<Phase> phase) {
         log += ModelUtilities::phaseResultsHTML(phase);
@@ -1161,13 +1195,6 @@ void Model::setThreshold(const double threshold)
 {
     if (mThreshold != threshold) {
         updateDensities(mFFTLength, mBandwidthType ,mBandwidth, threshold);
-        /*generateCredibility(threshold);
-        generateHPD(threshold);
-
-        generateActivity(mFFTLength, mHActivity, threshold);
-
-        setThresholdToAllModel(threshold);*/
-
     }
 }
 
@@ -1564,7 +1591,6 @@ void Model::generateTraceNumericalResults(const std::vector<ChainSpecs> &chains)
         }
     });
 
-
     std::ranges::for_each( mPhases, [chains](std::shared_ptr<Phase> phase) {
         phase->mAlpha.generateTraceNumericalResults(chains);
         phase->mBeta.generateTraceNumericalResults(chains);
@@ -1572,6 +1598,51 @@ void Model::generateTraceNumericalResults(const std::vector<ChainSpecs> &chains)
         phase->mDuration.generateTraceNumericalResults(chains);
     });
 
+
+    std::vector<double> Rhat;
+    std::vector<double> ESS;
+    for (size_t i = 0; i<mEvents.size(); i++) {
+        const auto& event = mEvents[i];
+        if (event->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
+            Rhat.push_back(event->mTheta.mResults.RhatESS.rHat);
+            ESS.push_back(std::min(event->mTheta.mResults.RhatESS.bulkESS,
+                                   event->mTheta.mResults.RhatESS.tailESS));
+
+            if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe) {
+                Rhat.push_back( event->mS02Theta.mResults.RhatESS.rHat);
+                ESS.push_back(std::min(event->mS02Theta.mResults.RhatESS.bulkESS,
+                                       event->mS02Theta.mResults.RhatESS.tailESS));
+            }
+            for (auto&& date : event->mDates) {
+                Rhat.push_back(date.mTi.mResults.RhatESS.rHat);
+                ESS.push_back(std::min(date.mTi.mResults.RhatESS.bulkESS,
+                                       date.mTi.mResults.RhatESS.tailESS));
+
+                Rhat.push_back(date.mSigmaTi.mResults.RhatESS.rHat);
+                ESS.push_back(std::min(date.mSigmaTi.mResults.RhatESS.bulkESS,
+                                       date.mSigmaTi.mResults.RhatESS.tailESS));
+            }
+        }
+    }
+
+    // Les paramètres de phase ne sont pas échantillonnés
+   /* for (size_t i = 0; i<mPhases.size(); i++) {
+        const auto& phase = mPhases[i];
+        Rhat.push_back(phase->mAlpha.mResults.RhatESS.rHat);
+        ESS.push_back(std::min(phase->mAlpha.mResults.RhatESS.bulkESS,
+                               phase->mAlpha.mResults.RhatESS.tailESS));
+
+        Rhat.push_back(phase->mBeta.mResults.RhatESS.rHat);
+        ESS.push_back(std::min(phase->mBeta.mResults.RhatESS.bulkESS,
+                               phase->mBeta.mResults.RhatESS.tailESS));
+
+        Rhat.push_back(phase->mDuration.mResults.RhatESS.rHat);
+        ESS.push_back(std::min(phase->mDuration.mResults.RhatESS.bulkESS,
+                               phase->mDuration.mResults.RhatESS.tailESS));
+
+    }*/
+    mConvergenceSummary = MCMCDiagnostic::computeConvergenceSummary(Rhat, ESS);
+    std::cout << " Convergence Summary : " << mConvergenceSummary.label.toStdString() << std::endl;
 
 #ifdef DEBUG
     qDebug() <<  "[Model::generateTraceNumericalResults] done in " + DHMS(t.elapsed()) ;

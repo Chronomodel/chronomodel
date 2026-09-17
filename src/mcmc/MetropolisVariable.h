@@ -40,7 +40,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #ifndef METROPOLISVARIABLE_H
 #define METROPOLISVARIABLE_H
 
-#include "Functions.h"
+//#include "Functions.h"
 #include "DateUtils.h"
 #include "MCMCSettings.h"
 
@@ -83,6 +83,219 @@ enum BandwidthType
     eBWCustom = 1,
     eBWSJ = 2,
     eBWNRD0 = 3
+};
+
+
+typedef double type_data;
+
+// ------------------------------------------------------------------
+// Quartiles
+// ------------------------------------------------------------------
+struct Quartiles
+{
+    type_data Q1 = static_cast<type_data>(0.0);
+    type_data Q2 = static_cast<type_data>(0.0);
+    type_data Q3 = static_cast<type_data>(0.0);
+};
+
+// ------------------------------------------------------------------
+// Statistiques de la fonction
+// ------------------------------------------------------------------
+struct DensityStat
+{
+    type_data bandwidth_used = static_cast<type_data>(0.0);
+    type_data max      = static_cast<type_data>(0.0);
+    type_data mode     = static_cast<type_data>(0.0);
+    type_data mean     = static_cast<type_data>(0.0);
+    type_data std      = static_cast<type_data>(0.0);
+    Quartiles quartiles{};
+};
+
+// ------------------------------------------------------------------
+// Statistiques de la trace
+// ------------------------------------------------------------------
+struct TraceStat
+{
+    bool updated = false;
+    type_data min      = static_cast<type_data>(0.0);
+    type_data max      = static_cast<type_data>(0.0);
+    type_data mean     = static_cast<type_data>(0.0);
+    type_data std      = static_cast<type_data>(0.0);
+    type_data bw_SJ      = static_cast<type_data>(0.0);
+    type_data bw_nrd0      = static_cast<type_data>(0.0);
+    Quartiles quartiles{};
+};
+
+#pragma mark R_hat & ESS
+
+namespace MCMCDiagnostic
+{
+// Seuils partagés par TOUS les diagnostics de convergence (calcul de synthèse ET
+// affichage UI), pour qu'ils ne puissent plus diverger silencieusement comme entre
+// computeConvergenceSummary (1.01/1.05) et l'ancien affichage Rhat (1.01/1.1).
+// Alignés sur Vehtari, Gelman, Simpson, Carpenter & Bürkner (2021) pour le Rhat,
+// et sur la règle usuelle (Stan/ArviZ/bayesplot) d'au moins ~400 tirages effectifs
+// par quantité d'intérêt pour l'ESS.
+namespace Threshold
+{
+
+constexpr double RhatGood    = 1.01; // en dessous : convergence satisfaisante
+constexpr double RhatWarning = 1.05; // en dessous : convergence douteuse ; au-dessus : non convergé
+
+constexpr double EssGood     = 400.; // au-dessus : ESS satisfaisant
+constexpr double EssWarning  = 100.; // en dessous : ESS trop faible pour être exploitable
+
+} // namespace Threshold
+enum class ConvergenceStatus
+{
+    eGood,      // Convergence satisfaisante
+    eWarning,   // Convergence douteuse, à surveiller
+    eBad        // Non convergé
+};
+
+struct ConvergenceSummary
+{
+     double maxRHat = 0.;                       // max(R-hat) sur toutes les variables
+     double meanRHat = 0.;                       // moyenne, à titre indicatif seulement (ne doit pas servir à décider)
+     size_t nVariables = 0;                       // nombre de variables évaluées
+     size_t nAboveGoodThreshold = 0;              // nb de variables avec R-hat >= goodThreshold (ou non finies)
+     double fractionAboveGoodThreshold = 0.;      // proportion correspondante
+
+     // --- ESS (nouveau) ---
+     bool hasEss = false;                         // ESS fourni et exploitable (essValues non vide)
+     double minESS = 0.;                          // min(ESS) sur les variables évaluées
+     double meanESS = 0.;                         // moyenne, à titre indicatif seulement (ne doit pas servir à décider)
+     size_t nEssVariables = 0;                     // nombre de variables ESS évaluées
+     size_t nBelowGoodEssThreshold = 0;            // nb de variables avec ESS < essGoodThreshold (ou non finies)
+     double fractionBelowGoodEssThreshold = 0.;    // proportion correspondante
+
+     // --- Sous-statuts (utiles pour un badge séparé par métrique dans l'UI/le log) ---
+     ConvergenceStatus rHatStatus = ConvergenceStatus::eGood;
+     ConvergenceStatus essStatus  = ConvergenceStatus::eGood;
+
+     ConvergenceStatus status = ConvergenceStatus::eGood;
+     QString label;                                // libellé qualitatif prêt à afficher dans l'UI
+ };
+
+
+
+struct RhatEssResult
+{
+    double rHat    = 0.;   // max(bulk-Rhat, tail-Rhat)
+    double bulkESS = 0.;   // ESS sur les valeurs rang-normalisées (précision moyenne/médiane)
+    double tailESS = 0.;   // min(ESS quantile 5 %, ESS quantile 95 %) (précision des queues)
+};
+
+/**
+ * @brief Calcule Rhat (split, rang-normalisé et replié) ET l'ESS (bulk + tail) d'une
+ *        variable échantillonnée en UNE seule passe, en partageant tout ce qui peut
+ *        l'être entre les deux diagnostics : split en demi-chaînes, tri des valeurs
+ *        regroupées (réutilisé pour la médiane ET les quantiles 5 %/95 %), passe de
+ *        rang-normalisation "bulk" (réutilisée pour bulk-Rhat ET bulk-ESS, qui portent
+ *        sur exactement les mêmes demi-chaînes transformées), statistiques W/B/var+
+ *        par jeu de demi-chaînes (calculées une seule fois et réutilisées à la fois
+ *        pour la formule du Rhat et pour la combinaison d'autocorrélation de l'ESS),
+ *        et un unique objet Eigen::FFT réutilisé pour les 3 jeux d'autocovariances
+ *        (bulk, indicatrice q05, indicatrice q95 — tous de même longueur après split).
+ *
+ *        Seul le repliement autour de la médiane (spécifique à tail-Rhat) et la
+ *        transformation en indicatrices de quantile (spécifique à tail-ESS) restent
+ *        des étapes distinctes : ce sont deux diagnostics différents qui ne partagent
+ *        que le nom "tail" (Vehtari, Gelman, Simpson, Carpenter & Bürkner, 2021).
+ *
+ * @warning Reproduction fidèle de l'algorithme de Geyer/Stan pour l'ESS, mais non
+ *          validée numériquement contre une référence externe (posterior::ess_bulk/
+ *          ess_tail en R, ou Stan). À comparer sur quelques chaînes de test avant
+ *          usage en production.
+ *
+ * @note Suppose vos fonctions averageRanks / invNormalCDF / rankNormalize déjà
+ *       écrites. Le Rhat reproduit exactement la formule de votre gelmanRubin()
+ *       (variante "coda", avec le terme correctif (M+1)/(M*N) sur B, et les mêmes
+ *       gardes pour les chaînes dégénérées : W et B quasi nuls -> 1.0, W quasi nul
+ *       seul -> infini, B négligeable devant W -> 1.0). L'ESS, en revanche,
+ *       utilise en interne la variance globale "var+" SANS ce terme correctif
+ *       (convention Stan/Vehtari standard) : le correctif (M+1)/M de votre
+ *       gelmanRubin est spécifique au facteur de réduction d'échelle et n'a pas
+ *       d'équivalent justifié dans la dérivation de l'ESS. Les deux var+ sont
+ *       calculées séparément à partir des mêmes W/B (donc sans repasser sur les
+ *       données), voir le commentaire dans le .cpp.
+ *
+ * @param chains  M chaînes de même longueur N (N >= 4 requis pour le split).
+ */
+RhatEssResult computeRhatAndEss(const std::vector<std::vector<double>>& chains);
+
+
+/**
+ * @brief Synthétise un ensemble de R-hat (un par variable échantillonnée) en un
+ *        diagnostic de convergence unique, qualitatif.
+ *
+ * Principe : le pire cas (max R-hat) pilote la décision, pas la moyenne, car une
+ * moyenne masque la seule variable qui n'a pas convergé. Un second critère (fraction
+ * de variables dépassant goodThreshold) évite qu'un grand nombre de paramètres ne
+ * fasse basculer le diagnostic en "Mauvais" à cause d'un simple bruit statistique
+ * isolé, ce qui est fréquent dès qu'on a beaucoup de variables (ti, deltaI, sigmaTi...).
+ *
+ * Seuils par défaut alignés sur Vehtari, Gelman, Simpson, Carpenter, Bürkner (2021)
+ * et l'usage courant (Stan), plus stricts que les seuils historiques 1.1/1.2 :
+ *
+ *   - maxRHat < goodThreshold                                          -> Bon
+ *   - maxRHat < warningThreshold ET fraction <= maxFractionAboveGood   -> Limite
+ *   - sinon (y compris toute valeur non finie)                        -> Mauvais
+ *
+ * À utiliser idéalement avec un split-R-hat (voire rank-normalized) plutôt qu'un
+ * R-hat classique, et en complément d'un diagnostic d'ESS (bulk/tail), le R-hat
+ * seul ne garantissant pas un échantillonnage suffisant des queues.
+ *
+ * @param rHatValues            R-hat de chaque variable échantillonnée
+ * @param goodThreshold         seuil en-dessous duquel une variable est jugée convergée (défaut 1.01)
+ * @param warningThreshold      seuil au-delà duquel le diagnostic global passe à "Mauvais" (défaut 1.05)
+ * @param maxFractionAboveGood  fraction maximale tolérée de variables >= goodThreshold
+ *                              avant de ne plus l'imputer au seul bruit (défaut 1 %)
+ */
+
+ConvergenceSummary computeConvergenceSummary(const std::vector<double>& rHatValues,
+                                             const std::vector<double>& essValues = {},
+                                             double goodThreshold = Threshold::RhatGood,
+                                             double warningThreshold = Threshold::RhatWarning,
+                                             double maxFractionAboveGood = 0.01,
+
+                                             double essGoodThreshold = Threshold::EssWarning,
+                                             double essWarningThreshold = Threshold::EssWarning,
+                                             double essMaxFractionBelowGood = -1.,
+                                             size_t minVariablesForBad = 4);
+} // namespace MCMCDiagnostic
+
+
+// ------------------------------------------------------------------
+// Analyse combinée (fonction + trace)
+// ------------------------------------------------------------------
+struct PosteriorAnalysis
+{
+    DensityStat densityAnalysis{};
+    TraceStat   traceAnalysis{};
+    MCMCDiagnostic::RhatEssResult RhatESS {};
+    // constructeur qui met des NaN pour indiquer « non calculé »
+    PosteriorAnalysis()
+    {
+        // ----- fonction -----
+        densityAnalysis.max  = std::numeric_limits<type_data>::quiet_NaN();
+        densityAnalysis.mode = std::numeric_limits<type_data>::quiet_NaN();
+        densityAnalysis.mean = std::numeric_limits<type_data>::quiet_NaN();
+        densityAnalysis.std  = std::numeric_limits<type_data>::quiet_NaN();
+        // les quartiles restent à 0.0 (ou vous pouvez les mettre à NaN aussi)
+        densityAnalysis.quartiles.Q1 = std::numeric_limits<type_data>::quiet_NaN();
+        densityAnalysis.quartiles.Q2 = std::numeric_limits<type_data>::quiet_NaN();
+        densityAnalysis.quartiles.Q3 = std::numeric_limits<type_data>::quiet_NaN();
+        // ----- trace -----
+        traceAnalysis.min  = std::numeric_limits<type_data>::quiet_NaN();
+        traceAnalysis.max  = std::numeric_limits<type_data>::quiet_NaN();
+        traceAnalysis.mean = std::numeric_limits<type_data>::quiet_NaN();
+        traceAnalysis.std  = std::numeric_limits<type_data>::quiet_NaN();
+        // idem pour les quartiles de la trace
+        traceAnalysis.quartiles.Q1 = std::numeric_limits<type_data>::quiet_NaN();
+        traceAnalysis.quartiles.Q2 = std::numeric_limits<type_data>::quiet_NaN();
+        traceAnalysis.quartiles.Q3 = std::numeric_limits<type_data>::quiet_NaN();
+    }
 };
 
 class MetropolisVariable
@@ -209,7 +422,7 @@ public:
     void memoHistoParameter(const int fftLen = 1024, const double bandwidth = 0.9, const double tmin = 0., const double tmax = 0.);
     bool HistoWithParameter(const int fftLen = 1024, const double bandwidth = 0.9, const double tmin = 0., const double tmax = 0.);
 
-    void generateHPD(const double threshold = 95);
+    void generateHPD(const double threshold = 95.0);
     void generateCredibility(const double threshold = 95.0);
 
 
@@ -500,4 +713,12 @@ private:
 QDataStream &operator<<( QDataStream& stream, const MetropolisVariable& data );
 
 QDataStream &operator>>( QDataStream& stream, MetropolisVariable& data );
+
+
+
+
+
+
+
+
 #endif

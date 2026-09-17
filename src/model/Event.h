@@ -42,6 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "MHVariable.h"
 #include "Date.h"
 #include "CurveSettings.h"
+#include "Matrix.h"
 #include "version.h"
 
 #include <QColor>

@@ -1675,9 +1675,44 @@ void ResultsView::updateShowList()
 
         } else if (mTempoRadio->isChecked()) {
             mMainVariable = GraphViewResults::eTempo;
+            if (mErrCheck->isChecked())
+               mShowList.append(GraphViewResults::eError);
+
+
+            if (mPhasesEventsUnfoldCheck->isChecked()) {
+                if (mCredibilityCheck->isChecked())
+                    mShowList.append(GraphViewResults::eCredibility);
+
+                mShowList.append(GraphViewResults::eThetaEvent);
+                if (mPhasesDatesUnfoldCheck->isChecked()) {
+                    mShowList.append(GraphViewResults::eDataTi);
+
+
+                }
+            }
 
         } else if (mActivityRadio->isChecked()) {
             mMainVariable = GraphViewResults::eActivity;
+            if (mErrCheck->isChecked())
+               mShowList.append(GraphViewResults::eError);
+            if (mActivityUnifCheck->isChecked())
+               mShowList.append(GraphViewResults::eActivityUnif);
+
+            if (mPhasesEventsUnfoldCheck->isChecked()) {
+                if (mCredibilityCheck->isChecked())
+                    mShowList.append(GraphViewResults::eCredibility);
+
+                mShowList.append(GraphViewResults::eThetaEvent);
+
+                if (mPhasesDatesUnfoldCheck->isChecked()) {
+                    mShowList.append(GraphViewResults::eDataTi);
+
+
+                }
+            }
+
+
+
 
         } else if (mDurationRadio->isChecked()) {
             mMainVariable = GraphViewResults::eDuration;
@@ -3665,115 +3700,6 @@ void ResultsView::updateCurvesToShow()
         return;
 
     }
-
-    // même code que updatemiainVariable ??
-    /*
-    else if ((mGraphListTab->currentName() == tr("Curves")) && mLambdaRadio->isChecked()) {
-        if (mCredibilityCheck->isChecked())
-            showVariableList.append(GraphViewResults::eCredibility);
-        showVariableList.append(GraphViewResults::eLambda);
-
-#ifdef KOMLAN
-    }  else if ((mGraphListTab->currentName() == tr("Curves")) && mS02VgRadio->isChecked()) {
-            if (mCredibilityCheck->isChecked())
-                showVariableList.append(GraphViewResults::eCredibility);
-            showVariableList.append(GraphViewResults::eS02Vg);
-
-#endif
-
-    } else if (mGraphListTab->currentName() == tr("Events")) {
-        if (mCredibilityCheck->isChecked())
-            showVariableList.append(GraphViewResults::eCredibility);
-
-        if (mEventThetaRadio->isChecked()) {
-            showVariableList.append(GraphViewResults::eThetaEvent);
-            if (mEventsDatesUnfoldCheck->isChecked()) {
-               showVariableList.append(GraphViewResults::eDataTi);
-               if (mDataCalibCheck->isChecked()) showVariableList.append(GraphViewResults::eDataCalibrate);
-               if (mWiggleCheck->isChecked()) showVariableList.append(GraphViewResults::eDataWiggle);
-
-            }
-        } else if (mDataSigmaRadio->isChecked()) {
-            if (mCredibilityCheck->isChecked())
-                showVariableList.append(GraphViewResults::eCredibility);
-            showVariableList.append(GraphViewResults::eSigma);
-
-        } else if (mEventVGRadio->isChecked()) {
-
-            if (mCredibilityCheck->isChecked())
-                showVariableList.append(GraphViewResults::eCredibility);
-            showVariableList.append(GraphViewResults::eVg);
-        }
-
-        else if (mEventVGRadio->isChecked()) {
-            if (mCredibilityCheck->isChecked())
-                showVariableList.append(GraphViewResults::eCredibility);
-            showVariableList.append(GraphViewResults::eS02);
-        }
-
-
-    }
-    else if (mGraphListTab->currentName() == tr("Phases")) {
-        if (mBeginEndRadio->isChecked()) {
-               showVariableList.append(GraphViewResults::eBeginEnd);
-               if (mCredibilityCheck->isChecked())
-                   showVariableList.append(GraphViewResults::eCredibility);
-               if (mPhasesEventsUnfoldCheck->isChecked()) {
-                   showVariableList.append(GraphViewResults::eThetaEvent);
-                   if (mPhasesDatesUnfoldCheck->isChecked()) {
-                       showVariableList.append(GraphViewResults::eDataTi);
-                   }
-               }
-        } else if (mTempoRadio->isChecked()) {
-            showVariableList.append(GraphViewResults::eTempo);
-            if (mErrCheck->isChecked())
-               showVariableList.append(GraphViewResults::eError);
-
-
-            if (mPhasesEventsUnfoldCheck->isChecked()) {
-                if (mCredibilityCheck->isChecked())
-                    showVariableList.append(GraphViewResults::eCredibility);
-                showVariableList.append(GraphViewResults::eThetaEvent);
-                if (mPhasesDatesUnfoldCheck->isChecked()) {
-                    showVariableList.append(GraphViewResults::eDataTi);
-
-
-                }
-            }
-
-        } else if (mActivityRadio->isChecked()) {
-            showVariableList.append(GraphViewResults::eActivity);
-            if (mErrCheck->isChecked())
-               showVariableList.append(GraphViewResults::eError);
-            if (mActivityUnifCheck->isChecked())
-               showVariableList.append(GraphViewResults::eActivityUnif);
-
-            if (mPhasesEventsUnfoldCheck->isChecked()) {
-                if (mCredibilityCheck->isChecked())
-                    showVariableList.append(GraphViewResults::eCredibility);
-                showVariableList.append(GraphViewResults::eThetaEvent);
-                if (mPhasesDatesUnfoldCheck->isChecked()) {
-                    showVariableList.append(GraphViewResults::eDataTi);
-
-
-                }
-            }
-
-        } else if (mDurationRadio->isChecked()) {
-            if (mCredibilityCheck->isChecked())
-                showVariableList.append(GraphViewResults::eCredibility);
-            showVariableList.append(GraphViewResults::eDuration);
-        }
-    }
-    // --------------------------------------------------------
-    //  All others
-    // --------------------------------------------------------
-    else { // it's curves !!
-
-    }
-    */
-
-   // const bool showStat = mEventsStatCheck->isChecked();
 
     // --------------------------------------------------------
     //  Update Graphs with selected options

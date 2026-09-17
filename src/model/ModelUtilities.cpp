@@ -827,6 +827,7 @@ QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const b
                 text += "<br><br>" + dateResultsHTML(&(date), model);
         }
 
+
     }
 
     if (model && model->is_curve) {
@@ -857,9 +858,10 @@ QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const b
         text += line(textBold(textBlue(QObject::tr("Posterior Event Date"))));
         text += line(textBlue(e->mTheta.resultsString("", DateUtils::getAppSettingsFormatStr())));
 
+        text +=  "<br>" + line(textBold(textBlue(QObject::tr("Posterior Shrinkage param."))));
+        text += line(textBlue(e->mS02Theta.resultsString("", nullptr)));
 
         if (withDates) {
-            //text += "<br>" +EventS02ResultsHTML(e); Pour version 4
             for (auto&& date : e->mDates)
                 text += "<br><br>" + dateResultsHTML(&(date), tmin_formated, tmax_formated);
         }
@@ -885,9 +887,7 @@ QString ModelUtilities::EventS02ResultsHTML(const std::shared_ptr<Event> e)
     QString text;
 
     if (e->mS02Theta.mSamplerProposal == SamplerProposal::eFixe) {
-       // text = line(textBold(textBlue(QObject::tr("Shrinkage param. = harmonic mean"))));
-        text += line(textGreen(QObject::tr("Shrinkage param. = harmonic mean : %1").arg(QString::number(e->mS02Theta.value()))));
-
+       text += line(textGreen(QObject::tr("Shrinkage param. = harmonic mean : %1").arg(QString::number(e->mS02Theta.value()))));
 
     } else {
         text += line(textBold(textBlue(QObject::tr("Posterior Shrinkage param."))));

@@ -782,8 +782,8 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
     //---- timeRange
 
-    if (mValueStack.at("Activity_TimeRange_min") == mValueStack.at("Activity_TimeRange_max")
-        || mValueStack.at("Activity_TimeRange_Level") != timeRangeLevel) {
+    if (!mValueStack.empty() && ((mValueStack.at("Activity_TimeRange_min") == mValueStack.at("Activity_TimeRange_max"))
+        || mValueStack.at("Activity_TimeRange_Level") != timeRangeLevel)) {
         const auto& betaTrace = *mBeta.mAllAcquiredTrace;
         const auto& alphaTrace = *mAlpha.mAllAcquiredTrace;
 
@@ -801,8 +801,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     double min95 = +INFINITY;
     double max95 = -INFINITY;
     // Ajout artificiel des events et bornes fixes
-    //const int nRealyAccepted = std::accumulate(model->mChains.begin(), model->mChains.end(), 0, [] (int sum, ChainSpecs c) {return sum + c.mRealyAccepted;});
-    const int nRealyAccepted = std::accumulate(model->mChains.begin(), model->mChains.end(), 0, [] (int sum, ChainSpecs c) {return sum + c.mIterDisplay;});
+    const int nRealyAccepted = std::accumulate(model->mChains.begin(), model->mChains.end(), 0, [] (int sum, ChainSpecs& c) {return sum + c.mIterDisplay;});
 
     for (const auto& ev : mEvents) {
         if (ev->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
@@ -956,8 +955,10 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
             }
             const int idxGridMax = std::clamp((int) floor((t - t_min_grid + h_2) / delta_t), 0, maxGrid) ;
 
-            for (auto&& ni = NiTot.begin() + idxGridMin; ni != NiTot.begin() + idxGridMax +1; ++ni) {
-                ++*ni ;
+            if (idxGridMin <= idxGridMax) {
+                for (auto&& ni = NiTot.begin() + idxGridMin; ni != NiTot.begin() + idxGridMax +1; ++ni) {
+                    ++*ni ;
+                }
             }
 
         }

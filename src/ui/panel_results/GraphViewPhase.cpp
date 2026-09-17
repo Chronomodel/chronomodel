@@ -437,10 +437,6 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
             const GraphCurve* tempo = mGraph->getCurve("Post Distrib All Chains");
 
             if ( tempo && !tempo->mData.isEmpty()) {
-                /*const bool showError = mShowList.contains(eError);
-                mGraph->setCurveVisible("Post Distrib All Chains", true);
-                mGraph->setCurveVisible("Post Distrib Env All Chains", showError);*/
-
                 QStringList curvesToShow;
                 curvesToShow << "Post Distrib All Chains";
                 if (mShowList.contains(eError))
@@ -502,41 +498,6 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
      *  - Duration Q3 i
      * ------------------------------------------------ */
     else if (mCurrentTypeGraph == eTrace) {
-        /*if (mShowList.contains(eBeginEnd)) {
-
-            for (int i = 0; i<mShowChainList.size(); ++i) {
-                mGraph->setCurveVisible("Begin Trace " + QString::number(i), mShowChainList.at(i));
-                mGraph->setCurveVisible("Begin Q1 " + QString::number(i), mShowChainList.at(i));
-                mGraph->setCurveVisible("Begin Q2 " + QString::number(i), mShowChainList.at(i));
-                mGraph->setCurveVisible("Begin Q3 " + QString::number(i), mShowChainList.at(i));
-
-                mGraph->setCurveVisible("End Trace " + QString::number(i), mShowChainList.at(i));
-                mGraph->setCurveVisible("End Q1 " + QString::number(i), mShowChainList.at(i));
-                mGraph->setCurveVisible("End Q2 " + QString::number(i), mShowChainList.at(i));
-                mGraph->setCurveVisible("End Q3 " + QString::number(i), mShowChainList.at(i));
-            }
-
-            mGraph->setTipXLab(tr("Iteration"));
-            mGraph->setTipYLab("t");
-            mGraph->setYAxisMode(GraphView::eMinMaxHidden);
-            mGraph->showInfos(false);
-            mGraph->autoAdjustYScale(true);
-
-        } else if (mShowList.contains(eDuration)) {
-
-            for (int i = 0; i<mShowChainList.size(); ++i) {
-                mGraph->setCurveVisible("Duration Trace " + QString::number(i), mShowChainList.at(i));
-                mGraph->setCurveVisible("Duration Q1 " + QString::number(i), mShowChainList.at(i));
-                mGraph->setCurveVisible("Duration Q2 " + QString::number(i), mShowChainList.at(i));
-                mGraph->setCurveVisible("Duration Q3 " + QString::number(i), mShowChainList.at(i));
-            }
-
-            mGraph->setTipXLab(tr("Iteration"));
-            mGraph->setTipYLab("t");
-            mGraph->setYAxisMode(GraphView::eMinMaxHidden);
-            mGraph->showInfos(false);
-            mGraph->autoAdjustYScale(true);
-        }*/
         QStringList curvesToShow;
 
         if (mShowList.contains(eBeginEnd)) {

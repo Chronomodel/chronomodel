@@ -208,7 +208,27 @@ QString MCMCLoopChrono::initialize()
     return initialize_time();
 }
 
+// Gibbs complet comme V2
 bool MCMCLoopChrono::update_v3()
+{
+    sampler_Gibbs(mModel->mEvents);
+
+    std::for_each(mModel->mPhases.begin(),
+                  mModel->mPhases.end(),
+                  [this](std::shared_ptr<Phase> p) {
+                      p->update_Tau(tminPeriod, tmaxPeriod);
+                  });
+
+    std::for_each(mModel->mPhaseConstraints.begin(),
+                  mModel->mPhaseConstraints.end(),
+                  [](std::shared_ptr<PhaseConstraint> pc) {
+                      pc->updateGamma();
+                  });
+
+    return true;
+}
+
+void MCMCLoopChrono::sampler_Gibbs(std::vector<std::shared_ptr<Event>> &events)
 {
 
     /* --------------------------------------------------------------
@@ -227,10 +247,100 @@ bool MCMCLoopChrono::update_v3()
 
     for (std::shared_ptr<Event> &event : mModel->mEvents) {
         event->mTheta.mSamplerProposal = SamplerProposal::eEventPrior; // test ici
-            event->updateTheta_v3(tminPeriod, tmaxPeriod);
+            //event->updateTheta_v3(tminPeriod, tmaxPeriod);
+            //
+        const double theta = event->mTheta.value();
+        const double S02Theta = event->mS02Theta.value();
+        for (auto&& date : event->mDates )   {
+            //date.updateDate_v3(event->mTheta.value(), event->mS02Theta.value());
 
-            if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe)
-                event->updateS02Theta_v338();
+            date.Inversion(theta);
+
+            date.updateDelta_v3(theta, S02Theta);
+            // date.updateSigmaShrinkage_K(theta, S02Theta);
+            date.mSigmaTi.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
+            date.updateSigma_Log10(theta, S02Theta);
+
+            date.updateWiggle();
+        }
+
+        const double min = event->getThetaMin(tminPeriod);
+        const double max = event->getThetaMax(tmaxPeriod);
+
+        if (min > max)
+            throw QObject::tr("Error for event : %1 : min = %2 : max = %3").arg(event->getQStringName(), QString::number(min), QString::number(max));
+
+        // -------------------------------------------------------------------------------------------------
+        //  Evaluer theta.
+        //  Le cas Wiggle est inclus ici car on utilise une formule générale.
+        //  On est en "wiggle" si au moins une des mesures a un delta > 0.
+        // -------------------------------------------------------------------------------------------------
+
+        double sum_p = 0.0;
+        double sum_t = 0.0;
+
+        for (auto&& date: event->mDates) {
+            const double variance  = pow(date.mSigmaTi.value(), 2);
+            sum_t += (date.mTi.value() + date.mDelta) / variance;
+            sum_p += 1.0 / variance;
+        }
+        const double ti_avg = sum_t / sum_p;
+        const double sigma = 1.0 / sqrt(sum_p);
+
+        if (min == max) {
+            double try_theta = min;
+            event->mTheta.accept_update(try_theta);
+
+        } else {
+            switch(event->mTheta.mSamplerProposal)
+            {
+            case SamplerProposal::eDoubleExp:
+            {
+                try {
+                    double try_theta = Generator::gaussByDoubleExp(ti_avg, sigma, min, max);
+                    //  double try_theta = Generator::truncatedNormal(ti_avg, sigma, min, max);
+                    event->mTheta.accept_update(try_theta);
+
+                }
+                catch(QString error) {
+                    throw QObject::tr("Error for event : %1 : %2").arg(event->getQStringName(), error);
+                }
+                break;
+            }
+
+                // Event Prior
+            case SamplerProposal::eEventPrior:
+            {
+                double try_theta = Generator::truncatedNormal(ti_avg, sigma, min, max);
+                event->mTheta.accept_update(try_theta);
+                break;
+            }
+
+            case SamplerProposal::eRWAdaptGauss:
+            {
+                // MH: The only case where the acceptance rate makes sense, since we use sigma MH :
+                double try_theta = Generator::normalDistribution(event->mTheta.value(), event->mTheta.mSigmaMH);
+
+                if (try_theta < min || try_theta > max) {
+                    event->mTheta.reject_update();
+                    break;
+                }
+                double diff1 = try_theta - ti_avg;
+                double diff2 = event->mTheta.value() - ti_avg;
+                double rate = -0.5 * (diff1*diff1 - diff2*diff2) / (sigma*sigma);
+                event->mTheta.try_update_log(try_theta, rate);
+                break;
+            }
+
+            default:
+                break;
+            }
+        }
+
+        //
+
+        if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe)
+            event->updateS02Theta_v338();
 
         //--------------------- Update Phases -set mAlpha and mBeta they coud be used by the Event in the other Phase ----------------------------------------
         /* --------------------------------------------------------------
@@ -253,8 +363,6 @@ bool MCMCLoopChrono::update_v3()
      * -------------------------------------------------------------- */
     std::for_each(PAR mModel->mPhaseConstraints.begin(), mModel->mPhaseConstraints.end(), [] (std::shared_ptr<PhaseConstraint> pc) {pc->updateGamma();});
 
-
-    return true;
 
 }
 
@@ -303,7 +411,8 @@ bool MCMCLoopChrono::update_v3_block_simulated_annealing()
             // --------------------------------------------------------------
 
             for (int s = 0; s < dwell_steps; ++s)
-                tempering_339(event_regenerated, T);
+                //tempering_339(event_regenerated, T);
+                tempering_339_ti_marg(event_regenerated, T);
 
         }
 
@@ -313,16 +422,21 @@ bool MCMCLoopChrono::update_v3_block_simulated_annealing()
     // ------------------------------------------------------------------
     // 6️⃣  Mise à jour standard de tous les events
     // ------------------------------------------------------------------
-
+#pragma mark CHOIX DU SAMPLER
     // sampler_339_4v(mModel->mEvents); //fonctionne
 
-    //sampler_339_4vXi(mModel->mEvents);
-   // sampler_339_SingleSite(mModel->mEvents); // fonctionne
+    // sampler_339_4vXi(mModel->mEvents);
+    // sampler_339_SingleSite(mModel->mEvents); // fonctionne
 
-    sampler_339_SingleSite_bloc(mModel->mEvents); // defaut // fonctionne
+    //sampler_339_SingleSite_bloc(mModel->mEvents); // defaut // fonctionne
+    sampler_339_SingleSite_bloc_delta(mModel->mEvents); // avec shift bloc // Fonctionne bien
 
-    //sampler_339_SingleSite_bloc_2(mModel->mEvents); // fonctionne, peu efficace avec une seule date
+    // sampler_339_SingleSite_bloc_2(mModel->mEvents); // fonctionne avec A.1, B.2 peu efficace avec une seule date
 
+    // sampler_339_SingleSite_SliceSampling(mModel->mEvents); //fonctionne , et trop lent en calcul
+
+
+  //  sampler_339_SingleSite_NonCentered(mModel->mEvents); // en test
     //sampler_339_Couple(mModel->mEvents);
 
     //sampler_339_3v(mModel->mEvents);
@@ -475,6 +589,236 @@ void MCMCLoopChrono::tempering_339(std::vector<std::shared_ptr<Event>> &events, 
     }
 }
 
+void MCMCLoopChrono::tempering_339_ti_marg(std::vector<std::shared_ptr<Event>> &events, double T)
+{
+    try{
+        for (auto &event : events) {
+            try {
+                // Évaluation des bornes de theta
+                const double min = event->getThetaMin(tminPeriod);
+                const double max = event->getThetaMax(tmaxPeriod);
+
+                if (min > max) {
+                    throw QObject::tr("[Event::tempering_339] Error for event : %1 : min = %2 : max = %3")
+                    .arg(event->getQStringName(), QString::number(min), QString::number(max));
+                }
+
+                // Gestion du cas min == max (Contrainte stricte) : theta connu,
+                // rien à marginaliser, on garde le comportement d'origine.
+                if (min == max) {
+                    event->mTheta.setValue(min);
+                    event->mThetaReduced = mModel->reduceTime(min);
+
+                    for (auto&& date : event->mDates) {
+                        //date.applyTi(event->mTheta.value());
+                        date.applyInversion(event->mTheta.value());
+                    }
+                }
+                else {
+                    // ==========================================================
+                    // Mise à jour de chaque ti, THETA MARGINALISÉ.
+                    // Kernel A.1 : proposition indépendante (calibration/mixing),
+                    // acceptée contre la marginale tronquée de theta.
+                    // sigma_i et delta_i restent FIXES ici (mis à jour plus bas).
+                    // ==========================================================
+
+                    // ----------------------------------------------------------
+                    // Statistiques pondérées globales. P_curr = somme des 1/V_i
+                    // ne dépend pas des ti : reste CONSTANT sur tout le balayage.
+                    // ----------------------------------------------------------
+                    long double P_curr  = 0.0L;
+                    long double mu_curr = 0.0L;
+                    long double S_curr  = 0.0L;
+
+                    for (const auto& date : event->mDates) {
+                        const long double sigma_i = static_cast<long double>(date.mSigmaTi.value());
+                        const long double y = static_cast<long double>(date.mTi.value()) + static_cast<long double>(date.mDelta);
+                        const long double w = 1.0L / (sigma_i * sigma_i);
+
+                        if (P_curr == 0.0L) {
+                            P_curr = w; mu_curr = y; S_curr = 0.0L;
+                        } else {
+                            const long double P_new = P_curr + w;
+                            const long double d = y - mu_curr;
+                            const long double mu_new = mu_curr + (w / P_new) * d;
+                            S_curr += w * d * (y - mu_new);
+                            P_curr = P_new;
+                            mu_curr = mu_new;
+                        }
+                    }
+
+                    if (P_curr <= 0.0L) continue; // Sécurité division par zéro
+
+                    // sigma de la marginale de theta : constant sur tout le balayage
+                    const long double sigma_avg = 1.0L / std::sqrt(P_curr);
+
+                    for (auto&& date : event->mDates) {
+
+                        const double ti_old0    = date.mTi.value();
+                        const double delta_old0 = date.mDelta;
+                        const long double sigma_i = static_cast<long double>(date.mSigmaTi.value());
+                        const long double w_i      = 1.0L / (sigma_i * sigma_i);
+                        const long double y_old    = static_cast<long double>(ti_old0) + delta_old0;
+
+                        // --- Leave-One-Out : retire cette date des stats globales ---
+                        const long double P_removed = P_curr - w_i;
+                        long double mu_removed = 0.0L;
+                        long double S_removed  = 0.0L;
+
+                        if (P_removed > 0.0L) {
+                            mu_removed = (P_curr * mu_curr - w_i * y_old) / P_removed;
+                            S_removed  = S_curr - w_i * (y_old - mu_curr) * (y_old - mu_removed);
+                            if (S_removed < 0.0L && S_removed > -1e-18L) S_removed = 0.0L;
+                        } else {
+                            mu_removed = y_old;
+                        }
+
+                        // --- Proposition indépendante de ti (kernel A.1 : calib/mixing) ---
+                        double ti_prop;
+                        if (Generator::randomUniform() < date.mMixingLevel) {
+                            ti_prop = *date.mCalibration->sample_t();
+                        } else {
+                            const double tminCalib = date.mCalibration->mTmin;
+                            const double tmaxCalib = date.mCalibration->mTmax;
+                            const double s = std::max((date.mSettings.mTmax - date.mSettings.mTmin),
+                                                      tmaxCalib - tminCalib) / 2.0;
+                            ti_prop = Generator::normalDistribution(ti_old0, s);
+                        }
+
+                        const double q_fwd = date.fProposalDensity(ti_prop, ti_old0);
+                        const double q_rev = date.fProposalDensity(ti_old0, ti_prop);
+                        if (q_fwd <= 0.0 || q_rev <= 0.0) {
+                            continue; // rejet automatique, ti inchangé
+                        }
+                        const double log_rate_q_t = std::log(q_rev) - std::log(q_fwd);
+
+                        // --- Vraisemblance calibration ---
+                        const double L_old = date.getLikelihood(ti_old0);
+                        const double L_new = date.getLikelihood(ti_prop);
+                        if (L_new <= 0.0 || L_old <= 0.0) {
+                            continue;
+                        }
+                        const double log_rate_L = std::log(L_new) - std::log(L_old);
+
+                        // --- Recombine avec la nouvelle valeur (P inchangé : seuls mu/S bougent) ---
+                        const long double y_new = static_cast<long double>(ti_prop) + delta_old0;
+
+                        long double mu_new, S_new;
+                        if (P_removed > 0.0L) {
+                            const long double d = y_new - mu_removed;
+                            mu_new = mu_removed + (w_i / P_curr) * d;   // P_new == P_curr (poids inchangés)
+                            S_new  = S_removed + w_i * d * (y_new - mu_new);
+                        } else {
+                            mu_new = y_new;
+                            S_new  = 0.0L;
+                        }
+                        if (S_new < 0.0L && S_new > -1e-18L) S_new = 0.0L;
+
+                        // --- Ratio MH : marginale tronquée de theta (T=1 ici, la
+                        //     température n'intervient que dans l'étape theta plus bas) ---
+                        const long double alpha_old_min = (static_cast<long double>(min) - mu_curr) / sigma_avg;
+                        const long double alpha_old_max = (static_cast<long double>(max) - mu_curr) / sigma_avg;
+                        const long double alpha_new_min = (static_cast<long double>(min) - mu_new)  / sigma_avg;
+                        const long double alpha_new_max = (static_cast<long double>(max) - mu_new)  / sigma_avg;
+
+                        const double log_Z_old = log_diff_cdf(static_cast<double>(alpha_old_min), static_cast<double>(alpha_old_max));
+                        const double log_Z_new = log_diff_cdf(static_cast<double>(alpha_new_min), static_cast<double>(alpha_new_max));
+
+                        if (!std::isfinite(log_Z_old) || !std::isfinite(log_Z_new)) {
+                            continue; // dégénéré : ti inchangé
+                        }
+
+                        // sigma_avg et sigma_i inchangés => pas de jacobien, pas de
+                        // ratio sigma_avg_new/sigma_avg_old (les deux valent 1 = log 0)
+                        const long double log_prior_marginal_diff = static_cast<long double>(log_Z_new - log_Z_old)
+                                                                   - 0.5L * (S_new - S_curr);
+
+                        const long double log_rate_total = log_prior_marginal_diff
+                                                           + static_cast<long double>(log_rate_L)
+                                                           + static_cast<long double>(log_rate_q_t);
+
+                        if (MHAcceptanceTest_log(static_cast<double>(log_rate_total))) {
+                            date.mTi.setValue(ti_prop);
+                            mu_curr = mu_new;
+                            S_curr  = S_new;
+                            // P_curr inchangé
+                        }
+                    }
+
+                    // ----------------------------------------------------------
+                    // theta ~ N(mu_curr, sigma_avg²) tronquée sur [min,max] :
+                    // moments exacts, déjà tenus à jour pendant le balayage
+                    // ci-dessus (pas besoin de refaire une boucle sum_p/sum_t).
+                    // ----------------------------------------------------------
+                    const double ti_avg = static_cast<double>(mu_curr);
+                    const double sigma  = static_cast<double>(sigma_avg);
+
+                    // Le pas de proposition s'élargit à haute température T
+                    const double sigma_proposal = event->mTheta.mSigmaMH * T;
+                    const double old_theta = event->mTheta.value();
+                    const double prop_theta = Generator::truncatedNormal(old_theta, sigma_proposal, min, max);
+
+                    const double num = normalCDF((max - old_theta) / sigma_proposal) - normalCDF((min - old_theta) / sigma_proposal);
+                    const double den = normalCDF((max - prop_theta) / sigma_proposal) - normalCDF((min - prop_theta) / sigma_proposal);
+
+                    if (num > 0.0 && den > 0.0) {
+                        const double log_support_ratio = std::log(num) - std::log(den);
+                        const double log_prior_diff = log_dnorm(prop_theta, ti_avg, sigma) - log_dnorm(old_theta, ti_avg, sigma);
+                        const double log_rate = (log_prior_diff / T) + log_support_ratio;
+
+                        if (MHAcceptanceTest_log(log_rate)) {
+                            event->mTheta.setValue(prop_theta);
+                            event->mThetaReduced = mModel->reduceTime(prop_theta);
+                        }
+                    }
+                }
+
+                // Mises à jour des hyperparamètres (inchangé)
+                for (auto&& date : event->mDates) {
+                    date.applyDelta(event->mTheta.value(), event->mS02Theta.value());
+                    date.applySigma(event->mTheta.value(), event->mS02Theta.value());// via shrinkage
+
+                    date.applyWiggle();
+                }
+
+            } catch (const std::exception &e) {
+                qWarning() << "[ " << __func__ << "] Tempering error on event"
+                           << event->getQStringName() << ":" << e.what();
+            }
+
+            if (AppSettings::mEventModel == EventModelType::EDM2) {
+                if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe)
+                    event->applyS02Theta_v3();
+            }
+
+            std::for_each(event->mPhases.begin(), event->mPhases.end(),
+                          [this](std::shared_ptr<Phase> p) {
+                              p->update_AlphaBeta(tminPeriod, tmaxPeriod);
+                          });
+        }
+
+        std::for_each(mModel->mPhases.begin(), mModel->mPhases.end(),
+                      [this](std::shared_ptr<Phase> p) {
+                          p->update_Tau(tminPeriod, tmaxPeriod);
+                      });
+
+        std::for_each(mModel->mPhaseConstraints.begin(), mModel->mPhaseConstraints.end(),
+                      [](std::shared_ptr<PhaseConstraint> pc) {
+                          pc->updateGamma();
+                      });
+
+    } catch (const char* e) {
+        qWarning() << "[" << __func__ << "] char " << e;
+    } catch (const std::length_error& e) {
+        qWarning() << "[" << __func__ << "] length_error" << e.what();
+    } catch (const std::out_of_range& e) {
+        qWarning() << "[" << __func__ << "] out_of_range" << e.what();
+    } catch (const std::exception& e) {
+        qWarning() << "[" << __func__ << "] " << e.what();
+    } catch(...) {
+        qWarning() << "[" << __func__ << "] Caught Exception!";
+    }
+}
 
 /**
  * @brief Méthode d'échantillonnage MCMC pour le modèle 339_4v.
@@ -1307,6 +1651,9 @@ void MCMCLoopChrono::sampler_339_SingleSite(std::vector<std::shared_ptr<Event>> 
 #pragma mark mixingKernel
 
                 constexpr double mixingKernel = 0;
+                // 0 -> A.1 ti calibré sigma shrinkage ; OK fonctionne ;
+                // 1 -> B.2 à controler
+
 
                 for (size_t i = 0; i < event->mDates.size(); ++i) {
 
@@ -1365,32 +1712,33 @@ void MCMCLoopChrono::sampler_339_SingleSite(std::vector<std::shared_ptr<Event>> 
 
                     if (u_kernel < mixingKernel) {
                         // ==============================================================
-                            // NOYAU B.2 : Saut d'Indépendance Non-Centré (NCP Papaspiliopoulos)
-                            // Centré sur la moyenne marginalisée (ti_bar)
-                            // ==============================================================
-                            date.mTi.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
+                        // NOYAU B.2 : Saut d'Indépendance Non-Centré (NCP Papaspiliopoulos)
+                        // Centré sur la moyenne marginalisée (ti_bar)
+                        // ==============================================================
+#pragma mark NOYAU B.2
+                        date.mTi.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
 
-                            // 1. Définition du centre physique (leave-one-out de l'événement)
-                            const double ti_bar = static_cast<double>(mu_removed) - delta_old0;
+                        // 1. Définition du centre physique (leave-one-out de l'événement)
+                        const double ti_bar = static_cast<double>(mu_removed) - delta_old0;
 
-                            // 2. Tirage INDÉPENDANT dans l'espace latent adimensionnel z
-                            // s_z gère l'amplitude de l'exploration autour de la moyenne (idéalement proche de 1)
-                            const double s_z = date.mTi.mSigmaMH;
-                            const double z_prop = Generator::normalDistribution(0.0, s_z);
+                        // 2. Tirage INDÉPENDANT dans l'espace latent adimensionnel z
+                        // s_z gère l'amplitude de l'exploration autour de la moyenne (idéalement proche de 1)
+                        const double s_z = date.mTi.mSigmaMH;
+                        const double z_prop = Generator::normalDistribution(0.0, s_z);
 
-                            // 3. Transformation déterministe vers l'espace physique (t = mu + sigma * z)
-                            ti_prop = ti_bar + sigma_cur * z_prop;
+                        // 3. Transformation déterministe vers l'espace physique (t = mu + sigma * z)
+                        ti_prop = ti_bar + sigma_cur * z_prop;
 
-                            // 4. Projection de l'état actuel dans l'espace latent pour évaluer q_rev
-                            const double z_old = (ti_old0 - ti_bar) / sigma_cur;
+                        // 4. Projection de l'état actuel dans l'espace latent pour évaluer q_rev
+                        const double z_old = (ti_old0 - ti_bar) / sigma_cur;
 
-                            // 5. Ratio de Metropolis-Hastings (log(q_rev) - log(q_fwd))
-                            // Le Jacobien du changement de variable (1/sigma_cur) s'annule parfaitement
-                            // entre le numérateur et le dénominateur.
-                            const double d_old  = z_old / s_z;
-                            const double d_prop = z_prop / s_z;
+                        // 5. Ratio de Metropolis-Hastings (log(q_rev) - log(q_fwd))
+                        // Le Jacobien du changement de variable (1/sigma_cur) s'annule parfaitement
+                        // entre le numérateur et le dénominateur.
+                        const double d_old  = z_old / s_z;
+                        const double d_prop = z_prop / s_z;
 
-                            log_rate_q = 0.5 * (d_prop * d_prop - d_old * d_old);
+                        log_rate_q = 0.5 * (d_prop * d_prop - d_old * d_old);
 
 
                     }
@@ -1480,6 +1828,8 @@ void MCMCLoopChrono::sampler_339_SingleSite(std::vector<std::shared_ptr<Event>> 
                         // ==============================================================
                         // NOYAU A.1 : Proposition globale (Mélange Calibré + N() via mMixingLevel)
                         // ==============================================================
+
+#pragma mark NOYAU A.1
                         date.mTi.mSamplerProposal = SamplerProposal::eLikelihood;
 
                         if (Generator::randomUniform() < date.mMixingLevel) {
@@ -1579,7 +1929,7 @@ void MCMCLoopChrono::sampler_339_SingleSite(std::vector<std::shared_ptr<Event>> 
                                 const long double log_rate_A = static_cast<long double>(log_rate_L)
                                                                + static_cast<long double>(log_rate_q)
                                                                + log_prior_marginal_diff_A;
-//std::cout << " log_rate_A=" << log_rate_A << std::endl;
+#pragma mark accept ti, delta
                                 if (MHAcceptanceTest_log(static_cast<double>(log_rate_A))) {
                                     date.mTi.accept_update(ti_prop);
                                     date.mDelta = delta_prop;
@@ -1962,7 +2312,9 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc(std::vector<std::shared_ptr<Eve
                 // 5. Mise à jour BLOC (ti, delta, sigma) pour chaque date
                 // ==========================================================================
 #pragma mark mixingKernel
-                constexpr double mixingKernel = 0.5; // 0 -> A.1 ti calibré; OK fonctionne ;  1 -> B.2 tout RW: ok fonctionne
+                constexpr double mixingKernel = 0.8;
+                // 0 -> A.1 ti calibré sigma shrinkage ; OK fonctionne ;
+                // 1 -> B.2 tout RW: ok fonctionne
 
                 for (size_t i = 0; i < event->mDates.size(); ++i) {
 
@@ -2054,7 +2406,7 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc(std::vector<std::shared_ptr<Eve
                                 // |J(ti,V)->(z,u)| = 1/(V^{3/2} ln10) => (sigma_prop/sigma_old)^3
                                 log_rate_q_t = 0.0;
                                 log_rate_q_s = 3.0 * std::log(sigma_prop / sigma_old);
-                                //log_rate_q_s = 2.0 * std::log(sigma_old / sigma_prop);
+
 
                             } else {
                                 // ----------------------------------------------------------------
@@ -2248,11 +2600,25 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc(std::vector<std::shared_ptr<Eve
                     event->mTheta.accept_update(min);
                 }
                 else {
-                    const double ti_avg_final = static_cast<double>(mu_curr);
-                    const double sigma_avg_final = 1.0 / std::sqrt( static_cast<double>(P_curr));
-                    const double new_theta = Generator::truncatedNormal(ti_avg_final, sigma_avg_final, min, max);
+#pragma mark useHMC
+                    constexpr bool useHMC = false;   // bascule pour A/B test
+                    if (useHMC) {
+                        constexpr int L_hmc = 20;
+                        const double eps_hmc = (M_PI / 2.0) / L_hmc;  // L*eps ~ pi/2
 
-                    event->mTheta.accept_update(new_theta);
+                        const double new_theta = hmcSampleTheta_temporal(
+                                    event->mTheta.value(), mu_curr, P_curr, min, max, L_hmc, eps_hmc);
+
+                        event->mTheta.accept_update(new_theta);
+                    } else {
+                        const double ti_avg_final = static_cast<double>(mu_curr);
+                        const double sigma_avg_final = 1.0 / std::sqrt(static_cast<double>(P_curr));
+                        const double new_theta = Generator::truncatedNormal(ti_avg_final, sigma_avg_final, min, max);
+
+                        event->mTheta.accept_update(new_theta);
+                    }
+
+
                 }
 
                 // ==================================================================
@@ -2327,7 +2693,576 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc(std::vector<std::shared_ptr<Eve
         return;
     }
 }
+void MCMCLoopChrono::sampler_339_SingleSite_bloc_delta(std::vector<std::shared_ptr<Event>> &events)
+{
+    try {
+        // ======================================================================
+        // 1. Mise à jour de tous les événements
+        // ======================================================================
+        for (auto &event : events) {
 
+            // ======================================================================
+            // 2. Mise à jour de theta uniquement si non fixé
+            // ======================================================================
+            if (event->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
+
+                // ==================================================================
+                // 3. Évaluation des bornes de theta
+                // ==================================================================
+                const double min = event->getThetaMin(tminPeriod);
+                const double max = event->getThetaMax(tmaxPeriod);
+
+                if (min > max) {
+                    throw QObject::tr("[%1] Error for event : %2 : min = %3 > max = %4")
+                    .arg(QString::fromLatin1(__func__),
+                         event->getQStringName(),
+                         QString::number(min),
+                         QString::number(max));
+                }
+
+#pragma mark Proposal ti, sigma, delta (Single-Site Block, par date)
+                // ==================================================================
+                // 4. Initialisation des statistiques pondérées globales
+                // ==================================================================
+                long double P_curr = 0.0L;
+                long double mu_curr = 0.0L;
+                long double S_curr = 0.0L;
+
+                for (const auto& date : event->mDates) {
+                    const long double sigma = static_cast<long double>(date.mSigmaTi.value());
+                    const long double y = static_cast<long double>(date.mTi.value()) + static_cast<long double>(date.mDelta);
+                    const long double w = 1.0L / (sigma * sigma);
+
+                    if (P_curr == 0.0L) {
+                        P_curr  = w;
+                        mu_curr = y;
+                        S_curr  = 0.0L;
+                    }
+                    else {
+                        const long double P_old = P_curr;
+                        const long double P_new = P_old + w;
+                        const long double d = y - mu_curr;
+                        const long double mu_new = mu_curr + (w / P_new) * d;
+
+                        S_curr += w * d * (y - mu_new);
+                        P_curr  = P_new;
+                        mu_curr = mu_new;
+                    }
+                }
+
+                // ==========================================================================
+                // 5. Mise à jour BLOC (ti, delta, sigma) pour chaque date
+                // ==========================================================================
+#pragma mark mixingKernel
+                constexpr double mixingKernel = 0.8;
+                // 0 -> A.1 ti calibré sigma shrinkage ; OK fonctionne ;
+                // 1 -> B.2 tout RW: ok fonctionne
+
+                for (size_t i = 0; i < event->mDates.size(); ++i) {
+
+                    auto& date = event->mDates[i];
+                    const double ti_old0    = date.mTi.value();
+                    const double delta_old0 = date.mDelta;
+                    const double sigma_old  = date.mSigmaTi.value();
+
+                    double ti_prop = ti_old0;
+                    double sigma_prop = sigma_old;
+                    double log_rate_L = 0.0;
+                    double log_rate_q_t = 0.0;
+                    double log_rate_q_s = 0.0;
+                    bool isvalide = true;
+
+                    // ----------------------------------------------------------------------
+                    // A. Calcul préalable Leave-One-Out O(1)
+                    // (Requis pour le noyau B.2 et l'évaluation rapide de la prior)
+                    // ----------------------------------------------------------------------
+                    const long double V1_old    = static_cast<long double>(sigma_old) * sigma_old;
+                    const long double w_old     = 1.0L / V1_old;
+                    const long double y_old     = static_cast<long double>(ti_old0) + delta_old0;
+
+                    const long double P_removed = P_curr - w_old;
+                    long double mu_removed = 0.0L;
+                    long double S_removed  = 0.0L;
+
+                    if (P_removed > 0.0L) {
+                        mu_removed = (P_curr * mu_curr - w_old * y_old) / P_removed;
+                        S_removed  = S_curr - w_old * (y_old - mu_curr) * (y_old - mu_removed);
+                        if (S_removed < 0.0L && S_removed > -1e-18L) S_removed = 0.0L;
+                    } else {
+                        mu_removed = y_old;
+                    }
+
+                    // ----------------------------------------------------------------------
+                    // B. Tirage de delta_prop (indépendant, identique pour les deux noyaux)
+                    // ----------------------------------------------------------------------
+                    double delta_prop;
+                    switch (date.mDeltaType) {
+                    case Date::eDeltaNone:     delta_prop = 0.0; break;
+                    case Date::eDeltaRange:    delta_prop = Generator::randomUniform(date.mDeltaMin, date.mDeltaMax); break;
+                    case Date::eDeltaGaussian: delta_prop = Generator::normalDistribution(date.mDeltaAverage, date.mDeltaError); break;
+                    case Date::eDeltaFixed:    delta_prop = date.mDeltaFixed; break;
+                    default: delta_prop = delta_old0; break;
+                    }
+
+                    // ----------------------------------------------------------------------
+                    // C. Bloc de propositions (ti, sigma)
+                    // ----------------------------------------------------------------------
+                    const double u_kernel = Generator::randomUniform();
+
+                    if (u_kernel < mixingKernel) {
+                        // ==============================================================
+                        // NOYAU B.2 : Saut Non-Centré (ti) + RW sur log10(V) (sigma)
+                        // ==============================================================
+#pragma mark NOYAU B.2
+                        date.mTi.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
+                        date.mSigmaTi.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
+
+                        // 1. RW sur log10(V), V = sigma^2
+                        const double log10_V1 = std::log10(static_cast<double>(V1_old));
+                        const double log10_V2 = Generator::normalDistribution(log10_V1, date.mSigmaTi.mSigmaMH);
+
+                        constexpr double logVMin = -100.0;
+                        constexpr double logVMax =  100.0;
+                        if (!std::isfinite(log10_V2) || log10_V2 < logVMin || log10_V2 > logVMax) {
+                            isvalide = false;
+                        } else {
+                            const double V2 = std::pow(10.0, log10_V2);
+                            sigma_prop = std::sqrt(V2);
+
+                            const double s_z = date.mTi.mSigmaMH;
+
+                            if (P_removed > 0.0L) {
+                                // ----------------------------------------------------------------
+                                // N >= 2 : ti_bar est un ancrage EXTERNE fixe (Leave-One-Out des
+                                // AUTRES dates), indépendant de (ti, sigma) de CETTE date. Le
+                                // changement de variable (ti,V)->(z,u) est bien défini, même
+                                // ancrage aller/retour => jacobien joint valide.
+                                // ----------------------------------------------------------------
+                                const double ti_bar = static_cast<double>(mu_removed) - delta_old0;
+
+                                const double z_old  = (ti_old0 - ti_bar) / sigma_old;
+                                const double z_prop = Generator::normalDistribution(z_old, s_z);
+                                ti_prop = ti_bar + sigma_prop * z_prop;
+
+                                // Marche (z,u) symétrique => Hastings = jacobien joint seul
+                                // |J(ti,V)->(z,u)| = 1/(V^{3/2} ln10) => (sigma_prop/sigma_old)^3
+                                log_rate_q_t = 0.0;
+                                log_rate_q_s = 3.0 * std::log(sigma_prop / sigma_old);
+
+
+                            } else {
+                                // ----------------------------------------------------------------
+                                // N == 1 : pas d'ancrage externe. "ti_bar = ti_old0" serait
+                                // auto-référent (dépend de l'état lui-même) : ce n'est PAS un
+                                // changement de variable valide, l'ancrage bougerait aussi au
+                                // retour (ti_bar_retour = ti_prop). Le facteur (sigma_prop/
+                                // sigma_old)^3 ne s'applique pas ici (terme résiduel dépendant
+                                // de z_prop non compensé -- cf. dérivation).
+                                //
+                                // Fix : DÉCOUPLER ti de sigma_prop. RW adaptif pur, symétrique,
+                                // centré sur ti_old0, échelle fixe s_z (indépendante de sigma) :
+                                //   log_rate_q_t = 0 trivialement (RW adaptif symétrique)
+                                // sigma garde son propre RW log10(V), mais seul désormais :
+                                //   Hastings = (sigma_prop/sigma_old)^2 (jacobien "V seul")
+                                // ----------------------------------------------------------------
+                                ti_prop = ti_old0 + Generator::normalDistribution(0.0, s_z);
+
+                                log_rate_q_t = 0.0;
+                                log_rate_q_s = 2.0 * std::log(sigma_prop / sigma_old);
+                               // log_rate_q_s = 2.0 * std::log(sigma_old / sigma_prop);
+                            }
+
+                        }
+                    }
+
+                    else {
+                        // ==============================================================
+                        // NOYAU A.1 : Likelihood/Calib (ti) + Shrinkage Uniform (sigma)
+                        // ==============================================================
+#pragma mark NOYAU A.1
+                        date.mTi.mSamplerProposal = SamplerProposal::eLikelihood;
+                        date.mSigmaTi.mSamplerProposal = SamplerProposal::ePrior;
+
+                        // 1. Tirage indépendant de V dans le prior shrinkage exact
+#pragma mark update sigma
+                        const double S02 = event->mS02Theta.value();
+
+                        constexpr double VMin = 1e-12;
+                        constexpr double VMax = 1e10;
+
+                        const double V2 = Generator::shrinkageUniforme(S02, VMin, VMax);
+                        sigma_prop = std::sqrt(V2);
+
+                        if (sigma_prop <= 0.0) {
+                            isvalide = false;
+                        } else {
+                            // 2. Likelihood sur ti (mélange calib / RW normal)
+                            if (Generator::randomUniform() < date.mMixingLevel) {
+                                ti_prop = *date.mCalibration->sample_t();
+                            } else {
+                                const double tminCalib = date.mCalibration->mTmin;
+                                const double tmaxCalib = date.mCalibration->mTmax;
+                                const double s = std::max((date.mSettings.mTmax - date.mSettings.mTmin),
+                                                          tmaxCalib - tminCalib) / 2.0;
+                                ti_prop = Generator::normalDistribution(ti_old0, s);
+                            }
+
+                            const double q_fwd = date.fProposalDensity(ti_prop, ti_old0);
+                            const double q_rev = date.fProposalDensity(ti_old0, ti_prop);
+
+                            if (q_fwd <= 0.0 || q_rev <= 0.0) {
+                                isvalide = false;
+                            } else {
+                                log_rate_q_t = std::log(q_rev) - std::log(q_fwd);
+
+                                // --------------------------------------------------------------
+                                // Échantillonneur d'indépendance exact sur V : q(V) = p_V(V).
+                                // Rapport MH pour un indépendance sampler :
+                                //   [p_V(V2)/p_V(V1)] * [q(V1)/q(V2)]
+                                //     = [p_V(V2)/p_V(V1)] * [p_V(V1)/p_V(V2)] = 1
+                                // Le prior shrinkage s'annule EXACTEMENT avec la proposition.
+                                // Comme log_prior_shrinkage = log(p_V(V2)/p_V(V1)) est ajouté
+                                // systématiquement à l'Étape E, on lui oppose ici son opposé
+                                // exact pour obtenir une contribution nette nulle.
+                                // --------------------------------------------------------------
+                                log_rate_q_s = -2.0 * (std::log(S02 + static_cast<double>(V1_old)) - std::log(S02 + V2));
+                            }
+                        }
+                    }
+
+                    // ----------------------------------------------------------------------
+                    // D. Vraisemblance Calibration (uniquement pour ti)
+                    // ----------------------------------------------------------------------
+                    if (isvalide) {
+                        const double L_old = date.getLikelihood(ti_old0);
+                        const double L_new = date.getLikelihood(ti_prop);
+
+                        if (L_new <= 0.0 || L_old <= 0.0 ) {
+                            isvalide = false;
+                        } else {
+                            log_rate_L = std::log(L_new) - std::log(L_old);
+                        }
+                    }
+
+                    // ----------------------------------------------------------------------
+                    // E. Calcul de la Marginal Prior Conjointe et Acceptation
+                    // ----------------------------------------------------------------------
+                    if (isvalide) {
+                        const long double V2_new = static_cast<long double>(sigma_prop) * sigma_prop;
+                        const long double w_new  = 1.0L / V2_new;
+                        const long double y_new  = static_cast<long double>(ti_prop) + delta_prop;
+
+                        // Ajout du nouvel état O(1)
+                        long double P_new = P_removed, mu_new = mu_removed, S_new = S_removed;
+                        if (P_new == 0.0L) {
+                            P_new = w_new; mu_new = y_new; S_new = 0.0L;
+                        } else {
+                            const long double d = y_new - mu_new;
+                            P_new  = P_removed + w_new;
+                            mu_new = mu_removed + (w_new / P_new) * d;
+                            S_new  = S_removed + w_new * d * (y_new - mu_new);
+                        }
+                        if (S_new < 0.0L && S_new > -1e-18L) S_new = 0.0L;
+
+                        const long double log_sigma_i_ratio = std::log(sigma_prop / static_cast<long double>(sigma_old));
+                        long double log_prior_marginal_diff = 0.0L;
+                        bool degenerate = false;
+
+                        if (min == max) {
+                            const long double theta_fixed  = static_cast<long double>(min);
+                            const long double residual_old = y_old - theta_fixed;
+                            const long double residual_new = y_new - theta_fixed;
+
+                            log_prior_marginal_diff = -0.5L * (residual_new * residual_new / V2_new
+                                                               - residual_old * residual_old / V1_old)
+                                                      - log_sigma_i_ratio;
+                        } else {
+                            const long double sigma_avg_old = 1.0L / std::sqrt(P_curr);
+                            const long double sigma_avg_new = 1.0L / std::sqrt(P_new);
+
+                            const long double alpha_old_min = (static_cast<long double>(min) - mu_curr) / sigma_avg_old;
+                            const long double alpha_old_max = (static_cast<long double>(max) - mu_curr) / sigma_avg_old;
+                            const long double alpha_new_min = (static_cast<long double>(min) - mu_new)  / sigma_avg_new;
+                            const long double alpha_new_max = (static_cast<long double>(max) - mu_new)  / sigma_avg_new;
+
+                            const double log_Z_old = log_diff_cdf(static_cast<double>(alpha_old_min), static_cast<double>(alpha_old_max));
+                            const double log_Z_new = log_diff_cdf(static_cast<double>(alpha_new_min), static_cast<double>(alpha_new_max));
+
+                            if (!std::isfinite(log_Z_old) || !std::isfinite(log_Z_new)) {
+                                degenerate = true;
+                            } else {
+                                const long double log_sigma_avg_ratio = std::log(sigma_avg_new / sigma_avg_old);
+                                log_prior_marginal_diff = static_cast<long double>(log_Z_new - log_Z_old)
+                                                          + log_sigma_avg_ratio
+                                                          - log_sigma_i_ratio
+                                                          - 0.5L * (S_new - S_curr);
+                            }
+                        }
+
+                        if (degenerate) {
+                            date.mTi.reject_update();
+                            date.mSigmaTi.reject_update();
+                        } else {
+                            // Shrinkage de la distribution S02
+                            const long double S02_ld = static_cast<long double>(event->mS02Theta.value());
+                            const long double log_prior_shrinkage = 2.0L * (std::log(S02_ld + V1_old) - std::log(S02_ld + V2_new));
+
+                            const long double log_rate_total = log_prior_marginal_diff
+                                                               + log_prior_shrinkage
+                                                               + static_cast<long double>(log_rate_L)
+                                                               + static_cast<long double>(log_rate_q_t)
+                                                               + static_cast<long double>(log_rate_q_s);
+
+                            if (MHAcceptanceTest_log(static_cast<double>(log_rate_total))) {
+                                date.mTi.accept_update(ti_prop);
+                                date.mSigmaTi.accept_update(static_cast<double>(sigma_prop));
+                                date.mDelta = delta_prop;
+
+                                P_curr = P_new;
+                                mu_curr = mu_new;
+                                S_curr = S_new;
+                            } else {
+                                date.mTi.reject_update();
+                                date.mSigmaTi.reject_update();
+                            }
+                        }
+                    } else {
+                        date.mTi.reject_update();
+                        date.mSigmaTi.reject_update();
+                    }
+                } // Fin de boucle des dates
+
+                // ==========================================================================
+                // 5-bis. NOUVEAU (essai) : décalage rigide conjoint de theta et de tous les
+                // ti, calé sur sigma_avg = 1/sqrt(P_curr) - même mécanisme que celui qui a
+                // fonctionné sur sampler_339_SingleSite_NonCentered. Cible le cas où les
+                // dates d'un événement sont mutuellement très informatives (accord fort,
+                // sigma petits) : theta et les ti deviennent alors fortement corrélés
+                // (effet "funnel", Neal), et les mises à jour une-date-à-la-fois de
+                // l'étape 5 ne suffisent plus à les faire bouger efficacement ensemble.
+                //
+                // Le décalage rigide ti_prop_i = ti_old_i + Δtheta, theta_prop = theta_old
+                // + Δtheta laisse EXACTEMENT invariant l'écart (ti-theta)/sigma_i, donc le
+                // prior hiérarchique Normal(ti; theta, sigmaTi²) ne contribue rien au ratio
+                // d'acceptation : seules la vraisemblance de calibration (absolue en ti) et
+                // la borne dure [min,max] de theta interviennent. sigma_avg est l'écart-type
+                // EXACT de la loi conditionnelle courante de theta (même quantité que celle
+                // utilisée juste après, à l'étape 6, pour le Gibbs de theta) : c'est la
+                // bonne échelle pour une exploration locale de la crête theta/ti - aucun
+                // nouveau paramètre adaptatif, recalculé à chaque itération à partir des
+                // données courantes. Un mélange d'échelle (kWideJumpProb, kWideJumpFactor),
+                // toujours symétrique en Δtheta -> aucun terme de Hastings, ajoute une
+                // capacité de saut ponctuel plus large pour franchir un désaccord franc
+                // entre deux dates, que sigma_avg seul ne peut pas couvrir.
+                // ==========================================================================
+#pragma mark Reparam - Décalage rigide theta + ti
+                if (min != max && !event->mDates.empty()) {
+
+                    constexpr double kWideJumpProb   = 0.30; // proportion de "grands" pas
+                    constexpr double kWideJumpFactor = 100.0; // facteur d'inflation du pas
+
+                    const double sigma_avg = 1.0 / std::sqrt(static_cast<double>(P_curr));
+                    const double stepScale = (Generator::randomUniform() < kWideJumpProb)
+                                                  ? kWideJumpFactor * sigma_avg
+                                                  : sigma_avg;
+
+                    const double theta_old  = event->mTheta.value();
+                    const double deltaTheta = Generator::normalDistribution(0.0, stepScale);
+                    const double theta_prop = theta_old + deltaTheta;
+
+                    bool shiftValide = (theta_prop >= min && theta_prop <= max);
+
+                    long double log_rate_L_shift = 0.0L;
+                    std::vector<double> ti_prop_shift;
+
+                    if (shiftValide) {
+                        ti_prop_shift.reserve(event->mDates.size());
+                        for (const auto& date : event->mDates) {
+                            const double ti_prop_i = date.mTi.value() + deltaTheta;
+                            ti_prop_shift.push_back(ti_prop_i);
+
+                            const double L_old = date.getLikelihood(date.mTi.value());
+                            const double L_new = date.getLikelihood(ti_prop_i);
+                            if (!(L_old > 0.0) || !(L_new > 0.0)) {
+                                shiftValide = false;
+                                break;
+                            }
+                            log_rate_L_shift += std::log(static_cast<long double>(L_new))
+                                              - std::log(static_cast<long double>(L_old));
+                        }
+                    }
+
+                    if (shiftValide && MHAcceptanceTest_log(static_cast<double>(log_rate_L_shift))) {
+                        event->mTheta.accept_update(theta_prop);
+                        for (size_t k = 0; k < event->mDates.size(); ++k) {
+                            event->mDates[k].mTi.accept_update(ti_prop_shift[k]);
+                        }
+                        // Une translation commune de tous les y_i et de mu laisse P_curr
+                        // et S_curr invariants (les écarts (y_i - mu) sont inchangés) :
+                        // seul mu_curr doit suivre le décalage.
+                        mu_curr += static_cast<long double>(deltaTheta);
+                    }
+                    // sinon : rejet, P_curr/mu_curr/S_curr restent ceux issus de l'étape 5
+                }
+
+#pragma mark Update Theta
+                // ==================================================================
+                // 6. Mise à jour de theta
+                // ==================================================================
+                if (min == max) {
+                    qDebug() << "[ " << __func__ << QString("] Warning for event : %1 : min == max = %2")
+                    .arg( event->getQStringName(), QString::number(min));
+                    event->mTheta.accept_update(min);
+                }
+                else {
+#pragma mark useHMC
+                    constexpr bool useHMC = false;   // bascule pour A/B test
+                    if (useHMC) {
+                        constexpr int L_hmc = 20;
+                        const double eps_hmc = (M_PI / 2.0) / L_hmc;  // L*eps ~ pi/2
+
+                        const double new_theta = hmcSampleTheta_temporal(
+                                    event->mTheta.value(), mu_curr, P_curr, min, max, L_hmc, eps_hmc);
+
+                        event->mTheta.accept_update(new_theta);
+                    } else {
+                        const double ti_avg_final = static_cast<double>(mu_curr);
+                        const double sigma_avg_final = 1.0 / std::sqrt(static_cast<double>(P_curr));
+                        const double new_theta = Generator::truncatedNormal(ti_avg_final, sigma_avg_final, min, max);
+
+                        event->mTheta.accept_update(new_theta);
+                    }
+
+
+                }
+
+                // ==================================================================
+                // 7. Mise à jour des wiggles
+                // ==================================================================
+#pragma mark Update Wiggle
+                for (auto&& date : event->mDates) {
+                    date.updateWiggle();
+                }
+
+                // ==================================================================
+                // 8. Mise à jour de S02Theta
+                // ==================================================================
+#pragma mark Update S02Theta
+                if (AppSettings::mEventModel == EventModelType::EDM2) {
+                    if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe) {
+                        event->updateS02Theta_v338();
+                    }
+                }
+
+                // ==================================================================
+                // 9. Mise à jour des bornes des phases de l'événement
+                // ==================================================================
+#pragma mark Update Phases
+                std::for_each(
+                    event->mPhases.begin(),
+                    event->mPhases.end(),
+                    [this](std::shared_ptr<Phase> p) {
+                        p->update_AlphaBeta(tminPeriod, tmaxPeriod);
+                    });
+            }
+        }
+
+        // ======================================================================
+        // 10. Mises à jour globales des phases
+        // ======================================================================
+        std::for_each(
+            mModel->mPhases.begin(),
+            mModel->mPhases.end(),
+            [this](std::shared_ptr<Phase> p) {
+                p->update_Tau(
+                    tminPeriod,
+                    tmaxPeriod);
+            });
+
+        // ======================================================================
+        // 11. Mise à jour globale des contraintes de phases
+        // ======================================================================
+        std::for_each( mModel->mPhaseConstraints.begin(), mModel->mPhaseConstraints.end(),
+                      [](std::shared_ptr<PhaseConstraint> pc) {
+                          pc->updateGamma();
+                      });
+    }
+    catch (const char* e) {
+        qWarning() << "[" << __func__ << "] char " << e;
+        return;
+    }
+    catch (const std::length_error& e) {
+        qWarning() << "[" << __func__ << "] length_error " << e.what();
+        return;
+    }
+    catch (const std::out_of_range& e) {
+        qWarning() << "[" << __func__ << "] out_of_range " << e.what();
+        return;
+    }
+    catch (const std::exception& e) {
+        qWarning() << "[" << __func__ << "] " << e.what();
+        return;
+    }
+    catch (...) {
+        qWarning() << "[" << __func__ << "] Caught Exception!";
+        return;
+    }
+}
+#pragma mark HMC
+// ============================================================================
+// HMC pour theta, mode "temporel seul" (h_YWI et h_lambda traités comme
+// constants -- eq. 12/13 du document "Modèle MCMC unifié"). Cible :
+//   p(theta | t, sigma_t) propto N(theta; mu_curr, 1/P_curr) sur [min,max]
+// Sert de brique de base + validation avant d'ajouter le gradient de courbe.
+// ============================================================================
+
+static inline double gradU_theta_temporal(double theta, double mu, double P)
+{
+    return P * (theta - mu);
+}
+
+static inline void reflectBounds(double& theta, double& p, double min, double max)
+{
+    for (int guard = 0; guard < 1000; ++guard) {
+        if (theta < min) { theta = 2.0 * min - theta; p = -p; }
+        else if (theta > max) { theta = 2.0 * max - theta; p = -p; }
+        else break;
+    }
+}
+
+// Un pas HMC complet (L sous-pas de leapfrog) pour theta, mode temporel seul.
+double MCMCLoopChrono::hmcSampleTheta_temporal(double theta0, long double mu, long double P,
+                                                double min, double max,
+                                                int L, double epsilon)
+{
+    const double mu_d = static_cast<double>(mu);
+    const double P_d  = static_cast<double>(P);
+    const double mass = P_d;   // masse = précision cible (dynamique "naturelle")
+
+    double theta = theta0;
+    double p = Generator::normalDistribution(0.0, std::sqrt(mass));
+    const double p0 = p;
+
+    p -= 0.5 * epsilon * gradU_theta_temporal(theta, mu_d, P_d);
+    for (int l = 0; l < L; ++l) {
+        theta += epsilon * p / mass;
+        reflectBounds(theta, p, min, max);
+        if (l != L - 1) {
+            p -= epsilon * gradU_theta_temporal(theta, mu_d, P_d);
+        }
+    }
+    p -= 0.5 * epsilon * gradU_theta_temporal(theta, mu_d, P_d);
+    p = -p;
+
+    auto U = [&](double th) { const double d = th - mu_d; return 0.5 * P_d * d * d; };
+    const double H_old = U(theta0) + (p0 * p0) / (2.0 * mass);
+    const double H_new = U(theta)  + (p  * p)  / (2.0 * mass);
+
+    if (MHAcceptanceTest_log(-(H_new - H_old))) {
+        return theta;
+    }
+    return theta0;
+}
 /**
  * @brief Étape MCMC "Single-Site Block" (variante 2) : met à jour conjointement
  *        (t_i, delta_i, sigma_i) pour chaque date de chaque événement, avec theta
@@ -2436,6 +3371,7 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc(std::vector<std::shared_ptr<Eve
  *      MHAcceptanceTest_log, log_diff_cdf, sampler_339_SingleSite_bloc (version précédente,
  *      sigma proposé différemment selon le noyau)
  */
+// noyau B.2 ne fonctionne pas avec une seule date, résultat instable!!
 void MCMCLoopChrono::sampler_339_SingleSite_bloc_2(std::vector<std::shared_ptr<Event>> &events)
 {
     try {
@@ -2502,7 +3438,10 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc_2(std::vector<std::shared_ptr<E
                 //   - B.2 : ti couplé à sigma (saut non centré z=(ti-ti_bar)/sigma)
                 // ==========================================================================
 #pragma mark mixingKernel
-                constexpr double mixingKernel = 0.5; // 0 -> A.1 OK, fonctionne ;  1 -> B.2 OK, fonctionne (peu efficace avec une seule date
+
+                constexpr double mixingKernel = 0;
+                // 0 -> A.1 OK, fonctionne, traite très bien les combinaisons de gaussienne ;
+                // 1 -> B.2 OK, fonctionne (peu efficace avec une seule date)
 
                 for (size_t i = 0; i < event->mDates.size(); ++i) {
 
@@ -2518,7 +3457,6 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc_2(std::vector<std::shared_ptr<E
                     double log_rate_q_s = 0.0;
                     bool isvalide = true;
 
-                    date.mSigmaTi.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
 
                     // ----------------------------------------------------------------------
                     // A. Calcul préalable Leave-One-Out O(1)
@@ -2556,6 +3494,8 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc_2(std::vector<std::shared_ptr<E
                     //    (indépendante du noyau choisi pour ti)
                     // ----------------------------------------------------------------------
 #pragma mark update sigma (RW commun aux deux noyaux)
+
+                    date.mSigmaTi.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
                     const double log10_V1 = std::log10(static_cast<double>(V1_old));
                     const double log10_V2 = Generator::normalDistribution(log10_V1, date.mSigmaTi.mSigmaMH);
 
@@ -2595,7 +3535,7 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc_2(std::vector<std::shared_ptr<E
                         // dates, ramenée à l'échelle de ti via delta courant (ancre fixe,
                         // indépendante de ti et V). Si N=1 (pas d'autre date), ti_bar=ti_old0
                         // et le noyau dégénère en RW gaussien centré sur ti_old.
-                        const double ti_bar = (P_removed > 0.0L)
+                        /*const double ti_bar = (P_removed > 0.0L)
                                                   ? static_cast<double>(mu_removed) - delta_old0
                                                   : ti_old0;
 
@@ -2611,7 +3551,47 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc_2(std::vector<std::shared_ptr<E
                         //    au cas "sigma seul" déjà appliqué ci-dessus.
                         // --------------------------------------------------------------
                         log_rate_q_t = 0.0;
-                        log_rate_q_s += std::log(sigma_prop / sigma_old);
+                        log_rate_q_s += std::log(sigma_prop / sigma_old);*/
+
+                        //
+                       /* const double theta_curr = event->mTheta.value();
+                        const double ti_bar     = theta_curr - delta_old0;
+
+                        const double z_old  = (ti_old0 - ti_bar) / sigma_old;
+                        const double s_z    = date.mTi.mSigmaMH;
+                        const double z_prop = Generator::normalDistribution(z_old, s_z);
+                        ti_prop = ti_bar + sigma_prop * z_prop;
+
+                        log_rate_q_t = 0.0;
+                        log_rate_q_s += std::log(sigma_prop / sigma_old);*/
+
+                        if (P_removed > 0.0L) {
+                            // Cas A : N > 1 (Événement à dates multiples)
+                            // L'ancre ti_bar est la moyenne Leave-One-Out (strictement indépendante de ti).
+                            const double ti_bar = static_cast<double>(mu_removed) - delta_old0;
+
+                            const double z_old  = (ti_old0 - ti_bar) / sigma_old;
+                            const double s_z    = date.mTi.mSigmaMH;
+                            const double z_prop = Generator::normalDistribution(z_old, s_z);
+                            ti_prop = ti_bar + sigma_prop * z_prop;
+
+                            // Le saut conjoint sur l'espace latent z est symétrique.
+                            log_rate_q_t = 0.0;
+                            log_rate_q_s += std::log(sigma_prop / sigma_old);
+
+                        } else {
+                            // Cas B : N = 1 (Date unique)
+                            // Pas de groupe pour centrer ti. Le couplage avec sigma casse
+                            // le bilan détaillé. On utilise un simple Random Walk sur ti.
+                            const double s_t = date.mTi.mSigmaMH;
+                            ti_prop = Generator::normalDistribution(ti_old0, s_t);
+
+                            // La marche aléatoire sur ti est purement symétrique.
+                            log_rate_q_t = 0.0;
+                            // log_rate_q_s reste intact. Il ne contient que le Jacobien de sigma
+                            // calculé à l'étape C (soit 2 * log(sigma_prop / sigma_old)).
+                        }
+
                     }
                     else if (isvalide) {
                         // ==============================================================
@@ -2754,11 +3734,23 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc_2(std::vector<std::shared_ptr<E
                     event->mTheta.accept_update(min);
                 }
                 else {
-                    const double ti_avg_final = static_cast<double>(mu_curr);
-                    const double sigma_avg_final = 1.0 / std::sqrt( static_cast<double>(P_curr));
-                    const double new_theta = Generator::truncatedNormal(ti_avg_final, sigma_avg_final, min, max);
+#pragma mark useHMC
+                    constexpr bool useHMC = false;   // bascule pour A/B test
+                    if (useHMC) {
+                        constexpr int L_hmc = 20;
+                        const double eps_hmc = (M_PI / 2.0) / L_hmc;  // L*eps ~ pi/2
 
-                    event->mTheta.accept_update(new_theta);
+                        const double new_theta = hmcSampleTheta_temporal(
+                                    event->mTheta.value(), mu_curr, P_curr, min, max, L_hmc, eps_hmc);
+
+                        event->mTheta.accept_update(new_theta);
+                    } else {
+                        const double ti_avg_final = static_cast<double>(mu_curr);
+                        const double sigma_avg_final = 1.0 / std::sqrt(static_cast<double>(P_curr));
+                        const double new_theta = Generator::truncatedNormal(ti_avg_final, sigma_avg_final, min, max);
+
+                        event->mTheta.accept_update(new_theta);
+                    }
                 }
 
                 // ==================================================================
@@ -2904,7 +3896,7 @@ void MCMCLoopChrono::sampler_339_3v(std::vector<std::shared_ptr<Event>> &events)
 
                     prop_ti.push_back(ti_prop);
 
-                    // Vraisemblance (divisée par T si Simulated Annealing)
+                    // Vraisemblance
                     const double L_old = date.getLikelihood(ti_old);
                     const double L_new = date.getLikelihood(ti_prop);
                     const double q_fwd = date.fProposalDensity(ti_prop, ti_old);
@@ -4044,13 +5036,13 @@ bool MCMCLoopChrono::adapt(const int batchIndex)
 
             //--------------------- Adapt Sigma MH de t_i -----------------------------------------
             if (date.mTi.mSamplerProposal == SamplerProposal::eRWAdaptGauss)
-                //noAdapt = date.mTi.adapt(taux_min, taux_max, batchIndex) && noAdapt;
-            noAdapt = date.mTi.adapt(.3, .4, batchIndex) && noAdapt;
+                noAdapt = date.mTi.adapt(taux_min, taux_max, batchIndex) && noAdapt;
+            //noAdapt = date.mTi.adapt(.3, .4, batchIndex) && noAdapt;
 
             //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
             if (date.mSigmaTi.mSamplerProposal == SamplerProposal::eRWAdaptGauss)
-                //noAdapt = date.mSigmaTi.adapt(taux_min, taux_max, batchIndex) && noAdapt;
-            noAdapt = date.mSigmaTi.adapt(.3, .4, batchIndex) && noAdapt;
+                noAdapt = date.mSigmaTi.adapt(taux_min, taux_max, batchIndex) && noAdapt;
+            //noAdapt = date.mSigmaTi.adapt(.3, .4, batchIndex) && noAdapt;
 
         }
 
@@ -4186,4 +5178,1156 @@ void MCMCLoopChrono::finalize()
     qDebug()<<QString("[MCMCLoopChrono::finalize] finish at %1").arg(endTime.toString("hh:mm:ss.zzz")) ;
     qDebug()<<QString("Total time elapsed %1").arg(DHMS(startTime.elapsed()));
 #endif
+}
+
+
+#pragma mark Slice Sampling
+// ============================================================================
+// sampler_339_SingleSite_SliceSampling
+//
+// Copie complète et autonome de sampler_339_SingleSite_bloc_2, mais avec un
+// SEUL noyau pour ti : slice sampling exact (sigma_old fixé pendant le
+// tirage), suivi d'un test M-H séparé pour sigma seul (ti fixé à sa nouvelle
+// valeur des deux côtés). Plus de mixingKernel, plus de branches A.1/B.2 :
+// c'est voulu, pour isoler et valider ce seul noyau avant de l'intégrer comme
+// option dans le sampler bloc principal.
+//
+// À ajouter dans MCMCLoopChrono.h :
+//   void sampler_339_SingleSite_SliceSampling(std::vector<std::shared_ptr<Event>> &events);
+//
+// À ajouter dans votre énum SamplerProposal si absent :
+//   eSliceSampling
+// ============================================================================
+
+
+// ----------------------------------------------------------------------------
+// Slice sampling 1D (Neal, 2003) : "stepping out" puis "shrinkage".
+// logTarget(t) renvoie le log-densité (à une constante additive près).
+// x0 = état courant, w = largeur initiale de tranche, lower/upper = bornes dures.
+// ----------------------------------------------------------------------------
+namespace {
+
+double sliceSample1D(const std::function<double(double)>& logTarget,
+                      double x0,
+                      double w,
+                      double lower,
+                      double upper,
+                      int maxStepsOut = 50,
+                      int maxShrink   = 100)
+{
+    const double logY = logTarget(x0) + std::log(Generator::randomUniform()); // niveau (log) de la tranche
+
+    double L = x0 - w * Generator::randomUniform();
+    double R = L + w;
+    L = std::max(L, lower);
+    R = std::min(R, upper);
+
+    int stepsLeft = maxStepsOut;
+    while (L > lower && logTarget(L) > logY && stepsLeft-- > 0) {
+        L -= w;
+        L = std::max(L, lower);
+    }
+    stepsLeft = maxStepsOut;
+    while (R < upper && logTarget(R) > logY && stepsLeft-- > 0) {
+        R += w;
+        R = std::min(R, upper);
+    }
+
+    for (int i = 0; i < maxShrink; ++i) {
+        const double xProp = L + Generator::randomUniform() * (R - L);
+        if (logTarget(xProp) > logY)
+            return xProp; // dans la tranche : tirage EXACT, aucun test M-H requis
+
+        if (xProp < x0) L = xProp;
+        else            R = xProp;
+    }
+
+    return x0; // repli de sécurité (cible pathologique / bornes trop serrées)
+}
+
+} // namespace anonyme
+
+
+void MCMCLoopChrono::sampler_339_SingleSite_SliceSampling(std::vector<std::shared_ptr<Event>> &events)
+{
+    try {
+        // ======================================================================
+        // 1. Mise à jour de tous les événements
+        // ======================================================================
+        for (auto &event : events) {
+
+            // ======================================================================
+            // 2. Mise à jour de theta uniquement si non fixé
+            // ======================================================================
+            if (event->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
+
+                // ==================================================================
+                // 3. Évaluation des bornes de theta
+                // ==================================================================
+                const double min = event->getThetaMin(tminPeriod);
+                const double max = event->getThetaMax(tmaxPeriod);
+
+                if (min > max) {
+                    throw QObject::tr("[%1] Error for event : %2 : min = %3 > max = %4")
+                    .arg(QString::fromLatin1(__func__),
+                         event->getQStringName(),
+                         QString::number(min),
+                         QString::number(max));
+                }
+
+                // ==================================================================
+                // 4. Initialisation des statistiques pondérées globales
+                // ==================================================================
+                long double P_curr = 0.0L;
+                long double mu_curr = 0.0L;
+                long double S_curr = 0.0L;
+
+                for (const auto& date : event->mDates) {
+                    const long double sigma = static_cast<long double>(date.mSigmaTi.value());
+                    const long double y = static_cast<long double>(date.mTi.value()) + static_cast<long double>(date.mDelta);
+                    const long double w = 1.0L / (sigma * sigma);
+
+                    if (P_curr == 0.0L) {
+                        P_curr  = w;
+                        mu_curr = y;
+                        S_curr  = 0.0L;
+                    }
+                    else {
+                        const long double P_old = P_curr;
+                        const long double P_new = P_old + w;
+                        const long double d = y - mu_curr;
+                        const long double mu_new = mu_curr + (w / P_new) * d;
+
+                        S_curr += w * d * (y - mu_new);
+                        P_curr  = P_new;
+                        mu_curr = mu_new;
+                    }
+                }
+
+                // ==========================================================================
+                // 5. Mise à jour (ti, delta, sigma) pour chaque date : SLICE SAMPLING SEUL
+                // ==========================================================================
+                for (size_t i = 0; i < event->mDates.size(); ++i) {
+
+                    auto& date = event->mDates[i];
+                    const double ti_old0    = date.mTi.value();
+                    const double delta_old0 = date.mDelta;
+                    const double sigma_old  = date.mSigmaTi.value();
+
+                    double sigma_prop  = sigma_old;
+                    double log_rate_q_s = 0.0;
+                    bool isvalide = true;
+
+                    // ----------------------------------------------------------------------
+                    // A. Calcul préalable Leave-One-Out O(1)
+                    // ----------------------------------------------------------------------
+                    const long double V1_old    = static_cast<long double>(sigma_old) * sigma_old;
+                    const long double w_old     = 1.0L / V1_old;
+                    const long double y_old     = static_cast<long double>(ti_old0) + delta_old0;
+
+                    const long double P_removed = P_curr - w_old;
+                    long double mu_removed = 0.0L;
+                    long double S_removed  = 0.0L;
+
+                    if (P_removed > 0.0L) {
+                        mu_removed = (P_curr * mu_curr - w_old * y_old) / P_removed;
+                        S_removed  = S_curr - w_old * (y_old - mu_curr) * (y_old - mu_removed);
+                        if (S_removed < 0.0L && S_removed > -1e-18L) S_removed = 0.0L;
+                    } else {
+                        mu_removed = y_old;
+                    }
+
+                    // ----------------------------------------------------------------------
+                    // B. Tirage de delta_prop (indépendant)
+                    // ----------------------------------------------------------------------
+                    double delta_prop;
+                    switch (date.mDeltaType) {
+                    case Date::eDeltaNone:     delta_prop = 0.0; break;
+                    case Date::eDeltaRange:    delta_prop = Generator::randomUniform(date.mDeltaMin, date.mDeltaMax); break;
+                    case Date::eDeltaGaussian: delta_prop = Generator::normalDistribution(date.mDeltaAverage, date.mDeltaError); break;
+                    case Date::eDeltaFixed:    delta_prop = date.mDeltaFixed; break;
+                    default: delta_prop = delta_old0; break;
+                    }
+
+                    // ----------------------------------------------------------------------
+                    // C. Proposition de sigma : RW adaptatif sur log10(V)
+                    // ----------------------------------------------------------------------
+                    date.mSigmaTi.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
+                    const double log10_V1 = std::log10(static_cast<double>(V1_old));
+                    const double log10_V2 = Generator::normalDistribution(log10_V1, date.mSigmaTi.mSigmaMH);
+
+                    constexpr double logVMin = -100.0;
+                    constexpr double logVMax =  100.0;
+                    if (!std::isfinite(log10_V2) || log10_V2 < logVMin || log10_V2 > logVMax) {
+                        isvalide = false;
+                    } else {
+                        const double V2 = std::pow(10.0, log10_V2);
+                        sigma_prop = std::sqrt(V2);
+                    }
+
+                    if (isvalide) {
+                        // Jacobien "sigma seul" du changement de variable V -> u = log10(V)
+                        log_rate_q_s = 2.0 * std::log(sigma_prop / sigma_old);
+                    } else {
+                        date.mTi.reject_update();
+                        date.mSigmaTi.reject_update();
+                        continue; // date suivante
+                    }
+
+                    // ======================================================================
+                    // D. NOYAU SLICE : tirage exact de ti à sigma_old fixé
+                    // ======================================================================
+                    date.mTi.mSamplerProposal = SamplerProposal::eSliceSampling;
+
+                    const double tLower = date.mCalibration ? date.mCalibration->mTmin
+                                                             : -std::numeric_limits<double>::infinity();
+                    const double tUpper = date.mCalibration ? date.mCalibration->mTmax
+                                                             :  std::numeric_limits<double>::infinity();
+
+                    // Densité cible de ti, à sigma = sigma_old FIXÉ (dérivée de la formule
+                    // du prior marginal après intégration de theta, avec V2_new -> V1_old
+                    // partout ; le terme de shrinkage S02 ne dépend que de sigma, il
+                    // disparaît car constant en t).
+                    auto logTargetTi = [&](double t) -> double {
+                        const double L = date.getLikelihood(t);
+                        if (!(L > 0.0))
+                            return -std::numeric_limits<double>::infinity();
+                        const long double logL = std::log(static_cast<long double>(L));
+
+                        const long double y_t = static_cast<long double>(t) + delta_prop;
+                        long double logPriorMarginal;
+
+                        if (min == max) {
+                            const long double theta_fixed = static_cast<long double>(min);
+                            const long double residual = y_t - theta_fixed;
+                            logPriorMarginal = -0.5L * residual * residual / V1_old;
+                        } else {
+                            const long double P_t = P_removed + w_old; // constant en t
+                            long double mu_t, S_t;
+                            if (P_removed > 0.0L) {
+                                const long double d = y_t - mu_removed;
+                                mu_t = mu_removed + (w_old / P_t) * d;
+                                S_t  = S_removed + w_old * d * (y_t - mu_t);
+                            } else {
+                                mu_t = y_t;
+                                S_t  = 0.0L;
+                            }
+                            const long double sigma_avg = 1.0L / std::sqrt(P_t); // constant en t
+
+                            const long double alpha_min = (static_cast<long double>(min) - mu_t) / sigma_avg;
+                            const long double alpha_max = (static_cast<long double>(max) - mu_t) / sigma_avg;
+                            const double logZ = log_diff_cdf(static_cast<double>(alpha_min), static_cast<double>(alpha_max));
+                            if (!std::isfinite(logZ))
+                                return -std::numeric_limits<double>::infinity();
+
+                            logPriorMarginal = static_cast<long double>(logZ) - 0.5L * S_t;
+                        }
+
+                        return static_cast<double>(logL + logPriorMarginal);
+                    };
+
+                    const double ti_prop = sliceSample1D(logTargetTi, ti_old0, date.mTi.mSigmaMH, tLower, tUpper);
+
+                    // Tirage exact : pas de test M-H pour ti.
+                    date.mTi.accept_update(ti_prop);
+                    date.mDelta = delta_prop;
+
+                    // --- Accumulateurs après le tirage de ti, sigma encore = sigma_old ---
+                    const long double y_afterTi = static_cast<long double>(ti_prop) + delta_prop;
+                    long double P_afterTi, mu_afterTi, S_afterTi;
+                    if (P_removed > 0.0L) {
+                        const long double d = y_afterTi - mu_removed;
+                        P_afterTi  = P_removed + w_old;
+                        mu_afterTi = mu_removed + (w_old / P_afterTi) * d;
+                        S_afterTi  = S_removed + w_old * d * (y_afterTi - mu_afterTi);
+                    } else {
+                        P_afterTi  = w_old;
+                        mu_afterTi = y_afterTi;
+                        S_afterTi  = 0.0L;
+                    }
+
+                    // ======================================================================
+                    // E. Test M-H séparé pour sigma seul (ti fixé à ti_prop des deux côtés)
+                    // ======================================================================
+                    const long double V2_new = static_cast<long double>(sigma_prop) * sigma_prop;
+                    const long double w_new  = 1.0L / V2_new;
+
+                    long double P_sig, mu_sig, S_sig;
+                    if (P_removed > 0.0L) {
+                        const long double d = y_afterTi - mu_removed;
+                        P_sig  = P_removed + w_new;
+                        mu_sig = mu_removed + (w_new / P_sig) * d;
+                        S_sig  = S_removed + w_new * d * (y_afterTi - mu_sig);
+                    } else {
+                        P_sig  = w_new;
+                        mu_sig = y_afterTi;
+                        S_sig  = 0.0L;
+                    }
+                    if (S_sig < 0.0L && S_sig > -1e-18L) S_sig = 0.0L;
+
+                    const long double log_sigma_i_ratio = std::log(sigma_prop / static_cast<long double>(sigma_old));
+                    long double log_prior_marginal_diff_sigma = 0.0L;
+                    bool degenerate = false;
+
+                    if (min == max) {
+                        const long double theta_fixed = static_cast<long double>(min);
+                        const long double residual     = y_afterTi - theta_fixed; // ti identique des deux côtés
+                        log_prior_marginal_diff_sigma = -0.5L * residual * residual * (1.0L / V2_new - 1.0L / V1_old)
+                                                         - log_sigma_i_ratio;
+                    } else {
+                        const long double sigma_avg_old = 1.0L / std::sqrt(P_afterTi);
+                        const long double sigma_avg_new = 1.0L / std::sqrt(P_sig);
+
+                        const long double alpha_old_min = (static_cast<long double>(min) - mu_afterTi) / sigma_avg_old;
+                        const long double alpha_old_max = (static_cast<long double>(max) - mu_afterTi) / sigma_avg_old;
+                        const long double alpha_new_min = (static_cast<long double>(min) - mu_sig)      / sigma_avg_new;
+                        const long double alpha_new_max = (static_cast<long double>(max) - mu_sig)      / sigma_avg_new;
+
+                        const double log_Z_old = log_diff_cdf(static_cast<double>(alpha_old_min), static_cast<double>(alpha_old_max));
+                        const double log_Z_new = log_diff_cdf(static_cast<double>(alpha_new_min), static_cast<double>(alpha_new_max));
+
+                        if (!std::isfinite(log_Z_old) || !std::isfinite(log_Z_new)) {
+                            degenerate = true;
+                        } else {
+                            const long double log_sigma_avg_ratio = std::log(sigma_avg_new / sigma_avg_old);
+                            log_prior_marginal_diff_sigma = static_cast<long double>(log_Z_new - log_Z_old)
+                                                            + log_sigma_avg_ratio
+                                                            - log_sigma_i_ratio
+                                                            - 0.5L * (S_sig - S_afterTi);
+                        }
+                    }
+
+                    if (degenerate) {
+                        date.mSigmaTi.reject_update();
+                        P_curr = P_afterTi; mu_curr = mu_afterTi; S_curr = S_afterTi;
+                    } else {
+                        const long double S02_ld = static_cast<long double>(event->mS02Theta.value());
+                        const long double log_prior_shrinkage = 2.0L * (std::log(S02_ld + V1_old) - std::log(S02_ld + V2_new));
+
+                        const long double log_rate_total_sigma = log_prior_marginal_diff_sigma
+                                                                 + log_prior_shrinkage
+                                                                 + static_cast<long double>(log_rate_q_s);
+
+                        if (MHAcceptanceTest_log(static_cast<double>(log_rate_total_sigma))) {
+                            date.mSigmaTi.accept_update(static_cast<double>(sigma_prop));
+                            P_curr = P_sig; mu_curr = mu_sig; S_curr = S_sig;
+                        } else {
+                            date.mSigmaTi.reject_update();
+                            P_curr = P_afterTi; mu_curr = mu_afterTi; S_curr = S_afterTi;
+                        }
+                    }
+
+                } // Fin de boucle des dates
+
+                // ==================================================================
+                // 6. Mise à jour de theta (inchangé)
+                // ==================================================================
+                if (min == max) {
+                    qDebug() << "[ " << __func__ << QString("] Warning for event : %1 : min == max = %2")
+                    .arg( event->getQStringName(), QString::number(min));
+                    event->mTheta.accept_update(min);
+                }
+                else {
+                    constexpr bool useHMC = false;   // bascule pour A/B test
+                    if (useHMC) {
+                        constexpr int L_hmc = 20;
+                        const double eps_hmc = (M_PI / 2.0) / L_hmc;
+
+                        const double new_theta = hmcSampleTheta_temporal(
+                                    event->mTheta.value(), mu_curr, P_curr, min, max, L_hmc, eps_hmc);
+
+                        event->mTheta.accept_update(new_theta);
+                    } else {
+                        const double ti_avg_final = static_cast<double>(mu_curr);
+                        const double sigma_avg_final = 1.0 / std::sqrt(static_cast<double>(P_curr));
+                        const double new_theta = Generator::truncatedNormal(ti_avg_final, sigma_avg_final, min, max);
+
+                        event->mTheta.accept_update(new_theta);
+                    }
+                }
+
+                // ==================================================================
+                // 7. Mise à jour des wiggles
+                // ==================================================================
+                for (auto&& date : event->mDates) {
+                    date.updateWiggle();
+                }
+
+                // ==================================================================
+                // 8. Mise à jour de S02Theta
+                // ==================================================================
+                if (AppSettings::mEventModel == EventModelType::EDM2) {
+                    if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe) {
+                        event->updateS02Theta_v338();
+                    }
+                }
+
+                // ==================================================================
+                // 9. Mise à jour des bornes des phases de l'événement
+                // ==================================================================
+                std::for_each(
+                    event->mPhases.begin(),
+                    event->mPhases.end(),
+                    [this](std::shared_ptr<Phase> p) {
+                        p->update_AlphaBeta(tminPeriod, tmaxPeriod);
+                    });
+            }
+        }
+
+        // ======================================================================
+        // 10. Mises à jour globales des phases
+        // ======================================================================
+        std::for_each(
+            mModel->mPhases.begin(),
+            mModel->mPhases.end(),
+            [this](std::shared_ptr<Phase> p) {
+                p->update_Tau(
+                    tminPeriod,
+                    tmaxPeriod);
+            });
+
+        // ======================================================================
+        // 11. Mise à jour globale des contraintes de phases
+        // ======================================================================
+        std::for_each( mModel->mPhaseConstraints.begin(), mModel->mPhaseConstraints.end(),
+                      [](std::shared_ptr<PhaseConstraint> pc) {
+                          pc->updateGamma();
+                      });
+    }
+    catch (const char* e) {
+        qWarning() << "[" << __func__ << "] char " << e;
+        return;
+    }
+    catch (const std::length_error& e) {
+        qWarning() << "[" << __func__ << "] length_error " << e.what();
+        return;
+    }
+    catch (const std::out_of_range& e) {
+        qWarning() << "[" << __func__ << "] out_of_range " << e.what();
+        return;
+    }
+    catch (const std::exception& e) {
+        qWarning() << "[" << __func__ << "] " << e.what();
+        return;
+    }
+    catch (...) {
+        qWarning() << "[" << __func__ << "] Caught Exception!";
+        return;
+    }
+}
+
+// ============================================================================
+// sampler_339_SingleSite_NonCentered
+//
+// Basé sur sampler_339_SingleSite_bloc_2, avec DEUX changements par rapport à
+// l'original :
+//
+// 1) Le noyau A.1 (étape 5) est inchangé. Le noyau B.2 est REMPLACÉ : au lieu
+//    de perturber aléatoirement z=(ti-theta)/sigma en même temps que sigma
+//    (deux sources de bruit qui se diluent, et un mSigmaMH de plus sujet au
+//    même effondrement adaptatif que les autres), le nouveau B.2 tient z
+//    EXACTEMENT fixe et ne fait bouger ti QUE via sigma_prop (déjà tiré à
+//    l'étape C) : ti_prop = theta_courant + sigma_prop * z_fixed, avec
+//    theta_courant = event->mTheta.value() (PAS une moyenne marginale des
+//    autres dates : toujours disponible, y compris pour un événement à une
+//    seule date, cas où l'ancienne version dégénérait en marche aléatoire
+//    découplée de sigma - donc sans effet sur le funnel). C'est un rescale
+//    non centré exact, qui cible le funnel (ti_i, sigmaTi_i) PAR DATE : quand
+//    une date est très informative, sigmaTi_i est poussé vers 0 par le prior
+//    de shrinkage, et ti_i doit alors rester collé à theta de plus en plus
+//    précisément - géométrie en entonnoir classique (Neal), ici à l'échelle
+//    d'une seule date plutôt qu'au niveau de l'événement entier. L'étape C
+//    (proposition de sigma) reçoit aussi un mélange d'échelle, pour la même
+//    raison que pour deltaTheta ci-dessous.
+//
+// 2) AJOUT de l'étape 5-bis : un mouvement de décalage rigide conjoint de
+//    theta et de TOUS les ti de l'événement. Ce mouvement cible le cas où les
+//    dates sont mutuellement très informatives (accord fort, sigma petits) :
+//    dans la paramétrisation centrée, theta et les ti deviennent alors
+//    fortement corrélés (même effet "funnel", mais au niveau de l'événement
+//    entier) et les mises à jour une-date-à-la-fois de l'étape 5 ne
+//    suffisent plus à les faire bouger efficacement ensemble.
+//
+// Le décalage rigide ti_prop_i = ti_old_i + Δtheta, theta_prop = theta_old +
+// Δtheta laisse EXACTEMENT invariant l'écart z_i = (ti-theta)/sigma_i, donc le
+// prior hiérarchique Normal(ti; theta, sigmaTi²) ne contribue rien au ratio
+// d'acceptation : seules la vraisemblance de calibration (absolue en ti) et
+// la borne dure [min,max] de theta interviennent.
+//
+// À valider sur le même protocole que les noyaux précédents : d'abord le cas
+// qui a révélé le problème (N dates identiques centrées), en comparant le
+// traceplot/ESS de theta avec et sans l'étape 5-bis ; puis vérifier que ce
+// mouvement ne dégrade rien sur des dates qui NE sont PAS d'accord (il devrait
+// y être simplement rarement accepté, sans nuire) ; puis le cas de deux dates
+// décalées avec des variances différentes (deux chaînes qui se figent chacune
+// sur une date différente = échec de mixing, pas de la vraie multimodalité
+// puisque le modèle est gaussien-gaussien donc log-concave).
+//
+// À ajouter dans MCMCLoopChrono.h :
+//   void sampler_339_SingleSite_NonCentered(std::vector<std::shared_ptr<Event>> &events);
+//
+// Pas de nouveau champ adaptatif requis sur mTheta : le pas de Δtheta est
+// calé sur sigma_avg = 1/sqrt(P_curr), l'écart-type EXACT de la loi
+// conditionnelle courante de theta (même quantité que celle utilisée à
+// l'étape 6 pour le Gibbs de theta), recalculé à chaque itération à partir
+// des données courantes - donc pas d'adaptation par accumulation
+// acceptations/rejets, et pas de risque d'effondrement du pas vers zéro par
+// rétroaction (un mSigmaMH adaptatif classique peut s'auto-piéger : proche
+// d'une des deux dates en conflit, les grands pas vers l'autre sont presque
+// toujours rejetés, donc l'adaptation réduit le pas, ce qui aggrave le
+// piège). Un mélange d'échelle (kWideJumpProb, kWideJumpFactor, voir
+// l'étape 5-bis) ajoute une capacité de saut ponctuel plus large, utile
+// quand deux dates en désaccord imposent un compromis éloigné de sigma_avg
+// seul (sigma_avg ne dépend que de la précision du couplage hiérarchique
+// sigmaTi, pas de la largeur des vraisemblances de calibration ni de
+// l'écart entre les dates) - à régler/valider empiriquement sur vos cas
+// de test.
+//
+// 3) AJOUT (v2) : Δtheta peut aussi être dérivé d'un tirage d'indépendance sur
+// une date pilote tirée au hasard dans l'événement (proba kPilotProb), au lieu
+// du saut aveugle N(0,sigma_avg) seul. Utile quand une ou deux dates de
+// l'événement ont une vraisemblance de calibration très multimodale (plateau
+// de calibration, ~30 modes) : le prior hiérarchique met son veto à un saut
+// A.1 vers un mode éloigné tant que theta ne l'a pas déjà rejoint (problème de
+// l'oeuf et la poule), et un saut aveugle N(0,sigma_avg) a très peu de chances
+// de tomber pile dans un pic étroit. Dériver Δtheta du tirage de la date
+// pilote (même mélange calibration/RW que A.1) vise directement un mode
+// plausible et entraîne theta + toutes les autres dates avec lui - toujours
+// une translation rigide pure, donc le couplage hiérarchique s'annule pour
+// toutes les dates comme avant ; seule la proposition n'étant plus symétrique,
+// le terme de Hastings de la date pilote (identique à celui de A.1) s'ajoute
+// au ratio. Voir l'étape 5-bis pour le détail.
+// ============================================================================
+
+void MCMCLoopChrono::sampler_339_SingleSite_NonCentered(std::vector<std::shared_ptr<Event>> &events)
+{
+    try {
+        // ======================================================================
+        // 1. Mise à jour de tous les événements
+        // ======================================================================
+        for (auto &event : events) {
+
+            // ======================================================================
+            // 2. Mise à jour de theta uniquement si non fixé
+            // ======================================================================
+            if (event->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
+
+                // ==================================================================
+                // 3. Évaluation des bornes de theta
+                // ==================================================================
+                const double min = event->getThetaMin(tminPeriod);
+                const double max = event->getThetaMax(tmaxPeriod);
+
+                if (min > max) {
+                    throw QObject::tr("[%1] Error for event : %2 : min = %3 > max = %4")
+                    .arg(QString::fromLatin1(__func__),
+                         event->getQStringName(),
+                         QString::number(min),
+                         QString::number(max));
+                }
+
+                // ==================================================================
+                // 4. Initialisation des statistiques pondérées globales
+                // ==================================================================
+                long double P_curr = 0.0L;
+                long double mu_curr = 0.0L;
+                long double S_curr = 0.0L;
+
+                for (const auto& date : event->mDates) {
+                    const long double sigma = static_cast<long double>(date.mSigmaTi.value());
+                    const long double y = static_cast<long double>(date.mTi.value()) + static_cast<long double>(date.mDelta);
+                    const long double w = 1.0L / (sigma * sigma);
+
+                    if (P_curr == 0.0L) {
+                        P_curr  = w;
+                        mu_curr = y;
+                        S_curr  = 0.0L;
+                    }
+                    else {
+                        const long double P_old = P_curr;
+                        const long double P_new = P_old + w;
+                        const long double d = y - mu_curr;
+                        const long double mu_new = mu_curr + (w / P_new) * d;
+
+                        S_curr += w * d * (y - mu_new);
+                        P_curr  = P_new;
+                        mu_curr = mu_new;
+                    }
+                }
+
+                // ==========================================================================
+                // 5. Mise à jour BLOC (ti, delta, sigma) pour chaque date
+                //    A.1 inchangé ; B.2 REMPLACÉ par le rescale non centré exact (voir
+                //    l'en-tête du fichier et le commentaire à l'étape D ci-dessous).
+                // ==========================================================================
+                constexpr double mixingKernel = 0.5;
+                // 0 -> A.1 uniquement ; 1 -> nouveau B.2 uniquement
+
+                for (size_t i = 0; i < event->mDates.size(); ++i) {
+
+                    auto& date = event->mDates[i];
+                    const double ti_old0    = date.mTi.value();
+                    const double delta_old0 = date.mDelta;
+                    const double sigma_old  = date.mSigmaTi.value();
+
+                    double ti_prop = ti_old0;
+                    double sigma_prop = sigma_old;
+                    double log_rate_L = 0.0;
+                    double log_rate_q_t = 0.0;
+                    double log_rate_q_s = 0.0;
+                    bool isvalide = true;
+
+                    // ----------------------------------------------------------------------
+                    // A. Calcul préalable Leave-One-Out O(1)
+                    // ----------------------------------------------------------------------
+                    const long double V1_old    = static_cast<long double>(sigma_old) * sigma_old;
+                    const long double w_old     = 1.0L / V1_old;
+                    const long double y_old     = static_cast<long double>(ti_old0) + delta_old0;
+
+                    const long double P_removed = P_curr - w_old;
+                    long double mu_removed = 0.0L;
+                    long double S_removed  = 0.0L;
+
+                    if (P_removed > 0.0L) {
+                        mu_removed = (P_curr * mu_curr - w_old * y_old) / P_removed;
+                        S_removed  = S_curr - w_old * (y_old - mu_curr) * (y_old - mu_removed);
+                        if (S_removed < 0.0L && S_removed > -1e-18L) S_removed = 0.0L;
+                    } else {
+                        mu_removed = y_old;
+                    }
+
+                    // ----------------------------------------------------------------------
+                    // B. Tirage de delta_prop (indépendant, identique pour les deux noyaux)
+                    // ----------------------------------------------------------------------
+                    double delta_prop;
+                    switch (date.mDeltaType) {
+                    case Date::eDeltaNone:     delta_prop = 0.0; break;
+                    case Date::eDeltaRange:    delta_prop = Generator::randomUniform(date.mDeltaMin, date.mDeltaMax); break;
+                    case Date::eDeltaGaussian: delta_prop = Generator::normalDistribution(date.mDeltaAverage, date.mDeltaError); break;
+                    case Date::eDeltaFixed:    delta_prop = date.mDeltaFixed; break;
+                    default: delta_prop = delta_old0; break;
+                    }
+
+                    // ----------------------------------------------------------------------
+                    // C. Proposition PARTAGÉE de sigma : RW adaptatif sur log10(V), avec
+                    //    mélange d'échelle (même principe que pour deltaTheta) : le pas
+                    //    adaptatif seul s'auto-piège quand la date est très informative
+                    //    (funnel (ti,sigma) : les grands pas sont presque toujours
+                    //    rejetés près de la solution, donc l'adaptation réduit le pas,
+                    //    ce qui aggrave le blocage). Une faible proportion de pas
+                    //    beaucoup plus larges, non filtrés par l'historique d'acceptation,
+                    //    permet d'en sortir.
+                    // ----------------------------------------------------------------------
+                    date.mSigmaTi.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
+                    const double log10_V1 = std::log10(static_cast<double>(V1_old));
+
+                    constexpr double kWideJumpProbSigma   = 0.10; // proportion de "grands" pas
+                    constexpr double kWideJumpFactorSigma = 10.0; // facteur d'inflation (échelle log10(V))
+                    const double sigmaStepMH = (Generator::randomUniform() < kWideJumpProbSigma)
+                                                    ? kWideJumpFactorSigma * date.mSigmaTi.mSigmaMH
+                                                    : date.mSigmaTi.mSigmaMH;
+
+                    const double log10_V2 = Generator::normalDistribution(log10_V1, sigmaStepMH);
+
+                    constexpr double logVMin = -100.0;
+                    constexpr double logVMax =  100.0;
+                    if (!std::isfinite(log10_V2) || log10_V2 < logVMin || log10_V2 > logVMax) {
+                        isvalide = false;
+                    } else {
+                        const double V2 = std::pow(10.0, log10_V2);
+                        sigma_prop = std::sqrt(V2);
+                    }
+
+                    if (isvalide) {
+                        log_rate_q_s = 2.0 * std::log(sigma_prop / sigma_old);
+                    }
+
+                    // ----------------------------------------------------------------------
+                    // D. Proposition de ti selon le noyau choisi
+                    // ----------------------------------------------------------------------
+                    const double u_kernel = Generator::randomUniform();
+
+                    if (isvalide && u_kernel < mixingKernel) {
+                        // ==============================================================
+                        // NOYAU B.2 REMPLACÉ : rescale non centré EXACT (z fixé)
+                        // ==============================================================
+                        // L'ancien B.2 perturbait z ALÉATOIREMENT (z_prop = N(z_old,s_z))
+                        // en plus de faire bouger sigma_prop : deux sources de bruit qui
+                        // diluent la corrélation qu'on cherche justement à exploiter, et
+                        // un paramètre de pas (mTi.mSigmaMH) de plus à régler/à voir
+                        // s'effondrer comme les autres. Ici z est laissé EXACTEMENT fixe :
+                        // seul sigma_prop (déjà tiré à l'étape C, avec son propre mélange
+                        // d'échelle) fait bouger ti, via ti = c + sigma_prop * z.
+                        //
+                        // Centre c = theta_courant (event->mTheta.value()), PAS ti_bar
+                        // (la moyenne marginale des autres dates) : ti_bar n'existe pas
+                        // pour un événement à une seule date (P_removed=0), ce qui faisait
+                        // retomber ce noyau sur une marche aléatoire simple, découplée de
+                        // sigma - donc SANS AUCUN effet sur le funnel (ti,sigmaTi) dans ce
+                        // cas, justement celui qui posait problème. theta_courant est
+                        // toujours disponible (y compris theta fixé, min=max), et
+                        // l'argument du Jacobien (t = c + sigma·z, c constante pendant le
+                        // balayage des dates) reste valide pour N'IMPORTE QUELLE constante
+                        // c - pas seulement ti_bar. Comme z = (ti-theta)/sigma est inchangé,
+                        // le terme de couplage hiérarchique Normal(ti; theta, sigma_i²)
+                        // reste rigoureusement le même avant/après, pour TOUT N (y compris
+                        // N=1) : c'est le même rescale non centré que l'analogue en échelle
+                        // du décalage rigide de theta (étape 5-bis), qui casse le funnel
+                        // (ti_i, sigmaTi_i) au lieu du funnel (theta, {ti}).
+                        date.mTi.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
+
+                        const double theta_courant = event->mTheta.value(); // fixe pendant tout le balayage des dates (mis à jour seulement à l'étape 6)
+                        const double z_fixed = (ti_old0 - theta_courant) / sigma_old;
+
+                        ti_prop = theta_courant + sigma_prop * z_fixed;
+
+                        log_rate_q_t = 0.0;
+                        // Jacobien du changement de variable (ti,V) -> (z,V) à z fixé :
+                        // terme log(sigma_prop/sigma_old), EN PLUS du 2*log(sigma_prop/
+                        // sigma_old) déjà accumulé à l'étape C (Jacobien du RW en
+                        // log10(V) seul). Sans ce terme le ratio serait faux.
+                        log_rate_q_s += std::log(sigma_prop / sigma_old);
+                    }
+                    else if (isvalide) {
+                        // ==============================================================
+                        // NOYAU A.1 : ti via Likelihood/Calib, indépendant de sigma
+                        // ==============================================================
+                        date.mTi.mSamplerProposal = SamplerProposal::eLikelihood;
+
+                        if (Generator::randomUniform() < date.mMixingLevel) {
+                            ti_prop = *date.mCalibration->sample_t();
+                        } else {
+                            const double tminCalib = date.mCalibration->mTmin;
+                            const double tmaxCalib = date.mCalibration->mTmax;
+                            const double s = std::max((date.mSettings.mTmax - date.mSettings.mTmin),
+                                                      tmaxCalib - tminCalib) / 2.0;
+                            ti_prop = Generator::normalDistribution(ti_old0, s);
+                        }
+
+                        const double q_fwd = date.fProposalDensity(ti_prop, ti_old0);
+                        const double q_rev = date.fProposalDensity(ti_old0, ti_prop);
+
+                        if (q_fwd <= 0.0 || q_rev <= 0.0) {
+                            isvalide = false;
+                        } else {
+                            log_rate_q_t = std::log(q_rev) - std::log(q_fwd);
+                        }
+                    }
+
+                    // ----------------------------------------------------------------------
+                    // E. Vraisemblance Calibration (uniquement pour ti)
+                    // ----------------------------------------------------------------------
+                    if (isvalide) {
+                        const double L_old = date.getLikelihood(ti_old0);
+                        const double L_new = date.getLikelihood(ti_prop);
+
+                        if (L_new <= 0.0 || L_old <= 0.0 ) {
+                            isvalide = false;
+                        } else {
+                            log_rate_L = std::log(L_new) - std::log(L_old);
+                        }
+                    }
+
+                    // ----------------------------------------------------------------------
+                    // F. Calcul de la Marginal Prior Conjointe et Acceptation
+                    // ----------------------------------------------------------------------
+                    if (isvalide) {
+                        const long double V2_new = static_cast<long double>(sigma_prop) * sigma_prop;
+                        const long double w_new  = 1.0L / V2_new;
+                        const long double y_new  = static_cast<long double>(ti_prop) + delta_prop;
+
+                        long double P_new = P_removed, mu_new = mu_removed, S_new = S_removed;
+                        if (P_new == 0.0L) {
+                            P_new = w_new; mu_new = y_new; S_new = 0.0L;
+                        } else {
+                            const long double d = y_new - mu_new;
+                            P_new  = P_removed + w_new;
+                            mu_new = mu_removed + (w_new / P_new) * d;
+                            S_new  = S_removed + w_new * d * (y_new - mu_new);
+                        }
+                        if (S_new < 0.0L && S_new > -1e-18L) S_new = 0.0L;
+
+                        const long double log_sigma_i_ratio = std::log(sigma_prop / static_cast<long double>(sigma_old));
+                        long double log_prior_marginal_diff = 0.0L;
+                        bool degenerate = false;
+
+                        if (min == max) {
+                            const long double theta_fixed  = static_cast<long double>(min);
+                            const long double residual_old = y_old - theta_fixed;
+                            const long double residual_new = y_new - theta_fixed;
+
+                            log_prior_marginal_diff = -0.5L * (residual_new * residual_new / V2_new
+                                                               - residual_old * residual_old / V1_old)
+                                                      - log_sigma_i_ratio;
+                        } else {
+                            const long double sigma_avg_old = 1.0L / std::sqrt(P_curr);
+                            const long double sigma_avg_new = 1.0L / std::sqrt(P_new);
+
+                            const long double alpha_old_min = (static_cast<long double>(min) - mu_curr) / sigma_avg_old;
+                            const long double alpha_old_max = (static_cast<long double>(max) - mu_curr) / sigma_avg_old;
+                            const long double alpha_new_min = (static_cast<long double>(min) - mu_new)  / sigma_avg_new;
+                            const long double alpha_new_max = (static_cast<long double>(max) - mu_new)  / sigma_avg_new;
+
+                            const double log_Z_old = log_diff_cdf(static_cast<double>(alpha_old_min), static_cast<double>(alpha_old_max));
+                            const double log_Z_new = log_diff_cdf(static_cast<double>(alpha_new_min), static_cast<double>(alpha_new_max));
+
+                            if (!std::isfinite(log_Z_old) || !std::isfinite(log_Z_new)) {
+                                degenerate = true;
+                            } else {
+                                const long double log_sigma_avg_ratio = std::log(sigma_avg_new / sigma_avg_old);
+                                log_prior_marginal_diff = static_cast<long double>(log_Z_new - log_Z_old)
+                                                          + log_sigma_avg_ratio
+                                                          - log_sigma_i_ratio
+                                                          - 0.5L * (S_new - S_curr);
+                            }
+                        }
+
+                        if (degenerate) {
+                            date.mTi.reject_update();
+                            date.mSigmaTi.reject_update();
+                        } else {
+                            const long double S02_ld = static_cast<long double>(event->mS02Theta.value());
+                            const long double log_prior_shrinkage = 2.0L * (std::log(S02_ld + V1_old) - std::log(S02_ld + V2_new));
+
+                            const long double log_rate_total = log_prior_marginal_diff
+                                                               + log_prior_shrinkage
+                                                               + static_cast<long double>(log_rate_L)
+                                                               + static_cast<long double>(log_rate_q_t)
+                                                               + static_cast<long double>(log_rate_q_s);
+
+                            if (MHAcceptanceTest_log(static_cast<double>(log_rate_total))) {
+                                date.mTi.accept_update(ti_prop);
+                                date.mSigmaTi.accept_update(static_cast<double>(sigma_prop));
+                                date.mDelta = delta_prop;
+
+                                P_curr = P_new;
+                                mu_curr = mu_new;
+                                S_curr = S_new;
+                            } else {
+                                date.mTi.reject_update();
+                                date.mSigmaTi.reject_update();
+                            }
+                        }
+                    } else {
+                        date.mTi.reject_update();
+                        date.mSigmaTi.reject_update();
+                    }
+                } // Fin de boucle des dates
+
+                // ==========================================================================
+                // 5-bis. NOUVEAU : décalage rigide conjoint de theta et de tous les ti
+                // ==========================================================================
+#pragma mark Reparam - Décalage rigide theta + ti
+
+                if (min != max && !event->mDates.empty()) {
+
+                    // --- Génération de Δtheta : mélange de deux mécanismes ---
+                    //
+                    // (a) Saut local/large "aveugle" (inchangé) : calé sur sigma_avg
+                    // courant (1/sqrt(P_curr), même quantité que le Gibbs de theta à
+                    // l'étape 6), avec mélange d'échelle pour occasionnellement franchir
+                    // un écart plus grand. Toujours symétrique en Δtheta -> aucun terme
+                    // de Hastings. Efficace pour la crête theta/ti quand les dates
+                    // s'accordent (sigma_avg petit = bonne échelle locale), ou pour
+                    // franchir un désaccord franc entre deux dates (composante large).
+                    //
+                    // (b) Saut dirigé par une date pilote tirée au hasard dans
+                    // l'événement (NOUVEAU) : Δtheta est dérivé d'un tirage
+                    // d'indépendance sur cette seule date, EXACTEMENT le même mélange
+                    // calibration/RW que le noyau A.1 (mMixingLevel). Comme
+                    // theta_prop = theta_old + Δtheta et ti_prop,k = ti_old,k + Δtheta
+                    // par construction, l'écart (ti_k - theta) reste invariant pour la
+                    // date pilote elle-même, tout comme pour les autres dates : c'est
+                    // toujours une translation rigide pure du système entier, le
+                    // couplage hiérarchique s'annule donc exactement pour TOUTES les
+                    // dates, comme en (a). Seule différence : la proposition n'étant
+                    // plus symétrique, il faut le terme de Hastings de la date pilote
+                    // (identique à celui déjà calculé par A.1, cf. fProposalDensity).
+                    // Utile quand une ou deux dates de l'événement ont une vraisemblance
+                    // de calibration très multimodale (plateau de calibration, ~30
+                    // modes) : un saut aveugle N(0,sigma_avg) a très peu de chances de
+                    // tomber dans un pic étroit, alors qu'un tirage direct dans la
+                    // calibration de la date pilote vise un mode réellement plausible,
+                    // et entraîne theta et toutes les autres dates avec lui.
+                    // (c) NOUVEAU : quand (b) est tiré, sigmaTi de la date pilote propose
+                    // aussi une nouvelle valeur, pour "suivre" le saut au lieu de rester
+                    // figé à une échelle calée sur l'ANCIENNE position. Sans ça, après un
+                    // grand saut vers un mode éloigné (courbure locale de calibration
+                    // différente), sigmaTi de la pilote peut se retrouver mal adapté à la
+                    // nouvelle position et mettre très longtemps à converger via les
+                    // seules étapes A.1/B.2 du sweep suivant (ce qui se lit comme un
+                    // blocage de sigmaTi). Le résidu r=y_pilote-theta étant EXACTEMENT
+                    // invariant sous le décalage de position (theta et ti_pilote bougent
+                    // du même Δtheta), seul le changement de sigma_pilote modifie le
+                    // terme de couplage hiérarchique pour cette date : on peut donc
+                    // calculer son ratio directement (même forme que le cas dégénéré
+                    // theta-fixe de l'étape F), sans marginalisation sur theta puisque
+                    // theta est ici une variable explicite du mouvement.
+                    constexpr double kPilotProb      = 0.15; // proportion de sauts dirigés
+                    constexpr double kWideJumpProb   = 0.10; // proportion de "grands" pas (sauts aveugles)
+                    constexpr double kWideJumpFactor = 30.0; // facteur d'inflation du pas (sauts aveugles)
+
+                    const double theta_old = event->mTheta.value();
+                    double deltaTheta = 0.0;
+                    double log_rate_q_shift = 0.0;
+                    double log_rate_sigma_pilot = 0.0;
+                    bool pilotValide = true;
+                    bool pilotSigmaMoved = false;
+                    size_t kPilotIdx = 0;
+                    double sigma_prop_pilot = 0.0;
+                    long double P_after_shift = P_curr, mu_after_shift = mu_curr, S_after_shift = S_curr;
+
+                    if (Generator::randomUniform() < kPilotProb) {
+                        kPilotIdx = std::min(event->mDates.size() - 1,
+                                              static_cast<size_t>(Generator::randomUniform() * event->mDates.size()));
+                        auto& pilotDate = event->mDates[kPilotIdx];
+                        const double ti_old_pilot    = pilotDate.mTi.value();
+                        const double sigma_old_pilot = pilotDate.mSigmaTi.value();
+                        const double delta_pilot     = pilotDate.mDelta;
+
+                        double ti_prop_pilot;
+                        if (Generator::randomUniform() < pilotDate.mMixingLevel) {
+                            ti_prop_pilot = *pilotDate.mCalibration->sample_t();
+                        } else {
+                            const double tminCalib = pilotDate.mCalibration->mTmin;
+                            const double tmaxCalib = pilotDate.mCalibration->mTmax;
+                            const double s = std::max((pilotDate.mSettings.mTmax - pilotDate.mSettings.mTmin),
+                                                      tmaxCalib - tminCalib) / 2.0;
+                            ti_prop_pilot = Generator::normalDistribution(ti_old_pilot, s);
+                        }
+
+                        const double q_fwd = pilotDate.fProposalDensity(ti_prop_pilot, ti_old_pilot);
+                        const double q_rev = pilotDate.fProposalDensity(ti_old_pilot, ti_prop_pilot);
+                        if (q_fwd <= 0.0 || q_rev <= 0.0) {
+                            pilotValide = false;
+                        } else {
+                            log_rate_q_shift = std::log(q_rev) - std::log(q_fwd);
+                            deltaTheta = ti_prop_pilot - ti_old_pilot;
+
+                            // --- (c) sigmaTi de la pilote suit le saut ---
+                            const long double V1_pilot = static_cast<long double>(sigma_old_pilot) * sigma_old_pilot;
+                            const long double w_old_pilot = 1.0L / V1_pilot;
+                            const double log10_V1_pilot = std::log10(static_cast<double>(V1_pilot));
+                            const double log10_V2_pilot = Generator::normalDistribution(log10_V1_pilot, pilotDate.mSigmaTi.mSigmaMH);
+
+                            constexpr double logVMin = -100.0;
+                            constexpr double logVMax =  100.0;
+                            if (!std::isfinite(log10_V2_pilot) || log10_V2_pilot < logVMin || log10_V2_pilot > logVMax) {
+                                pilotValide = false;
+                            } else {
+                                const long double V2_pilot = std::pow(10.0L, static_cast<long double>(log10_V2_pilot));
+                                sigma_prop_pilot = static_cast<double>(std::sqrt(V2_pilot));
+
+                                // Jacobien du RW en log10(V) (identique à l'étape C)
+                                log_rate_q_shift += 2.0 * std::log(sigma_prop_pilot / sigma_old_pilot);
+
+                                // Résidu invariant sous le décalage de position
+                                const long double r = static_cast<long double>(ti_old_pilot) + static_cast<long double>(delta_pilot)
+                                                     - static_cast<long double>(theta_old);
+                                const long double log_sigma_pilot_ratio = std::log(static_cast<long double>(sigma_prop_pilot)
+                                                                                    / static_cast<long double>(sigma_old_pilot));
+
+                                const long double log_rate_target_pilot = -0.5L * r * r * (1.0L / V2_pilot - 1.0L / V1_pilot)
+                                                                          - log_sigma_pilot_ratio;
+
+                                const long double S02_ld = static_cast<long double>(event->mS02Theta.value());
+                                const long double log_prior_shrinkage_pilot = 2.0L * (std::log(S02_ld + V1_pilot) - std::log(S02_ld + V2_pilot));
+
+                                log_rate_sigma_pilot = static_cast<double>(log_rate_target_pilot + log_prior_shrinkage_pilot);
+                                pilotSigmaMoved = true;
+
+                                // --- Candidats (P,mu,S) après décalage de position (inchangés,
+                                // cf. (a)/(b)) PUIS changement du poids de la pilote (retrait/
+                                // réinjection O(1)) : nécessaire pour que l'étape 6 (Gibbs de
+                                // theta) utilise ensuite la bonne précision si ce mouvement est
+                                // accepté. Ne sert PAS au ratio d'acceptation ci-dessus (theta
+                                // est explicite dans ce mouvement, pas marginalisé).
+                                const long double y_pilot_new = static_cast<long double>(ti_prop_pilot) + static_cast<long double>(delta_pilot);
+                                const long double mu_shifted  = mu_curr + static_cast<long double>(deltaTheta);
+                                const long double P_wo_pilot  = P_curr - w_old_pilot;
+
+                                long double mu_wo_pilot, S_wo_pilot;
+                                if (P_wo_pilot > 0.0L) {
+                                    mu_wo_pilot = (P_curr * mu_shifted - w_old_pilot * y_pilot_new) / P_wo_pilot;
+                                    S_wo_pilot  = S_curr - w_old_pilot * (y_pilot_new - mu_shifted) * (y_pilot_new - mu_wo_pilot);
+                                    if (S_wo_pilot < 0.0L && S_wo_pilot > -1e-18L) S_wo_pilot = 0.0L;
+                                } else {
+                                    mu_wo_pilot = y_pilot_new;
+                                    S_wo_pilot  = 0.0L;
+                                }
+
+                                const long double w_new_pilot = 1.0L / V2_pilot;
+                                if (P_wo_pilot == 0.0L) {
+                                    P_after_shift  = w_new_pilot;
+                                    mu_after_shift = y_pilot_new;
+                                    S_after_shift  = 0.0L;
+                                } else {
+                                    const long double d = y_pilot_new - mu_wo_pilot;
+                                    P_after_shift  = P_wo_pilot + w_new_pilot;
+                                    mu_after_shift = mu_wo_pilot + (w_new_pilot / P_after_shift) * d;
+                                    S_after_shift  = S_wo_pilot + w_new_pilot * d * (y_pilot_new - mu_after_shift);
+                                    if (S_after_shift < 0.0L && S_after_shift > -1e-18L) S_after_shift = 0.0L;
+                                }
+                            }
+                        }
+                    } else {
+                        const double sigma_avg = 1.0 / std::sqrt(static_cast<double>(P_curr));
+                        const double stepScale = (Generator::randomUniform() < kWideJumpProb)
+                                                      ? kWideJumpFactor * sigma_avg
+                                                      : sigma_avg;
+                        deltaTheta = Generator::normalDistribution(0.0, stepScale);
+                    }
+
+                    const double theta_prop = theta_old + deltaTheta;
+
+                    bool shiftValide = pilotValide && (theta_prop >= min && theta_prop <= max);
+
+                    long double log_rate_L_shift = 0.0L;
+                    std::vector<double> ti_prop_shift;
+
+                    if (shiftValide) {
+                        ti_prop_shift.reserve(event->mDates.size());
+                        for (const auto& date : event->mDates) {
+                            const double ti_prop_i = date.mTi.value() + deltaTheta;
+                            ti_prop_shift.push_back(ti_prop_i);
+
+                            const double L_old = date.getLikelihood(date.mTi.value());
+                            const double L_new = date.getLikelihood(ti_prop_i);
+                            if (!(L_old > 0.0) || !(L_new > 0.0)) {
+                                shiftValide = false;
+                                break;
+                            }
+                            log_rate_L_shift += std::log(static_cast<long double>(L_new))
+                                              - std::log(static_cast<long double>(L_old));
+                        }
+                    }
+
+                    const double log_rate_shift_total = static_cast<double>(log_rate_L_shift) + log_rate_q_shift + log_rate_sigma_pilot;
+
+                    if (shiftValide && MHAcceptanceTest_log(log_rate_shift_total)) {
+                        event->mTheta.accept_update(theta_prop);
+                        for (size_t k = 0; k < event->mDates.size(); ++k) {
+                            event->mDates[k].mTi.accept_update(ti_prop_shift[k]);
+                        }
+                        if (pilotSigmaMoved) {
+                            event->mDates[kPilotIdx].mSigmaTi.accept_update(sigma_prop_pilot);
+                            // Le poids de la pilote a changé : (P_curr,mu_curr,S_curr) ne sont
+                            // plus simplement "translatés", ils doivent refléter le nouveau
+                            // poids (cf. calcul des candidats ci-dessus).
+                            P_curr  = P_after_shift;
+                            mu_curr = mu_after_shift;
+                            S_curr  = S_after_shift;
+                        } else {
+                            // Translation commune pure de tous les y_i et de mu : P_curr et
+                            // S_curr restent invariants (les écarts (y_i - mu) sont inchangés),
+                            // seul mu_curr doit suivre le décalage.
+                            mu_curr += static_cast<long double>(deltaTheta);
+                        }
+                    } else if (pilotSigmaMoved) {
+                        event->mDates[kPilotIdx].mSigmaTi.reject_update();
+                    }
+                    // sinon : rejet, P_curr/mu_curr/S_curr restent ceux issus de l'étape 5
+                }
+
+#pragma mark Update Theta
+                // ==================================================================
+                // 6. Mise à jour de theta (Gibbs exact, inchangé) - complémentaire au
+                //    décalage rigide ci-dessus : affine theta localement une fois le
+                //    bloc éventuellement recentré par l'étape 5-bis
+                // ==================================================================
+                if (min == max) {
+                    qDebug() << "[ " << __func__ << QString("] Warning for event : %1 : min == max = %2")
+                    .arg( event->getQStringName(), QString::number(min));
+                    event->mTheta.accept_update(min);
+                }
+                else {
+                    constexpr bool useHMC = false;
+                    if (useHMC) {
+                        constexpr int L_hmc = 20;
+                        const double eps_hmc = (M_PI / 2.0) / L_hmc;
+
+                        const double new_theta = hmcSampleTheta_temporal(
+                                    event->mTheta.value(), mu_curr, P_curr, min, max, L_hmc, eps_hmc);
+
+                        event->mTheta.accept_update(new_theta);
+                    } else {
+                        const double ti_avg_final = static_cast<double>(mu_curr);
+                        const double sigma_avg_final = 1.0 / std::sqrt(static_cast<double>(P_curr));
+                        const double new_theta = Generator::truncatedNormal(ti_avg_final, sigma_avg_final, min, max);
+
+                        event->mTheta.accept_update(new_theta);
+                    }
+                }
+
+                // ==================================================================
+                // 7. Mise à jour des wiggles
+                // ==================================================================
+#pragma mark Update Wiggle
+                for (auto&& date : event->mDates) {
+                    date.updateWiggle();
+                }
+
+                // ==================================================================
+                // 8. Mise à jour de S02Theta
+                // ==================================================================
+#pragma mark Update S02Theta
+                if (AppSettings::mEventModel == EventModelType::EDM2) {
+                    if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe) {
+                        event->updateS02Theta_v338();
+                    }
+                }
+
+                // ==================================================================
+                // 9. Mise à jour des bornes des phases de l'événement
+                // ==================================================================
+#pragma mark Update Phases
+                std::for_each(
+                    event->mPhases.begin(),
+                    event->mPhases.end(),
+                    [this](std::shared_ptr<Phase> p) {
+                        p->update_AlphaBeta(tminPeriod, tmaxPeriod);
+                    });
+            }
+        }
+
+        // ======================================================================
+        // 10. Mises à jour globales des phases
+        // ======================================================================
+        std::for_each(
+            mModel->mPhases.begin(),
+            mModel->mPhases.end(),
+            [this](std::shared_ptr<Phase> p) {
+                p->update_Tau(
+                    tminPeriod,
+                    tmaxPeriod);
+            });
+
+        // ======================================================================
+        // 11. Mise à jour globale des contraintes de phases
+        // ======================================================================
+        std::for_each( mModel->mPhaseConstraints.begin(), mModel->mPhaseConstraints.end(),
+                      [](std::shared_ptr<PhaseConstraint> pc) {
+                          pc->updateGamma();
+                      });
+    }
+    catch (const char* e) {
+        qWarning() << "[" << __func__ << "] char " << e;
+        return;
+    }
+    catch (const std::length_error& e) {
+        qWarning() << "[" << __func__ << "] length_error " << e.what();
+        return;
+    }
+    catch (const std::out_of_range& e) {
+        qWarning() << "[" << __func__ << "] out_of_range " << e.what();
+        return;
+    }
+    catch (const std::exception& e) {
+        qWarning() << "[" << __func__ << "] " << e.what();
+        return;
+    }
+    catch (...) {
+        qWarning() << "[" << __func__ << "] Caught Exception!";
+        return;
+    }
 }

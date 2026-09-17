@@ -86,6 +86,7 @@ public:
     // Stockage des courbes binomiales en fonction de n
     std::unordered_map<int, std::vector<double>> mBinomiale_Gx;
 
+    MCMCDiagnostic::ConvergenceSummary mConvergenceSummary;
 protected:
     QStringList mCurveName;
     QStringList mCurveLongName;
