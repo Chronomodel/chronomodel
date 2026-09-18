@@ -146,13 +146,16 @@ MainWindow::MainWindow(QWidget* parent):
 #endif
 
 #ifdef Q_OS_WIN
-    setWindowTitle(" v" + VERSION_STRING + " " + file_name);
+    const QString title = QStringLiteral(" v") + QStringLiteral(VERSION_STRING) + " " + file_name;
+    setWindowTitle(title);
 
 #else
 
     setWindowTitle(qApp->applicationName() + " v" + VERSION_STRING + " " + file_name);// see main.cpp for the application name
 #endif
     std::cout << "MainWindow::updateWindowTitle] version " << VERSION_STRING << file_name.toStdString() << std::endl;
+
+
 }
 
 MainWindow::~MainWindow()

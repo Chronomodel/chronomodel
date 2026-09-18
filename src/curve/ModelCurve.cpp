@@ -1764,11 +1764,12 @@ void ModelCurve::memo_PosteriorG_XYZ(PosteriorMeanG &postG, const MCMCSpline &sp
     std::vector<double> &vecVarianceG_X = postG.gx.vecVarianceG;
     std::vector<double> &vecVarianceG_Y = postG.gy.vecVarianceG;
     std::vector<double> &vecVarianceG_Z = postG.gz.vecVarianceG;
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
     // erreur intra spline
     std::vector<double> &vecVarIntraG_X = postG.gx.vecVarErrG;
     std::vector<double> &vecVarIntraG_Y = postG.gy.vecVarErrG;
     std::vector<double> &vecVarIntraG_Z = postG.gz.vecVarErrG;
-
+#endif
     //Pointeur sur tableau
     std::vector<double>::iterator itVecG_X = postG.gx.vecG.begin();
     std::vector<double>::iterator itVecGP_X = postG.gx.vecGP.begin();
@@ -1806,9 +1807,6 @@ void ModelCurve::memo_PosteriorG_XYZ(PosteriorMeanG &postG, const MCMCSpline &sp
     const double n = realyAccepted;
     double prevMeanG_X, prevMeanG_Y, prevMeanG_Z;
 
-    constexpr double k = 3.0; // Le nombre de fois sigma G, pour le calcul de la densité
-
-    int  idxYErrMin, idxYErrMax;
 
 
     // 3 - Calcul pour la composante
@@ -1816,6 +1814,10 @@ void ModelCurve::memo_PosteriorG_XYZ(PosteriorMeanG &postG, const MCMCSpline &sp
     for (int idx_t = 0; idx_t < nbPtsX ; ++idx_t) {
         t = (double)idx_t * stepT + mSettings.mTmin ;
 #if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
+
+        constexpr double k = 3.0; // Le nombre de fois sigma G, pour le calcul de la densité
+
+        int  idxYErrMin, idxYErrMax;
         valeurs_G_VarG_GP_GS(t, spline.splineX, gx, varIntraGx, gpx, gsx, i0, mSettings.mTmin, mSettings.mTmax);
         valeurs_G_VarG_GP_GS(t, spline.splineY, gy, varIntraGy, gpy, gsy, i0, mSettings.mTmin, mSettings.mTmax);
 
@@ -2170,11 +2172,12 @@ void ModelCurve::memo_PosteriorG_IDF(PosteriorMeanG &postG, const MCMCSpline &sp
     std::vector<double> &vecVarianceG_X = postG.gx.vecVarianceG;
     std::vector<double> &vecVarianceG_Y = postG.gy.vecVarianceG;
     std::vector<double> &vecVarianceG_Z = postG.gz.vecVarianceG;
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
     // erreur intra spline
     std::vector<double> &vecVarIntraG_X = postG.gx.vecVarErrG;
     std::vector<double> &vecVarIntraG_Y = postG.gy.vecVarErrG;
     std::vector<double> &vecVarIntraG_Z = postG.gz.vecVarErrG;
-
+#endif
     //Pointeur sur tableau
     std::vector<double>::iterator itVecG_Inc = postG.gx.vecG.begin();
     std::vector<double>::iterator itVecGP_Inc = postG.gx.vecGP.begin();
@@ -2211,6 +2214,9 @@ void ModelCurve::memo_PosteriorG_IDF(PosteriorMeanG &postG, const MCMCSpline &sp
     double varIntraGx = 0;
     double varIntraGy = 0;
     double varIntraGz = 0;
+    constexpr double k = 3.0; // Le nombre de fois sigma G, pour le calcul de la densité
+
+    int  idxYErrMin, idxYErrMax;
 #endif
 
     double Inc, Dec, F;
@@ -2220,9 +2226,7 @@ void ModelCurve::memo_PosteriorG_IDF(PosteriorMeanG &postG, const MCMCSpline &sp
 
     double n = realyAccepted;
 
-    constexpr double k = 3.0; // Le nombre de fois sigma G, pour le calcul de la densité
 
-    int  idxYErrMin, idxYErrMax;
 
 
     // 3 - Calcul pour la composante

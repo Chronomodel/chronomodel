@@ -8292,7 +8292,7 @@ bool MCMCLoopCurve::sampler_339_block_4v()
 
 
                             // 2. Proposition de theta avec le Prior
-                            double prop_theta;
+                            double prop_theta = 0;
                             double log_rate_total = -INFINITY; // reject
 
                             // ======================================================================
@@ -19305,7 +19305,6 @@ t_prob MCMCLoopCurve::h_VG_Event(const double Vg, const double S02_Vg) const
     const double S02_plus_x = S02_Vg + Vg;
     const double S02_x_power = S02_plus_x * S02_plus_x ; // a=1 donc pow(S02_plus_x, a + 1);
 
-
     return S02_Vg / S02_x_power;
 }
 
@@ -22257,60 +22256,6 @@ ColumnVectorD sampleOrderedNaive(const ColumnVectorD& mu,
     return f;
 }
 
-ColumnVectorD sampleOrderedThreads(const ColumnVectorD& mu,
-                                   const MatrixD& a,
-                                   unsigned int globalSeed,
-                                   int nThreadsPerBatch = 2)
-{
-    const int N = mu.size();
-    const auto L = robust_LLt(a);
-    ColumnVectorD result(N);
-    std::atomic<bool> found(false);
-
-    int batchId = 0;
-
-    while (!found.load()) {
-        std::vector<std::thread> threads;
-        threads.reserve(nThreadsPerBatch);
-
-        for (int t = 0; t < nThreadsPerBatch; ++t) {
-            threads.emplace_back([&, t, batchId]() {
-                ColumnVectorD fr(N), f(N);
-
-                // RNG par thread, reproductible
-                std::mt19937 rng(globalSeed + batchId * nThreadsPerBatch + t);
-                std::normal_distribution<double> gauss(0.0, 1.0);
-
-                while (!found.load()) {
-                    for (int i = 0; i < N; ++i) fr(i) = gauss(rng);
-                    f = mu + L * fr;
-
-                    bool increasing = true;
-                    for (int i = 0; i < N-1; ++i) {
-                        if (f(i) >= f(i+1)) {
-                            increasing = false;
-                            break;
-                        }
-                    }
-
-                    if (increasing) {
-                        if (!found.exchange(true)) {
-                            result = f; // seul le premier thread écrit
-                        }
-                        break; // stop thread
-                    }
-                }
-            });
-        }
-
-        // Attend que tous les threads terminent leur batch
-        for (auto& th : threads) th.join();
-        ++batchId;
-    }
-
-    return result;
-}
-
 // hit and run
 ColumnVectorD hitAndRun_old(const ColumnVectorD& mu,
                         const MatrixD& C,
@@ -22689,11 +22634,6 @@ ColumnVectorD MCMCLoopCurve::multinormal_sampling_depth(const ColumnVectorD& mu,
 
     }
 
-   /* else if (N > 10) {
-        auto hr = sampleOrderedThreads(mu, a, 12 , 3);
-        return hr;
-
-    }*/
     else {
         return sampleOrderedNaive(mu, a);
     }

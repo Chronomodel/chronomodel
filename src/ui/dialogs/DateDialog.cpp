@@ -168,7 +168,7 @@ DateDialog::DateDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, f
     // -------------------------------------------------
     // 3️⃣  Fonction utilitaire pour le palette
     // -------------------------------------------------
-    auto applyPalette = [](QLineEdit *edit, QValidator::State st){
+/*    auto applyPalette = [](QLineEdit *edit, QValidator::State st){
         QPalette p = edit->palette();
         if (st == QValidator::Acceptable) {
             p.setColor(QPalette::Base, QColor(230,255,230));   // vert pâle
@@ -183,7 +183,7 @@ DateDialog::DateDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent, f
     // -------------------------------------------------
     // 4️⃣  Connexions (lambda qui utilise de vraies variables)
     // -------------------------------------------------
-  /*  auto updatePalette = [this, applyPalette](QLineEdit *edit){
+    auto updatePalette = [this, applyPalette](QLineEdit *edit){
         QString txt = edit->text();
         int pos = 0;
         QValidator::State st = mValidator_R->validate(txt, pos);

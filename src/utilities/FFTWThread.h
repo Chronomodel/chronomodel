@@ -46,84 +46,25 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <mutex>
 #include <unordered_map>
 #include <memory>
+#include <thread>
 
 class FFTWThreadCache
 {
 public:
+    struct Buffers { double* grid = nullptr; fftw_complex* spectrum = nullptr; };
 
-    /**
-     * @brief Structure regroupant les buffers de travail r2c réutilisables.
-     */
-    struct Buffers {
-        double* grid = nullptr;
-        fftw_complex* spectrum = nullptr;
-    };
-
-    static fftw_plan backward(int M)
-    {
-        thread_local PlanCacheBackward cache;
-        return cache.get_plan(M);
-    }
-
-    /**
-     * @brief   Retourne un plan FFTW « forward » (real‑to‑complex) de taille @p M.
-     *
-     * Le plan est stocké dans un cache **thread‑local**.  La première fois que
-     * la fonction est appelée dans un thread donné, le plan est créé avec
-     * `FFTW_MEASURE`.  Les appels suivants renvoient le même objet, sans frais
-     * supplémentaire.
-     *
-     * @param[in] M  Taille de la transformée (nombre de points dans le domaine
-     *               temporel).  La valeur doit être strictement positive.
-     *
-     * @return  Un handle `fftw_plan` valide que l’on peut passer à
-     *          `fftw_execute_dft_r2c()` ou à d’autres fonctions d’exécution.
-     *
-     * @throw std::runtime_error  Si la création du plan échoue (par ex.
-     *                             allocation insuffisante ou erreur interne de
-     *                             FFTW).
-     *
-     * @note    Le plan est détruit automatiquement lorsque le thread se termine
-     *          grâce au destructeur de `PlanCache`.  Il n’est **pas** nécessaire
-     *          d’appeler `fftw_destroy_plan()` manuellement.
-     *
-     * @since   1.0
-     */
-    static fftw_plan forward(int M)
-    {
-        thread_local PlanCache cache;
-        return cache.get(M);
-    }
-
-    /**
-     * @brief Retourne les buffers (grid & spectrum) dimensionnés pour la taille @p M.
-     *        Alloue la mémoire uniquement au premier appel ou si M change.
-     */
-    static Buffers get_buffers(int M)
-    {
-        thread_local BufferCache cache;
-        return cache.get(M);
-    }
-
+    static fftw_plan backward(int M) { return backwardCache().get_plan(M); }
+    static fftw_plan forward(int M)  { return forwardCache().get(M); }
+    static Buffers get_buffers(int M){ return bufferCache().get(M); }
 
 private:
-    static std::mutex& planMutex() {
-        static std::mutex& m = *new std::mutex();
-        return m;
-    }
+    static std::mutex& planMutex()   { static std::mutex m; return m; }
+    static std::mutex& bufferMutex() { static std::mutex m; return m; }
 
-    static std::mutex& bufferMutex() {
-        static std::mutex& m = *new std::mutex();
-        return m;
-    }
-    // --- Cache des plans backward ---
-    struct PlanCacheBackward
-    {
-        std::unordered_map<int, std::shared_ptr<fftw_plan_s>> map;
-
+    struct PlanCacheBackward {
+        std::unordered_map<int, fftw_plan> map;
         fftw_plan get_plan(int M)
         {
-            // Vérification de la taille valide
             if (M <= 0) {
                 throw std::invalid_argument("FFT size must be positive");
             }
@@ -132,9 +73,8 @@ private:
 
             auto it = map.find(M);
             if (it != map.end())
-                return it->second.get(); // Retourne le plan via le shared_ptr
+                return it->second;
 
-            // Création du plan
             fftw_complex* tmp_in = static_cast<fftw_complex*>(fftw_malloc((M / 2 + 1) * sizeof(fftw_complex)));
             double* tmp_out = static_cast<double*>(fftw_malloc(M * sizeof(double)));
 
@@ -153,42 +93,15 @@ private:
                 throw std::runtime_error("FFTW backward plan creation failed");
             }
 
-            // Stockage dans le cache avec un shared_ptr
-            map[M] = std::shared_ptr<fftw_plan_s>(p, [](fftw_plan plan) {
-                fftw_destroy_plan(plan);
-            });
-
-            return map[M].get();
+            map[M] = p;
+            return p;
         }
 
-        ~PlanCacheBackward() {
-            // Le destructeur est géré automatiquement par shared_ptr
-            map.clear();
-        }
     };
-
-    // --- Cache des plans ---
-    /**
-     * @brief   Structure interne qui stocke les plans FFTW d’un thread.
-     *
-     * Chaque instance de `PlanCache` possède une map `std::unordered_map<int,
-     * fftw_plan>` où la clé est la taille du tableau (`M`) et la valeur le plan
-     * correspondant.  Le destructeur parcourt la map et libère chaque plan avec
-     * `fftw_destroy_plan()`.
-     *
-     * @note    Cette structure n’est jamais exposée à l’extérieur de la classe
-     *          `FFTWThreadCache`; elle sert uniquement de conteneur privé.
-     *
-     * @since   1.0
-     */
-    struct PlanCache
-    {
-        /** @brief  Map <taille, plan> gérée par le thread. */
-        std::unordered_map<int, std::shared_ptr<fftw_plan_s>> map;
-
+    struct PlanCache {
+        std::unordered_map<int, fftw_plan> map;
         fftw_plan get(int M)
         {
-            // Vérification de la taille valide
             if (M <= 0) {
                 throw std::invalid_argument("FFT size must be positive");
             }
@@ -197,9 +110,8 @@ private:
 
             auto it = map.find(M);
             if (it != map.end())
-                return it->second.get(); // Retourne le plan via le shared_ptr
+                return it->second;
 
-            // Création du plan
             double* tmp_in = static_cast<double*>(fftw_malloc(M * sizeof(double)));
             fftw_complex* tmp_out = static_cast<fftw_complex*>(fftw_malloc((M / 2 + 1) * sizeof(fftw_complex)));
 
@@ -218,30 +130,11 @@ private:
                 throw std::runtime_error("FFTW forward plan creation failed");
             }
 
-            // Stockage dans le cache avec un shared_ptr
-            map[M] = std::shared_ptr<fftw_plan_s>(p, [](fftw_plan plan) {
-                fftw_destroy_plan(plan);
-            });
-
-            return map[M].get();
-        }
-
-        /**
-         * @brief   Destructeur : libère tous les plans détenus par le thread.
-         *
-         * Le destructeur est invoqué automatiquement lorsque le thread se
-         * termine (ou à la fin du programme pour le thread principal).  Chaque
-         * plan stocké dans `map` est détruit avec `fftw_destroy_plan()`.
-         *
-         * @since   1.0
-         */
-        ~PlanCache() {
-            // Le destructeur est géré automatiquement par shared_ptr
-            map.clear();
+            map[M] = p;
+            return p;
         }
     };
 
-    // --- Cache des buffers de travail ---
     struct BufferCache
     {
         int current_M = 0;
@@ -250,7 +143,6 @@ private:
 
         Buffers get(int M)
         {
-            // Vérification de la taille valide
             if (M <= 0) {
                 throw std::invalid_argument("Buffer size must be positive");
             }
@@ -279,8 +171,40 @@ private:
             if (spectrum) fftw_free(spectrum);
         }
     };
-};
 
+    // Remplace le thread_local : une map globale clé = id de thread,
+    // protégée par son propre mutex. Détruite une seule fois, à la fin
+    // du programme, dans le thread principal — jamais dans un TLS callback.
+    static PlanCacheBackward& backwardCache()
+    {
+        static std::mutex mapMutex;
+        static std::unordered_map<std::thread::id, std::unique_ptr<PlanCacheBackward>> perThread;
+        std::lock_guard<std::mutex> lock(mapMutex);
+        auto& slot = perThread[std::this_thread::get_id()];
+        if (!slot) slot = std::make_unique<PlanCacheBackward>();
+        return *slot;
+    }
+
+    static PlanCache& forwardCache()
+    {
+        static std::mutex mapMutex;
+        static std::unordered_map<std::thread::id, std::unique_ptr<PlanCache>> perThread;
+        std::lock_guard<std::mutex> lock(mapMutex);
+        auto& slot = perThread[std::this_thread::get_id()];
+        if (!slot) slot = std::make_unique<PlanCache>();
+        return *slot;
+    }
+
+    static BufferCache& bufferCache()
+    {
+        static std::mutex mapMutex;
+        static std::unordered_map<std::thread::id, std::unique_ptr<BufferCache>> perThread;
+        std::lock_guard<std::mutex> lock(mapMutex);
+        auto& slot = perThread[std::this_thread::get_id()];
+        if (!slot) slot = std::make_unique<BufferCache>();
+        return *slot;
+    }
+};
 
 
 #endif // FFTWTHREAD_H

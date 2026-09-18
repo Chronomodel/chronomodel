@@ -42,6 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include "MetropolisVariable.h"
 #include "Generator.h"
+#include <deque>
 
 /**
  * @brief Test d'acceptation Metropolis-Hastings basé sur un rapport donné

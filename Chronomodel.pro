@@ -379,10 +379,10 @@ macx{
         # this is to include fftw.h in the code :
 
         # FFTW 3.3.11 - universal (x86_64 + arm64)
-        INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.3.11_uni/mac/include
+        INCLUDEPATH += $$_PRO_FILE_PWD_/lib/fftw-3.3.11/mac/include
         # LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.3.11_uni/mac" -lfftw3_universal
 
-        LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.3.11_uni/mac" \
+        LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.3.11/mac" \
                 -lfftw3_threads_universal \
                 -lfftw3_universal
 
@@ -413,8 +413,9 @@ win32{
 
         } else { # to compile with a x64 machine
             message("64-bit")
-            INCLUDEPATH += lib/fftw-3.2.2/win64
-            LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.2.2/win64" -lfftw3-3
+            INCLUDEPATH += lib/fftw-3.3.11/win64/include
+            LIBS += -L"$$_PRO_FILE_PWD_/lib/fftw-3.3.11/win64/lib" \
+                    -lfftw3
         }
 }
 #linux :

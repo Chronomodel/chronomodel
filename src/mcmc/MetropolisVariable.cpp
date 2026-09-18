@@ -2446,17 +2446,17 @@ ConvergenceSummary computeConvergenceSummary(const std::vector<double>& rHatValu
     switch (summary.status) {
     case ConvergenceStatus::eGood:
         summary.label = summary.hasEss
-                            ? QObject::tr("Satisfactory convergence (max R\xCC\x82 = %1, min ESS = %2)")
+                            ? QObject::tr("Satisfactory convergence (max R\u03022 = %1, min ESS = %2)")
                                   .arg(summary.maxRHat, 0, 'f', 4)
                                   .arg(summary.minESS, 0, 'f', 0)
-                            : QObject::tr("Satisfactory convergence (maxR\xCC\x82 = %1)")
+                            : QObject::tr("Satisfactory convergence (max R\u0302 = %1)")
                                   .arg(summary.maxRHat, 0, 'f', 4);
         break;
 
     case ConvergenceStatus::eWarning: {
         QStringList reasons;
         if (rHatStatus != ConvergenceStatus::eGood) {
-            reasons << QObject::tr("max R\xCC\x82 = %1, %2 % of variables ≥ %3")
+            reasons << QObject::tr("max R\u0302 = %1, %2 % of variables ≥ %3")
                            .arg(summary.maxRHat, 0, 'f', 4)
                            .arg(summary.fractionAboveGoodThreshold * 100., 0, 'f', 2)
                            .arg(goodThreshold, 0, 'f', 2);
@@ -2474,10 +2474,10 @@ ConvergenceSummary computeConvergenceSummary(const std::vector<double>& rHatValu
 
     case ConvergenceStatus::eBad: {
         QStringList reasons;
-        reasons << QObject::tr("max R\xCC\x82 = %1%2")
+        reasons << QObject::tr("max R\u0302 = %1%2")
                        .arg(summary.maxRHat, 0, 'f', 4)
                        .arg(nNonFinite > 0
-                                ? QObject::tr(", %1 variable(s) with non‑computable R\xCC\x82")
+                                ? QObject::tr(", %1 variable(s) with non‑computable R\u0302")
                                       .arg(nNonFinite)
                                 : QString());
         if (summary.hasEss) {

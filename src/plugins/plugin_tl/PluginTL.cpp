@@ -85,7 +85,7 @@ long double PluginTL::getLikelihood(const double t, const QJsonObject &data) con
     /* ------------------------------------------------------------------
      * 3️⃣   Gaussian value (normalisation factor = 1 / error)
      * ------------------------------------------------------------------ */
-    const long double likelihood = std::expl(exponent) / error;
+    const long double likelihood = std::exp(exponent) / error;
 
     return likelihood;
 }

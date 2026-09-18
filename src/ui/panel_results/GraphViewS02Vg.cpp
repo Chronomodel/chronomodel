@@ -72,11 +72,11 @@ void GraphViewS02Vg::generateCurves(const graph_t typeGraph, const QList<variabl
     defaultPen.setWidthF(1);
     defaultPen.setStyle(Qt::SolidLine);
 
-    QColor color = Qt::blue;
-
     const QString resultsHTML = ModelUtilities::S02VgResultsHTML(model);
     setNumericalResults(resultsHTML);
+
 #ifdef KOMLAN
+    QColor color = Qt::blue;
     // ------------------------------------------------
     //  First tab : Posterior distrib
     // ------------------------------------------------

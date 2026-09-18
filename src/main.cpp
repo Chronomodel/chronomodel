@@ -197,10 +197,11 @@ int main(int argc, char *argv[])
     std::cout << "  - Threads used by Eigen:        " << Eigen::nbThreads() << "\n";
     std::cout << "  - Using multi-threading:        " << (Eigen::nbThreads() > 1 ? "✅ YES" : "❌ NO") << "\n";
 
-
+    fftw_make_planner_thread_safe(); // existe depuis fftw-3.3.6
     fftw_init_threads();             // <-- initialise le support multithread
     fftw_plan_with_nthreads(nCores); // <-- nombre de threads à utiliser
     std::cout << "  - fftw multi-Threading: " << nCores << "\n";
+
 
 // ---
 #ifdef Q_OS_MAC
@@ -290,7 +291,15 @@ int main(int argc, char *argv[])
 
         int result = a.exec();
         delete c;
+
+        // À ce point, tous les threads de calcul FFTW sont terminés (en admettant
+        // que ~MainController() les a bien joints). On est dans le thread principal,
+        // en code normal : c'est l'endroit sûr pour libérer l'état interne de FFTW.
+        fftw_cleanup_threads();
+
         return result;
+
+
 
     } catch (const std::exception& e) {
         // Logger l'exception critique

@@ -38,7 +38,6 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 --------------------------------------------------------------------- */
 
 #include "Functions.h"
-#include "Generator.h"
 #include "QtUtilities.h"
 #include "AppSettings.h"
 #include "StdUtilities.h"
@@ -47,13 +46,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 
 #include <QDebug>
 #include <QApplication>
-#include <QThread>
+//#include <QThread>
 
 #include <iostream>
 #include <map>
 #include <QTime>
 #include <QElapsedTimer>
-//#include <experimental/algorithm>
 
 #ifdef _OPENMP
 #include <omp.h>
