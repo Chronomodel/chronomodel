@@ -176,7 +176,10 @@ protected:
     QString initialize_330();
     bool update_330();
 
-#elif VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5
+/*  Versions > 3.3.5
+ *  ou Versions >= 4.0.0 (tout numéro majeur > 3)          */
+#elif (VERSION_MAJOR > 3)                                   \
+    || ( VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5)
 #pragma mark Version 3.3.5
 
     QString initialize_335();
@@ -193,8 +196,13 @@ protected:
 
     QString initialize_interpolate_old();
     bool update_interpolate_old();
+#endif
 
 #pragma mark Version 3.3.9
+/*  Versions > 3.3.8  (c’est‑à‑dire 3.3.9, 3.4.x, …)
+ *  ou Versions >= 4.0.0 (tout numéro majeur > 3)          */
+#if (VERSION_MAJOR > 3)                                   \
+    || (VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 8)
 
     QString initialize_339();
 
@@ -212,17 +220,9 @@ protected:
 
     QString initialize_interpolate_339();
     bool update_interpolate_339();
-
-
-#elif VERSION_MAJOR == 4 && VERSION_MINOR >= 0 && VERSION_PATCH >= 0
-#pragma mark Version 4
-    QString initialize_400();
-    QString initialize_401();
-    bool update_400();
-    bool update_401();
-
-
 #endif
+
+
 #pragma mark Interpolate
     inline QString initialize_interpolate()
     {

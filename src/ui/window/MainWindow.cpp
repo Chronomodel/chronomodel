@@ -1090,7 +1090,10 @@ void MainWindow::rebuildExportCurve()
 
         } else {
             for (auto &splineXYZ : fullrunTrace) {
-#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5
+/*  Versions > 3.3.5
+ *  ou Versions >= 4.0.0 (tout numéro majeur > 3)          */
+#if (VERSION_MAJOR > 3)                                   \
+                ||  (VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5)
                 curveModel->memo_PosteriorG_3D_335(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterDisplay );
 #else
                 curveModel->memo_PosteriorG_3D(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterDisplay );
@@ -1148,7 +1151,10 @@ void MainWindow::rebuildExportCurve()
 
             } else {
                 for (auto &splineXYZ : runTraceByChain) {
-#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5
+/*  Versions > 3.3.8  (c’est‑à‑dire 3.3.9, 3.4.x, …)
+ *  ou Versions >= 4.0.0 (tout numéro majeur > 3)          */
+#if (VERSION_MAJOR > 3)                                   \
+                    || ( VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5)
                     curveModel->memo_PosteriorG_3D_335(meanGByChain, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterDisplay );
 #else
                     curveModel->memo_PosteriorG_3D(meanGByChain, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterDisplay );

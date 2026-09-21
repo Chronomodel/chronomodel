@@ -2581,7 +2581,10 @@ void ModelCurve::memo_PosteriorG_IDF(PosteriorMeanG &postG, const MCMCSpline &sp
 #endif
 
 #pragma mark memo_PosteriorG_3D_335()
-#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5
+/*  Versions > 3.3.5
+ *  ou Versions >= 4.0.0 (tout numéro majeur > 3)          */
+#if (VERSION_MAJOR > 3)                                   \
+||  (VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5)
 void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted)
 {
 

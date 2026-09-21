@@ -118,20 +118,24 @@ contains(CONFIG, use_openmp) {
 }
 
 macx {
+    # --- Choix du compilateur ---
+    # Par défaut : Apple Clang (nécessaire pour le build universal x86_64 + arm64).
+    # GCC Homebrew seulement si demandé : qmake CONFIG+=use_gcc  (build mono-architecture)
     GCC_PATH = /usr/local/bin   # ou /opt/homebrew/bin sur Apple Silicon
-    exists($$GCC_PATH/g++-14) { # je mets g++-14 pour déactiver l'utilisation de g++-15
-    # --- Compiler override for macOS (use Homebrew GCC instead of Apple Clang)
-        message("✅ Using GCC 15 from $$GCC_PATH")
-        QMAKE_CC = $$GCC_PATH/gcc-15
-        QMAKE_CXX = $$GCC_PATH/g++-15
-        QMAKE_LINK = $$GCC_PATH/g++-15
-        QMAKESPEC = macx-g++
+    GCC_VER  = 15
+
+    contains(CONFIG, use_gcc):exists($$GCC_PATH/g++-$$GCC_VER) {
+        message("✅ Using GCC $$GCC_VER from $$GCC_PATH")
+        QMAKE_CC   = $$GCC_PATH/gcc-$$GCC_VER
+        QMAKE_CXX  = $$GCC_PATH/g++-$$GCC_VER
+        QMAKE_LINK = $$GCC_PATH/g++-$$GCC_VER
+        QMAKESPEC  = macx-g++
 
         # OpenMP activé seulement si flag
         contains(CONFIG, use_openmp) {
             QMAKE_CXXFLAGS += -fopenmp
             QMAKE_LFLAGS   += -fopenmp
-            LIBS += -L$$GCC_PATH/../lib/gcc/15 -lgomp
+            LIBS += -L$$GCC_PATH/../lib/gcc/$$GCC_VER -lgomp
         }
 
         # Chemins des headers standard de GCC
@@ -140,22 +144,32 @@ macx {
         INCLUDEPATH += /usr/local/Cellar/gcc/15.2.0/include
 
     } else {
-        # message("❌ GCC 15 not found in $$GCC_PATH — will fallback to Apple Clang ")
-        # --- Forcer explicitement l’utilisation de Clang ---
-        QMAKE_CC = /usr/bin/clang
-        QMAKE_CXX = /usr/bin/clang++
-        QMAKE_LINK = /usr/bin/clang++
-        QMAKESPEC = macx-clang
+        # --- Apple Clang (défaut, compatible universal) ---
+        QMAKE_CC      = /usr/bin/clang
+        QMAKE_CXX     = /usr/bin/clang++
+        QMAKE_LINK    = /usr/bin/clang++
+        QMAKESPEC     = macx-clang
         QMAKE_MAC_SDK = macosx
 
         message("✅ Using Apple Clang compiler")
-        # OpenMP pour Clang si flag activé, il faut avoir charger libomp avec "brew install libomp"
+
+        # OpenMP pour Clang si flag activé.
+        # Les en-têtes viennent de Homebrew ("brew install libomp"), mais la bibliothèque
+        # est le libomp.dylib universel (x86_64 + arm64) du dépôt : celui de Homebrew
+        # est mono-architecture et fait échouer l'édition de liens arm64.
         contains(CONFIG, use_openmp) {
             LIBOMP_INCLUDE = /usr/local/opt/libomp/include
-            LIBOMP_LIB     = /usr/local/opt/libomp/lib
+            LIBOMP_DIR     = $$PWD/lib/openMP/macOS14
+
             QMAKE_CXXFLAGS += -Xclang -fopenmp -I$$LIBOMP_INCLUDE
-            QMAKE_LFLAGS   += -lomp -L$$LIBOMP_LIB
-            message("Using libomp from $$LIBOMP_LIB")
+            LIBS           += $$LIBOMP_DIR/libomp.dylib
+
+            # Embarquer libomp dans le bundle (Contents/Frameworks)
+            libomp_bundle.files = $$LIBOMP_DIR/libomp.dylib
+            libomp_bundle.path  = Contents/Frameworks
+            QMAKE_BUNDLE_DATA  += libomp_bundle
+
+            message("Using universal libomp from $$LIBOMP_DIR")
         }
     }
 }
@@ -178,10 +192,10 @@ CONFIG(release, debug|release) {
         QMAKE_CFLAGS   += -march=x86-64-v2 -mtune=generic
     }
 
-    # ---- macOS (Intel + ARM universel) ----Seulemeznt Intel
+    # ---- macOS (Intel + ARM universel)
     macx {
-        #message("Building Universal Binary (x86_64 + arm64)")
-        message("Building Binary x86_64 ")
+        message("Building Universal Binary (x86_64 + arm64)")
+        #message("Building Binary x86_64 ") #----Seulement Intel
 
         # This is the minimal Mac OS X version supported by the application. You must have the corresponding SDK installed whithin XCode.
         #QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14 # OS X 10.9 	Mavericks oct 2013  # essai sinon 10.14
@@ -192,11 +206,11 @@ CONFIG(release, debug|release) {
 
         QMAKE_MACOSX_DEPLOYMENT_TARGET = 14.0 # Since 2026-06-22
 
-        QMAKE_APPLE_DEVICE_ARCHS = x86_64 #arm64
+        QMAKE_APPLE_DEVICE_ARCHS = x86_64 arm64
 
-        QMAKE_CXXFLAGS += -arch x86_64 #-arch arm64
-        QMAKE_CFLAGS   += -arch x86_64 #-arch arm64
-        QMAKE_LFLAGS   += -arch x86_64 #-arch arm64
+        QMAKE_CXXFLAGS += -arch x86_64 -arch arm64
+        QMAKE_CFLAGS   += -arch x86_64 -arch arm64
+        QMAKE_LFLAGS   += -arch x86_64 -arch arm64
 
     }
 

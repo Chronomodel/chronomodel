@@ -93,12 +93,10 @@ public:
     virtual bool loadFromStream(QDataStream *in)
     {
         //std::cout << "[ModelCurve::restoreFromFile] entering";
-       /* static const QSet<QString> compatible_version_339 = {
-            QStringLiteral("3.3.9")
-        };*/
         static const QSet<QString> compatible_version_338 = {
             QStringLiteral("3.3.8"),
-            QStringLiteral("3.3.9")
+            QStringLiteral("3.3.9"),
+            QStringLiteral("4.0.0"),
         };
         static const QSet<QString> compatible_version_335 = {
             QStringLiteral("3.3.5"),
@@ -191,7 +189,9 @@ public:
 
 #endif
 
-#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5
+/*  Versions > 3.3.5
+ *  ou Versions >= 4.0.0 (tout numéro majeur > 3)          */
+#if (VERSION_MAJOR > 3) || (VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5)
     void memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted);
 #endif
 
