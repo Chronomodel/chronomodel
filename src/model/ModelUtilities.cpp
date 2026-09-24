@@ -796,10 +796,12 @@ QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const b
             text += textBlue(QObject::tr("Fixed value : %1 %2").arg(stringForLocal(e->mTheta.value()), DateUtils::getAppSettingsFormatStr())); // for VG mX is Variance and we need Std gi
         }
 
-        text += "<br>" + line(textBold(textBlue(QObject::tr("Posterior Shrinkage param."))));
-        text += line(textBlue(e->mS02Theta.resultsString("", nullptr)));
 
-        if (withDates) {
+
+        if (withDates) { // display within log
+            text += "<br>" + line(textBold(textBlue(QObject::tr("Posterior Shrinkage param."))));
+            text += line(textBlue(e->mS02Theta.resultsString("", nullptr)));
+
             for (auto&& date : e->mDates) {
                 text += "<br><br>" + dateResultsHTML(&(date), tmin_formated, tmax_formated);
                 text += "<br>" + line(textBold(textBlack(QObject::tr("Posterior Std ti"))));
