@@ -170,7 +170,7 @@ public:
         EventSZFUpdated,
         EventNodeParamUpdated,
         // ---- Design (couleurs / noms) ----
-        DateNameUpdates,
+        DateNameUpdated,
         DateColorUpdated,
         EventColorUpdated,
         EventNameUpdated,

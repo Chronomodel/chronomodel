@@ -444,7 +444,7 @@ public:
 
     bool adapt(double coef_min = 0.42, const double coef_max = 0.46,
                            size_t batchIndex = 100,
-                           double sigma_min = 1e-10, double sigma_max = 100000.0,
+                           double sigma_min = 1e-10, double sigma_max = 100000000.0,
                            double c = 0.5, double kappa = 0.6, double t0 = 10.0);
 
     // Nouveau prototype : batchIndex est obligatoire et vient en premier

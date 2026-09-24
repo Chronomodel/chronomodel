@@ -10147,7 +10147,8 @@ bool MCMCLoopCurve::sampler_339_SingleSite_bloc_delta()
                         //    Un seul test MH par date : (ti, sigma, delta) proposés et
                         //    acceptés/rejetés ensemble (cf. en-tête de fichier).
                         // ==================================================================
-                        constexpr double mixingKernel = 0.5; // identique au sampler d'origine
+#pragma mark mixingKernel
+                        constexpr double mixingKernel = 0.8; // identique au sampler d'origine Defaut 0.8
                         // 0 -> A.1 (calibration + shrinkage exact) ; 1 -> B.2 (saut non-centré joint)
 
                         for (size_t i = 0; i < event->mDates.size(); ++i) {
@@ -10432,21 +10433,29 @@ bool MCMCLoopCurve::sampler_339_SingleSite_bloc_delta()
                         // que l'étape 3, avec try_theta = theta_prop.
                         // ==================================================================
 #pragma mark Reparam - Décalage rigide theta + ti (courbe)
+                        bool shiftValide = false;
+                        event->mTheta.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
+
                         if (min != max && !event->mDates.empty()) {
 
-                            constexpr double kWideJumpProb   = 0.30; // proportion de "grands" pas
-                            constexpr double kWideJumpFactor = 100.0; // facteur d'inflation du pas
+                            // constexpr double kWideJumpProb   = 0.30; // proportion de "grands" pas
+                            // constexpr double kWideJumpFactor = 100.0; // facteur d'inflation du pas
 
-                            const double sigma_avg_shift = 1.0 / std::sqrt(static_cast<double>(P_curr));
-                            const double stepScale_shift = (Generator::randomUniform() < kWideJumpProb)
-                                                          ? kWideJumpFactor * sigma_avg_shift
-                                                          : sigma_avg_shift;
+                            // const double sigma_avg_shift = 1.0 / std::sqrt(static_cast<double>(P_curr));
+                            // const double stepScale_shift = (Generator::randomUniform() < kWideJumpProb)
+                            //                              ? kWideJumpFactor * sigma_avg_shift
+                            //                              : sigma_avg_shift;
 
                             const double theta_old_shift  = event->mTheta.value();
-                            const double deltaTheta       = Generator::normalDistribution(0.0, stepScale_shift);
+                            // const double deltaTheta       = Generator::normalDistribution(0.0, stepScale_shift);
+
+                            // const double theta_old  = event->mTheta.value();
+
+                            const double deltaTheta = Generator::normalDistribution(0.0, event->mTheta.mSigmaMH);
+
                             const double theta_prop_shift = theta_old_shift + deltaTheta;
 
-                            bool shiftValide = (theta_prop_shift >= min && theta_prop_shift <= max);
+                            shiftValide = (theta_prop_shift >= min && theta_prop_shift <= max);
 
                             long double log_rate_L_shift = 0.0L;
                             std::vector<double> ti_prop_shift;
@@ -10474,7 +10483,7 @@ bool MCMCLoopCurve::sampler_339_SingleSite_bloc_delta()
                                 // comme à l'étape 3 (même séquence de calcul, try_theta ->
                                 // theta_prop_shift).
                                 // ----------------------------------------------------------------
-                                event->mTheta.setValue(theta_prop_shift);
+                                event->mTheta.setValue(theta_prop_shift); // affectation temporaire pour le reste del'algo
                                 event->mThetaReduced = mModel->reduceTime(theta_prop_shift);
 
                                 const bool ordered_shift = std::is_sorted(mModel->mEvents.begin(), mModel->mEvents.end(),
@@ -10585,7 +10594,7 @@ bool MCMCLoopCurve::sampler_339_SingleSite_bloc_delta()
                                     event->mTheta.setValue(theta_prop_shift);
                                     event->mThetaReduced = mModel->reduceTime(theta_prop_shift);
                                     for (size_t k = 0; k < event->mDates.size(); ++k) {
-                                        event->mDates[k].mTi.accept_update(ti_prop_shift[k]);
+                                        event->mDates[k].mTi.setValue(ti_prop_shift[k]);
                                     }
 
                                     current_vecH = std::move(try_vecH);
@@ -10614,6 +10623,9 @@ bool MCMCLoopCurve::sampler_339_SingleSite_bloc_delta()
                                     spreadEventsThetaReduced0(mModel->mEvents);
                                 }
                             }
+                            else {
+                                event->mTheta.reject_update(); // regle sigmaMH pour deltaTheta
+                            }
                             // si shiftValide == false : rien n'a été proposé, on ne touche à rien
                         }
 
@@ -10624,7 +10636,7 @@ bool MCMCLoopCurve::sampler_339_SingleSite_bloc_delta()
 #pragma mark proposal Theta
                         if (min == max) {
                             // theta figé : pas de proposition, pas de recalcul spline nécessaire
-                            event->mTheta.accept_update(min);
+                            event->mTheta.setValue(min);
                             event->mThetaReduced = mModel->reduceTime(min);
                         } else {
 
@@ -10740,6 +10752,11 @@ bool MCMCLoopCurve::sampler_339_SingleSite_bloc_delta()
                             // 4. Test MH sur Theta (ratio de Vraisemblance Spline)
                             // ==================================================================
                             if (MHAcceptanceTest(rate)) {
+                                if (shiftValide) { // regle sigmaMH de deltatshift
+                                   event->mTheta.accept_update(try_theta);
+                                } else {
+                                    event->mTheta.reject_update();
+                                }
                                 event->mTheta.setValue(try_theta);
                                 event->mThetaReduced = mModel->reduceTime(try_theta);
 
@@ -10755,6 +10772,9 @@ bool MCMCLoopCurve::sampler_339_SingleSite_bloc_delta()
                                 Var_residual_spline = try_S02Vg;
 
                             } else {
+                                if (shiftValide) {
+                                    event->mTheta.reject_update();
+                                }
                                 event->mTheta.setValue(current_theta);
                                 event->mThetaReduced = mModel->reduceTime(current_theta);
                                 orderEventsByThetaReduced(mModel->mEvents);
@@ -15940,8 +15960,8 @@ bool MCMCLoopCurve::adapt(const int batchIndex)
     /* En haute dimension (> 5), le taux optimal se rapproche de 0.23.
         Si vous avez des vecteurs de grande dimension, il serait judicieux de réduire la fenêtre (ex. 0.20‑0.30).
     */
-    //const double taux_min = 0.20;
-    //const double taux_max = 0.30;
+    const double taux_min_2 = 0.20;
+    const double taux_max_2 = 0.30;
 
 
     bool noAdapt = true;
@@ -15949,17 +15969,29 @@ bool MCMCLoopCurve::adapt(const int batchIndex)
     // --------------------- Adapt -----------------------------------------
 
     for (auto& event : mModel->mEvents) {
-        for (auto& date : event->mDates) {
-            //--------------------- Adapt Sigma MH de t_i -----------------------------------------
-            if (date.mTi.mSamplerProposal == SamplerProposal::eRWAdaptGauss)
-                noAdapt &= date.mTi.adapt(taux_min, taux_max, batchIndex);
+        if (event->mDates.size()>0) {
+            for (auto& date : event->mDates) {
+                //--------------------- Adapt Sigma MH de t_i -----------------------------------------
+                if (date.mTi.mSamplerProposal == SamplerProposal::eRWAdaptGauss)
+                    noAdapt &= date.mTi.adapt(taux_min_2, taux_max_2, batchIndex);
 
-            //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
-            if (date.mSigmaTi.mSamplerProposal == SamplerProposal::eRWAdaptGauss)
-                noAdapt &= date.mSigmaTi.adapt(taux_min, taux_max, batchIndex);
+                //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
+                if (date.mSigmaTi.mSamplerProposal == SamplerProposal::eRWAdaptGauss)
+                    noAdapt &= date.mSigmaTi.adapt(taux_min_2, taux_max_2, batchIndex);
 
+            }
+        } else {
+            for (auto& date : event->mDates) {
+                //--------------------- Adapt Sigma MH de t_i -----------------------------------------
+                if (date.mTi.mSamplerProposal == SamplerProposal::eRWAdaptGauss)
+                    noAdapt &= date.mTi.adapt(taux_min, taux_max, batchIndex);
+
+                //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
+                if (date.mSigmaTi.mSamplerProposal == SamplerProposal::eRWAdaptGauss)
+                    noAdapt &= date.mSigmaTi.adapt(taux_min, taux_max, batchIndex);
+
+            }
         }
-
         //--------------------- Adapt Sigma MH de Theta Event -----------------------------------------
         if ((event->mType != Event::eBound) && ( event->mTheta.mSamplerProposal == SamplerProposal::eRWAdaptGauss) )
             noAdapt &= event->mTheta.adapt(taux_min, taux_max, batchIndex);

@@ -591,6 +591,23 @@ public:
         std::gamma_distribution<double>  gamma(alpha, beta);
         return gamma(Generator::sEngine);
     }
+    static inline double inverseGammaDistribution(const double alpha, const double beta) noexcept
+    {
+        // Pour obtenir une Inv-Gamma(alpha, beta),
+        // on doit générer une Gamma(alpha, 1/beta) puis prendre l'inverse.
+
+        // Ici, alpha = 2.0 et beta = 1.0/P
+        // Le paramètre 'scale' de std::gamma_distribution doit donc être 1/beta,
+        // ce qui revient à 1 / (1/P) = P.
+
+        double scale = 1.0 / beta;
+        std::gamma_distribution<double> gamma(alpha, scale);
+
+        double sample = gamma(Generator::sEngine);
+
+        // On retourne l'inverse pour transformer la Gamma en Inverse-Gamma
+        return 1.0 / sample;
+    }
 
     static inline double exponentialeDistribution(const double meanexp)
     {

@@ -350,7 +350,7 @@ QString MCMCLoop::initialize_time()
                     for (Date& date : uEvent->mDates) {
 
                         // 1 - Init ti
-                        const bool is_wiggle = date.mDeltaType != Date::eDeltaNone;
+                       // const bool is_wiggle = date.mDeltaType != Date::eDeltaNone;
 #ifdef FIXEDPRIOR
                         date.mTi.mSamplerProposal = SamplerProposal::eLikelihood;
 #endif
@@ -1400,7 +1400,7 @@ void MCMCLoop::run()
 
                 // memo();
                 recordBurnAdapt();
-                recordMH();
+                recordMH(); // sert à l'affichage
                 est.addSample(stepTimer.nsecsElapsed(), /*wasRegen=*/false, annealingEnabled);
 
                 ++chain.mBatchIterIndex;
@@ -1515,7 +1515,6 @@ void MCMCLoop::run()
 
             if (batchIdx == chain.mIterPerBatch) {
                 adapt(totalBacth);
-                //adapt(batchIdx);
                 batchIdx = 1;
                 totalBacth++;
 

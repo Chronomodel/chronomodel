@@ -656,7 +656,6 @@ void Model::generateResultsLog()
 
     for (const auto& ev : mEvents) {
         log += ModelUtilities::eventResultsHTML(ev, true, mSettings.getTminFormated(), mSettings.getTmaxFormated(), !getCurvesName().isEmpty());
-        //log += ModelUtilities::eventResultsHTML(ev, true, this);
         log += "<hr>";
     }
 

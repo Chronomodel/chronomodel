@@ -565,7 +565,7 @@ void Project::fillStructureReasons()
 // ---------------------------------------------------------------------------
 void Project::fillDesignReasons()
 {
-    mReasonChangeDesign << ReasonId::DateNameUpdates
+    mReasonChangeDesign << ReasonId::DateNameUpdated
                         << ReasonId::DateColorUpdated
                         << ReasonId::EventColorUpdated
                         << ReasonId::EventNameUpdated
@@ -588,7 +588,7 @@ void Project::fillPositionReasons()
 void Project::fillEventPropertyReasons()
 {
     // Sous‑ensemble des raisons déjà présentes dans les autres sets.
-    mReasonChangeEventProperties << ReasonId::DateNameUpdates
+    mReasonChangeEventProperties << ReasonId::DateNameUpdated
                                  << ReasonId::DateColorUpdated
                                  << ReasonId::EventXIncUpdated
                                  << ReasonId::EventSXIncUpdated
@@ -663,7 +663,7 @@ QString Project::reasonToString(ReasonId id)
     case ReasonId::EventSZFUpdated:             return tr(TR("Event S Z‑F updated"));
     case ReasonId::EventNodeParamUpdated:       return tr(TR("Event Node updated"));
     // ---- Design ----
-    case ReasonId::DateNameUpdates:             return tr(TR("Date name updates"));
+    case ReasonId::DateNameUpdated:             return tr(TR("Date name updates"));
     case ReasonId::DateColorUpdated:            return tr(TR("Date color updated"));
     case ReasonId::EventColorUpdated:           return tr(TR("Event color updated"));
     case ReasonId::EventNameUpdated:            return tr(TR("Event name updated"));
@@ -3218,15 +3218,16 @@ void Project::updateDate(int eventId, int dateIndex)
         if (event.value(STATE_ID).toInt() == eventId) {
             QJsonArray dates = event.value(STATE_EVENT_DATES).toArray();
             if (dateIndex < dates.size()) {
-                QJsonObject date = dates[dateIndex].toObject();
+                QJsonObject date_old = dates[dateIndex].toObject();
+                QJsonObject date_new = date_old;
 
-                QString pluginId = date.value(STATE_DATE_PLUGIN_ID).toString();
+                QString pluginId = date_new.value(STATE_DATE_PLUGIN_ID).toString();
                 PluginAbstract* plugin = PluginManager::getPluginFromId(pluginId);
 
                 DateDialog dialog(qApp->activeWindow());
                 PluginFormAbstract* form = plugin->getForm();
                 dialog.setForm(form);
-                dialog.setDate(date);
+                dialog.setDate(date_new);
 
                 if (dialog.exec() == QDialog::Accepted) {
                     if (form->isValid()) {
@@ -3234,37 +3235,46 @@ void Project::updateDate(int eventId, int dateIndex)
                         // or mReasonChangeDesign or mReasonChangePosition,
                         // we force to use the fonction checkStateModification() within pushProjectState()
 
-                        date[STATE_DATE_DATA] = form->getData();
+                        date_new[STATE_DATE_DATA] = form->getData();
 
-                        date[STATE_NAME] = dialog.getName();
+                        date_new[STATE_NAME] = dialog.getName();
 #ifdef FIXEDPRIOR
-                        date[STATE_DATE_SAMPLER] = static_cast<int>(SamplerProposal::eLikelihood);
+                        date_new[STATE_DATE_SAMPLER] = static_cast<int>(SamplerProposal::eLikelihood);
 #else
-                        date[STATE_DATE_SAMPLER] = static_cast<int>(dialog.getMethod());
+                        date_new[STATE_DATE_SAMPLER] = static_cast<int>(dialog.getMethod());
 #endif
-                        date[STATE_DATE_DELTA_TYPE] = dialog.getDeltaType();
-                        date[STATE_DATE_DELTA_FIXED] = dialog.getDeltaFixed();
-                        date[STATE_DATE_DELTA_MIN] = dialog.getDeltaMin();
-                        date[STATE_DATE_DELTA_MAX] = dialog.getDeltaMax();
-                        date[STATE_DATE_DELTA_AVERAGE] = dialog.getDeltaAverage();
-                        date[STATE_DATE_DELTA_ERROR] = dialog.getDeltaError();
+                        date_new[STATE_DATE_DELTA_TYPE] = dialog.getDeltaType();
+                        date_new[STATE_DATE_DELTA_FIXED] = dialog.getDeltaFixed();
+                        date_new[STATE_DATE_DELTA_MIN] = dialog.getDeltaMin();
+                        date_new[STATE_DATE_DELTA_MAX] = dialog.getDeltaMax();
+                        date_new[STATE_DATE_DELTA_AVERAGE] = dialog.getDeltaAverage();
+                        date_new[STATE_DATE_DELTA_ERROR] = dialog.getDeltaError();
 
-                        PluginAbstract* plugin = PluginManager::getPluginFromId(date.value(STATE_DATE_PLUGIN_ID).toString());
-                        const bool valid = plugin->isDateValid(date.value(STATE_DATE_DATA).toObject(), settings);
+                        PluginAbstract* plugin = PluginManager::getPluginFromId(date_new.value(STATE_DATE_PLUGIN_ID).toString());
+                        const bool valid = plugin->isDateValid(date_new.value(STATE_DATE_DATA).toObject(), settings);
                         plugin = nullptr;
-                        date[STATE_DATE_VALID] = valid;
+                        date_new[STATE_DATE_VALID] = valid;
 
-                        if (dates[dateIndex].toObject() != date) {
+                        if (date_old != date_new) {
+                            // Compare sans le champ nom pour savoir si seul le nom a changé
+                            QJsonObject old_noName = date_old;
+                            QJsonObject new_noName = date_new;
+                            old_noName.remove(STATE_NAME);
+                            new_noName.remove(STATE_NAME);
+
+                            const bool onlyNameChanged = (old_noName == new_noName);
+
                             QJsonObject state = mState;
-
-                            dates[dateIndex] = date;
+                            dates[dateIndex] = date_new;
                             event[STATE_EVENT_DATES] = dates;
                             events[i] = event;
                             state[STATE_EVENTS] = events;
 
-                            pushProjectState(state, ReasonId::DateCreated, true);//"Date from dialog", true);
+                            pushProjectState(state,
+                                             onlyNameChanged ? ReasonId::DateNameUpdated
+                                                             : ReasonId::DateCreated,
+                                             true);
                         }
-
                     } else {
                         QMessageBox message(QMessageBox::Critical,
                                             tr("Invalid data"),

@@ -2754,7 +2754,7 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc_delta(std::vector<std::shared_p
                 // 5. Mise à jour BLOC (ti, delta, sigma) pour chaque date
                 // ==========================================================================
 #pragma mark mixingKernel
-                constexpr double mixingKernel = 0.8;
+                constexpr double mixingKernel = 0.8; //Default 0.8
                 // 0 -> A.1 ti calibré sigma shrinkage ; OK fonctionne ;
                 // 1 -> B.2 tout RW: ok fonctionne
 
@@ -3055,19 +3055,30 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc_delta(std::vector<std::shared_p
                 // capacité de saut ponctuel plus large pour franchir un désaccord franc
                 // entre deux dates, que sigma_avg seul ne peut pas couvrir.
                 // ==========================================================================
-#pragma mark Reparam - Décalage rigide theta + ti
+#pragma mark Décalage rigide theta + ti
                 if (min != max && !event->mDates.empty()) {
 
-                    constexpr double kWideJumpProb   = 0.30; // proportion de "grands" pas
-                    constexpr double kWideJumpFactor = 100.0; // facteur d'inflation du pas
+                    // constexpr double kWideJumpProb   = 0.30; // proportion de "grands" pas
 
-                    const double sigma_avg = 1.0 / std::sqrt(static_cast<double>(P_curr));
-                    const double stepScale = (Generator::randomUniform() < kWideJumpProb)
-                                                  ? kWideJumpFactor * sigma_avg
-                                                  : sigma_avg;
+                    // double kWideJumpFactor = 100.0; // facteur d'inflation du pas
+                    // const double sigma_avg = 1.0 / std::sqrt(static_cast<double>(P_curr));
+                    // alpha = 2; beta = (alpha-1)/P
+                    // const double sigma_avg = std::sqrt(Generator::inverseGammaDistribution(2, 1.0 / static_cast<double>(P_curr) ));
+
+                    // alpha = 3; beta = (alpha-1)/P
+                    // const double sigma_avg = std::sqrt(Generator::inverseGammaDistribution(4, 3.0 / static_cast<double>(P_curr) ));
+
+
+                    // const double stepScale = (Generator::randomUniform() < kWideJumpProb)
+                    //                             ? kWideJumpFactor * sigma_avg
+                    //                           : sigma_avg;
+                    // const double deltaTheta = Generator::normalDistribution(0.0, stepScale);
 
                     const double theta_old  = event->mTheta.value();
-                    const double deltaTheta = Generator::normalDistribution(0.0, stepScale);
+
+                    event->mTheta.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
+                    const double deltaTheta = Generator::normalDistribution(0.0, event->mTheta.mSigmaMH);
+
                     const double theta_prop = theta_old + deltaTheta;
 
                     bool shiftValide = (theta_prop >= min && theta_prop <= max);
@@ -3093,14 +3104,16 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc_delta(std::vector<std::shared_p
                     }
 
                     if (shiftValide && MHAcceptanceTest_log(static_cast<double>(log_rate_L_shift))) {
-                        event->mTheta.accept_update(theta_prop);
+                        event->mTheta.accept_update(theta_prop); // regle sigmaMH pour deltaTheta
                         for (size_t k = 0; k < event->mDates.size(); ++k) {
-                            event->mDates[k].mTi.accept_update(ti_prop_shift[k]);
+                            event->mDates[k].mTi.setValue(ti_prop_shift[k]); //mise à jour de Ti sans modifier le taux d'acceptation qui sert pour le RW de ti
                         }
                         // Une translation commune de tous les y_i et de mu laisse P_curr
                         // et S_curr invariants (les écarts (y_i - mu) sont inchangés) :
                         // seul mu_curr doit suivre le décalage.
                         mu_curr += static_cast<long double>(deltaTheta);
+                    } else {
+                        event->mTheta.reject_update(); // regle sigmaMH pour deltaTheta
                     }
                     // sinon : rejet, P_curr/mu_curr/S_curr restent ceux issus de l'étape 5
                 }
@@ -3112,7 +3125,7 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc_delta(std::vector<std::shared_p
                 if (min == max) {
                     qDebug() << "[ " << __func__ << QString("] Warning for event : %1 : min == max = %2")
                     .arg( event->getQStringName(), QString::number(min));
-                    event->mTheta.accept_update(min);
+                    event->mTheta.setValue(min);
                 }
                 else {
 #pragma mark useHMC
@@ -3124,13 +3137,13 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc_delta(std::vector<std::shared_p
                         const double new_theta = hmcSampleTheta_temporal(
                                     event->mTheta.value(), mu_curr, P_curr, min, max, L_hmc, eps_hmc);
 
-                        event->mTheta.accept_update(new_theta);
+                        event->mTheta.setValue(new_theta);
                     } else {
                         const double ti_avg_final = static_cast<double>(mu_curr);
                         const double sigma_avg_final = 1.0 / std::sqrt(static_cast<double>(P_curr));
                         const double new_theta = Generator::truncatedNormal(ti_avg_final, sigma_avg_final, min, max);
 
-                        event->mTheta.accept_update(new_theta);
+                        event->mTheta.setValue(new_theta);
                     }
 
 
@@ -3439,7 +3452,7 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc_2(std::vector<std::shared_ptr<E
                 // ==========================================================================
 #pragma mark mixingKernel
 
-                constexpr double mixingKernel = 0;
+                constexpr double mixingKernel = 0.8 ; // Default 0.8
                 // 0 -> A.1 OK, fonctionne, traite très bien les combinaisons de gaussienne ;
                 // 1 -> B.2 OK, fonctionne (peu efficace avec une seule date)
 
@@ -5017,8 +5030,8 @@ bool MCMCLoopChrono::adapt(const int batchIndex)
     /* En haute dimension (> 5), le taux optimal se rapproche de 0.23.
         Si vous avez des vecteurs de grande dimension, il serait judicieux de réduire la fenêtre (ex. 0.20‑0.30).
     */
-    //const double taux_min = 0.20;
-    //const double taux_max = 0.30;
+    constexpr double taux_min_2 = 0.30;
+    constexpr double taux_max_2 = 0.40;
 /*
  * d (paramètres proposés ensemble)	taux optimal
 1	≈ 0.44
@@ -5032,18 +5045,28 @@ bool MCMCLoopChrono::adapt(const int batchIndex)
 
 
     for (const auto& event : mModel->mEvents) {
-        for (auto& date : event->mDates) {
+        if (event->mDates.size() > 1) {
+            for (auto& date : event->mDates) {
+                //--------------------- Adapt Sigma MH de t_i -----------------------------------------
+                if (date.mTi.mSamplerProposal == SamplerProposal::eRWAdaptGauss)
+                    noAdapt &= date.mTi.adapt(taux_min_2, taux_max_2, batchIndex);
 
-            //--------------------- Adapt Sigma MH de t_i -----------------------------------------
-            if (date.mTi.mSamplerProposal == SamplerProposal::eRWAdaptGauss)
-                noAdapt = date.mTi.adapt(taux_min, taux_max, batchIndex) && noAdapt;
-            //noAdapt = date.mTi.adapt(.3, .4, batchIndex) && noAdapt;
+                //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
+                if (date.mSigmaTi.mSamplerProposal == SamplerProposal::eRWAdaptGauss)
+                    noAdapt &= date.mSigmaTi.adapt(taux_min_2, taux_max_2, batchIndex);
 
-            //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
-            if (date.mSigmaTi.mSamplerProposal == SamplerProposal::eRWAdaptGauss)
-                noAdapt = date.mSigmaTi.adapt(taux_min, taux_max, batchIndex) && noAdapt;
-            //noAdapt = date.mSigmaTi.adapt(.3, .4, batchIndex) && noAdapt;
+            }
+        } else {
+            for (auto& date : event->mDates) {
+                //--------------------- Adapt Sigma MH de t_i -----------------------------------------
+                if (date.mTi.mSamplerProposal == SamplerProposal::eRWAdaptGauss)
+                    noAdapt &= date.mTi.adapt(taux_min, taux_max, batchIndex);
 
+                //--------------------- Adapt Sigma MH de Sigma i -----------------------------------------
+                if (date.mSigmaTi.mSamplerProposal == SamplerProposal::eRWAdaptGauss)
+                    noAdapt &= date.mSigmaTi.adapt(taux_min, taux_max, batchIndex);
+
+            }
         }
 
         //--------------------- Adapt Sigma MH de Theta Event -----------------------------------------
@@ -5116,6 +5139,7 @@ void MCMCLoopChrono::recordBurnAdapt()
 
 }
 
+// Ne sert que pourl'affichage
 void MCMCLoopChrono::recordMH()
 {
     for (auto& event : mModel->mEvents) {
@@ -5126,6 +5150,7 @@ void MCMCLoopChrono::recordMH()
             for (auto&& date : event->mDates )   {
                 //--------------------- Memo Dates -----------------------------------------
                 date.mTi.saveCurrentAcceptRate();
+
                 date.mSigmaTi.saveCurrentAcceptRate();
             }
 

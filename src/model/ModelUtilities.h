@@ -55,9 +55,9 @@ namespace ModelUtilities
     std::vector<std::vector<std::shared_ptr<Event>>> getBranchesFromEvent(std::shared_ptr<Event> start);
     std::vector<std::vector<std::shared_ptr<Event>>> getAllEventsBranches(const std::vector<std::shared_ptr<Event>>& events);
 
-    std::vector<std::vector<Phase *> > getNextBranches(const std::vector<Phase *> &curBranch, const Phase *lastNode, const double gammaSum, const double maxLength);
-    std::vector<std::vector<Phase *> > getBranchesFromPhase(Phase *start, const double maxLength);
-    std::vector<std::vector<Phase*> > getAllPhasesBranches(const std::vector<std::shared_ptr<Phase> > &events, const double maxLength);
+    std::vector<std::vector<Phase*>> getNextBranches(const std::vector<Phase*> &curBranch, const Phase *lastNode, const double gammaSum, const double maxLength);
+    std::vector<std::vector<Phase*>> getBranchesFromPhase(Phase *start, const double maxLength);
+    std::vector<std::vector<Phase*>> getAllPhasesBranches(const std::vector<std::shared_ptr<Phase> > &events, const double maxLength);
 
     std::vector<std::shared_ptr<Event>> unsortEvents(const std::vector<std::shared_ptr<Event>> &events);
     QString modelDescriptionHTML(const std::shared_ptr<ModelCurve> model);
@@ -66,12 +66,10 @@ namespace ModelUtilities
     QString modelStateDescriptionText(const std::shared_ptr<ModelCurve> model = nullptr, QString stateDescript = "");
 
 #pragma mark Results in HTML format
-    QString dateResultsHTML(const Date* d, const std::shared_ptr<ModelCurve> &model = nullptr);
-    QString dateResultsHTML(const Date* d, const double tmin_formated, const double tmax_formated);
+    QString dateResultsHTML(const Date* d, const double tmin_formated = 0, const double tmax_formated  = 0);
     QString sigmaTiResultsHTML(const Date* d);
 
-    QString eventResultsHTML(const std::shared_ptr<Event> e, const bool withDates, const std::shared_ptr<ModelCurve> model = nullptr);
-    QString eventResultsHTML(const std::shared_ptr<Event> e, const bool withDates, const double tmin_formated, const double tmax_formated, bool with_curve = false);
+    QString eventResultsHTML(const std::shared_ptr<Event> e, const bool withDates, const double tmin_formated = 0, const double tmax_formated = 0, bool with_curve = false);
     QString EventS02ResultsHTML(const std::shared_ptr<Event> e);
     QString VgResultsHTML(const std::shared_ptr<Event> e);
 

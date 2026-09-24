@@ -5495,8 +5495,6 @@ QMap<double, double> gaussian_filter(QMap<double, double> &map, const double sig
     }
 
 
-    //qDebug() <<"filtre Gaussian";
-    //  data
     int inputSize = (int) curve_input.size();
 
     const double sigma_filter = sigma * step;
@@ -5505,11 +5503,8 @@ QMap<double, double> gaussian_filter(QMap<double, double> &map, const double sig
     const int paddingSize = 2*gaussSize;
 
     const int N = gaussSize + 2*paddingSize;
-    //const int NComplex = 2* (N/2)+1;
 
     const int NComplex =  (N/2)+1;
-
-    // https://www.fftw.org/fftw3_doc/Real_002ddata-DFT-Array-Format.html
 
     double *inputReal;
     inputReal = new double [N];
@@ -5548,7 +5543,7 @@ QMap<double, double> gaussian_filter(QMap<double, double> &map, const double sig
 
 
     double *outputReal;
-    outputReal = new double [2* (N/2)+1];//;[N];
+    outputReal = new double [2* (N/2)+1];
 
     fftw_plan plan_output = fftw_plan_dft_c2r_1d(N, inputComplex, outputReal, FFTW_ESTIMATE);
     fftw_execute(plan_output);

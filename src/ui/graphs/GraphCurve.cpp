@@ -81,7 +81,6 @@ GraphCurve::~GraphCurve()
 void GraphCurve::setPen(QPen pen)
 {
     mPen = pen;
-    //mPen.setDashPattern(QList<qreal>{pen.widthF(), pen.widthF()});
 }
 
 

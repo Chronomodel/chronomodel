@@ -731,44 +731,13 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
     return HTMLText;
 }
 
-
-
-QString ModelUtilities::dateResultsHTML(const Date* d, const std::shared_ptr<ModelCurve> &model)
-{
-    Q_ASSERT(d);
-    QString text = line(textBold(textBlack(QObject::tr("Data : %1").arg(d->getQStringName())))) + "<br>";
-    text += line(textBold(textBlack(QObject::tr("Posterior calib. date"))));
-
-    if (d->mTi.mSamplerProposal != SamplerProposal::eFixe && model != nullptr) {
-
-        short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTi.mFormatedHPD, model);
-        switch (position) {
-        case -1:
-            text += line( textBold(textRed(QObject::tr("Solutions exist before study period") )) );
-            break;
-        case +1:
-            text += line( textBold(textRed(QObject::tr("Solutions exist after study period"))) );
-            break;
-        case +2:
-            text += line( textBold(textRed(QObject::tr("Solutions exist outside study period"))) );
-            break;
-        default:
-            break;
-        }
-
-     }
-    text += line(textBlack(d->mTi.resultsString("", DateUtils::getAppSettingsFormatStr()))) ;
-
-    return text;
-}
-
 QString ModelUtilities::dateResultsHTML(const Date* d, const double tmin_formated, const double tmax_formated)
 {
     Q_ASSERT(d);
     QString text = line(textBold(textBlack(QObject::tr("Data : %1").arg(d->getQStringName())))) + "<br>";
     text += line(textBold(textBlack(QObject::tr("Posterior calib. date"))));
 
-    if (d->mTi.mSamplerProposal != SamplerProposal::eFixe) {
+    if (d->mTi.mSamplerProposal != SamplerProposal::eFixe && tmin_formated !=  tmax_formated) {
 
         short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTi.mFormatedHPD, tmin_formated, tmax_formated);
         switch (position) {
@@ -788,9 +757,6 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const double tmin_formate
     }
     text += line(textBlack(d->mTi.resultsString("", DateUtils::getAppSettingsFormatStr()))) ;
 
-    text +=  "<br>" + line(textBold(textBlack(QObject::tr("Posterior Std ti"))));
-    text += line(textBlack(d->mSigmaTi.resultsString()));
-
     return text;
 }
 
@@ -806,43 +772,6 @@ QString ModelUtilities::sigmaTiResultsHTML(const Date* d)
     return text;
 }
 
-QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const bool withDates, const std::shared_ptr<ModelCurve> model)
-{
-    Q_ASSERT(e);
-    QString text;
-    if (e->mType == Event::eBound) {
-        text += line(textBold(textRed(QObject::tr("Bound : %1").arg(e->getQStringName())))) + "<br>";
-        text += line(textBold(textRed(QObject::tr("Posterior Bound Date"))));
-        text += line(textRed(e->mTheta.resultsString("", DateUtils::getAppSettingsFormatStr())));
-
-    }
-    else {
-        text += line(textBold(textBlue(QObject::tr("Event : %1").arg(e->getQStringName())))) + "<br>";
-        text += line(textBold(textBlue(QObject::tr("Posterior Event Date"))));
-        text += line(textBlue(e->mTheta.resultsString("", DateUtils::getAppSettingsFormatStr())));
-
-        if (withDates) {
-            text += "<br>" + EventS02ResultsHTML(e); // Pour version 4
-            for (auto&& date : e->mDates)
-                text += "<br><br>" + dateResultsHTML(&(date), model);
-        }
-
-
-    }
-
-    if (model && model->is_curve) {
-        if (e->mVg.mSamplerProposal == SamplerProposal::eFixe) {
-            text += "<br>" + line(textBold(textGreen(QObject::tr("Curve : Std gi"))));
-            text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mBurnAdaptTrace->at(0)))));
-
-        } else {
-            text += "<br>" + line(textBold(textGreen(QObject::tr("Curve : Posterior Std gi"))));
-            text += line(textGreen(e->mVg.resultsString("", nullptr)));
-        }
-    }
-    return text;
-}
-
 QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const bool withDates, const double tmin_formated, const double tmax_formated, bool with_curve)
 {
     Q_ASSERT(e);
@@ -850,20 +779,33 @@ QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const b
     if (e->mType == Event::eBound) {
         text += line(textBold(textRed(QObject::tr("Bound : %1").arg(e->getQStringName())))) + "<br>";
         text += line(textBold(textRed(QObject::tr("Posterior Bound Date"))));
-        text += line(textRed(e->mTheta.resultsString("", DateUtils::getAppSettingsFormatStr())));
+        //text += line(textRed(e->mTheta.resultsString("", DateUtils::getAppSettingsFormatStr())));
+        text += QObject::tr("Fixed value : %1 %2").arg(stringForLocal(e->mTheta.value()), DateUtils::getAppSettingsFormatStr()); // for VG mX is Variance and we need Std gi
 
     }
     else {
         text += line(textBold(textBlue(QObject::tr("Event : %1").arg(e->getQStringName())))) + "<br>";
         text += line(textBold(textBlue(QObject::tr("Posterior Event Date"))));
-        text += line(textBlue(e->mTheta.resultsString("", DateUtils::getAppSettingsFormatStr())));
+        // Le taux d'acceptation est utilisé pour DeltaTheta
+       // text += line(textBlue(e->mTheta.resultsString("", DateUtils::getAppSettingsFormatStr())));
 
-        text +=  "<br>" + line(textBold(textBlue(QObject::tr("Posterior Shrinkage param."))));
+        if (e->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
+            text += textBlue( e->mTheta.MetropolisVariable::resultsString("", DateUtils::getAppSettingsFormatStr()));
+
+        } else {
+            text += textBlue(QObject::tr("Fixed value : %1 %2").arg(stringForLocal(e->mTheta.value()), DateUtils::getAppSettingsFormatStr())); // for VG mX is Variance and we need Std gi
+        }
+
+        text += "<br>" + line(textBold(textBlue(QObject::tr("Posterior Shrinkage param."))));
         text += line(textBlue(e->mS02Theta.resultsString("", nullptr)));
 
         if (withDates) {
-            for (auto&& date : e->mDates)
+            for (auto&& date : e->mDates) {
                 text += "<br><br>" + dateResultsHTML(&(date), tmin_formated, tmax_formated);
+                text += "<br>" + line(textBold(textBlack(QObject::tr("Posterior Std ti"))));
+                text += line(textBlack(date.mSigmaTi.resultsString()));
+            }
+
         }
 
     }
@@ -871,7 +813,7 @@ QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const b
     if (with_curve) {
         if (e->mVg.mSamplerProposal == SamplerProposal::eFixe) {
             text += "<br>" + line(textBold(textGreen(QObject::tr("Curve : Std gi"))));
-            text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mBurnAdaptTrace->at(0)))));
+            text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.value()))));
 
         } else {
             text += "<br>" + line(textBold(textGreen(QObject::tr("Curve : Posterior Std gi"))));

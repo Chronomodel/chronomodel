@@ -1105,15 +1105,10 @@ void Date::calibrateWiggle(const StudyPeriodSettings &settings, std::shared_ptr<
             for (int j = 0; j < N_in; ++j) {
                 // Division entière exacte pour retrouver l'indice d'origine
                 int idxLow = j / M;
-                int rem = j % M; // Reste exact
 
                 if (idxLow >= inputSizeOld - 1) {
                     f_resampled[j] = calibrationTemp.back();
                 } else {
-                    // Fraction exacte sans arrondi flottant // crée un lissage des créneaux
-                   // double frac = (double)rem / (double)M;
-                   // f_resampled[j] = (1.0 - frac) * calibrationTemp[idxLow] + frac * calibrationTemp[idxLow + 1];
-                    // Nouveau code :
                     f_resampled[j] = calibrationTemp[idxLow];
                 }
             }

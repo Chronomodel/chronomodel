@@ -1508,7 +1508,7 @@ void GraphView::drawCurves(QPainter& painter)
                         painter.setPen(QPen(bg, 1));
                         painter.drawRect(border_h);
 
-                        break;
+                    break;
 
                     case CurveRefPts::eDotLine:
                         pathPoint.moveTo( xMinPlot, yPlot );
@@ -1519,10 +1519,10 @@ void GraphView::drawCurves(QPainter& painter)
                         painter.setBrush(refPointsPen.brush());
                         painter.setPen(refPointsPen);
                         painter.strokePath(pathPoint, refPointsPen);
-                        break;
+                    break;
 
                     case CurveRefPts::eDotLineCross:
-                        painter.drawEllipse(QRectF( xPlot - penWidth, yPlot - penWidth,  penWidth*2., penWidth*2.));
+                    {    painter.drawEllipse(QRectF( xPlot - penWidth, yPlot - penWidth,  penWidth*2., penWidth*2.));
 
                         pathPoint.moveTo( xMinPlot, yPlot);
                         pathPoint.lineTo( xMaxPlot, yPlot);
@@ -1532,6 +1532,12 @@ void GraphView::drawCurves(QPainter& painter)
                         refPointsPen.setDashPattern(QList<qreal>{1, 5});
 
                         painter.setBrush(refPointsPen.brush());
+
+                        // Gestion de la couleur grise avec transparence
+                        QColor grayColor = Qt::gray;
+                        grayColor.setAlphaF(0.5); // 0.5 = 70% d'opacité (3-50% de transparence)
+                        refPointsPen.setColor(grayColor);
+
                         painter.setPen(refPointsPen);
                         painter.strokePath(pathPoint, refPointsPen);
 
@@ -1540,40 +1546,61 @@ void GraphView::drawCurves(QPainter& painter)
 
                         painter.setPen(QPen(bg, 1));
                         painter.drawRect(border_v);
-
-                        break;
+                    }
+                    break;
 
                     case CurveRefPts::eCustomDashLineCross:
-                        pathPoint.moveTo( xMinPlot, yPlot);
-                        pathPoint.lineTo( xMaxPlot, yPlot);
+                    {    // --- 1. TRACÉ DE LA LIGNE POINTILLÉE GRISE ET TRANSPARENTE ---
+                        pathPoint.moveTo(xMinPlot, yPlot);
+                        pathPoint.lineTo(xMaxPlot, yPlot);
 
+                        // Sauvegarde de la couleur originale
+                        QColor originalColor = refPointsPen.color();
+
+                        // Configuration du style pointillé
                         refPointsPen.setWidthF(pen.widthF());
                         refPointsPen.setStyle(Qt::CustomDashLine);
                         refPointsPen.setDashPattern(QList<qreal>{5, 5});
+
+                        // Gestion de la couleur grise avec transparence
+                        QColor grayColor = Qt::gray;
+                        grayColor.setAlphaF(0.7); // 0.7 = 70% d'opacité (30% de transparence)
+                        refPointsPen.setColor(grayColor);
 
                         painter.setBrush(refPointsPen.brush());
                         painter.setPen(refPointsPen);
                         painter.strokePath(pathPoint, refPointsPen);
 
+                        // --- 2. TRACÉ DE LA CROIX (COULEUR ORIGINALE ET OPAQUE) ---
                         pathPoint.clear();
+
+                        // Rétablissement du style plein et de la couleur d'origine
                         refPointsPen.setStyle(Qt::SolidLine);
-                        pathPoint.moveTo( xPlot, getYForValue(ymin, true));
-                        pathPoint.lineTo( xPlot, getYForValue(ymax, true));
+                        refPointsPen.setColor(originalColor);
+
+                        painter.setPen(refPointsPen);
+
+                        pathPoint.moveTo(xPlot, getYForValue(ymin, true));
+                        pathPoint.lineTo(xPlot, getYForValue(ymax, true));
                         painter.strokePath(pathPoint, refPointsPen);
-                        break;
+                    }
+                    break;
+
 
                     case CurveRefPts::eRoundLine:
-                        pathPoint.addEllipse(xPlot - rayPlot, yPlot - rayPlot, rayPlot*2., rayPlot*2.);
+                    {    pathPoint.addEllipse(xPlot - rayPlot, yPlot - rayPlot, rayPlot*2., rayPlot*2.);
 
                         pathPoint.moveTo( xPlot, getYForValue(ymin, true));
                         pathPoint.lineTo( xPlot, getYForValue(ymax, true));
 
                         refPointsPen.setWidthF( pen.widthF()); // not penWidth
                         refPointsPen.setStyle(Qt::SolidLine);
+
                         painter.setBrush(Qt::NoBrush);
                         painter.setPen(refPointsPen);
                         painter.strokePath(pathPoint, refPointsPen);
-                        break;
+                    }
+                    break;
 
                     case CurveRefPts::ePoint:
                         pathPoint.addEllipse(xPlot - rayPlot, yPlot - rayPlot, rayPlot*2., rayPlot*2.);
@@ -1583,7 +1610,7 @@ void GraphView::drawCurves(QPainter& painter)
                         painter.setBrush(refPointsPen.brush());
                         painter.setPen(refPointsPen);
                         painter.strokePath(pathPoint, refPointsPen);
-                        break;
+                    break;
 
                     default:
                         break;
