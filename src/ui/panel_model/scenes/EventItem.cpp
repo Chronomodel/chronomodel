@@ -343,7 +343,7 @@ void EventItem::handleDrop(QGraphicsSceneDragDropEvent* e)
     }
     event[STATE_EVENT_DATES] = dates;
 
-    project->updateEvent(event, Project::ReasonId::DateCreated);// QObject::tr("Dates added to event (CSV drag)"));
+    project->updateEvent(event, Project::ReasonId::DateCreated);
     scene->updateStateSelectionFromItem();
     scene->sendUpdateProject(Project::ReasonId::EventsSelection, true, false); //  bool notify = true, bool storeUndoCommand = false
 }

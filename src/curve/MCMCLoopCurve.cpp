@@ -8258,7 +8258,7 @@ bool MCMCLoopCurve::sampler_339_block_4v()
                                 log_rate_L += (std::log(L_new) - std::log(L_old));
                                 log_rate_q += std::log(q_rev) - std::log(q_fwd);
 
-#pragma mark Update Delta
+#pragma mark sampling Delta Wiggle
                                 // Proposition de Delta, suivant son Prior, le ratio MH = 1
                                 old_delta.push_back(date.mDelta);
 
@@ -8551,6 +8551,8 @@ bool MCMCLoopCurve::sampler_339_block_4v()
                                         date.mTi.accept_update(prop_ti[i]);
                                         date.mSigmaTi.accept_update(prop_sigma[i]);
                                         date.mDelta = prop_delta[i++];
+                                        date.updateWiggle();
+                                        date.mWiggle.accept_update(date.mWiggle.value());
                                     }
 
                                     current_vecH = std::move(try_vecH);
@@ -10189,6 +10191,7 @@ bool MCMCLoopCurve::sampler_339_SingleSite_bloc_delta()
                             // ----------------------------------------------------------------------
                             // B. Tirage de delta_prop (indépendant, identique pour les deux noyaux)
                             // ----------------------------------------------------------------------
+#pragma mark sampling Delta Wiggle
                             double delta_prop;
                             switch (date.mDeltaType) {
                             case Date::eDeltaNone:     delta_prop = 0.0; break;
@@ -10782,9 +10785,10 @@ bool MCMCLoopCurve::sampler_339_SingleSite_bloc_delta()
                             }
                         }
                     }
-
+#pragma mark update Wiggle
                     for (auto&& date : event->mDates) {
                         date.updateWiggle();
+                        date.mWiggle.accept_update(date.mWiggle.value());
                     }
 
                     std::for_each(event->mPhases.begin(), event->mPhases.end(),

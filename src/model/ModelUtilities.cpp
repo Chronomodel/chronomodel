@@ -731,15 +731,15 @@ QString ModelUtilities::modelStateDescriptionHTML(const std::shared_ptr<ModelCur
     return HTMLText;
 }
 
-QString ModelUtilities::dateResultsHTML(const Date* d, const double tmin_formated, const double tmax_formated)
+QString ModelUtilities::dateResultsHTML(const Date* date, const double tmin_formated, const double tmax_formated)
 {
-    Q_ASSERT(d);
-    QString text = line(textBold(textBlack(QObject::tr("Data : %1").arg(d->getQStringName())))) + "<br>";
+    Q_ASSERT(date);
+    QString text = line(textBold(textBlack(QObject::tr("Data : %1").arg(date->getQStringName())))) + "<br>";
     text += line(textBold(textBlack(QObject::tr("Posterior calib. date"))));
 
-    if (d->mTi.mSamplerProposal != SamplerProposal::eFixe && tmin_formated !=  tmax_formated) {
+    if (date->mTi.mSamplerProposal != SamplerProposal::eFixe && tmin_formated !=  tmax_formated) {
 
-        short position = ModelUtilities::HPDOutsideSudyPeriod(d->mTi.mFormatedHPD, tmin_formated, tmax_formated);
+        short position = ModelUtilities::HPDOutsideSudyPeriod(date->mTi.mFormatedHPD, tmin_formated, tmax_formated);
         switch (position) {
         case -1:
             text += line( textBold(textRed(QObject::tr("Solutions exist before study period") )) );
@@ -755,20 +755,25 @@ QString ModelUtilities::dateResultsHTML(const Date* d, const double tmin_formate
         }
 
     }
-    text += line(textBlack(d->mTi.resultsString("", DateUtils::getAppSettingsFormatStr()))) ;
+    text += line(textBlack(date->mTi.resultsString("", DateUtils::getAppSettingsFormatStr()))) ;
+
+    if (date->mDeltaType != Date::eDeltaNone) {
+        text += "<br>" + line(textBold(textBlack(QObject::tr("Posterior Wiggle"))));
+        text += line(textBlack(date->mWiggle.resultsString("", DateUtils::getAppSettingsFormatStr()))) ;
+    }
 
     return text;
 }
 
 
-QString ModelUtilities::sigmaTiResultsHTML(const Date* d)
+QString ModelUtilities::sigmaTiResultsHTML(const Date* date)
 {
-    Q_ASSERT(d);
+    Q_ASSERT(date);
     QString text;
-    text += line(textBold(textBlack(QObject::tr("Data : %1").arg(d->getQStringName())))) + "<br>";
+    text += line(textBold(textBlack(QObject::tr("Data : %1").arg(date->getQStringName())))) + "<br>";
 
     text += line(textBold(textBlack(QObject::tr("Posterior Std ti"))));
-    text += line(textBlack(d->mSigmaTi.resultsString()));
+    text += line(textBlack(date->mSigmaTi.resultsString()));
     return text;
 }
 

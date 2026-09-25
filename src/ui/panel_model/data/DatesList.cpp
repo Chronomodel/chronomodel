@@ -171,7 +171,7 @@ void DatesList::dropEvent(QDropEvent* e)
         }
     }
     event[STATE_EVENT_DATES] = datesOrdered;
-    MainWindow::getInstance()->updateEvent(event, Project::ReasonId::DateUpdated);//tr("Dates order changed"));
+    MainWindow::getInstance()->updateEvent(event, Project::ReasonId::DateUpdated);
 }
 
 void DatesList::keyPressEvent(QKeyEvent* e)

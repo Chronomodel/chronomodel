@@ -1458,18 +1458,17 @@ void Date::setBandwidth(BandwidthType bwt, double bandwidth)
     mTi.setBandwidth(bwt, bandwidth);
     mSigmaTi.setBandwidth(bwt, bandwidth);
 
-    if ( !( mDeltaType == Date::eDeltaNone ) )
+    if (mDeltaType != Date::eDeltaNone)
         mWiggle.setBandwidth(bwt, bandwidth);
 
 }
 
 void Date::generateFormatedKDE(const std::vector<ChainSpecs>& chains, const int fftLen, const double tmin, const double tmax)
 {
-
     mTi.generateFormatedKDE(chains, fftLen, tmin, tmax);
     mSigmaTi.generateFormatedKDE(chains, fftLen);
 
-    if ( !( mDeltaType == Date::eDeltaNone ) )
+    if (mDeltaType != Date::eDeltaNone)
         mWiggle.generateFormatedKDE(chains, fftLen);
 
 }

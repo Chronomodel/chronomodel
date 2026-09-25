@@ -1131,6 +1131,7 @@ void MCMCLoopChrono::sampler_339_4v(std::vector<std::shared_ptr<Event>> &events)
 #pragma mark Update Wiggle
                 for (auto&& date : event->mDates) {
                     date.updateWiggle();
+                    date.mWiggle.accept_update(date.mWiggle.value());
                 }
 
 #pragma mark Update S02Theta
@@ -1507,6 +1508,7 @@ void MCMCLoopChrono::sampler_339_4vXi(std::vector<std::shared_ptr<Event>> &event
 #pragma mark Update Wiggle
                 for (auto&& date : event->mDates) {
                     date.updateWiggle();
+                    date.mWiggle.accept_update(date.mWiggle.value());
                 }
 
 #pragma mark Update S02Theta
@@ -2082,6 +2084,7 @@ void MCMCLoopChrono::sampler_339_SingleSite(std::vector<std::shared_ptr<Event>> 
 #pragma mark Update Wiggle
                 for (auto&& date : event->mDates) {
                     date.updateWiggle();
+                    date.mWiggle.accept_update(date.mWiggle.value());
                 }
 
                 // ==================================================================
@@ -3155,6 +3158,7 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc_delta(std::vector<std::shared_p
 #pragma mark Update Wiggle
                 for (auto&& date : event->mDates) {
                     date.updateWiggle();
+                    date.mWiggle.accept_update(date.mWiggle.value());
                 }
 
                 // ==================================================================

@@ -348,11 +348,6 @@ void Model::updateFormatSettings()
 
     for (const auto& event : mEvents) {
 
-       /* for (auto i =0 ; i< event->mTheta.mAllAcquiredTrace->size(); i++) {
-            if (i<event->mTheta.mBurnInPriorTrace->size())
-                event->mTheta.mAllAcquiredTrace.get()[i] = event->mTheta.mBurnInPriorTrace.get()[i];
-        }*/
-
         event->mTheta.setFormat(appSetFormat);
 
         event->mS02Theta.setFormat(DateUtils::eNumeric);
@@ -1207,6 +1202,9 @@ void Model::setThresholdToAllModel(const double threshold)
           for (auto&& date : e->mDates ) {
                 date.mTi.mThresholdUsed = mThreshold;
                 date.mSigmaTi.mThresholdUsed = mThreshold;
+
+                if (date.mDeltaType != Date::eDeltaNone)
+                    date.mWiggle.mThresholdUsed = mThreshold;
             }
         }
     }
@@ -1547,6 +1545,9 @@ void Model::generateDensityNumericalResults(const std::vector<ChainSpecs> &chain
             for (auto&& date : event->mDates) {
                 date.mTi.generateDensityNumericalResults(chains);
                 date.mSigmaTi.generateDensityNumericalResults(chains);
+
+                if (date.mDeltaType != Date::eDeltaNone)
+                    date.mWiggle.generateDensityNumericalResults(chains);
             }
         } else {
             event->mTheta.MetropolisVariable::generateDensityNumericalResults(chains);
@@ -1584,6 +1585,9 @@ void Model::generateTraceNumericalResults(const std::vector<ChainSpecs> &chains)
             for (auto&& date : event->mDates) {
                 date.mTi.generateTraceNumericalResults(chains);
                 date.mSigmaTi.generateTraceNumericalResults(chains);
+
+                if (date.mDeltaType != Date::eDeltaNone)
+                    date.mWiggle.generateTraceNumericalResults(chains);
             }
         } else {
             event->mTheta.MetropolisVariable::generateTraceNumericalResults(chains);
@@ -1676,10 +1680,6 @@ void Model::generateCredibility(const double thresh)
     QElapsedTimer t;
     t.start();
 #endif
-   // if (mThreshold == thresh) // False if FFTW bandwidth, we must redo Credibility
-   //     return;
-
-
     for (const auto& ev : mEvents) {
         if (ev->type() != Event::eBound)//(ev->mTheta.mSamplerProposal != SamplerProposal::eFixe)
             ev->mTheta.generateCredibility(thresh);
@@ -1691,6 +1691,9 @@ void Model::generateCredibility(const double thresh)
             for (auto&& date : ev->mDates )  {
                 date.mTi.generateCredibility(thresh);
                 date.mSigmaTi.generateCredibility(thresh);
+
+                if (date.mDeltaType != Date::eDeltaNone)
+                    date.mWiggle.generateCredibility(thresh);
             }
         }
 
@@ -1735,22 +1738,8 @@ void Model::generateHPD(const double thresh)
 #ifdef DEBUG
     qDebug()<<QString("[Model::generateHPD] Treshold =  %1 %; in progress").arg(thresh);
     QElapsedTimer t;
-     t.start();
+    t.start();
 #endif
-
-    /*for (const auto& event : mEvents) {
-        if (event->mTheta.mSamplerProposal != SamplerProposal::eFixe && event->type() != Event::eBound) {
-                event->mTheta.generateHPD(thresh);
-            if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe)
-                event->mS02Theta.generateHPD(thresh);
-
-            for (auto&& date : event->mDates) {
-                date.mTi.generateHPD(thresh);
-                date.mSigmaTi.generateHPD(thresh);
-            }
-        }
-    }
-    */
 
     for (const auto& event : mEvents
                                  | std::views::filter([](const auto& ev) {
@@ -1763,6 +1752,9 @@ void Model::generateHPD(const double thresh)
         for (auto&& date : event->mDates) {
             date.mTi.generateHPD(thresh);
             date.mSigmaTi.generateHPD(thresh);
+
+            if (date.mDeltaType != Date::eDeltaNone)
+                date.mWiggle.generateHPD(thresh);
         }
     }
 
