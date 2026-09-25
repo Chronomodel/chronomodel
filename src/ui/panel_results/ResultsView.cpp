@@ -4263,10 +4263,20 @@ void ResultsView::updateEventsOptions(qreal& optionWidgetHeight, bool isPostDist
         totalH += unfoldLayout->spacing() * 2;
 
     } else {
-        mDataCheck->hide();
+
         mDataCalibCheck->hide();
-        mWiggleCheck->hide();
         mWiggleCalibCheck->hide();
+
+        QVBoxLayout* unfoldLayout = new QVBoxLayout();
+        unfoldLayout->setContentsMargins(15, 0, 0, 0);
+        unfoldLayout->setSpacing(10);
+        unfoldLayout->addWidget(mDataCheck, Qt::AlignLeft);
+        unfoldLayout->addWidget(mWiggleCheck, Qt::AlignLeft);
+        eventLayout->addLayout(unfoldLayout);
+
+        addTotalHeight(totalH, mDataCheck);
+        addTotalHeight(totalH, mWiggleCheck);
+        totalH += unfoldLayout->spacing() * 2;
     }
 
     add(mEventsStatCheck);

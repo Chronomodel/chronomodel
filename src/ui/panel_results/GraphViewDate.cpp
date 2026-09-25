@@ -277,10 +277,14 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
         if (variableList.contains(eDataTi) && mDate->mTi.mSamplerProposal!= SamplerProposal::eFixe) {
             generateTraceCurves(mChains, &mDate->mTi);
 
+        } else if (variableList.contains(eDataWiggle) && mDate->mWiggle.mSamplerProposal!= SamplerProposal::eFixe) {
+            mTitle = tr("Wiggle : %1").arg(mDate->getQStringName());
+            generateLogTraceCurves(mChains, &mDate->mWiggle);
+
         } else if (variableList.contains(eSigma) && mDate->mSigmaTi.mSamplerProposal!= SamplerProposal::eFixe) {
                 mTitle = tr("Individual Log10(Std) : %1").arg(mDate->getQStringName());
                 generateLogTraceCurves(mChains, &mDate->mSigmaTi);
-                //generateTraceCurves(mChains, &mDate->mSigmaTi);
+
         }
 
     }
@@ -438,7 +442,9 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
             }
         }
         mGraph->setCurveVisible(curvesToShow, true);
+
     }
+
     /* -----------------------Third tab : Acceptance rate.-------------------------
      *  Possible curves (could be for theta or sigma):
      *  - Accept i
