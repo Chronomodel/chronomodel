@@ -339,28 +339,27 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
 
             const bool showCalib = mShowList.contains(eDataCalibrate);
             const bool showWiggle = mShowList.contains(eDataWiggle);
+            const bool showWiggleCalib = mShowList.contains(eDataCalibrateWiggle);
             const bool showCredibility = mShowList.contains(eCredibility);
 
             QStringList curvesToShow;
 
             if (showCalib) {
 
-                if (showWiggle) {
-                    curvesToShow << "Wiggle Calibration";
-                }
-                else
-                {
                     curvesToShow << "Calibration";
-                }
-            }
 
+            }
+            if (showWiggleCalib) {
+                curvesToShow << "Wiggle Calibration";
+            }
             if (mShowAllChains) {
 
                 if (showWiggle) {
                     curvesToShow << "Wiggle Post Distrib All Chains";
 
                 }
-                else {
+
+                if (showCalib) {
                     curvesToShow << "Post Distrib All Chains" << "HPD All Chains";
                 }
                 if (showCredibility) {

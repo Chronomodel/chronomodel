@@ -218,8 +218,11 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mDataCalibCheck->setFixedHeight(h_Check);
     mDataCalibCheck->setChecked(true);
 
-    mWiggleCheck = new CheckBox(tr("Wiggle shifted"));
+    mWiggleCheck = new CheckBox(tr("Post. Dates Wiggle"));
     mWiggleCheck->setFixedHeight(h_Check);
+
+    mWiggleCalibCheck = new CheckBox(tr("Calib. Dates Wiggle"));
+    mWiggleCalibCheck->setFixedHeight(h_Check);
 
     mEventsStatCheck = new CheckBox(tr("Show Stat."));
     mEventsStatCheck->setFixedHeight(h_Check);
@@ -243,9 +246,9 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     resultsGroupLayout->addWidget(mEventsDatesUnfoldCheck);
     resultsGroupLayout->addWidget(mDataCalibCheck);
     resultsGroupLayout->addWidget(mWiggleCheck);
+    resultsGroupLayout->addWidget(mWiggleCalibCheck);
     resultsGroupLayout->addWidget(mEventsStatCheck);
 
-    //mEventsGroup->resize(8 * h, mOptionsW);
     mEventsGroup->setLayout(resultsGroupLayout);
 
 
@@ -411,6 +414,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
 
     connect(mDataCalibCheck, &CheckBox::clicked, this, &ResultsView::applyShowList);
     connect(mWiggleCheck, &CheckBox::clicked, this, &ResultsView::applyShowList);
+    connect(mWiggleCalibCheck, &CheckBox::clicked, this, &ResultsView::applyShowList);
 
     connect(mEventsStatCheck, &CheckBox::clicked, this, &ResultsView::showStats);
 
@@ -1656,6 +1660,9 @@ void ResultsView::updateShowList()
                 if (mWiggleCheck->isChecked())
                     mShowList.append(GraphViewResults::eDataWiggle);
 
+                if (mWiggleCalibCheck->isChecked())
+                    mShowList.append(GraphViewResults::eDataCalibrateWiggle);
+
             }
 
         } else if (mDataSigmaRadio->isChecked()) {
@@ -1732,6 +1739,9 @@ void ResultsView::updateShowList()
 
                         if (mWiggleCheck->isChecked())
                             mShowList.append(GraphViewResults::eDataWiggle);
+
+                        if (mWiggleCalibCheck->isChecked())
+                            mShowList.append(GraphViewResults::eDataCalibrateWiggle);
 
                     } else {
                         mShowList.append(GraphViewResults::eDataCalibrate);
@@ -4105,6 +4115,7 @@ void ResultsView::createOptionsWidget()
 
         mDataCalibCheck->hide();
         mWiggleCheck->hide();
+        mWiggleCalibCheck->hide();
 
         eventGroupLayout->addWidget(mEventsStatCheck);
         totalH += h;
@@ -4252,21 +4263,25 @@ void ResultsView::updateEventsOptions(qreal& optionWidgetHeight, bool isPostDist
     if (isPostDistrib && mEventThetaRadio->isChecked() && mEventsDatesUnfoldCheck->isChecked()) {
         mDataCalibCheck->show();
         mWiggleCheck->show();
+        mWiggleCalibCheck->show();
 
         QVBoxLayout* unfoldLayout = new QVBoxLayout();
         unfoldLayout->setContentsMargins(15, 0, 0, 0);
         unfoldLayout->setSpacing(10);
         unfoldLayout->addWidget(mDataCalibCheck, Qt::AlignLeft);
         unfoldLayout->addWidget(mWiggleCheck, Qt::AlignLeft);
+        unfoldLayout->addWidget(mWiggleCalibCheck, Qt::AlignLeft);
         eventLayout->addLayout(unfoldLayout);
 
         addTotalHeight(totalH, mDataCalibCheck);
         addTotalHeight(totalH, mWiggleCheck);
+        addTotalHeight(totalH, mWiggleCalibCheck);
         totalH += unfoldLayout->spacing() * 2;
 
     } else {
         mDataCalibCheck->hide();
         mWiggleCheck->hide();
+        mWiggleCalibCheck->hide();
     }
 
     add(mEventsStatCheck);

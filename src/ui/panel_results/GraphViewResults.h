@@ -185,7 +185,9 @@ public:
 #ifdef KOMLAN
         eS02Vg,
 #endif
-        eDataTi, eDataCalibrate, eDataWiggle,
+        eDataTi, eDataCalibrate,
+        eDataWiggle,
+        eDataCalibrateWiggle,
         eCredibility,
         eSigma ,
         eVg,
