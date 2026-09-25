@@ -211,7 +211,6 @@ void ProjectView::showModel()
 void ProjectView::showResults()
 {
     auto model = getModel_ptr();
-   // mResultsView->clearResults(); // ici
     mStack->setCurrentIndex(1);
     
     updateResults();
