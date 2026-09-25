@@ -91,8 +91,17 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
     defaultPen.setStyle(Qt::SolidLine);
 
     QString resultsHTML = tr("Nothing to Display");
+    bool showDate = false;
+    for (auto e : {eDataTi, eDataCalibrate, eDataWiggle, eDataCalibrateWiggle}) {
+        if (mShowList.contains(e)) {
+            showDate = true;
+            break;
+        }
+    }
 
-    if (variableList.contains(eDataTi)) {
+
+
+    if (showDate) {
         resultsHTML = ModelUtilities::dateResultsHTML(mDate);
 
     } else if (variableList.contains(eSigma)) {
@@ -106,7 +115,50 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
       * ------------------------------------------------
       */
     if (typeGraph == ePostDistrib) {
+        /* ------------------------------------------------
+         *  Possible Curves :
+         *  - Sigma
+         *  - Post Distrib All Chains
+         *  - Post Distrib Chain i
+         * ------------------------------------------------
+         */
+        if (variableList.contains(eSigma)) {
+            graph_density();
+            mGraph->removeAllCurves(); // delete default zones made by graph_density()
+            mGraph->mLegendX = "";
+            mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
+            mTitle = tr("Individual Std : %1").arg(mDate->getQStringName());
 
+            //  Post Distrib All Chains
+            const GraphCurve &curvePostDistrib = densityCurve(mDate->mSigmaTi.fullHisto(),
+                                                              "Post Distrib all Chains",
+                                                              color,
+                                                              Qt::SolidLine,
+                                                              Qt::NoBrush);
+            mGraph->add_curve(curvePostDistrib);
+
+            // Post Distrib Chain i
+            if (!mDate->mSigmaTi.mChainsKDE.empty())
+                for (size_t i=0; i<mChains.size(); ++i) {
+                    const GraphCurve &curvePostDistribChain = densityCurve(mDate->mSigmaTi.KDEForChain(i),
+                                                                           "Post Distrib Chain " + QString::number(i),
+                                                                           Painting::chainColors.at(i),
+                                                                           Qt::SolidLine,
+                                                                           Qt::NoBrush);
+                    mGraph->add_curve(curvePostDistribChain);
+                }
+            // HPD All Chains
+            const GraphCurve &curveHPD = HPDCurve(mDate->mSigmaTi.mFormatedHPD,
+                                                  "HPD All Chains",
+                                                  color);
+            mGraph->add_curve(curveHPD);
+            // Credibility (must be the last created curve because uses yMax!
+            GraphCurve curveCred = topLineSection(mDate->mSigmaTi.mFormatedCredibility,
+                                                  "Credibility All Chains",
+                                                  color);
+            mGraph->add_curve(curveCred);
+            mGraph->setYAxisMode(GraphView::AxisMode::eHidden);
+        }
         /* ------------------------------------------------
          *  Possible Curves :
          *  - Post Distrib All Chains
@@ -117,7 +169,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
          *  - Wiggle
          * ------------------------------------------------
          */
-        if (variableList.contains(eDataTi)) {
+        else  {
             graph_density();
             mTitle = tr("Data : %1").arg(mDate->getQStringName());
 
@@ -207,50 +259,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
 
         }
 
-        /* ------------------------------------------------
-         *  Possible Curves :
-         *  - Sigma
-         *  - Post Distrib All Chains
-         *  - Post Distrib Chain i
-         * ------------------------------------------------
-         */
-        else if (variableList.contains(eSigma)) {
-            graph_density();
-            mGraph->removeAllCurves(); // delete default zones made by graph_density()
-            mGraph->mLegendX = "";
-            mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
-            mTitle = tr("Individual Std : %1").arg(mDate->getQStringName());
 
-            //  Post Distrib All Chains
-            const GraphCurve &curvePostDistrib = densityCurve(mDate->mSigmaTi.fullHisto(),
-                                                               "Post Distrib all Chains",
-                                                               color,
-                                                               Qt::SolidLine,
-                                                               Qt::NoBrush);
-            mGraph->add_curve(curvePostDistrib);
-
-            // Post Distrib Chain i
-            if (!mDate->mSigmaTi.mChainsKDE.empty())
-                for (size_t i=0; i<mChains.size(); ++i) {
-                    const GraphCurve &curvePostDistribChain = densityCurve(mDate->mSigmaTi.KDEForChain(i),
-                                                                            "Post Distrib Chain " + QString::number(i),
-                                                                            Painting::chainColors.at(i),
-                                                                            Qt::SolidLine,
-                                                                            Qt::NoBrush);
-                    mGraph->add_curve(curvePostDistribChain);
-                }
-            // HPD All Chains
-            const GraphCurve &curveHPD = HPDCurve(mDate->mSigmaTi.mFormatedHPD,
-                                                   "HPD All Chains",
-                                                    color);
-            mGraph->add_curve(curveHPD);
-            // Credibility (must be the last created curve because uses yMax!
-            GraphCurve curveCred = topLineSection(mDate->mSigmaTi.mFormatedCredibility,
-                                                            "Credibility All Chains",
-                                                            color);
-            mGraph->add_curve(curveCred);
-            mGraph->setYAxisMode(GraphView::AxisMode::eHidden);
-        }
 
     }
     /* ------------------------------------------------
@@ -286,8 +295,7 @@ void GraphViewDate::generateCurves(const graph_t typeGraph, const QList<variable
         graph_acceptation();
 
         if (variableList.contains(eDataTi) && mDate->mTi.mSamplerProposal != SamplerProposal::eFixe) {
-            //mTitle = tr("Data : %1").arg(mDate->getQStringName());// default title
-            generateAcceptCurves(mChains, &mDate->mTi);
+              generateAcceptCurves(mChains, &mDate->mTi);
 
         } else if (variableList.contains(eSigma) && mDate->mSigmaTi.mSamplerProposal != SamplerProposal::eFixe) {
             mTitle = tr("Individual Std : %1").arg(mDate->getQStringName());
@@ -327,71 +335,12 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
     if (mCurrentTypeGraph == ePostDistrib) {
         /* ------------------------------------------------
          *  Possible Curves :
-         *  - Post Distrib All Chains
-         *  - Post Distrib Chain i
-         *  - HPD All Chains
-         *  - Credibility All Chains
-         *  - Calibration
-         *  - Wiggle
-         * ------------------------------------------------
-         */
-        if (mShowList.contains(eDataTi)) {
-
-            const bool showCalib = mShowList.contains(eDataCalibrate);
-            const bool showWiggle = mShowList.contains(eDataWiggle);
-            const bool showWiggleCalib = mShowList.contains(eDataCalibrateWiggle);
-            const bool showCredibility = mShowList.contains(eCredibility);
-
-            QStringList curvesToShow;
-
-            if (showCalib) {
-
-                    curvesToShow << "Calibration";
-
-            }
-            if (showWiggleCalib) {
-                curvesToShow << "Wiggle Calibration";
-            }
-            if (mShowAllChains) {
-
-                if (showWiggle) {
-                    curvesToShow << "Wiggle Post Distrib All Chains";
-
-                }
-
-                if (showCalib) {
-                    curvesToShow << "Post Distrib All Chains" << "HPD All Chains";
-                }
-                if (showCredibility) {
-                    curvesToShow << "Credibility All Chains";
-                }
-            }
-
-            // Ajouter les chaînes individuelles
-            for (int i = 0; i < mShowChainList.size(); ++i) {
-                if (mShowChainList[i]) {
-
-                    if (showWiggle) {
-                        curvesToShow << QString("Wiggle Post Distrib Chain %1").arg(i);
-
-                    } else {
-                        curvesToShow << QString("Post Distrib Chain %1").arg(i);
-
-                    }
-                }
-            }
-
-            mGraph->setCurveVisible(curvesToShow, true);
-        }
-
-        /* ------------------------------------------------
-         *  Possible Curves :
          *  - Sigma
          *  -- Post Distrib All Chains
          *  -- Post Distrib Chain i
          * ------------------------------------------------
          */
-        else if (showList.contains(eSigma)) {
+        if (showList.contains(eSigma)) {
 
             QStringList curvesToShow;
 
@@ -414,6 +363,59 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
             mGraph->setTipXLab(tr("sigma"));
 
         }
+        /* ------------------------------------------------
+         *  Possible Curves :
+         *  - Post Distrib All Chains
+         *  - Post Distrib Chain i
+         *  - HPD All Chains
+         *  - Credibility All Chains
+         *  - Calibration
+         *  - Wiggle
+         * ------------------------------------------------
+         */
+
+
+        else  {
+
+            QStringList curvesToShow;
+
+            if (mShowList.contains(eDataCalibrate)) {
+                    curvesToShow << "Calibration";
+            }
+            if (mShowList.contains(eDataCalibrateWiggle)) {
+                curvesToShow << "Wiggle Calibration";
+            }
+            if (mShowAllChains) {
+                if (mShowList.contains(eDataTi)) {
+                    curvesToShow << "Post Distrib All Chains" << "HPD All Chains";
+                }
+
+                if (mShowList.contains(eDataWiggle)) {
+                    curvesToShow << "Wiggle Post Distrib All Chains";
+                }
+
+                if (mShowList.contains(eCredibility)) {
+                    curvesToShow << "Credibility All Chains";
+                }
+            }
+
+            // Ajouter les chaînes individuelles
+            for (int i = 0; i < mShowChainList.size(); ++i) {
+                if (mShowChainList[i]) {
+                    if (mShowList.contains(eDataTi)) {
+                        curvesToShow << QString("Post Distrib Chain %1").arg(i);
+                    }
+
+                    if (mShowList.contains(eDataWiggle)) {
+                        curvesToShow << QString("Wiggle Post Distrib Chain %1").arg(i);
+                    }
+                }
+            }
+
+            mGraph->setCurveVisible(curvesToShow, true);
+        }
+
+
 
     }
     /* ------------------Second tab : History plots.------------------------------
@@ -469,7 +471,11 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
         mGraph->setCurveVisible(curvesToShow, true);
 
     }
-   update();
+    else {
+        QStringList curvesToShow;
+        mGraph->setCurveVisible(curvesToShow, true);
+    }
+    update();
 }
 
 

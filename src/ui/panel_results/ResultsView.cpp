@@ -214,6 +214,10 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mEventVGRadio = new RadioButton(tr("Std gi"));
     mEventVGRadio->setFixedHeight(h_Radio);
 
+    mDataCheck = new CheckBox(tr("Post. Dates"));
+    mDataCheck->setFixedHeight(h_Check);
+    mDataCheck->setChecked(true);
+
     mDataCalibCheck = new CheckBox(tr("Individual Calib. Dates"));
     mDataCalibCheck->setFixedHeight(h_Check);
     mDataCalibCheck->setChecked(true);
@@ -244,6 +248,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     resultsGroupLayout->addWidget(mEventVGRadio);
 
     resultsGroupLayout->addWidget(mEventsDatesUnfoldCheck);
+    resultsGroupLayout->addWidget(mDataCheck);
     resultsGroupLayout->addWidget(mDataCalibCheck);
     resultsGroupLayout->addWidget(mWiggleCheck);
     resultsGroupLayout->addWidget(mWiggleCalibCheck);
@@ -412,6 +417,7 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     connect(mActivityRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
     connect(mDurationRadio, &RadioButton::clicked, this, &ResultsView::applyCurrentVariable);
 
+    connect(mDataCheck, &CheckBox::clicked, this, &ResultsView::applyShowList);
     connect(mDataCalibCheck, &CheckBox::clicked, this, &ResultsView::applyShowList);
     connect(mWiggleCheck, &CheckBox::clicked, this, &ResultsView::applyShowList);
     connect(mWiggleCalibCheck, &CheckBox::clicked, this, &ResultsView::applyShowList);
@@ -931,7 +937,8 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     connect(mBandwidthCustomRadio, &RadioButton::clicked, this, &ResultsView::applyBandwidth);
     connect(mBandwidthEdit, &LineEdit::editingFinished, this, &ResultsView::applyBandwidth);
 
-    connect(mCredibilityCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    //connect(mCredibilityCheck, &CheckBox::clicked, this, &ResultsView::updateCurvesToShow);
+    connect(mCredibilityCheck, &CheckBox::clicked, this, &ResultsView::applyShowList);
     connect(mFFTLenCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &ResultsView::applyFFTLength);
 
     connect(mThresholdEdit, &LineEdit::editingFinished, this, &ResultsView::applyThreshold);
@@ -1651,8 +1658,12 @@ void ResultsView::updateShowList()
     if (currentTabName == tr("Events")) {
         if (mEventThetaRadio->isChecked()) {
             mMainVariable = GraphViewResults::eThetaEvent;
+            if (mCredibilityCheck->isChecked())
+                mShowList.append(GraphViewResults::eCredibility);
+
             if (mEventsDatesUnfoldCheck->isChecked()) {
-                mShowList.append(GraphViewResults::eDataTi);
+                if (mDataCheck->isChecked())
+                    mShowList.append(GraphViewResults::eDataTi);
 
                 if (mDataCalibCheck->isChecked())
                     mShowList.append(GraphViewResults::eDataCalibrate);
@@ -1692,8 +1703,17 @@ void ResultsView::updateShowList()
 
                 mShowList.append(GraphViewResults::eThetaEvent);
                 if (mPhasesDatesUnfoldCheck->isChecked()) {
-                    mShowList.append(GraphViewResults::eDataTi);
+                    if (mDataCheck->isChecked())
+                        mShowList.append(GraphViewResults::eDataTi);
 
+                    if (mDataCalibCheck->isChecked())
+                        mShowList.append(GraphViewResults::eDataCalibrate);
+
+                    if (mWiggleCheck->isChecked())
+                        mShowList.append(GraphViewResults::eDataWiggle);
+
+                    if (mWiggleCalibCheck->isChecked())
+                        mShowList.append(GraphViewResults::eDataCalibrateWiggle);
 
                 }
             }
@@ -1712,14 +1732,21 @@ void ResultsView::updateShowList()
                 mShowList.append(GraphViewResults::eThetaEvent);
 
                 if (mPhasesDatesUnfoldCheck->isChecked()) {
-                    mShowList.append(GraphViewResults::eDataTi);
+                    if (mDataCheck->isChecked())
+                        mShowList.append(GraphViewResults::eDataTi);
+
+                    if (mDataCalibCheck->isChecked())
+                        mShowList.append(GraphViewResults::eDataCalibrate);
+
+                    if (mWiggleCheck->isChecked())
+                        mShowList.append(GraphViewResults::eDataWiggle);
+
+                    if (mWiggleCalibCheck->isChecked())
+                        mShowList.append(GraphViewResults::eDataCalibrateWiggle);
 
 
                 }
             }
-
-
-
 
         } else if (mDurationRadio->isChecked()) {
             mMainVariable = GraphViewResults::eDuration;
@@ -1731,21 +1758,17 @@ void ResultsView::updateShowList()
                 mShowList.append(GraphViewResults::eThetaEvent);
 
                 if (mPhasesDatesUnfoldCheck->isChecked()) {
-                    mShowList.append(GraphViewResults::eDataTi);
+                    if (mDataCheck->isChecked())
+                        mShowList.append(GraphViewResults::eDataTi);
 
-                    if (mDataCalibCheck->isChecked() || mWiggleCheck->isChecked()) {
-                        if (mDataCalibCheck->isChecked())
-                            mShowList.append(GraphViewResults::eDataCalibrate);
-
-                        if (mWiggleCheck->isChecked())
-                            mShowList.append(GraphViewResults::eDataWiggle);
-
-                        if (mWiggleCalibCheck->isChecked())
-                            mShowList.append(GraphViewResults::eDataCalibrateWiggle);
-
-                    } else {
+                    if (mDataCalibCheck->isChecked())
                         mShowList.append(GraphViewResults::eDataCalibrate);
-                    }
+
+                    if (mWiggleCheck->isChecked())
+                        mShowList.append(GraphViewResults::eDataWiggle);
+
+                    if (mWiggleCalibCheck->isChecked())
+                        mShowList.append(GraphViewResults::eDataCalibrateWiggle);
                 }
             }
         }
@@ -1810,6 +1833,7 @@ void ResultsView::applyShowList()
 
 void ResultsView::applyCurrentVariable()
 {
+    mShowList.clear();
     updateShowList();
     createGraphs();
 
@@ -2197,8 +2221,6 @@ void ResultsView::createByPhasesGraphs()
                                 graph->setItemColor(event->mColor);
 
                                 setGraphicOption(*graph);
-
-                                //phaseLayout->addWidget(graph);
 
                                 mByPhasesGraphs.append(graph);
                                 connect(graph, &GraphViewResults::selected, this, &ResultsView::updateOptionsWidget);
@@ -3486,7 +3508,6 @@ void ResultsView::updateGraphsMinMax()
     if (mCurrentTypeGraph == GraphViewResults::ePostDistrib) {
 
         if (mMainVariable == GraphViewResults::eDuration
-
             || mMainVariable == GraphViewResults::eS02
 
 
@@ -3609,46 +3630,6 @@ void ResultsView::updateCurvesToShow()
             && !mS02VgRadio->isChecked()
 #endif
             ) {
-/*
-        if (mCurveGRadio->isChecked()) {
-            showVariableList.append(GraphViewResults::eG);
-
-            if (mCurveErrorCheck->isChecked())
-                showVariableList.append(GraphViewResults::eGGauss);
-
-            if (mCurveHpdCheck->isChecked())
-                showVariableList.append(GraphViewResults::eGHpd);
-
-            if (mCurveMapCheck->isChecked())
-                showVariableList.append(GraphViewResults::eMap);
-
-            if (mCurveEventsPointsCheck->isChecked())
-                showVariableList.append(GraphViewResults::eGEventsPts);
-
-            if (mCurveDataPointsCheck->isChecked())
-                showVariableList.append(GraphViewResults::eGDatesPts);
-        }
-        if (mCurveGPRadio->isChecked()) {
-            showVariableList.append(GraphViewResults::eGP);
-
-            if (mCurveGPGaussCheck->isChecked())
-                showVariableList.append(GraphViewResults::eGPGauss);
-
-            if (mCurveGPHpdCheck->isChecked())
-                showVariableList.append(GraphViewResults::eGPHpd);
-
-            if (mCurveGPMapCheck->isChecked())
-                showVariableList.append(GraphViewResults::eGPMap);
-
-
-        }
-
-       if (mCurveGSRadio->isChecked())
-            showVariableList.append(GraphViewResults::eGS);
-
-       */
-
-
 
         // --------------------------------------------------------
         //  Update Graphs with selected options
@@ -4078,33 +4059,33 @@ void ResultsView::createOptionsWidget()
     //  Update controls depending on current graph list
     // -------------------------------------------------------------------------------------
 
-        mOptionsLayout->addWidget(mEventsGroup);
+    mOptionsLayout->addWidget(mEventsGroup);
 
-        mGraphTypeTabs->setTabVisible(1, true); // History Plot
-        mGraphTypeTabs->setTabVisible(2, true); // Acceptance Rate
-        mGraphTypeTabs->setTabVisible(3, true); // Autocorrelation
+    mGraphTypeTabs->setTabVisible(1, true); // History Plot
+    mGraphTypeTabs->setTabVisible(2, true); // Acceptance Rate
+    mGraphTypeTabs->setTabVisible(3, true); // Autocorrelation
 
-        mEventsGroup->show();
-        mPhasesGroup->setVisible(false);
-        mCurvesGroup->setVisible(false);
-        const qreal h = mEventThetaRadio->height() * 1.5;
+    mEventsGroup->show();
+    mPhasesGroup->setVisible(false);
+    mCurvesGroup->setVisible(false);
+    const qreal h = mEventThetaRadio->height() * 1.5;
 
-        mEventVGRadio->setVisible(false);
-        //--- change layout
+    mEventVGRadio->setVisible(false);
+    //--- change layout
 
 
-        QVBoxLayout* eventGroupLayout = new QVBoxLayout();
-        eventGroupLayout->setContentsMargins(10, 10, 10, 10);
-        //eventGroupLayout->setSpacing(15);
-        eventGroupLayout->addWidget(mEventThetaRadio);
-        eventGroupLayout->addWidget(mDataSigmaRadio);
+    QVBoxLayout* eventGroupLayout = new QVBoxLayout();
+    eventGroupLayout->setContentsMargins(10, 10, 10, 10);
+    //eventGroupLayout->setSpacing(15);
+    eventGroupLayout->addWidget(mEventThetaRadio);
+    eventGroupLayout->addWidget(mDataSigmaRadio);
 
-        eventGroupLayout->addWidget(mS02Radio);
-        qreal totalH =  4*h;
- #ifdef KOMLAN
-        eventGroupLayout->addWidget(mS02VgRadio);
-        totalH =  5*h;
- #endif
+    eventGroupLayout->addWidget(mS02Radio);
+    qreal totalH =  4*h;
+#ifdef KOMLAN
+    eventGroupLayout->addWidget(mS02VgRadio);
+    totalH =  5*h;
+#endif
 
 
         mEventVGRadio->hide();
@@ -4112,7 +4093,7 @@ void ResultsView::createOptionsWidget()
 
         eventGroupLayout->addWidget(mEventsDatesUnfoldCheck);
 
-
+        mDataCheck->hide();
         mDataCalibCheck->hide();
         mWiggleCheck->hide();
         mWiggleCalibCheck->hide();
@@ -4261,6 +4242,7 @@ void ResultsView::updateEventsOptions(qreal& optionWidgetHeight, bool isPostDist
     add(mEventsDatesUnfoldCheck);
 
     if (isPostDistrib && mEventThetaRadio->isChecked() && mEventsDatesUnfoldCheck->isChecked()) {
+        mDataCheck->show();
         mDataCalibCheck->show();
         mWiggleCheck->show();
         mWiggleCalibCheck->show();
@@ -4268,17 +4250,20 @@ void ResultsView::updateEventsOptions(qreal& optionWidgetHeight, bool isPostDist
         QVBoxLayout* unfoldLayout = new QVBoxLayout();
         unfoldLayout->setContentsMargins(15, 0, 0, 0);
         unfoldLayout->setSpacing(10);
+        unfoldLayout->addWidget(mDataCheck, Qt::AlignLeft);
         unfoldLayout->addWidget(mDataCalibCheck, Qt::AlignLeft);
         unfoldLayout->addWidget(mWiggleCheck, Qt::AlignLeft);
         unfoldLayout->addWidget(mWiggleCalibCheck, Qt::AlignLeft);
         eventLayout->addLayout(unfoldLayout);
 
+        addTotalHeight(totalH, mDataCheck);
         addTotalHeight(totalH, mDataCalibCheck);
         addTotalHeight(totalH, mWiggleCheck);
         addTotalHeight(totalH, mWiggleCalibCheck);
         totalH += unfoldLayout->spacing() * 2;
 
     } else {
+        mDataCheck->hide();
         mDataCalibCheck->hide();
         mWiggleCheck->hide();
         mWiggleCalibCheck->hide();

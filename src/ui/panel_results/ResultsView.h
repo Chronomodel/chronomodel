@@ -347,6 +347,7 @@ private:
     RadioButton* mEventThetaRadio;
     CheckBox* mEventsDatesUnfoldCheck;
 
+    CheckBox* mDataCheck;
     CheckBox* mDataCalibCheck;
     CheckBox* mWiggleCheck;
     CheckBox* mWiggleCalibCheck;

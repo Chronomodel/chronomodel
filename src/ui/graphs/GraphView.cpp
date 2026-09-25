@@ -509,6 +509,7 @@ void GraphView::setCurveVisible(std::initializer_list<const char*> names, const 
     });
     repaintGraph();
 }
+
 GraphCurve* GraphView::getCurve(const QString& name)
 {
     QList<GraphCurve>::Iterator result = std::ranges::find_if(mCurves.begin(), mCurves.end(), [name](auto c) {return c.mName == name;});
