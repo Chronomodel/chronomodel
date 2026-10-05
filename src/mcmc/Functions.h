@@ -546,6 +546,9 @@ QMap<double, double> gaussian_filter(QMap<double, double> &map, const double sig
 
 QMap<double, double> gaussian_filter_simple(const QMap<double, double> &map, const double sigma);
 
+QMap<type_data, type_data> moving_average_filter(const QMap<type_data, type_data>& data,
+                                                 type_data h);
+
 std::vector<double> low_pass_filter(std::vector<double>& curve_input, const double Tc, const short padding_type = 0);
 
 #pragma mark EDM2

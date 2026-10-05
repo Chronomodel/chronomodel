@@ -5730,3 +5730,29 @@ QMap<double, double> gaussian_filter_simple(const QMap<double, double> &map, con
 
     return result;
 }
+
+// Moyenne mobile centrée sur [t-h, t+h] (h dans l'unité de t).
+// Fonctionne sur une grille régulière ou non. Bords : fenêtre tronquée.
+QMap<type_data, type_data> moving_average_filter(const QMap<type_data, type_data>& data,
+                                                        type_data h)
+{
+    const int n = data.size();
+    if (n < 3 || h <= 0.)
+        return data;
+
+    QVector<type_data> t(n), cum(n + 1, 0.);
+    int i = 0;
+    for (auto it = data.constBegin(); it != data.constEnd(); ++it, ++i) {
+        t[i] = it.key();
+        cum[i + 1] = cum[i] + it.value();      // somme cumulée des valeurs
+    }
+
+    QMap<type_data, type_data> out;
+    int lo = 0, hi = 0;
+    for (i = 0; i < n; ++i) {
+        while (t[lo] < t[i] - h) ++lo;                      // borne basse de la fenêtre
+        while (hi + 1 < n && t[hi + 1] <= t[i] + h) ++hi;   // borne haute de la fenêtre
+        out.insert(t[i], (cum[hi + 1] - cum[lo]) / type_data(hi - lo + 1));
+    }
+    return out;
+}
