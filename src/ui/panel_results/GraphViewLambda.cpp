@@ -404,7 +404,7 @@ void GraphViewLambda::generateAcceptation()
 
     mGraph->setTipYLab("Rate");
     mGraph->setFormatFunctX(nullptr);
-    mTitle = tr("Smoothing Acceptation");
+    mTitle = tr("Smoothing");
     if (model->mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe)
         generateAcceptCurves(mChains, &(model->mLambdaSpline));
     else
@@ -420,7 +420,7 @@ void GraphViewLambda::generateCorrelation()
 
     mGraph->mLegendX = "";
     mGraph->setFormatFunctX(nullptr);
-    mTitle = tr("Smoothing Autocorrelation");
+    mTitle = tr("Smoothing");
     if (model->mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe) {
         generateCorrelCurves(mChains, &(model->mLambdaSpline));
 

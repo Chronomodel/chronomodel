@@ -717,7 +717,7 @@ void GraphViewDate::generateAcceptation()
     if (mShowList.contains(eDataTi) &&
         mDate->mTi.mSamplerProposal != SamplerProposal::eFixe) {
         mTitle = tr("Data: %1").arg(mDate->getQStringName());
-        generateAcceptCurves(mChains, &mDate->mTi, "DataTi");
+        generateAcceptCurves(mChains, &mDate->mTi, "DataTi", 35.0);
 
     }
     // Le wiggle est 100% accepted
@@ -731,7 +731,7 @@ void GraphViewDate::generateAcceptation()
     else if (mShowList.contains(eSigma) &&
         mDate->mSigmaTi.mSamplerProposal != SamplerProposal::eFixe) {
         mTitle = tr("Individual Std: %1").arg(mDate->getQStringName());
-        generateAcceptCurves(mChains, &mDate->mSigmaTi, "sigmaTi");
+        generateAcceptCurves(mChains, &mDate->mSigmaTi, "sigmaTi", 35.0);
     }
     else {
         mTitle = tr("Data: %1").arg(mDate->getQStringName());

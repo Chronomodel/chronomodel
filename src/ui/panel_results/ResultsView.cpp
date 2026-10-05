@@ -1877,6 +1877,7 @@ void ResultsView::applyUIConfiguration()
 {
     updateShowList(); // met à jour mMainVariable, mShowList, mShowAllChains, mShowChainList,
     updateOptionsWidget();
+    updateScales();
     createGraphs();
 
     updateGraphsHeight();//follow mZoom do updateLayout
@@ -3974,11 +3975,11 @@ void ResultsView::updateScales()
                 // On ne peut pas regarder en dehors de l'intervalle
                 // The Ruler range is set exactly to the min and max (impossible to scroll outside)
                 const double tCenter = (mResultMinT + mResultMaxT) * 0.5;
-                const double tSpan = mResultMaxT - mResultMinT;
+                const double tSpan_2 = (mResultMaxT - mResultMinT) * 0.5;
                 const double maxZoom = sliderToZoom(mTimeSlider->maximum())* 0.01;
 
-                const double tRangeMin = tCenter - (tSpan * 0.5 * maxZoom);
-                const double tRangeMax = tCenter + (tSpan * 0.5 * maxZoom);
+                const double tRangeMin = tCenter - (tSpan_2 * maxZoom);
+                const double tRangeMax = tCenter + (tSpan_2 * maxZoom);
 
                 mRuler->setRange(tRangeMin, tRangeMax);
 
@@ -4003,11 +4004,6 @@ void ResultsView::updateScales()
         // The min is always 0
         mResultMinT = 0.0;
 
-        // The number of zoom levels depends on the number of iterations (by a factor 100)
-        // e.g. 400 iterations => 4 levels
-        /*const int zoomLevels = (int) std::max( 1, zoomToSlider( mResultMaxT / 100));
-        mTimeSlider->setRange(0, zoomLevels);*/
-
         mRuler->addArea(0.0, 1+ chain.mIterPerBurn, QColor(235, 115, 100));
         mRuler->addArea(1 + chain.mIterPerBurn, 1 + chain.mIterPerBurn + adaptSize, QColor(250, 180, 90));
         mRuler->addArea(1 + chain.mIterPerBurn + adaptSize, mResultMaxT, QColor(130, 205, 110));
@@ -4016,16 +4012,7 @@ void ResultsView::updateScales()
         mRuler->setFormatFunctX(nullptr);*/
 
         mTimeSlider->setRange(0, kSliderMax);
-        // On ne peut pas regarder en dehors de l'intervalle
-        // The Ruler range is set exactly to the min and max (impossible to scroll outside)
-       /* const double tCenter = (mResultMinT + mResultMaxT) / 2.0;
-        const double tSpan = mResultMaxT - mResultMinT;
-        const double maxZoom = sliderToZoom(mTimeSlider->maximum()/100);
 
-        const double tRangeMin = tCenter - ((tSpan/2.0) * maxZoom);
-        const double tRangeMax = tCenter + ((tSpan/2.0) * maxZoom);
-*/
-        //mRuler->setRange(tRangeMin, tRangeMax);
         mRuler->setRange(mResultMinT, mResultMaxT);
 
         mRuler->setFormatFunctX(nullptr);
@@ -4036,21 +4023,15 @@ void ResultsView::updateScales()
         mResultMinT = 0.0;
         mResultMaxT = 40.0;
 
-        /*const int zoomLevels = 1;//(int) zoomToSlider( mResultMaxT / 5.0);
-        mTimeSlider->setRange(0, zoomLevels);
-
-        mRuler->setRange(mResultMinT, mResultMaxT);
-        mRuler->setFormatFunctX(nullptr);*/
-
         mTimeSlider->setRange(0, kSliderMax);
         // On ne peut pas regarder en dehors de l'intervalle
         // The Ruler range is set exactly to the min and max (impossible to scroll outside)
-        const double tCenter = (mResultMinT + mResultMaxT) / 2.0;
-        const double tSpan = mResultMaxT - mResultMinT;
-        const double maxZoom = sliderToZoom(mTimeSlider->maximum()/100);
+        const double tCenter = (mResultMinT + mResultMaxT) * 0.5;
+        const double tSpan_2 = (mResultMaxT - mResultMinT) * 0.5;
+        const double maxZoom = sliderToZoom(mTimeSlider->maximum()) * 0.01;
 
-        const double tRangeMin = tCenter - ((tSpan/2.0) * maxZoom);
-        const double tRangeMax = tCenter + ((tSpan/2.0) * maxZoom);
+        const double tRangeMin = tCenter - (tSpan_2 * maxZoom);
+        const double tRangeMax = tCenter + (tSpan_2 * maxZoom);
 
         mRuler->setRange(tRangeMin, tRangeMax);
 
@@ -4082,7 +4063,7 @@ void ResultsView::updateScales()
         zoom = mZoomsH.value(key);
     }
 
-    setGraphsHeightForProp(zoom /100.);
+    setGraphsHeightForProp(zoom * 0.01);
 
     mZoomEdit->blockSignals(true);
     mZoomEdit->setText(QLocale().toString(zoom));

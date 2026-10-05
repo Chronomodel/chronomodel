@@ -662,7 +662,8 @@ void GraphViewResults::generateLogTraceCurves(const std::vector<ChainSpecs> &cha
 }
 
 void GraphViewResults::generateAcceptCurves(const std::vector<ChainSpecs> &chains, MHVariable* variable,
-                                            const QString& name)
+                                            const QString& name,
+                                            const double targetValue)
 {
     QString prefix = name.isEmpty() ? name : name + " ";
 
@@ -678,7 +679,7 @@ void GraphViewResults::generateAcceptCurves(const std::vector<ChainSpecs> &chain
             mGraph->add_curve(curve);
         }
     }
-    mGraph->add_curve(horizontalLine(44, prefix + "Accept Target", QColor(180, 10, 20), Qt::DashLine));
+    mGraph->add_curve(horizontalLine(targetValue, prefix + "Accept Target", QColor(180, 10, 20), Qt::DashLine));
 }
 
 void GraphViewResults::generateCorrelCurves(const std::vector<ChainSpecs> &chains, MHVariable* variable,

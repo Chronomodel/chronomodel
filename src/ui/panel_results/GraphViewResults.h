@@ -355,7 +355,8 @@ public:
 
     void generateAcceptCurves(const std::vector<ChainSpecs> &chains,
                               MHVariable* variable,
-                              const QString& name = QString());
+                              const QString& name = QString(),
+                              const double targetValue = 44.0);
 
     void generateCorrelCurves(const std::vector<ChainSpecs> &chains,
                               MHVariable* variable,
