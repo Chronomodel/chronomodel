@@ -122,7 +122,6 @@ GraphViewResults::GraphViewResults(QWidget* parent):
 
 GraphViewResults::~GraphViewResults()
 {
-
 }
 
 void GraphViewResults::generateCurves(const graph_t typeGraph, const QList<variable_t>& showList)
@@ -139,6 +138,40 @@ void GraphViewResults::updateCurvesToShow(bool showAllChains, const QList<bool>&
 
 }
 
+void GraphViewResults::updateCurves(const graph_t typeGraph,
+                  const QList<variable_t> &showList,
+                  bool showAllChains,
+                  const QList<bool> &showChainList)
+{
+    mCurrentTypeGraph = typeGraph;
+    mShowList = showList;
+    mShowAllChains = showAllChains;
+    mShowChainList = showChainList;
+
+    graph_reset();
+
+    if (mCurrentTypeGraph == ePostDistrib) {
+        generatePosterior();
+    }
+    else if (mCurrentTypeGraph == eTrace) {
+        generateHistory();
+    }
+    else if (mCurrentTypeGraph == eAccept) {
+        generateAcceptation();
+    }
+    else if (mCurrentTypeGraph == eCorrel) {
+        generateCorrelation();
+    }
+
+    updateStatHTML();
+
+    update();
+}
+
+QString updateStatHTML()
+{
+    return QString();
+}
 
 void GraphViewResults::setSettings(const StudyPeriodSettings& settings)
 {
@@ -152,16 +185,16 @@ void GraphViewResults::setMCMCSettings(const MCMCSettings& mcmc, const std::vect
 }
 
 
-void GraphViewResults::setView(type_data range_Xmin, type_data range_Xmax,  type_data resultCurrentMinT, type_data resultCurrentMaxT, const double scale_major, const int scale_minor)
+void GraphViewResults::setView(type_data range_Tmin, type_data range_Tmax,  type_data resultCurrentMinT, type_data resultCurrentMaxT, const double scale_major, const int scale_minor)
 {
     mGraph->blockSignals(true);
-    mGraph->setRangeX(range_Xmin, range_Xmax);
+    mGraph->setRangeX(range_Tmin, range_Tmax);
     mGraph->setCurrentX(resultCurrentMinT, resultCurrentMaxT);
     mGraph->changeXScaleDivision(scale_major, scale_minor);
     mGraph->blockSignals(false);
     mGraph->zoomX(resultCurrentMinT, resultCurrentMaxT);
     // we must update the size of the Graph if the font has changed between two toogle
-    updateLayout();
+    updateLayout(); // do update
 }
 /**
  @brief set date range on all the study
@@ -514,8 +547,6 @@ void GraphViewResults::paintEvent(QPaintEvent* )
    }
 
     p.setPen(QColor(105, 105, 105));
-   // if (mShowNumResults) // cadre autour des stat
-   //     p.drawRect(mStatArea.geometry());//->geometry().adjusted(-1, -1, 1, 1));
 
     p.end();
 
@@ -533,37 +564,44 @@ void GraphViewResults::paintEvent(QPaintEvent* )
     mItemColor = itemColor;
 }
 
+
+
 void GraphViewResults::generateTraceCurves(const std::vector<ChainSpecs> &chains,
                                            MetropolisVariable* variable,
                                            const QString& name)
 {
     QString prefix = name.isEmpty() ? name : name + " ";
-    mGraph->reserveCurves(4*chains.size());
-    for (size_t i = 0; i < chains.size(); ++i) {
-        GraphCurve curve;
+    mGraph->reserveCurves(4);
 
-        curve.mType = GraphCurve::eVectorData;
-        curve.mName = prefix + "Trace " + QString::number(i);
-        const auto v = variable->fullFormatedTraceForChain(chains, i);
-        curve.mDataVector = std::vector(v.begin(), v.end());
-        curve.mPen.setColor(Painting::chainColors.at(i));
-        mGraph->add_curve(curve);
-
-        const Quartiles &quartiles = variable->mChainsResults[i].traceAnalysis.quartiles;
+    if (mShowAllChains) {
+        const Quartiles &quartiles = variable->mResults.traceAnalysis.quartiles;
 
         QColor colBorder = QColor(Qt::darkBlue).darker(100);
         colBorder.setAlpha(100);
         QColor colMediane = QColor(Qt::darkBlue).darker(120);
         colMediane.setAlpha(100);
 
-        const GraphCurve &curveQ3 = horizontalLine(quartiles.Q3, prefix + "Q3 " + QString::number(i), colBorder);
+        const GraphCurve &curveQ3 = horizontalLine(quartiles.Q3, prefix + "Q3 ", colBorder);
         mGraph->add_curve(curveQ3);
 
-        const GraphCurve &curveQ2 = horizontalLine(quartiles.Q2, prefix + "Q2 " + QString::number(i), colMediane);
+        const GraphCurve &curveQ2 = horizontalLine(quartiles.Q2, prefix + "Q2 ", colMediane);
         mGraph->add_curve(curveQ2);
 
-        const GraphCurve &curveQ1 = horizontalLine(quartiles.Q1, prefix + "Q1 " + QString::number(i), colBorder);
+        const GraphCurve &curveQ1 = horizontalLine(quartiles.Q1, prefix + "Q1 ", colBorder);
         mGraph->add_curve(curveQ1);
+    }
+
+    for (size_t i = 0; i < chains.size(); ++i) {
+        if (mShowChainList[i]) {
+            GraphCurve curve;
+            curve.mVisible = true;
+            curve.mType = GraphCurve::eVectorData;
+            curve.mName = prefix + "Trace " + QString::number(i);
+            const auto v = variable->fullFormatedTraceForChain(chains, i);
+            curve.mDataVector = std::vector(v.begin(), v.end());
+            curve.mPen.setColor(Painting::chainColors.at(i));
+            mGraph->add_curve(curve);
+        }
     }
 }
 
@@ -572,23 +610,9 @@ void GraphViewResults::generateLogTraceCurves(const std::vector<ChainSpecs> &cha
                                            const QString& name)
 {
     QString prefix = name.isEmpty() ? name : name + " ";
-    mGraph->reserveCurves(4*chains.size());
-    for (size_t i = 0; i < chains.size(); ++i) {
-        GraphCurve curve;
-
-        curve.mType = GraphCurve::eVectorData;
-        curve.mName = prefix + "Trace " + QString::number(i);
-        const auto v = variable->fullFormatedTraceForChain(chains, i);
-        // Appliquer log10 à chaque valeur
-        curve.mDataVector.reserve(v.size());
-        for (const auto& value : v) {
-            curve.mDataVector.push_back(std::log10(value));
-        }
-
-        curve.mPen.setColor(Painting::chainColors[i]);
-        mGraph->add_curve(curve);
-
-        const Quartiles &quartiles = variable->mChainsResults[i].traceAnalysis.quartiles;
+    mGraph->reserveCurves(4);
+    if (mShowAllChains) {
+        const Quartiles &quartiles = variable->mResults.traceAnalysis.quartiles;
 
         QColor colBorder = QColor(Qt::darkBlue).darker(100);
         colBorder.setAlpha(100);
@@ -596,147 +620,105 @@ void GraphViewResults::generateLogTraceCurves(const std::vector<ChainSpecs> &cha
         colMediane.setAlpha(100);
 
         // Appliquer log10 aux quartiles aussi
-        const GraphCurve &curveQ3 = horizontalLine(std::log10(quartiles.Q3), prefix + "Q3 " + QString::number(i), colBorder);
+        const GraphCurve &curveQ3 = horizontalLine(std::log10(quartiles.Q3), prefix + "Q3 ", colBorder);
         mGraph->add_curve(curveQ3);
 
-        const GraphCurve &curveQ2 = horizontalLine(std::log10(quartiles.Q2), prefix + "Q2 " + QString::number(i), colMediane);
+        const GraphCurve &curveQ2 = horizontalLine(std::log10(quartiles.Q2), prefix + "Q2 ", colMediane);
         mGraph->add_curve(curveQ2);
 
-        const GraphCurve &curveQ1 = horizontalLine(std::log10(quartiles.Q1), prefix + "Q1 " + QString::number(i), colBorder);
+        const GraphCurve &curveQ1 = horizontalLine(std::log10(quartiles.Q1), prefix + "Q1 ", colBorder);
         mGraph->add_curve(curveQ1);
     }
-}
 
-void GraphViewResults::generateAcceptCurves(const std::vector<ChainSpecs> &chains, MHVariable* variable)
-{
-    mGraph->reserveCurves(chains.size()+1);
     for (size_t i = 0; i < chains.size(); ++i) {
-        GraphCurve curve;
-        curve.mName = "Accept " + QString::number(i);
-        curve.mType = GraphCurve::eVectorData;
-        curve.mDataVector = variable->acceptationForChain(chains, i);
-        curve.mPen.setColor(Painting::chainColors.at(i));
-        mGraph->add_curve(curve);
-    }
-    mGraph->add_curve(horizontalLine(44, "Accept Target", QColor(180, 10, 20), Qt::DashLine));
-}
+        if (mShowChainList[i]) {
+            GraphCurve curve;
+            curve.mVisible = true;
 
-void GraphViewResults::generateCorrelCurves(const std::vector<ChainSpecs> &chains, MHVariable* variable)
-{
-    mGraph->reserveCurves(3*chains.size());
-    for (size_t i = 0; i < chains.size(); ++i) {
-        GraphCurve curve;
-        curve.mName = "Correl " + QString::number(i);
-        curve.mType = GraphCurve::eVectorData;
-        curve.mDataVector = variable->correlationForChain(i);
-        // if there is no data, no curve to add.
-        // It can append if there is not enought iteration, for example since a test
-        if (curve.mDataVector.empty())
-            continue;
+            curve.mType = GraphCurve::eVectorData;
+            curve.mName = prefix + "Trace " + QString::number(i);
+            const auto v = variable->fullFormatedTraceForChain(chains, i);
+            // Appliquer log10 à chaque valeur
+            curve.mDataVector.reserve(v.size());
+            double valideVal = 1;
+            for (const auto& value : v) {
+                double logValue = std::log10(value);
+                if (isnan(logValue)) {
+                    curve.mDataVector.push_back(valideVal);
+                }
+                if (numext::isinf(logValue)) {
+                    curve.mDataVector.push_back(valideVal);
+                } else {
+                    curve.mDataVector.push_back(logValue);
+                    valideVal = logValue;
+                }
+            }
 
-        curve.mPen.setColor(Painting::chainColors.at(i));
-        mGraph->add_curve(curve);
+            curve.mPen.setColor(Painting::chainColors[i]);
+            mGraph->add_curve(curve);
 
-        //to do, we only need the totalIter number?
-        //const double n = variable->runRawTraceForChain(mChains, i).size();
-        const double n = variable->acquiredTraceforChain(mChains, i).size();
-        const double limit = 1.96 / sqrt(n);
-
-        const GraphCurve &curveLimitLower = horizontalLine(-limit, "Correl Limit Lower " + QString::number(i),
-                                                            Qt::red,
-                                                            Qt::DotLine);
-
-        const GraphCurve &curveLimitUpper = horizontalLine(limit, "Correl Limit Upper " + QString::number(i),
-                                                            Qt::red,
-                                                            Qt::DotLine);
-        mGraph->add_curve(curveLimitLower);
-        mGraph->add_curve(curveLimitUpper);
+        }
     }
 }
 
-void GraphViewResults::graph_reset()
+void GraphViewResults::generateAcceptCurves(const std::vector<ChainSpecs> &chains, MHVariable* variable,
+                                            const QString& name)
 {
-    mGraph->removeAllCurves();
+    QString prefix = name.isEmpty() ? name : name + " ";
 
-    mGraph->squeezeCurves();
-    mGraph->showInfos(false);
-    mGraph->clearInfos();
-    mGraph->resetNothingMessage();
-    mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
-    mGraph->setFormatFunctX(nullptr);
-    mGraph->setFormatFunctY(nullptr);
+    mGraph->reserveCurves(2);
+    for (size_t i = 0; i < chains.size(); ++i) {
+        if (mShowChainList[i]) {
+            GraphCurve curve;
+            curve.mVisible = true;
+            curve.mName = prefix + "Accept " + QString::number(i);
+            curve.mType = GraphCurve::eVectorData;
+            curve.mDataVector = variable->acceptationForChain(chains, i);
+            curve.mPen.setColor(Painting::chainColors.at(i));
+            mGraph->add_curve(curve);
+        }
+    }
+    mGraph->add_curve(horizontalLine(44, prefix + "Accept Target", QColor(180, 10, 20), Qt::DashLine));
 }
 
-void GraphViewResults::graph_density()
+void GraphViewResults::generateCorrelCurves(const std::vector<ChainSpecs> &chains, MHVariable* variable,
+                                            const QString& name)
 {
-    mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eBothOverflow);
+    QString prefix = name.isEmpty() ? name : name + " ";
 
-    mGraph->setTipYLab("");
-    mGraph->setTipXLab("t");
+    mGraph->reserveCurves(3);
+    for (size_t i = 0; i < chains.size(); ++i) {
+        if (mShowChainList[i]) {
+            GraphCurve curve;
+            curve.mVisible = true;
+            curve.mName = prefix + "Correl " + QString::number(i);
+            curve.mType = GraphCurve::eVectorData;
+            curve.mDataVector = variable->correlationForChain(i);
+            // if there is no data, no curve to add.
+            // It can append if there is not enought iteration, for example since a test
+            if (curve.mDataVector.empty())
+                continue;
 
-    mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
+            curve.mPen.setColor(Painting::chainColors.at(i));
+            mGraph->add_curve(curve);
 
-    mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
-    mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+            const double n = variable->acquiredTraceforChain(mChains, i).size();
+            const double limit = 1.96 / sqrt(n);
 
-    mGraph->autoAdjustYScale(true);
+            const GraphCurve &curveLimitLower = horizontalLine(-limit, "Correl Limit Lower " + QString::number(i),
+                                                               Qt::red,
+                                                               Qt::DotLine);
 
-    mGraph->setXAxisMode(GraphView::AxisMode::eAllTicks);
-    mGraph->setYAxisMode(GraphView::AxisMode::eHidden);
-    // ------------------------------------------------------------
-    //  Add zones outside study period
-    // ------------------------------------------------------------
-    const GraphZone zoneMin (-std::numeric_limits<double>::max(), mSettings.getTminFormated());
-    mGraph->add_zone(zoneMin);
-
-    const GraphZone zoneMax (mSettings.getTmaxFormated(), std::numeric_limits<double>::max());
-    mGraph->add_zone(zoneMax);
-
+            const GraphCurve &curveLimitUpper = horizontalLine(limit, "Correl Limit Upper " + QString::number(i),
+                                                               Qt::red,
+                                                               Qt::DotLine);
+            mGraph->add_curve(curveLimitLower);
+            mGraph->add_curve(curveLimitUpper);
+        }
+    }
 }
 
-void GraphViewResults::graph_trace()
-{
-    mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
-    mGraph->mLegendX = tr("Iterations");
 
-    mGraph->setTipXLab(tr("Iteration"));
-    mGraph->setTipYLab("t");
 
-    mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
-    mGraph->setYAxisSupport(AxisTool::AxisSupport::eMin_Max);
-
-    mGraph->setYAxisMode(GraphView::AxisMode::eMinMaxHidden);
-
-    mGraph->autoAdjustYScale(true);
-}
-
-void GraphViewResults::graph_acceptation()
-{
-    mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
-    mGraph->mLegendX = tr("Iterations");
-    mGraph->setTipXLab(tr("Iteration"));
-    mGraph->setTipYLab(tr("Rate"));
-
-    mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
-    mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
-    mGraph->setYAxisMode(GraphView::AxisMode::eMinMaxHidden );
-
-    mGraph->autoAdjustYScale(false);
-    mGraph->setRangeY(0, 100);
-}
-
-void GraphViewResults::graph_correlation()
-{
-    mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
-    mGraph->setTipXLab("h");
-    mGraph->setTipYLab(tr("Value"));
-    mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
-    mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllTip);
-    mGraph->setYAxisMode(GraphView::AxisMode::eMinMaxHidden);
-
-    mGraph->autoAdjustYScale(false);
-    mGraph->setRangeY(-1, 1);
-    mGraph->setXScaleDivision(10, 10);
-}
 
 

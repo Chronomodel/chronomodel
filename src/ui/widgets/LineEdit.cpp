@@ -68,28 +68,31 @@ LineEdit::~LineEdit() = default;
 
 void LineEdit::resetText(double value)
 {
-    QLineEdit::blockSignals(true);
-    static const QLocale locale;
-    QString text;
+    {
+        const QSignalBlocker blocker(QLineEdit);
 
-    if (value == 0.0)
-        text = locale.toString(0.0, 'f', 3);
-    else if (std::abs(value) < 0.01)
-        text = locale.toString(value, 'e', 3);
-    else
-        text = locale.toString(value, 'f', 3);
+        static const QLocale locale;
+        QString text;
 
-    QLineEdit::setText(text);
-    QLineEdit::blockSignals(false);
+        if (value == 0.0)
+            text = locale.toString(0.0, 'f', 3);
+        else if (std::abs(value) < 0.01)
+            text = locale.toString(value, 'e', 3);
+        else
+            text = locale.toString(value, 'f', 3);
 
+        QLineEdit::setText(text);
+
+    }
     adjustFont();
 }
 
 void LineEdit::resetText(const QString& text)
 {
-    QLineEdit::blockSignals(true);
-    QLineEdit::setText(text);
-    QLineEdit::blockSignals(false);
+    {
+        const QSignalBlocker blocker(QLineEdit);
+        QLineEdit::setText(text);
+    }
 
     adjustFont();
 }

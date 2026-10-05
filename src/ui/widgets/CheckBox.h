@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -48,8 +48,12 @@ class CheckBox: public QCheckBox
 public:
     explicit CheckBox(QWidget* parent = nullptr);
     explicit CheckBox(const QString& text, QWidget* parent = nullptr);
-
     ~CheckBox();
+
+    QColor mDotColor;
+    bool mHasDot;
+
+    void setDotColor(const QColor& color) { mDotColor = color; mHasDot = true; update(); }
 
 protected:
     bool mMouseOver;

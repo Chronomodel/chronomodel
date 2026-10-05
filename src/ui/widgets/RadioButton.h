@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -48,8 +48,11 @@ class RadioButton: public QRadioButton
 public:
     explicit RadioButton(QWidget* parent = 0);
     explicit RadioButton(const QString& text, QWidget* parent = 0);
-
     ~RadioButton();
+
+    QColor mDotColor;
+    bool mHasDot;
+    void setDotColor(const QColor& color) { mDotColor = color; mHasDot = true; update(); }
 
 protected:
     void paintEvent(QPaintEvent* e);

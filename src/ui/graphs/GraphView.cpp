@@ -267,8 +267,13 @@ void GraphView::adjustYScale()
                     if (curve.isVectorData()) {
                         const std::vector<qreal> &subData = getVectorDataInRange(curve.mDataVector, mCurrentMinX, mCurrentMaxX, qreal (0.), qreal (curve.mDataVector.size()));
                         if (!subData.empty()) {
-                            yMin = std::min(yMin, range_min_value(subData));
-                            yMax = std::max(yMax, range_max_value(subData));
+                            const double min = range_min_value(subData);
+                            const double max = range_max_value(subData);
+                            //if (!std::isfinite(min))
+                                yMin = std::min(yMin, min);
+                            //if (!std::isfinite(max)) {
+                                 yMax = std::max(yMax, max);
+                            //}
                         }
 
                     } else if (curve.isShape()) {
@@ -347,6 +352,10 @@ void GraphView::zoomX(const type_data min, const type_data max)
         mAxisToolX.updateValues(width(), 10.0, min, max);
         
         adjustYScale();
+
+        if ((width() <= 0) || (height() <= 0))
+            return;
+
         repaintGraph();
 
     }
@@ -1400,6 +1409,7 @@ void GraphView::drawCurves(QPainter& painter)
                         const auto m = subData.size();
                         std::vector<type_data> lightData;
                         if (m > n ) {
+
                             for (size_t i = 0; i < n; ++i) {
                                 size_t idx = i * (m - 1) / (n - 1);
                                 lightData.push_back(subData[idx]);
@@ -1408,9 +1418,6 @@ void GraphView::drawCurves(QPainter& painter)
                             lightData = subData;
                         }
 
-                        // const type_data dataStep = type_data(subData.size()) / type_data(n);
-
-                        // qDebug() <<" indices.size" <<indices.size() << "ligthdata.size" <<lightData.size();
                         bool isFirst = true;
 
                         const type_data xStep = (mCurrentMaxX - mCurrentMinX) / type_data(lightData.size() - 1);
@@ -1423,6 +1430,7 @@ void GraphView::drawCurves(QPainter& painter)
                             const type_data valueY = lightData.at(i);
 
                             if (valueX >= mCurrentMinX && valueX <= mCurrentMaxX && mMinY<= valueY && valueY <= mMaxY) {
+
                                 qreal x = getXForValue(valueX, false);
                                 qreal y = getYForValue(valueY, false);
 
@@ -2732,7 +2740,7 @@ void GraphView::exportReferenceCurves(const QString& defaultPath, const QLocale 
         // https://en.wikipedia.org/wiki/Standard_score
         // Quantile normal pour 1 - alpha/2
 
-        const double z_score = zScore(1.0 - threshold/100.0); // Pour 95% z=1.96
+        const double z_score = zCritical(threshold); // Pour 95% z=1.96
         // Déduction de sigma à partir de la largeur de l'intervalle
         //return std::abs((b - a) / (2.0 * z_score));
         if (xMin_BCAD < xMax_BCAD) {

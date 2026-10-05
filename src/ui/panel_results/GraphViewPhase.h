@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2018
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -53,12 +53,18 @@ public:
 
     void setPhase(std::shared_ptr<Phase> phase);
 
-    void generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList);
-    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showVariableList);
+    void generateCurves(const graph_t typeGraph, const QList<variable_t>& showList);
+    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showList);
 
 
 private:
     std::shared_ptr<Phase> mPhase;
+
+    void generatePosterior();
+    void generateHistory();
+    void generateAcceptation();
+    void generateCorrelation();
+    virtual void updateStatHTML();
 
 };
 

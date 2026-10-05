@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2025
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -57,8 +57,16 @@ public:
     void generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList);
     void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showList);
 
+
+
 private:
     Date* mDate;
+
+    void generatePosterior();
+    void generateHistory();
+    void generateAcceptation();
+    void generateCorrelation();
+    void updateStatHTML();
 
 };
 

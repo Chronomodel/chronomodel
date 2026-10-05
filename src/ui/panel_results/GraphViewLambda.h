@@ -51,14 +51,19 @@ public:
     explicit GraphViewLambda(QWidget* parent = nullptr);
     virtual ~GraphViewLambda();
 
-    virtual void generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList);
-    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showVariableList);
+    virtual void generateCurves(const graph_t typeGraph, const QList<variable_t>& showList);
+    void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showList);
 
 /*protected:
     void paintEvent(QPaintEvent* e);
     void resizeEvent(QResizeEvent* );
 */
-
+private:
+    void generatePosterior();
+    void generateHistory();
+    void generateAcceptation();
+    void generateCorrelation();
+    void updateStatHTML();
 };
 
 #endif

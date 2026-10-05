@@ -243,7 +243,7 @@ QList<T> getVectorDataInRange(const QList<T> &data, const T subMin,const T subMa
 
 }
 
-/*
+
 template <typename T>
 std::vector<T> getVectorDataInRange(const std::vector<T> &data, const T subMin,const T subMax, const T min, const T max)
 {
@@ -267,8 +267,39 @@ std::vector<T> getVectorDataInRange(const std::vector<T> &data, const T subMin,c
     else
         return data;
 
-}*/
+}
+/*
+template <typename T>
+std::vector<T> getVectorDataInRange(const std::vector<T>& data, const T subMin, const T subMax,
+                                    const T min, const T max)
+{
+    if (data.empty())
+        return {};                       // plus robuste qu'une exception ici
 
+    if (subMin == min && subMax == max)
+        return data;
+
+    if (!(max > min))                    // évite la division par 0 et les NaN
+        return data;
+
+    const double n = static_cast<double>(data.size());
+    const double last = n - 1.;
+
+    // Clamp en double AVANT la conversion en entier
+    double fStart = std::floor(n * (subMin - min) / (max - min));
+    double fEnd   = std::floor(n * (subMax - min) / (max - min));
+    fStart = std::clamp(fStart, 0., last);
+    fEnd   = std::clamp(fEnd,   0., last);
+
+    if (fStart > fEnd)
+        return {};
+
+    const size_t idxStart = static_cast<size_t>(fStart);
+    const size_t idxEnd   = static_cast<size_t>(fEnd);
+
+    return std::vector<T>(data.begin() + idxStart, data.begin() + idxEnd + 1);
+}*/
+/*
 template <typename T>
 std::vector<T> getVectorDataInRange(const std::vector<T>& data, const T subMin, const T subMax, const T min, const T max)
 {
@@ -295,7 +326,7 @@ std::vector<T> getVectorDataInRange(const std::vector<T>& data, const T subMin, 
     // Use std::copy to copy the range
     std::copy(data.begin() + idxStart, data.begin() + idxEnd + 1, std::back_inserter(subData));
     return subData;
-}
+}*/
 
 template <template<typename...> class Container, class T>
 void save_container_template(QDataStream& stream, const Container<T>& data)

@@ -60,6 +60,9 @@ public:
     inline QList<CurveRefPts> eventsPoints() const { return mEventsPoints;};
     inline QList<CurveRefPts> dataPoints() const { return mDataPoints;};
     
+    inline void setScale(Scale & scale) {mScale = scale;};
+    inline Scale scale() const {return mScale;} ;
+
     virtual void generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList);
     void updateCurvesToShowForG(bool showAllChains, QList<bool> showChainList, const QList<variable_t>& showVariableList, const Scale scale);
 
@@ -69,9 +72,14 @@ private:
 
     QList<CurveRefPts> mEventsPoints;
     QList<CurveRefPts> mDataPoints;
+    Scale mScale;
 
     CurveMap densityMap_2_hpdMap (const CurveMap& densityMap, int nb_iter);
-
+    virtual void updateCurves(const graph_t typeGraph,
+                              const QList<variable_t> &showList,
+                              bool showAllChains,
+                              const QList<bool> &showChainList);
+    virtual void updateStatHTML();
 };
 
 #endif

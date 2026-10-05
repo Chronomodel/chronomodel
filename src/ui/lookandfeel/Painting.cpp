@@ -233,6 +233,77 @@ void drawBox(QPainter& painter, const QRectF& r, const QString& text)
     painter.drawText(r.adjusted(5, 0, -5, -r.height() + 20), Qt::AlignLeft | Qt::AlignVCenter, text);
 }
 
+// Dessine le rond de couleur et renvoie le décalage x où doit commencer le texte
+static qreal drawColorDot(QPainter& painter, const QRectF& r, qreal x, const QColor& color)
+{
+    if (!color.isValid())
+        return x;
+
+    const qreal d = qMin<qreal>(12., r.height() - 4.);
+    painter.save();
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    painter.setPen(QPen(QColor(120, 120, 120), 1));
+    painter.setBrush(color);
+    painter.drawEllipse(QRectF(x, r.top() + (r.height() - d) / 2., d, d));
+    painter.restore();
+
+    return x + d + 5;
+}
+
+void drawRadio(QPainter& painter, const QRectF& rect, const QString& text, bool toggled,
+               const QColor& dotColor)
+{
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    QRectF r = rect.adjusted(1, 1, -1, -1);
+    int subM (0);
+
+    painter.setPen(QColor(120, 120, 120));
+    painter.setBrush(QColor(230, 230, 230));
+    painter.drawEllipse(r.adjusted(0, subM, r.height() - r.width() - 2*subM, -subM));
+
+    if (toggled) {
+        int insideM = 3;
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(Painting::mainColorLight);
+        painter.drawEllipse(r.adjusted(insideM,
+                                       subM+insideM,
+                                       r.height() - r.width() - 2*subM - insideM,
+                                       -subM - insideM));
+    }
+
+    const qreal textX = r.left() + r.height() - 2*subM + 5;
+
+    painter.setPen(qApp->palette().text().color());
+    painter.drawText(QRectF(textX, r.top(), r.right() - textX, r.height()),
+                     Qt::AlignLeft | Qt::AlignVCenter, text);
+
+    const qreal textW = painter.fontMetrics().horizontalAdvance(text);
+    drawColorDot(painter, r, textX + textW + 6, dotColor);
+}
+
+void drawCheckbox(QPainter& painter, const QRectF& r, const QString& text, Qt::CheckState state,
+                  const QColor& dotColor)
+{
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    int subM (0);
+
+    QRectF boxRect = r.adjusted(0, subM, r.height() - r.width() - 2*subM, -subM);
+    drawCheckBoxBox(painter, boxRect, state, QColor(230, 230, 230), QColor(120, 120, 120));
+
+    const qreal textX = r.left() + r.height() - 2*subM + 5;
+
+    painter.setPen(qApp->palette().text().color());
+    painter.drawText(QRectF(textX, r.top(), r.right() - textX, r.height()),
+                     Qt::AlignLeft | Qt::AlignVCenter, text);
+
+    // rond après le texte
+    const qreal textW = painter.fontMetrics().horizontalAdvance(text);
+    drawColorDot(painter, r, textX + textW + 6, dotColor);
+}
+
+/*
 void drawRadio(QPainter& painter, const QRectF& rect, const QString& text, bool toggled)
 {
     painter.setRenderHint(QPainter::Antialiasing);
@@ -271,7 +342,7 @@ void drawCheckbox(QPainter& painter, const QRectF& r, const QString& text, Qt::C
 
     painter.drawText(r.adjusted(r.height() - 2*subM + 5, 0, 0, 0), Qt::AlignLeft | Qt::AlignVCenter, text);
 }
-
+*/
 void drawCheckBoxBox(QPainter& painter, const QRectF& rect, Qt::CheckState state, const QColor& back, const QColor& border)
 {
     painter.setRenderHint(QPainter::Antialiasing);

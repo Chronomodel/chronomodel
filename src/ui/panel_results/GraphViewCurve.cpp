@@ -57,8 +57,7 @@ GraphViewCurve::GraphViewCurve(QWidget *parent):GraphViewResults(parent)
 }
 
 GraphViewCurve::~GraphViewCurve()
-{
-    
+{  
 }
 
 void GraphViewCurve::setComposanteG(const PosteriorMeanGComposante& composante)
@@ -98,7 +97,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
     // 95% envelope  https://en.wikipedia.org/wiki/1.96
 
     const double threshold = getModel_ptr()->mThreshold;
-    const double z_score = zScore(1.0 - threshold * 0.01); // Pour 95% z = 1.96
+    const double z_score = zCritical(threshold); // Pour 95% z = 1.96
 
     if (mShowList.contains(eG)) {
         std::vector<CurveRefPts> curveEventsPoints;
@@ -515,7 +514,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
             envColor_i  = Painting::chainColors[i];
             envColor_i.setAlpha(30);
             const GraphCurve &curveGEnv_i = shapeCurve(GPInf_Data_i, GPSup_Data_i, "G Prime Gauss Env Chain " + QString::number(i),
-                                                       Painting::chainColors[i], Qt::CustomDashLine, envColor_i);
+                                                       Painting::chainColors[i], Qt::CustomDashLine, envColor_i, true);
             mGraph->add_curve(curveGEnv_i);
 
         }
@@ -659,9 +658,6 @@ void GraphViewCurve::updateCurvesToShowForG(bool showAllChains, QList<bool> show
     }
 
     mGraph->setCurveVisible(curvesToShow, true);
-
-
-
 
 }
 
@@ -1024,4 +1020,590 @@ double find_best_bandwidth_map(const std::map<double,double>& data,
     }
 
     return best_h;
+}
+
+
+
+
+
+void GraphViewCurve::updateCurves(const graph_t typeGraph,
+                                    const QList<variable_t> &showList,
+                                    bool showAllChains,
+                                    const QList<bool> &showChainList)
+{
+    mCurrentTypeGraph = typeGraph;
+    mShowList = showList;
+    mShowAllChains = showAllChains;
+    mShowChainList = showChainList;
+
+    mGraph->autoAdjustYScale(false);
+    if (!mGraph->autoAdjustY()) {
+        //Scale scale (-10, 10);
+        mGraph->setRangeY(mScale.min, mScale.max);
+        mGraph->setYScaleDivision(mScale);
+    }
+
+    mGraph->removeAllCurves();
+
+    mGraph->clearInfos();
+    mGraph->resetNothingMessage();
+    mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eBothOverflow);
+    mGraph->setTipXLab("t");
+    mGraph->setYAxisMode(GraphView::AxisMode::eAllTicks);
+    //mGraph->autoAdjustYScale(false);
+    mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
+    mGraph->setFormatFunctX(nullptr);
+    mGraph->setBackgroundColor(QColor(230, 230, 230));
+
+    const QString &resultsHTML = ModelUtilities::curveResultsHTML(getModel_ptr());
+    setNumericalResults(resultsHTML);
+
+    // We use the parameter saved with the map
+    const double step = (mComposanteG.mapG.maxX() - mComposanteG.mapG.minX()) / (mComposanteG.mapG.column() -1);
+    const double tmin = mComposanteG.mapG.minX();
+
+    const double tminFormated = DateUtils::convertToAppSettingsFormat(mComposanteG.mapGP.minX());
+    const double tmaxFormated = DateUtils::convertToAppSettingsFormat(mComposanteG.mapGP.maxX());
+
+    std::vector<CurveRefPts> curveEventsPoints;
+    if (mShowList.contains(eGEventsPts)) {
+
+        // installation des points de ref
+
+        for (auto& ePts : mEventsPoints) {
+            CurveRefPts ref;
+            ref.Xmin = DateUtils::convertToAppSettingsFormat(ePts.Xmin);
+            ref.Xmax = DateUtils::convertToAppSettingsFormat(ePts.Xmax);
+            if (ref.Xmin > ref.Xmax)
+                std::swap(ref.Xmin, ref.Xmax);
+
+            ref.Ymin = ePts.Ymin;
+            ref.Ymax = ePts.Ymax;
+            ref.type = ePts.type;
+            ref.color = ePts.color;
+            ref.pen = QPen(ePts.color, 1, Qt::SolidLine);
+            ref.brush = ePts.color;
+            ref.name = "Events Points";
+            ref.comment = ePts.comment;
+            ref.setVisible(true);
+            curveEventsPoints.push_back(ref);
+        }
+    }
+    std::vector<CurveRefPts> curveDataPoints;
+    if (mShowList.contains(eGDatesPts)) {
+
+        for (auto& dPts : mDataPoints) {
+            CurveRefPts ref;
+            ref.Xmin = DateUtils::convertToAppSettingsFormat(dPts.Xmin);
+            ref.Xmax = DateUtils::convertToAppSettingsFormat(dPts.Xmax);
+            if (ref.Xmin > ref.Xmax)
+                std::swap(ref.Xmin, ref.Xmax);
+
+            ref.Ymin = dPts.Ymin;
+            ref.Ymax = dPts.Ymax;
+            ref.type = dPts.type;
+            ref.color = dPts.color;
+            ref.name = "Data Points";
+            ref.comment = dPts.comment;
+            ref.setVisible(true);
+            curveDataPoints.push_back(ref);
+
+        }
+    }
+    // Quantile normal pour 1 - alpha/2
+    // 95% envelope  https://en.wikipedia.org/wiki/1.96
+
+    //const double threshold = getModel_ptr()->mThreshold;
+    //const double z_score = zScore(1.0 - threshold * 0.01);
+    const double threshold = getModel_ptr()->mThreshold;                 // ex. 95 // Pour 95% z = 1.96
+    const double z_score   = zCritical(threshold);            // = invNormalCDF(0.975) = 1.95996
+#pragma mark G
+    if (mShowList.contains(eG)) {
+        const double tminFormated = DateUtils::convertToAppSettingsFormat(mComposanteG.mapG.minX());
+        const double tmaxFormated = DateUtils::convertToAppSettingsFormat(mComposanteG.mapG.maxX());
+
+        if (mShowList.contains(eMap)) {
+
+            if (mShowAllChains) {
+                GraphCurve curveMap;
+                curveMap.mName = "G Map";
+                curveMap.mPen = QPen(QColor(107, 174, 214), 1, Qt::SolidLine);//QPen(Qt::black, 1, Qt::SolidLine); //107, 174, 214
+                curveMap.mBrush = Qt::NoBrush;
+                curveMap.mIsRectFromZero = false;
+                curveMap.mVisible = true;
+
+                curveMap.mType = GraphCurve::eMapData;
+                curveMap.mMap = mComposanteG.mapG;
+                curveMap.setPalette(AppSettings::mMapPalette);
+
+
+                if (tmaxFormated > tminFormated) {
+                    curveMap.mMap.setRangeX(tminFormated, tmaxFormated);
+
+                } else {
+                    curveMap.mMap.setRangeX(tmaxFormated, tminFormated);
+                    // we must reflect the map
+
+                    CurveMap displayMap (curveMap.mMap.row(), curveMap.mMap.column());
+
+                    int c  = curveMap.mMap.column() - 1;
+
+                    unsigned i = 0 ;
+                    while ( c >= 0) {
+                        for (unsigned r = 0; r < curveMap.mMap.row() ; r++) {
+                            displayMap[i++] = mComposanteG.mapG.at(c, r);
+
+                        }
+                        c--;
+                    }
+
+                    curveMap.mMap.setData(displayMap.Data());
+                }
+                mGraph->add_curve(curveMap); // to be draw in first
+
+            }
+
+            QList<GraphCurve> curveMapChains;
+
+            for (unsigned i = 0; i < mComposanteGChains.size(); ++i) {
+                if (mShowChainList[i]) {
+                    GraphCurve curveMapChain;
+                    curveMapChain.mName = "G Map Chain " + QString::number(i);
+                    curveMapChain.mPen = QPen(Painting::chainColors[i], 1, Qt::SolidLine);
+                    curveMapChain.mBrush = Qt::NoBrush;
+                    curveMapChain.mIsRectFromZero = false;
+
+                    curveMapChain.mType = GraphCurve::eMapData;
+                    curveMapChain.mMap = mComposanteGChains.at(i).mapG;
+
+                    const QColor color_0 = QColor(Painting::chainColors[i].red(),
+                                                  Painting::chainColors[i].green(),
+                                                  Painting::chainColors[i].blue(),
+                                                  0);
+                    const QColor color_1 = QColor(Painting::chainColors[i].red(),
+                                                  Painting::chainColors[i].green(),
+                                                  Painting::chainColors[i].blue(),
+                                                  255);
+
+                    std::vector<ColorStop> chainColorStop {
+                        {0.0, color_0},
+                        {1.0, color_1}
+                    };
+                    curveMapChain.setColorStops(chainColorStop);
+
+                    if (tmaxFormated > tminFormated) {
+                        curveMapChain.mMap.setRangeX(tminFormated, tmaxFormated);
+
+                    } else {
+                        curveMapChain.mMap.setRangeX(tmaxFormated, tminFormated);
+                        // we must reflect the map
+                        CurveMap displayMap (curveMapChain.mMap.row(), curveMapChain.mMap.column());
+
+                        int c  = curveMapChain.mMap.column() - 1;
+                        unsigned i = 0;
+                        while ( c >= 0) {
+                            for (unsigned r = 0; r < curveMapChain.mMap.row() ; r++) {
+                                displayMap[i++] = curveMapChain.mMap.at(c, r);
+                            }
+                            c--;
+                        }
+                        curveMapChain.mMap.setData(displayMap.Data());
+                    }
+
+                    curveMapChains.append(curveMapChain);
+                }
+
+            }
+            for (auto&& c: curveMapChains) {
+                mGraph->add_curve(c);
+            }
+        }
+
+        // Create HPD Env --------
+        if (mShowList.contains(eGHpd)) {
+            if (mShowAllChains) {
+                std::vector<int> min_indices, max_indices;
+
+                auto curveMap = mComposanteG.mapG;
+                densityMap_2_thresholdIndices_optimized(curveMap, threshold, min_indices, max_indices);
+
+                QMap<type_data, type_data> curveHPDMid_Data ;
+                QMap<type_data, type_data> curveHPDSup_Data ;
+                QMap<type_data, type_data> curveHPDInf_Data ;
+                type_data Ymin_map = curveMap.minY();
+                type_data Ymax_map = curveMap.maxY();
+                type_data step_map_Y = (Ymax_map - Ymin_map) / (curveMap.row() -1);
+                // les temps de la map sont déjà convertis avant
+                type_data tmin_map = curveMap.minX();
+                type_data tmax_map = curveMap.maxX();
+                type_data step_map_t = (tmax_map - tmin_map) / (curveMap.column() -1);
+                for (unsigned c = 0; c < curveMap.column() ; c++) {
+
+                    const double t = c * step_map_t + tmin_map;
+                    auto val_inf = min_indices[c] * step_map_Y + Ymin_map;
+                    auto val_sup = max_indices[c] * step_map_Y + Ymin_map;
+                    curveHPDMid_Data.insert(t, (val_sup + val_inf) / 2.0);
+                    curveHPDInf_Data.insert(t, val_inf);
+                    curveHPDSup_Data.insert(t, val_sup);
+                }
+
+                //auto hbwd = 0.02 * curveMap.mMap.column();
+               /* auto hbwd = 0.005;// * curveMap.column();
+                curveHPDMid_Data = gaussian_filter_simple(curveHPDMid_Data, hbwd);
+                curveHPDInf_Data = gaussian_filter_simple(curveHPDInf_Data, hbwd);
+                curveHPDSup_Data = gaussian_filter_simple(curveHPDSup_Data, hbwd);
+*/
+
+                // Largeur de la demi-fenêtre : nb de pas de la map × pas en temps
+                constexpr int nbStep = 5;                       // à ajuster (2 à 6 en général)
+                const type_data h = nbStep * step_map_t;
+
+                curveHPDInf_Data = moving_average_filter(curveHPDInf_Data, h);
+                curveHPDSup_Data = moving_average_filter(curveHPDSup_Data, h);
+
+                // On recalcule la médiane de l'enveloppe à partir des courbes lissées pour rester cohérent
+                for (auto it = curveHPDMid_Data.begin(); it != curveHPDMid_Data.end(); ++it) {
+                    const type_data t = it.key();
+                    it.value() = (curveHPDInf_Data.value(t) + curveHPDSup_Data.value(t)) / 2.0;
+                }
+                //---
+                const QColor envHPDColor (162, 47, 52, 200);
+
+                const GraphCurve curveHPD = FunctionCurve(curveHPDMid_Data, "G HPD Mid", envHPDColor );
+                const GraphCurve &curveHPDEnv = shapeCurve(curveHPDInf_Data, curveHPDSup_Data, "G HPD Env",
+                                                           envHPDColor, Qt::CustomDashLine, Qt::NoBrush);
+
+                mGraph->add_curve(curveHPD);
+                mGraph->add_curve(curveHPDEnv);
+            }
+        }
+        // ---- End HPD Env
+
+
+        if (mShowList.contains(eGGauss)) {
+            // create Gaussian G curve
+            QMap<type_data, type_data> G_Data ;
+            QMap<type_data, type_data> curveGSup_Data ;
+            QMap<type_data, type_data> curveGInf_Data ;
+
+            if (mShowAllChains) {
+                for (size_t idx = 0; idx < mComposanteG.vecG.size() ; ++idx) {
+
+                    const double t = DateUtils::convertToAppSettingsFormat(idx*step + tmin);
+                    auto G = mComposanteG.vecG[idx];
+                    auto err = z_score * sqrt(mComposanteG.vecVarG[idx]);
+
+                    G_Data.insert(t, G);
+                    curveGSup_Data.insert(t, G + err);
+                    curveGInf_Data.insert(t, G - err);
+                }
+
+                const GraphCurve curveMean = FunctionCurve(G_Data, "G Mean", Painting::mainColorDark ); // This is the name of the columns when exporting the graphs
+
+                const GraphCurve &curveGaussEnv = shapeCurve(curveGInf_Data, curveGSup_Data, "G Gauss Env",
+                                                             Painting::mainColorDark, Qt::CustomDashLine, Qt::NoBrush);
+
+                mGraph->add_curve(curveMean); // This is the order of the columns when exporting the graphs
+                mGraph->add_curve(curveGaussEnv);
+            }
+
+
+            for (int i = 0; i < mComposanteGChains.size(); ++i) {
+                if (mShowChainList[i]) {
+                    QMap<type_data, type_data> curveG_i;
+                    QMap<type_data, type_data> curveGInf_i;
+                    QMap<type_data, type_data> curveGSup_i;
+                    const auto& compoGChain_i = mComposanteGChains.at(i);
+
+                    for (size_t idx = 0; idx < mComposanteG.vecG.size() ; ++idx) {
+                        const double t = DateUtils::convertToAppSettingsFormat(idx*step + tmin);
+                        auto G = compoGChain_i.vecG[idx];
+                        auto err = z_score * sqrt(compoGChain_i.vecVarG[idx]);
+
+                        curveG_i.insert(t, G);
+                        curveGInf_i.insert(t, G - err);
+                        curveGSup_i.insert(t, compoGChain_i.vecG[idx] + err);
+                    }
+
+
+                    const GraphCurve &curve_i = FunctionCurve(curveG_i, "G Mean Chain " + QString::number(i),
+                                                              Painting::chainColors[i]);
+                    mGraph->add_curve(curve_i);
+
+                    QColor envColor_i  = Painting::chainColors[i];
+                    envColor_i.setAlpha(30);
+                    const GraphCurve &curveGEnv_i = shapeCurve(curveGInf_i, curveGSup_i, "G Gauss Env Chain " + QString::number(i),
+                                                               Painting::chainColors[i], Qt::CustomDashLine, Qt::NoBrush);//envColor_i);
+                    mGraph->add_curve(curveGEnv_i);
+                }
+            }
+
+        }
+
+        // must be put at the end to print the points above
+        if (mShowList.contains(eGEventsPts)) {
+            mGraph->set_points(curveEventsPoints);
+        }
+        if (mShowList.contains(eGDatesPts)) {
+            mGraph->insert_points(curveDataPoints);
+
+        }
+
+        mGraph->setYAxisMode(GraphView::AxisMode::eAllTicks);
+        mGraph->autoAdjustYScale(false);
+    }
+ #pragma mark GP
+    else if (mShowList.contains(eGP)) {
+        if (mShowList.contains(eGPMap) ) {
+            if (mShowAllChains) {
+                GraphCurve curveMap;
+                curveMap.mName = "G Prime Map";
+                curveMap.mPen = QPen(Qt::black, 1, Qt::SolidLine);
+                curveMap.mBrush = Qt::NoBrush;
+                curveMap.mIsRectFromZero = false;
+
+
+                curveMap.mType = GraphCurve::eMapData;
+                curveMap.mMap = mComposanteG.mapGP;
+                curveMap.setPalette(AppSettings::mMapPalette);// ColorPalette::TemperatureSoftDensity);
+
+                if (tmaxFormated > tminFormated) {
+                    curveMap.mMap.setRangeX(tminFormated, tmaxFormated);
+
+                } else {
+                    curveMap.mMap.setRangeX(tmaxFormated, tminFormated);
+                    // we must reflect the map
+
+                    CurveMap displayMap (curveMap.mMap.row(), curveMap.mMap.column());
+
+                    int c  = curveMap.mMap.column() - 1;
+
+                    unsigned i = 0 ;
+                    while ( c >= 0) {
+                        for (unsigned r = 0; r < curveMap.mMap.row() ; r++) {
+                            displayMap[i++] = mComposanteG.mapGP.at(c, r);
+
+                        }
+                        c--;
+                    }
+
+                    curveMap.mMap.setData(displayMap.Data());
+                }
+                mGraph->add_curve(curveMap); // to be draw in first
+            }
+
+        //QList<GraphCurve> curveMapChains;
+
+            for (unsigned i = 0; i < mComposanteGChains.size(); ++i) {
+                if (mShowChainList[i]) {
+                    GraphCurve curveMapChain;
+                    curveMapChain.mName = "G Prime Map Chain " + QString::number(i);
+                    curveMapChain.mPen = QPen(Painting::chainColors[i], 1, Qt::SolidLine);
+                    curveMapChain.mBrush = Qt::NoBrush;
+                    curveMapChain.mIsRectFromZero = false;
+
+                    curveMapChain.mType = GraphCurve::eMapData;
+                    curveMapChain.mMap = mComposanteGChains.at(i).mapGP;
+
+                    const QColor color_0 = QColor(Painting::chainColors[i].red(),
+                                                  Painting::chainColors[i].green(),
+                                                  Painting::chainColors[i].blue(),
+                                                  0);
+                    const QColor color_1 = QColor(Painting::chainColors[i].red(),
+                                                  Painting::chainColors[i].green(),
+                                                  Painting::chainColors[i].blue(),
+                                                  255);
+
+                    std::vector<ColorStop> chainColorStop {
+                        {0.0, color_0},
+                        {1.0, color_1}
+                    };
+                    curveMapChain.setColorStops(chainColorStop);
+
+                    if (tmaxFormated > tminFormated) {
+                        curveMapChain.mMap.setRangeX(tminFormated, tmaxFormated);
+
+                    } else {
+                        curveMapChain.mMap.setRangeX(tmaxFormated, tminFormated);
+                        // we must reflect the map
+                        CurveMap displayMap (curveMapChain.mMap.row(), curveMapChain.mMap.column());
+
+                        int c  = curveMapChain.mMap.column() - 1;
+                        unsigned i = 0;
+                        while ( c >= 0) {
+                            for (unsigned r = 0; r < curveMapChain.mMap.row() ; r++) {
+                                displayMap[i++] = curveMapChain.mMap.at(c, r);
+                            }
+                            c--;
+                        }
+                        curveMapChain.mMap.setData(displayMap.Data());
+                    }
+
+                    mGraph->add_curve(curveMapChain);
+                }
+            }
+        }
+        /*for (auto&& c: curveMapChains) {
+            mGraph->add_curve(c);
+        }*/
+
+        double threshold = getModel_ptr()->mThreshold;
+        // Create HPD Env --------
+        if (mShowAllChains &&
+            mShowList.contains(eGPHpd)) {
+            std::vector<int> min_indices, max_indices;
+            auto curveMap = mComposanteG.mapGP;
+
+            densityMap_2_thresholdIndices_optimized(curveMap, threshold, min_indices, max_indices);
+
+            QMap<type_data, type_data> curveHPDMid_Data ;
+            QMap<type_data, type_data> curveHPDSup_Data ;
+            QMap<type_data, type_data> curveHPDInf_Data ;
+            type_data Ymin_map = curveMap.minY();
+            type_data Ymax_map = curveMap.maxY();
+            type_data step_map_Y = (Ymax_map - Ymin_map) / (curveMap.row() -1);
+            // les temps de la map sont déjà convertis avant
+            type_data tmin_map = curveMap.minX();
+            type_data tmax_map = curveMap.maxX();
+            type_data step_map_t = (tmax_map - tmin_map) / (curveMap.column() -1);
+            for (unsigned c = 0; c < curveMap.column() ; c++) {
+
+                const double t = c * step_map_t + tmin_map;
+                auto val_inf = min_indices[c] * step_map_Y + Ymin_map;
+                auto val_sup = max_indices[c] * step_map_Y + Ymin_map;
+                curveHPDMid_Data.insert(t, (val_sup + val_inf) / 2.0);
+                curveHPDInf_Data.insert(t, val_inf);
+                curveHPDSup_Data.insert(t, val_sup);
+            }
+
+            //auto hbwd = 0.02 * curveMap.mMap.column();
+            auto hbwd = 0.005 * curveMap.column();
+            curveHPDMid_Data = gaussian_filter_simple(curveHPDMid_Data, hbwd);
+            curveHPDInf_Data = gaussian_filter_simple(curveHPDInf_Data, hbwd);
+            curveHPDSup_Data = gaussian_filter_simple(curveHPDSup_Data, hbwd);
+
+            const QColor envHPDColor (162, 47, 52, 200);
+
+            const GraphCurve curveHPD = FunctionCurve(curveHPDMid_Data, "G Prime HPD Mid", envHPDColor );
+            const GraphCurve curveHPDEnv = shapeCurve(curveHPDInf_Data, curveHPDSup_Data, "G Prime HPD Env",
+                                                      envHPDColor, Qt::CustomDashLine, Qt::NoBrush);
+
+
+            mGraph->add_curve(curveHPD);
+            mGraph->add_curve(curveHPDEnv);
+        }
+        // ---- End HPD Env
+
+
+        GraphCurve curveZero = horizontalLine(0., "G Prime Zero", QColor(219, 01, 01));
+        mGraph->add_curve(curveZero);
+        if (mShowList.contains(eGPGauss)) {
+            if (mShowAllChains) {
+                // Mean Gaussian curve
+                QMap<type_data, type_data> GP_Data, GPInf_Data, GPSup_Data ;
+                for (size_t idx = 0; idx < mComposanteG.vecGP.size() ; ++idx) {
+                    double t = DateUtils::convertToAppSettingsFormat(idx*step + tmin);
+                    double Gp = mComposanteG.vecGP[idx];
+                    double errGp = z_score * sqrt(mComposanteG.vecVarGP[idx]);
+
+                    GP_Data.insert(t, Gp);
+                    GPInf_Data.insert(t, Gp - errGp);
+                    GPSup_Data.insert(t, Gp + errGp);
+
+
+                }
+
+                const GraphCurve &curveMean = FunctionCurve(GP_Data, "G Prime Mean", Painting::mainColorDark);
+
+                const GraphCurve &curveGaussEnv = shapeCurve(GPInf_Data, GPSup_Data, "G Prime Gauss Env",
+                                                             Painting::mainColorDark, Qt::CustomDashLine, Qt::NoBrush);
+                mGraph->add_curve(curveMean);
+                mGraph->add_curve(curveGaussEnv);
+            }
+
+            QColor envColor_i;
+            for (unsigned i = 0; i < mComposanteGChains.size(); ++i) {
+                if (mShowChainList[i]) {
+                    const auto& compoChain = mComposanteGChains[i];
+                    QMap<type_data, type_data> GP_Data_i, GPInf_Data_i,GPSup_Data_i  ;
+
+                    for (size_t idx = 0; idx < compoChain.vecGP.size() ; ++idx) {
+                        double t = DateUtils::convertToAppSettingsFormat(idx*step + tmin); // il faut convertir t
+                        double Gp = compoChain.vecGP[idx];
+                        double errGp = z_score * sqrt(compoChain.vecVarGP[idx]);
+                        GP_Data_i.insert(t , Gp);
+
+                        GPInf_Data_i.insert(t, Gp - errGp);
+                        GPSup_Data_i.insert(t, Gp + errGp);
+
+                    }
+                    const GraphCurve &curveGPChain = FunctionCurve(GP_Data_i, "G Prime Mean Chain " + QString::number(i), Painting::chainColors[i]);
+                    mGraph->add_curve(curveGPChain);
+
+                    envColor_i  = Painting::chainColors[i];
+                    envColor_i.setAlpha(30);
+                    const GraphCurve &curveGEnv_i = shapeCurve(GPInf_Data_i, GPSup_Data_i, "G Prime Gauss Env Chain " + QString::number(i),
+                                                               Painting::chainColors[i], Qt::CustomDashLine, Qt::NoBrush);//, envColor_i);
+                    mGraph->add_curve(curveGEnv_i);
+                }
+            }
+        }
+        mGraph->setTipYLab("Rate");
+        mGraph->setYAxisMode(GraphView::AxisMode::eAllTicks);
+        mGraph->autoAdjustYScale(false);
+
+
+    }
+#pragma mark GS
+    else if (mShowList.contains(eGS)) {
+        if (mShowAllChains) {
+            QMap<type_data, type_data> GS_Data;
+            for (size_t idx = 0; idx < mComposanteG.vecGS.size() ; ++idx) {
+                GS_Data.insert( DateUtils::convertToAppSettingsFormat(idx*step + tmin), mComposanteG.vecGS.at(idx));
+            }
+            const GraphCurve &curveGS = FunctionCurve(GS_Data, "G Second", Painting::mainColorDark);
+            mGraph->add_curve(curveGS);
+        }
+
+        for (unsigned i = 0; i < mComposanteGChains.size(); ++i) {
+            if (mShowChainList[i]) {
+                QMap<type_data, type_data> GS_Data_i;
+                for (size_t idx = 0; idx < mComposanteGChains[i].vecGS.size() ; ++idx) {
+                    GS_Data_i.insert( DateUtils::convertToAppSettingsFormat(idx*step + tmin), mComposanteGChains[i].vecGS.at(idx));
+                }
+                const GraphCurve &curveGSChain = FunctionCurve(GS_Data_i, "G Second Chain " + QString::number(i), Painting::chainColors[i]);
+                mGraph->add_curve(curveGSChain);
+            }
+
+        }
+        mGraph->setTipYLab("Acc.");
+
+        mGraph->setYAxisMode(GraphView::AxisMode::eAllTicks);
+        mGraph->autoAdjustYScale(false);
+
+    }
+
+    // ------------------------------------------------------------
+    //   Add zones outside study period
+    // ------------------------------------------------------------
+
+    const GraphZone zoneMin (-std::numeric_limits<double>::max(), mSettings.getTminFormated());
+    mGraph->add_zone(zoneMin);
+
+    const GraphZone zoneMax (mSettings.getTmaxFormated(), std::numeric_limits<double>::max());
+    mGraph->add_zone(zoneMax);
+
+    mGraph->setTipXLab(tr("t"));
+
+    updateStatHTML();
+
+    update();
+}
+
+void GraphViewCurve::updateStatHTML()
+{
+    auto model = getModel_ptr();
+    const QString resultsHTML = ModelUtilities::lambdaResultsHTML(model);
+    setNumericalResults(resultsHTML);
+
 }

@@ -66,9 +66,12 @@ void GraphViewPhase::setPhase(std::shared_ptr<Phase> phase)
     setItemColor(mPhase->mColor);
 }
 
-void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variable_t>& variableList)
+void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variable_t>& showList)
 {
-    GraphViewResults::generateCurves(typeGraph, variableList);
+    updateCurves(typeGraph, showList, mShowAllChains, mShowChainList);
+    return;
+
+    GraphViewResults::generateCurves(typeGraph, showList);
 
     graph_reset();
 
@@ -362,37 +365,15 @@ void GraphViewPhase::generateCurves(const graph_t typeGraph, const QList<variabl
 
 }
 
-void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showVariableList)
+void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showList)
 {
     Q_ASSERT(mPhase);
-    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showVariableList);
+    updateCurves(mCurrentTypeGraph, showList, showAllChains, showChainList);
+    return;
 
-    /* --------------------First tab : Posterior Distrib----------------------------
-     *
-     *  Possible curves :
-     *  - Begin-End
-     *  -- Post Distrib Begin-End All Chains
-     *  -- HPD Begin All Chains
-     *  -- HPD End All Chains
-     *
-     *  -- Post Distrib Begin Chain i
-     *  -- Post Distrib End Chain i
-     *
-     *  -Duration
-     *  -- Post Distrib All Chains
-     *  -- HPD All Chains
-     *  -- Credibility All Chains
-     *  -- Post Distrib Chain i
-     *
-     *  - Tempo
-     *  -- Tempo All Chains
-     *  -- Tempo Error Env All Chain
-     *
-     *  - Activity
-     *  -- All Chains
-     *  -- Env All Chain
-     *
-     * ------------------------------------------------*/
+
+    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showList);
+
     if (mCurrentTypeGraph == ePostDistrib) {
 
         if (mShowList.contains(eBeginEnd)) {
@@ -482,21 +463,7 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
         }
     }
-    /* ---------------- second tab : history plot--------------------------------
-     *  - Begin Trace i
-     *  - Begin Q1 i
-     *  - Begin Q2 i
-     *  - Begin Q3 i
-     *  - End Trace i
-     *  - End Q1 i
-     *  - End Q2 i
-     *  - End Q3 i
-     *
-     *  - Duration Trace i
-     *  - Duration Q1 i
-     *  - Duration Q2 i
-     *  - Duration Q3 i
-     * ------------------------------------------------ */
+
     else if (mCurrentTypeGraph == eTrace) {
         QStringList curvesToShow;
 
@@ -538,4 +505,347 @@ void GraphViewPhase::updateCurvesToShow(bool showAllChains, const QList<bool>& s
         }
     }
     repaint();
+}
+
+
+void GraphViewPhase::generatePosterior()
+{
+    QPen defaultPen;
+    defaultPen.setWidthF(1);
+    defaultPen.setStyle(Qt::SolidLine);
+
+    QColor color = mPhase->mColor;
+
+    mGraph->setBackgroundColor(QColor(230, 230, 230));
+    if (mShowList.contains(eBeginEnd)) {
+        graph_density();
+
+        mTitle = tr("Phase : %1").arg(mPhase->getQStringName());
+
+        std::map<double, double> &alpha = mPhase->mAlpha.mFormatedKDE;
+        std::map<double, double> &beta = mPhase->mBeta.mFormatedKDE;
+
+        std::map<double, double> &alphaHPD = mPhase->mAlpha.mFormatedHPD;
+        std::map<double, double> &betaHPD = mPhase->mBeta.mFormatedHPD;
+
+        // Detection of one Bound used as boundary != is xor
+        // If there is two Bound, the both are egal to 1, thus nothing to do
+
+        const bool alphaIsBound = (alpha.size() == 1);
+        const bool betaIsBound = (beta.size() == 1);
+
+        if (alphaIsBound && !betaIsBound) {
+            const double normPdf = map_max(beta)->second;
+            alpha[alpha.begin()->first] =  normPdf;
+            alphaHPD[alphaHPD.begin()->first] = normPdf;
+
+        } else if (betaIsBound && !alphaIsBound) {
+            const double normPdf = map_max(alpha)->second;
+            beta[beta.begin()->first] = normPdf;
+            betaHPD[betaHPD.begin()->first] = normPdf;
+
+        } else if (alphaIsBound && betaIsBound) {
+            alpha[alpha.begin()->first] =  1.;
+            alphaHPD[alphaHPD.begin()->first] = 1.;
+
+            beta[beta.begin()->first] = 1.;
+            betaHPD[betaHPD.begin()->first] = 1.;
+        }
+
+        if (mShowAllChains) {
+            const GraphCurve &curveBegin = densityCurve(alpha, "Post Distrib Begin All Chains", color, Qt::DotLine);
+            const QColor colorEnd = mPhase->mColor.darker(170);
+
+            const GraphCurve &curveEnd = densityCurve(beta, "Post Distrib End All Chains", colorEnd, Qt::DashLine);
+            color.setAlpha(255); // set mBrush to fill
+            const GraphCurve &curveBeginHPD = HPDCurve(alphaHPD, "HPD Begin All Chains", color);
+
+            const GraphCurve &curveEndHPD = HPDCurve(betaHPD, "HPD End All Chains", colorEnd);
+
+            mGraph->add_curve(curveBegin);
+            mGraph->add_curve(curveEnd);
+
+            mGraph->add_curve(curveBeginHPD);
+            mGraph->add_curve(curveEndHPD);
+
+            const GraphCurve &curveTimeRange = topLineSection(mPhase->getFormatedTimeRange(), "Time Range", color);
+            mGraph->add_curve(curveTimeRange);
+        }
+
+        if (!mPhase->mAlpha.mChainsKDE.empty())
+            for (size_t i = 0; i<mChains.size(); ++i) {
+                if (mShowChainList[i]) {
+                    std::map<double, double> &alpha_i = mPhase->mAlpha.mChainsKDE[i];
+                    std::map<double, double> &beta_i = mPhase->mBeta.mChainsKDE[i];
+
+                    if (alphaIsBound && !betaIsBound) {
+                        alpha_i[alpha_i.begin()->first] =  map_max(beta_i)->second;
+
+                    } else if (betaIsBound && !alphaIsBound) {
+                        beta_i[beta_i.begin()->first] = map_max(alpha_i)->second;
+                    }
+
+                    const GraphCurve &curveBegin = densityCurve(alpha_i,
+                                                                "Post Distrib Begin Chain " + QString::number(i),
+                                                                Painting::chainColors.at(i), Qt::DotLine);
+
+                    const GraphCurve &curveEnd = densityCurve(beta_i,
+                                                              "Post Distrib End Chain " + QString::number(i),
+                                                              Painting::chainColors.at(i).darker(170), Qt::DashLine);
+                    mGraph->add_curve(curveBegin);
+                    mGraph->add_curve(curveEnd);
+                }
+            }
+
+
+    }
+    else if (mShowList.contains(eTempo)) {
+
+        if (!mPhase->mTempo.empty()) {
+            graph_density();
+            mGraph->reserveCurves(2);
+
+            mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
+            mGraph->mLegendY = "Events";
+
+            mGraph->setTipXLab("t");
+            mGraph->setTipYLab("n");
+
+            mTitle = tr("Phase Tempo: %1").arg(mPhase->getQStringName());
+
+            GraphCurve curveTempo = densityCurve(mPhase->mTempo,
+                                                 "Post Distrib All Chains",
+                                                 color.darker(), Qt::SolidLine);
+            curveTempo.mIsRectFromZero = false;
+            if (mShowList.contains(eError)) {
+                auto brushColor = color;
+                brushColor.setAlpha(30);
+                const GraphCurve &curveTempoEnv = shapeCurve(mPhase->mTempoInf, mPhase->mTempoSup,
+                                                             "Post Distrib Env All Chains",
+                                                             color, Qt::CustomDashLine, brushColor);
+
+                mGraph->add_curve(curveTempoEnv);
+            }
+            mGraph->add_curve(curveTempo);
+
+        }
+
+
+    }
+    else if (mShowList.contains(eActivity)) {
+
+        if (!mPhase->mActivity.empty()) {
+            graph_density();
+
+            mGraph->setTipXLab("t");
+            mGraph->setTipYLab("A");
+
+            mGraph->reserveCurves(3);
+
+            mTitle = tr("Phase Activity: %1").arg(mPhase->getQStringName());
+            GraphCurve curveActivity = densityCurve( mPhase->mActivity,
+                                                    "Post Distrib All Chains",
+                                                    color, Qt::SolidLine);
+            curveActivity.mIsRectFromZero = true;
+
+            if (mShowList.contains(eError)) {
+                auto brushColor = color;
+                brushColor.setAlpha(30);
+
+                const GraphCurve &curveActivityEnv = shapeCurve(mPhase->mActivityInf, mPhase->mActivitySup,
+                                                                "Post Distrib Env All Chains",
+                                                                color, Qt::CustomDashLine, brushColor);
+
+                mGraph->add_curve(curveActivityEnv);
+
+
+                if (mPhase->mEvents.size()>1
+                    && mPhase->mValueStack.contains("Activity_Threshold") && mPhase->mValueStack.contains("Activity_Significance_Score") ) {
+                    const int nbEvents = mPhase->mEvents.size();
+
+                    QString txt = QString("Nb Events = %1; h = %2  \u2192  Significance Score (%3 %) = %4").arg(
+                        QString::number(nbEvents),
+                        stringForLocal(mPhase->mValueStack.at("Activity_h")),
+                        stringForLocal(mPhase->mValueStack.at("Activity_Threshold")),
+                        stringForLocal(mPhase->mValueStack.at("Activity_Significance_Score"), true));
+                    mGraph->setInfo(txt);
+
+                } else
+                    mGraph->clearInfos();
+            }
+
+            mGraph->add_curve(curveActivity);
+            if (mShowList.contains(eActivityUnif)) {
+
+                /* ------------------------------------------------------------
+                 *   Display envelope Uniform
+                 * ------------------------------------------------------------*/
+
+                GraphCurve curveActivityUnifTheo = densityCurve(mPhase->mActivityUnifTheo,
+                                                                "Post Distrib Unif Mean",
+                                                                Qt::darkGray, Qt::SolidLine);
+                curveActivityUnifTheo.mIsRectFromZero = false;
+
+                mGraph->add_curve(curveActivityUnifTheo);
+            }
+
+
+
+        }
+
+    } else if (mShowList.contains(eDuration)) {
+        //graph_density();
+        mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eBothOverflow);
+
+        mGraph->setTipYLab("");
+        mGraph->setTipXLab("d");
+
+        mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
+
+        mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
+        mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+
+        mGraph->autoAdjustYScale(true);
+
+        mGraph->setXAxisMode(GraphView::AxisMode::eAllTicks);
+        mGraph->setYAxisMode(GraphView::AxisMode::eHidden);
+
+        // ------------------------------------------------------------
+        //  Add zones outside study period
+        // ------------------------------------------------------------
+        const GraphZone zoneMin (-std::numeric_limits<double>::max(), 0);
+        mGraph->add_zone(zoneMin);
+        /*
+            const GraphZone zoneMax (mSettings.getTmaxFormated(), std::numeric_limits<double>::max());
+            mGraph->add_zone(zoneMax);*/
+
+        mGraph->reserveCurves(3 + mChains.size());
+        mGraph->mLegendX = tr("Years");
+
+        mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+        mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+
+        mGraph->setYAxisMode(GraphView::AxisMode::eMinMaxHidden);
+        mTitle = tr("Phase Duration: %1").arg(mPhase->getQStringName());
+
+        if (mPhase->mDuration.fullHisto().size() > 0) {
+            if (mShowAllChains) {
+                const GraphCurve &curveDuration = densityCurve(mPhase->mDuration.fullHisto(), "Post Distrib All Chains", color);
+                mGraph->add_curve(curveDuration);
+
+                // mGraph->setRangeX(0., ceil(curveDuration.mData.lastKey()));
+                color.setAlpha(255);
+                const GraphCurve &curveDurationHPD = HPDCurve(mPhase->mDuration.mFormatedHPD, "HPD All Chains", color);
+                mGraph->setCanControlOpacity(true);
+                mGraph->add_curve(curveDurationHPD);
+
+                // ------------------------------------
+                //  Theta Credibility
+                // ------------------------------------
+
+                if (mShowList.contains(eCredibility)) {
+                    const GraphCurve &curveCred = topLineSection(mPhase->mDuration.mFormatedCredibility,
+                                                                 "Credibility All Chains",
+                                                                 color);
+                    mGraph->add_curve(curveCred);
+                }
+            }
+
+        }
+
+
+        if (!mPhase->mDuration.mChainsKDE.empty())
+            for (size_t i = 0; i < mChains.size(); ++i) {
+                if (mShowChainList[i]) {
+                const GraphCurve &curveDuration = densityCurve(mPhase->mDuration.KDEForChain(i),
+                                                               "Post Distrib Chain " + QString::number(i),
+                                                               Painting::chainColors.at(i), Qt::DotLine);
+
+                mGraph->add_curve(curveDuration);
+                }
+            }
+
+    }
+
+
+}
+
+/* ------------------------------------------------
+     *  Second tab : History plots.
+     *  Possible Curves (could be for ti or sigma):
+     *  - Trace i
+     *  - Q1 i
+     *  - Q2 i
+     *  - Q3 i
+     * ------------------------------------------------
+     */
+void GraphViewPhase::generateHistory()
+{
+    if (mShowList.contains(eBeginEnd)) {
+        graph_trace();
+         mTitle = tr("Phase: %1").arg(mPhase->getQStringName());
+
+        generateTraceCurves(mChains, &(mPhase->mAlpha), "Begin");
+        generateTraceCurves(mChains, &(mPhase->mBeta), "End");
+        mGraph->autoAdjustYScale(true);
+
+    } else if (mShowList.contains(eDuration)) {
+        graph_trace();
+
+        mTitle = tr("Phase Duration: %1").arg(mPhase->getQStringName());
+
+        generateTraceCurves(mChains, &(mPhase->mDuration), "Duration");
+        mGraph->autoAdjustYScale(true);
+    }
+
+}
+
+/* ------------------------------------------------
+     *  Third tab : Acceptance rate.
+     *  Possible curves (could be for ti or sigma):
+     *  - Accept i
+     *  - Accept Target
+     * ------------------------------------------------
+     */
+void GraphViewPhase::generateAcceptation()
+{
+    mTitle = tr("Phase: %1").arg(mPhase->getQStringName());
+    mGraph->resetNothingMessage();
+}
+
+/* ------------------------------------------------
+     *  Fourth tab : Autocorrelation
+     *  Possible curves (could be for theta or sigma):
+     *  - Correl i
+     *  - Correl Limit Lower i
+     *  - Correl Limit Upper i
+     * ------------------------------------------------
+     */
+void GraphViewPhase::generateCorrelation()
+{
+    mTitle = tr("Phase : %1").arg(mPhase->getQStringName());
+    mGraph->resetNothingMessage();
+
+}
+
+
+void GraphViewPhase::updateStatHTML()
+{
+
+    QString resultsHTML = tr("Nothing to Display");
+    if (mShowList.contains(eBeginEnd)) {
+        resultsHTML = ModelUtilities::phaseResultsHTML(mPhase);
+
+    } else if (mShowList.contains(eTempo)) {
+        resultsHTML = ModelUtilities::tempoResultsHTML(mPhase);
+
+    } else if (mShowList.contains(eDuration)) {
+        resultsHTML = ModelUtilities::durationResultsHTML(mPhase);
+
+    } else if (mShowList.contains(eActivity)) {
+        resultsHTML = ModelUtilities::activityResultsHTML(mPhase);
+    }
+
+    setNumericalResults(resultsHTML);
+
 }

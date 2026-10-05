@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2025
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -63,7 +63,7 @@ GraphCurve::GraphCurve():
     mVerticalValue(type_data(0)),
     mSections(std::vector<QPair<type_data, type_data> >()),
     mShape(std::pair<QMap<type_data, type_data>, QMap<type_data, type_data>> ()),
-    mVisible(false)
+    mVisible(true)
 {
 }
 
@@ -102,6 +102,7 @@ GraphCurve densityCurve( const QMap<double, double> data,
             curve.mPen.setDashPattern(QList<qreal>{5, 5});
         curve.mBrush = brush;
         curve.mIsRectFromZero = false; // for Unif-typo. calibs. and curveActivityUnifTheo, invisible for others!
+        curve.mVisible = true;
     }
     return curve;
 }
@@ -121,6 +122,7 @@ GraphCurve densityCurve( const std::map<double, double> data,
             curve.mPen.setDashPattern(QList<qreal>{5, 5});
         curve.mBrush = brush;
         curve.mIsRectFromZero = true; // for Unif-typo. calibs. and curveActivityUnifTheo, invisible for others!
+        curve.mVisible = true;
     }
     return curve;
 }
@@ -181,6 +183,7 @@ GraphCurve topLineSection(const std::pair<double, double> &section, const QStrin
     curve.mPen.setWidth(1);
     curve.mPen.setStyle(Qt::SolidLine);
     curve.mType = GraphCurve::eTopLineSections;
+    curve.mVisible = true;
     return curve;
 }
 

@@ -74,7 +74,7 @@ void CheckBox::leaveEvent(QEvent * e)
     QCheckBox::QWidget::leaveEvent(e);
 }
 
-void CheckBox::paintEvent(QPaintEvent* e)
+/*void CheckBox::paintEvent(QPaintEvent* e)
 {
     (void) e;
 
@@ -85,4 +85,11 @@ void CheckBox::paintEvent(QPaintEvent* e)
         QToolTip::showText(mapToGlobal(rect().center()), toolTip());
     }
   //  QCheckBox::paintEvent(e);
+}*/
+
+void CheckBox::paintEvent(QPaintEvent* e)
+{
+    Q_UNUSED(e);
+    QPainter p(this);
+    drawCheckbox(p, rect(), text(), checkState(), mHasDot ? mDotColor : QColor());
 }

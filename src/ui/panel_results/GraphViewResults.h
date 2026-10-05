@@ -224,8 +224,6 @@ protected:
     bool mShowAllChains;
     QList<bool> mShowChainList;
 
-    // QList<variable_t> mShowList;
-    // QList<variable_t> mShowList;
     QList<variable_t> mShowList;
 
     ScrollableLabel* mStatArea;
@@ -322,19 +320,132 @@ public:
         return html_to_plain_text(mStatHTMLText);
     };
 
-    void generateTraceCurves(const std::vector<ChainSpecs> &chains, MetropolisVariable* variable, const QString& name = QString());
-    void generateLogTraceCurves(const std::vector<ChainSpecs> &chains, MetropolisVariable* variable, const QString& name = QString());
+    // Nouvelle fonction
+    inline void forceRefresh()
+    {
+        mGraph->forceRefresh();
+    }
+    virtual void updateCurves(const graph_t typeGraph,
+                              const QList<variable_t> &showList,
+                              bool showAllChains,
+                              const QList<bool> &showChainList);
 
-    void generateAcceptCurves(const std::vector<ChainSpecs> &chains, MHVariable* variable);
+    inline void updateCurves() {
+        updateCurves(mCurrentTypeGraph,
+                     mShowList,
+                     mShowAllChains,
+                     mShowChainList);
+    }
+    virtual void generatePosterior() {};
+    virtual void generateHistory() {};
+    virtual void generateAcceptation() {};
+    virtual void generateCorrelation() {};
+    virtual void updateStatHTML()
+    {
+       setNumericalResults(tr("Nothing to Display"));
+    };
+    // ----
 
-    void generateCorrelCurves(const std::vector<ChainSpecs> &chains, MHVariable* variable);
+    void generateTraceCurves(const std::vector<ChainSpecs> &chains,
+                             MetropolisVariable* variable,
+                             const QString& name = QString());
+    void generateLogTraceCurves(const std::vector<ChainSpecs> &chains,
+                                MetropolisVariable* variable,
+                                const QString& name = QString());
 
-    void graph_reset();
-    void graph_density();
-    void graph_trace();
-    void graph_acceptation();
-    void graph_correlation();
+    void generateAcceptCurves(const std::vector<ChainSpecs> &chains,
+                              MHVariable* variable,
+                              const QString& name = QString());
 
+    void generateCorrelCurves(const std::vector<ChainSpecs> &chains,
+                              MHVariable* variable,
+                              const QString& name = QString());
+
+
+    inline void graph_reset()
+   {
+        mGraph->removeAllCurves();
+
+        mGraph->squeezeCurves();
+        mGraph->showInfos(false);
+        mGraph->clearInfos();
+        mGraph->resetNothingMessage();
+        mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
+        mGraph->setFormatFunctX(nullptr);
+        mGraph->setFormatFunctY(nullptr);
+    }
+
+    inline void graph_density()
+    {
+        mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eBothOverflow);
+
+        mGraph->setTipYLab("");
+        mGraph->setTipXLab("t");
+
+        mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
+
+        mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
+        mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+
+        mGraph->autoAdjustYScale(true);
+
+        mGraph->setXAxisMode(GraphView::AxisMode::eAllTicks);
+        mGraph->setYAxisMode(GraphView::AxisMode::eHidden);
+        // ------------------------------------------------------------
+        //  Add zones outside study period
+        // ------------------------------------------------------------
+        const GraphZone zoneMin (-std::numeric_limits<double>::max(), mSettings.getTminFormated());
+        mGraph->add_zone(zoneMin);
+
+        const GraphZone zoneMax (mSettings.getTmaxFormated(), std::numeric_limits<double>::max());
+        mGraph->add_zone(zoneMax);
+
+    }
+
+    inline void graph_trace()
+    {
+        mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
+        mGraph->mLegendX = tr("Iterations");
+
+        mGraph->setTipXLab(tr("Iteration"));
+        mGraph->setTipYLab("t");
+
+        mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+        mGraph->setYAxisSupport(AxisTool::AxisSupport::eMin_Max);
+
+        mGraph->setYAxisMode(GraphView::AxisMode::eMinMaxHidden);
+
+        mGraph->autoAdjustYScale(true);
+    }
+
+    inline void graph_acceptation()
+    {
+        mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
+        mGraph->mLegendX = tr("Iterations");
+        mGraph->setTipXLab(tr("Iteration"));
+        mGraph->setTipYLab(tr("Rate"));
+
+        mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
+        mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+        mGraph->setYAxisMode(GraphView::AxisMode::eMinMaxHidden );
+
+        mGraph->autoAdjustYScale(false);
+        mGraph->setRangeY(0, 100);
+    }
+
+    inline void graph_correlation()
+    {
+        mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
+        mGraph->setTipXLab("h");
+        mGraph->setTipYLab(tr("Value"));
+        mGraph->setXAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
+        mGraph->setYAxisSupport(AxisTool::AxisSupport::eAllTip);
+        mGraph->setYAxisMode(GraphView::AxisMode::eMinMaxHidden);
+
+        mGraph->autoAdjustYScale(false);
+        mGraph->setRangeY(-1, 1);
+        mGraph->setXScaleDivision(10, 10);
+    }
     // This method is used to recreate all curves in mGraph.
     // It is vitual because we want a different behavior in sub-classes (GraphViewDate, GraphViewEvent and GraphViewPhase)
     virtual void generateCurves(const graph_t typeGraph, const QList<variable_t> &showList);
@@ -344,6 +455,13 @@ public:
     //virtual void updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, bool showCredibility, bool showCalib, bool showWiggle);
     virtual void updateCurvesToShow(bool showAllChains, const QList<bool> &showChainList, const QList<variable_t> &showList);
 
+
+
+    void setChainsList(bool showAllChains, const QList<bool> &showChainList)
+    {
+        mShowAllChains = showAllChains;
+        mShowChainList = showChainList;
+    };
 
     inline void changeYScaleDivision(const Scale &sc)
     {
@@ -364,7 +482,7 @@ public:
         mStatArea->setText(mStatHTMLText);
     };
 
-    void setView(type_data range_Xmin, type_data range_Xmax, type_data resultCurrentMinT, type_data resultCurrentMaxT, const double scale_major, const int scale_minor);
+    void setView(type_data range_Tmin, type_data range_Tmax, type_data resultCurrentMinT, type_data resultCurrentMaxT, const double scale_major, const int scale_minor);
 
 public slots:
     void setRange(type_data min, type_data max);

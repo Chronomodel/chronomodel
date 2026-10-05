@@ -384,15 +384,19 @@ QString MCMCLoop::initialize_time()
                             switch (date.mDeltaType) {
                             case Date::eDeltaNone:
                                 date.mDelta = 0.0;
+                                date.mWiggle.mSamplerProposal = SamplerProposal::eNone;
                                 break;
                             case Date::eDeltaRange:
                                 date.mDelta = Generator::randomUniform(date.mDeltaMin, date.mDeltaMax);
+                                date.mWiggle.mSamplerProposal = SamplerProposal::ePrior;
                                 break;
                             case Date::eDeltaGaussian:
                                 date.mDelta = Generator::normalDistribution(date.mDeltaAverage, date.mDeltaError);
+                                date.mWiggle.mSamplerProposal = SamplerProposal::ePrior;
                                 break;
                             case Date::eDeltaFixed:
                                 date.mDelta = date.mDeltaFixed;
+                                date.mWiggle.mSamplerProposal = SamplerProposal::ePrior;
                                 break;
                             }
 

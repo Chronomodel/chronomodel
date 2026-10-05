@@ -1062,11 +1062,19 @@ inline double diff_erf(double a, double b,
  *  * https://en.wikipedia.org/wiki/Standard_score
  */
 
-[[nodiscard]] inline double zScore(double alpha) noexcept
+// Quantile de la loi normale standard : Φ^{-1}(p)
+[[nodiscard]] inline double zScore(double p) noexcept
 {
-    return invNormalCDF(alpha);
+    return invNormalCDF(p);
 }
 
+// Valeur critique bilatérale pour un niveau de confiance en pourcentage
+// (95 -> 1.95996, 68.27 -> 1.0, 99 -> 2.5758) : z_{1-α/2}, avec α = 1 - level/100
+[[nodiscard]] inline double zCritical(double confidenceLevelPercent) noexcept
+{
+    const double alpha = 1.0 - confidenceLevelPercent * 0.01;
+    return invNormalCDF(1.0 - 0.5 * alpha);
+}
 
 /**
  * @brief N compute Normal law = Gauss law // see dnorm()

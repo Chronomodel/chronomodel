@@ -4137,7 +4137,7 @@ void MCMCLoopChrono::sampler_339_3v(std::vector<std::shared_ptr<Event>> &events)
     }
 }
 
-void MCMCLoopChrono::sampler_339_Couple(std::vector<std::shared_ptr<Event>> &events)
+/* void MCMCLoopChrono::sampler_339_Couple(std::vector<std::shared_ptr<Event>> &events)
 {
     try {
         // ======================================================================
@@ -4649,7 +4649,7 @@ void MCMCLoopChrono::sampler_339_Couple(std::vector<std::shared_ptr<Event>> &eve
         return;
     }
 
-}
+} */
 
 /**
  * @brief Uncollapsed joint Metropolis-Hastings block sampler for (t_i, sigma_i, theta).

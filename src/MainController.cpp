@@ -65,8 +65,11 @@ MainController::MainController(const QString& filePath)
     //std::cout<<"Inside [MainController::MainController]" <<std::endl;
 
     try {
+AppSettings::readSettings();
+        mMainWindow->move(AppSettings::mLastPosition);
+        mMainWindow->resize(AppSettings::mLastSize);
+mMainWindow->show();
 
-        AppSettings::readSettings();
 
         QString path;
         if (filePath != "" ) {
@@ -80,15 +83,15 @@ MainController::MainController(const QString& filePath)
 
         }
 
-        mMainWindow->readSettings(path);
+        mMainWindow->readSettings(path); //do MCMCFinish
 
-        mMainWindow->move(AppSettings::mLastPosition);
-        mMainWindow->resize(AppSettings::mLastSize);
+        //mMainWindow->move(AppSettings::mLastPosition);
+        //mMainWindow->resize(AppSettings::mLastSize);
 
     }  catch(...) {
         std::cout << "[MainController] Caught Exception!" << std::endl;
     }
 
-    mMainWindow->show();
+  //  mMainWindow->show();
 
 }

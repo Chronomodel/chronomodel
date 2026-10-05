@@ -56,10 +56,13 @@ GraphViewLambda::~GraphViewLambda()
 {
 }
 
-void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variable_t> &variableList)
+void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variable_t> &showList)
 {
+    updateCurves(typeGraph, showList, mShowAllChains, mShowChainList);
+    return;
+
     auto model = getModel_ptr();
-    GraphViewResults::generateCurves(typeGraph, variableList);
+    GraphViewResults::generateCurves(typeGraph, showList);
     
     mGraph->removeAllCurves();
 
@@ -185,10 +188,13 @@ void GraphViewLambda::generateCurves(const graph_t typeGraph, const QList<variab
     }
 }
 
-void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t> &variableList)
+void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t> &showList)
 {
+    updateCurves(mCurrentTypeGraph, showList, showAllChains, showChainList);
+    return;
 
-    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, variableList);
+
+    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showList);
 
     if (mCurrentTypeGraph == ePostDistrib)  {
         mGraph->setTipYLab("");
@@ -227,13 +233,6 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
      * ------------------------------------------------
      */
     else if (mCurrentTypeGraph == eTrace)  {
-        /*for (unsigned i = 0; i < mShowChainList.size(); ++i) {
-            mGraph->setCurveVisible("Trace " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Q1 " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Q2 " + QString::number(i), mShowChainList.at(i));
-            mGraph->setCurveVisible("Q3 " + QString::number(i), mShowChainList.at(i));
-        }*/
-
         QStringList curvesToShow;
         for (int j = 0; j < mShowChainList.size(); ++j) {
             if (mShowChainList.at(j)) {
@@ -261,9 +260,6 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
      * ------------------------------------------------ */
     else if (mCurrentTypeGraph == eAccept) {
 
-        /*mGraph->setCurveVisible("Accept Target", true);
-        for (int i=0; i<mShowChainList.size(); ++i)
-            mGraph->setCurveVisible("Accept " + QString::number(i), mShowChainList.at(i));*/
         QStringList curvesToShow;
         curvesToShow << "Accept Target";
         for (int j = 0; j < mShowChainList.size(); ++j) {
@@ -294,11 +290,7 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
        *  - Correl Limit Upper i
        * ------------------------------------------------   */
       else if (mCurrentTypeGraph == eCorrel) {
-          /*for (int i=0; i<mShowChainList.size(); ++i) {
-              mGraph->setCurveVisible("Correl " + QString::number(i), mShowChainList.at(i));
-              mGraph->setCurveVisible("Correl Limit Lower " + QString::number(i), mShowChainList.at(i));
-              mGraph->setCurveVisible("Correl Limit Upper " + QString::number(i), mShowChainList.at(i));
-          }*/
+
           QStringList curvesToShow;
           for (int j = 0; j < mShowChainList.size(); ++j) {
               if (mShowChainList.at(j)) {
@@ -323,4 +315,125 @@ void GraphViewLambda::updateCurvesToShow(bool showAllChains, const QList<bool>& 
       }
 
       repaint();
+}
+
+
+void GraphViewLambda::generatePosterior()
+{
+    auto model = getModel_ptr();
+
+    QColor color = Qt::blue;
+    QPen defaultPen;
+    defaultPen.setWidthF(1);
+    defaultPen.setStyle(Qt::SolidLine);
+
+    mGraph->mLegendX = "Log10";
+    mGraph->setFormatFunctX(nullptr);
+    mGraph->setFormatFunctY(nullptr);
+    mGraph->setBackgroundColor(QColor(230, 230, 230));
+    mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eBothOverflow);
+
+    mGraph->autoAdjustYScale(true);
+
+    mGraph->setXAxisMode(GraphView::AxisMode::eAllTicks);
+    mGraph->setYAxisMode(GraphView::AxisMode::eHidden);
+
+    mTitle = tr("Smoothing");
+
+    // ------------------------------------
+    //  Post distrib All Chains
+    // ------------------------------------
+    if (mShowAllChains) {
+        const GraphCurve &curvePostDistrib = densityCurve(model->mLambdaSpline.mFormatedKDE,
+                                                          "Post Distrib All Chains",
+                                                          color);
+
+        mGraph->add_curve(curvePostDistrib);
+
+        // ------------------------------------
+        //  HPD All Chains
+        // ------------------------------------
+        const GraphCurve &curveHPD = HPDCurve(model->mLambdaSpline.mFormatedHPD, "HPD All Chains", color);
+        mGraph->add_curve(curveHPD);
+
+        if (mShowList.contains(eCredibility)) {
+            const GraphCurve &curveCred = topLineSection(model->mLambdaSpline.mFormatedCredibility,
+                                                         "Credibility All Chains",
+                                                         color);
+            mGraph->add_curve(curveCred);
+        }
+    }
+    // ------------------------------------
+    //  Post Distrib Chain i
+    // ------------------------------------
+
+    for (size_t i = 0; i < mChains.size(); ++i)  {
+        if (mShowChainList[i]) {
+            const GraphCurve &curvePostDistribChain = densityCurve(model->mLambdaSpline.KDEForChain(i),
+                                                                   "Post Distrib Chain " + QString::number(i),
+                                                                   Painting::chainColors.at(i),
+                                                                   Qt::SolidLine,
+                                                                   Qt::NoBrush);
+            mGraph->add_curve(curvePostDistribChain);
+        }
+    }
+
+    mGraph->autoAdjustYScale(true);
+
+}
+
+
+void GraphViewLambda::generateHistory()
+{
+    graph_trace();
+    auto model = getModel_ptr();
+
+    mGraph->setTipYLab("Smoothing");
+    mGraph->setFormatFunctX(nullptr);
+    mTitle = tr("Smoothing Trace");
+    if (model->mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe)
+        generateTraceCurves(mChains, &(model->mLambdaSpline));
+    else
+        mGraph->resetNothingMessage();
+}
+
+void GraphViewLambda::generateAcceptation()
+{
+    graph_acceptation();
+    auto model = getModel_ptr();
+
+    mGraph->setTipYLab("Rate");
+    mGraph->setFormatFunctX(nullptr);
+    mTitle = tr("Smoothing Acceptation");
+    if (model->mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe)
+        generateAcceptCurves(mChains, &(model->mLambdaSpline));
+    else
+        mGraph->resetNothingMessage();
+
+
+}
+
+void GraphViewLambda::generateCorrelation()
+{
+    graph_correlation();
+    auto model = getModel_ptr();
+
+    mGraph->mLegendX = "";
+    mGraph->setFormatFunctX(nullptr);
+    mTitle = tr("Smoothing Autocorrelation");
+    if (model->mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe) {
+        generateCorrelCurves(mChains, &(model->mLambdaSpline));
+
+    }
+    else
+        mGraph->resetNothingMessage();
+
+}
+
+void GraphViewLambda::updateStatHTML()
+{
+    auto model = getModel_ptr();
+    const QString resultsHTML = ModelUtilities::lambdaResultsHTML(model);
+    setNumericalResults(resultsHTML);
+
 }

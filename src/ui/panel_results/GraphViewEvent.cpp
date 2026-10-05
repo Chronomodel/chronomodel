@@ -67,13 +67,16 @@ void GraphViewEvent::setEvent(std::shared_ptr<Event> event)
 
 void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable_t> &showList)
 {
+    updateCurves(typeGraph, showList, mShowAllChains, mShowChainList);
+    return;
+
     GraphViewResults::generateCurves(typeGraph, showList);
 
     /* ------------------------------------------------
      *  Reset the graph object settings
      * ------------------------------------------------
      */
-    graph_reset();
+    GraphViewResults::graph_reset();
 
     QPen defaultPen;
     defaultPen.setWidthF(1);
@@ -129,7 +132,6 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
     // ------------------------------------------------
     if (typeGraph == ePostDistrib) {
 
-        //mGraph->mLegendX = DateUtils::getAppSettingsFormatStr();
         mGraph->setBackgroundColor(QColor(230, 230, 230));
 
         /* ------------------------------------------------
@@ -371,10 +373,15 @@ void GraphViewEvent::generateCurves(const graph_t typeGraph,const QList<variable
 
 }
 
-void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showVariableList)
+void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& showChainList, const QList<variable_t>& showList)
 {
     Q_ASSERT(mEvent);
-    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showVariableList);
+
+    updateCurves(mCurrentTypeGraph, showList, showAllChains, showChainList);
+    return;
+
+
+    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showList);
     QStringList curvesToShow;
 
     /* --------------------First tab : Posterior distrib----------------------------
@@ -540,4 +547,349 @@ void GraphViewEvent::updateCurvesToShow(bool showAllChains, const QList<bool>& s
 
     mGraph->setCurveVisible(curvesToShow, true);
     repaint();
+}
+
+
+void GraphViewEvent::generatePosterior()
+{
+
+    QPen defaultPen;
+    defaultPen.setWidthF(1);
+    defaultPen.setStyle(Qt::SolidLine);
+    bool isFixedBound = false;
+    Bound* bound = nullptr;
+    if (mEvent->type() == Event::eBound) {
+        bound = dynamic_cast<Bound*>(mEvent.get());
+        isFixedBound = (bound != nullptr);
+    }
+
+    const QColor color = mEvent->mColor;
+
+    mGraph->setBackgroundColor(QColor(230, 230, 230));
+
+    if (mShowList.contains(eThetaEvent)) {
+        GraphViewResults::graph_density();
+
+        mTitle = (isFixedBound ? tr("Bound") : tr("Event")) + ": " + mEvent->getQStringName();
+
+        if (isFixedBound) {
+            GraphCurve curveLineBound;
+            curveLineBound.mName = "Post Distrib All Chains";
+            curveLineBound.mPen.setColor(color);
+            curveLineBound.mBrush.setStyle(Qt::NoBrush);
+            curveLineBound.mType = GraphCurve::eHorizontalSections;
+            qreal tLower = bound->formatedFixedValue();
+            qreal tUpper = tLower;
+            curveLineBound.mSections.push_back(qMakePair(tLower,tUpper));
+            mGraph->add_curve(curveLineBound);
+
+            // generate theorical curves
+            for (size_t i = 0; i < mChains.size(); ++i) {
+                curveLineBound.mName = "Post Distrib Chain " + QString::number(i);
+                curveLineBound.mPen.setColor(Painting::chainColors.at(i));
+                curveLineBound.mBrush.setStyle(Qt::NoBrush);
+                mGraph->add_curve(curveLineBound);
+            }
+
+        } else {
+            if (mShowAllChains) {
+                const GraphCurve &curvePostDistrib = densityCurve(mEvent->mTheta.mFormatedKDE,
+                                                              "Post Distrib All Chains",
+                                                              color);
+                mGraph->add_curve(curvePostDistrib);
+
+                // HPD All Chains
+                const GraphCurve &curveHPD = HPDCurve(mEvent->mTheta.mFormatedHPD,
+                                                      "HPD All Chains",
+                                                      color, true);
+                mGraph->add_curve(curveHPD);
+            }
+            // ------------------------------------
+            //  Post Distrib Chain i
+            // ------------------------------------
+            //
+            if (!mEvent->mTheta.mChainsKDE.empty())
+                for (size_t i = 0; i < mEvent->mTheta.mChainsKDE.size(); ++i) {
+                    if (mShowChainList[i]) {
+                        const GraphCurve &curvePostDistribChain = densityCurve(mEvent->mTheta.mChainsKDE[i],
+                                                                               "Post Distrib Chain " + QString::number(i),
+                                                                               Painting::chainColors.at(i),
+                                                                               Qt::SolidLine,
+                                                                               Qt::NoBrush);
+                        mGraph->add_curve(curvePostDistribChain);
+                    }
+                }
+
+            if (mShowAllChains &&
+                mShowList.contains(eCredibility)) {
+                const GraphCurve &curveCred = topLineSection(mEvent->mTheta.mFormatedCredibility,
+                                                             "Credibility All Chains",
+                                                             color);
+                mGraph->add_curve(curveCred);
+            }
+        }
+
+    }
+    else if (mShowList.contains(eS02) &&
+             mEvent->mS02Theta.mSamplerProposal != SamplerProposal::eFixe) {
+        graph_density();
+
+        mGraph->removeAllCurves(); // delete default zones made by graph_density()
+
+        mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
+        mGraph->mLegendX = "";
+        mGraph->setBackgroundColor(QColor(230, 230, 230));
+
+        mTitle = tr("Event Shrinkage:") + mEvent->getQStringName();
+
+        if (mShowAllChains) {
+            GraphCurve curve = densityCurve(mEvent->mS02Theta.fullHisto(), "Post Distrib All Chains", color);
+            curve.mVisible = true;
+            mGraph->add_curve(curve);
+
+            // HPD All Chains
+            const GraphCurve &curveHPD = HPDCurve(mEvent->mS02Theta.mFormatedHPD,
+                                                  "HPD All Chains",
+                                                  color,
+                                                  true);
+            mGraph->add_curve(curveHPD);
+        }
+
+
+        if (!mEvent->mS02Theta.mChainsKDE.empty()) {
+            for (size_t j = 0; j<mChains.size(); ++j) {
+                if (mShowChainList[j]){
+                    const GraphCurve &curveChain = densityCurve(mEvent->mS02Theta.KDEForChain(j), "Post Distrib Chain " + QString::number(j), Painting::chainColors.at(j));
+                    mGraph->add_curve(curveChain);
+                }
+            }
+        }
+
+
+        if (mShowAllChains &&
+            mShowList.contains(eCredibility)) {
+            const GraphCurve &curveCred = topLineSection(mEvent->mS02Theta.mFormatedCredibility,
+                                                         "Credibility All Chains",
+                                                         color);
+            mGraph->add_curve(curveCred);
+        }
+    }
+
+    else if (mShowList.contains(eVg)) {
+        GraphViewResults::graph_density();
+        mGraph->removeAllCurves(); // delete default zones made by graph_density()
+
+        mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
+        mGraph->mLegendX = "";
+        mGraph->setBackgroundColor(QColor(230, 230, 230));
+
+        mTitle = tr("Std gi:") + mEvent->getQStringName();
+
+        if (mShowAllChains) {
+            GraphCurve curve = densityCurve(mEvent->mVg.fullHisto(), "Post Distrib All Chains", color);
+            curve.mVisible = true;
+            mGraph->add_curve(curve);
+
+            // HPD All Chains
+            const GraphCurve &curveHPD = HPDCurve(mEvent->mVg.mFormatedHPD, "HPD All Chains", color);
+            mGraph->add_curve(curveHPD);
+        }
+
+        if (!mEvent->mVg.mChainsKDE.empty()) {
+            for (size_t i = 0; i < mChains.size(); ++i) {
+                if (mShowChainList[i]) {
+                    const GraphCurve &curveChain = densityCurve(mEvent->mVg.KDEForChain(i), "Post Distrib Chain " + QString::number(i), Painting::chainColors[i]);
+                    mGraph->add_curve(curveChain);
+                }
+            }
+        }
+
+
+        if (mShowAllChains &&
+            mShowList.contains(eCredibility)) {
+            const GraphCurve &curveCred = topLineSection(mEvent->mVg.mFormatedCredibility,
+                                                         "Credibility All Chains",
+                                                         color);
+            mGraph->add_curve(curveCred);
+        }
+    }
+    // ------------------------------------------------
+    //  Events don't have std dev BUT we can visualize
+    //  an overlay of all dates std dev instead.
+    //  Possible curves, FOR ALL DATES :
+    //  - Post Distrib i All Chains
+    //  - Post Distrib i Chain j
+    // ------------------------------------------------
+
+    else if (mShowList.contains(eSigma)) {
+        graph_density();
+        mGraph->removeAllCurves(); // delete default zones made by graph_density()
+        mGraph->setOverArrow(GraphView::OverflowDataArrowMode::eNone);
+        mGraph->mLegendX = "";
+
+        mGraph->setBackgroundColor(QColor(230, 230, 230));
+        mTitle = (isFixedBound ? tr("Bound") : tr("Std ti Compilation")) + ": " + mEvent->getQStringName();
+
+        int i = 0;
+        for (auto&& date : mEvent->mDates) {
+            if (mShowAllChains) {
+                GraphCurve curve = densityCurve(date.mSigmaTi.fullHisto(),
+                                                "Post Distrib Date " + QString::number(i) + " All Chains",
+                                                color);
+
+                mGraph->add_curve(curve);
+            }
+
+            if (!date.mSigmaTi.mChainsKDE.empty())
+                for (size_t j=0; j<mChains.size(); ++j) {
+                    if (mShowChainList[i]) {
+                        const GraphCurve &curveChain = densityCurve(date.mSigmaTi.KDEForChain(j),
+                                                                    "Post Distrib Date " + QString::number(i) + " Chain " + QString::number(j),
+                                                                    Painting::chainColors.at(j));
+
+                        mGraph->add_curve(curveChain);
+                    }
+                }
+
+            ++i;
+        }
+    }
+    else {
+        mTitle = (isFixedBound ? tr("Bound") : tr("Event")) + ": " + mEvent->getQStringName();
+    }
+}
+
+/* ------------------------------------------------
+     *  Second tab : History plots.
+     *  Possible Curves (could be for ti or sigma):
+     *  - Trace i
+     *  - Q1 i
+     *  - Q2 i
+     *  - Q3 i
+     * ------------------------------------------------
+     */
+void GraphViewEvent::generateHistory()
+{
+    graph_trace();
+
+    if (mShowList.contains(eThetaEvent) && mEvent->mTheta.mSamplerProposal != SamplerProposal::eFixe &&
+        mEvent->type() != Event::eBound) {
+        mTitle = tr("Event: %1").arg(mEvent->getQStringName());
+        generateTraceCurves(mChains, &(mEvent->mTheta));
+
+    }
+    else if (mShowList.contains(eS02) && mEvent->mS02Theta.mSamplerProposal != SamplerProposal::eFixe) {
+        mTitle = tr("Log10(Event Shrinkage): %1").arg(mEvent->getQStringName());
+        generateLogTraceCurves(mChains, &(mEvent->mS02Theta));
+
+    }
+    else if (mShowList.contains(eVg) && mEvent->mVg.mSamplerProposal != SamplerProposal::eFixe) {
+        mTitle = tr("Log10(Std gi): %1").arg(mEvent->getQStringName());
+        generateLogTraceCurves(mChains, &(mEvent->mVg));
+    }
+    else {
+        mTitle = (mEvent->type() == Event::eBound ? tr("Bound") : tr("Event")) + ": " + mEvent->getQStringName();
+    }
+
+}
+
+/* ------------------------------------------------
+     *  Third tab : Acceptance rate.
+     *  Possible curves (could be for ti or sigma):
+     *  - Accept i
+     *  - Accept Target
+     * ------------------------------------------------
+     */
+void GraphViewEvent::generateAcceptation()
+{
+    graph_acceptation();
+
+    if (mShowList.contains(eThetaEvent) ) {
+        if (mEvent->mTheta.mSamplerProposal == SamplerProposal::eRWAdaptGauss &&
+            mEvent->type() != Event::eBound) {
+            mTitle = tr("Event: %1").arg(mEvent->getQStringName());
+            generateAcceptCurves(mChains, &(mEvent->mTheta));
+
+        } else {
+            mTitle = (mEvent->type() == Event::eBound ? tr("Bound") : tr("Event")) + ": " + mEvent->getQStringName();
+
+            mGraph->setNothingMessage(tr("100 %"));
+        }
+
+    }
+    else if (mShowList.contains(eS02) &&
+               mEvent->mS02Theta.mSamplerProposal != SamplerProposal::eFixe) {
+        mTitle = tr("Event Shrinkage: %1").arg(mEvent->getQStringName());
+        generateAcceptCurves(mChains, &(mEvent->mS02Theta));
+
+    }
+    else if (mShowList.contains(eVg) &&
+               mEvent->mVg.mSamplerProposal != SamplerProposal::eFixe) {
+        mTitle = tr("Std gi: %1").arg(mEvent->getQStringName());
+        generateAcceptCurves(mChains, &(mEvent->mVg));
+    }
+    else if (mShowList.contains(eSigma) &&
+        mEvent->mVg.mSamplerProposal != SamplerProposal::eFixe) {
+        mTitle = tr("Std gi: %1").arg(mEvent->getQStringName());
+        //mGraph->setNothingMessage(tr("100 %"));
+    }
+    else {
+        mTitle = (mEvent->type() == Event::eBound ? tr("Bound") : tr("Event")) + ": " + mEvent->getQStringName();
+    }
+}
+
+/* ------------------------------------------------
+     *  Fourth tab : Autocorrelation
+     *  Possible curves (could be for theta or sigma):
+     *  - Correl i
+     *  - Correl Limit Lower i
+     *  - Correl Limit Upper i
+     * ------------------------------------------------
+     */
+void GraphViewEvent::generateCorrelation()
+{
+    graph_correlation();
+
+    if (mShowList.contains(eThetaEvent) &&
+        mEvent->mTheta.mSamplerProposal!= SamplerProposal::eFixe &&
+        mEvent->type() != Event::eBound ) {
+
+        mTitle = tr("Event: %1").arg(mEvent->getQStringName());
+        generateCorrelCurves(mChains, &(mEvent->mTheta));
+    }
+    else if (mShowList.contains(eS02) &&
+             mEvent->mS02Theta.mSamplerProposal!= SamplerProposal::eFixe) {
+        mTitle = tr("Event Shrinkage: %1").arg(mEvent->getQStringName());
+        generateCorrelCurves(mChains, &(mEvent->mS02Theta));
+
+    }
+    else if (mShowList.contains(eVg) &&
+             mEvent->mVg.mSamplerProposal!= SamplerProposal::eFixe) {
+        mTitle = tr("Std gi: %1").arg(mEvent->getQStringName());
+        generateCorrelCurves(mChains, &(mEvent->mVg));
+
+    } else {
+        mTitle = (mEvent->type() == Event::eBound ? tr("Bound") : tr("Event")) + ": " + mEvent->getQStringName();
+    }
+
+}
+
+
+void GraphViewEvent::updateStatHTML()
+{
+
+    QString resultsHTML = tr("Nothing to Display");
+    if (mShowList.contains(eThetaEvent)) {
+        resultsHTML = ModelUtilities::eventResultsHTML(mEvent, false);
+    }
+    else if (mShowList.contains(eS02)) {
+        resultsHTML = ModelUtilities::EventS02ResultsHTML(mEvent);
+
+    }
+    else if (mShowList.contains(eVg)) {
+        resultsHTML = ModelUtilities::VgResultsHTML(mEvent);
+
+    }
+    setNumericalResults(resultsHTML);
+
 }

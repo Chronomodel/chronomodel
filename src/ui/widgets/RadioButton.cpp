@@ -58,10 +58,16 @@ RadioButton::~RadioButton()
 
 }
 
-void RadioButton::paintEvent(QPaintEvent* e)
+/*void RadioButton::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);
 
     QPainter p(this);
     drawRadio(p, rect(), text(), isChecked());
+}*/
+void RadioButton::paintEvent(QPaintEvent* e)
+{
+    Q_UNUSED(e);
+    QPainter p(this);
+    drawRadio(p, rect(), text(), isChecked(), mHasDot ? mDotColor : QColor());
 }

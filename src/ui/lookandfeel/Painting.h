@@ -77,9 +77,14 @@ double pointSize(double size);
 void drawButton(QPainter& painter, const QRectF& r, bool hover, bool isEnabled = true, const QString& text = QString(), const QIcon& icon = QIcon());
 void drawButton2(QPainter& painter, const QRectF& r, bool hover, bool isEnabled = true, const QString& text = QString(), const QIcon& icon = QIcon(), bool isFlat = false);
 void drawBox(QPainter& painter, const QRectF& r, const QString& text);
-void drawRadio(QPainter& painter, const QRectF& r, const QString& text, bool toggled);
-void drawCheckbox(QPainter &painter, const QRectF &r, const QString& text, Qt::CheckState state);
+//void drawRadio(QPainter& painter, const QRectF& r, const QString& text, bool toggled);
+//void drawCheckbox(QPainter &painter, const QRectF &r, const QString& text, Qt::CheckState state);
 void drawCheckBoxBox(QPainter& painter, const QRectF& r, Qt::CheckState state, const QColor& back, const QColor& border);
+
+void drawRadio(QPainter& painter, const QRectF& rect, const QString& text, bool toggled,
+               const QColor& dotColor = QColor());
+void drawCheckbox(QPainter& painter, const QRectF& r, const QString& text, Qt::CheckState state,
+                  const QColor& dotColor = QColor());
 
 struct ColorStop {
     double pos;

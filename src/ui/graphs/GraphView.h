@@ -470,5 +470,6 @@ public:
 
     inline bool isTitle()   const { return !mTitle.text().isEmpty(); }
     inline bool withTitle() const { return !mSubTitle.text().isEmpty(); }
+
 };
 

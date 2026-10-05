@@ -196,12 +196,15 @@ void Ruler::setCurrent(const double min, const double max)
         double curMinAtMaxScroll = mMax - (mMax - mMin) * (pageStep / range);
         double value = scrollRange * (mCurrentMin - mMin) / (curMinAtMaxScroll - mMin);
 
-        blockSignals(true);
-        mScrollBar->setPageStep(int(pageStep));
-        mScrollBar->setRange(0, int(scrollRange));
 
-        mScrollBar->setValue(int(value));
-        blockSignals(false);
+        {
+            const QSignalBlocker blocker(mScrollBar);
+            mScrollBar->setPageStep(int(pageStep));
+            mScrollBar->setRange(0, int(scrollRange));
+
+            mScrollBar->setValue(int(value));
+        }
+
     }
 
     updateLayout();
@@ -218,17 +221,17 @@ void Ruler::currentChanged(const double &min, const double &max)
 }
 double Ruler::getZoom()
 {
-    return (100.-mZoomProp);
+    return (100.0 - mZoomProp);
 }
 
 
 void Ruler::setZoom(double &prop)
 {
-    double minProp = 1. / (mMax - mMin);   //10. / (mMax - mMin);
+    double minProp = 1.0 / (mMax - mMin);   //10. / (mMax - mMin);
 
     mZoomProp = std::max(minProp, prop /100.);
 
-    if (mZoomProp != 1.) {
+    if (mZoomProp != 1.0) {
         // Remember old scroll position
         double posProp = 0.;
         double rangeBefore = double (mScrollBar->maximum());
@@ -247,9 +250,7 @@ void Ruler::setZoom(double &prop)
         if (rangeAfter > 0.)
             pos = floor(posProp * rangeAfter);
         mScrollBar->setValue(int(pos));
-       /* mScrollBar->setTracking(false);
-        mScrollBar->setSliderPosition(pos);
-        mScrollBar->setTracking(true);*/
+
 
     } else
         mScrollBar->setRange(0, 0);

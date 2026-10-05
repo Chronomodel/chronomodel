@@ -48,6 +48,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QLineEdit>
 #include <qapplication.h>
 #include <QStyle>
+#include <QButtonGroup>
 
 class QStackedWidget;
 class QScrollArea;
@@ -153,8 +154,8 @@ protected:
     // ------------------------------------------------
     GraphViewResults::variable_t getMainVariable() const;
     void setTimeRange();
-    void setTimeSlider(const int value);
-    void setTimeEdit(const double value);
+    void setTimeSlider(const double percent);
+    void setTimeEdit(const double percent);
     void setTimeScale();
 
     // ------------------------------------------------
@@ -174,6 +175,8 @@ protected:
     // ------------------------------------------------
     void updateZoomT();
     void updateGraphsZoomT();
+
+    void setGraphsHeightForProp(double prop);
     void updateGraphsHeight();
 
     // ------------------------------------------------
@@ -201,8 +204,6 @@ private slots:
     // ------------------------------------------------
     //  Graphs / Curves / Controls
     // ------------------------------------------------
-
-    void applyShowList();
 
     void createGraphs();
 
@@ -235,7 +236,7 @@ private slots:
     void applyGraphTypeTab();
     void applyGraphListTab();
 
-    void applyCurrentVariable();
+    void applyUIConfiguration();
 
 
     // Span options
@@ -249,6 +250,8 @@ private slots:
     void applyXRange();
     void applyYRange();
     void applyZRange();
+
+    Scale findOptimalVerticalMinMax(int id = 0);
 
     void findOptimalX();
     void findOptimalY();
@@ -351,6 +354,10 @@ private:
     CheckBox* mDataCalibCheck;
     CheckBox* mWiggleCheck;
     CheckBox* mWiggleCalibCheck;
+
+    QButtonGroup* mRadioGroupDataWiggle;
+    RadioButton* mDataRadio;
+    RadioButton* mWiggleRadio;
 
     RadioButton* mDataSigmaRadio;
 
@@ -561,6 +568,15 @@ private:
     GraphViewResults::graph_t mCurrentTypeGraph;
 
     QList<GraphViewResults::variable_t> mShowList;
+    bool mShowAllChains;
+
+    // --------------------------------------------------------
+    //  mShowChainList is a list of booleans describing which chains are visible or not.
+    //  For Post distribs, multiple chains can be visible at once (checkboxes)
+    //  In other cases, only one chain can be displayed (radios)
+    // --------------------------------------------------------
+    QList<bool> mShowChainList;
+
     GraphViewResults::variable_t mMainVariable;
 
     bool mHasPhases;

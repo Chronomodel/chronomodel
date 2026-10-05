@@ -96,7 +96,7 @@ protected:
     void sampler_339_SingleSite_bloc_2(std::vector<std::shared_ptr<Event>> &events);
 
     void sampler_339_3v(std::vector<std::shared_ptr<Event> > &events);
-    void sampler_339_Couple(std::vector<std::shared_ptr<Event> > &events);
+    //void sampler_339_Couple(std::vector<std::shared_ptr<Event> > &events);
 
 
     void sampler_339_SingleSite_SliceSampling(std::vector<std::shared_ptr<Event>> &events); // trop lent

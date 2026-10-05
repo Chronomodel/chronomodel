@@ -1497,12 +1497,18 @@ void ModelCurve::exportHpdGComposanteToReferenceCurves(const PosteriorMeanGCompo
             curveHPDSup_Data.insert(t, val_sup);
         }
 
-        auto hbwd = 0.005 * map.column();
+        /*auto hbwd = 0.005 * map.column();
         curveHPDMid_Data = gaussian_filter_simple(curveHPDMid_Data, hbwd);
         //curveHPDInf_Data = gaussian_filter_simple(curveHPDInf_Data, hbwd);
-        curveHPDSup_Data = gaussian_filter_simple(curveHPDSup_Data, hbwd);
+        curveHPDSup_Data = gaussian_filter_simple(curveHPDSup_Data, hbwd);*/
+        // Largeur de la demi-fenêtre : nb de pas de la map × pas en temps
+        constexpr int nbStep = 5;                       // à ajuster (2 à 6 en général)
+        const type_data h = nbStep * step_map_t;
 
-        const double z_score = zScore(1.0 - mThreshold/100.0); // Pour 95% z=1.96
+        curveHPDMid_Data = moving_average_filter(curveHPDMid_Data, h);
+        curveHPDSup_Data = moving_average_filter(curveHPDSup_Data, h);
+
+        const double z_score = zCritical(mThreshold); // Pour 95% z=1.96
         // Sauvegarde par valeur de step de 1, tmin et tmax sont en BC/AD
         double xMin = mSettings.mTmin;
         double xMax = mSettings.mTmax;
@@ -1510,7 +1516,7 @@ void ModelCurve::exportHpdGComposanteToReferenceCurves(const PosteriorMeanGCompo
         int nbData = (xMax - xMin)/ step;
         for (int i = nbData; i >= 0; --i) {
             const auto t = (type_data)(i)*step + xMin;
-            //const auto t = DateUtils::convertFromAppSettingsFormat(x);
+
             list.clear();
 
             list << csvLocale.toString(t);
@@ -1609,7 +1615,7 @@ void ModelCurve::exportHpdGPComposanteToReferenceCurves(const PosteriorMeanGComp
         //curveHPDInf_Data = gaussian_filter_simple(curveHPDInf_Data, hbwd);
         curveHPDSup_Data = gaussian_filter_simple(curveHPDSup_Data, hbwd);
 
-        const double z_score = zScore(1.0 - mThreshold/100.0); // Pour 95% z=1.96
+        const double z_score = zCritical(mThreshold); // Pour 95% z=1.96
         // Sauvegarde par valeur de step de 1, tmin et tmax sont en BC/AD
         double xMin = mSettings.mTmin;
         double xMax = mSettings.mTmax;

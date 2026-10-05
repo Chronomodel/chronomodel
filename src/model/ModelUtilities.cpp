@@ -1112,7 +1112,7 @@ QString ModelUtilities::lambdaResultsHTML(const std::shared_ptr<ModelCurve> mode
 
     } else if (model->mLambdaSpline.mSamplerProposal == SamplerProposal::eFixe && model->mCurveSettings.mLambdaSplineType == CurveSettings::eInterpolation) {
         text = line(textBold(textGreen(QObject::tr("Smoothing"))));
-        text += line(textGreen(QObject::tr("Interpolation Fixed value : %1").arg(QString::number(0))));
+        text += line(textGreen(QObject::tr("Interpolation Fixed value: %1").arg(QString::number(0))));
 
     } else {
         text = line(textBold(textGreen(QObject::tr("Stat. on the log10 of Smoothing"))));
@@ -1120,6 +1120,7 @@ QString ModelUtilities::lambdaResultsHTML(const std::shared_ptr<ModelCurve> mode
     }
     return text;
 }
+
 QString ModelUtilities::S02VgResultsHTML(const std::shared_ptr<ModelCurve> model)
 {
     QString text;

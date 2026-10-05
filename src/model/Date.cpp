@@ -472,7 +472,13 @@ void Date::fromJson(const QJsonObject& json)
     mWiggle.setName("Wiggle of Date : "+ mName);
     mWiggle.mSupport = Support::eR;
     mWiggle.mFormat = DateUtils::eUnknown;
+    if (json.value(STATE_DATE_DELTA_TYPE).toInt() == eDeltaNone)
+        mWiggle.mSamplerProposal = SamplerProposal::eNone;
 
+    else if (json.value(STATE_DATE_DELTA_TYPE).toInt() == eDeltaFixed)
+        mWiggle.mSamplerProposal = SamplerProposal::eFixe;
+    else
+        mWiggle.mSamplerProposal = SamplerProposal::ePrior;
 
     std::map<std::string, CalibrationCurve>::iterator it = project->mCalibCurves.find (mUUID);
     if ( it != project->mCalibCurves.end()) {

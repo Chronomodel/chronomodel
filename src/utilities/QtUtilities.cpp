@@ -1319,7 +1319,7 @@ std::pair<std::vector<double>, std::vector<size_t>> downsampleLTTBWithIndices(
 
     return {values, indices};
 }
-
+/*
 void densityMap_2_thresholdIndices_optimized(const CurveMap& densityMap,
                                         double threshold,
                                         std::vector<int>& min_indices,
@@ -1400,5 +1400,58 @@ void densityMap_2_thresholdIndices_optimized(const CurveMap& densityMap,
             }
         }
         //qDebug() << " colonne = " <<c << " min_indices[c]= " << min_indices[c] << " max_indices= " << max_indices[c];
+    }
+}*/
+void densityMap_2_thresholdIndices_optimized(const CurveMap& densityMap,
+                                             double threshold,
+                                             std::vector<int>& min_indices,
+                                             std::vector<int>& max_indices)
+{
+    const size_t numRows = densityMap.row();
+    const size_t numCols = densityMap.column();
+
+    min_indices.assign(numCols, -1);
+    max_indices.assign(numCols, -1);
+
+    std::vector<double> cum(numRows + 1);
+
+    for (size_t c = 0; c < numCols; ++c) {
+
+        cum[0] = 0.0;
+        for (size_t r = 0; r < numRows; ++r)
+            cum[r + 1] = cum[r] + densityMap(c, r);
+
+        const double total = cum[numRows];
+        if (total <= 0.0) continue;
+
+        const double target = threshold / 100.0 * total;
+
+        // Plus court intervalle [bestA, bestB] de masse >= target
+        size_t bestA = 0, bestB = numRows - 1;
+        size_t bestLen = numRows + 1;
+        double bestMass = 0.0;
+
+        size_t a = 0;
+        for (size_t b = 0; b < numRows; ++b) {
+            // a minimal tel que masse(a..b) >= target (a ne fait que croître avec b)
+            while (a < b && cum[b + 1] - cum[a + 1] >= target)
+                ++a;
+
+            const double mass = cum[b + 1] - cum[a];
+            if (mass >= target) {
+                const size_t len = b - a + 1;
+                if (len < bestLen || (len == bestLen && mass > bestMass)) {
+                    bestLen = len; bestMass = mass;
+                    bestA = a; bestB = b;
+                }
+            }
+        }
+
+        // Ne pas tronquer les zéros de bord : on resserre sur les bins non nuls
+        while (bestA < bestB && densityMap(c, bestA) <= 0.0) ++bestA;
+        while (bestB > bestA && densityMap(c, bestB) <= 0.0) --bestB;
+
+        min_indices[c] = static_cast<int>(bestA);
+        max_indices[c] = static_cast<int>(bestB);
     }
 }
