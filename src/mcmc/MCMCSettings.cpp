@@ -152,13 +152,13 @@ QJsonObject MCMCSettings::toJson() const
     mcmc[STATE_MCMC_NUM_BURN_ITER]       = QJsonValue::fromVariant(mIterPerBurn);
     mcmc[STATE_MCMC_MAX_ADAPT_BATCHES]   = QJsonValue::fromVariant(mMaxBatches);
     mcmc[STATE_MCMC_ITER_PER_BATCH]      = QJsonValue::fromVariant(mIterPerBatch);
-    mcmc[STATE_MCMC_THINNING_INTERVAL]  = QJsonValue::fromVariant(mThinningInterval);
+    mcmc[STATE_MCMC_THINNING_INTERVAL]   = QJsonValue::fromVariant(mThinningInterval);
     mcmc[STATE_MCMC_MIXING]              = QJsonValue::fromVariant(mMixingLevel);
 
     // ----- Paramètres d’annealing -----
     mcmc[STATE_MCMC_ANNEAL_TEMP]        = QJsonValue::fromVariant(mAnnealTemp);
-    mcmc[STATE_MCMC_ANNEAL_RECURRENCE] = QJsonValue::fromVariant(mAnnealRecurrence);
-    mcmc[STATE_MCMC_ANNEAL_DWELL]      = QJsonValue::fromVariant(mAnnealDwell);
+    mcmc[STATE_MCMC_ANNEAL_RECURRENCE]  = QJsonValue::fromVariant(mAnnealRecurrence);
+    mcmc[STATE_MCMC_ANNEAL_DWELL]       = QJsonValue::fromVariant(mAnnealDwell);
 
     // ----- seeds -----
     QJsonArray seeds;

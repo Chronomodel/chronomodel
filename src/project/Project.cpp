@@ -149,6 +149,12 @@ QJsonObject Project::emptyState()
 
     state[STATE_MCMC] = mcmc;
 
+    // ----- Enums → int (ou QVariant) -----
+    state[STATE_EVENTMODEL] = QJsonValue( static_cast<int>(EventModelType::EDM2) );
+    state[STATE_FORMATDATE] = QJsonValue( static_cast<int>(DateUtils::FormatDate::eBCAD) );
+
+    state[STATE_FORMATDATE_CUSTOM] = QJsonValue::fromVariant(QString("Years"));
+
     state[STATE_EVENTS] = QJsonArray();
     state[STATE_PHASES] = QJsonArray();
     state[STATE_EVENTS_CONSTRAINTS] = QJsonArray();
@@ -218,18 +224,6 @@ bool Project::pushProjectState(const QJsonObject &state, const Project::ReasonId
 
 
 }
-
-/*void Project::sendUpdateState(const QJsonObject &state, const ReasonId id, bool notify)
-{
-    qDebug() << "[Project::sendUpdateState QGuiApplication::postEvent] " << Project::reasonToString(id) << notify;
-
-    // The event must be allocated on the heap since the post event queue will take ownership of the event
-    // and delete it once it has been posted.
-    // It is not safe to access the event after it has been posted.
-
-    QGuiApplication::postEvent(this, new StateEvent(state, id, notify), Qt::HighEventPriority);//Qt::NormalEventPriority);
-
-}*/
 
 void Project::sendUpdateState(const QJsonObject &state, const ReasonId id, bool notify)
 {
@@ -545,6 +539,7 @@ void Project::fillStructureReasons()
                            // Curve & MCMC
                            << ReasonId::CurveSettingsUpdated
                            << ReasonId::MCMCSettingsUpdated
+                           << ReasonId::EventModelUpdated
                            // Curve parameters
                            << ReasonId::EventXIncUpdated
                            << ReasonId::EventSXIncUpdated
@@ -573,7 +568,8 @@ void Project::fillDesignReasons()
                         << ReasonId::PhaseNameUpdated
                         << ReasonId::PhasesSelection
                         << ReasonId::EventsSelection
-                        << ReasonId::NoItemSelection;
+                        << ReasonId::NoItemSelection
+                        << ReasonId::FormatDateUpdated;
 }
 // ---------------------------------------------------------------------------
 // 6️⃣  Raisons de **position**
@@ -654,6 +650,8 @@ QString Project::reasonToString(ReasonId id)
     // ---- Curve / MCMC ----
     case ReasonId::CurveSettingsUpdated:        return tr(TR("Curve settings updated"));
     case ReasonId::MCMCSettingsUpdated:         return tr(TR("MCMC settings updated"));
+    case ReasonId::EventModelUpdated:           return tr(TR("Event Model updated"));
+    case ReasonId::FormatDateUpdated:           return tr(TR("Format Date updated"));
     // ---- Curve parameters ----
     case ReasonId::EventXIncUpdated:            return tr(TR("Event X‑Inc updated"));
     case ReasonId::EventSXIncUpdated:           return tr(TR("Event S X‑Inc updated"));
@@ -776,7 +774,6 @@ bool Project::load(const QString &path, bool force)
     const QString resPath = dir.filePath(baseName + ".res");
 
 
-
     const QString appVersionStr = QApplication::applicationVersion();
     bool initialLoadSuccess = false;
     bool newerProject = false;
@@ -886,6 +883,59 @@ bool Project::load(const QString &path, bool force)
                                     QMessageBox::Ok,
                                     qApp->activeWindow());
                 message.exec();
+            }
+
+            // Mise à jour de AppSetting, pour le modèle EDM2 et du format de date
+            if (!loadingState.contains(STATE_FORMATDATE) ||
+                loadingState.value(STATE_FORMATDATE).isNull()) {
+                AppSettings::mFormatDate = DateUtils::FormatDate::eBCAD;
+
+                AppSettings::mFormatDateCustom = QString("Years");
+
+                loadingState[STATE_FORMATDATE] = QJsonValue( static_cast<int>(DateUtils::FormatDate::eBCAD) );
+                loadingState[STATE_FORMATDATE_CUSTOM] = QJsonValue::fromVariant(QString("Years"));
+
+            } else {
+                AppSettings::mFormatDate = static_cast<DateUtils::FormatDate> (loadingState[STATE_FORMATDATE].toInt());
+
+                AppSettings::mFormatDateCustom = loadingState[STATE_FORMATDATE_CUSTOM].toString();
+            }
+
+            if (!loadingState.contains(STATE_EVENTMODEL) ||
+                loadingState.value(STATE_EVENTMODEL).isNull()) {
+                AppSettings::mEventModel = EventModelType::EDM2;
+                loadingState[STATE_EVENTMODEL] = QJsonValue( static_cast<int>(EventModelType::EDM2) );
+                // ------------------------------------------------------------
+                //  Warning: EDM2 model will be used
+                // ------------------------------------------------------------
+                QMessageBox edm2Warning(
+                    QMessageBox::Warning,                     // icon
+                    tr("EDM2 Model"),                         // title
+                    tr("Warning: the project will be run with the new EDM2 model.\n"
+                       "If this is not the intended model, you can change it in the application settings."),
+                    QMessageBox::Ok,                          // button(s)
+                    qApp->activeWindow()                      // parent window
+                    );
+
+                // Show the dialog modally
+                edm2Warning.exec();
+
+
+            } else {
+                AppSettings::mEventModel = static_cast<EventModelType> (loadingState[STATE_EVENTMODEL].toInt());
+                // ------------------------------------------------------------
+                // Warning: EDM1
+                // ------------------------------------------------------------
+                if (AppSettings::mEventModel == EventModelType::EDM1) {
+                    QMessageBox edm1Warning(
+                        QMessageBox::Warning,
+                        tr("Old Event Model"),
+                        tr("Careful: this project is using the old Event Model EDM1.\n"
+                           "If you want to change it to EDM2, go to the application settings."),
+                        QMessageBox::Ok,
+                        qApp->activeWindow());
+                    edm1Warning.exec();
+                }
             }
 
             // Comparaison des versions

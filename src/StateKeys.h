@@ -43,6 +43,12 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define STATE_APP_VERSION "app_version"
 #define STATE_SETTINGS "settings"
 #define STATE_MCMC "mcmc"
+
+#define STATE_EVENTMODEL "event_model"
+#define STATE_FORMATDATE "format_date"
+#define STATE_FORMATDATE_CUSTOM "format_date_custom"
+
+
 #define STATE_CURVE "curve"
 #define STATE_EVENTS "events"
 #define STATE_PHASES "phases"

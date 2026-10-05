@@ -242,7 +242,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
 
     }
     mFormatDate->addItem(
-        tr("Custom X Label"),
+        tr("Custom Time Axis"),
         QVariant::fromValue(DateUtils::eCustom)
         );
 
@@ -322,7 +322,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
     grid->addWidget(mFormatDateLab, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mFormatDate, row, 1);
 
-    QLabel* dateEdit = new QLabel(tr("Custom X Label"));
+    QLabel* dateEdit = new QLabel(tr("Custom Time Axis"));
     grid->addWidget(dateEdit, ++row, 0, Qt::AlignRight | Qt::AlignVCenter);
     grid->addWidget(mCustomDateEdit, row, 1);
 

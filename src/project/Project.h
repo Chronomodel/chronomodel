@@ -158,9 +158,11 @@ public:
         PhaseConstraintDeleted,
         PhaseEventsUpdated,
         PhasesMerged,
-        // ---- Curve / MCMC ----
+        // ---- MCMC ----
         CurveSettingsUpdated,
         MCMCSettingsUpdated,
+        EventModelUpdated,
+        FormatDateUpdated,
         // ---- Curve parameters ----
         EventXIncUpdated,
         EventSXIncUpdated,

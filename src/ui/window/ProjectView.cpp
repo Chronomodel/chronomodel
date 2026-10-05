@@ -44,6 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "ResultsView.h"
 #include "AppSettings.h"
 #include "StateKeys.h"
+#include "Project.h"
 
 #include <QStackedWidget>
 #include <QScreen>
@@ -251,21 +252,71 @@ void ProjectView::applyFilesSettings(std::shared_ptr<ModelCurve> &model)
 
 void ProjectView::applySettings(std::shared_ptr<ModelCurve> &model)
 {
+    // -----------------------------------------------------------------
+    // 1️⃣  Refresh the view that depends on the global application settings
+    // -----------------------------------------------------------------
     mModelView->applyAppSettings();
 
-    if (model && !model->mEvents.empty()) {
-        const double memoThreshold = model->mThreshold;
-        model->mThreshold = -1;
-        model->clearThreshold();
-        model->updateDensities(model->mFFTLength, model->mBandwidthType, model->mBandwidth, memoThreshold);
-        mResultsView->applyAppSettings();
+    // -----------------------------------------------------------------
+    // 2️⃣  Keep the project JSON in sync with the current AppSettings
+    // -----------------------------------------------------------------
+    QJsonObject state = getProject_ptr()->state();
 
-        mLogInitEdit->setText(model->getInitLog());
-        mLogAdaptEdit->setText(model->getAdaptLog());
+    // Helper lambda – writes the two date‑format keys and pushes the new state
+    auto pushDateFormat = [&](Project::ReasonId reason)
+    {
+        state[STATE_FORMATDATE]        = static_cast<int>(AppSettings::mFormatDate);
+        state[STATE_FORMATDATE_CUSTOM] = QJsonValue::fromVariant(AppSettings::mFormatDateCustom);
+        getProject_ptr()->pushProjectState(state, reason, false); // notify=false ->no undo possible
+    };
 
-        updateResultsLog();
+    // -----------------------------------------------------------------
+    // 2.1  Event‑model changed ?
+    // -----------------------------------------------------------------
+    if (state[STATE_EVENTMODEL] != static_cast<int>(AppSettings::mEventModel))
+    {
+        state[STATE_EVENTMODEL] = static_cast<int>(AppSettings::mEventModel);
+        AppSettings::mIsSaved = false;          // the project is now “dirty”
 
+        // also update the date‑format part (they belong together)
+        pushDateFormat(Project::ReasonId::EventModelUpdated);
+        return;                                 // nothing else to do for a model change
     }
+
+    // -----------------------------------------------------------------
+    // 2.2  Date‑format changed ?
+    // -----------------------------------------------------------------
+    if (state[STATE_FORMATDATE]        != static_cast<int>(AppSettings::mFormatDate) ||
+        state[STATE_FORMATDATE_CUSTOM] != AppSettings::mFormatDateCustom)
+    {
+        pushDateFormat(Project::ReasonId::FormatDateUpdated);
+    }
+
+    // -----------------------------------------------------------------
+    // 3️⃣  Refresh the results view if a curve model is present
+    // -----------------------------------------------------------------
+    if (!model || model->mEvents.empty())
+        return;                                 // nothing to update
+
+    // Preserve the current threshold, then force a full recomputation
+    const double oldThreshold = model->mThreshold;
+    model->mThreshold = -1;                     // disable threshold temporarily
+    model->clearThreshold();
+
+    model->updateDensities(model->mFFTLength,
+                           model->mBandwidthType,
+                           model->mBandwidth,
+                           oldThreshold);      // re‑apply the previous threshold
+
+    // Propagate the new settings to the results view
+    mResultsView->applyAppSettings();
+
+    // Update the UI widgets that display the log files
+    mLogInitEdit->setText(model->getInitLog());
+    mLogAdaptEdit->setText(model->getAdaptLog());
+
+    // Finally refresh the combined results log widget
+    updateResultsLog();
 }
 
 void ProjectView::updateMultiCalibrationAndEventProperties()
