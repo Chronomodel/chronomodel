@@ -188,6 +188,7 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent,
     mAnnealRecurrenceEdit->setFixedSize(mEditW, mButH);
     mAnnealRecurrenceEdit->setValidator(validatorRplus);
     mAnnealRecurrenceEdit->setAlignment(Qt::AlignCenter);
+    mAnnealRecurrenceEdit->setPlaceholderText(tr("0 to disable"));
 
     mAnnealDwellEdit  = new LineEdit(this);
     mAnnealDwellEdit->setFixedSize(mEditW, mButH);
@@ -219,9 +220,6 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent,
     connect(mResetBut, &QPushButton::clicked, this, &MCMCSettingsDialog::reset);
     connect(mTestBut, &QPushButton::clicked, this, &MCMCSettingsDialog::setQuickTest);
 
-    /*const int fixedHeight = mTop + mColoredBoxHeigth
-                            + (show_help ? mHelp->heightForWidth(mTotalWidth - 2 * mMarginW) : 0)
-                            + 5 * mMarginH + 2 * mLineH + mOkBut->height();*/
     const int fixedHeight = mTop + mColoredBoxHeigth
                             + (show_help ? mHelp->heightForWidth(mTotalWidth - 2 * mMarginW) : 0)
                             + 5 * mMarginH + 2 * mLineH + mOkBut->height();
@@ -592,9 +590,9 @@ void MCMCSettingsDialog::reset()
 
     mLevelEdit->setText(QLocale().toString(MCMC_MIXING_DEFAULT));
 
-    mAnnealTempEdit->setText(QLocale().toString(100.0));
-    mAnnealRecurrenceEdit->setText(QLocale().toString(500));
-    mAnnealDwellEdit->setText(QLocale().toString(100));
+    mAnnealTempEdit->setText(QLocale().toString(MCMC_ANNEAL_TEMP));
+    mAnnealRecurrenceEdit->setText(QLocale().toString(MCMC_ANNEAL_RECURRENCE));
+    mAnnealDwellEdit->setText(QLocale().toString(MCMC_ANNEAL_DWELL));
 }
 
 
