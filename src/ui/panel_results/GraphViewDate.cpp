@@ -330,142 +330,7 @@ void GraphViewDate::updateCurvesToShow(bool showAllChains, const QList<bool>& sh
 {
     updateCurves(mCurrentTypeGraph, showList, showAllChains, showChainList);
     return;
-/*
-    GraphViewResults::updateCurvesToShow(showAllChains, showChainList, showList);
 
-    QStringList curvesToShow;
-    QString prefix;
-
-    if (mShowList.contains(eDataTi)) {
-        prefix = "DataTi";
-
-    } else if (mShowList.contains(eDataWiggle)) {
-        prefix = "WiggleTi";
-
-    } else if (mShowList.contains(eSigma)) {
-        prefix = "SigmaTi";
-    }
-
-    if (mCurrentTypeGraph == ePostDistrib) {
-
-        if (showList.contains(eSigma)) {
-
-            QStringList curvesToShow;
-
-            if (mShowAllChains) {
-                curvesToShow << "Post Distrib all Chains" << "HPD All Chains";
-                if (mShowList.contains(eCredibility)) {
-                    curvesToShow << "Credibility All Chains";
-                }
-            }
-
-            // Ajouter les chaînes individuelles
-            for (int i = 0; i < mShowChainList.size(); ++i) {
-                if (mShowChainList[i]) {
-                    curvesToShow << QString("Post Distrib Chain %1").arg(i)
-                    << QString("Wiggle Post Distrib Chain %1").arg(i);
-                }
-            }
-
-            mGraph->setCurveVisible(curvesToShow, true);
-            mGraph->setTipXLab(tr("sigma"));
-
-        }
-        else if (showList.contains(eVg) || showList.contains(eS02)) {
-             mGraph->resetNothingMessage();
-
-        }
-
-
-
-        else  {
-
-            QStringList curvesToShow;
-
-            if (mShowList.contains(eDataCalibrate)) {
-                    curvesToShow << "Calibration";
-            }
-            if (mShowList.contains(eDataCalibrateWiggle)) {
-                curvesToShow << "Wiggle Calibration";
-            }
-            if (mShowAllChains) {
-                if (mShowList.contains(eDataTi)) {
-                    curvesToShow << "Post Distrib All Chains" << "HPD All Chains";
-                }
-
-                if (mShowList.contains(eDataWiggle)) {
-                    curvesToShow << "Wiggle Post Distrib All Chains";
-                }
-
-                if (mShowList.contains(eCredibility)) {
-                    curvesToShow << "Credibility All Chains";
-                }
-            }
-
-            // Ajouter les chaînes individuelles
-            for (int i = 0; i < mShowChainList.size(); ++i) {
-                if (mShowChainList[i]) {
-                    if (mShowList.contains(eDataTi)) {
-                        curvesToShow << QString("Post Distrib Chain %1").arg(i);
-                    }
-
-                    if (mShowList.contains(eDataWiggle)) {
-                        curvesToShow << QString("Wiggle Post Distrib Chain %1").arg(i);
-                    }
-                }
-            }
-
-            mGraph->setCurveVisible(curvesToShow, true);
-        }
-
-
-
-    }
-
-    else if (mCurrentTypeGraph == eTrace) {
-
-        // On ne lance la boucle que si un prefix a été trouvé
-        if (!prefix.isEmpty()) {
-            for (int j = 0; j < mShowChainList.size(); ++j) {
-                if (mShowChainList[j]) {
-                    curvesToShow << QString("%1 Trace %2").arg(prefix).arg(j);
-                    curvesToShow << QString("%1 Q1 %2").arg(prefix).arg(j);
-                    curvesToShow << QString("%1 Q2 %2").arg(prefix).arg(j);
-                    curvesToShow << QString("%1 Q3 %2").arg(prefix).arg(j);
-                }
-            }
-        }
-
-        mGraph->setCurveVisible(curvesToShow, true);
-
-    }
-
-    else if (mCurrentTypeGraph == eAccept) {
-
-        mGraph->setCurveVisible(prefix + "Accept Target", true);
-        for (int i = 0; i<mShowChainList.size(); ++i)
-            mGraph->setCurveVisible(prefix + "Accept " + QString::number(i), mShowChainList.at(i));
-    }
-
-    else if (mCurrentTypeGraph == eCorrel) {
-
-        QStringList curvesToShow;
-        for (int j = 0; j < mShowChainList.size(); ++j) {
-            if (mShowChainList[j]) {
-                curvesToShow << QString(prefix + "Correl %1").arg(j);
-                curvesToShow << QString(prefix + "Correl Limit Lower %1").arg(j);
-                curvesToShow << QString(prefix + "Correl Limit Upper %1").arg(j);
-            }
-        }
-        mGraph->setCurveVisible(curvesToShow, true);
-
-    }
-    else {
-        QStringList curvesToShow;
-        mGraph->setCurveVisible(curvesToShow, true);
-    }
-    update();
-    */
 }
 
 
@@ -511,10 +376,12 @@ void GraphViewDate::generatePosterior()
             mGraph->add_curve(curveHPD);
 
             // Credibility (must be the last created curve because uses yMax!
-            GraphCurve curveCred = topLineSection(mDate->mSigmaTi.mFormatedCredibility,
-                                                  "Credibility All Chains",
-                                                  color);
-            mGraph->add_curve(curveCred);
+            if (mShowList.contains(eCredibility)) {
+                const GraphCurve& curveCred = topLineSection(mDate->mSigmaTi.mFormatedCredibility,
+                                                      "Credibility All Chains",
+                                                      color);
+                mGraph->add_curve(curveCred);
+            }
         }
 
         // Post Distrib Chain i

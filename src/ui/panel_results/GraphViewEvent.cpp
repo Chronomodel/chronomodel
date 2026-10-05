@@ -742,7 +742,7 @@ void GraphViewEvent::generatePosterior()
 
             if (!date.mSigmaTi.mChainsKDE.empty())
                 for (size_t j=0; j<mChains.size(); ++j) {
-                    if (mShowChainList[i]) {
+                    if (mShowChainList[j]) {
                         const GraphCurve &curveChain = densityCurve(date.mSigmaTi.KDEForChain(j),
                                                                     "Post Distrib Date " + QString::number(i) + " Chain " + QString::number(j),
                                                                     Painting::chainColors.at(j));
