@@ -4033,7 +4033,8 @@ void ResultsView::updateScales()
         const double tRangeMin = tCenter - (tSpan_2 * maxZoom);
         const double tRangeMax = tCenter + (tSpan_2 * maxZoom);
 
-        mRuler->setRange(tRangeMin, tRangeMax);
+        //mRuler->setRange(tRangeMin, tRangeMax);
+        mRuler->setRange(0, 40);
 
         mRuler->setFormatFunctX(nullptr);
     }

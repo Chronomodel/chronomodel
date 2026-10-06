@@ -2241,25 +2241,6 @@ RhatEssResult computeRhatAndEss(const std::vector<std::vector<double>>& chains)
 // libellés, décimales affichées, etc.
 // ============================================================================
 
-// --- Ajouts à faire dans la définition de ConvergenceSummary (header) -----
-//
-// struct ConvergenceSummary
-// {
-//     ... champs existants inchangés (nVariables, status, label, maxRHat,
-//         meanRHat, nAboveGoodThreshold, fractionAboveGoodThreshold) ...
-//
-//     // --- Nouveaux champs ESS ---
-//     bool hasEss = false;                       // ESS fourni et exploitable
-//     size_t nEssVariables = 0;
-//     double minESS = std::numeric_limits<double>::quiet_NaN();
-//     double meanESS = std::numeric_limits<double>::quiet_NaN();
-//     size_t nBelowGoodEssThreshold = 0;
-//     double fractionBelowGoodEssThreshold = 0.;
-//
-//     // --- Sous-statuts (utiles pour afficher un badge par métrique dans l'UI) ---
-//     ConvergenceStatus rHatStatus = ConvergenceStatus::eGood;
-//     ConvergenceStatus essStatus  = ConvergenceStatus::eGood;
-// };
 
 namespace {
 
