@@ -848,7 +848,7 @@ void ModelCurve::generateTraceNumericalResults(const std::vector<ChainSpecs> &ch
         std::vector<double> Rhat;
         std::vector<double> ESS;
         for (size_t i = 0; i<mEvents.size(); i++) {
-          const auto& event = mEvents[i];
+            const auto& event = mEvents[i];
                 if (event->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
                     Rhat.push_back(event->mTheta.mResults.RhatESS.rHat);
                     ESS.push_back(std::min(event->mTheta.mResults.RhatESS.bulkESS,
@@ -877,14 +877,16 @@ void ModelCurve::generateTraceNumericalResults(const std::vector<ChainSpecs> &ch
             }
         }
 
-       if (mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe) {
+        if (mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe) {
             Rhat.push_back(mLambdaSpline.mResults.RhatESS.rHat);
             ESS.push_back(std::min(mLambdaSpline.mResults.RhatESS.bulkESS,
                                    mLambdaSpline.mResults.RhatESS.tailESS));
         }
 
-       // On écrase l'ancienne valeur produite par Model::generateTraceNumericalResults(chains);
-       mConvergenceSummary = MCMCDiagnostic::computeConvergenceSummary(Rhat, ESS);
+        // On écrase l'ancienne valeur produite par Model::generateTraceNumericalResults(chains);
+
+        auto M = mChains.size();
+        mConvergenceSummary = MCMCDiagnostic::computeConvergenceSummary(Rhat, ESS, M);
 
     }
 }

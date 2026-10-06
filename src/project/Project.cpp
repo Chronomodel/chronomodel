@@ -912,7 +912,7 @@ bool Project::load(const QString &path, bool force)
                     QMessageBox::Warning,                     // icon
                     tr("EDM2 Model"),                         // title
                     tr("Warning: the project will be run with the new EDM2 model.\n"
-                       "If this is not the intended model, you can change it in the application settings."),
+                       "If you want to run it with the previous EDM1 model, change it in the application settings."),
                     QMessageBox::Ok,                          // button(s)
                     qApp->activeWindow()                      // parent window
                     );
@@ -930,8 +930,8 @@ bool Project::load(const QString &path, bool force)
                     QMessageBox edm1Warning(
                         QMessageBox::Warning,
                         tr("Old Event Model"),
-                        tr("Careful: this project is using the old Event Model EDM1.\n"
-                           "If you want to change it to EDM2, go to the application settings."),
+                        tr("Warning: this project is using the old Event Model EDM1.\n"
+                           "If you want to run it with the last EDM2 model, change it in the application settings."),
                         QMessageBox::Ok,
                         qApp->activeWindow());
                     edm1Warning.exec();

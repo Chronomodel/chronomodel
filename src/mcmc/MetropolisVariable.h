@@ -138,12 +138,15 @@ namespace MCMCDiagnostic
 // par quantité d'intérêt pour l'ESS.
 namespace Threshold
 {
-
 constexpr double RhatGood    = 1.01; // en dessous : convergence satisfaisante
-constexpr double RhatWarning = 1.05; // en dessous : convergence douteuse ; au-dessus : non convergé
+constexpr double RhatWarning = 1.05; // en dessous : douteuse ; au-dessus : non convergé
 
-constexpr double EssGood     = 400.; // au-dessus : ESS satisfaisant
-constexpr double EssWarning  = 100.; // en dessous : ESS trop faible pour être exploitable
+// ESS PAR CHAÎNE (multiplié par le nombre de chaînes dans computeConvergenceSummary)
+constexpr double EssGoodPerChain    = 500.; // au-dessus : satisfaisant
+constexpr double EssWarningPerChain = 100.; // en dessous : trop faible pour être exploitable
+// Seuils globaux d'ESS pour nChains chaînes (utilisés partout : synthèse ET affichage)
+inline double essGood(size_t nChains)    { return EssGoodPerChain    * static_cast<double>(nChains); }
+inline double essWarning(size_t nChains) { return EssWarningPerChain * static_cast<double>(nChains); }
 
 } // namespace Threshold
 enum class ConvergenceStatus
@@ -255,12 +258,10 @@ RhatEssResult computeRhatAndEss(const std::vector<std::vector<double>>& chains);
 
 ConvergenceSummary computeConvergenceSummary(const std::vector<double>& rHatValues,
                                              const std::vector<double>& essValues = {},
+                                             size_t nChains = 4,
                                              double goodThreshold = Threshold::RhatGood,
                                              double warningThreshold = Threshold::RhatWarning,
                                              double maxFractionAboveGood = 0.01,
-
-                                             double essGoodThreshold = Threshold::EssWarning,
-                                             double essWarningThreshold = Threshold::EssWarning,
                                              double essMaxFractionBelowGood = -1.,
                                              size_t minVariablesForBad = 4);
 } // namespace MCMCDiagnostic

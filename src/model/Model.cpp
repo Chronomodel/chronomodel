@@ -1644,7 +1644,10 @@ void Model::generateTraceNumericalResults(const std::vector<ChainSpecs> &chains)
                                phase->mDuration.mResults.RhatESS.tailESS));
 
     }*/
-    mConvergenceSummary = MCMCDiagnostic::computeConvergenceSummary(Rhat, ESS);
+    //mConvergenceSummary = MCMCDiagnostic::computeConvergenceSummary(Rhat, ESS);
+    auto M = mChains.size();
+    mConvergenceSummary = MCMCDiagnostic::computeConvergenceSummary(Rhat, ESS, M);
+
     std::cout << " Convergence Summary : " << mConvergenceSummary.label.toStdString() << std::endl;
 
 #ifdef DEBUG

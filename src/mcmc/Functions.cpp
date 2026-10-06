@@ -826,6 +826,7 @@ QString posteriorAnalysisToString(const PosteriorAnalysis &analysis)
 
     if (analysis.densityAnalysis.std >= 0.) {
         using namespace MCMCDiagnostic;
+
         // --- Rhat : mêmes règles qu'avant (0.0 -> une seule chaîne, non fini -> chaînes
         //     bloquées), mais seuil "Insuffisant" aligné sur Threshold::RhatWarning (1.05,
         //     au lieu de 1.1) pour rester cohérent avec computeConvergenceSummary ---
@@ -852,16 +853,22 @@ QString posteriorAnalysisToString(const PosteriorAnalysis &analysis)
 
         // --- ESS : même principe à 3 paliers (+ cas non calculable, ex. variable
         //     dégénérée/fixée où var+ ~ 0) ---
-        auto essColor = [](double ess) -> QString {
-            if (!std::isfinite(ess))          return "black";
-            if (ess < Threshold::EssWarning)  return "red";
-            if (ess < Threshold::EssGood)     return "orange";
+        // Seuils globaux = seuils par chaîne × nombre de chaînes M
+        auto M = getModel_ptr()->mChains.size();
+
+        const double essWarn = Threshold::essWarning(M);
+        const double essGood = Threshold::essGood(M);
+
+        auto essColor = [essWarn, essGood](double ess) -> QString {
+            if (!std::isfinite(ess)) return "black";
+            if (ess < essWarn)       return "red";
+            if (ess < essGood)       return "orange";
             return "green";
         };
-        auto essStatus = [](double ess) -> QString {
-            if (!std::isfinite(ess))          return QObject::tr("❓ Not calculable");
-            if (ess < Threshold::EssWarning)  return QObject::tr("❌ Too low");
-            if (ess < Threshold::EssGood)     return QObject::tr("⚠️ Insufficient (&lt; 400)");
+        auto essStatus = [essWarn, essGood](double ess) -> QString {
+            if (!std::isfinite(ess)) return QObject::tr("❓ Not calculable");
+            if (ess < essWarn)       return QObject::tr("❌ Too low");
+            if (ess < essGood)       return QObject::tr("⚠️ Insufficient (&lt; %1)").arg(essGood, 0, 'f', 0);
             return QObject::tr("✅ Satisfactory");
         };
         auto essDisplay = [](double ess) -> QString {
@@ -877,21 +884,7 @@ QString posteriorAnalysisToString(const PosteriorAnalysis &analysis)
         QString paragraphStyle = "margin:0; line-height:0.9;";
 
         // 2.  Construire le texte HTML
-       /* result = "<i style='line-height:0.9;'>"
-                 + QString("<span style='color:%1'>").arg(rhatColor(rhat))
-                 + QObject::tr("R\xCC\x82 = %1 %2")
-                       .arg(rhatDisplay(rhat), rhatStatus(rhat))
-                 + "</span><br>"
-                 + QString("<span style='color:%1'>").arg(essColor(bulkESS))
-                 + QObject::tr("ESS bulk = %1 %2")
-                       .arg(essDisplay(bulkESS), essStatus(bulkESS))
-                 + "</span><br>"
-                 + QString("<span style='color:%1'>").arg(essColor(tailESS))
-                 + QObject::tr("ESS tail = %1 %2")
-                       .arg(essDisplay(tailESS), essStatus(tailESS))
-                 + "</span>"
-                 + "</i>";*/
-// --
+
         const bool allGood = (rhatColor(rhat)   == "green")
                              && (essColor(bulkESS) == "green")
                              && (essColor(tailESS) == "green");
@@ -914,8 +907,6 @@ QString posteriorAnalysisToString(const PosteriorAnalysis &analysis)
                      + "</span>"
                      + "</i>";
         }
-//---
-
 
         result += "<br><i>" + QObject::tr("Trace Stat.")  + "</i><br>";
         result += QObject::tr("Mean = %1  ;  Std = %2").arg( stringForLocal(analysis.traceAnalysis.mean),
@@ -958,64 +949,6 @@ Quartiles quartilesForTrace(const std::vector<type_data> &trace)
     return quartiles;
 }
 
-/*
-QList<double> calculRepartition(const QList<double> &calib)
-{
-    QList<double> repartitionTemp;
-
-    // we use long double type because
-    // after several sums, the repartion can be in the double type range
-    long double lastRepVal (0.);
-    for (auto&& v : calib) {
-        long double lastV = v;
-
-        long double rep = lastRepVal;
-        if(v != 0. && lastV != 0.)
-            rep = lastRepVal + (lastV + v) / 2.;
-
-        repartitionTemp.append((double)rep);
-        lastRepVal = rep;
-    }
-    return repartitionTemp;
-}
-*/
-/*
-QList<double> calculRepartition(const QMap<double, double>  &calib)
-{
-    QList<double> repartitionTemp;
-
-    // we use long double type because
-    // after several sums, the repartion can be in the double type range
-    long double lastV = 0;
-    QMap<double, double>::const_iterator it (calib.cbegin());
-
-    //long double lastRepVal (lastV);
-    long double rep = 0.;
-
-
-    for (auto [key, value] : calib.asKeyValueRange()) {
-        //const long double v = it.value();
-
-        if(value != 0. && lastV != 0.)
-            //rep = lastRepVal + (t-lastT)*(lastV + v) / 2.l;
-            // rep = lastRepVal + (lastV + v); // step is constant
-            rep +=  (lastV + value); // step is constant
-
-        lastV = value;
-
-        repartitionTemp.append((double)rep);
-    }
-
-
-//lastRepVal = rep;
-    // Normalize repartition
-    QList<double> repartition;
-    for (auto&& v : repartitionTemp)
-        repartition.append(v/rep);
-
-    return repartition;
-}
-*/
 
 QList<double> calculRepartition(const QMap<double, double>  &calib)
 {

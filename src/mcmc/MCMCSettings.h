@@ -42,7 +42,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include <QJsonObject>
 #include <QList>
 
-#define MCMC_NUM_CHAINS_DEFAULT 3
+#define MCMC_NUM_CHAINS_DEFAULT 4
 #define MCMC_NUM_RUN_DEFAULT 100000
 #define MCMC_NUM_BURN_DEFAULT 1000
 #define MCMC_MAX_ADAPT_BATCHES_DEFAULT 200

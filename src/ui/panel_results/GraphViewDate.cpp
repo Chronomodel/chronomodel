@@ -44,6 +44,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #include "Painting.h"
 #include "ModelUtilities.h"
 #include "StdUtilities.h"
+#include "QtUtilities.h"
 
 #include <QtWidgets>
 
@@ -645,8 +646,13 @@ void GraphViewDate::updateStatHTML()
     QString resultsHTML;
     if (mShowList.contains(eSigma)) {
         resultsHTML = ModelUtilities::sigmaTiResultsHTML(mDate);
-    } else {
+
+    } else if (mShowList.contains(eDataTi)) {
         resultsHTML = ModelUtilities::dateResultsHTML(mDate);
+
+    } else if (mShowList.contains(eDataWiggle)) {
+        resultsHTML = line(textBold(textBlack(QObject::tr("Posterior Wiggle"))));
+        resultsHTML += mDate->mWiggle.resultsString("", DateUtils::getAppSettingsFormatStr());
     }
     setNumericalResults(resultsHTML);
 

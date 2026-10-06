@@ -1869,7 +1869,7 @@ static std::vector<double> rankNormalize(const std::vector<double>& pooled)
     const std::vector<double> ranks = averageRanks(pooled);
     std::vector<double> z(S);
     for (int i = 0; i < S; ++i)
-        z[i] = invNormalCDF((ranks[i] - 3.0 / 8.0) / (static_cast<double>(S) - 1.0 / 4.0));
+        z[i] = invNormalCDF((ranks[i] - 3.0 / 8.0) / (static_cast<double>(S) + 1.0 / 4.0));
     return z;
 }
 
@@ -2014,8 +2014,11 @@ double rhatFromStats(const HalfChainStats& s, int M, int N)
     if (W < 1e-15)               return std::numeric_limits<double>::infinity(); // W->0, B!=0 : bloquées sur des valeurs différentes
     if (B < 1e-15 * W)           return 1.0;                                    // chaînes essentiellement identiques
 
-    const double V_hat = ((N - 1.0) / N) * W + ((M + 1.0) / (M * N)) * B;
-    return std::sqrt(V_hat / W);
+    //const double V_hat = ((N - 1.0) / N) * W + ((M + 1.0) / (M * N)) * B;
+    //return std::sqrt(V_hat / W);
+
+    const double varPlus = ((N - 1.0) / N) * W + B / N;   // Vehtari et al. 2021
+    return std::sqrt(varPlus / W);
 }
 
 // var+ "Stan/Vehtari" (SANS le correctif (M+1)/M) : c'est cette version, et
@@ -2105,9 +2108,9 @@ double essFromHalves(const std::vector<std::vector<double>>& halves,
     // tau = 1 + 2*sum(rho_t) : paires consécutives, arrêt à la première paire
     // négative (séquence positive initiale), rendues monotones (non-croissantes)
     // pour réduire la variance de l'estimateur (séquence monotone initiale, Geyer 1992).
-    double tau = 1.;
+   /* double tau = -1.;
     double prevPairSum = std::numeric_limits<double>::infinity();
-    int t = 1;
+    int t = 0;                                  // paires (rho0+rho1), (rho2+rho3), ...
     while (t + 1 < N) {
         double pairSum = rhoHat[t] + rhoHat[t + 1];
         if (pairSum < 0.)
@@ -2117,9 +2120,28 @@ double essFromHalves(const std::vector<std::vector<double>>& halves,
         prevPairSum = pairSum;
         t += 2;
     }
+    tau = std::max(tau, 1.);                    // ESS <= nTotal
+    const double nTotal = static_cast<double>(M) * static_cast<double>(N);
+    return nTotal / tau;*/
+
+    // Correction pour avoir les mêmes valeurs que R
+    double tau = -1.;
+    double prevPairSum = std::numeric_limits<double>::infinity();
+    double nextEven = 0.;                         // rho_T de la première paire rejetée
+    int t = 0;
+    while (t + 1 < N) {
+        const double pairSum = rhoHat[t] + rhoHat[t + 1];
+        if (pairSum < 0.) { nextEven = rhoHat[t]; break; }
+        const double capped = std::min(pairSum, prevPairSum);
+        tau += 2. * capped;
+        prevPairSum = capped;
+        t += 2;
+    }
+    if (nextEven > 0.) tau += nextEven;           // terme de biais (Stan / posterior)
 
     const double nTotal = static_cast<double>(M) * static_cast<double>(N);
-    return std::min(nTotal / tau, nTotal);
+    tau = std::max(tau, 1. / std::log10(nTotal)); // borne identique à posterior
+    return nTotal / tau;                          // sans plafond à nTotal
 }
 
 } // namespace detail
@@ -2259,24 +2281,17 @@ ConvergenceStatus worseStatus(ConvergenceStatus a, ConvergenceStatus b)
 
 ConvergenceSummary computeConvergenceSummary(const std::vector<double>& rHatValues,
                                              const std::vector<double>& essValues,
+                                             size_t nChains,
                                              double goodThreshold,
                                              double warningThreshold,
                                              double maxFractionAboveGood,
-
-                                             double essGoodThreshold,
-                                             double essWarningThreshold,
                                              double essMaxFractionBelowGood,
                                              size_t minVariablesForBad)
 {
-    // minVariablesForBad : safety‑check for very small models. With N = 4
-    // variables, a single borderline variable already accounts for 25 % — far
-    // above a fraction tolerance that is meant for large N (e.g. maxFractionAboveGood
-    // = 5 %). Without this guard, a 4‑variable model where only one variable is
-    // “just borderline” (⚠ Insufficient, not individually “Not converged”) would
-    // incorrectly be classified as globally “Not converged”. Therefore we require
-    // that AT LEAST minVariablesForBad variables be affected before the fraction
-    // can push the status to eBad; below that we stay in eWarning regardless of the
-    // fraction.
+    // Seuils d'ESS globaux = seuils par chaîne × nombre de chaînes
+    const double essGoodThreshold    = Threshold::essGood(nChains);    // si les paramètres essGoodPerChain
+    const double essWarningThreshold = Threshold::essWarning(nChains); // ne sont plus utilisés ailleurs
+
     ConvergenceSummary summary;
     summary.nVariables = rHatValues.size();
 
