@@ -274,7 +274,7 @@ std::vector<double> multiMatParVec(const MatrixD &matrix, const std::vector<doub
 MatrixLD addMatEtMat0(const MatrixLD& matrix1, const MatrixLD& matrix2);
 MatrixLD addMatEtMat(const MatrixLD& matrix1, const MatrixLD& matrix2, const size_t nbBandes);
 MatrixLD addIdentityToMat(const MatrixLD& matrix);
-MatrixLD multiConstParMat(const MatrixLD& matrix, const double c, const size_t nbBandes);
+MatrixLD multiConstParMat(const MatrixLD& matrix, const double c);
 MatrixLD multiConstParMat0(const MatrixLD& matrix, const double c);
 
 MatrixLD multiMatParMat0(const MatrixLD& matrix1, const MatrixLD& matrix2);

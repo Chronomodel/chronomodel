@@ -547,8 +547,6 @@ Event const Event::fromJson(const QJsonObject& json)
     const QJsonArray dates = json.value(STATE_EVENT_DATES).toArray();
 
     for (auto&& date : dates) {
-        //Date dat (date.toObject());
-       // if (!dat.isNull())
         try {
             event.mDates.emplace_back(date.toObject());
 
@@ -2657,10 +2655,21 @@ void Event::updateS02Theta_gamma()
 void Event::applyS02Theta_v3()
 {
     try {
-        const double logVMin = -100.0;
-        const double logVMax = 100.0;
+        const double logVMin = -20.0;
+        const double logVMax = 20.0;
 
-        const double logV2 = Generator::truncatedNormal(log10(mS02Theta.value()) , mS02Theta.mSigmaMH, logVMin, logVMax );
+        const double logV2 = Generator::truncatedNormal(
+            log10(mS02Theta.value()) ,
+            mS02Theta.mSigmaMH,
+            logVMin,
+            logVMax );
+
+        // Protection NaN sur logV2
+        if (std::isnan(logV2)) {
+            qWarning() << "[" << __func__ << "] logV2 is NaN – aborting update.";
+            return;
+        }
+
         const double V2 = pow(10.0, logV2);
 
 

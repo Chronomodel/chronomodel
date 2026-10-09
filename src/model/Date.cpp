@@ -90,17 +90,17 @@ Date::Date():
     mName("No Named Date")
 {
 
-    mTi.setName("Ti of Date : " + mName);
+    mTi.setName("Ti of Date: " + mName);
     mTi.mSupport = Support::eR;
     mTi.mFormat = DateUtils::eUnknown;
     mTi.mSamplerProposal = SamplerProposal::eDatePrior;
 
-    mSigmaTi.setName("SigmaTi of Date : " + mName);
+    mSigmaTi.setName("SigmaTi of Date: " + mName);
     mSigmaTi.mSupport = Support::eRp;
     mSigmaTi.mFormat = DateUtils::eNumeric;
     mSigmaTi.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
 
-    mWiggle.setName("Wiggle of Date : " + mName);
+    mWiggle.setName("Wiggle of Date: " + mName);
     mWiggle.mSupport = Support::eR;
     mWiggle.mFormat = DateUtils::eNumeric;
 
@@ -181,17 +181,17 @@ void Date::init()
     mOrigin = eSingleDate;
     mPlugin = nullptr;
 
-    mTi.setName("Ti of Date : " + mName);
+    mTi.setName("Ti of Date: " + mName);
     mTi.mSupport = Support::eR;
     mTi.mFormat = DateUtils::eUnknown;
     mTi.mSamplerProposal = SamplerProposal::eDatePrior;
 
-    mSigmaTi.setName("SigmaTi of Date : " + mName);
+    mSigmaTi.setName("SigmaTi of Date: " + mName);
     mSigmaTi.mSupport = Support::eRp;
     mSigmaTi.mFormat = DateUtils::eNumeric;
     mSigmaTi.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
 
-    mWiggle.setName("Wiggle of Date : " + mName);
+    mWiggle.setName("Wiggle of Date: " + mName);
     mWiggle.mSupport = Support::eR;
     mWiggle.mFormat = DateUtils::eUnknown;
 
@@ -456,7 +456,7 @@ void Date::fromJson(const QJsonObject& json)
         }
     }
 
-    mTi.setName("Ti of Date : "+ mName);
+    mTi.setName("Ti of Date: "+ mName);
     mTi.mSupport = Support::eR;
     mTi.mFormat = DateUtils::eUnknown;
     mTi.mSamplerProposal = (SamplerProposal)json.value(STATE_DATE_SAMPLER).toInt();
@@ -465,11 +465,11 @@ void Date::fromJson(const QJsonObject& json)
         mSigmaTi.mSamplerProposal = SamplerProposal::eFixe;
     else
         mSigmaTi.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
-    mSigmaTi.setName("Sigma of Date : "+ mName);
+    mSigmaTi.setName("Sigma of Date: "+ mName);
     mSigmaTi.mSupport = Support::eRp;
     mSigmaTi.mFormat = DateUtils::eNumeric;
 
-    mWiggle.setName("Wiggle of Date : "+ mName);
+    mWiggle.setName("Wiggle of Date: "+ mName);
     mWiggle.mSupport = Support::eR;
     mWiggle.mFormat = DateUtils::eUnknown;
     if (json.value(STATE_DATE_DELTA_TYPE).toInt() == eDeltaNone)
@@ -2344,67 +2344,7 @@ void Date::updateSigmaShrinkage0(const double theta_mX,
 
 
 #pragma mark update SigmaTi
-/*
-void Date::updateSigmaShrinkage_K(const double theta_mX,
-                                  const double S02Theta_mX)
-{
-    const double mu = pow(mTi.value() - (theta_mX - mDelta), 2.) * 0.5;
-    const double V1 = mSigmaTi.value() * mSigmaTi.value();
 
-    double rapport = -1, V2;
-
-    // ---------------------------------------------------------
-    // Mixture weights (fixes ici, adaptables si voulu)
-    // ---------------------------------------------------------
-    constexpr double w1 = 0.;   // RW local
-    //constexpr double w2 = 0.5;   // RW large
-
-    const double u = Generator::randomUniform();
-
-    if (u < w1) {
-        const double VMin = 0.;
-        const double VMax = 1.E+10;
-
-        V2 = Generator::shrinkageUniforme(S02Theta_mX);
-
-        if (VMin<V2 && V2<VMax) {
-            //const double dexp = exp(-mu * (V1 -V2)/(V1*V2));
-            // Likelihood term
-            const double log_x1 =  -mu * (V1 - V2) / (V1 * V2);
-            //rapport = dexp * sqrt(V1/V2);
-            const double log_rate = log_x1 + 0.5*(log(V1)-log(V2));
-            mSigmaTi.try_update_log(sqrt(V2), log_rate);
-            return;
-        }
-    }
-        // =========================================================
-        // q1 : Random Walk local (symétrique)
-        // =========================================================
-    else {
-        const int logVMin = -100;
-        const int logVMax = 100;
-
-        const double logV2 = Generator::normalDistribution(log10(V1), mSigmaTi.mSigmaMH);
-
-        V2 = pow(10, logV2);
-
-        if (logV2 >= logVMin && logV2 <= logVMax) {
-            const double x1 = exp(-mu * (V1 - V2) / (V1 * V2));
-            // Likelihood term
-            //const double log_x1 =  -mu * (V1 - V2) / (V1 * V2);
-
-            const double x2 = pow((S02Theta_mX + V1) / (S02Theta_mX + V2), 1.0 + 1.0);
-
-            rapport = x1 * sqrt(V1/V2) * x2 * V2 / V1 ; // (V2 / V1) est le jacobien!
-            mSigmaTi.try_update(sqrt(V2), rapport);
-            return;
-        }
-
-    }
-    mSigmaTi.reject_update();
-
-}
-*/
 
 //----- test
 // Sigma tiré par adaptation directement en variance

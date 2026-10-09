@@ -6375,7 +6375,8 @@ bool MCMCLoopCurve::update_339_block()
 
             for (int s = 0; s < dwell_steps; ++s)
                // tempering_339(T);
-                tempering_339_block(T);
+               // tempering_339_block(T);
+                tempering_339_SingleSite_bloc_delta(T);
 
 
         }
@@ -6386,7 +6387,11 @@ bool MCMCLoopCurve::update_339_block()
     //memo = sampler_339();
     //memo = sampler_339_block_4v();
     // memo = sampler_339_SingleSite(); //fonctionne
-    memo = sampler_339_SingleSite_bloc_delta();
+
+
+    //memo = sampler_339_SingleSite_bloc_delta(); // par defaut, fonctionne très bien
+    //memo = tempering_339_ti_marg(1); //test
+    memo = tempering_339_SingleSite_bloc_delta(0);
     return memo;
 
 }
@@ -11197,9 +11202,10 @@ bool MCMCLoopCurve::tempering_339(double T)
 #pragma mark update Theta
             if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
                 // --------------------------------------------------------------
-                //  A - Update ti Dates (idem MCMCLoopChrono)
+                //  A - Update ti, sigmaTi, delta Dates (idem MCMCLoopChrono)
                 // --------------------------------------------------------------
                 try {
+#pragma mark update ti, sigmaTi, delta
                     if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
                         for (std::shared_ptr<Event>& event : mModel->mEvents) {
                             for (auto&& date : event->mDates) {
@@ -11875,7 +11881,7 @@ bool MCMCLoopCurve::tempering_339_block(double T)
             if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
 
                 // Les vecteurs positions X, Y et Z doivent suivre l'ordre des thétas
-                //SparseQuadraticFormSolver try_R_solver(1); // shift selon notre padding
+
                 for (std::shared_ptr<Event>& event : initListEvents) {
                     if (event->mType == Event::eDefault) {
 
@@ -11946,7 +11952,7 @@ bool MCMCLoopCurve::tempering_339_block(double T)
 
                         // Si min = max, on force l'acceptation de theta et des ti
                         if (min == max) {
-                            qDebug() << QObject::tr("[MCMCLoopChrono::tempering_339_block] Warning for event : %1 : min == max = %2")
+                            qDebug() << QObject::tr("[MCMCLoopCurve::tempering_339_block] Warning for event : %1 : min == max = %2")
                             .arg(event->getQStringName(), QString::number(min));
 
                             event->mTheta.accept_update(min);
@@ -11970,7 +11976,7 @@ bool MCMCLoopCurve::tempering_339_block(double T)
                             size_t idx = 0;
 
                             for (auto&& date : event->mDates) {
-                                const double var = std::pow(date.mSigmaTi.value(), 2.0);
+                                const double var = date.mSigmaTi.value() * date.mSigmaTi.value();
                                 sum_t_old += (old_ti[idx] + date.mDelta) / var;
                                 sum_t_prop += (prop_ti[idx] + date.mDelta) / var;
                                 sum_p += 1.0 / var;
@@ -12231,7 +12237,8 @@ bool MCMCLoopCurve::tempering_339_block(double T)
                 } // End of loop initListEvents
 
 
-            } else { // Pas bayésien : on sauvegarde la valeur constante dans la trace
+            }
+            else { // Pas bayésien : on sauvegarde la valeur constante dans la trace
                 for (std::shared_ptr<Event>& event : initListEvents) {
                     event->mTheta.accept_update(event->mTheta.value());
 
@@ -12518,7 +12525,7 @@ bool MCMCLoopCurve::tempering_339_block(double T)
             }
 
         } catch(...) {
-            std::cout << "[MCMCLoopCurve::sampler_338] update VG Event Caught Exception!" << std::endl;
+            std::cout << "[MCMCLoopCurve::tempering_339_block] update VG Event Caught Exception!" << std::endl;
         }
 
 
@@ -12674,6 +12681,1547 @@ bool MCMCLoopCurve::tempering_339_block(double T)
 
 }
 
+// MCMCLoopCurve::tempering_339_ti_marg(double T)
+//
+// Variante tempered du bloc par evenement, avec decouplage :
+//  - Etape 1 : balayage marginal des t_i (theta "gele" a sa valeur courante,
+//              aucune dependance a la courbe -- meme principe que
+//              MCMCLoopChrono::tempering_339_ti_marg, cf. Cor. cor:marginale).
+//  - Etape 2 : theta + courbe, test tempere unique (meme principe que
+//              Proposition prop:mh-theta, temperature T appliquee au seul
+//              terme "energie").
+//
+// Approximation assumee (Proposition prop:marginale-partielle, deja documentee
+// pour le bloc non tempere) : l'etape 1 marginalise theta comme si la courbe
+// n'existait pas. La correction est reintroduite integralement a l'etape 2.
+bool MCMCLoopCurve::tempering_339_ti_marg(double T)
+{
+    try {
+        // Variable du MH de la spline
+
+        DiagonalMatrixD W_1;
+
+        // --------------------------------------------------------------
+        //  B - Update theta Events
+        // --------------------------------------------------------------
+        // copie la liste des pointeurs
+        std::vector<std::shared_ptr<Event>> initListEvents (mModel->mEvents.size());
+        std::copy(mModel->mEvents.begin(), mModel->mEvents.end(), initListEvents.begin() );
+
+        std::vector<double> sy = get_vector<double> (get_Sy, initListEvents);
+
+        std::vector<double> current_vect_Yx, current_vect_Yy, current_vect_Yz;
+
+        if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) { //ca doit être bon à l'inititialisation
+            orderEventsByThetaReduced(mModel->mEvents);
+            spreadEventsThetaReduced0(mModel->mEvents);
+        }
+
+        // Les vecteurs positions X, Y et Z doivent suivre l'ordre des thétas
+
+        // Construction de la matrice Y_mat des points, les positions (x, y, z) ne sont mis à jour
+        // qu'à la fin
+
+        if (mModel->compute_XYZ) {
+            const ColumnVectorD& x_vec = get_ColumnVector<double>(get_Yx, mModel->mEvents);
+            const ColumnVectorD& y_vec = get_ColumnVector<double>(get_Yy, mModel->mEvents);
+            const ColumnVectorD& z_vec = get_ColumnVector<double>(get_Yz, mModel->mEvents);
+            current_Y << x_vec, y_vec, z_vec;
+
+            const ColumnVectorD& gx_vec = get_ColumnVector<double>(get_Gx, mModel->mEvents);
+            const ColumnVectorD& gy_vec = get_ColumnVector<double>(get_Gy, mModel->mEvents);
+            const ColumnVectorD& gz_vec = get_ColumnVector<double>(get_Gz, mModel->mEvents);
+            current_G << gx_vec, gy_vec, gz_vec;
+
+        } else if (mModel->compute_Y) {
+            const ColumnVectorD& x_vec = get_ColumnVector<double>(get_Yx, mModel->mEvents);
+            const ColumnVectorD& y_vec = get_ColumnVector<double>(get_Yy, mModel->mEvents);
+            current_Y << x_vec, y_vec;
+
+            const ColumnVectorD& gx_vec = get_ColumnVector<double>(get_Gx, mModel->mEvents);
+            const ColumnVectorD& gy_vec = get_ColumnVector<double>(get_Gy, mModel->mEvents);
+            current_G << gx_vec, gy_vec;
+
+        } else {
+            const ColumnVectorD& x_vec = get_ColumnVector<double>(get_Yx, mModel->mEvents);
+            current_Y << x_vec;
+
+            const ColumnVectorD& gx_vec = get_ColumnVector<double>(get_Gx, mModel->mEvents);
+            current_G << gx_vec;
+        }
+
+        if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
+            current_vecH = calculVecH(mModel->mEvents);
+            auto [tmp_Q0, tmp_R0] = calculMatQR_D(current_vecH);
+
+            // Pour modifier les membres de classe :
+            current_Q = tmp_Q0;
+            current_R = tmp_R0;
+
+            current_R_solver.factorize(current_R); // Factorisation une seule fois, crée le solver ldlt
+
+            current_R_1QT = current_R_solver.compute_Rinv_QT(current_Q); // On passe Q, et la fonction calcul Qt pour résoudre  R*X=Qt -> X = R^{-1} * Q^T
+            current_K = current_Q * current_R_1QT; // Matrice pleine
+        }
+        try {
+
+            // init the current state
+#pragma mark update Theta
+            if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
+
+                auto logCalib = [](Date& date, double t) {
+                    const double L = date.getLikelihood(t);
+                    return (L > 0.0) ? std::log(L) : -std::numeric_limits<double>::infinity();
+                };
+
+                // Proposition de ti : melange calibration / RW.
+                // q(t|t0) = fProposalDensity(t, t0) est la densite du MELANGE complet :
+                // meme formule de Hastings quelle que soit la composante tiree.
+                auto proposeTi = [](Date& date, double ti_old, double& log_rate_q) {
+                    double ti_new;
+                    if (Generator::randomUniform() < date.mMixingLevel)
+                        ti_new = *date.mCalibration->sample_t();
+                    else
+                        ti_new = ti_old + Generator::normalDistribution(0.0, date.mTi.mSigmaMH);
+
+                    log_rate_q = std::log(date.fProposalDensity(ti_old, ti_new))
+                               - std::log(date.fProposalDensity(ti_new, ti_old));
+                    return ti_new;
+                };
+
+                // Tirage independant de delta dans son prior :
+                // prior et proposition s'annulent, aucun terme de Hastings.
+                auto drawDelta = [](const Date& date) {
+                    switch (date.mDeltaType) {
+                    case Date::eDeltaNone:     return 0.0;
+                    case Date::eDeltaRange:    return Generator::randomUniform(date.mDeltaMin, date.mDeltaMax);
+                    case Date::eDeltaGaussian: return Generator::normalDistribution(date.mDeltaAverage, date.mDeltaError);
+                    case Date::eDeltaFixed:    return date.mDeltaFixed;
+                    default:                   return date.mDelta;
+                    }
+                };
+
+                // copie stable : mModel->mEvents est re-trie dans la boucle
+                for (std::shared_ptr<Event> event : initListEvents)
+                {
+                    const double min = event->getThetaMin(tminPeriod);
+                    const double max = event->getThetaMax(tmaxPeriod);
+                    const size_t N   = event->mDates.size();
+
+                    // -----------------------------------------------------------------
+                    // Cas degenere : theta fixe -> (ti, delta) tires conditionnellement a theta
+                    // (N == 0 : theta laisse inchange, a completer si ce cas existe hors Bound)
+                    // -----------------------------------------------------------------
+                    if (min == max || N == 0) {
+                        const double theta = (min == max) ? min : event->mTheta.value();
+                        event->mTheta.setValue(theta);
+
+                        for (auto&& date : event->mDates) {
+                            const double Vi        = date.mSigmaTi.value() * date.mSigmaTi.value();
+                            const double ti_old    = date.mTi.value();
+                            const double delta_old = date.mDelta;
+
+                            double log_rate_q;
+                            const double ti_new    = proposeTi(date, ti_old, log_rate_q);
+                            const double delta_new = drawDelta(date);
+
+                            const double eo = ti_old + delta_old - theta;
+                            const double en = ti_new + delta_new - theta;
+                            const double log_energy = -0.5 * (en * en - eo * eo) / Vi
+                                                    + logCalib(date, ti_new) - logCalib(date, ti_old);
+
+                            if (MHAcceptanceTest_log(log_energy / T + log_rate_q)) {
+                                date.mTi.setValue(ti_new);
+                                date.mDelta = delta_new;
+                            } else {
+                                date.mTi.setValue(ti_old);
+                            }
+                        }
+                        std::for_each(PAR event->mPhases.begin(), event->mPhases.end(),
+                                      [this](std::shared_ptr<Phase> p) { p->update_AlphaBeta(tminPeriod, tmaxPeriod); });
+                        continue;
+                    }
+
+                    const double theta_old = event->mTheta.value();
+
+                    // -----------------------------------------------------------------
+                    // Etat de depart (sauvegarde en cas de rejet du bloc) : ti ET delta
+                    // -----------------------------------------------------------------
+                    std::vector<double> ti_old(N), ti(N), delta_old(N), delta(N), Wi(N), y(N);
+                    long double P = 0.0L, sum_wy = 0.0L;
+                    for (size_t i = 0; i < N; ++i) {
+                        const Date& d = event->mDates[i];
+                        ti_old[i]    = ti[i]    = d.mTi.value();
+                        delta_old[i] = delta[i] = d.mDelta;
+                        Wi[i] = 1.0 / (d.mSigmaTi.value() * d.mSigmaTi.value());
+                        y[i]  = ti[i] + delta[i];
+                        P      += Wi[i];
+                        sum_wy += Wi[i] * y[i];
+                    }
+                    long double mu = sum_wy / P;
+                    long double S  = 0.0L;
+                    for (size_t i = 0; i < N; ++i)
+                        S += Wi[i] * (y[i] - mu) * (y[i] - mu);
+
+                    // Cible temperee : Vi -> Vi*T  =>  sigma_avg_T = sqrt(T/P), S -> S/T.
+                    const double sigma_avg_T = std::sqrt(T / static_cast<double>(P));
+                    auto logZ = [&](long double m) {
+                        const double md = static_cast<double>(m);
+                        return std::log(normalCDF((max - md) / sigma_avg_T) - normalCDF((min - md) / sigma_avg_T));
+                    };
+                    double logZ_curr = logZ(mu);
+
+                    // =================================================================
+                    // ETAPE 1 : balayage des (ti, delta), theta integre (Cor. cor:marginale).
+                    // Sens tire au hasard : composition des N sous-pas reversible.
+                    // =================================================================
+                    std::vector<char> subAccepted(N, 0);
+                    const bool forward = Generator::randomUniform() < 0.5;
+
+                    for (size_t k = 0; k < N; ++k) {
+                        const size_t i = forward ? k : N - 1 - k;
+                        Date& date = event->mDates[i];
+
+                        double log_rate_q;
+                        const double ti_new    = proposeTi(date, ti[i], log_rate_q);
+                        const double delta_new = drawDelta(date);
+                        const double y_new     = ti_new + delta_new;
+
+                        // remplacement direct y_i -> y_new (meme poids, P inchange), valable pour N=1
+                        const long double dlt    = static_cast<long double>(y_new) - y[i];
+                        const long double mu_new = mu + Wi[i] * dlt / P;
+                        const long double S_new  = S + Wi[i] * dlt * ((y_new - mu_new) + (y[i] - mu));
+                        const double logZ_new    = logZ(mu_new);
+
+                        const double log_rate = (logZ_new - logZ_curr)
+                                              - 0.5 * static_cast<double>(S_new - S) / T
+                                              + (logCalib(date, ti_new) - logCalib(date, ti[i])) / T
+                                              + log_rate_q;               // delta : aucun terme
+
+                        if (MHAcceptanceTest_log(log_rate)) {
+                            ti[i]    = ti_new;
+                            delta[i] = delta_new;
+                            y[i]     = y_new;
+                            mu = mu_new;
+                            S  = S_new;
+                            logZ_curr = logZ_new;
+                            subAccepted[i] = 1;
+                        }
+                    }
+
+                    // =================================================================
+                    // ETAPE 2 : theta' tire EXACTEMENT dans sa conditionnelle de datation
+                    // (temperee), puis test du bloc (t', delta', theta') sur le seul rapport spline.
+                    // =================================================================
+                    const double theta_prop = Generator::truncatedNormal(static_cast<double>(mu), sigma_avg_T, min, max);
+
+                    // --- reconstruction "try" de la courbe pour theta_prop ---
+                    event->mTheta.setValue(theta_prop);
+                    event->mThetaReduced = mModel->reduceTime(theta_prop);
+
+                    const bool ordered = std::is_sorted(mModel->mEvents.begin(), mModel->mEvents.end(),
+                                                        [](const std::shared_ptr<Event> a, const std::shared_ptr<Event> b) {
+                        return a->mThetaReduced < b->mThetaReduced;
+                    });
+                    try_Y.setZero();
+                    try_G.setZero();
+                    if (!ordered) {
+                        orderEventsByThetaReduced(mModel->mEvents);
+
+                        if (mModel->compute_XYZ) {
+                            const ColumnVectorD& x_vec = get_ColumnVector<double>(get_Yx, mModel->mEvents);
+                            const ColumnVectorD& y_vec = get_ColumnVector<double>(get_Yy, mModel->mEvents);
+                            const ColumnVectorD& z_vec = get_ColumnVector<double>(get_Yz, mModel->mEvents);
+                            try_Y << x_vec, y_vec, z_vec;
+                            const ColumnVectorD& gx_vec = get_ColumnVector<double>(get_Gx, mModel->mEvents);
+                            const ColumnVectorD& gy_vec = get_ColumnVector<double>(get_Gy, mModel->mEvents);
+                            const ColumnVectorD& gz_vec = get_ColumnVector<double>(get_Gz, mModel->mEvents);
+                            try_G << gx_vec, gy_vec, gz_vec;
+
+                        } else if (mModel->compute_Y) {
+                            const ColumnVectorD& x_vec = get_ColumnVector<double>(get_Yx, mModel->mEvents);
+                            const ColumnVectorD& y_vec = get_ColumnVector<double>(get_Yy, mModel->mEvents);
+                            try_Y << x_vec, y_vec;
+                            const ColumnVectorD& gx_vec = get_ColumnVector<double>(get_Gx, mModel->mEvents);
+                            const ColumnVectorD& gy_vec = get_ColumnVector<double>(get_Gy, mModel->mEvents);
+                            try_G << gx_vec, gy_vec;
+
+                        } else {
+                            const ColumnVectorD& x_vec = get_ColumnVector<double>(get_Yx, mModel->mEvents);
+                            try_Y << x_vec;
+                            const ColumnVectorD& gx_vec = get_ColumnVector<double>(get_Gx, mModel->mEvents);
+                            try_G << gx_vec;
+                        }
+                    } else {
+                        try_Y = current_Y;
+                        try_G = current_G;
+                    }
+
+                    spreadEventsThetaReduced0(mModel->mEvents);
+
+                    const std::vector<double>& try_vect_Theta = get_vector<double>(get_Theta, mModel->mEvents);
+                    const double try_S02Vg = var_Gasser(try_vect_Theta, try_Y);
+
+                    try_vecH = calculVecH(mModel->mEvents);
+                    auto [tmp_Q, tmp_R] = calculMatQR_D(try_vecH);
+                    try_Q = tmp_Q;
+                    try_R = tmp_R;
+
+                    SparseQuadraticFormSolver try_R_solver(1);
+                    try_R_solver.factorize(try_R);
+                    try_R_1QT = try_R_solver.compute_Rinv_QT(try_Q);
+                    try_K = try_Q * try_R_1QT;
+
+                    const MatrixD try_QtQ     = try_Q.transpose() * try_Q;
+                    const MatrixD current_QtQ = current_Q.transpose() * current_Q;
+
+                    t_prob log_rate_detPlusK = 0.5 * (ln_rate_determinant_padded_matrix_A_B(try_QtQ, try_R)
+                                                      - ln_rate_determinant_padded_matrix_A_B(current_QtQ, current_R));
+                    if (mModel->compute_XYZ)
+                        log_rate_detPlusK *= 3.0;
+                    else if (mModel->compute_Y)
+                        log_rate_detPlusK *= 2.0;
+
+                    const double rate_ftKf_val = rate_ftKf(current_G, current_K, try_G, try_K, mModel->mLambdaSpline.value());
+
+                    double rate_Vg = 1.0;
+                    if (mCurveSettings.mVarianceType != CurveSettings::eModeFixed) {
+                        const double current_S02Vg = mModel->mS02Vg;
+                        rate_Vg = try_S02Vg / current_S02Vg;
+
+                        if (mCurveSettings.mVarianceType == CurveSettings::eModeBayesian) {
+                            rate_Vg = pow(rate_Vg, mPointEvent.size());
+                            for (const auto& e : mPointEvent)
+                                rate_Vg *= pow((e->mVg.value() + current_S02Vg) / (e->mVg.value() + try_S02Vg), 2.0);
+                        } else {
+                            rate_Vg *= pow((event->mVg.value() + current_S02Vg) / (event->mVg.value() + try_S02Vg), 2.0);
+                        }
+                    }
+
+                    // Calibration, datation, prior de delta, normalisations TN et Hastings
+                    // s'annulent exactement : il ne reste que le rapport de courbe, tempere.
+                    const double log_rate = (static_cast<double>(log_rate_detPlusK)
+                                             + std::log(rate_ftKf_val)
+                                             + std::log(rate_Vg)) / T;
+
+                    event->mTheta.setValue(theta_old);
+                    const bool accepted = MHAcceptanceTest_log(log_rate);
+
+                    if (accepted) {
+                        event->mTheta.setValue(theta_prop);
+                        current_Y      = try_Y;
+                        current_G      = try_G;
+                        current_Q      = try_Q;
+                        current_R      = try_R;
+                        current_K      = try_K;
+                        current_R_1QT  = try_R_1QT;
+                        current_vecH   = try_vecH;
+                        mModel->mS02Vg = try_S02Vg;
+
+                    } else {
+                        event->mTheta.setValue(theta_old);
+                        event->mThetaReduced = mModel->reduceTime(theta_old);
+                        orderEventsByThetaReduced(mModel->mEvents);
+                        spreadEventsThetaReduced0(mModel->mEvents);
+                    }
+
+                    // Commit de (ti, delta) : valeurs du balayage si le bloc est accepte,
+                    // sinon retour a l'etat de depart. Le signal d'adaptation de mTi est
+                    // celui du sous-pas, puisque c'est lui que mTi.mSigmaMH regle.
+                    for (size_t i = 0; i < N; ++i) {
+                        Date& date = event->mDates[i];
+                        const double t_final = accepted ? ti[i]    : ti_old[i];
+                        date.mDelta          = accepted ? delta[i] : delta_old[i];
+
+                       // if (subAccepted[i]) {
+                            date.mTi.setValue(t_final);
+                       // } else {
+                       //     date.mTi.setValue(t_final);
+                       //     date.mTi.reject_update();
+                       // }
+                    }
+
+                    std::for_each(PAR event->mPhases.begin(), event->mPhases.end(),
+                                  [this](std::shared_ptr<Phase> p) { p->update_AlphaBeta(tminPeriod, tmaxPeriod); });
+                }
+            }
+            else { // Pas bayésien : on sauvegarde la valeur constante dans la trace
+                for (std::shared_ptr<Event>& event : initListEvents) {
+                    event->mTheta.accept_update(event->mTheta.value());
+
+                    /* --------------------------------------------------------------
+                         * C.1 - Update Alpha, Beta & Duration Phases
+                         * -------------------------------------------------------------- */
+                    //  Update Phases -set mAlpha and mBeta ; they coud be used by the Event in the other Phase ----------------------------------------
+                    std::for_each(PAR event->mPhases.begin(), event->mPhases.end(), [this] (std::shared_ptr<Phase> p) {p->update_AlphaBeta (tminPeriod, tmaxPeriod);});
+                }
+
+            }
+
+            //  Update Phases Tau; they could be used by the Event in the other Phase ----------------------------------------
+            /* --------------------------------------------------------------
+                *  C.2 - Update Tau Phases
+                * -------------------------------------------------------------- */
+            std::for_each(PAR mModel->mPhases.begin(), mModel->mPhases.end(), [this] (std::shared_ptr<Phase> p) {p->update_Tau (tminPeriod, tmaxPeriod);});
+
+            /* --------------------------------------------------------------
+                *  C.3 - Update Gamma Phases
+                * -------------------------------------------------------------- */
+            std::for_each(PAR mModel->mPhaseConstraints.begin(), mModel->mPhaseConstraints.end(), [] (std::shared_ptr<PhaseConstraint> pc) {pc->updateGamma();});
+
+
+        } catch(...) {
+            qDebug() << "[MCMCLoopCurve::tempering_339_ti_marg] Theta : Caught Exception!\n";
+        }
+
+
+
+#pragma mark update S02Theta
+        // --------------------------------------------------------------
+        //  D - Update S02 - à faire dans la version 4 ou EDM2
+        // --------------------------------------------------------------
+        if (AppSettings::mEventModel == EventModelType::EDM2 ) {
+            if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
+                try {
+                    for (std::shared_ptr<Event> &event : initListEvents
+                         | std::views::filter([](const auto& ev) {
+                                              return ev->mTheta.mSamplerProposal != SamplerProposal::eFixe
+                                              && ev->type() != Event::eBound;
+                })) {
+                        event->applyS02Theta_v3();
+
+                    }
+                }  catch (...) {
+                    qDebug() << "[MCMCLoopCurve::tempering_339_ti_marg] S02 : Caught Exception!\n";
+
+                }
+            }
+        }
+
+        // --------------------------------------------------------------
+        //  Remarque : à ce stade, tous les theta events sont à jour et ordonnés.
+        //  On va à présent mettre à jour tous les VG, puis Lambda Spline.
+        //  Pour cela, nous devons espacer les thetas pour permettre les calculs.
+        //  Nous le faisons donc ici, et restaurerons les vrais thetas à la fin.
+        // --------------------------------------------------------------
+
+        // --------------------------------------------------------------
+        //  D - Update Vg Global or individual (Events)
+        // --------------------------------------------------------------
+        try {
+            if (mCurveSettings.mVarianceType != CurveSettings::eModeFixed ) {
+                // Events must be ordered
+
+                /* --------------------------------------------------------------
+                * F - Update mS02Vg, tau in Komlan thesis
+                * -------------------------------------------------------------- */
+#pragma mark update mModel->mS02Vg
+                try {
+
+                    if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
+                            const std::vector<double>& vec_t = get_vector<double>(get_Theta, mModel->mEvents);
+
+                            Var_residual_spline = var_Gasser(vec_t, current_Y);
+
+                    }
+
+                    mModel->mS02Vg = Var_residual_spline;// <- code d'origine
+
+
+                } catch (std::exception& e) {
+                    std::cout<< "[MCMCLoopCurve::tempering_339_block] S02 Vg : exception caught: " << e.what() << std::endl;
+
+                }
+
+
+                try {
+
+                    // --------------------------------------------------------------
+                    //  D-1 - Update Vg
+                    // --------------------------------------------------------------
+
+#pragma mark update Vg
+                    if (mCurveSettings.mVarianceType == CurveSettings::eModeBayesian) {
+
+                        for (std::shared_ptr<Event>& event : initListEvents)   {
+
+                            if (event->mVg.mSamplerProposal != SamplerProposal::eFixe) { // rejete les Bounds
+
+
+                                // Valeur actuelle
+                                double old_Vg = event->mVg.value();
+                                const t_prob W_current = event->mW;
+
+                                // On tire une nouvelle valeur :
+
+                                //double try_value = Generator::shrinkageUniforme(mModel->mS02Vg.mX);
+
+                                const double prop_Vg_log = Generator::normalDistribution(log10(old_Vg), event->mVg.mSigmaMH);
+
+
+                                t_prob rate = -1.0;
+
+                                // ------------------------------------------------------------------
+                                // Problème de conditionnement pour factorisation LLt, il faut que la matrice A soit SPD
+                                // donc lambda * W_1 * Q * B_1 * Qt < I
+                                //  W_1 = Sy^2 + Vg  -> hypothèse lambda * W_1 < 1  -> W_1 < 1/ lambda
+                                 // double max_sampling = (1.0 / mModel->mLambdaSpline.mX) - event->mSy * event->mSy;
+
+
+                                DiagonalMatrixD W_1_current (initListEvents.size()) ; // correspond à 1.0/mW
+                                std::transform(initListEvents.cbegin(), initListEvents.cend(), W_1_current.diagonal().begin(), [](std::shared_ptr<Event> ev){return 1.0/ ev->mW;});// {return (ev->mSy*ev->mSy + ev->mVg.mX;});
+
+
+                                if (prop_Vg_log >= -20 && prop_Vg_log <= 10) {
+                                    const double prop_Vg = pow(10.0, prop_Vg_log);
+
+                                    event->mVg.setValue(prop_Vg);
+                                    event->updateW();
+
+                                    // calcul direct
+                                    auto r_vg = (mModel->mS02Vg + old_Vg) / (mModel->mS02Vg + prop_Vg);
+                                    //auto r_vg = 1.0 + (current_value - try_value) / (mModel->mS02Vg + try_value); // peut aussi s'écrire comme ca
+                                    auto rate_h_vg = r_vg * r_vg;
+
+                                    // Inverse des Poids
+
+                                    const t_prob W_1_try  = prop_Vg + event->mSy * event->mSy;
+
+                                    // Pré-calcul de la différence carrée
+                                    const t_prob dx = event->mYx - event->mGx;
+                                    t_prob sum_sq = dx * dx;
+
+                                    // Si on modélise Y
+                                    if (mModel->compute_Y) {
+                                        const t_prob dy = event->mYy - event->mGy;
+                                        sum_sq += dy * dy;
+                                    }
+
+                                    // Si on modélise Z
+                                    if (mModel->compute_XYZ) {
+                                        const t_prob dz = event->mYz - event->mGz;
+                                        sum_sq += dz * dz;
+                                    }
+
+                                    // Delta
+                                    const t_prob log_delta_h = 0.5 * (sum_sq / W_1_try - sum_sq * W_current);
+
+                                    // Calcul de la racine du ratio
+                                    const t_prob sqrt_W_ratio = 1.0 / sqrt(W_current * W_1_try);
+
+                                    // Exposant dépendant des dimensions modélisées
+                                    const t_prob rate_sqrt_Wi = std::pow(sqrt_W_ratio, n_components);
+
+                                    // Taux final
+                                    rate = rate_sqrt_Wi * std::exp(-log_delta_h) * rate_h_vg;
+                                    // multiplier par la jacobien
+                                    rate *= prop_Vg / old_Vg;
+
+                                    if (MHAcceptanceTest(rate)) {
+                                        event->mVg.setValue(prop_Vg);
+                                    } else {
+                                        event->mVg.setValue(old_Vg);
+                                    }
+
+                                    event->updateW();
+
+
+                                } else {
+
+                                    event->mVg.setValue(old_Vg);
+                                    event->updateW();
+                                    //event->mVg.reject_update();
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+                    else {  // mode VG Global
+#pragma mark update Vg Global
+                        // QUE DEVIENNENT LES BORNES ?? -> il n'y a plus de Node, les Nodes sont transformés en Event
+
+                        /* Si nous sommes en variance global,
+                             * il faut trouver l'indice du premier Event qui ne soit pas bound
+                             * L'ordre et donc l'indice change avec le spread
+                             */
+
+                        // Ici nous devons retrouver le premier Event, car plus de Node
+                        auto it = std::find_if (initListEvents.begin(), initListEvents.end(),[](auto event) {return event->mPointType == Event::ePoint; });
+
+                        // On tire une nouvelle valeur :
+                        const double old_Vg = it->get()->mVg.value();
+                        //double log_rate;
+
+                        const double prop_Vg_log = Generator::truncatedNormal(log10(old_Vg), it->get()->mVg.mSigmaMH, -20, 10);
+
+                        // rapport des a priori du proposal=shrinkage, si echantillonnage avec le shrinkageUniforme() rate_h_vg = 1
+                        const double prop_Vg = pow(10.0, prop_Vg_log);
+
+
+                        // 1. Évaluation des a priori sur Vg (shrinkage)
+                        const double prior_Vg_old  = h_VG_Event(old_Vg, mModel->mS02Vg);
+                        const double prior_Vg_prop = h_VG_Event(prop_Vg, mModel->mS02Vg);
+
+                        // 2. Accumulateurs de log-vraisemblance
+                        double sum_log_variance_ratio = 0.0;   // somme de log((prop_Vg + Sy²) / (old_Vg + Sy²))
+                        double log_likelihood_quad_old = 0.0;
+                        double log_likelihood_quad_prop = 0.0;
+
+                        for (std::shared_ptr<Event>& ev : mModel->mEvents) {
+                            const double mW_prop = 1.0 / (prop_Vg + ev->mSy * ev->mSy);
+                            const double log_var_ratio = log(prop_Vg + ev->mSy * ev->mSy) + log(ev->mW);
+
+                            // Axe X
+                            sum_log_variance_ratio += log_var_ratio;
+                            log_likelihood_quad_old  += -0.5 * std::pow(ev->mYx - ev->mGx, 2.0) * ev->mW;
+                            log_likelihood_quad_prop += -0.5 * std::pow(ev->mYx - ev->mGx, 2.0) * mW_prop;
+
+                            if (mModel->compute_Y) {
+                                log_likelihood_quad_old += -0.5 * pow(ev->mYy - ev->mGy, 2.0) * ev->mW;
+                                log_likelihood_quad_prop += -0.5 * pow(ev->mYy - ev->mGy, 2.0) * mW_prop;
+                                sum_log_variance_ratio += log_var_ratio;
+                            }
+                            if (mModel->compute_XYZ) {
+                                log_likelihood_quad_old  += -0.5 * pow(ev->mYz - ev->mGz, 2.0) * ev->mW;
+                                log_likelihood_quad_prop += -0.5 * pow(ev->mYz - ev->mGz, 2.0) * mW_prop;
+                                sum_log_variance_ratio += log_var_ratio;
+                            }
+
+
+                        }
+                        // 3. Composantes du ratio Metropolis-Hastings
+                        const double log_rate_norm_weights = -0.5 * sum_log_variance_ratio;
+                        const double log_rate_likelihood_quad = log_likelihood_quad_prop - log_likelihood_quad_old;
+                        const double log_rate_prior_Vg = log(prior_Vg_prop) + log(prop_Vg)
+                                                       - log(prior_Vg_old) - log(old_Vg);
+
+                        // 4. Bilan global
+                        const double log_rate = log_rate_norm_weights + log_rate_likelihood_quad + log_rate_prior_Vg;
+
+
+                        if (MHAcceptanceTest_log(log_rate)) {
+                            for (std::shared_ptr<Event>& ev : mModel->mEvents) {
+                                ev->mVg.setValue(prop_Vg);
+                                ev->updateW();
+                            }
+                        } else {
+                            // rejected
+                            for (std::shared_ptr<Event>& ev : mModel->mEvents) {
+                                ev->mVg.setValue(old_Vg); // forced update, to restore the previous current_value
+                                ev->updateW();
+                                //ev->mVg.reject_update();
+                            }
+                        }
+                        // On fait le test du rapport directement, car les fonctions test_update() et try_update(), ajoutent une valeur à mLastAccept
+
+
+                    }
+
+                } catch (std::exception& e) {
+                    std::cout << "[MCMCLoopCurve::tempering_339_block] VG : exception caught: " << e.what() << std::endl;
+
+                } catch(...) {
+                    std::cout << "[MCMCLoopCurve::tempering_339_block] update VG Event Caught Exception!" << std::endl;
+                }
+
+
+                // Pas bayésien : on sauvegarde la valeur constante dans la trace
+            }
+            else {
+                for (std::shared_ptr<Event>& event : initListEvents) {
+                    event->mVg.accept_update(mCurveSettings.mVarianceFixed);
+                    // event->updateW(); //mVG never change so W never change
+
+                }
+            }
+
+        } catch(...) {
+            std::cout << "[MCMCLoopCurve::tempering_339_ti_marg] update VG Event Caught Exception!" << std::endl;
+        }
+
+
+        // --------------------------------------------------------------
+        //  E - Update Lambda
+        // --------------------------------------------------------------
+#pragma mark update Lambda
+
+        try {
+            // On stocke l'ancienne valeur :
+            const double old_lambda = mModel->mLambdaSpline.value();
+            const bool hot = (T > 1.0);
+
+            if (mCurveSettings.mLambdaSplineType == CurveSettings::eModeBayesian && !hot) {
+                // Au lieu de : current_K = current_Q * current_R_1QT;
+                // et          sum_quadratic = quadratic_form(current_K, current_G);
+                const int n_total = current_R.rows();
+                const int n_cols  = current_G.cols(); // Nombre de dimensions (1, 2 ou 3)
+
+                const int first   = 1;
+                const int nsub    = n_total - 2;
+                // Faire directement :
+                MatrixD v = SparseMatrixD(current_Q.transpose()) * current_G; // Q^T * f
+
+                // Résoudre R * x = v  (solver déjà factorisé sur R)
+                if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
+                    current_R_solver.factorize(current_R);// si current_R à changer, R dépend de théta
+                }
+
+                // 2️⃣ Initialiser x comme une matrice de la même taille que v
+                MatrixD x = MatrixD::Zero(n_total, n_cols);
+                // 3️⃣ Utiliser .block() au lieu de .segment() pour extraire les lignes des sous-colonnes
+                // Syntaxe .block(ligne_debut, col_debut, nb_lignes, nb_colonnes)
+                x.block(first, 0, nsub, n_cols) = current_R_solver.solve(v.block(first, 0, nsub, n_cols));
+
+                // 4️⃣ Calcul de la forme quadratique globale (somme pour toutes les colonnes)
+                double sum_quadratic = 0.0;
+                if (n_cols == 1) {
+                    // Cas classique optimisé (vecteur)
+                    sum_quadratic = v.col(0).dot(x.col(0));
+                } else {
+                    // Cas multi-colonnes : somme des produits scalaires colonne par colonne
+                    for (int c = 0; c < n_cols; ++c) {
+                        sum_quadratic += v.col(c).dot(x.col(c));
+                    }
+                }
+
+               // x.segment(first, nsub) = current_R_solver.solve(v.segment(first, nsub));
+
+
+                // f^T K f = v^T x  (produit scalaire stable)
+               // double sum_quadratic = v.dot(x); //seulement possible avec une seule dimension
+                // les Events peuvent avoir changé d'ordre depuis la mise à jour des Thétas
+                // et il faut vérifier que current_G soit à jour depuis update theta
+                // produit f^t*K*f et la trace de la matrice K
+                //double sum_quadratic = quadratic_form(current_K, current_G);
+
+                // On tire une nouvelle valeur :
+
+                const double prop_lambda_log = Generator::truncatedNormal(log10(old_lambda), mModel->mLambdaSpline.mSigmaMH, -20, +10);
+                const double prop_lambda = pow(10.0, prop_lambda_log);
+
+                // log(rate_try_ftKf) directement, sans passer par exp()
+                const double log_rate_ftKf = -(prop_lambda - old_lambda) * 0.5 * sum_quadratic;
+
+                // Calcul du log du rapport de probabilité d'acceptation
+                double log_rate;
+                if (mModel->compute_XYZ) {
+                    log_rate = log_rate_h_lambda_XYZ_339(old_lambda, prop_lambda, n_points);
+
+                } else if (mModel->compute_Y) {
+                    log_rate = log_rate_h_lambda_XY_339(old_lambda, prop_lambda, n_points);
+
+                } else {
+                    /**
+                    * \f$ P(\lambda) = \frac{ \lambda^{\tfrac{1}{2}(n_{\text{points}} - 2)}} { \left( {c + \lambda} \right)^{\mu + 1}} \f$
+                    */
+
+                    log_rate = log_rate_h_lambda_X_339(old_lambda, prop_lambda, n_points);
+
+                }
+
+                log_rate += log_rate_ftKf;
+
+                // jacobien du changement de variable log10 : log(prop_lambda / old_lambda)
+
+                log_rate += std::log(prop_lambda) - std::log(old_lambda);
+
+                mModel->mLambdaSpline.test_update_log(old_lambda, prop_lambda, log_rate);
+
+
+            }
+            // Pas bayésien : on sauvegarde la valeur constante dans la trace
+            else if (hot) {
+                        // phase chaude du recuit : lambda gele. setValue et non accept_update,
+                        // pour ne pas injecter d'acceptations fictives dans l'adaptation de mSigmaMH.
+                        mModel->mLambdaSpline.setValue(old_lambda);
+                    }
+                    else {
+                        mModel->mLambdaSpline.accept_update(old_lambda); // lambda fixe par l'utilisateur
+                    }
+
+        } catch(...) {
+            qDebug() << "[MCMCLoopCurve::tempering_339_ti_marg] Lambda : Caught Exception!\n";
+        }
+
+
+        // --------------------------------------------------------------
+        //  F - update G(x) in MCMCSpline mModel->mSpline
+        // --------------------------------------------------------------
+#pragma mark update G(x)
+        //-------- Simulation gaussienne multivariées des splines f
+
+        // F.1- Calcul spline
+
+        // Toutes les matrices doivent être à jours, aprés le passage dans update theta, et update VG met à jour event->mW
+
+        // F.2 - test GPrime positive
+        if (mCurveSettings.mProcessType == CurveSettings::eProcess_Depth) {
+
+            mModel->mSpline = samplingSpline_multi2(mModel->mEvents, current_R, current_Q);
+
+            //return hasPositiveGPrimePlusConst(mModel->mSpline.splineX, mModel->mSettings.mTmin, mModel->mSettings.mTmax, mCurveSettings.mThreshold); // si dy >mCurveSettings.mThreshold => pas de memo de la courbe
+
+        } else {
+            mModel->mSpline = samplingSpline_multi2(mModel->mEvents, current_R, current_Q); // utilise mModel->mLambdaSpline.mX et ev->mW et mets à jour lEvents[i]-> mGx = fx[i];
+            //return true;
+        }
+
+
+    } catch (const char* e) {
+        qWarning() << "[MCMCLoopCurve::tempering_339_ti_marg] char " << e;
+
+    } catch (const std::length_error& e) {
+        qWarning() << "[MCMCLoopCurve::tempering_339_ti_marg] length_error" << e.what();
+
+    } catch (const std::out_of_range& e) {
+        qWarning() << "[MCMCLoopCurve::tempering_339_ti_marg] out_of_range" << e.what();
+
+    } catch (const std::exception& e) {
+        qWarning() << "[MCMCLoopCurve::tempering_339_ti_marg] " << e.what();
+
+    } catch(...) {
+        qWarning() << "[MCMCLoopCurve::tempering_339_block] Caught Exception!\n";
+        return false;
+    }
+
+    return true;
+
+
+
+}
+
+
+bool MCMCLoopCurve::tempering_339_SingleSite_bloc_delta(const double T_in)
+{
+    // T_in == 0 : acquisition (cible exacte + comptage d'acceptation)
+    // T_in == 1 : dwell       (cible exacte, lambda et Vg libres, pas de comptage)
+    // T_in  > 1 : chauffe     (calibration et courbe temperees, lambda et Vg geles, pas de comptage)
+    const bool   counting = (T_in <= 0.0);
+    const double T        = counting ? 1.0 : T_in;   // seule temperature utilisee dans les rapports
+    const bool   hot      = (T > 1.0);
+
+    auto commitMH = [counting](auto& var, double value, bool accepted) {
+               if (!counting) {
+                   var.setValue(value);
+               } else if (accepted) {
+                   var.accept_update(value);
+               } else {
+                   var.setValue(value);
+                   var.reject_update();
+               }
+           };
+
+    try {
+        const int  n_components = mModel->compute_XYZ ? 3 : (mModel->compute_Y ? 2 : 1);
+        const int  n_points     = static_cast<int>(mModel->mEvents.size());
+        const bool hot          = (T > 1.0);
+
+        std::vector<std::shared_ptr<Event>> initListEvents(mModel->mEvents.size());
+        std::copy(mModel->mEvents.begin(), mModel->mEvents.end(), initListEvents.begin());
+
+        // ------------------------------------------------------------------
+        // Outils communs au bloc theta et au decalage rigide
+        // ------------------------------------------------------------------
+        auto fillYG = [&](auto& Y, auto& G) {
+            Y.resize(n_points, n_components);
+            G.resize(n_points, n_components);
+            switch (n_components) {
+            case 3: {
+                const ColumnVectorD& x_vec = get_ColumnVector<double>(get_Yx, mModel->mEvents);
+                const ColumnVectorD& y_vec = get_ColumnVector<double>(get_Yy, mModel->mEvents);
+                const ColumnVectorD& z_vec = get_ColumnVector<double>(get_Yz, mModel->mEvents);
+                Y << x_vec, y_vec, z_vec;
+                const ColumnVectorD& gx_vec = get_ColumnVector<double>(get_Gx, mModel->mEvents);
+                const ColumnVectorD& gy_vec = get_ColumnVector<double>(get_Gy, mModel->mEvents);
+                const ColumnVectorD& gz_vec = get_ColumnVector<double>(get_Gz, mModel->mEvents);
+                G << gx_vec, gy_vec, gz_vec;
+            } break;
+            case 2: {
+                const ColumnVectorD& x_vec = get_ColumnVector<double>(get_Yx, mModel->mEvents);
+                const ColumnVectorD& y_vec = get_ColumnVector<double>(get_Yy, mModel->mEvents);
+                Y << x_vec, y_vec;
+                const ColumnVectorD& gx_vec = get_ColumnVector<double>(get_Gx, mModel->mEvents);
+                const ColumnVectorD& gy_vec = get_ColumnVector<double>(get_Gy, mModel->mEvents);
+                G << gx_vec, gy_vec;
+            } break;
+            default: {
+                const ColumnVectorD& x_vec = get_ColumnVector<double>(get_Yx, mModel->mEvents);
+                Y << x_vec;
+                const ColumnVectorD& gx_vec = get_ColumnVector<double>(get_Gx, mModel->mEvents);
+                G << gx_vec;
+            } break;
+            }
+        };
+
+        // Place provisoirement theta_new, reconstruit l'etat "try" de la courbe et renvoie
+        // le log-rapport courbe (det + ftKf + Vg), NON tempere. Ne commite rien.
+        auto logRateSplineTry = [&](const std::shared_ptr<Event>& ev, double theta_new) -> double {
+            ev->mTheta.setValue(theta_new);
+            ev->mThetaReduced = mModel->reduceTime(theta_new);
+
+            const bool ordered = std::is_sorted(mModel->mEvents.begin(), mModel->mEvents.end(),
+                                                [](const std::shared_ptr<Event> a, const std::shared_ptr<Event> b) {
+                return a->mThetaReduced < b->mThetaReduced;
+            });
+            if (!ordered) {
+                orderEventsByThetaReduced(mModel->mEvents);
+                fillYG(try_Y, try_G);
+            } else {
+                try_Y = current_Y;
+                try_G = current_G;
+            }
+            spreadEventsThetaReduced0(mModel->mEvents);
+
+            const std::vector<double>& try_vect_Theta = get_vector<double>(get_Theta, mModel->mEvents);
+            try_S02Vg = var_Gasser(try_vect_Theta, try_Y);
+
+            try_vecH = calculVecH(mModel->mEvents);
+            auto [tmp_Q, tmp_R] = calculMatQR_D(try_vecH);
+            try_Q = tmp_Q;
+            try_R = tmp_R;
+
+            SparseQuadraticFormSolver try_solver(1);
+            try_solver.factorize(try_R);
+            try_R_1QT = try_solver.compute_Rinv_QT(try_Q);
+            try_K = try_Q * try_R_1QT;
+
+            const MatrixD try_QtQ     = try_Q.transpose() * try_Q;
+            const MatrixD current_QtQ = current_Q.transpose() * current_Q;
+            const double log_rate_det = 0.5 * n_components *
+                  (ln_rate_determinant_padded_matrix_A_B(try_QtQ, try_R)
+                 - ln_rate_determinant_padded_matrix_A_B(current_QtQ, current_R));
+
+            const double log_rate_fKf = std::log(rate_ftKf(current_G, current_K, try_G, try_K,
+                                                           mModel->mLambdaSpline.value()));
+
+            double log_rate_Vg = 0.0;
+            if (mCurveSettings.mVarianceType != CurveSettings::eModeFixed) {
+                const double cur = mModel->mS02Vg;
+                if (mCurveSettings.mVarianceType == CurveSettings::eModeBayesian) {
+                    log_rate_Vg = static_cast<double>(mPointEvent.size()) * std::log(try_S02Vg / cur);
+                    for (const auto& e : mPointEvent)
+                        log_rate_Vg += 2.0 * std::log((e->mVg.value() + cur) / (e->mVg.value() + try_S02Vg));
+                } else {
+                    log_rate_Vg = std::log(try_S02Vg / cur)
+                                + 2.0 * std::log((ev->mVg.value() + cur) / (ev->mVg.value() + try_S02Vg));
+                }
+            }
+            return log_rate_det + log_rate_fKf + log_rate_Vg;
+        };
+
+        auto commitTry = [&]() {
+            current_vecH  = std::move(try_vecH);
+            current_K     = std::move(try_K);
+            current_R_1QT = std::move(try_R_1QT);
+            current_R     = std::move(try_R);
+            current_Q     = std::move(try_Q);
+            current_Y     = std::move(try_Y);
+            current_G     = std::move(try_G);
+            mModel->mS02Vg      = try_S02Vg;
+            Var_residual_spline = try_S02Vg;
+        };
+
+        auto restoreTheta = [&](const std::shared_ptr<Event>& ev, double theta_back) {
+            ev->mTheta.setValue(theta_back);
+            ev->mThetaReduced = mModel->reduceTime(theta_back);
+            orderEventsByThetaReduced(mModel->mEvents);
+            spreadEventsThetaReduced0(mModel->mEvents);
+        };
+
+        // ------------------------------------------------------------------
+        // Etat courant de la courbe
+        // ------------------------------------------------------------------
+        orderEventsByThetaReduced(mModel->mEvents);
+        spreadEventsThetaReduced0(mModel->mEvents);
+        fillYG(current_Y, current_G);
+
+        if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
+            current_vecH = calculVecH(mModel->mEvents);
+            auto [tmp_Q0, tmp_R0] = calculMatQR_D(current_vecH);
+            current_Q = tmp_Q0;
+            current_R = tmp_R0;
+            current_R_solver.factorize(current_R);          // membre (plus de solver local masquant)
+            current_R_1QT = current_R_solver.compute_Rinv_QT(current_Q);
+            current_K = current_Q * current_R_1QT;
+        }
+
+        // ------------------------------------------------------------------
+        //  B - Update theta Events
+        // ------------------------------------------------------------------
+        try {
+            if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
+
+#pragma mark mixingKernel
+                constexpr double mixingKernel = 0.8; // 0 -> A.1 ; 1 -> B.2
+
+                for (std::shared_ptr<Event>& event : initListEvents) {
+                    if (event->mType == Event::eDefault && !event->mDates.empty()) {
+
+                        const double min = event->getThetaMin(tminPeriod);
+                        const double max = event->getThetaMax(tmaxPeriod);
+
+                        if (min > max) {
+                            const auto seed = mLoopChains.at(mChainIndex).mSeed;
+                            throw QObject::tr("[%1] Error for event : %2 : min = %3 > max = %4  \n seed = %5")
+                            .arg(QString::fromLatin1(__func__),
+                                 event->getQStringName(),
+                                 QString::number(min),
+                                 QString::number(max),
+                                 QString::number(seed));
+                        }
+
+                        const size_t N          = event->mDates.size();
+                        const bool   thetaFixed = (min == max);
+                        const double theta_old  = event->mTheta.value();
+
+                        // ==============================================================
+                        // 1. Welford + sauvegarde de l'etat (rejet eventuel du bloc)
+                        // ==============================================================
+                        long double P_curr = 0.0L, mu_curr = 0.0L, S_curr = 0.0L;
+                        std::vector<double> ti_save(N), sigma_save(N), delta_save(N);
+
+                        for (size_t i = 0; i < N; ++i) {
+                            const auto& date = event->mDates[i];
+                            ti_save[i]    = date.mTi.value();
+                            sigma_save[i] = date.mSigmaTi.value();
+                            delta_save[i] = date.mDelta;
+
+                            const long double sigma = static_cast<long double>(sigma_save[i]);
+                            const long double y = static_cast<long double>(ti_save[i]) + static_cast<long double>(delta_save[i]);
+                            const long double w = 1.0L / (sigma * sigma);
+
+                            if (P_curr == 0.0L) {
+                                P_curr = w; mu_curr = y; S_curr = 0.0L;
+                            } else {
+                                const long double P_new = P_curr + w;
+                                const long double d = y - mu_curr;
+                                mu_curr += (w / P_new) * d;
+                                S_curr  += w * d * (y - mu_curr);
+                                P_curr   = P_new;
+                            }
+                        }
+
+                        // ==============================================================
+                        // 2. Balayage single-site (ti, sigma, delta), theta integre.
+                        //    Sens tire au hasard : la composition des N sous-pas devient
+                        //    reversible, ce qui rend exact le test unique de l'etape 3.
+                        //    Les valeurs sont posees par setValue ; les statistiques
+                        //    d'adaptation sont alimentees apres la decision du bloc.
+                        // ==============================================================
+                        std::vector<char> subAccepted(N, 0);
+                        const bool forward = Generator::randomUniform() < 0.5;
+
+                        for (size_t k = 0; k < N; ++k) {
+                            const size_t i = forward ? k : N - 1 - k;
+                            auto& date = event->mDates[i];
+
+                            const double ti_old0    = date.mTi.value();
+                            const double delta_old0 = date.mDelta;
+                            const double sigma_old  = date.mSigmaTi.value();
+
+                            double ti_prop    = ti_old0;
+                            double sigma_prop = sigma_old;
+                            double log_rate_L   = 0.0;
+                            double log_rate_q_t = 0.0;
+                            double log_rate_q_s = 0.0;
+                            bool isvalide = true;
+
+                            // --- A. Leave-One-Out O(1)
+                            const long double V1_old = static_cast<long double>(sigma_old) * sigma_old;
+                            const long double w_old  = 1.0L / V1_old;
+                            const long double y_old  = static_cast<long double>(ti_old0) + delta_old0;
+
+                            const long double P_removed = P_curr - w_old;
+                            long double mu_removed = 0.0L;
+                            long double S_removed  = 0.0L;
+                            if (P_removed > 0.0L) {
+                                mu_removed = (P_curr * mu_curr - w_old * y_old) / P_removed;
+                                S_removed  = S_curr - w_old * (y_old - mu_curr) * (y_old - mu_removed);
+                                if (S_removed < 0.0L && S_removed > -1e-18L) S_removed = 0.0L;
+                            } else {
+                                mu_removed = y_old;
+                            }
+
+                            // --- B. Tirage de delta_prop dans son prior (aucun terme de Hastings)
+#pragma mark sampling Delta Wiggle
+                            double delta_prop;
+                            switch (date.mDeltaType) {
+                            case Date::eDeltaNone:     delta_prop = 0.0; break;
+                            case Date::eDeltaRange:    delta_prop = Generator::randomUniform(date.mDeltaMin, date.mDeltaMax); break;
+                            case Date::eDeltaGaussian: delta_prop = Generator::normalDistribution(date.mDeltaAverage, date.mDeltaError); break;
+                            case Date::eDeltaFixed:    delta_prop = date.mDeltaFixed; break;
+                            default:                   delta_prop = delta_old0; break;
+                            }
+
+                            // --- C. Propositions (ti, sigma)
+                            if (Generator::randomUniform() < mixingKernel) {
+#pragma mark noyau B.2
+                                date.mTi.mSamplerProposal      = SamplerProposal::eRWAdaptGauss;
+                                date.mSigmaTi.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
+
+                                const double log10_V1 = std::log10(static_cast<double>(V1_old));
+                                const double log10_V2 = Generator::normalDistribution(log10_V1, date.mSigmaTi.mSigmaMH);
+
+                                constexpr double logVMin = -100.0;
+                                constexpr double logVMax =  100.0;
+                                if (!std::isfinite(log10_V2) || log10_V2 < logVMin || log10_V2 > logVMax) {
+                                    isvalide = false;
+                                } else {
+                                    sigma_prop = std::sqrt(std::pow(10.0, log10_V2));
+                                    const double s_z = date.mTi.mSigmaMH;
+
+                                    if (P_removed > 0.0L) {
+                                        const double ti_bar = static_cast<double>(mu_removed) - delta_old0;
+                                        const double z_old  = (ti_old0 - ti_bar) / sigma_old;
+                                        const double z_prop = Generator::normalDistribution(z_old, s_z);
+                                        ti_prop = ti_bar + sigma_prop * z_prop;
+                                        log_rate_q_t = 0.0;
+                                        log_rate_q_s = 3.0 * std::log(sigma_prop / sigma_old);
+                                    } else {
+                                        ti_prop = ti_old0 + Generator::normalDistribution(0.0, s_z);
+                                        log_rate_q_t = 0.0;
+                                        log_rate_q_s = 2.0 * std::log(sigma_prop / sigma_old);
+                                    }
+                                }
+                            } else {
+#pragma mark noyau A.1
+                                date.mTi.mSamplerProposal      = SamplerProposal::eLikelihood;
+                                date.mSigmaTi.mSamplerProposal = SamplerProposal::ePrior;
+#pragma mark update sigma
+                                const double S02 = event->mS02Theta.value();
+                                constexpr double VMin = 1e-12;
+                                constexpr double VMax = 1e10;
+                                // AJOUT : la proposition A.1 ne couvre que [VMin, VMax]. Si l'etat
+                                // courant (atteignable via B.2) est hors de cet intervalle, le
+                                // mouvement retour a une densite nulle : on rejette.
+                                if (static_cast<double>(V1_old) < VMin || static_cast<double>(V1_old) > VMax) {
+                                    isvalide = false;
+                                }
+
+                                const double V2 = Generator::shrinkageUniforme(S02, VMin, VMax);
+                                sigma_prop = std::sqrt(V2);
+
+                                if (sigma_prop <= 0.0) {
+                                    isvalide = false;
+                                } else {
+                                    if (Generator::randomUniform() < date.mMixingLevel) {
+                                        ti_prop = *date.mCalibration->sample_t();
+                                    } else {
+                                        const double tminCalib = date.mCalibration->mTmin;
+                                        const double tmaxCalib = date.mCalibration->mTmax;
+                                        const double s = std::max((date.mSettings.mTmax - date.mSettings.mTmin),
+                                                                  tmaxCalib - tminCalib) / 2.0;
+                                        ti_prop = Generator::normalDistribution(ti_old0, s);
+                                    }
+
+                                    const double q_fwd = date.fProposalDensity(ti_prop, ti_old0);
+                                    const double q_rev = date.fProposalDensity(ti_old0, ti_prop);
+                                    if (q_fwd <= 0.0 || q_rev <= 0.0) {
+                                        isvalide = false;
+                                    } else {
+                                        log_rate_q_t = std::log(q_rev) - std::log(q_fwd);
+                                        // independance exacte sur V : annule le prior shrinkage ajoute en E
+                                        log_rate_q_s = -2.0 * (std::log(S02 + static_cast<double>(V1_old)) - std::log(S02 + V2));
+                                    }
+                                }
+                            }
+
+                            // --- D. Vraisemblance de calibration
+                            if (isvalide) {
+                                const double L_old = date.getLikelihood(ti_old0);
+                                const double L_new = date.getLikelihood(ti_prop);
+                                if (L_new <= 0.0 || L_old <= 0.0)
+                                    isvalide = false;
+                                else
+                                    log_rate_L = std::log(L_new) - std::log(L_old);
+                            }
+
+                            // --- E. Marginale jointe + test
+                            if (isvalide) {
+                                const long double V2_new = static_cast<long double>(sigma_prop) * sigma_prop;
+                                const long double w_new  = 1.0L / V2_new;
+                                const long double y_new  = static_cast<long double>(ti_prop) + delta_prop;
+
+                                long double P_new = P_removed, mu_new = mu_removed, S_new = S_removed;
+                                if (P_new == 0.0L) {
+                                    P_new = w_new; mu_new = y_new; S_new = 0.0L;
+                                } else {
+                                    const long double d = y_new - mu_new;
+                                    P_new  = P_removed + w_new;
+                                    mu_new = mu_removed + (w_new / P_new) * d;
+                                    S_new  = S_removed + w_new * d * (y_new - mu_new);
+                                }
+                                if (S_new < 0.0L && S_new > -1e-18L) S_new = 0.0L;
+
+                                const long double log_sigma_i_ratio = std::log(sigma_prop / static_cast<long double>(sigma_old));
+                                long double log_prior_marginal_diff = 0.0L;
+                                bool degenerate = false;
+
+                                if (thetaFixed) {
+                                    const long double theta_fixed  = static_cast<long double>(min);
+                                    const long double residual_old = y_old - theta_fixed;
+                                    const long double residual_new = y_new - theta_fixed;
+                                    log_prior_marginal_diff = -0.5L * (residual_new * residual_new / V2_new
+                                                                       - residual_old * residual_old / V1_old)
+                                                              - log_sigma_i_ratio;
+                                } else {
+                                    const long double sigma_avg_old = 1.0L / std::sqrt(P_curr);
+                                    const long double sigma_avg_new = 1.0L / std::sqrt(P_new);
+
+                                    const long double a_old_min = (static_cast<long double>(min) - mu_curr) / sigma_avg_old;
+                                    const long double a_old_max = (static_cast<long double>(max) - mu_curr) / sigma_avg_old;
+                                    const long double a_new_min = (static_cast<long double>(min) - mu_new)  / sigma_avg_new;
+                                    const long double a_new_max = (static_cast<long double>(max) - mu_new)  / sigma_avg_new;
+
+                                    const double log_Z_old = log_diff_cdf(static_cast<double>(a_old_min), static_cast<double>(a_old_max));
+                                    const double log_Z_new = log_diff_cdf(static_cast<double>(a_new_min), static_cast<double>(a_new_max));
+
+                                    if (!std::isfinite(log_Z_old) || !std::isfinite(log_Z_new)) {
+                                        degenerate = true;
+                                    } else {
+                                        log_prior_marginal_diff = static_cast<long double>(log_Z_new - log_Z_old)
+                                                                + std::log(sigma_avg_new / sigma_avg_old)
+                                                                - log_sigma_i_ratio
+                                                                - 0.5L * (S_new - S_curr);
+                                    }
+                                }
+
+                                if (!degenerate) {
+                                    const long double S02_ld = static_cast<long double>(event->mS02Theta.value());
+                                    const long double log_prior_shrinkage = 2.0L * (std::log(S02_ld + V1_old) - std::log(S02_ld + V2_new));
+
+                                    // seule la calibration est temperee ; priors et Hastings ne le sont pas
+                                    const long double log_rate_total = log_prior_marginal_diff
+                                                                     + log_prior_shrinkage
+                                                                     + static_cast<long double>(log_rate_L / T)
+                                                                     + static_cast<long double>(log_rate_q_t)
+                                                                     + static_cast<long double>(log_rate_q_s);
+
+                                    if (MHAcceptanceTest_log(static_cast<double>(log_rate_total))) {
+                                        date.mTi.setValue(ti_prop);
+                                        date.mSigmaTi.setValue(sigma_prop);
+                                        date.mDelta = delta_prop;
+                                        P_curr  = P_new;
+                                        mu_curr = mu_new;
+                                        S_curr  = S_new;
+                                        subAccepted[i] = 1;
+                                    }
+                                }
+                            }
+                        } // fin du balayage
+
+                        // ==============================================================
+                        // 3. theta' tire EXACTEMENT dans TN(mu', sigma_avg'), puis test
+                        //    unique du bloc (dates + theta) sur le seul rapport courbe.
+                        //    Calibration, lien hierarchique, priors, normalisations TN et
+                        //    Hastings s'annulent exactement.
+                        // ==============================================================
+#pragma mark proposal Theta
+                        if (thetaFixed) {
+                            event->mTheta.setValue(min);
+                            event->mThetaReduced = mModel->reduceTime(min);
+                        } else {
+                            const double sigma_avg  = 1.0 / std::sqrt(static_cast<double>(P_curr));
+                            const double theta_prop = Generator::truncatedNormal(static_cast<double>(mu_curr), sigma_avg, min, max);
+
+                            const double log_rate = logRateSplineTry(event, theta_prop) / T;
+
+                            if (!std::isnan(log_rate) && MHAcceptanceTest_log(log_rate)) {
+                                commitTry();                        // theta deja place a theta_prop
+                            } else {
+                                restoreTheta(event, theta_old);
+                                for (size_t i = 0; i < N; ++i) {    // retour de TOUT le bloc
+                                    auto& date = event->mDates[i];
+                                    date.mTi.setValue(ti_save[i]);
+                                    date.mSigmaTi.setValue(sigma_save[i]);
+                                    date.mDelta = delta_save[i];
+                                }
+                            }
+                        }
+
+                        // Statistiques d'adaptation : signal du sous-pas, puisque c'est lui
+                        // que mTi.mSigmaMH et mSigmaTi.mSigmaMH reglent.
+                        for (size_t i = 0; i < N; ++i) {
+                            auto& date = event->mDates[i];
+                            commitMH(date.mTi,      date.mTi.value(),      subAccepted[i]);
+                            commitMH(date.mSigmaTi, date.mSigmaTi.value(), subAccepted[i]);
+                        }
+                        // ==============================================================
+                        // 4. Decalage rigide conjoint theta + ti (mouvement MH valide a lui
+                        //    seul). Lien hierarchique invariant ; calibration et courbe
+                        //    temperees. Seul utilisateur de mTheta.mSigmaMH.
+                        // ==============================================================
+#pragma mark Reparam - Decalage rigide theta + ti (courbe)
+                        if (!thetaFixed) {
+                            event->mTheta.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
+
+                            const double theta_old_shift  = event->mTheta.value();
+                            const double deltaTheta       = Generator::normalDistribution(0.0, event->mTheta.mSigmaMH);
+                            const double theta_prop_shift = theta_old_shift + deltaTheta;
+
+                            bool shiftValide = (theta_prop_shift >= min && theta_prop_shift <= max);
+                            long double log_rate_L_shift = 0.0L;
+                            std::vector<double> ti_prop_shift;
+
+                            if (shiftValide) {
+                                ti_prop_shift.reserve(N);
+                                for (const auto& date : event->mDates) {
+                                    const double ti_prop_i = date.mTi.value() + deltaTheta;
+                                    ti_prop_shift.push_back(ti_prop_i);
+                                    const double L_old = date.getLikelihood(date.mTi.value());
+                                    const double L_new = date.getLikelihood(ti_prop_i);
+                                    if (!(L_old > 0.0) || !(L_new > 0.0)) {
+                                        shiftValide = false;
+                                        break;
+                                    }
+                                    log_rate_L_shift += std::log(static_cast<long double>(L_new))
+                                                      - std::log(static_cast<long double>(L_old));
+                                }
+                            }
+
+                            if (shiftValide) {
+                                const double log_rate_shift =
+                                    (static_cast<double>(log_rate_L_shift) + logRateSplineTry(event, theta_prop_shift)) / T;
+
+                                if (!std::isnan(log_rate_shift) && MHAcceptanceTest_log(log_rate_shift)) {
+                                    commitMH(event->mTheta, theta_prop_shift, true);
+                                    for (size_t k = 0; k < N; ++k)
+                                        event->mDates[k].mTi.setValue(ti_prop_shift[k]);
+                                    commitTry();
+                                } else {
+                                    restoreTheta(event, theta_old_shift);
+                                    commitMH(event->mTheta, theta_old_shift, false);
+                                }
+                            } else {
+                                commitMH(event->mTheta, event->mTheta.value(), false);
+                            }
+                        }
+                    }
+
+#pragma mark update Wiggle
+                    for (auto&& date : event->mDates) {
+                        date.updateWiggle();
+                        commitMH(date.mWiggle, date.mWiggle.value(), true);
+                    }
+                    std::for_each(event->mPhases.begin(), event->mPhases.end(),
+                                  [this](std::shared_ptr<Phase> p) { p->update_AlphaBeta(tminPeriod, tmaxPeriod); });
+
+                } // fin boucle initListEvents
+
+                std::for_each(PAR mModel->mPhases.begin(), mModel->mPhases.end(),
+                              [this](std::shared_ptr<Phase> p) { p->update_Tau(tminPeriod, tmaxPeriod); });
+
+                std::for_each(PAR mModel->mPhaseConstraints.begin(), mModel->mPhaseConstraints.end(),
+                              [](std::shared_ptr<PhaseConstraint> pc) { pc->updateGamma(); });
+
+#pragma mark update S02Theta
+                if (AppSettings::mEventModel == EventModelType::EDM2) {
+                    try {
+                        for (std::shared_ptr<Event>& event : initListEvents
+                             | std::views::filter([](const auto& ev) {
+                                   return ev->mTheta.mSamplerProposal != SamplerProposal::eFixe
+                                       && ev->type() != Event::eBound;
+                               })) {
+                            event->updateS02Theta_v338();
+                        }
+                    } catch (...) {
+                        qDebug() << "[" << __func__ << "] S02Theta : Caught Exception!\n";
+                    }
+                }
+            }
+
+        } catch (...) {
+            qDebug() << "[" << __func__ << "] Theta : Caught Exception!\n";
+        }
+
+#pragma mark CURVE ----
+        // --------------------------------------------------------------
+        //  D - Update Vg Global ou Individuel (gele si T > 1)
+        // --------------------------------------------------------------
+        try {
+            if (mCurveSettings.mVarianceType != CurveSettings::eModeFixed) {
+
+                // S02Vg est une fonction deterministe de (theta, Y) : toujours recalcule
+                if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
+                    const std::vector<double>& vec_t = get_vector<double>(get_Theta, mModel->mEvents);
+                    Var_residual_spline = var_Gasser(vec_t, current_Y);
+                }
+                mModel->mS02Vg = Var_residual_spline;
+
+                if (!hot && mCurveSettings.mVarianceType == CurveSettings::eModeBayesian) {
+#pragma mark Update Vg individuel
+                    for (std::shared_ptr<Event>& event : initListEvents) {
+                        if (event->mVg.mSamplerProposal != SamplerProposal::eFixe) {
+
+                            const double  old_Vg    = event->mVg.value();
+                            const t_prob  W_current = event->mW;
+                            const double  prop_Vg_log = Generator::normalDistribution(log10(old_Vg), event->mVg.mSigmaMH);
+
+                            if (prop_Vg_log >= -20 && prop_Vg_log <= 10) {
+                                const double prop_Vg = pow(10.0, prop_Vg_log);
+
+                                event->mVg.setValue(prop_Vg);
+                                event->updateW();
+
+                                const auto   r_vg      = (mModel->mS02Vg + old_Vg) / (mModel->mS02Vg + prop_Vg);
+                                const auto   rate_h_vg = r_vg * r_vg;
+                                const t_prob W_1_try   = prop_Vg + event->mSy * event->mSy;
+
+                                const t_prob dx = event->mYx - event->mGx;
+                                t_prob sum_sq = dx * dx;
+                                if (mModel->compute_Y) {
+                                    const t_prob dy = event->mYy - event->mGy;
+                                    sum_sq += dy * dy;
+                                }
+                                if (mModel->compute_XYZ) {
+                                    const t_prob dz = event->mYz - event->mGz;
+                                    sum_sq += dz * dz;
+                                }
+
+                                const t_prob log_delta_h  = 0.5 * (sum_sq / W_1_try - sum_sq * W_current);
+                                const t_prob sqrt_W_ratio = 1.0 / sqrt(W_current * W_1_try);
+                                const t_prob rate_sqrt_Wi = std::pow(sqrt_W_ratio, n_components);
+
+                                t_prob rate_vg = rate_sqrt_Wi * std::exp(-log_delta_h) * rate_h_vg;
+                                rate_vg *= prop_Vg / old_Vg; // jacobien log10
+
+                                const bool acc = MHAcceptanceTest(rate_vg);
+                                commitMH(event->mVg, acc ? prop_Vg : old_Vg, acc);
+                                event->updateW();
+
+                            } else {
+                                commitMH(event->mVg, old_Vg, false);
+                                event->updateW();
+                            }
+
+                        }
+                    }
+
+                } else if (!hot && mCurveSettings.mVarianceType == CurveSettings::eModeGlobal) {
+#pragma mark Update Vg Global
+                    auto it = std::find_if(initListEvents.begin(), initListEvents.end(),
+                                           [](auto ev) { return ev->mPointType == Event::ePoint; });
+
+                    const double old_Vg      = it->get()->mVg.value();
+                    const double prop_Vg_log = Generator::truncatedNormal(log10(old_Vg), it->get()->mVg.mSigmaMH, -20, 10);
+                    const double prop_Vg     = pow(10.0, prop_Vg_log);
+
+                    const double prior_Vg_old  = h_VG_Event(old_Vg,  mModel->mS02Vg);
+                    const double prior_Vg_prop = h_VG_Event(prop_Vg, mModel->mS02Vg);
+
+                    double sum_log_variance_ratio   = 0.0;
+                    double log_likelihood_quad_old  = 0.0;
+                    double log_likelihood_quad_prop = 0.0;
+
+                    for (std::shared_ptr<Event>& ev : mModel->mEvents) {
+                        const double mW_prop       = 1.0 / (prop_Vg + ev->mSy * ev->mSy);
+                        const double log_var_ratio = log(prop_Vg + ev->mSy * ev->mSy) + log(ev->mW);
+
+                        sum_log_variance_ratio   += log_var_ratio;
+                        log_likelihood_quad_old  += -0.5 * std::pow(ev->mYx - ev->mGx, 2.0) * ev->mW;
+                        log_likelihood_quad_prop += -0.5 * std::pow(ev->mYx - ev->mGx, 2.0) * mW_prop;
+
+                        if (mModel->compute_Y) {
+                            log_likelihood_quad_old  += -0.5 * pow(ev->mYy - ev->mGy, 2.0) * ev->mW;
+                            log_likelihood_quad_prop += -0.5 * pow(ev->mYy - ev->mGy, 2.0) * mW_prop;
+                            sum_log_variance_ratio   += log_var_ratio;
+                        }
+                        if (mModel->compute_XYZ) {
+                            log_likelihood_quad_old  += -0.5 * pow(ev->mYz - ev->mGz, 2.0) * ev->mW;
+                            log_likelihood_quad_prop += -0.5 * pow(ev->mYz - ev->mGz, 2.0) * mW_prop;
+                            sum_log_variance_ratio   += log_var_ratio;
+                        }
+                    }
+
+                    const double log_rate_vg = -0.5 * sum_log_variance_ratio
+                                             + (log_likelihood_quad_prop - log_likelihood_quad_old)
+                                             + log(prior_Vg_prop) + log(prop_Vg)
+                                             - log(prior_Vg_old)  - log(old_Vg);
+
+                    const bool acc = MHAcceptanceTest_log(log_rate_vg);
+                    for (std::shared_ptr<Event>& ev : mModel->mEvents) {
+                        commitMH(ev->mVg, acc ? prop_Vg : old_Vg, acc);
+                        ev->updateW();
+                    }
+
+                }
+
+            }
+        } catch (...) {
+            std::cout << "[" << __func__ << "] update VG Event Caught Exception!" << std::endl;
+        }
+
+        // --------------------------------------------------------------
+        //  E - Update Lambda Spline (gele si T > 1)
+        // --------------------------------------------------------------
+#pragma mark Update Lambda Spline
+        try {
+            if (mCurveSettings.mLambdaSplineType == CurveSettings::eModeBayesian && !hot) {
+                const double old_lambda = mModel->mLambdaSpline.value();
+
+                const int n_total = current_R.rows();
+                const int n_cols  = current_G.cols();
+                const int first   = 1;
+                const int nsub    = n_total - 2;
+
+                MatrixD v = SparseMatrixD(current_Q.transpose()) * current_G;
+                if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian)
+                    current_R_solver.factorize(current_R);
+
+                MatrixD x = MatrixD::Zero(n_total, n_cols);
+                x.block(first, 0, nsub, n_cols) = current_R_solver.solve(v.block(first, 0, nsub, n_cols));
+
+                double sum_quadratic = 0.0;
+                for (int c = 0; c < n_cols; ++c)
+                    sum_quadratic += v.col(c).dot(x.col(c));
+
+                const double prop_lambda_log = Generator::truncatedNormal(log10(old_lambda), mModel->mLambdaSpline.mSigmaMH, -20, +10);
+                const double prop_lambda     = pow(10.0, prop_lambda_log);
+
+                double log_rate_lambda;
+                if (mModel->compute_XYZ)
+                    log_rate_lambda = log_rate_h_lambda_XYZ_339(old_lambda, prop_lambda, n_points);
+                else if (mModel->compute_Y)
+                    log_rate_lambda = log_rate_h_lambda_XY_339(old_lambda, prop_lambda, n_points);
+                else
+                    log_rate_lambda = log_rate_h_lambda_X_339(old_lambda, prop_lambda, n_points);
+
+                log_rate_lambda += -(prop_lambda - old_lambda) * 0.5 * sum_quadratic;     // log rate_ftKf
+                log_rate_lambda += std::log(prop_lambda) - std::log(old_lambda);         // jacobien log10
+
+                const bool acc = MHAcceptanceTest_log(log_rate_lambda);
+                commitMH(mModel->mLambdaSpline, acc ? prop_lambda : old_lambda, acc);
+            }
+            // hot : lambda gele, aucun appel -> adaptation intacte
+        } catch (...) {
+            qDebug() << "[" << __func__ << "] Lambda : Caught Exception!\n";
+        }
+
+        // --------------------------------------------------------------
+        //  F - Update Spline f(x)
+        // --------------------------------------------------------------
+        mModel->mSpline = samplingSpline_multi2(mModel->mEvents, current_R, current_Q);
+
+        // Chauffe / dwell : pas de memo, donc pas de test de monotonie
+        if (!counting)
+            return false;
+
+        // Acquisition
+        if (mCurveSettings.mProcessType == CurveSettings::eProcess_Depth)
+            return hasPositiveGPrimePlusConst(mModel->mSpline.splineX, mModel->mSettings.mTmin,
+                                              mModel->mSettings.mTmax, mCurveSettings.mThreshold);
+        return true;
+
+    } catch (const std::exception& e) {
+        qWarning() << "[" << __func__ << "] " << e.what();
+    } catch (...) {
+        qWarning() << "[" << __func__ << "] Caught Exception!";
+    }
+    return false;
+}
 
 #endif
 
@@ -17447,7 +18995,7 @@ double MCMCLoopCurve::S02_Vg_Yy(std::vector<std::shared_ptr<Event> >& events, co
         S02 += pow(ev->mYy - *g++, 2.);
     }
     //  Mat_B = R + alpha * Qt * W-1 * Q
-    const MatrixLD matB = addMatEtMat(matricesWI.matR, multiConstParMat(matricesWI.matQTW_1Q, lambdaSpline, 5), 5);
+    const MatrixLD matB = addMatEtMat(matricesWI.matR, multiConstParMat(matricesWI.matQTW_1Q, lambdaSpline), 5);
 
     // Decomposition_Cholesky de matB en matL et matD
     const std::pair<MatrixLD, DiagonalMatrixLD> decomp = decompositionCholesky(matB, 5, 1);
@@ -17470,23 +19018,21 @@ double MCMCLoopCurve::S02_Vg_Yz(std::vector<std::shared_ptr<Event>> &events, con
 
     double S02 = 0;
     // schoolbook
-    /*
-    for (unsigned long i = 0; i< vecG.size(); i++) {
-        S02 += pow(_events[i]->mYz - vecG[i], 2.);
-    }
-    */
+    //
+    // for (unsigned long i = 0; i< vecG.size(); i++) {
+    //     S02 += pow(_events[i]->mYz - vecG[i], 2.);
+    // }
+
     // C++ optimization
     auto g = vecG.begin();
     for (auto& ev : events) {
         S02 += pow(ev->mYz - *g++, 2.);
     }
     //  Mat_B = R + alpha * Qt * W-1 * Q
-    const MatrixLD& matB = addMatEtMat(matricesWI.matR, multiConstParMat(matricesWI.matQTW_1Q, lambdaSpline, 5), 5);
+    const MatrixLD& matB = addMatEtMat(matricesWI.matR, multiConstParMat(matricesWI.matQTW_1Q, lambdaSpline), 5);
 
     // Decomposition_Cholesky de matB en matL et matD
     const std::pair<MatrixLD, DiagonalMatrixLD>& decomp = decompositionCholesky(matB, 5, 1);
-
-    //const SplineResults &s = doSplineZ (matricesWI, events, vecH, decomp, lambdaSpline);
 
     const DiagonalMatrixLD matA = diagonal_influence_matrix(matricesWI, 1, decomp, lambdaSpline);
 
@@ -20668,6 +22214,7 @@ MatrixLD inverseMatSym_originKK(const MatrixLD &matrixLE,  const DiagonalMatrixL
  *             passe à Generator pour qu’il utilise le même source).
  * @return double  un échantillon λ.
  */
+/*
 double truncatedNormal(double mu, double a, double b)
 {
     if (!std::isfinite(mu) || !std::isfinite(a) || !std::isfinite(b)) {
@@ -20702,12 +22249,12 @@ double truncatedNormal(double mu, double a, double b)
     // La fonction lance des exceptions si le domaine est incohérent,
     // on les laisse remonter.
     return Generator::gaussByDoubleExp(mu, 1.0, min, max);
-}
+}*/
 
 
-/* -----------------------------------------------------------------
-   Hit‑and‑Run → **un seul** vecteur colonne (taille = mu.size()).
-   ----------------------------------------------------------------- */
+// -----------------------------------------------------------------
+//   Hit‑and‑Run → **un seul** vecteur colonne (taille = mu.size()).
+//   -----------------------------------------------------------------
 /*
 inline ColumnVectorD sampleOrdered_one(const ColumnVectorD& mu,
                                        const MatrixD& C,
@@ -20833,6 +22380,7 @@ inline ColumnVectorD sampleOrdered_one(const ColumnVectorD& mu,
 */
 
 // ne fonctionne pas avec notre MCMC, puisque l'interet et de garder C constant
+/*
 inline ColumnVectorD sampleOrdered_one(const ColumnVectorD& mu,
                                        const MatrixD& C,
                                        int nIterPerSample,
@@ -20915,4 +22463,4 @@ inline ColumnVectorD sampleOrdered_one(const ColumnVectorD& mu,
     // 5. Retour au domaine original : y = mu + Lz
     return mu + L * z;
 }
-
+*/

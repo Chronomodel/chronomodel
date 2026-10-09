@@ -333,10 +333,11 @@ void ProjectView::updateMultiCalibrationAndEventProperties()
  */
 void ProjectView::initResults()
 {
-    auto model = getModel_ptr();
+    const auto& model = getModel_ptr();
     model->updateDesignFromJson();
-    model->initDensities();
+    model->initDensities(); // affiche le flag vert
 
+MainWindow::getInstance()->setConvergenceStatus(model->mConvergenceSummary.status);
     model->generateModelLog();
     model->generateResultsLog();
 
@@ -361,7 +362,10 @@ void ProjectView::updateResults()
         model->updateDesignFromJson();
 
         mResultsView->updateModel();
-    }
+        MainWindow::getInstance()->setConvergenceStatus(model->mConvergenceSummary.status);
+    } else
+        MainWindow::getInstance()->setConvergenceStatus(MCMCDiagnostic::ConvergenceStatus::eNone);
+
 }
 
 void ProjectView::updateResultsLog()

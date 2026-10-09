@@ -269,7 +269,7 @@ void MainWindow::createActions()
     mRunAction->setIconVisibleInMenu(true);
     mRunAction->setToolTip(tr("Run Model"));
 
-    mResetMCMCAction = new QAction(tr("Reset Events and Data samplers"), this);
+    //mResetMCMCAction = new QAction(tr("Reset Events and Data samplers"), this);
 
     //-----------------------------------------------------------------
     // View Actions
@@ -407,7 +407,7 @@ void MainWindow::createMenus()
     mMCMCMenu->addAction(mRunAction);
     mMCMCMenu->addAction(mMCMCSettingsAction);
     mMCMCMenu->addSeparator();
-    mMCMCMenu->addAction(mResetMCMCAction);
+    //mMCMCMenu->addAction(mResetMCMCAction);
 
     //-----------------------------------------------------------------
     // View menu
@@ -690,7 +690,7 @@ void MainWindow::connectProject()
     connect(mProject.get(), &Project::projectStateChanged, this, &MainWindow::updateProject);
 
     connect(mMCMCSettingsAction, &QAction::triggered, mProject.get(), &Project::mcmcSettings);
-    connect(mResetMCMCAction, &QAction::triggered, mProject.get(), &Project::resetMCMC);
+    //connect(mResetMCMCAction, &QAction::triggered, mProject.get(), &Project::resetMCMC);
 
     connect(mRunAction, &QAction::triggered, mProject.get(), &Project::run);
 }
@@ -702,7 +702,7 @@ void MainWindow::disconnectProject()
     disconnect(mProject.get(), &Project::projectStateChanged, this, &MainWindow::updateProject);
 
     disconnect(mMCMCSettingsAction, &QAction::triggered, mProject.get(), &Project::mcmcSettings);
-    disconnect(mResetMCMCAction, &QAction::triggered, mProject.get(), &Project::resetMCMC);
+    //disconnect(mResetMCMCAction, &QAction::triggered, mProject.get(), &Project::resetMCMC);
 
     disconnect(mRunAction, &QAction::triggered, mProject.get(), &Project::run);
 
@@ -1064,7 +1064,7 @@ void MainWindow::rebuildExportCurve()
         }
 
         int totalIterDisplay = 1;
-        int last_totalIterDisplay = totalIterDisplay;
+        int last_totalIterDisplay;
         int iter_index = 0;
         std::vector<size_t> index_to_memo ;
         if (!curveModel->compute_Y) {
@@ -1094,7 +1094,18 @@ void MainWindow::rebuildExportCurve()
  *  ou Versions >= 4.0.0 (tout numéro majeur > 3)          */
 #if (VERSION_MAJOR > 3)                                   \
                 ||  (VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5)
+
+                last_totalIterDisplay = totalIterDisplay;
+                // TODO
+                //curveModel->memo_PosteriorG_3D_filtering(meanG.gx, splineXYZ.splineX, totalIterDisplay, minMaxPFilter );
+                if (last_totalIterDisplay == totalIterDisplay) { // increment = courbe acceptée
+                    index_to_memo.push_back(iter_index);
+                }
+                ++iter_index;
+
                 curveModel->memo_PosteriorG_3D_335(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterDisplay );
+
+
 #else
                 curveModel->memo_PosteriorG_3D(meanG, splineXYZ, curveModel->mCurveSettings.mProcessType,  totalIterDisplay );
 #endif
@@ -1194,6 +1205,7 @@ void MainWindow::rebuildExportCurve()
             for (size_t i = 0; i<curveModel->Model::mEvents.size(); ++i) {
 
                 auto& ev = curveModel->mEvents[i];
+
                 // Initialisation et copie pour mTheta
                 ev->mTheta.is_curve_filtering = true;
                 if (ev->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
@@ -1202,7 +1214,8 @@ void MainWindow::rebuildExportCurve()
 
                     // Initialisation et copie pour mS02Theta
                     ev->mS02Theta.is_curve_filtering = true;
-                    copyFilteredData(ev->mS02Theta.mAllAcquiredTrace, ev->mS02Theta.mDisplayAcquiredTrace, index_to_memo);
+                    if (ev->mS02Theta.mSamplerProposal != SamplerProposal::eFixe)
+                        copyFilteredData(ev->mS02Theta.mAllAcquiredTrace, ev->mS02Theta.mDisplayAcquiredTrace, index_to_memo);
 
                     // mise à jour des dates
                     for (auto& d : ev->mDates) {
@@ -1215,6 +1228,18 @@ void MainWindow::rebuildExportCurve()
                 }
 
             }
+            // Si les Event sont filtrés, il faut recalculer les phases
+            for (auto& p : curveModel->Model::mPhases) {
+                p->mAlpha.is_curve_filtering = true;
+                copyFilteredData(p->mAlpha.mAllAcquiredTrace, p->mAlpha.mDisplayAcquiredTrace, index_to_memo);
+
+                p->mBeta.is_curve_filtering = true;
+                copyFilteredData(p->mBeta.mAllAcquiredTrace, p->mBeta.mDisplayAcquiredTrace, index_to_memo);
+
+                p->mDuration.is_curve_filtering = true;
+                copyFilteredData(p->mDuration.mAllAcquiredTrace, p->mDuration.mDisplayAcquiredTrace, index_to_memo);
+            }
+
             if (curveModel->is_curve) {
                 for (size_t i = 0; i<curveModel->Model::mEvents.size(); ++i) {
                     auto& ev = curveModel->mEvents[i];
@@ -1229,12 +1254,13 @@ void MainWindow::rebuildExportCurve()
                     copyFilteredData(curveModel->mLambdaSpline.mAllAcquiredTrace, curveModel->mLambdaSpline.mDisplayAcquiredTrace, index_to_memo);
                 }
             }
+
         }
         else {
             for (size_t i = 0; i<curveModel->Model::mEvents.size(); i++) {
                 auto& ev = curveModel->mEvents[i];
                 ev->mTheta.is_curve_filtering = false;
-                ev->mTheta.mDisplayAcquiredTrace= std::make_shared<std::vector<double>>();
+                ev->mTheta.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
 
                 ev->mS02Theta.is_curve_filtering = false;
                 ev->mS02Theta.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
@@ -1242,13 +1268,24 @@ void MainWindow::rebuildExportCurve()
                 //mise à jour des dates
                 for (auto& d : ev->mDates) {
                     d.mTi.is_curve_filtering = false;
-                    d.mTi.mDisplayAcquiredTrace= std::make_shared<std::vector<double>>();
+                    d.mTi.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
 
                     d.mSigmaTi.is_curve_filtering = false;
                     d.mSigmaTi.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
 
                 }
             }
+            for (auto& p : curveModel->Model::mPhases) {
+                p->mAlpha.is_curve_filtering = false;
+                p->mAlpha.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
+
+                p->mBeta.is_curve_filtering = false;
+                p->mBeta.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
+
+                p->mDuration.is_curve_filtering = false;
+                p->mDuration.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
+            }
+
             if (curveModel->is_curve) {
                 for (size_t i = 0; i<curveModel->Model::mEvents.size(); ++i) {
                     auto& ev = curveModel->mEvents[i];
@@ -1264,6 +1301,7 @@ void MainWindow::rebuildExportCurve()
                 }
             }
         }
+
         auto& model = mProject->mModel;
         model->updateDensities(model->mFFTLength, model->mBandwidthType, model->mBandwidth, model->mThreshold);
 
@@ -1515,7 +1553,7 @@ void MainWindow::clearInterface()
     mCurveAction->setEnabled(false);
     mViewModelAction->setEnabled(false);
     mMCMCSettingsAction->setEnabled(false);
-    mResetMCMCAction->setEnabled(false);
+    //mResetMCMCAction->setEnabled(false);
 
     mSelectEventsAction->setEnabled(false);
 
@@ -1550,7 +1588,7 @@ void MainWindow::activateInterface(bool activate)
     mCurveAction->setEnabled(activate);
     mViewModelAction->setEnabled(activate);
     mMCMCSettingsAction->setEnabled(activate);
-    mResetMCMCAction->setEnabled(activate);
+    //mResetMCMCAction->setEnabled(activate);
 
     mSelectEventsAction->setEnabled(activate);
     mEventsColorAction->setEnabled(activate);
@@ -1606,12 +1644,16 @@ void MainWindow::mcmcFinished()
     mViewResultsAction->setChecked(true);
 
     mRescaleCurveAction->setEnabled(mProject->isCurve());
-
     // Tell the views to update
-    mProjectView->initResults();
+    mProjectView->initResults(); // affiche le flag vert
 
+}
+
+
+void MainWindow::setConvergenceStatus( MCMCDiagnostic::ConvergenceStatus status)
+{
     QColor color;
-    switch (mProject->mModel->mConvergenceSummary.status) {
+    switch (status) {
     case MCMCDiagnostic::ConvergenceStatus::eGood:    color = QColor(0x2e, 0xcc, 0x71); break; // vert
     case MCMCDiagnostic::ConvergenceStatus::eWarning: color = QColor(0xf3, 0x9c, 0x12); break; // orange
     case MCMCDiagnostic::ConvergenceStatus::eBad:     color = QColor(0xe7, 0x4c, 0x3c); break; // rouge

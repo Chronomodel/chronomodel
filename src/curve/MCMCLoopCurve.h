@@ -213,6 +213,10 @@ protected:
     // Echantillonnage par bloc
     bool sampler_339_block_2v(); //bloc de 2 variables : ti & theta
     bool tempering_339_block(double T);
+    bool tempering_339_ti_marg(double T); // en test
+
+    bool tempering_339_SingleSite_bloc_delta(const double T_in);  //en test
+
     bool sampler_339_block_4v(); // bloc de 4 variables : ti, delta, sigma_ti et theta
 
     bool sampler_339_SingleSite();
@@ -389,7 +393,7 @@ ColumnVectorD hitAndRun(const ColumnVectorD& mu,
 /* -----------------------------------------------------------------
    Truncated normal sampler (standard deviation = 1, mean = mu)
    ----------------------------------------------------------------- */
-double truncatedNormal(double mu, double a, double b);
+//double truncatedNormal(double mu, double a, double b);
 
 
 /* -----------------------------------------------------------------
@@ -403,9 +407,9 @@ MatrixD sampleOrdered(const RowVectorD& mu,
                             int burnIn          = 1000, // itérations à jeter
                             int thin            = 1) ;   // sous‑échantillonnage
 
-ColumnVectorD sampleOrdered_one(const ColumnVectorD& mu,
+/* ColumnVectorD sampleOrdered_one(const ColumnVectorD& mu,
                                        const MatrixD& C,
                                        int nIterPerSample = 250,   // itérations entre deux enregistrements
                                        int burnIn          = 1000, // itérations à jeter avant le premier enregistrement
-                                       int thin            = 1) ;
+                                       int thin            = 1) ;*/
 #endif

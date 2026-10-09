@@ -266,6 +266,8 @@ void Model::clear()
     mLogInit.clear();
     mLogAdapt.clear();
     mLogResults.clear();
+
+    MainWindow::getInstance()->setConvergenceStatus(MCMCDiagnostic::ConvergenceStatus::eNone);
 }
 
 void Model::shrink_to_fit()
@@ -1390,11 +1392,26 @@ void Model::updateDensities(int fftLen, BandwidthType bandwidthType, double band
     if (getProject_ptr()->mLoop)
         emit getProject_ptr()->mLoop->setMessage(QObject::tr("Computing posterior distributions and numerical results"));
 
-    updateFormatSettings(); // update mFormat for formatedCredibility and formatedTrace
 
-    generatePosteriorDensities(mChains, fftLen, bandwidthType, bandwidth);
+    updateFormatSettings(); // update mFormat for formatedCredibility and formatedTrace, reconstruit mFormatedAcquiredTrace
 
-    generateHPD(threshold);
+    // Vérifier si au moins une chaîne a mIterDisplay différent de mRealyAccepted, pour refaire les RHat et ESS
+   /* bool is_curve_filtering = false;
+    const auto& model = getModel_ptr();
+    for (const auto &ch : model->mChains) {
+        if (ch.mIterDisplay != ch.mRealyAccepted) {
+            is_curve_filtering = true;
+            break;
+        }
+    }
+    if (is_curve_filtering)*/
+    // Si les traces sont modifiés, il faut refaire le calcul
+        generateTraceNumericalResults(mChains);
+
+
+    generatePosteriorDensities(mChains, fftLen, bandwidthType, bandwidth);  // utilise les stats de Traces
+
+    generateHPD(threshold); // utilise formatedAcquiredTrace
     generateCredibility(threshold);
 
     // memo the new value of the Threshold inside all the part of the model: phases, events and dates
@@ -1644,10 +1661,9 @@ void Model::generateTraceNumericalResults(const std::vector<ChainSpecs> &chains)
                                phase->mDuration.mResults.RhatESS.tailESS));
 
     }*/
-    //mConvergenceSummary = MCMCDiagnostic::computeConvergenceSummary(Rhat, ESS);
+
     auto M = mChains.size();
     mConvergenceSummary = MCMCDiagnostic::computeConvergenceSummary(Rhat, ESS, M);
-
     std::cout << " Convergence Summary : " << mConvergenceSummary.label.toStdString() << std::endl;
 
 #ifdef DEBUG
@@ -1800,7 +1816,7 @@ void Model::generateTempo(const size_t gridLength)
         for (const auto& ev : phase->mEvents) {
             if (ev->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
 
-                const auto & rawtrace = *ev->mTheta.mAllAcquiredTrace;
+                const auto & rawtrace = *ev->mTheta.traceToDisplay();// .mAllAcquiredTrace;
                 concaAllTrace.resize(concaAllTrace.size() + rawtrace.size());
                 std::copy_backward( rawtrace.begin(), rawtrace.end(), concaAllTrace.end() );
 

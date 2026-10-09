@@ -337,7 +337,7 @@ public slots:
     bool save();
 
     void mcmcSettings();
-    void resetMCMC();
+    //void resetMCMC();
     
     void run();
     void runChronomodel();

@@ -67,6 +67,8 @@ namespace ModelUtilities
 
 #pragma mark Results in HTML format
     QString dateResultsHTML(const Date* date, const double tmin_formated = 0, const double tmax_formated  = 0);
+    QString wiggleResultsHTML(const Date* date);
+
     QString sigmaTiResultsHTML(const Date* date);
 
     QString eventResultsHTML(const std::shared_ptr<Event> e, const bool withDates, const double tmin_formated = 0, const double tmax_formated = 0, bool with_curve = false);

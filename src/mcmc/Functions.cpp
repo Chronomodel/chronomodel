@@ -2464,7 +2464,7 @@ double quadratic_form(const MatrixD& K, const MatrixD& Y)
 
 }
 
-MatrixLD multiConstParMat(const MatrixLD& matrix, const double c, const size_t nbBandes)
+MatrixLD multiConstParMat(const MatrixLD& matrix, const double c)
 {
     /*const size_t i_max = static_cast<size_t>(matrix.rows())-1;
     MatrixLD result = matrix;

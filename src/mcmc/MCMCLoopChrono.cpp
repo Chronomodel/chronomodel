@@ -599,7 +599,7 @@ void MCMCLoopChrono::tempering_339_ti_marg(std::vector<std::shared_ptr<Event>> &
                 const double max = event->getThetaMax(tmaxPeriod);
 
                 if (min > max) {
-                    throw QObject::tr("[Event::tempering_339] Error for event : %1 : min = %2 : max = %3")
+                    throw QObject::tr("[Event::tempering_339_ti_marg] Error for event : %1 : min = %2 : max = %3")
                     .arg(event->getQStringName(), QString::number(min), QString::number(max));
                 }
 
@@ -610,7 +610,6 @@ void MCMCLoopChrono::tempering_339_ti_marg(std::vector<std::shared_ptr<Event>> &
                     event->mThetaReduced = mModel->reduceTime(min);
 
                     for (auto&& date : event->mDates) {
-                        //date.applyTi(event->mTheta.value());
                         date.applyInversion(event->mTheta.value());
                     }
                 }
@@ -2841,11 +2840,10 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc_delta(std::vector<std::shared_p
                                 // changement de variable (ti,V)->(z,u) est bien défini, même
                                 // ancrage aller/retour => jacobien joint valide.
                                 // ----------------------------------------------------------------
-                                const double ti_bar = static_cast<double>(mu_removed) - delta_old0;
-
-                                const double z_old  = (ti_old0 - ti_bar) / sigma_old;
+                                const double y_bar  = static_cast<double>(mu_removed);
+                                const double z_old  = (ti_old0 + delta_old0 - y_bar) / sigma_old;
                                 const double z_prop = Generator::normalDistribution(z_old, s_z);
-                                ti_prop = ti_bar + sigma_prop * z_prop;
+                                ti_prop = y_bar + sigma_prop * z_prop - delta_prop;
 
                                 // Marche (z,u) symétrique => Hastings = jacobien joint seul
                                 // |J(ti,V)->(z,u)| = 1/(V^{3/2} ln10) => (sigma_prop/sigma_old)^3
@@ -2872,7 +2870,7 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc_delta(std::vector<std::shared_p
 
                                 log_rate_q_t = 0.0;
                                 log_rate_q_s = 2.0 * std::log(sigma_prop / sigma_old);
-                               // log_rate_q_s = 2.0 * std::log(sigma_old / sigma_prop);
+
                             }
 
                         }
@@ -2892,6 +2890,13 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc_delta(std::vector<std::shared_p
 
                         constexpr double VMin = 1e-12;
                         constexpr double VMax = 1e10;
+
+                        // AJOUT : la proposition A.1 ne couvre que [VMin, VMax]. Si l'etat
+                        // courant (atteignable via B.2) est hors de cet intervalle, le
+                        // mouvement retour a une densite nulle : on rejette.
+                        if (static_cast<double>(V1_old) < VMin || static_cast<double>(V1_old) > VMax) {
+                            isvalide = false;
+                        }
 
                         const double V2 = Generator::shrinkageUniforme(S02, VMin, VMax);
                         sigma_prop = std::sqrt(V2);

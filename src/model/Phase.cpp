@@ -784,8 +784,8 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
 
     if (!mValueStack.empty() && ((mValueStack.at("Activity_TimeRange_min") == mValueStack.at("Activity_TimeRange_max"))
         || mValueStack.at("Activity_TimeRange_Level") != timeRangeLevel)) {
-        const auto& betaTrace = *mBeta.mAllAcquiredTrace;
-        const auto& alphaTrace = *mAlpha.mAllAcquiredTrace;
+        const auto& betaTrace = *mBeta.traceToDisplay();//.mAllAcquiredTrace;
+        const auto& alphaTrace = *mAlpha.traceToDisplay();//.mAllAcquiredTrace;
 
         const std::pair<double, double> timeRange = timeRangeFromTraces( alphaTrace, betaTrace, timeRangeLevel, "Time Range for Phase : " + getQStringName());
         mValueStack.insert_or_assign("Activity_TimeRange_min", timeRange.first);
@@ -806,7 +806,7 @@ void Phase::generateActivity(size_t gridLength, double h, const double threshold
     for (const auto& ev : mEvents) {
         if (ev->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
             //const auto &rawtrace = ev->mTheta.fullRunRawTrace(model->mChains);
-            const auto& rawtrace = *ev->mTheta.mAllAcquiredTrace;
+            const auto& rawtrace = *ev->mTheta.traceToDisplay();// mAllAcquiredTrace;
             std::copy_if(rawtrace.begin(), rawtrace.end(),
                          std::back_inserter(concaTrace),
                          [TimeRange_min, TimeRange_max](double x) { return (TimeRange_min<= x && x<= TimeRange_max); });

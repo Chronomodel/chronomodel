@@ -1234,7 +1234,6 @@ ResultsView::ResultsView(QWidget* parent, Qt::WindowFlags flags):
     mPhasesScrollArea->setVisible(false);
     mCurvesScrollArea->setVisible(false);
 
-    //mGraphHeight = 4 * AppSettings::heigthUnit();
     setGraphsHeightForProp(1.0);
     mHeightForVisibleTicksAxis = mGraphHeight ;
 
@@ -4024,16 +4023,7 @@ void ResultsView::updateScales()
         mResultMaxT = 40.0;
 
         mTimeSlider->setRange(0, kSliderMax);
-        // On ne peut pas regarder en dehors de l'intervalle
-        // The Ruler range is set exactly to the min and max (impossible to scroll outside)
-        const double tCenter = (mResultMinT + mResultMaxT) * 0.5;
-        const double tSpan_2 = (mResultMaxT - mResultMinT) * 0.5;
-        const double maxZoom = sliderToZoom(mTimeSlider->maximum()) * 0.01;
 
-        const double tRangeMin = tCenter - (tSpan_2 * maxZoom);
-        const double tRangeMax = tCenter + (tSpan_2 * maxZoom);
-
-        //mRuler->setRange(tRangeMin, tRangeMax);
         mRuler->setRange(0, 40);
 
         mRuler->setFormatFunctX(nullptr);
@@ -4098,8 +4088,8 @@ void ResultsView::updateScales()
             }
             setXRange();
 
-            graphs[0]->updateCurves(mCurrentTypeGraph, mShowList, mShowAllChains, mShowChainList);
-            graphs[0]->forceRefresh();
+            //graphs[0]->updateCurves(mCurrentTypeGraph, mShowList, mShowAllChains, mShowChainList);
+            //graphs[0]->forceRefresh();
         }
         // -------------------------------------------------------
         // Y option
@@ -4117,8 +4107,8 @@ void ResultsView::updateScales()
             }
             setYRange();
 
-            graphs[1]->updateCurves(mCurrentTypeGraph, mShowList, mShowAllChains, mShowChainList);
-            graphs[1]->forceRefresh();
+            //graphs[1]->updateCurves(mCurrentTypeGraph, mShowList, mShowAllChains, mShowChainList);
+           // graphs[1]->forceRefresh();
             // -------------------------------------------------------
             // Z option
             // -------------------------------------------------------
@@ -4135,8 +4125,8 @@ void ResultsView::updateScales()
                 }
                 setZRange();
 
-                graphs[2]->updateCurves(mCurrentTypeGraph, mShowList, mShowAllChains, mShowChainList);
-                graphs[2]->forceRefresh();
+                //graphs[2]->updateCurves(mCurrentTypeGraph, mShowList, mShowAllChains, mShowChainList);
+                //graphs[2]->forceRefresh();
 
             }
         }

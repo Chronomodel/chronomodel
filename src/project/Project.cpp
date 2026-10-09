@@ -2428,6 +2428,8 @@ void Project::mcmcSettings()
 /**
  * @brief Project::resetMCMC Restore default sampling methods on each ti and theta
  */
+// Obsolete
+/*
 void Project::resetMCMC()
 {
     QMessageBox message(QMessageBox::Warning,
@@ -2471,10 +2473,11 @@ void Project::resetMCMC()
         pushProjectState(stateNext, ReasonId::MCMCMethodReset, true);
     }
 }
+*/
 
 bool Project::studyPeriodIsValid()
 {
-    const QJsonObject settings = mState.value(STATE_SETTINGS).toObject();
+    const QJsonObject& settings = mState.value(STATE_SETTINGS).toObject();
     const double tmin = settings.value(STATE_SETTINGS_TMIN).toDouble();
     const double tmax = settings.value(STATE_SETTINGS_TMAX).toDouble();
     if (tmin >= tmax)

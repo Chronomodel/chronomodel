@@ -755,16 +755,31 @@ QString ModelUtilities::dateResultsHTML(const Date* date, const double tmin_form
         }
 
     }
-    text += line(textBlack(date->mTi.resultsString("", DateUtils::getAppSettingsFormatStr()))) ;
+    // le noyaux de ti est un mixing kernel, le taux d'acceptation n'est utilisé que par le noyaux RW adaptatif
+    //text += line(textBlack(date->mTi.resultsString("", DateUtils::getAppSettingsFormatStr()))) ;
+    text += textBlue( date->mTi.MetropolisVariable::resultsString("", DateUtils::getAppSettingsFormatStr()));
 
-    if (date->mDeltaType != Date::eDeltaNone) {
-        text += "<br>" + line(textBold(textBlack(QObject::tr("Posterior Wiggle"))));
-        text += line(textBlack(date->mWiggle.resultsString("", DateUtils::getAppSettingsFormatStr()))) ;
-    }
+    if (date->mTi.is_curve_filtering)
+        text += date->mTi.getFilteringString();
 
     return text;
 }
 
+QString ModelUtilities::wiggleResultsHTML(const Date* date)
+{
+    Q_ASSERT(date);
+    QString text;
+    if (date->mDeltaType != Date::eDeltaNone) {
+        text = line(textBold(textBlack(QObject::tr("Posterior Wiggle"))));
+        if (date->mDeltaType == Date::eDeltaFixed) {
+           text += line(textBlack(QObject::tr("Fixed value : %1 ").arg(stringForLocal(date->mWiggle.value()))));
+
+        } else
+            text += line(textBlack(date->mWiggle.resultsString())) ;
+    }
+
+    return text;
+}
 
 QString ModelUtilities::sigmaTiResultsHTML(const Date* date)
 {
@@ -774,6 +789,8 @@ QString ModelUtilities::sigmaTiResultsHTML(const Date* date)
 
     text += line(textBold(textBlack(QObject::tr("Posterior Std ti"))));
     text += line(textBlack(date->mSigmaTi.resultsString()));
+    if (date->mSigmaTi.is_curve_filtering)
+        text += date->mSigmaTi.getFilteringString();
     return text;
 }
 
@@ -791,12 +808,13 @@ QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const b
     else {
         text += line(textBold(textBlue(QObject::tr("Event : %1").arg(e->getQStringName())))) + "<br>";
         text += line(textBold(textBlue(QObject::tr("Posterior Event Date"))));
-        // Le taux d'acceptation est utilisé pour DeltaTheta
+        // Le taux d'acceptation est utilisé pour DeltaTheta, il ne faut plus l'afficher
        // text += line(textBlue(e->mTheta.resultsString("", DateUtils::getAppSettingsFormatStr())));
 
         if (e->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
             text += textBlue( e->mTheta.MetropolisVariable::resultsString("", DateUtils::getAppSettingsFormatStr()));
-
+            if (e->mTheta.is_curve_filtering)
+                text += e->mVg.getFilteringString();
         } else {
             text += textBlue(QObject::tr("Fixed value : %1 %2").arg(stringForLocal(e->mTheta.value()), DateUtils::getAppSettingsFormatStr())); // for VG mX is Variance and we need Std gi
         }
@@ -825,6 +843,8 @@ QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const b
         } else {
             text += "<br>" + line(textBold(textGreen(QObject::tr("Curve : Posterior Std gi"))));
             text += line(textGreen(e->mVg.resultsString("", nullptr)));
+            if (e->mVg.is_curve_filtering)
+                text += e->mVg.getFilteringString();
         }
     }
     return text;
@@ -841,7 +861,8 @@ QString ModelUtilities::EventS02ResultsHTML(const std::shared_ptr<Event> e)
     } else {
         text += line(textBold(textBlue(QObject::tr("Posterior Shrinkage param."))));
         text += line(textBlue(e->mS02Theta.resultsString("", nullptr)));
-
+        if (e->mS02Theta.is_curve_filtering)
+            text += e->mVg.getFilteringString();
     }
     return text;
 }
@@ -865,6 +886,8 @@ QString ModelUtilities::VgResultsHTML(const std::shared_ptr<Event> e)
     } else {
         text += line(textBold(textGreen(QObject::tr("Curve : Posterior Std gi"))));
         text += line(textGreen(e->mVg.resultsString("", nullptr)));
+        if (e->mVg.is_curve_filtering)
+            text += e->mVg.getFilteringString();
     }
     return text;
 }
@@ -877,10 +900,14 @@ QString ModelUtilities::phaseResultsHTML(const std::shared_ptr<Phase> p)
     text += "<br>";
     text += line(textBold(textOrange(QObject::tr("Begin (posterior distrib.)"))));
     text += line(textOrange(p->mAlpha.resultsString("", DateUtils::getAppSettingsFormatStr())));
+    if (p->mAlpha.is_curve_filtering)
+        text += p->mAlpha.getFilteringString();
 
     text += "<br>";
     text += line(textBold(textOrange(QObject::tr("End (posterior distrib.)"))));
     text += line(textOrange(p->mBeta.resultsString("", DateUtils::getAppSettingsFormatStr())));
+    if (p->mBeta.is_curve_filtering)
+        text += p->mBeta.getFilteringString();
 
     if (p->mTimeRange != std::pair<double, double>(- std::numeric_limits<double>::max(), +std::numeric_limits<double>::max())) {
         text += "<br>";
@@ -897,14 +924,15 @@ QString ModelUtilities::phaseResultsHTML(const std::shared_ptr<Phase> p)
 
 QString ModelUtilities::durationResultsHTML(const std::shared_ptr<Phase> p)
 {
-   QString text = line(textBold(textOrange(QObject::tr("Phase : %1").arg(p->getQStringName()))));
-   text += line(textOrange(QObject::tr("Number of Events : %1").arg(p->mEvents.size())));
+    QString text = line(textBold(textOrange(QObject::tr("Phase : %1").arg(p->getQStringName()))));
+    text += line(textOrange(QObject::tr("Number of Events : %1").arg(p->mEvents.size())));
 
-   text += "<br>";
-   text += line(textBold(textOrange(QObject::tr("Duration (posterior distrib.)"))));
-   text += line(textOrange(p->mDuration.resultsString(QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"))));
-
-   return text;
+    text += "<br>";
+    text += line(textBold(textOrange(QObject::tr("Duration (posterior distrib.)"))));
+    text += line(textOrange(p->mDuration.resultsString(QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"))));
+    if (p->mDuration.is_curve_filtering)
+        text += p->mDuration.getFilteringString();
+    return text;
 }
 
 QString ModelUtilities::tempoResultsHTML(const std::shared_ptr<Phase> p)

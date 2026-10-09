@@ -1603,7 +1603,7 @@ void GraphViewCurve::updateCurves(const graph_t typeGraph,
 void GraphViewCurve::updateStatHTML()
 {
     auto model = getModel_ptr();
-    const QString resultsHTML = ModelUtilities::lambdaResultsHTML(model);
+    const QString resultsHTML = ModelUtilities::curveResultsHTML(model);
     setNumericalResults(resultsHTML);
 
 }

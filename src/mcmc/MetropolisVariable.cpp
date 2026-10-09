@@ -437,7 +437,7 @@ void MetropolisVariable::updateFormatedTrace(const DateUtils::FormatDate fm)
         std::transform(traceDisplay->cbegin(), traceDisplay->cend(), mFormatedAcquiredTrace->begin(), [&fm](const double i) {return DateUtils::convertToFormat(i, fm);});
 
     }
-
+    mResults.traceAnalysis.updated = false;
 
 }
 
@@ -780,11 +780,12 @@ void MetropolisVariable::generateDensityNumericalResults(const std::vector<Chain
 
 /* --------------------------------------------------------------
    2️⃣  generateTraceNumericalResults
+Uilise les chaines brutes, non filtrées pour ESS et RHat
    -------------------------------------------------------------- */
 void MetropolisVariable::generateTraceNumericalResults(const std::vector<ChainSpecs> &chains)
 {
     // ----- Résultats globaux (concatenation de toutes les chaînes) -----
-    const std::vector<double>& trace = *mFormatedAcquiredTrace;
+    const std::vector<double>& trace = *mFormatedAcquiredTrace; // correspond à la trace à afficher si is_curve_filtering
     if (!mFormatedAcquiredTrace)
         return;
 
@@ -797,22 +798,40 @@ void MetropolisVariable::generateTraceNumericalResults(const std::vector<ChainSp
     mResults.traceAnalysis.updated = true;
 
     if (mAllAcquiredTrace->size() > chains.size() + 1) {
-        // -----------------------------------------------------------------
-        // 1. Recherche de la taille d'acquisition la plus petite
-        // -----------------------------------------------------------------
-        int sizeMin = std::numeric_limits<int>::max();
-        for (std::size_t chain_index = 0; chain_index < chains.size(); ++chain_index)
-            sizeMin = std::min(sizeMin, chains[chain_index].mRealyAccepted);
-
-        // -----------------------------------------------------------------
-        // 2. Construction du tableau de sous-chaînes à utiliser pour Rhat/ESS
-        // -----------------------------------------------------------------
         std::vector<std::vector<double>> chainForRhat(chains.size());
-        for (std::size_t chain_index = 0; chain_index < chains.size(); ++chain_index) {
-            std::vector<double> fullTrace = runRawTraceForChain(chains, chain_index);
-            chainForRhat[chain_index] = std::vector<double>(fullTrace.end() - sizeMin, fullTrace.end());
-        }
+        if (is_curve_filtering) {
+            // -----------------------------------------------------------------
+            // 1. Recherche de la taille d'acquisition la plus petite
+            // -----------------------------------------------------------------
+            int sizeMin = std::numeric_limits<int>::max();
+            for (std::size_t chain_index = 0; chain_index < chains.size(); ++chain_index)
+                sizeMin = std::min(sizeMin, chains[chain_index].mIterDisplay);
 
+            // -----------------------------------------------------------------
+            // 2. Construction du tableau de sous-chaînes à utiliser pour Rhat/ESS
+            // -----------------------------------------------------------------
+             for (std::size_t chain_index = 0; chain_index < chains.size(); ++chain_index) {
+                std::vector<double> trace = extractTraceForChain(mFormatedAcquiredTrace, chains, chain_index);
+                chainForRhat[chain_index] = std::vector<double>(trace.end() - sizeMin, trace.end());
+            }
+        }
+        else {
+            // -----------------------------------------------------------------
+            // 1. Recherche de la taille d'acquisition la plus petite
+            // -----------------------------------------------------------------
+            int sizeMin = std::numeric_limits<int>::max();
+            for (std::size_t chain_index = 0; chain_index < chains.size(); ++chain_index)
+                sizeMin = std::min(sizeMin, chains[chain_index].mRealyAccepted);
+
+            // -----------------------------------------------------------------
+            // 2. Construction du tableau de sous-chaînes à utiliser pour Rhat/ESS
+            // -----------------------------------------------------------------
+
+            for (std::size_t chain_index = 0; chain_index < chains.size(); ++chain_index) {
+                std::vector<double> fullTrace = runRawTraceForChain(chains, chain_index);
+                chainForRhat[chain_index] = std::vector<double>(fullTrace.end() - sizeMin, fullTrace.end());
+            }
+        }
         // -----------------------------------------------------------------
         // 3. Rhat + ESS
         // -----------------------------------------------------------------

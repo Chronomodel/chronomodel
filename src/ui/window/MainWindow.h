@@ -124,6 +124,8 @@ public slots:
     void showHelp(bool);
     void setLanguage(QAction* action);
     void mcmcFinished();
+    void setConvergenceStatus( MCMCDiagnostic::ConvergenceStatus status);
+
     void noResult();
     void updateProject();
     void toggleCurve(bool checked);
@@ -179,7 +181,7 @@ private:
 
     QAction* mMCMCSettingsAction;
     QAction* mRunAction;
-    QAction* mResetMCMCAction;
+    // QAction* mResetMCMCAction;
     
     SwitchAction* mCurveAction;
 

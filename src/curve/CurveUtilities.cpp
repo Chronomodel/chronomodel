@@ -4308,7 +4308,7 @@ long double cross_validation (const std::vector<t_matrix>& vec_Y, const SplineMa
     //showMatrix(matrices.matQ, "matQ");
 
 
-    MatrixLD matB = addMatEtMat(matrices.matR, multiConstParMat(matrices.matQTW_1Q, lambda, 5), 5);
+    MatrixLD matB = addMatEtMat(matrices.matR, multiConstParMat(matrices.matQTW_1Q, lambda), 5);
 
     //MatrixLD Btest = matrices.matR + lambda*matrices.matQTW_1Q;
     //showMatrix(Btest, "Btest");
@@ -4535,7 +4535,7 @@ double RSS(const std::vector<t_matrix> &vec_Y, const SplineMatricesLD &matrices,
 {
     MatrixLD matB (matrices.matR.rows(), matrices.matR.cols());
     if (lambda != 0) {
-        const MatrixLD &tmp = multiConstParMat(matrices.matQTW_1Q, lambda, 5);
+        const MatrixLD &tmp = multiConstParMat(matrices.matQTW_1Q, lambda);
         matB = addMatEtMat(matrices.matR, tmp, 5);
 
     } else {
@@ -5008,7 +5008,7 @@ std::pair<double, double> initLambdaSplineByCV(const bool depth, const std::vect
 
             //  Spline final
 
-            const MatrixLD &tmp = multiConstParMat(spline_matrices.matQTW_1Q, lambda_test, 5);
+            const MatrixLD &tmp = multiConstParMat(spline_matrices.matQTW_1Q, lambda_test);
             const MatrixLD &matB = addMatEtMat(spline_matrices.matR, tmp, 5);
 
 
@@ -6509,7 +6509,7 @@ std::vector<double> general_residual(const std::vector<t_matrix> &vec_Y,  const 
 {
     const double N = matrices.diagWInv.rows();
 
-    const MatrixLD& matB = addMatEtMat(matrices.matR, multiConstParMat(matrices.matQTW_1Q, lambda, 5), 5);
+    const MatrixLD& matB = addMatEtMat(matrices.matR, multiConstParMat(matrices.matQTW_1Q, lambda), 5);
 
     // Decomposition_Cholesky de matB en matL et matD
     // Si alpha global: calcul de Mat_B = R + lambda * Qt * W-1 * Q  et décomposition de Cholesky en Mat_L et Mat_D
@@ -6904,7 +6904,7 @@ std::pair<MatrixLD, DiagonalMatrixLD> decomp_matB(const SplineMatricesLD& matric
 
     // Decomposition_Cholesky de matB en matL et matD
     // Si lambda global: calcul de Mat_B = R + lambda * Qt * W-1 * Q  et décomposition de Cholesky en Mat_L et Mat_D
-    const MatrixLD &tmp = multiConstParMat(matrices.matQTW_1Q, lambdaSpline, 5);
+    const MatrixLD &tmp = multiConstParMat(matrices.matQTW_1Q, lambdaSpline);
 
     const MatrixLD &matB = addMatEtMat(matrices.matR, tmp, 5);
     return decompositionCholesky(matB, 5, 1);
@@ -6942,7 +6942,7 @@ t_prob h_YWI_AY(const SplineMatricesLD& matrices, const std::vector<std::shared_
         // Decomposition_Cholesky de matB en matL et matD
         // Si lambda global: calcul de Mat_B = R + lambda * Qt * W-1 * Q  et décomposition de Cholesky en Mat_L et Mat_D
 
-        const MatrixLD &tmp = multiConstParMat(matrices.matQTW_1Q, lambdaSpline, 5);
+        const MatrixLD &tmp = multiConstParMat(matrices.matQTW_1Q, lambdaSpline);
         matB = addMatEtMat(matR, tmp, 5);
 
     } else {

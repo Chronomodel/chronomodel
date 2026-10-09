@@ -153,7 +153,8 @@ enum class ConvergenceStatus
 {
     eGood,      // Convergence satisfaisante
     eWarning,   // Convergence douteuse, à surveiller
-    eBad        // Non convergé
+    eBad,        // Non convergé
+    eNone   // non evalue, enlève le flag
 };
 
 struct ConvergenceSummary
@@ -635,17 +636,44 @@ public:
         }
     }
 
-    // Obsolete
+    // Use within generateTraceNumericalResults
     inline std::vector<double> runRawTraceForChain(const std::vector<ChainSpecs>& chains, const size_t index) {
         const std::vector<double> &trace = extractTraceForChain(mAllAcquiredTrace, chains, index);
         return std::vector<double>(trace.begin(), trace.end());
     };
 
-
+    // utilise iterDisplay pour recréer une chaine pour mFormatedAquiredTrace
     inline std::vector<double> runFormatedTraceForChain(const std::vector<ChainSpecs>& chains, const size_t index) {
         const std::vector<double> &trace = extractTraceForChain(mFormatedAcquiredTrace, chains, index);
         return std::vector<double>(trace.begin(), trace.end());
     };
+
+    /**
+     * @brief Returns a string describing the accepted‑iteration rate after filtering.
+     *
+     * The string is translated (Qt i18n) and follows the format:
+     *   "Accepted iteration rate after filtering:: %1 / %2 = %3 %"
+     */
+    QString getFilteringString() const
+    {
+        const int displayedCount = mDisplayAcquiredTrace->size();
+        const int totalCount     = mAllAcquiredTrace->size();
+
+        // Guard against division by zero
+        const double ratio = (totalCount != 0)
+                                 ? static_cast<double>(displayedCount) / static_cast<double>(totalCount) * 100.0
+                                 : 0.0;
+
+        const QString fmt = QObject::tr(
+            "Accepted iteration rate after filtering: %1 / %2 = %3 %"
+            );
+
+
+        return fmt.arg(QString::number(displayedCount),
+                       QString::number(totalCount),
+                       QString::number(ratio, 'f', 2));   // two decimal places
+    }
+
 
     std::vector<double> correlationForChain(const size_t index);
 
