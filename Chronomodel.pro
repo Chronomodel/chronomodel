@@ -109,11 +109,11 @@ QMAKE_CXXFLAGS += -std=c++20
 # Ajouter dans Qt Creator : CONFIG += use_openmp
 CONFIG += use_openmp
 contains(CONFIG, use_openmp) {
-    message("✅ OpenMP enabled")
+    message("[OK] OpenMP enabled")
     OPENMP_ENABLED = 1
 
 } else {
-    message("❌ OpenMP disabled")
+    message("[--] OpenMP disabled")
     OPENMP_ENABLED = 0
 }
 
@@ -173,7 +173,22 @@ macx {
         }
     }
 }
-
+contains(CONFIG, use_openmp) {
+    win32-g++ {
+        message("[OK] OpenMP (MinGW)")
+        QMAKE_CXXFLAGS += -fopenmp
+        QMAKE_LFLAGS   += -fopenmp
+    }
+    win32-msvc* {
+        message("[OK] OpenMP (MSVC)")
+        QMAKE_CXXFLAGS += /openmp        # ou /openmp:llvm (VS 2019+) pour OpenMP 3.x
+    }
+    unix:!macx {
+        message("[OK] OpenMP (Linux GCC)")
+        QMAKE_CXXFLAGS += -fopenmp
+        QMAKE_LFLAGS   += -fopenmp
+    }
+}
 
 # ======================================================
 # RELEASE configuration

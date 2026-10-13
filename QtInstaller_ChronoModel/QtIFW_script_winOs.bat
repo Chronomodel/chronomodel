@@ -39,13 +39,24 @@ copy "%ROOT%\icon\Chronomodel.ico" "%PKG%"
 echo  3 - Copy ABOUT.html files
 copy "%ROOT%\deploy\ABOUT.html" "%PKG%"
 
+rem Toolchain MinGW utilisee pour compiler (runtime GCC + OpenMP)
+set MINGW=C:\Qt\Tools\mingw1310_64
+
+echo  4 - Copy fichier lib
+rem Runtime GCC : pris dans la toolchain qui a compile l'executable
+copy "%MINGW%\bin\libgcc_s_seh-1.dll"   "%PKG%\."
+copy "%MINGW%\bin\libstdc++-6.dll"      "%PKG%\."
+copy "%MINGW%\bin\libwinpthread-1.dll"  "%PKG%\."
+rem OpenMP (absent du bin du kit Qt)
+copy "%MINGW%\bin\libgomp-1.dll"        "%PKG%\."
+if errorlevel 1 echo ERREUR : libgomp-1.dll introuvable dans %MINGW%\bin
+
+
 echo  4 - Copy fichier lib
 rem Les DLL Qt sont dans "bin", pas a la racine du kit ; sans %% la variable
 rem QTVERSION n'etait pas substituee et le script cherchait un dossier
 rem litteralement nomme "QTVERSION" (d'ou les erreurs "Chemin d acces introuvable").
-copy "%QTVERSION%\bin\libgcc_s_seh-1.dll" "%PKG%\."
-copy "%QTVERSION%\bin\libstdc++-6.dll" "%PKG%\."
-copy "%QTVERSION%\bin\libwinpthread-1.dll" "%PKG%\."
+
 copy "%QTVERSION%\bin\Qt6Concurrent.dll" "%PKG%\."
 copy "%QTVERSION%\bin\Qt6Core.dll" "%PKG%\."
 copy "%QTVERSION%\bin\Qt6Gui.dll" "%PKG%\."
