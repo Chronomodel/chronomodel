@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
 
-Copyright or © or Copr. CNRS	2014 - 2024
+Copyright or © or Copr. CNRS	2014 - 2026
 
 Authors :
 	Philippe LANOS
@@ -295,7 +295,7 @@ QString ModelUtilities::getMCMCSettingsLog(const std::shared_ptr<ModelCurve> mod
             .arg(color, title);
     };
 
-    auto line = [](const QString& label, const QString& value) {
+    auto textLine = [](const QString& label, const QString& value) {
         return QString(
                    "<div style='margin-left:12px;'>"
                    "<b>%1</b> %2"
@@ -307,51 +307,55 @@ QString ModelUtilities::getMCMCSettingsLog(const std::shared_ptr<ModelCurve> mod
 
     log += sectionTitle(QObject::tr("MCMC"), globalColor);
 
-    log += line(QObject::tr("Number of chains :"),
+    log += textLine(QObject::tr("Number of chains:"),
                 QString::number(s.mNumChains));
 
-    log += line(QObject::tr("Mixing level :"),
+    log += textLine(QObject::tr("Mixing level:"),
                 QString::number(s.mMixingLevel));
 
     /* ---- Burn-in ---- */
 
     log += sectionTitle(QObject::tr("1 - BURN-IN"), burnColor);
 
-    log += line(QObject::tr("Iterations :"),
+    log += textLine(QObject::tr("Iterations:"),
                 QString::number(s.mIterPerBurn));
 
     /* ---- Adapt ---- */
 
     log += sectionTitle(QObject::tr("2 - ADAPT"), adaptColor);
 
-    log += line(QObject::tr("Max batches :"),
+    log += textLine(QObject::tr("Max batches:"),
                 QString::number(s.mMaxBatches));
 
-    log += line(QObject::tr("Iterations per batch :"),
+    log += textLine(QObject::tr("Iterations per batch:"),
                 QString::number(s.mIterPerBatch));
 
     /* ---- Acquire ---- */
 
     log += sectionTitle(QObject::tr("3 - ACQUIRE"), acquireColor);
 
-    log += line(QObject::tr("Running iterations :"),
+    log += textLine(QObject::tr("Running iterations:"),
                 QString::number(s.mIterPerAquisition));
 
-    log += line(QObject::tr("Thinning interval :"),
+    log += textLine(QObject::tr("Thinning interval :"),
                 QString::number(s.mThinningInterval));
 
     /* ---- Annealing ---- */
 
     log += sectionTitle(QObject::tr("4 - ANNEALING"), annealColor);
+    if (s.mAnnealRecurrence == 0) {
+        log += QString(QObject::tr("Disabled"));
 
-    log += line(QObject::tr("Init. Temp. :"),
-                QString::number(s.mAnnealTemp));
+    } else {
+        log += textLine(QObject::tr("Init. Temp.:"),
+                        QString::number(s.mAnnealTemp));
 
-    log += line(QObject::tr("Recurrence :"),
-                QString::number(s.mAnnealRecurrence));
+        log += textLine(QObject::tr("Recurrence:"),
+                        QString::number(s.mAnnealRecurrence));
 
-    log += line(QObject::tr("Dwell :"),
-                QString::number(s.mAnnealDwell));
+        log += textLine(QObject::tr("Dwell:"),
+                        QString::number(s.mAnnealDwell));
+    }
 
     return log;
 }
@@ -371,7 +375,7 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
     for (auto&& event : model->mEvents) {
         if (event->type() == Event::eBound) {
             auto bound = dynamic_cast<Bound*>(event.get());
-            log += line(textRed(QObject::tr("Bound ( %1 / %2 ) : %3 ( %4  phases,  %5 const. back.,  %6 const.fwd.)").arg(QString::number(i+1), QString::number(model->mEvents.size()), bound->getQStringName(),
+            log += line(textRed(QObject::tr("Bound ( %1 / %2 ): %3 ( %4  phases,  %5 const. back.,  %6 const.fwd.)").arg(QString::number(i+1), QString::number(model->mEvents.size()), bound->getQStringName(),
                                                                                                                QString::number(bound->mPhases.size()),
                                                                                                                QString::number(bound->mConstraintsBwd.size()),
                                                                                                                QString::number(bound->mConstraintsFwd.size()))));
@@ -384,6 +388,9 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
                                                                                                                          QString::number(event->mConstraintsBwd.size()),
                                                                                                                          QString::number(event->mConstraintsFwd.size()))
                                  + "<br>" + QObject::tr("- %1").arg(MHVariable::getSamplerProposalText(event->mTheta.mSamplerProposal))));
+
+            log += "<br>" + QObject::tr("- MCMC: Single-site block update (Ti, σTi, δi) with mixed proposal kernels for Ti and σTi ");
+
             log += "<br>" + line(textBlue(QObject::tr("BetaS02 of Event: %1").arg(QString::number(event->mBetaS02))));
             if (event->mS02Theta.mSamplerProposal == SamplerProposal::eFixe) {
                 log += line(textBlue(QObject::tr("- S02Theta Fixed: %1 (EDM1)").arg(DateUtils::convertToAppSettingsFormatStr(event->mS02Theta.value()) )));
@@ -417,7 +424,7 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
                 break;
             case CurveSettings::eProcess_3D:
                 log += line(textGreen(QObject::tr("- X: %1 ±  %2").arg(stringForLocal(event->mXIncDepth), stringForLocal(event->mS_XA95Depth))));
-                log += line(textGreen(QObject::tr("- Y: %1 ±  %2")).arg(stringForLocal(event->mYDec), stringForLocal(event->mS_Y)));
+                log += line(textGreen(QObject::tr("- Y: %1 ±  %2").arg(stringForLocal(event->mYDec), stringForLocal(event->mS_Y))));
                 log += line(textGreen(QObject::tr("- Z: %1 ±  %2").arg(stringForLocal(event->mZField), stringForLocal(event->mS_ZField))));
                 break;
 
@@ -444,7 +451,8 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
             log += "<br>";
             log += line(textBlack(QObject::tr("Data ( %1 / %2 ): %3").arg(QString::number(j+1), QString::number(event->mDates.size()), date.getQStringName())
                                   + "<br>" + QObject::tr("- Plugin: %1").arg(date.mPlugin->getName())
-                                  + "<br>" + QObject::tr("- MCMC %1").arg(MHVariable::getSamplerProposalText(date.mTi.mSamplerProposal))
+                                 // + "<br>" + QObject::tr("- MCMC %1").arg(MHVariable::getSamplerProposalText(date.mTi.mSamplerProposal))
+
                                   + "<br>" + QObject::tr("- Parameters: %1").arg(date.getDesc()))
                         + (date.mDeltaType != Date::eDeltaNone ? textBlue("<br> - "+ date.getWiggleDesc()): ""));
 
@@ -497,7 +505,8 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
 
     if (model->is_curve) {
         log += line(textBold(textGreen( QObject::tr("Curve Parameters"))));
-        log += line(textGreen( QObject::tr(" - Process : %1").arg(model->mCurveSettings.processText())));
+        log += line(textGreen( QObject::tr(" - Process: %1").arg(model->mCurveSettings.processText())));
+
         if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Depth )
             log += line(textGreen(QObject::tr(" - Minimal Rate : %1").arg(stringForLocal(model->mCurveSettings.mThreshold))));
 
@@ -506,27 +515,27 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
         }
 
         if (model->mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
-            log += line(textGreen( QObject::tr(" - Event Date : Bayesian")));
+            log += line(textGreen( QObject::tr(" - Event Date: Bayesian")));
 
         } else {
-            log += line(textGreen( QObject::tr(" - Event Date : Fixed on init value")));
+            log += line(textGreen( QObject::tr(" - Event Date: Fixed on init value")));
         }
 
         if (model->mCurveSettings.mVarianceType == CurveSettings::eModeBayesian) {
-            log += line(textGreen( QObject::tr(" - Std gi : Individual Bayesian")));
+            log += line(textGreen( QObject::tr(" - Std gi: Individual Bayesian")));
 
         } else if (model->mCurveSettings.mVarianceType == CurveSettings::eModeGlobal) {
-            log += line(textGreen( QObject::tr(" - Std gi : Global Bayesian")));
+            log += line(textGreen( QObject::tr(" - Std Gi: Global Bayesian")));
 
         } else {
-            log += line(textGreen( QObject::tr(" - Std gi : Fixed = %1").arg(QString::number(sqrt(model->mCurveSettings.mVarianceFixed)))));
+            log += line(textGreen( QObject::tr(" - Std Gi: Fixed = %1").arg(QString::number(sqrt(model->mCurveSettings.mVarianceFixed)))));
         }
 
         if (model->mCurveSettings.mLambdaSplineType == CurveSettings::eModeBayesian) {
-            log += line(textGreen( QObject::tr(" - Smoothing : Bayesian")));
+            log += line(textGreen( QObject::tr(" - Smoothing: Bayesian")));
 
         } else {
-            log += line(textGreen( QObject::tr(" - Smoothing : Fixed = %1").arg(QString::number(model->mCurveSettings.mLambdaSpline))));
+            log += line(textGreen( QObject::tr(" - Smoothing: Fixed = %1").arg(QString::number(model->mCurveSettings.mLambdaSpline))));
         }
 
     }

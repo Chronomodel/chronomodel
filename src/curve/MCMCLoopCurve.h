@@ -160,6 +160,9 @@ protected:
 
     void orderEventsByThetaReduced(std::vector<std::shared_ptr<Event> > &event);
     void spreadEventsThetaReduced0(std::vector<std::shared_ptr<Event>> &sortedEvents, t_reduceTime spreadSpan = 0.0);
+
+    void spreadPAVA(std::vector<std::shared_ptr<Event>>& sortedEvents, t_reduceTime spreadSpan);
+
     std::vector<double> spreadEventsTheta0(std::vector<std::shared_ptr<Event>>& Events, t_reduceTime spreadSpan = 0.0);
     std::vector<double> unclumpTheta(const std::vector<std::shared_ptr<Event>>& events, double spreadSpan = 1e-8);
     std::vector<double> unclumpThetaReduit(const std::vector<std::shared_ptr<Event>>& events, double spreadSpan = 1e-8);

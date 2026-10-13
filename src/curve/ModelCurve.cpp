@@ -663,63 +663,78 @@ void ModelCurve::saveMapToFile(QFile *file, const QString csvSep, const CurveMap
 void ModelCurve::saveSplinesToFile(QFile *file, const QString csvSep) const
 {
     // Protection
+    if (!file || !file->isOpen()) {
+        std::cout << "[" << __func__ << "]" << "Error : File not open !" << std::endl;
+        return;
+    }
+
     if (mSplinesTrace.empty() || mSplinesTrace[0].splineX.vecG.empty())
         return;
 
-    QTextStream output(file);
-    const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
-    output << "# " << version << "\n";
-
-    // 1. Détection correcte des composantes Y et Z
+    // Composantes présentes (Z n'est écrit que si Y l'est, comme avant)
     const bool withY = !mSplinesTrace[0].splineY.vecG.empty();
-    const bool withZ = !mSplinesTrace[0].splineZ.vecG.empty();
+    const bool withZ = withY && !mSplinesTrace[0].splineZ.vecG.empty();
 
-    // 2. En-tête (Header)
-    QStringList header;
-    header << "Theta" << "Theta_reduice" << "Gx" << "Gamma_x";
-    if (withY) {
-        header << "Gy" << "Gamma_y";
-        if (withZ) {
-            header << "Gz" << "Gamma_z";
+    // Nombre de points du spline (défini par la première trace)
+    const size_t nbPoints = mSplinesTrace[0].splineX.vecG.size();
+
+    // Valeur d'un vecteur au point p, ou champ vide si le vecteur est trop court
+    // (garde toutes les lignes alignées sur l'en-tête)
+    auto val = [](const auto& v, size_t p) -> QString {
+        return p < v.size() ? stringForCSV(v[p], true) : QString();
+    };
+
+    {
+        QTextStream output(file);
+        const QString version = qApp->applicationName() + " " + qApp->applicationVersion();
+        output << "# " << version << "\n";
+
+        // 1. En-tête : un bloc de colonnes par point
+        QStringList header;
+        for (size_t iPt = 0; iPt < nbPoints; ++iPt) {
+            const QString k = QString::number(iPt + 1);
+            header << "Theta_" + k << "Theta_reduced_" + k << "Gx_" + k << "Gamma_x_" + k;
+            if (withY) {
+                header << "Gy_" + k << "Gamma_y_" + k;
+                if (withZ)
+                    header << "Gz_" + k << "Gamma_z_" + k;
+            }
         }
-    }
-    output << header.join(csvSep) << "\n";
+        output << header.join(csvSep) << "\n";
 
-    // 3. Écriture des données
-    for (size_t i = 0; i < mSplinesTrace.size(); ++i) {
-        const auto& trace = mSplinesTrace[i];
-        const size_t numIters = trace.splineX.vecG.size();
-
-        for (size_t iter = 0; iter < numIters; ++iter) {
-            const double reduiceT = trace.splineX.vecThetaReduced[iter];
-            const auto Gx = trace.splineX.vecG[iter];
-            const auto gammax = trace.splineX.vecGamma[iter];
-            const auto theta = yearTime(reduiceT);
+        // 2. Données : une ligne par trace (itération MCMC)
+        for (size_t iTrace = 0; iTrace < mSplinesTrace.size(); ++iTrace) {
+            const auto& trace = mSplinesTrace[iTrace];
 
             QStringList row;
-            row << stringForCSV(theta, true)
-                << stringForCSV(reduiceT, true)
-                << stringForCSV(Gx, true)
-                << stringForCSV(gammax, true);
+            row.reserve(header.size());
 
-            if (withY && iter < trace.splineY.vecG.size()) {
-                const auto Gy = trace.splineY.vecG[iter];
-                const auto gammay = trace.splineY.vecGamma[iter];
-                row << stringForCSV(Gy, true)
-                    << stringForCSV(gammay, true);
+            for (size_t iPt = 0; iPt < nbPoints; ++iPt) {
+                // Theta réel calculé à partir de theta réduit
+                if (iPt < trace.splineX.vecThetaReduced.size()) {
+                    const double reducedT = trace.splineX.vecThetaReduced[iPt];
+                    row << stringForCSV(yearTime(reducedT), true)
+                        << stringForCSV(reducedT, true);
+                } else {
+                    row << QString() << QString();
+                }
 
-                if (withZ && iter < trace.splineZ.vecG.size()) {
-                    const auto Gz = trace.splineZ.vecG[iter];
-                    const auto gammaz = trace.splineZ.vecGamma[iter];
-                    row << stringForCSV(Gz, true)
-                        << stringForCSV(gammaz, true);
+                row << val(trace.splineX.vecG, iPt)
+                    << val(trace.splineX.vecGamma, iPt);
+
+                if (withY) {
+                    row << val(trace.splineY.vecG, iPt)
+                    << val(trace.splineY.vecGamma, iPt);
+                    if (withZ) {
+                        row << val(trace.splineZ.vecG, iPt)
+                        << val(trace.splineZ.vecGamma, iPt);
+                    }
                 }
             }
 
-            output << row.join(csvSep) << "\n"; // Saut de ligne après CHAQUE point
+            output << row.join(csvSep) << "\n"; // une ligne par trace
         }
     }
-
     file->close();
 }
 

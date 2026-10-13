@@ -324,8 +324,8 @@ MatrixLD comatrice0(const MatrixLD& matrix);
 MatrixLD choleskyLL0(const MatrixLD& matrix);
 MatrixLD cholesky_LLt_MoreSorensen(const MatrixLD &matrix);
 MatrixLD cholesky_LLt_MoreSorensen_adapt(const MatrixLD &matrix);
-MatrixLD robust_LLt(const MatrixLD& matrix);
-MatrixD robust_LLt(const MatrixD& matrix);
+MatrixLD robust_LLt(const MatrixLD& matrix); //obsolete
+MatrixD robust_LLt(const MatrixD& matrix); // obsolete
 
 MatrixLD robust_SVD(const MatrixLD& V);
 MatrixD robust_SVD(const MatrixD& V) ;

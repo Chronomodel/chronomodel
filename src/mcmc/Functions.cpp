@@ -3937,6 +3937,7 @@ MatrixLD robust_LLt(const MatrixLD& matrix)
     return L;
 }
 
+/*
 MatrixD robust_LLt(const MatrixD& matrix)
 {
     constexpr double epsilon = 1e-100;
@@ -4007,7 +4008,36 @@ MatrixD robust_LLt(const MatrixD& matrix)
     }
 
     return L;
+}*/
+MatrixD robust_LLt(const MatrixD& matrix)
+{
+#ifdef DEBUG
+    if (matrix.rows() != matrix.cols())
+        throw std::invalid_argument("[robust_LLt] Matrix must be square");
+#endif
+    const MatrixD S = 0.5 * (matrix + matrix.transpose());   // symétrisation
+    const Eigen::Index n = S.rows();
+    const double tol = double(n) * std::numeric_limits<double>::epsilon()
+                       * S.diagonal().cwiseAbs().maxCoeff();     // seuil relatif
+
+    // 1) LLT, accepté seulement si les pivots ne sont pas des résidus d'arrondi
+    Eigen::LLT<MatrixD> llt(S);
+    if (llt.info() == Eigen::Success) {
+        const MatrixD L = llt.matrixL();
+        if (L.diagonal().minCoeff() > std::sqrt(tol))
+            return L;
+    }
+
+    // 2) LDLT avec pivotage : A = Pᵀ L D Lᵀ P  =>  facteur = Pᵀ · L · √D
+    Eigen::LDLT<MatrixD> ldlt(S);
+    MatrixD L = ldlt.matrixL();
+    const Eigen::VectorXd D = ldlt.vectorD();
+    for (Eigen::Index i = 0; i < n; ++i)
+        L.col(i) *= (D(i) > tol) ? std::sqrt(D(i)) : 0.0;   // pivots ~0 ou négatifs -> 0
+
+    return ldlt.transpositionsP().transpose() * L;          // correction de la permutation
 }
+
 /**
  * robust_SVD
  * -------------

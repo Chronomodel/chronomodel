@@ -6343,9 +6343,7 @@ void ResultsView::exportResults()
             if (getProject_ptr()->isCurve()) {
                 // first Map G
                 const auto list_names = model->getCurvesName();
-                QFile file(dirPath);
-                if (!file.open(QFile::WriteOnly | QFile::Truncate))
-                        return;                     // gére l’erreur
+                QFile file;
 
                 // --------------   Saving Curve Map
                 try {
@@ -6411,7 +6409,7 @@ void ResultsView::exportResults()
 
                         if (file.open(QFile::WriteOnly | QFile::Truncate)) {
                             model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gy.mapGP);
-                            file.close();
+                            //file.close(); // déjà dans saveMapToFile
                         }
 
                         if (model->displayZ()) {
@@ -6426,7 +6424,7 @@ void ResultsView::exportResults()
 
                             if (file.open(QFile::WriteOnly | QFile::Truncate)) {
                                 model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gz.mapGP);
-                                file.close();
+                                //file.close();
                             }
                         }
 
@@ -6438,7 +6436,9 @@ void ResultsView::exportResults()
                 // --------------   Saving Curve Splines
                 try {
                     file.setFileName(dirPath + "/Curve_" + list_names.at(0) + "_Splines.csv");
-                    model->saveSplinesToFile(&file, csvSep);
+                    if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+                        model->saveSplinesToFile(&file, csvSep);
+                    }
 
                 } catch (...) {std::cout << "[" << __func__ << "] Saving Curve Ref : Caught Exception! " << file.fileName().toStdString() << std::endl;
                 }

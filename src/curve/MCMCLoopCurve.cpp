@@ -19381,6 +19381,57 @@ void MCMCLoopCurve::spreadEventsThetaReduced0(std::vector<std::shared_ptr<Event>
 
 }
 
+inline t_reduceTime defaultSpreadSpan(std::size_t n)
+{
+    // fraction de l'espacement moyen : borne Γ ~ ΔG / h² à un niveau raisonnable
+    return 1e-3 / (double)n;
+}
+void MCMCLoopCurve::spreadPAVA(std::vector<std::shared_ptr<Event>>& sortedEvents,
+                                              t_reduceTime spreadSpan)
+{
+    const std::size_t n = sortedEvents.size();
+    if (n < 2) return;
+
+    if (spreadSpan <= 0.0)
+        spreadSpan = defaultSpreadSpan(n);   // calculé à chaque appel, plus de static (voir §4)
+
+    // Rien à faire si tous les écarts sont déjà suffisants
+    bool ok = true;
+    for (std::size_t i = 0; i + 1 < n; ++i) {
+        if (sortedEvents[i+1]->mThetaReduced - sortedEvents[i]->mThetaReduced < spreadSpan) {
+            ok = false;
+            break;
+        }
+    }
+    if (ok) return;
+
+    // PAVA sur u_i = t_i - i*s  (u doit être croissant)
+    std::vector<double> blockMean;
+    std::vector<std::size_t> blockLen;
+    blockMean.reserve(n);
+    blockLen.reserve(n);
+
+    for (std::size_t i = 0; i < n; ++i) {
+        blockMean.push_back(sortedEvents[i]->mThetaReduced - (double)i * spreadSpan);
+        blockLen.push_back(1);
+
+        // Fusion des blocs adjacents qui violent la monotonie
+        while (blockMean.size() > 1 && blockMean[blockMean.size()-2] > blockMean.back()) {
+            const double m2 = blockMean.back();
+            const std::size_t l2 = blockLen.back();
+            blockMean.pop_back();
+            blockLen.pop_back();
+            blockMean.back() = (blockMean.back() * blockLen.back() + m2 * l2) / (blockLen.back() + l2);
+            blockLen.back() += l2;
+        }
+    }
+
+    // Reconstruction : t_i = u_i + i*s
+    std::size_t i = 0;
+    for (std::size_t b = 0; b < blockMean.size(); ++b)
+        for (std::size_t k = 0; k < blockLen[b]; ++k, ++i)
+            sortedEvents[i]->mThetaReduced = blockMean[b] + (double)i * spreadSpan;
+}
 // identique à MCMCLoopCurve::spreadEventsThetaReduced0 , mais directement avec les thetas
 // à utiliser avec prudence car ne tient pas compte des contraintes strati
 
@@ -20243,6 +20294,7 @@ MCMCSpline MCMCLoopCurve::samplingSpline_multi2(std::vector<std::shared_ptr<Even
 }
 */
 
+/* code du 12 oct 2026
 MCMCSpline MCMCLoopCurve::samplingSpline_multi2(std::vector<std::shared_ptr<Event> > &Events, const SparseMatrixD &R, const SparseMatrixD& Q)
 {
     MCMCSpline spline;
@@ -20292,20 +20344,21 @@ MCMCSpline MCMCLoopCurve::samplingSpline_multi2(std::vector<std::shared_ptr<Even
         DiagonalMatrixD I (W_1.rows());
         I.setIdentity();
 
-        /** Simulation de la fonction f
-         *   Σ = A * W_1
-         * Ancien Calcule L = Cholesky(Σ) (via LLᵀ)
-         * Nouveau Calcul Vroot via une SVD, plus stable
-         * Tire f = μ + L·z, avec z ~ 𝒩(0, I)
-         */
+        // Simulation de la fonction f
+        //   Σ = A * W_1
+        // Ancien Calcule L = Cholesky(Σ) (via LLᵀ)
+        // Nouveau Calcul Vroot via une SVD, plus stable
+        // Tire f = μ + L·z, avec z ~ 𝒩(0, I)
+
+
 
         // Calcul du vecteur moyen AY de la conditionnelle complète avec le valeur de Yx
 
 
-        /**
+
         * Calcule A = I - λ * W_1 * Q * B_1 * Qᵀ forme Silverman
         *
-        */
+
 
         // matrice de projection (ou opérateur de lissage).
         MatrixD A = I.toDenseMatrix() - lambda * W_1 * QB_1Qt;// forme classique
@@ -20335,18 +20388,7 @@ MCMCSpline MCMCLoopCurve::samplingSpline_multi2(std::vector<std::shared_ptr<Even
         // et gamma vérifie : f_i'' = gamma_i
         // calculé via : B * gamma = Q^T * Yx - R * 0  (conditions limites nulles)<- Erreur ici, c'est pour un lissage moyen
 
-        // Ancien
-        // Donc : résoudre B * gamma = Q^T * Yx  (pas Q^T * f !)<- est le système de Green & Silverman qui donne le lissage moyen
-       /* ColumnVectorD rhs = SparseMatrixD(Q.transpose()) * Yx;
-        ColumnVectorD rhs_sub = rhs.segment(first, nsub);
-        ColumnVectorD gamma_sub = solver.solve(rhs_sub);  // réutilise le solver de B déjà factorisé !
 
-        ColumnVectorD vecGamma_x = ColumnVectorD::Zero(n_points);
-        vecGamma_x.segment(first, nsub) = gamma_sub;
- */
- // fin ancien
-
-// Claude
         //Or B·γ = Qᵀ·y (avec B = R + λQᵀW⁻¹Q) est le système de Green & Silverman qui donne le lissage moyen mu_Yx = Yx - λW⁻¹Qγ.
         // Ce γ est donc mathématiquement cohérent avec mu_Yx,
         // pas avec fx qui est mu_Yx plus un bruit gaussien.
@@ -20383,6 +20425,8 @@ MCMCSpline MCMCLoopCurve::samplingSpline_multi2(std::vector<std::shared_ptr<Even
 
         if (mModel->compute_Y) {
 
+
+
             ColumnVectorD Yy = stdVectorToColumnVector(get_vector<double>(get_Yy, Events));
             ColumnVectorD mu_Yy = A * Yy;
 
@@ -20394,10 +20438,8 @@ MCMCSpline MCMCLoopCurve::samplingSpline_multi2(std::vector<std::shared_ptr<Even
             }
 
             // Ancien erreur Donc : résoudre B * gamma_y = Q^T * Yy  (pas Q^T * f !)
-            /*rhs = SparseMatrixD(Q.transpose()) * Yy;
-            rhs_sub = rhs.segment(first, nsub);
-            gamma_sub = solver.solve(rhs_sub);  // réutilise le solver de B déjà factorisé !
-            */
+
+
 
 
             rhs = SparseMatrixD(Q.transpose()) * fy;
@@ -20420,8 +20462,10 @@ MCMCSpline MCMCLoopCurve::samplingSpline_multi2(std::vector<std::shared_ptr<Even
             splineY.vecVarG = std::vector<double>(n_points, 0.0);
 #endif
             spline.splineY  = std::move(splineY);
-        }
+
+            }
         if (mModel->compute_XYZ) {
+
 
             ColumnVectorD Yz = stdVectorToColumnVector(get_vector<double>(get_Yz, Events));
             ColumnVectorD mu_Yz = A * Yz;
@@ -20433,11 +20477,6 @@ MCMCSpline MCMCLoopCurve::samplingSpline_multi2(std::vector<std::shared_ptr<Even
                 Events[i]-> mGz = fz[i];
             }
 
-            // Ancien erreur : Donc : résoudre B * gamma_z = Q^T * Yz  (pas Q^T * f !)
-           /* rhs = SparseMatrixD(Q.transpose()) * Yz;
-            rhs_sub = rhs.segment(first, nsub);
-            gamma_sub = solver.solve(rhs_sub);  // réutilise le solver de B déjà factorisé !
-            */
             // Calcul de la dérivée seconde de la fonction f
             //ColumnVectorD vecGamma_z =  R_1Qt * fz;
 
@@ -20465,6 +20504,185 @@ MCMCSpline MCMCLoopCurve::samplingSpline_multi2(std::vector<std::shared_ptr<Even
 
     } catch (...) {
         std::cout << "[MCMCLoopCurve::samplingSpline_multi2] error" << std::endl;
+    }
+    return spline;
+}
+*/
+
+
+// Tirage d'une composante : f ~ N(A·Y, A·W⁻¹) et gamma tel que R·gamma = Qᵀ·f
+static ColumnVectorD sampleSplineComponent(const ColumnVectorD& Y,
+                                           const ColumnVectorD& w,
+                                           const SparseMatrixD& Qsub,
+                                           const Eigen::SimplicialLDLT<SparseMatrixD>& solverB,
+                                           const SparseMatrixD& Lr,
+                                           const double lambda,
+                                           ColumnVectorD& gamma)
+{
+    const Eigen::Index n = Y.size();
+    const Eigen::Index m = Lr.rows();
+
+    ColumnVectorD z1(n), z2(m);
+    for (Eigen::Index k = 0; k < n; ++k) z1[k] = Generator::normalDistribution(0.0, 1.0);
+    for (Eigen::Index k = 0; k < m; ++k) z2[k] = Generator::normalDistribution(0.0, 1.0);
+
+    const double sqrtL = std::sqrt(lambda);
+
+    // Perturbation des données : ỹ = Y + W^{-1/2} z1
+    const ColumnVectorD ytilde = Y + z1.cwiseQuotient(w.cwiseSqrt());
+
+    // β = B⁻¹ (λ Qᵀ ỹ − √λ L z2)
+    const ColumnVectorD c    = lambda * (Qsub.transpose() * ytilde) - sqrtL * (Lr * z2);
+    const ColumnVectorD beta = solverB.solve(c);
+
+    // γ = β/λ + L⁻ᵀ z2 / √λ   (bords naturels = 0)
+    const SparseMatrixD LrT = Lr.transpose();
+    const ColumnVectorD LtInvZ2 = LrT.triangularView<Eigen::Upper>().solve(z2);
+    gamma = ColumnVectorD::Zero(n);
+    gamma.segment(1, m) = beta / lambda + LtInvZ2 / sqrtL;
+
+    // f = ỹ − W⁻¹ Q β
+    return ytilde - (Qsub * beta).cwiseQuotient(w);
+}
+
+/**
+ * @brief MCMCLoopCurve::samplingSpline_multi2
+ * Tire la courbe (valeurs aux nœuds f et dérivées secondes γ) selon sa loi
+ * conditionnelle complète, pour chaque composante active (X, et Y, Z si demandées).
+ *
+ * @details
+ * Modèle (spline cubique naturelle lissante, Green & Silverman) :
+ *   - données Y aux nœuds θ_i (temps réduit), poids W = diag(mW)
+ *   - pénalité λ ∫ f''²  <=>  a priori γ ~ N(0, (λR)⁻¹)
+ *   - B = R + λ Qᵀ W⁻¹ Q,  A = I − λ W⁻¹ Q B⁻¹ Qᵀ
+ *   - loi conditionnelle : f ~ N(A·Y, A·W⁻¹), puis γ défini par R γ = Qᵀ f
+ *
+ * Tirage par perturbation (perturbation-optimisation), sans former A, V = A·W⁻¹
+ * ni matrice dense : uniquement des résolutions creuses/bandes en O(n).
+ * Pour chaque composante, avec z1 ~ N(0, I_n), z2 ~ N(0, I_{n-2}), R = L Lᵀ :
+ *   ỹ = Y + W^{-1/2} z1          (perturbation des données)
+ *   v = L^{-T} z2                (tirage a priori de γ, Cov = R⁻¹)
+ *   ũ = ỹ + √λ W⁻¹ Q v
+ *   γ = B⁻¹ Qᵀ ũ
+ *   f = ỹ − W⁻¹ Q (λγ − √λ v)
+ * On a exactement E[f] = A·Y, Cov[f] = A·W⁻¹ et R γ = Qᵀ f.
+ *
+ * Avantages sur l'ancien tirage (multinormal_sampling(A·Y, V) puis R γ = Qᵀ f) :
+ *   - pas de soustraction catastrophique dans A = I − … ni de LLᵀ/LDLᵀ dense de V
+ *     (V est quasi singulière quand deux nœuds sont proches : valeur propre ~ h³) ;
+ *   - γ n'est pas obtenu en divisant les différences de f par h² : il n'y a plus
+ *     d'amplification du bruit d'arrondi sur les nœuds quasi confondus ;
+ *   - aucune division par λ : formule exacte et continue jusqu'à λ = 0.
+ *
+ * Cas λ = 0 (interpolation) : B = R, f = ỹ ~ N(Y, W⁻¹), γ = R⁻¹ Qᵀ f.
+ * Les f_i sont alors indépendants : pour deux nœuds proches (écart h), γ ~ Δf / h²
+ * est légitimement très grand. L'espacement minimal des nœuds
+ * (spreadEventsThetaReduced0) reste nécessaire.
+ *
+ * Conventions :
+ *   - R et Q sont « paddées » (n×n) ; seul le sous-bloc d'indices 1..n-2 est utilisé
+ *     (conditions naturelles γ_0 = γ_{n-1} = 0) ;
+ *   - les Events doivent être triés par mThetaReduced croissant, et R, Q construits
+ *     à partir de ces mêmes θ réduits ;
+ *   - B et R sont factorisés une seule fois et réutilisés pour X, Y et Z ;
+ *     chaque composante reçoit des tirages z1, z2 indépendants.
+ *
+ * Générateur aléatoire : consomme 2n − 2 normales par composante (au lieu de n
+ * auparavant). Les traces ne sont donc pas reproductibles à l'identique par rapport
+ * à l'ancienne version, mais la loi échantillonnée est la même.
+ *
+ * @param Events Événements triés (temps réduit croissant). Effets de bord : mGx
+ *               (et mGy, mGz selon compute_Y / compute_XYZ) reçoivent les valeurs tirées.
+ * @param R      Matrice R du spline (n×n paddée, tridiagonale sur le sous-bloc utile).
+ * @param Q      Matrice Q du spline (n×n paddée, colonnes 1..n-2 utiles).
+ * @return MCMCSpline contenant, par composante, vecThetaReduced, vecG (= f) et
+ *         vecGamma (= γ, nuls aux bords). En cas d'erreur (λ < 0, échec de
+ *         factorisation), un message est écrit sur la sortie standard et le spline
+ *         retourné est vide.
+ *
+ * @note Complexité O(n) par composante (systèmes creux bandes), contre O(n³)
+ *       pour l'ancienne version dense.
+ */
+MCMCSpline MCMCLoopCurve::samplingSpline_multi2(std::vector<std::shared_ptr<Event>>& Events,
+                                                const SparseMatrixD& R,
+                                                const SparseMatrixD& Q)
+{
+    MCMCSpline spline;
+    const size_t n_points = Events.size();
+
+    try {
+        const double lambda = mModel->mLambdaSpline.value();
+        if (lambda < 0.0)
+            throw std::runtime_error("lambda < 0 : cas non géré");
+
+        // Poids et W⁻¹
+        ColumnVectorD w(n_points);
+        for (size_t i = 0; i < n_points; ++i)
+            w[i] = Events[i]->mW;
+        const DiagonalMatrixD W_1 = w.cwiseInverse().asDiagonal();
+
+        // B = R + λ Qᵀ W⁻¹ Q   (matrices paddées, sous-bloc utile 1..n-2)
+        const SparseMatrixD Qt = Q.transpose();
+        const SparseMatrixD B  = R + lambda * Qt * W_1 * Q;
+
+        const int first = 1;
+        const int nsub  = int(B.rows()) - 2;
+
+        const SparseMatrixD Bsub = B.block(first, first, nsub, nsub);
+        const SparseMatrixD Rsub = R.block(first, first, nsub, nsub);
+        const SparseMatrixD Qsub = Q.middleCols(first, nsub);
+
+        // Factorisations (une seule fois pour X, Y, Z)
+        Eigen::SimplicialLDLT<SparseMatrixD> solverB(Bsub);
+        Eigen::SimplicialLLT<SparseMatrixD, Eigen::Lower, Eigen::NaturalOrdering<int>> cholR(Rsub);
+        if (solverB.info() != Eigen::Success || cholR.info() != Eigen::Success)
+            throw std::runtime_error("spline factorisation failed");
+        const SparseMatrixD Lr = cholR.matrixL();
+
+        const std::vector<t_reduceTime> thetaRed = get_vector<t_reduceTime>(get_ThetaReduced, Events);
+
+        auto makeComp = [&](const ColumnVectorD& f, const ColumnVectorD& g) {
+            MCMCSplineComposante comp;
+            comp.vecThetaReduced = thetaRed;
+            comp.vecG     = std::vector<double>(f.data(), f.data() + f.size());
+            comp.vecGamma = std::vector<double>(g.data(), g.data() + g.size());
+#if VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH < 5
+            comp.vecVarG  = std::vector<double>(n_points, 0.0);
+#endif
+            return comp;
+        };
+
+        // --- X
+        {
+            const ColumnVectorD Yx = stdVectorToColumnVector(get_vector<double>(get_Yx, Events));
+            ColumnVectorD gx;
+            const ColumnVectorD fx = sampleSplineComponent(Yx, w, Qsub, solverB, Lr, lambda, gx);
+            for (size_t i = 0; i < n_points; ++i) Events[i]->mGx = fx[i];
+            spline.splineX = makeComp(fx, gx);
+        }
+
+        // --- Y
+        if (mModel->compute_Y) {
+            const ColumnVectorD Yy = stdVectorToColumnVector(get_vector<double>(get_Yy, Events));
+            ColumnVectorD gy;
+            const ColumnVectorD fy = sampleSplineComponent(Yy, w, Qsub, solverB, Lr, lambda, gy);
+            for (size_t i = 0; i < n_points; ++i) Events[i]->mGy = fy[i];
+            spline.splineY = makeComp(fy, gy);
+        }
+
+        // --- Z
+        if (mModel->compute_XYZ) {
+            const ColumnVectorD Yz = stdVectorToColumnVector(get_vector<double>(get_Yz, Events));
+            ColumnVectorD gz;
+            const ColumnVectorD fz = sampleSplineComponent(Yz, w, Qsub, solverB, Lr, lambda, gz);
+            for (size_t i = 0; i < n_points; ++i) Events[i]->mGz = fz[i];
+            spline.splineZ = makeComp(fz, gz);
+        }
+
+    } catch (const std::exception& e) {
+        std::cout << "[MCMCLoopCurve::samplingSpline_multi2] error: " << e.what() << std::endl;
+    } catch (...) {
+        std::cout << "[MCMCLoopCurve::samplingSpline_multi2] unknown error" << std::endl;
     }
     return spline;
 }
