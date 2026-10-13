@@ -2508,6 +2508,15 @@ ConvergenceSummary computeConvergenceSummary(const std::vector<double>& rHatValu
                             .arg(reasons.join(QStringLiteral(" ; ")));
         break;
     }
+    default:{
+        QStringList reasons;
+        reasons << QObject::tr("max R\u0302 = not defined");
+        if (summary.hasEss) {
+            reasons << QObject::tr("min ESS = Impossible");;
+        }
+        summary.label = QObject::tr("Not Possible)");
+        break;
+    }
     }
 
     return summary;
