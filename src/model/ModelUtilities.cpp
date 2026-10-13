@@ -389,7 +389,7 @@ QString ModelUtilities::modelDescriptionHTML(const std::shared_ptr<ModelCurve> m
                                                                                                                          QString::number(event->mConstraintsFwd.size()))
                                  + "<br>" + QObject::tr("- %1").arg(MHVariable::getSamplerProposalText(event->mTheta.mSamplerProposal))));
 
-            log += "<br>" + QObject::tr("- MCMC: Single-site block update (Ti, σTi, δi) with mixed proposal kernels for Ti and σTi ");
+            log += "<br>" + QObject::tr("- MCMC: Single-site block update (ti, σ_ti, δi) with mixed proposal kernels for ti and σ_ti ");
 
             log += "<br>" + line(textBlue(QObject::tr("BetaS02 of Event: %1").arg(QString::number(event->mBetaS02))));
             if (event->mS02Theta.mSamplerProposal == SamplerProposal::eFixe) {
