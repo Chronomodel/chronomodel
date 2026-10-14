@@ -907,13 +907,16 @@ QString ModelUtilities::phaseResultsHTML(const std::shared_ptr<Phase> p)
 
     text += "<br>";
     text += line(textBold(textOrange(QObject::tr("Begin (posterior distrib.)"))));
-    text += line(textOrange(p->mAlpha.resultsString("", DateUtils::getAppSettingsFormatStr())));
+    text += line(textOrange(p->mAlpha.resultsString("", DateUtils::getAppSettingsFormatStr(), false)));
+
     if (p->mAlpha.is_curve_filtering)
         text += p->mAlpha.getFilteringString();
 
     text += "<br>";
     text += line(textBold(textOrange(QObject::tr("End (posterior distrib.)"))));
-    text += line(textOrange(p->mBeta.resultsString("", DateUtils::getAppSettingsFormatStr())));
+    text += line(textOrange(p->mBeta.resultsString("", DateUtils::getAppSettingsFormatStr(), false)));
+
+
     if (p->mBeta.is_curve_filtering)
         text += p->mBeta.getFilteringString();
 
@@ -937,7 +940,9 @@ QString ModelUtilities::durationResultsHTML(const std::shared_ptr<Phase> p)
 
     text += "<br>";
     text += line(textBold(textOrange(QObject::tr("Duration (posterior distrib.)"))));
-    text += line(textOrange(p->mDuration.resultsString(QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"))));
+
+    text += line(textOrange(p->mDuration.resultsString(QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), false)));
+
     if (p->mDuration.is_curve_filtering)
         text += p->mDuration.getFilteringString();
     return text;

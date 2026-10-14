@@ -204,7 +204,7 @@ public:
 
     // Trace and Posterior density needed for this :
     //virtual void generateNumericalResults(const std::vector<ChainSpecs>& chains); // obsolete
-    virtual void generateDensityNumericalResults(const std::vector<ChainSpecs>& chains);
+    virtual void generateDensityNumericalResults();
     virtual void generateTraceNumericalResults(const std::vector<ChainSpecs>& chains);
 
     void generateTempo(const size_t gridLength);

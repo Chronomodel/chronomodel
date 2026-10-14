@@ -429,7 +429,7 @@ public:
 
 
     // Virtual because MHVariable subclass adds some information
-    virtual void generateDensityNumericalResults(const std::vector<ChainSpecs>& chains);
+    virtual void generateDensityNumericalResults();
     virtual void generateTraceNumericalResults(const std::vector<ChainSpecs>& chains);
 
     void updateFormatedCredibility(const DateUtils::FormatDate fm);
@@ -678,7 +678,7 @@ public:
     std::vector<double> correlationForChain(const size_t index);
 
     virtual QString resultsString(const QString& noResultMessage = QObject::tr("No result to display"),
-                                  const QString& unit = QString()) const;
+                                  const QString& unit = QString(), const bool withConvergence = true) const;
 
     QStringList getResultsList(const QLocale locale, const int precision = 0, const bool withDateFormat = true) const;
 

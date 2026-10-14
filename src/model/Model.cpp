@@ -608,13 +608,16 @@ void Model::generateResultsLog()
     QString convergenceColor;
     switch (mConvergenceSummary.status) {
     case MCMCDiagnostic::ConvergenceStatus::eGood:
-        convergenceColor = QStringLiteral("#2e7d32"); // vert
+        convergenceColor = QStringLiteral("#2e7d32"); // vert foncé
         break;
     case MCMCDiagnostic::ConvergenceStatus::eWarning:
         convergenceColor = QStringLiteral("#f9a825"); // orange/ambre
         break;
     case MCMCDiagnostic::ConvergenceStatus::eBad:
-        convergenceColor = QStringLiteral("#c62828"); // rouge
+        convergenceColor = QStringLiteral("#c62828"); // Rouge foncé
+        break;
+    default:
+        convergenceColor = QStringLiteral("#333333"); // Anthracite
         break;
     }
 
@@ -641,8 +644,13 @@ void Model::generateResultsLog()
     std::ranges::for_each(mPhases, [&log](std::shared_ptr<Phase> phase) {
         log += ModelUtilities::phaseResultsHTML(phase);
         log += "<br>";
+
         log += line(textBold(textOrange(QObject::tr("Duration (posterior distrib.)"))));
-        log += line(textOrange(phase->mDuration.resultsString(QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"))));
+
+        log += line(textOrange(phase->mDuration.resultsString(QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), false)));
+
+        if (phase->mDuration.is_curve_filtering)
+            log += phase->mDuration.getFilteringString();
         log += "<hr>";
     });
 
@@ -1381,7 +1389,7 @@ void Model::initDensities()
         generateActivity(mFFTLength, mHActivity, 95.);
     }
 
-    generateDensityNumericalResults(mChains);
+    generateDensityNumericalResults();
 
 }
 
@@ -1422,7 +1430,7 @@ void Model::updateDensities(int fftLen, BandwidthType bandwidthType, double band
         generateActivity(fftLen, mHActivity, threshold);
     }
 
-    generateDensityNumericalResults(mChains);
+    generateDensityNumericalResults();
 
     mBandwidthType = bandwidthType;
     mBandwidth = bandwidth;
@@ -1545,38 +1553,38 @@ void Model::generateNumericalResults(const std::vector<ChainSpecs> &chains)
 }
 */
 
-void Model::generateDensityNumericalResults(const std::vector<ChainSpecs> &chains)
+void Model::generateDensityNumericalResults()
 {
 #ifdef DEBUG
     QElapsedTimer t;
     t.start();
 #endif
 
-    std::ranges::for_each( mEvents, [chains](std::shared_ptr<Event> event) {
+    std::ranges::for_each( mEvents, [](std::shared_ptr<Event> event) {
         if (event->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
-            event->mTheta.generateDensityNumericalResults(chains);
+            event->mTheta.generateDensityNumericalResults();
 
             if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe)
-                event->mS02Theta.generateDensityNumericalResults(chains);
+                event->mS02Theta.generateDensityNumericalResults();
 
             for (auto&& date : event->mDates) {
-                date.mTi.generateDensityNumericalResults(chains);
-                date.mSigmaTi.generateDensityNumericalResults(chains);
+                date.mTi.generateDensityNumericalResults();
+                date.mSigmaTi.generateDensityNumericalResults();
 
                 if (date.mDeltaType != Date::eDeltaNone)
-                    date.mWiggle.generateDensityNumericalResults(chains);
+                    date.mWiggle.generateDensityNumericalResults();
             }
         } else {
-            event->mTheta.MetropolisVariable::generateDensityNumericalResults(chains);
+            event->mTheta.MetropolisVariable::generateDensityNumericalResults();
         }
     });
 
 
-    std::ranges::for_each( mPhases, [chains](std::shared_ptr<Phase> phase) {
-        phase->mAlpha.MetropolisVariable::generateDensityNumericalResults(chains);
-        phase->mBeta.MetropolisVariable::generateDensityNumericalResults(chains);
+    std::ranges::for_each( mPhases, [](std::shared_ptr<Phase> phase) {
+        phase->mAlpha.MetropolisVariable::generateDensityNumericalResults();
+        phase->mBeta.MetropolisVariable::generateDensityNumericalResults();
         // phase->mTau.generateNumericalResults(chains);
-        phase->mDuration.MetropolisVariable::generateDensityNumericalResults(chains);
+        phase->mDuration.MetropolisVariable::generateDensityNumericalResults();
     });
 
 

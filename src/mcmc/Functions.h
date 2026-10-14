@@ -56,14 +56,13 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define PAR
 #endif
 
-
-
-
 DensityStat analyseDensity(const QMap<type_data, type_data> &fun);
 DensityStat analyseDensity(const std::map<type_data, type_data> &fun);
 
 QString densityStatToString(const DensityStat& analysis);
-QString posteriorAnalysisToString(const PosteriorAnalysis& analysis);
+
+QString convergenceToHtml(const PosteriorAnalysis &analysis);
+QString posteriorAnalysisToString(const PosteriorAnalysis& analysis, const bool withConvergence = true);
 
 // Standard Deviation of a vector of data
 
@@ -76,7 +75,6 @@ type_data std_Koening(const QList<type_data> &data);
 inline double std_Knuth(const QList<double> &data) {return sqrt(variance_pop_Knuth(data));};
 inline double std_Knuth(const std::vector<double> &data) {return sqrt(variance_pop_Knuth(data));};
 inline double std_Knuth(const std::vector<int> &data) {return sqrt(variance_pop_Knuth(data));};
-
 
 void mean_variance_Knuth(const std::vector<double> &data, double &mean, double &variance);
 void mean_variance_Knuth(const QList<double> &data, double &mean, double &variance);

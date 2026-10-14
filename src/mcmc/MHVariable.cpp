@@ -414,17 +414,10 @@ void MHVariable::generateGlobalRunAcceptation(const std::vector<ChainSpecs> &cha
     mGlobalAcceptationPerCent = mMHAcceptcountSinceAquire / aquisition * 100.;
 }
 
-
-/*void MHVariable::generateNumericalResults(const std::vector<ChainSpecs> &chains)
-{
-    MetropolisVariable::generateNumericalResults(chains);
-    generateGlobalRunAcceptation(chains);
-}*/
-
 // doit être fait à chaque modification du lissage
-void MHVariable::generateDensityNumericalResults(const std::vector<ChainSpecs>& chains)
+void MHVariable::generateDensityNumericalResults()
 {
-    MetropolisVariable::generateDensityNumericalResults(chains);
+    MetropolisVariable::generateDensityNumericalResults();
 }
 
 // Peut être fait une fois à la sortie des iterations
@@ -435,10 +428,10 @@ void MHVariable::generateTraceNumericalResults(const std::vector<ChainSpecs>& ch
 }
 
 
-QString MHVariable::resultsString(const QString &noResultMessage, const QString &unit) const
+QString MHVariable::resultsString(const QString &noResultMessage, const QString &unit, const bool withConvergence) const
 {
     if (mSamplerProposal != SamplerProposal::eFixe) {
-        const QString result = MetropolisVariable::resultsString(noResultMessage, unit);
+        const QString result = MetropolisVariable::resultsString(noResultMessage, unit, withConvergence);
         const QString globalTxt = stringForLocal(mGlobalAcceptationPerCent);
 
         return result + "<br>" + QObject::tr("Acceptance rate (all acquire iterations) : %1 % (%2)").arg(globalTxt, getSamplerProposalText(mSamplerProposal));

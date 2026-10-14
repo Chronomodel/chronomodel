@@ -826,20 +826,20 @@ void ModelCurve::generateCorrelations(const std::vector<ChainSpecs> &chains)
 #endif
 }
 
-void ModelCurve::generateDensityNumericalResults(const std::vector<ChainSpecs> &chains)
+void ModelCurve::generateDensityNumericalResults()
 {
-    Model::generateDensityNumericalResults(chains);
+    Model::generateDensityNumericalResults();
 
     if (is_curve) {
         for (std::shared_ptr<Event>& event : mEvents) {
             if (event->mVg.mSamplerProposal != SamplerProposal::eFixe)
-                event->mVg.generateDensityNumericalResults(chains);
+                event->mVg.generateDensityNumericalResults();
         }
         if (mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe)
-            mLambdaSpline.generateDensityNumericalResults(chains);
+            mLambdaSpline.generateDensityNumericalResults();
 #ifdef KOMLAN
         if (mS02Vg.mSamplerProposal != SamplerProposal::eFixe)
-            mS02Vg.generateDensityNumericalResults(chains);
+            mS02Vg.generateDensityNumericalResults();
 #endif
     }
 }

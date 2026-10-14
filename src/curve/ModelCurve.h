@@ -147,12 +147,10 @@ public:
     virtual void generateModelLog();
     virtual void generateResultsLog();
 
-
     void generatePosteriorDensities(const std::vector<ChainSpecs> &chains, int fftLen, BandwidthType bwt, double bandwidth = 1.);
     virtual void generateCorrelations(const std::vector<ChainSpecs> &chains);
 
-    //void generateNumericalResults(const std::vector<ChainSpecs> &chains);// obsolete
-    virtual void generateDensityNumericalResults(const std::vector<ChainSpecs>& chains);
+    virtual void generateDensityNumericalResults();
     virtual void generateTraceNumericalResults(const std::vector<ChainSpecs>& chains);
 
     virtual void generateCredibility(const double thresh);

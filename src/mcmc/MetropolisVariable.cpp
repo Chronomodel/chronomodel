@@ -768,7 +768,7 @@ void MetropolisVariable::generateCorrelations(const std::vector<ChainSpecs> &cha
 /* --------------------------------------------------------------
    1️⃣  generateDensityNumericalResults
    -------------------------------------------------------------- */
-void MetropolisVariable::generateDensityNumericalResults(const std::vector<ChainSpecs> &chains)
+void MetropolisVariable::generateDensityNumericalResults()
 {
     // ----- Résultats globaux (concatenation de toutes les chaînes) -----
     if (mFormatedKDE.empty())
@@ -974,12 +974,12 @@ std::vector<double> MetropolisVariable::correlationForChain(const size_t index)
 }
 
 
-QString MetropolisVariable::resultsString(const QString &noResultMessage, const QString &unit) const
+QString MetropolisVariable::resultsString(const QString &noResultMessage, const QString &unit, const bool withConvergence) const
 {
     if (mFormatedKDE.empty())
         return noResultMessage;
 
-    QString result = posteriorAnalysisToString(mResults) + "<br>";
+    QString result = posteriorAnalysisToString(mResults, withConvergence) + "<br>";
 
     result += "<i>"+ QObject::tr("Probabilities") + " </i><br>";
 
@@ -2461,7 +2461,7 @@ ConvergenceSummary computeConvergenceSummary(const std::vector<double>& rHatValu
     switch (summary.status) {
     case ConvergenceStatus::eGood:
         summary.label = summary.hasEss
-                            ? QObject::tr("Satisfactory convergence (max R\u03022 = %1, min ESS = %2)")
+                            ? QObject::tr("Satisfactory convergence (max R\u0302 = %1, min ESS = %2)")
                                   .arg(summary.maxRHat, 0, 'f', 4)
                                   .arg(summary.minESS, 0, 'f', 0)
                             : QObject::tr("Satisfactory convergence (max R\u0302 = %1)")

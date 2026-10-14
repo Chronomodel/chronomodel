@@ -816,97 +816,87 @@ QString densityStatToString(const DensityStat &analysis)
     return result;
 }
 
+
+QString convergenceToHtml(const PosteriorAnalysis &analysis)
+{
+    using namespace MCMCDiagnostic;
+
+    const QString cGreen  = QStringLiteral("#2e7d32");
+    const QString cOrange = QStringLiteral("#f9a825");
+    const QString cRed    = QStringLiteral("#c62828");
+    const QString cBlack  = QStringLiteral("#000000");
+
+    const int M = getModel_ptr()->mChains.size();
+    const double essWarn = Threshold::essWarning(M);
+    const double essGood = Threshold::essGood(M);
+
+    struct Line { QString col, label, stat; };
+
+    // ---------------- R̂ ----------------
+    const double rhat = analysis.RhatESS.rHat;
+    Line r;
+    QString rDisp = QString::number(rhat, 'f', 4);
+    if (rhat == 0.0) {
+        r.col = cBlack; r.stat = QObject::tr("❓ One chain"); rDisp = "-";
+    } else if (!std::isfinite(rhat)) {
+        r.col = cRed;   r.stat = QObject::tr("❌ Not converged (chains stuck)"); rDisp = QString::fromUtf8("∞");
+    } else if (rhat < Threshold::RhatGood) {
+        r.col = cGreen; r.stat = QObject::tr("✅ Satisfactory convergence");
+    } else if (rhat < Threshold::RhatWarning) {
+        r.col = cOrange; r.stat = QObject::tr("⚠️ Insufficient convergence");
+    } else {
+        r.col = cRed;   r.stat = QObject::tr("❌ Not converged");
+    }
+    r.label = QObject::tr("R\xCC\x82 = %1").arg(rDisp);
+
+    // ---------------- ESS (bulk / tail) ----------------
+    auto essLine = [&](double ess, const QString &labelFmt) {
+        Line l;
+        QString disp = QString::number(ess, 'f', 0);
+        if (!std::isfinite(ess)) {
+            l.col = cBlack;  l.stat = QObject::tr("❓ Not calculable"); disp = "-";
+        } else if (ess < essWarn) {
+            l.col = cRed;    l.stat = QObject::tr("❌ Too low");
+        } else if (ess < essGood) {
+            l.col = cOrange;
+            l.stat = QObject::tr("⚠️ Insufficient") + " (< " + QString::number(essGood, 'f', 0) + ")";
+        } else {
+            l.col = cGreen;  l.stat = QObject::tr("✅ Satisfactory");
+        }
+        l.label = labelFmt.arg(disp);
+        return l;
+    };
+    const Line b = essLine(analysis.RhatESS.bulkESS, QObject::tr("ESS bulk = %1"));
+    const Line t = essLine(analysis.RhatESS.tailESS, QObject::tr("ESS tail = %1"));
+
+    // ---------------- HTML ----------------
+    auto esc = [](const QString &s) { return s.toHtmlEscaped(); };
+
+    if (r.col == cGreen && b.col == cGreen && t.col == cGreen) {
+        return QString("<i><span style='color:%1'>%2 &middot; %3 &middot; %4 ✅</span></i>")
+            .arg(cGreen, esc(r.label), esc(b.label), esc(t.label));
+    }
+
+    auto span = [&](const Line &l) {
+        return QString("<span style='color:%1'>%2 %3</span>")
+        .arg(l.col, esc(l.label), esc(l.stat));
+    };
+    return "<i>" + span(r) + "<br>" + span(b) + "<br>" + span(t) + "</i>";
+}
+
+
+
 /**
  * @brief Return a text with the value of th Quartiles Q1, Q2 and Q3
  * @see PosteriorAnalysis
  */
-QString posteriorAnalysisToString(const PosteriorAnalysis &analysis)
+QString posteriorAnalysisToString(const PosteriorAnalysis &analysis, const bool withConvergence)
 {
     QString result (QObject::tr("No data"));
 
     if (analysis.densityAnalysis.std >= 0.) {
-        using namespace MCMCDiagnostic;
 
-        // --- Rhat : mêmes règles qu'avant (0.0 -> une seule chaîne, non fini -> chaînes
-        //     bloquées), mais seuil "Insuffisant" aligné sur Threshold::RhatWarning (1.05,
-        //     au lieu de 1.1) pour rester cohérent avec computeConvergenceSummary ---
-        auto rhatColor = [](double rhat) -> QString {
-            if (rhat == 0.0)                    return "black";
-            if (!std::isfinite(rhat))           return "red";
-            if (rhat < Threshold::RhatGood)     return "green";
-            if (rhat < Threshold::RhatWarning)  return "orange";
-            return "red";
-        };
-
-        auto rhatStatus = [](double rhat) -> QString {
-            if (rhat == 0.0)                    return QObject::tr("❓One Chain");
-            if (!std::isfinite(rhat))           return QObject::tr("❌ Not converged (chains stuck)");
-            if (rhat < Threshold::RhatGood)     return QObject::tr("✅ Satisfactory convergence");
-            if (rhat < Threshold::RhatWarning)  return QObject::tr("⚠️ Insufficient convergence");
-            return QObject::tr("❌ Not converged");
-        };
-        auto rhatDisplay = [](double rhat) -> QString {
-            if (rhat == 0.0)          return "-";
-            if (!std::isfinite(rhat)) return QString::fromUtf8("∞");
-            return QString::number(rhat, 'f', 4);
-        };
-
-        // --- ESS : même principe à 3 paliers (+ cas non calculable, ex. variable
-        //     dégénérée/fixée où var+ ~ 0) ---
-        // Seuils globaux = seuils par chaîne × nombre de chaînes M
-        auto M = getModel_ptr()->mChains.size();
-
-        const double essWarn = Threshold::essWarning(M);
-        const double essGood = Threshold::essGood(M);
-
-        auto essColor = [essWarn, essGood](double ess) -> QString {
-            if (!std::isfinite(ess)) return "black";
-            if (ess < essWarn)       return "red";
-            if (ess < essGood)       return "orange";
-            return "green";
-        };
-        auto essStatus = [essWarn, essGood](double ess) -> QString {
-            if (!std::isfinite(ess)) return QObject::tr("❓ Not calculable");
-            if (ess < essWarn)       return QObject::tr("❌ Too low");
-            if (ess < essGood)       return QObject::tr("⚠️ Insufficient (&lt; %1)").arg(essGood, 0, 'f', 0);
-            return QObject::tr("✅ Satisfactory");
-        };
-        auto essDisplay = [](double ess) -> QString {
-            if (!std::isfinite(ess)) return "-";
-            return QString::number(ess, 'f', 0);
-        };
-
-        const double rhat    = analysis.RhatESS.rHat;
-        const double bulkESS = analysis.RhatESS.bulkESS;
-        const double tailESS = analysis.RhatESS.tailESS;
-
-        // 1.  Définir le style du paragraphe (pas de marge, inter‑ligne réduit)
-        QString paragraphStyle = "margin:0; line-height:0.9;";
-
-        // 2.  Construire le texte HTML
-
-        const bool allGood = (rhatColor(rhat)   == "green")
-                             && (essColor(bulkESS) == "green")
-                             && (essColor(tailESS) == "green");
-
-        if (allGood) {
-            result = "<i><span style='color:green'>"
-                     + QObject::tr("R\xCC\x82 = %1  ·  ESS bulk = %2  ·  ESS tail = %3  ✅")
-                           .arg(rhatDisplay(rhat), essDisplay(bulkESS), essDisplay(tailESS))
-                     + "</span></i>";
-        } else {
-            result = "<i>"
-                     + QString("<span style='color:%1'>").arg(rhatColor(rhat))
-                     + QObject::tr("R\xCC\x82 = %1 %2").arg(rhatDisplay(rhat), rhatStatus(rhat))
-                     + "</span><br>"
-                     + QString("<span style='color:%1'>").arg(essColor(bulkESS))
-                     + QObject::tr("ESS bulk = %1 %2").arg(essDisplay(bulkESS), essStatus(bulkESS))
-                     + "</span><br>"
-                     + QString("<span style='color:%1'>").arg(essColor(tailESS))
-                     + QObject::tr("ESS tail = %1 %2").arg(essDisplay(tailESS), essStatus(tailESS))
-                     + "</span>"
-                     + "</i>";
-        }
+        result = withConvergence ? convergenceToHtml(analysis) : QString("");
 
         result += "<br><i>" + QObject::tr("Trace Stat.")  + "</i><br>";
         result += QObject::tr("Mean = %1  ;  Std = %2").arg( stringForLocal(analysis.traceAnalysis.mean),

@@ -490,11 +490,11 @@ public:
     std::vector<double> acceptationForChain(const std::vector<ChainSpecs>& chains, size_t index);
     void generateGlobalRunAcceptation(const std::vector<ChainSpecs>& chains);
 
-    virtual void generateDensityNumericalResults(const std::vector<ChainSpecs>& chains) override;
+    virtual void generateDensityNumericalResults() override;
     virtual void generateTraceNumericalResults(const std::vector<ChainSpecs>& chains) override;
 
     QString resultsString(const QString &noResultMessage = QObject::tr("No result to display"),
-                          const QString &unit = QString()) const override;
+                          const QString &unit = QString(), const bool withConvergence = true) const override;
 
     static QString getSamplerProposalText(const SamplerProposal sp) ;
     static SamplerProposal getSamplerProposalFromText(const QString &text);
