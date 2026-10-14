@@ -87,7 +87,7 @@ knowledge of the CeCILL V2.1 license and that you accept its terms.
 #define APP_SETTINGS_STR_SHEET "sheet"
 
 #define APP_SETTINGS_STR_EVENTMODEL "event_model"
-#define APP_SETTINGS_DEFAULT_EVENTMODEL 2
+#define APP_SETTINGS_DEFAULT_EVENTMODEL 1
 
 class AppSettings
 {

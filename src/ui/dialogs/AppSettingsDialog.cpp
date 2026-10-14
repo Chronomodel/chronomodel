@@ -88,7 +88,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
         QVariant::fromValue(ColorPalette::TemperatureSoftDensity)
         );
     mMapPaletteCombo->addItem(
-        "Black & White higth Contrast",
+        "Black & White high Contrast",
         QVariant::fromValue(ColorPalette::BlackWhite)
         );
     mMapPaletteCombo->addItem(
@@ -139,24 +139,24 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
 
     // Palette native
     mMapPaletteCombo->addItem(
-        "Magma Higth Contrast (Viridis A)",
+        "Magma High Contrast (Viridis A)",
         QVariant::fromValue(ColorPalette::Magma10)
         );
     mMapPaletteCombo->addItem(
-        "Inferno Higth Contrast (Viridis B)",
+        "Inferno High Contrast (Viridis B)",
         QVariant::fromValue(ColorPalette::Inferno10)
         );
     mMapPaletteCombo->addItem(
-        "Plasma Higth Contrast (Viridis C)",
+        "Plasma High Contrast (Viridis C)",
         QVariant::fromValue(ColorPalette::Plasma10)
         );
     //Palette perceptuellement uniforme pour daltoniens (jaune → bleu).
     mMapPaletteCombo->addItem(
-        "Viridis Higth Contrast (D)",
+        "Viridis High Contrast (D)",
         QVariant::fromValue(ColorPalette::Viridis10)
         );
     mMapPaletteCombo->addItem(
-        "Cividis Higth Contrast (Viridis E)",
+        "Cividis High Contrast (Viridis E)",
         QVariant::fromValue(ColorPalette::Cividis10)
         );
 
@@ -179,7 +179,7 @@ AppSettingsDialog::AppSettingsDialog(QWidget* parent, Qt::WindowFlags flags): QD
         QVariant::fromValue(ColorPalette::Gist_rainbow14Density)
         );
     mMapPaletteCombo->addItem(
-        "Rainbow Higth Contrast",
+        "Rainbow High Contrast",
         QVariant::fromValue(ColorPalette::Gist_rainbow14)
         );
     // --------------------

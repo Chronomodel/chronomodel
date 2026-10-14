@@ -765,8 +765,7 @@ QString ModelUtilities::dateResultsHTML(const Date* date, const double tmin_form
 
     }
     // le noyaux de ti est un mixing kernel, le taux d'acceptation n'est utilisé que par le noyaux RW adaptatif
-    //text += line(textBlack(date->mTi.resultsString("", DateUtils::getAppSettingsFormatStr()))) ;
-    text += textBlue( date->mTi.MetropolisVariable::resultsString("", DateUtils::getAppSettingsFormatStr()));
+    text += textBlack( date->mTi.MetropolisVariable::resultsString("", DateUtils::getAppSettingsFormatStr()));
 
     if (date->mTi.is_curve_filtering)
         text += date->mTi.getFilteringString();
