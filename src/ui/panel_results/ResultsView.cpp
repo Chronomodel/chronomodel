@@ -6401,30 +6401,28 @@ void ResultsView::exportResults()
                         model->exportMeanGComposanteToReferenceCurves(model->mPosteriorMeanG.gy,dirPath +  "/Curve_" + list_names.at(1) + "_Gauss_ref.csv", QLocale::English, ",");
                         model->exportMeanGPComposanteToReferenceCurves(model->mPosteriorMeanG.gy,  dirPath + "/Curve_" + list_names.at(1) + "_GP_Gauss_ref.csv", QLocale::English, ",");
 
-                        model->exportHpdGComposanteToReferenceCurves(model->mPosteriorMeanG.gy, dirPath + "/Curve_" + list_names.at(0) + "__Hpd_ref.csv", QLocale::English, ",");
-                        model->exportHpdGPComposanteToReferenceCurves(model->mPosteriorMeanG.gy, dirPath + "/Curve_" + list_names.at(0) + "_GP_Hpd_ref.csv", QLocale::English, ",");
+                        model->exportHpdGComposanteToReferenceCurves(model->mPosteriorMeanG.gy, dirPath + "/Curve_" + list_names.at(1) + "_Hpd_ref.csv", QLocale::English, ",");
+                        model->exportHpdGPComposanteToReferenceCurves(model->mPosteriorMeanG.gy, dirPath + "/Curve_" + list_names.at(1) + "_GP_Hpd_ref.csv", QLocale::English, ",");
 
 
                         file.setFileName(dirPath + "/Curve" + list_names.at(1) + "_GP_Map.csv");
 
                         if (file.open(QFile::WriteOnly | QFile::Truncate)) {
                             model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gy.mapGP);
-                            //file.close(); // déjà dans saveMapToFile
                         }
 
                         if (model->displayZ()) {
                             model->exportMeanGComposanteToReferenceCurves(model->mPosteriorMeanG.gz, dirPath +"/Curve_" + list_names.at(2) + "_Gauss_ref.csv", QLocale::English, ",");
                             model->exportMeanGPComposanteToReferenceCurves(model->mPosteriorMeanG.gz, dirPath +"/Curve_" + list_names.at(2) + "_GP_Gauss_ref.csv", QLocale::English, ",");
 
-                            model->exportHpdGComposanteToReferenceCurves(model->mPosteriorMeanG.gz, dirPath +"/Curve_" + list_names.at(0) + "_Hpd_ref.csv", QLocale::English, ",");
-                            model->exportHpdGPComposanteToReferenceCurves(model->mPosteriorMeanG.gz, dirPath +"/Curve_" + list_names.at(0) + "_GP_Hpd_ref.csv", QLocale::English, ",");
+                            model->exportHpdGComposanteToReferenceCurves(model->mPosteriorMeanG.gz, dirPath +"/Curve_" + list_names.at(2) + "_Hpd_ref.csv", QLocale::English, ",");
+                            model->exportHpdGPComposanteToReferenceCurves(model->mPosteriorMeanG.gz, dirPath +"/Curve_" + list_names.at(2) + "_GP_Hpd_ref.csv", QLocale::English, ",");
 
 
                             file.setFileName(dirPath + "/Curve" + list_names.at(2) + "_GP_Map.csv");
 
                             if (file.open(QFile::WriteOnly | QFile::Truncate)) {
                                 model->saveMapToFile(&file, csvSep, model->mPosteriorMeanG.gz.mapGP);
-                                //file.close();
                             }
                         }
 

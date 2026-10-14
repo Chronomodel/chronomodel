@@ -6388,10 +6388,8 @@ bool MCMCLoopCurve::update_339_block()
     //memo = sampler_339_block_4v();
     // memo = sampler_339_SingleSite(); //fonctionne
 
-
-    //memo = sampler_339_SingleSite_bloc_delta(); // par defaut, fonctionne très bien
-    //memo = tempering_339_ti_marg(1); //test
-    memo = tempering_339_SingleSite_bloc_delta(0);
+    //memo = sampler_339_SingleSite_bloc_delta(); //  fonctionne très bien
+    memo = tempering_339_SingleSite_bloc_delta(0); // par defaut, fonctionne très bien
     return memo;
 
 }
