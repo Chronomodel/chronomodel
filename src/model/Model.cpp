@@ -39,6 +39,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #include "StdUtilities.h"
 #include "DateUtils.h"
 
+#include <QIODevice>
+
 #include "MetropolisVariable.h"
 
 #include <QJsonArray>
@@ -639,7 +641,7 @@ void Model::generateResultsLog()
         log += line(textOrange(phase->mDuration.resultsString(QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), false)));
 
         if (phase->mDuration.is_curve_filtering)
-            log += phase->mDuration.getFilteringString();
+            log += line(textOrange(phase->mDuration.getFilteringString()));
         log += "<hr>";
     });
 
@@ -2220,8 +2222,35 @@ void Model::clearTraces()
 /** @Brief Save .res file, the result of computation and compress it
  *
  * */
+/**
+ * @brief Model::peekResFormatTag
+ * Regarde, sans les consommer, les 8 octets suivants du flux et indique s'ils
+ * correspondent au marqueur @p tag. Les .res 4.0.0 écrits avant l'ajout du
+ * compteur d'acceptation n'ont pas ce marqueur et sont relus en v338.
+ */
+bool Model::peekResFormatTag(QDataStream* in, quint64 tag)
+{
+    QIODevice* dev = in ? in->device() : nullptr;
+    if (!dev || dev->isSequential())
+        return false;
+
+    const QByteArray raw = dev->peek(sizeof(quint64));
+    if (raw.size() != static_cast<qsizetype>(sizeof(quint64)))
+        return false;
+
+    QDataStream probe(raw);
+    probe.setByteOrder(in->byteOrder());
+    probe.setVersion(in->version());
+    quint64 v = 0;
+    probe >> v;
+    return v == tag;
+}
+
 void Model::saveToStream(QDataStream *out) const
 {
+   // Marqueur de format v4.0.0 : les MHVariable contiennent mMHAcceptcountSinceAquire
+   *out << kResFormatTag_v400;
+
    // *out << quint32 (out->version());// we could add software version here << quint16(out.version());
    // *out << qApp->applicationVersion();
 
@@ -2640,8 +2669,8 @@ bool Model::loadFromStream_v328(QDataStream *in)
     // -----------------------------------------------------
 
     for (std::shared_ptr<Event> &e : mEvents) {
-        e->mTheta.load_stream(*in);
-        e->mS02Theta.load_stream(*in); // since 2023-06-01 v3.2.3
+        e->mTheta.load_stream_v338(*in);
+        e->mS02Theta.load_stream_v338(*in); // since 2023-06-01 v3.2.3
     }
     // -----------------------------------------------------
     //  Read dates data
@@ -2653,10 +2682,10 @@ bool Model::loadFromStream_v328(QDataStream *in)
                 //d.mTi = MHVariable();
                 //d.mSigmaTi = MHVariable();
                 //d.mWiggle = MHVariable();
-                d.mTi.load_stream(*in);
-                d.mSigmaTi.load_stream(*in);
+                d.mTi.load_stream_v338(*in);
+                d.mSigmaTi.load_stream_v338(*in);
                 if (d.mDeltaType != Date::eDeltaNone)
-                    d.mWiggle.load_stream(*in);
+                    d.mWiggle.load_stream_v338(*in);
 
                 *in >> d.mDeltaFixed;
                 *in >> d.mDeltaMin;
@@ -2935,8 +2964,8 @@ bool Model::loadFromStream_v338(QDataStream *in)
         // -----------------------------------------------------
 
         for (std::shared_ptr<Event> &e : mEvents) {
-            e->mTheta.load_stream(*in);
-            e->mS02Theta.load_stream(*in);
+            e->mTheta.load_stream_v338(*in);
+            e->mS02Theta.load_stream_v338(*in);
             if (in->status() != QDataStream::Ok) {
                 qWarning() << "[Model::loadFromStream_v338] Erreur lecture event";
                 return false;
@@ -2951,10 +2980,10 @@ bool Model::loadFromStream_v338(QDataStream *in)
 
             for (auto&& d : event->mDates) {
 
-                d.mTi.load_stream(*in);
-                d.mSigmaTi.load_stream(*in);
+                d.mTi.load_stream_v338(*in);
+                d.mSigmaTi.load_stream_v338(*in);
                 if (d.mDeltaType != Date::eDeltaNone)
-                    d.mWiggle.load_stream(*in);
+                    d.mWiggle.load_stream_v338(*in);
 
                 *in >> d.mDeltaFixed;
                 *in >> d.mDeltaMin;
@@ -3013,6 +3042,180 @@ bool Model::loadFromStream_v338(QDataStream *in)
     }
     /*catch (...) {
         std::cout << "[Model::loadFromStream_v338] Error " << std::endl;
+        return false;
+    }*/
+}
+
+
+/**
+ * @brief Model::loadFromStream_v400
+ * Identique à v338, mais les MHVariable sont lues avec load_stream_v400
+ * (ajout de mMHAcceptcountSinceAquire). Fichiers .res écrits par la v4.0.0.
+ */
+bool Model::loadFromStream_v400(QDataStream *in)
+{
+    std::cout << "[Model::loadFromStream_v400] Entering" << std::endl;
+
+    if (in->version()!= QDataStream::Qt_6_4)
+        return false;
+
+    try {
+        // -----------------------------------------------------
+        //  Marqueur de format v4.0.0
+        // -----------------------------------------------------
+        quint64 tag = 0;
+        *in >> tag;
+        if (in->status() != QDataStream::Ok || tag != kResFormatTag_v400) {
+            qWarning() << "[Model::loadFromStream_v400] marqueur de format v4.0.0 absent ou invalide";
+            return false;
+        }
+
+
+        // -----------------------------------------------------
+        //  Read info
+        // -----------------------------------------------------
+
+        // -------------------------------------------------
+        // 3️⃣  Lire les chaînes
+        // -------------------------------------------------
+        quint32 chainCount = 0;
+        *in >> chainCount;
+        if (in->status() != QDataStream::Ok) {
+            qWarning() << "Erreur lecture du nombre de chaînes";
+            return false;
+        }
+        mChains.clear();
+        mChains.reserve(static_cast<size_t>(chainCount));
+        for (quint32 i = 0; i < chainCount; ++i) {
+            ChainSpecs ch;
+            *in >> ch.burnElapsedTime;
+            *in >> ch.mAdaptElapsedTime;
+            *in >> ch.mAcquisitionElapsedTime;
+
+            quint32 tmp;
+            *in >> tmp; ch.mBatchIndex = static_cast<decltype(ch.mBatchIndex)>(tmp);
+            *in >> tmp; ch.mBatchIterIndex = static_cast<decltype(ch.mBatchIterIndex)>(tmp);
+            *in >> tmp; ch.mBurnIterIndex = static_cast<decltype(ch.mBurnIterIndex)>(tmp);
+            *in >> tmp; ch.mMaxBatchs = static_cast<decltype(ch.mMaxBatchs)>(tmp);
+            *in >> ch.mMixingLevel;
+            *in >> tmp; ch.mIterPerBatch = static_cast<decltype(ch.mIterPerBatch)>(tmp);
+            *in >> tmp; ch.mIterPerBurn = static_cast<decltype(ch.mIterPerBurn)>(tmp);
+            *in >> tmp; ch.mIterPerAquisition = static_cast<decltype(ch.mIterPerAquisition)>(tmp);
+            *in >> tmp; ch.mAquisitionIterIndex = static_cast<decltype(ch.mAquisitionIterIndex)>(tmp);
+            *in >> tmp; ch.mSeed = static_cast<decltype(ch.mSeed)>(tmp);
+            *in >> tmp; ch.mThinningInterval = static_cast<decltype(ch.mThinningInterval)>(tmp);
+            *in >> tmp; ch.mRealyAccepted = static_cast<decltype(ch.mRealyAccepted)>(tmp);
+            *in >> tmp; ch.mTotalIter = static_cast<decltype(ch.mTotalIter)>(tmp);
+            // champ dérivé
+            ch.mIterDisplay = ch.mRealyAccepted;
+            if (in->status() != QDataStream::Ok) {
+                qWarning() << "[Model::loadFromStream_v400] Erreur lecture chaîne n°" << i;
+                return false;
+            }
+            mChains.push_back(ch);
+        }
+        if (in->status() != QDataStream::Ok) {
+            throw std::runtime_error("Failed to read variable Chain");
+        }
+        // -----------------------------------------------------
+        // 4️⃣ Read phases data
+        // -----------------------------------------------------
+
+        for (std::shared_ptr<Phase> &p : mPhases) {
+            p->mAlpha.load_stream(*in);
+            p->mBeta.load_stream(*in);
+            p->mTau.load_stream(*in);
+            p->mDuration.load_stream(*in);
+
+        }
+        if (in->status() != QDataStream::Ok) {
+            qWarning() << "[Model::loadFromStream_v400] Erreur lecture phase";
+            return false;
+
+        }
+        // -----------------------------------------------------
+        //  5️⃣ Read events data
+        // -----------------------------------------------------
+
+        for (std::shared_ptr<Event> &e : mEvents) {
+            e->mTheta.load_stream_v400(*in);
+            e->mS02Theta.load_stream_v400(*in);
+            if (in->status() != QDataStream::Ok) {
+                qWarning() << "[Model::loadFromStream_v400] Erreur lecture event";
+                return false;
+            }
+        }
+        // -----------------------------------------------------
+        //  6️⃣ Read dates data
+        // -----------------------------------------------------
+
+        for (std::shared_ptr<Event> &event : mEvents) {
+            if (event->mType != Event::eDefault) continue;
+
+            for (auto&& d : event->mDates) {
+
+                d.mTi.load_stream_v400(*in);
+                d.mSigmaTi.load_stream_v400(*in);
+                if (d.mDeltaType != Date::eDeltaNone)
+                    d.mWiggle.load_stream_v400(*in);
+
+                *in >> d.mDeltaFixed;
+                *in >> d.mDeltaMin;
+                *in >> d.mDeltaMax;
+                *in >> d.mDeltaAverage;
+                *in >> d.mDeltaError;
+
+                double tmp;
+                *in >> tmp;
+                d.setTminRefCurve(tmp);
+                *in >> tmp;
+                d.setTmaxRefCurve(tmp);
+
+                d.mCalibration = & (getProject_ptr()->mCalibCurves[d.mUUID]);
+
+                // HPD map
+                quint32 hpSize = 0;
+                *in >> hpSize;
+                d.mCalibHPD.clear();
+                for (quint32 i = 0; i < hpSize; ++i) {
+                    double key, value;
+                    *in >> key >> value;
+                    d.mCalibHPD.insert(key, value);
+                }
+
+
+                const std::string toFind = "WID::" + d.mUUID;
+
+                if (d.mWiggleCalibration && !d.mWiggleCalibration->mVector.empty())
+                    d.mWiggleCalibration = &(getProject_ptr()->mCalibCurves[toFind]);
+                if (in->status() != QDataStream::Ok) {
+                    qWarning() << "[Model::loadFromStream_v400] Erreur lecture date";
+                    return false;
+                }
+            }
+        }
+
+        // -------------------------------------------------
+        // 7️⃣  Logs
+        // -------------------------------------------------
+        *in >> mLogModel;
+        *in >> mLogInit;
+        *in >> mLogAdapt;
+        *in >> mLogResults;
+
+        if (in->status() != QDataStream::Ok) {
+            qWarning() << "[Model::loadFromStream_v400] Erreur lecture logs";
+            return false;
+        }
+        return true;
+
+    }
+    catch (const std::exception& e) {
+        std::cout << "[Model::loadFromStream_v400]  " << e.what() << std::endl;
+        return false;
+    }
+    /*catch (...) {
+        std::cout << "[Model::loadFromStream_v400] Error " << std::endl;
         return false;
     }*/
 }

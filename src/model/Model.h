@@ -147,7 +147,11 @@ public:
 
     virtual void saveToStream(QDataStream* out) const ;
 
-    virtual bool loadFromStream(QDataStream* in) {return loadFromStream_v338(in);};
+    // Marqueur de format écrit en tête du modèle depuis la v4.0.0 (compteur d'acceptation MH)
+    static constexpr quint64 kResFormatTag_v400 = 0x43484D4F44563430ULL; // "CHMODV40"
+    static bool peekResFormatTag(QDataStream* in, quint64 tag);
+
+    virtual bool loadFromStream(QDataStream* in) {return loadFromStream_v400(in);};
 
     bool loadFromStream_v323(QDataStream* in);
     bool loadFromStream_v324(QDataStream* in);
@@ -155,6 +159,7 @@ public:
     bool loadFromStream_v330(QDataStream* in);
 
     bool loadFromStream_v338(QDataStream* in);
+    bool loadFromStream_v400(QDataStream* in);
 
     // Only trace needed for this :
     virtual void generateCorrelations(const std::vector<ChainSpecs>& chains);

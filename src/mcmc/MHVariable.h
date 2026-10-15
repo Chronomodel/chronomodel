@@ -489,16 +489,15 @@ public:
     static SamplerProposal getSamplerProposalFromText(const QString &text);
 
 
-    inline void load_stream(QDataStream& stream) {load_stream_v338(stream);};
+    inline void load_stream(QDataStream& stream) {load_stream_v400(stream);};
 
 
     void load_stream_v328(QDataStream& stream);
     void load_stream_v327(QDataStream& stream);
     void load_stream_v330(QDataStream& stream);
     void load_stream_v337(QDataStream& stream);
-
-private:
     void load_stream_v338(QDataStream& stream);
+    void load_stream_v400(QDataStream& stream); // v338 + mMHAcceptcountSinceAquire
 
 
 };

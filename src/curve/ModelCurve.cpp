@@ -417,15 +417,15 @@ bool ModelCurve::loadFromStream_v328(QDataStream* in)
     }
 
     for (auto&& e : mEvents)
-        e->mVg.load_stream(*in);
+        e->mVg.load_stream_v338(*in);
 
 
     quint32 tmp32;
-    mLambdaSpline.load_stream(*in);
+    mLambdaSpline.load_stream_v338(*in);
 
     //*in >> mS02Vg;
     MHVariable oldSO2Vg;
-    oldSO2Vg.load_stream(*in);
+    oldSO2Vg.load_stream_v338(*in);
 
     *in >> tmp32;
     mSplinesTrace.resize(tmp32);
@@ -463,11 +463,11 @@ bool ModelCurve::loadFromStream_v330(QDataStream* in)
 
     try {
         for (auto&& e : mEvents)
-            e->mVg.load_stream(*in);
+            e->mVg.load_stream_v338(*in);
 
 
         quint32 tmp32;
-        mLambdaSpline.load_stream(*in);
+        mLambdaSpline.load_stream_v338(*in);
 
         // mS02Vg.load_stream(*in);
 
@@ -562,11 +562,61 @@ bool ModelCurve::loadFromStream_v338(QDataStream* in)
 
     try {
         for (auto&& e : mEvents)
-            e->mVg.load_stream(*in);
+            e->mVg.load_stream_v338(*in);
 
 
         quint32 tmp32;
-        mLambdaSpline.load_stream(*in);
+        mLambdaSpline.load_stream_v338(*in);
+
+        //*in >> mS02Vg;
+        //mS02Vg.load_stream(*in);
+
+        *in >> tmp32;
+        mSplinesTrace.resize(tmp32);
+        for (auto& splin : mSplinesTrace) {
+            *in >> splin;
+        }
+
+        *in >> mPosteriorMeanG;
+
+        *in >> tmp32;
+        mPosteriorMeanGByChain.resize(tmp32);
+        for (auto& pMByChain : mPosteriorMeanGByChain) {
+            *in >> pMByChain;
+        }
+
+        return true;
+
+    } catch (...) {
+        std::cout << "[" << __func__ << "] error" << std::endl;
+        return false;
+    }
+
+
+}
+
+bool ModelCurve::loadFromStream_v400(QDataStream* in)
+{
+    bool ok = Model::loadFromStream_v400(in);
+
+    // Gérer l'erreur de lecture ici
+    if (in->status() != QDataStream::Ok) {
+        qDebug() << "[ModelCurve::loadFromStream_v400]  erreur de flux ; in->status()=" << in->status();
+
+    }
+
+
+    if (!is_curve || !ok) {
+        return ok;
+    }
+
+    try {
+        for (auto&& e : mEvents)
+            e->mVg.load_stream_v400(*in);
+
+
+        quint32 tmp32;
+        mLambdaSpline.load_stream_v400(*in);
 
         //*in >> mS02Vg;
         //mS02Vg.load_stream(*in);

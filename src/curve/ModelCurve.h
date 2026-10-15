@@ -82,10 +82,12 @@ public:
     virtual bool loadFromStream(QDataStream *in)
     {
         //std::cout << "[ModelCurve::restoreFromFile] entering";
+        static const QSet<QString> compatible_version_400 = {
+            QStringLiteral("4.0.0")
+        };
         static const QSet<QString> compatible_version_338 = {
             QStringLiteral("3.3.8"),
-            QStringLiteral("3.3.9"),
-            QStringLiteral("4.0.0"),
+            QStringLiteral("3.3.9")
         };
         static const QSet<QString> compatible_version_335 = {
             QStringLiteral("3.3.5"),
@@ -104,7 +106,16 @@ public:
 
         *in >> res_file_version;
 
-        if (compatible_version_338.contains(res_file_version))
+        if (compatible_version_400.contains(res_file_version)) {
+            // Les .res 4.0.0 écrits avant l'ajout du compteur d'acceptation
+            // n'ont pas le marqueur : format identique à v338
+            if (peekResFormatTag(in, kResFormatTag_v400))
+                return loadFromStream_v400(in);
+            else
+                return loadFromStream_v338(in);
+        }
+
+        else if (compatible_version_338.contains(res_file_version))
             return loadFromStream_v338(in);
 
         else if (compatible_version_335.contains(res_file_version))
@@ -129,6 +140,7 @@ public:
     bool loadFromStream_v335(QDataStream *in);
 
     bool loadFromStream_v338(QDataStream *in);
+    bool loadFromStream_v400(QDataStream *in);
 
     virtual QJsonObject toJson() const;
     virtual void fromJson( const QJsonObject &json);
