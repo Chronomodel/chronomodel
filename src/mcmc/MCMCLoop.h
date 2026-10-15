@@ -34,6 +34,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #include "ModelCurve.h"
 
 #include <QThread>
+#include <QElapsedTimer>
 #include <memory>
 #include <vector>
 
@@ -121,47 +122,99 @@ protected:
 };
 
 
+/**
+ * @brief AnnealAwareEstimator
+ * Estimation du temps restant du MCMC.
+ *  - Le coût d'une itération est mesuré en temps réel écoulé entre deux tick(),
+ *    donc TOUT est compté : update(), record*, acquire(), adapt(), emit, processEvents...
+ *  - Moyenne cumulée par phase (Burn-in, Adaptation, Acquisition) au lieu d'une EMA
+ *    très bruitée ; une phase pas encore observée prend le coût de la plus proche connue.
+ *  - Les itérations avec régénération (recuit) sont mesurées à part : coût d'un sous-pas.
+ *  - Le temps d'initialisation des chaînes déjà faites sert à estimer celui des suivantes.
+ */
 class AnnealAwareEstimator
 {
 public:
+    enum Phase { eBurn = 0, eAdapt = 1, eAcq = 2 };
+
     void setSubSteps(int n) { mSubSteps = n; }
 
-    void addSample(qint64 dtNs, bool wasRegen, bool annealingEnabled)
+    /** À appeler juste avant la boucle d'une phase : le temps hors boucle n'est pas compté. */
+    void beginPhase()
     {
-        constexpr double alpha = 0.1;
+        if (!mWall.isValid())
+            mWall.start();
+        mLast = mWall.nsecsElapsed();
+    }
 
-        if (!wasRegen) {
-            mEmaNormal = (mEmaNormal < 0.0) ? (double)dtNs
-                                            : alpha * dtNs + (1.0 - alpha) * mEmaNormal;
-
-            if (annealingEnabled && !mSubStepSeededFromReal)   // 👈 garde-fou
-                mEmaSubStep = mEmaNormal;
+    /** À appeler à la FIN de chaque itération (après emit / processEvents). */
+    void tick(Phase p, bool wasRegen)
+    {
+        if (!mWall.isValid()) {
+            beginPhase();
+            return;
         }
-        else if (mSubSteps > 0) {
-            const double base = (mEmaNormal >= 0.0) ? mEmaNormal : 0.0;
-            const double perSub = std::max(0.0, (dtNs - base)) / mSubSteps;
+        const qint64 now = mWall.nsecsElapsed();
+        const qint64 dt  = now - mLast;
+        mLast = now;
 
-            if (!mSubStepSeededFromReal) {
-                // première vraie mesure : on remplace l'estimation a priori
-                mEmaSubStep = perSub;
-                mSubStepSeededFromReal = true;
-            } else {
-                mEmaSubStep = alpha * perSub + (1.0 - alpha) * mEmaSubStep;
-            }
+        if (!wasRegen || mSubSteps <= 0) {
+            mSum[p] += dt;
+            ++mCount[p];
+
+        } else {
+            const double base   = std::max(0.0, cost(p));
+            const double perSub = std::max(0.0, double(dt) - base) / mSubSteps;
+            mSumSub += perSub;
+            ++mCountSub;
         }
     }
 
-    qint64 estimateRemainingNs(qint64 t, qint64 N, qint64 R, bool regenApplies) const
+    /** Durée mesurée d'une initialisation de chaîne (ns). */
+    void addInit(qint64 ns) { mSumInit += ns; ++mCountInit; }
+
+    /** Coût moyen d'une itération normale de la phase p (ns), -1 si rien n'est encore mesuré. */
+    double cost(Phase p) const
     {
-        if (mEmaNormal < 0.0) return 0;
+        if (mCount[p] > 0)
+            return double(mSum[p]) / double(mCount[p]);
+
+        // phase pas encore observée : coût de la phase connue la plus proche
+        static constexpr Phase order[3][3] = { {eBurn, eAdapt, eAcq},
+                                               {eAdapt, eBurn, eAcq},
+                                               {eAcq, eAdapt, eBurn} };
+        for (Phase q : order[p])
+            if (mCount[q] > 0)
+                return double(mSum[q]) / double(mCount[q]);
+        return -1.0;
+    }
+
+    /** Coût d'un sous-pas de recuit ; même fonction qu'une itération normale avant la 1re mesure. */
+    double subStepCost(Phase p) const
+    {
+        return (mCountSub > 0) ? mSumSub / double(mCountSub) : cost(p);
+    }
+
+    qint64 initCost() const { return (mCountInit > 0) ? mSumInit / mCountInit : 0; }
+
+    bool isReady() const { return mCount[eBurn] + mCount[eAdapt] + mCount[eAcq] > 0; }
+
+    /**
+     * @param t  index d'itération (mTotalIter) au début des N itérations restantes
+     * @param N  nombre d'itérations restantes dans la phase
+     * @param R  période de régénération (recuit), 0 si pas de recuit
+     */
+    qint64 estimateRemainingNs(Phase p, qint64 t, qint64 N, qint64 R, bool regenApplies) const
+    {
+        const double c = cost(p);
+        if (c < 0.0 || N <= 0)
+            return 0;
 
         const qint64 nRegen  = regenApplies ? countUpcomingRegen(std::max<qint64>(t, 1), N, R) : 0;
         const qint64 nNormal = N - nRegen;
+        const double regenCost = c + mSubSteps * subStepCost(p);
 
-        const double subCost   = (mEmaSubStep >= 0.0) ? mEmaSubStep : 0.0;
-        const double regenCost = mEmaNormal + mSubSteps * subCost;
-
-        return (qint64)(nNormal * mEmaNormal + nRegen * regenCost);
+        return qint64(nNormal * c + nRegen * regenCost);
     }
 
 private:
@@ -171,10 +224,19 @@ private:
         return (t + N - 1) / R - (t - 1) / R;
     }
 
-    int    mSubSteps  = 0;
-    double mEmaNormal = -1.0;
-    double mEmaSubStep = -1.0;
-    bool   mSubStepSeededFromReal = false;   // 👈 bascule dès la 1ʳᵉ vraie mesure
+    QElapsedTimer mWall;
+    qint64 mLast = 0;
+
+    int    mSubSteps = 0;
+
+    qint64 mSum[3]   = {0, 0, 0};
+    qint64 mCount[3] = {0, 0, 0};
+
+    double mSumSub   = 0.0;
+    qint64 mCountSub = 0;
+
+    qint64 mSumInit   = 0;
+    qint64 mCountInit = 0;
 };
 
 inline int computeAnnealSubSteps(int max_expo_T, int dwell_steps_T0)

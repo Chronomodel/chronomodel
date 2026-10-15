@@ -1242,7 +1242,6 @@ void MCMCLoop::run()
     AnnealAwareEstimator est;      // 👈 partagé Burn-in / Adapting / Acquisition
     est.setSubSteps(annealSubSteps);
     const qint64 R = mModel->mMCMCSettings.mAnnealRecurrence;
-    QElapsedTimer stepTimer;
 
     for (mChainIndex = 0; mChainIndex < mLoopChains.size(); ++mChainIndex) {
 
@@ -1250,7 +1249,8 @@ void MCMCLoop::run()
 
         ChainSpecs& chain = mLoopChains[mChainIndex];
 
-        const bool annealingEnabled = (R > 0) && (R < chain.mIterPerAquisition);
+        // même condition que dans update() : la régénération a lieu dès que R > 0 (mTotalIter % R == 0 en acquisition)
+        const bool annealingEnabled = (R > 0);
 
 
         // Utiliser le seed d'initialisation (sélectionné par SMC)
@@ -1287,6 +1287,7 @@ void MCMCLoop::run()
         recordMH();
 
         chain.mInitElapsedTime = initTime.elapsed();
+        est.addInit(initTime.nsecsElapsed());
         initTime.~QElapsedTimer();
 
         mModel->mLogInit += "<hr>";
@@ -1309,6 +1310,7 @@ void MCMCLoop::run()
         QElapsedTimer burningTime;
         burningTime.start();
 
+        est.beginPhase();
         while (chain.mBurnIterIndex < chain.mIterPerBurn) {
             if (isInterruptionRequested()) {
                 mAbortedReason = ABORTED_BY_USER;
@@ -1317,7 +1319,6 @@ void MCMCLoop::run()
 
             try {
 
-                stepTimer.start();
                 update();
 
 
@@ -1333,7 +1334,6 @@ void MCMCLoop::run()
 
             recordBurnAdapt();
             recordMH();
-            est.addSample(stepTimer.nsecsElapsed(), /*wasRegen=*/false, annealingEnabled);   // 👈
 
 
 
@@ -1350,6 +1350,7 @@ void MCMCLoop::run()
                 lastUpdateTime = now;
             }
             emit stepProgressed(iterDone);
+            est.tick(AnnealAwareEstimator::eBurn, false);
         }
         chain.burnElapsedTime = burningTime.elapsed();
         burningTime.~QElapsedTimer();
@@ -1366,6 +1367,7 @@ void MCMCLoop::run()
         adaptTime.start();
 
 
+        est.beginPhase();
         while ( chain.mBatchIndex < chain.mMaxBatchs) {
             if (isInterruptionRequested()) {
                 mAbortedReason = ABORTED_BY_USER;
@@ -1380,7 +1382,6 @@ void MCMCLoop::run()
                 }
 
                 try {
-                    stepTimer.start();
                     update();
 
 #ifdef _WIN32
@@ -1395,7 +1396,6 @@ void MCMCLoop::run()
                 // memo();
                 recordBurnAdapt();
                 recordMH(); // sert à l'affichage
-                est.addSample(stepTimer.nsecsElapsed(), /*wasRegen=*/false, annealingEnabled);
 
                 ++chain.mBatchIterIndex;
                 ++chain.mTotalIter;
@@ -1411,6 +1411,7 @@ void MCMCLoop::run()
 
                 emit stepProgressed(iterDone);
                 qApp->processEvents(); //This function is especially useful if you have a long running operation and want to show its progress
+                est.tick(AnnealAwareEstimator::eAdapt, false); // adapt() de fin de batch compté sur l'itération suivante
             }
             ++chain.mBatchIndex;
 
@@ -1456,6 +1457,7 @@ void MCMCLoop::run()
 
         chain.mRealyAccepted = 0;
 
+        est.beginPhase();
         while (chain.mAquisitionIterIndex < chain.mIterPerAquisition) {
             if (isInterruptionRequested()) {
                 mAbortedReason = ABORTED_BY_USER;
@@ -1473,7 +1475,6 @@ void MCMCLoop::run()
                 // mModel->mMCMCSettings.mAnnealRecurrence * mModel->mMCMCSettings.mAnnealTemp + mModel->mMCMCSettings.mAnnealRecurrence * mModel->mMCMCSettings.mAnnealDwell
 
 
-                stepTimer.start();
                 OkToMemo = update();
 
                 thinningIdx++;
@@ -1505,7 +1506,6 @@ void MCMCLoop::run()
 
             }
 
-            est.addSample(stepTimer.nsecsElapsed(), willRegen, annealingEnabled);
 
             if (batchIdx == chain.mIterPerBatch) {
                 adapt(totalBacth);
@@ -1534,6 +1534,7 @@ void MCMCLoop::run()
             }
 
             emit stepProgressed(iterDone);
+            est.tick(AnnealAwareEstimator::eAcq, willRegen);
         }
 
         chain.mIterDisplay = chain.mRealyAccepted;
@@ -1583,25 +1584,29 @@ void MCMCLoop::run()
 }
 
 
-qint64 estimateGlobalRemainingNs(const std::vector<ChainSpecs> &chains,   // ou le type réel de mLoopChains
+qint64 estimateGlobalRemainingNs(const std::vector<ChainSpecs> &chains,
                                  int currentChainIndex,
                                  MCMCLoop::State state,
                                  const AnnealAwareEstimator& est,
                                  qint64 R)
 {
+    using P = AnnealAwareEstimator;
+    if (!est.isReady())
+        return 0;
+
+    const bool annealingEnabled = (R > 0); // même condition que update()
     qint64 total = 0;
 
     // ---- 1. Reste de la chaîne courante ----
     {
         const ChainSpecs& chain = chains[currentChainIndex];
-        const bool annealingEnabled = (R > 0) && (R <= chain.mIterPerAquisition);
         qint64 t = chain.mTotalIter;
 
         if (state == MCMCLoop::State::eInit || state == MCMCLoop::State::eBurning) {
             const qint64 remain = (state == MCMCLoop::State::eBurning)
-            ? (chain.mIterPerBurn - chain.mBurnIterIndex)
-            : chain.mIterPerBurn;
-            total += est.estimateRemainingNs(t, remain, R, /*regenApplies=*/false);
+                                ? (chain.mIterPerBurn - chain.mBurnIterIndex)
+                                : chain.mIterPerBurn;
+            total += est.estimateRemainingNs(P::eBurn, t, remain, R, /*regenApplies=*/false);
             t += remain;
         }
 
@@ -1614,34 +1619,33 @@ qint64 estimateGlobalRemainingNs(const std::vector<ChainSpecs> &chains,   // ou 
             } else {
                 remain = totalAdaptIter;
             }
-            total += est.estimateRemainingNs(t, remain, R, /*regenApplies=*/false);
+            total += est.estimateRemainingNs(P::eAdapt, t, remain, R, /*regenApplies=*/false);
             t += remain;
         }
 
         {
             const qint64 remain = (state == MCMCLoop::State::eAcquisition)
-            ? (chain.mIterPerAquisition - chain.mAquisitionIterIndex)
-            : chain.mIterPerAquisition;
-            total += est.estimateRemainingNs(t, remain, R, annealingEnabled);
-            t += remain;
+                                ? (chain.mIterPerAquisition - chain.mAquisitionIterIndex)
+                                : chain.mIterPerAquisition;
+            total += est.estimateRemainingNs(P::eAcq, t, remain, R, annealingEnabled);
         }
     }
 
-    // ---- 2. Chaînes futures, pas encore démarrées : temps complet ----
+    // ---- 2. Chaînes futures, pas encore démarrées : init + temps complet ----
     for (size_t c = currentChainIndex + 1; c < chains.size(); ++c) {
         const ChainSpecs& chain = chains[c];
-        const bool annealingEnabled = (R > 0) && (R <= chain.mIterPerAquisition);
-        qint64 t = 0;   // 👈 chaîne pas encore démarrée, mTotalIter repart de 0
+        qint64 t = 0;   // chaîne pas encore démarrée, mTotalIter repart de 0
 
-        total += est.estimateRemainingNs(t, chain.mIterPerBurn, R, /*regenApplies=*/false);
+        total += est.initCost();
+
+        total += est.estimateRemainingNs(P::eBurn, t, chain.mIterPerBurn, R, /*regenApplies=*/false);
         t += chain.mIterPerBurn;
 
         const qint64 totalAdaptIter = (qint64)chain.mMaxBatchs * chain.mIterPerBatch;
-        total += est.estimateRemainingNs(t, totalAdaptIter, R, /*regenApplies=*/false);
+        total += est.estimateRemainingNs(P::eAdapt, t, totalAdaptIter, R, /*regenApplies=*/false);
         t += totalAdaptIter;
 
-        total += est.estimateRemainingNs(t, chain.mIterPerAquisition, R, annealingEnabled);
-        t += chain.mIterPerAquisition;
+        total += est.estimateRemainingNs(P::eAcq, t, chain.mIterPerAquisition, R, annealingEnabled);
     }
 
     return total;

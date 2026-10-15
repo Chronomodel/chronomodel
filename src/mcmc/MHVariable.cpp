@@ -521,6 +521,7 @@ QDataStream &operator<<( QDataStream& stream, const MHVariable& data )
 
     stream << data.mSigmaMH;
     stream << data.mSamplerProposal;
+    stream << static_cast<qint64>(data.mMHAcceptcountSinceAquire); // depuis v4.0.0
 
     return stream;
 }
@@ -691,6 +692,31 @@ void MHVariable::load_stream_v338(QDataStream& stream)
 
 }
 
+
+
+/**
+ * @brief MHVariable::load_stream_v400
+ * Format v4.0.0 = format v338 + mMHAcceptcountSinceAquire (qint64).
+ * Sans ce compteur, le taux d'acceptation global était recalculé à 0 %
+ * après rechargement d'un fichier .res.
+ */
+void MHVariable::load_stream_v400(QDataStream& stream)
+{
+    load_stream_v338(stream);
+
+    qint64 n = 0;
+    stream >> n;
+    if (stream.status() != QDataStream::Ok) {
+        qDebug() << "[MHVariable::load_stream_v400] erreur lecture mMHAcceptcountSinceAquire"
+                 << stream.status() << stream.device()->errorString();
+        throw std::runtime_error("[MHVariable::load_stream_v400] Error reading mMHAcceptcountSinceAquire");
+    }
+    if (n < 0) {
+        qDebug() << "[MHVariable::load_stream_v400] valeur négative pour mMHAcceptcountSinceAquire:" << n;
+        throw std::runtime_error("[MHVariable::load_stream_v400] Invalid mMHAcceptcountSinceAquire (negative)");
+    }
+    mMHAcceptcountSinceAquire = n;
+}
 
 QDataStream &operator>>(QDataStream& stream, MHVariable& data )
 {

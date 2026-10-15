@@ -757,7 +757,7 @@ QString ModelUtilities::dateResultsHTML(const Date* date, const double tmin_form
     text += textBlack( date->mTi.MetropolisVariable::resultsString("", DateUtils::getAppSettingsFormatStr()));
 
     if (date->mTi.is_curve_filtering)
-        text += date->mTi.getFilteringString();
+        text += line( textBold(textBlack(date->mTi.getFilteringString())));
 
     return text;
 }
@@ -787,7 +787,7 @@ QString ModelUtilities::sigmaTiResultsHTML(const Date* date)
     text += line(textBold(textBlack(QObject::tr("Posterior Std ti"))));
     text += line(textBlack(date->mSigmaTi.resultsString()));
     if (date->mSigmaTi.is_curve_filtering)
-        text += date->mSigmaTi.getFilteringString();
+        text += line(textBlack(date->mSigmaTi.getFilteringString()));
     return text;
 }
 
@@ -811,7 +811,7 @@ QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const b
         if (e->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
             text += textBlue( e->mTheta.MetropolisVariable::resultsString("", DateUtils::getAppSettingsFormatStr()));
             if (e->mTheta.is_curve_filtering)
-                text += e->mVg.getFilteringString();
+                text += line(textBold(textBlue(e->mVg.getFilteringString())));
         } else {
             text += textBlue(QObject::tr("Fixed value : %1 %2").arg(stringForLocal(e->mTheta.value()), DateUtils::getAppSettingsFormatStr())); // for VG mX is Variance and we need Std gi
         }
@@ -841,7 +841,7 @@ QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const b
             text += "<br>" + line(textBold(textGreen(QObject::tr("Curve : Posterior Std gi"))));
             text += line(textGreen(e->mVg.resultsString("", nullptr)));
             if (e->mVg.is_curve_filtering)
-                text += e->mVg.getFilteringString();
+                text += line(textGreen(e->mVg.getFilteringString()));
         }
     }
     return text;
@@ -858,8 +858,9 @@ QString ModelUtilities::EventS02ResultsHTML(const std::shared_ptr<Event> e)
     } else {
         text += line(textBold(textBlue(QObject::tr("Posterior Shrinkage param."))));
         text += line(textBlue(e->mS02Theta.resultsString("", nullptr)));
+
         if (e->mS02Theta.is_curve_filtering)
-            text += e->mVg.getFilteringString();
+            text += line(textBlue(e->mVg.getFilteringString()));
     }
     return text;
 }
@@ -884,7 +885,7 @@ QString ModelUtilities::VgResultsHTML(const std::shared_ptr<Event> e)
         text += line(textBold(textGreen(QObject::tr("Curve : Posterior Std gi"))));
         text += line(textGreen(e->mVg.resultsString("", nullptr)));
         if (e->mVg.is_curve_filtering)
-            text += e->mVg.getFilteringString();
+            text += line(textGreen(e->mVg.getFilteringString()));
     }
     return text;
 }
@@ -899,7 +900,7 @@ QString ModelUtilities::phaseResultsHTML(const std::shared_ptr<Phase> p)
     text += line(textOrange(p->mAlpha.resultsString("", DateUtils::getAppSettingsFormatStr(), false)));
 
     if (p->mAlpha.is_curve_filtering)
-        text += p->mAlpha.getFilteringString();
+        text += line(textOrange(p->mAlpha.getFilteringString()));
 
     text += "<br>";
     text += line(textBold(textOrange(QObject::tr("End (posterior distrib.)"))));
@@ -907,7 +908,7 @@ QString ModelUtilities::phaseResultsHTML(const std::shared_ptr<Phase> p)
 
 
     if (p->mBeta.is_curve_filtering)
-        text += p->mBeta.getFilteringString();
+        text += line(textOrange(p->mBeta.getFilteringString()));
 
     if (p->mTimeRange != std::pair<double, double>(- std::numeric_limits<double>::max(), +std::numeric_limits<double>::max())) {
         text += "<br>";
@@ -933,7 +934,7 @@ QString ModelUtilities::durationResultsHTML(const std::shared_ptr<Phase> p)
     text += line(textOrange(p->mDuration.resultsString(QObject::tr("No duration estimated ! (normal if only 1 event in the phase)"), QObject::tr("Years"), false)));
 
     if (p->mDuration.is_curve_filtering)
-        text += p->mDuration.getFilteringString();
+        text += line(textOrange(p->mDuration.getFilteringString()));
     return text;
 }
 
