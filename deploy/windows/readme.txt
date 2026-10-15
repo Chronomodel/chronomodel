@@ -3,40 +3,67 @@ PROJECT
 ————————————————————————————————————————————————————————————————————————
 
 ChronoModel Project
-"http://www.chronomodel.com"
-version 3.3.0
-2025-03-05
+"https://www.chronomodel.com"
+version 4.0.0
+2026-10-15
 
 ————————————————————————————————————————————————————————————————————————
 CREDITS
 ————————————————————————————————————————————————————————————————————————
 Copyright © 2014 - 2026 CNRS
-used under the terms:
-GNU GENERAL PUBLIC LICENSE
-Version 3, 29 June 2007, or (at your option) any later version
+
+Main Software License:
+GNU General Public License v3.0 or later (GPL-3.0-or-later)
 "https://www.gnu.org/licenses/gpl-3.0.html"
 
-This software use C subroutine library from the FFTW project
-"http://www.fftw.org/"
-distributed under the terms of the GNU General Public License
+Third-Party Libraries:
+
+    FFTW Library
+    http://www.fftw.org/
+    Distributed under the terms of the:
+        Gnu General Public License (GPL) v2 "https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html"
+
+    Eigen Library
+    https://eigen.tuxfamily.org/
+    Distributed under the:
+        Mozilla Public License 2.0 (MPL2) "https://www.mozilla.org/en-US/MPL/2.0/"
+
+License Compatibility Notice:
+This software combines multiple open-source libraries with compatible licensing terms.
+Each library retains its original license, and users must comply with the respective
+license conditions when using or distributing this software.
+
+————————————————————————————————————————————————————————————————————————
+TO CITE CHRONOMODEL
+————————————————————————————————————————————————————————————————————————
+To cite ChronoModel Version 4.0 in your publications:
+
+	Ph. Lanos and Ph. Dufresne (2026). ChronoModel version 4.0: Software for
+	Chronological Modelling of Archaeological Data using Bayesian Statistics.
+	Available from "https://chronomodel.com"
 
 ————————————————————————————————————————————————————————————————————————
 AUTHORS
 ————————————————————————————————————————————————————————————————————————
-
-Project Manager:
+Management
 
 	Philippe LANOS
 
-
-ChronoModel was originally written by:
+Design, Architecture, Coding
 
 	Helori LANOS (2014-2017 + 2020)
+	Komlan Midodzino NOUKPOAPE (2021-2024)
+	Philippe DUFRESNE (2015-present)
 
+Debugging, Maintenance, Support
 
-The current maintainer is:
+	Philippe DUFRESNE
 
-	Philippe DUFRESNE (2015-2025)
+Documentation
+
+	Philippe LANOS
+	Philippe DUFRESNE
+
 
 ————————————————————————————————————————————————————————————————————————
 CONTRIBUTORS

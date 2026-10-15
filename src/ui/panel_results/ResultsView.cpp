@@ -1867,13 +1867,14 @@ void ResultsView::updateShowList()
 void ResultsView::applyUIConfiguration()
 {
     setUpdatesEnabled(false);
+
     updateShowList(); // met à jour mMainVariable, mShowList, mShowAllChains, mShowChainList,
     updateOptionsWidget();
-    //updateScales();
-    createGraphs();
+    updateGraphsMinMax();   // mResultMinT/MaxT de la NOUVELLE variable
+    computeScales();        // échelles calculées, aucun graphe touché
+    createGraphs();         // generateCurves -> setScale avec les bonnes bornes, puis updateScales
+    updateGraphsHeight();   //follow mZoom do updateLayout
 
-    updateGraphsHeight();//follow mZoom do updateLayout
-    //updateLayout();
     setUpdatesEnabled(true);
 }
 
@@ -3829,7 +3830,7 @@ void ResultsView::updateCurvesToShow()
  *
  * @see GraphViewResults, Scale, DateUtils, Ruler, QPair, QLocale
  */
-void ResultsView::updateScales()
+void ResultsView::computeScales()
 {
     auto model = getModel_ptr();
     if ( model == nullptr) {
@@ -4000,9 +4001,6 @@ void ResultsView::updateScales()
         mRuler->addArea(0.0, 1+ chain.mIterPerBurn, QColor(235, 115, 100));
         mRuler->addArea(1 + chain.mIterPerBurn, 1 + chain.mIterPerBurn + adaptSize, QColor(250, 180, 90));
         mRuler->addArea(1 + chain.mIterPerBurn + adaptSize, mResultMaxT, QColor(130, 205, 110));
-        // The Ruler range is set exactly to the min and max (impossible to scroll outside)
-        /*mRuler->setRange(mResultMinT, mResultMaxT);
-        mRuler->setFormatFunctX(nullptr);*/
 
         mTimeSlider->setRange(0, kSliderMax);
 
@@ -4082,8 +4080,6 @@ void ResultsView::updateScales()
             }
             setXRange();
 
-            //graphs[0]->updateCurves(mCurrentTypeGraph, mShowList, mShowAllChains, mShowChainList);
-            //graphs[0]->forceRefresh();
         }
         // -------------------------------------------------------
         // Y option
@@ -4101,8 +4097,6 @@ void ResultsView::updateScales()
             }
             setYRange();
 
-            //graphs[1]->updateCurves(mCurrentTypeGraph, mShowList, mShowAllChains, mShowChainList);
-           // graphs[1]->forceRefresh();
             // -------------------------------------------------------
             // Z option
             // -------------------------------------------------------
@@ -4119,22 +4113,26 @@ void ResultsView::updateScales()
                 }
                 setZRange();
 
-                //graphs[2]->updateCurves(mCurrentTypeGraph, mShowList, mShowAllChains, mShowChainList);
-                //graphs[2]->forceRefresh();
-
             }
         }
     }
+}
 
-    // -------------------------------------------------------
-    //  Apply to all graphs
-    // -------------------------------------------------------
-
-    for (GraphViewResults*& graph : graphs) {
+void ResultsView::applyScalesToGraphs()
+{
+    const QList<GraphViewResults*> graphs = currentGraphs(false);
+    for (GraphViewResults* graph : graphs) {
         graph->setHeightForVisibleAxis(mHeightForVisibleTicksAxis);
-        graph->setView(mRuler->mMin, mRuler->mMax, mResultCurrentMinT, mResultCurrentMaxT, mMajorScale, mMinorCountScale);
+        graph->setView(mRuler->mMin, mRuler->mMax, mResultCurrentMinT, mResultCurrentMaxT,
+                       mMajorScale, mMinorCountScale);
         graph->forceRefresh();
     }
+}
+
+void ResultsView::updateScales()
+{
+    computeScales();
+    applyScalesToGraphs();
 }
 
 void ResultsView::createOptionsWidget()

@@ -5,7 +5,7 @@ PROJECT
 ChronoModel Project
 "https://www.chronomodel.com"
 version 4.0.0
-2026-09-25
+2026-10-15
 
 ————————————————————————————————————————————————————————————————————————
 CREDITS
@@ -32,6 +32,15 @@ License Compatibility Notice:
 This software combines multiple open-source libraries with compatible licensing terms.
 Each library retains its original license, and users must comply with the respective
 license conditions when using or distributing this software.
+
+————————————————————————————————————————————————————————————————————————
+TO CITE CHRONOMODEL
+————————————————————————————————————————————————————————————————————————
+To cite ChronoModel Version 4.0 in your publications:
+
+	Ph. Lanos and Ph. Dufresne (2026). ChronoModel version 4.0: Software for
+	Chronological Modelling of Archaeological Data using Bayesian Statistics.
+	Available from "https://chronomodel.com"
 
 ————————————————————————————————————————————————————————————————————————
 AUTHORS

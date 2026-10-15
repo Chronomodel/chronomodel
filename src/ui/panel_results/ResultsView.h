@@ -619,6 +619,9 @@ private:
     QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, QPair<double, double>> mZoomsX;
     QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, QPair<double, double>> mZoomsY;
     QMap<QPair<GraphViewResults::variable_t, GraphViewResults::graph_t>, QPair<double, double>> mZoomsZ;
+
+    void computeScales();        // tout l'état : plages T, ticks, ruler, éditeurs, Min/Max X/Y/Z, hauteur
+    void applyScalesToGraphs();  // la boucle finale sur currentGraphs()
 };
 
 #endif

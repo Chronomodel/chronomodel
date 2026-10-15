@@ -1715,249 +1715,59 @@ std::function<QColor(double)> makeColorGradientFromBase(const QColor& baseColor,
     };
 }
 
-
 void GraphView::drawMap(const GraphCurve& curve, QPainter& painter)
 {
-    // Récupérer les paramètres de rendu actuels
-    QPainter::RenderHints originalRenderHints = painter.renderHints();
-    painter.setRenderHint(QPainter::Antialiasing, false); // supprime le crénelage entre les rectangles contigues
-
-   // QColor mainColor(curve.mPen.color());  // bleu moyen
-   // auto getDynamicColor = makeColorGradientFromBase(mainColor);
-
-    const double minY = curve.mMap.minY();
-    const double maxY = curve.mMap.maxY();
-    const double minX = curve.mMap.minX();
-    const double maxX = curve.mMap.maxX();
-    const double maxVal = curve.mMap.maxValue();
-    const double minVal = curve.mMap.minValue();
-
-    const size_t numCols = curve.mMap.column();
-    const size_t numRows = curve.mMap.row();
-
-    const double dX = (maxX - minX) / (numCols - 1);
-
-    const qreal rectXSize = (getXForValue(maxX, false) - getXForValue(minX, false)) / (numCols - 1);
-    const qreal rectYSize = (getYForValue(minY, false) - getYForValue(maxY, false)) / (numRows - 1);
-
-    QPen rectPen;
-    rectPen.setStyle(Qt::NoPen);
-
-    QColor col;
-
-    qreal x_left = getXForValue(minX, true);
-
-
-    for (unsigned c1 = 1 ; c1 < curve.mMap.column(); c1++) {
-        const double tReal = c1 * dX + minX;
-        qreal x_rigth;
-        if (tReal <= mCurrentMinX || c1 == numCols - 1)
-            x_rigth = getXForValue(tReal, true);
-
-        else if (tReal >= mCurrentMaxX)
-            x_rigth = getXForValue(tReal, true);
-
-        else
-            x_rigth = getXForValue(tReal, true) + rectXSize / 2.0;
-
-        if (tReal< mCurrentMinX || mCurrentMaxX< tReal) {
-            x_left = x_rigth;
-            continue;
-        }
-
-        bool hpd = true;
-        //const int theme = 2;//4; 5
-
-        const double minMax_99 = (maxVal - minVal) * 0.99;
-        const double minMax_95 = (maxVal - minVal) * 0.95;
-        const double minMax_50 = (maxVal - minVal) * 0.50;
-        const double minMax_25 = (maxVal - minVal) * 0.25;
-
-//#endif
-        double y_bottom = getYForValue(minY, true);// + rectYSize / 2.0; // le bas de l'écran
-// nous allons du bas de l'ecran vers le haut, pour t constant
-        for (unsigned r = 1 ; r < curve.mMap.row(); r++) {
-            const double val = curve.mMap(c1, r);
-            const qreal yReal = r*(maxY-minY)/(curve.mMap.row()-1) + minY;
-            qreal y_top = getYForValue(yReal, true) - rectYSize / 2.0;
-
-            if ( val > minVal) {
-//#ifdef DEBUG
-                if (hpd) {
-                    //en hpd 95% de la surface correspond à 5% du max
-
-                    //
-                    auto cumul_val = val;
-
-                    /*
-                    switch (theme) {
-                    case 1: // couleurs grand contraste
-                        if (cumul_val > minMax_99)        // interval 95 -> 99
-
-                            col = QColor(Qt::black);
-                        else if (cumul_val > minMax_95)   // interval 50 -> 95
-                            col = QColor(Qt::gray);
-
-
-                        else if (cumul_val > minMax_25)   //interval 50 -> 95
-                            col = QColor(Qt::red);
-
-
-                        else if ( cumul_val > minMax_25)  // interval 25 -> 50
-                            col = QColor(Qt::blue);
-
-
-                        else col = QColor(Qt::yellow);    // interval 0 -> 25
-
-                        col.setAlphaF(0.5);
-                        break;
-
-                    case 2: // "Inferno" (Matplotlib / Scientific colormaps)
-                          if (cumul_val > minMax_99)
-                            col = QColor(252, 255, 164); // jaune pâle, très clair (haute densité)
-
-                          else if (cumul_val > minMax_95)
-                              col = QColor(254, 204, 92);  // doré clair
-
-                          else if (cumul_val > minMax_50)      //interval 50 -> 95
-                              col = QColor(240, 96, 60);   // orange profond
-
-                          else if (cumul_val > minMax_25)
-                              col = QColor(153, 28, 59);   // bordeaux
-
-                          else                              // interval 0 -> 25
-                              col = QColor(0, 0, 4);       // presque noir
-                          col = getColorFromStops(cumul_val/(maxVal - minVal), infernoStops);
-                          col.setAlphaF(0.7);
-                          //col.setAlphaF( std::clamp((cumul_val / sum), 0.3, 1.0) );
-                        break;
-
-                    case 3:  // couleurs harmonieuses "Blues" de ColorBrewer //https://colorbrewer2.org/
-                        if (cumul_val > minMax_99)
-                        col = QColor(247, 247, 247); // #f7f7f7 // très clair
-
-                        else if (cumul_val > minMax_95)
-                            col = QColor(189, 215, 231); // #bdd7e7 // bleu très clair
-
-                        else if (cumul_val > minMax_50)
-                            col = QColor(107, 174, 214); // #6baed6 // bleu moyen
-
-                        else if (cumul_val > minMax_25)
-                            col = QColor(33, 113, 181); // #2171b5 // bleu foncé
-
-                        else
-                            col = QColor(8, 48, 107);   // #08306b // presque noir
-                        col = getColorFromStops(cumul_val/(maxVal - minVal), BluesStops);
-                        col.setAlphaF(0.5);
-                        break;
-
-                    case 4:
-                        //col = getBluesColor(cumul_val/(maxVal - minVal));
-                        col = getDynamicColor(cumul_val/(maxVal - minVal));
-                        //col.setAlphaF( std::clamp(cumul_val / sum, 0.3, 1.0) );
-                        col.setAlphaF(0.5);
-                        break;
-
-                    case 5:
-                        col = getColorFromStops(cumul_val/(maxVal - minVal), inferno2Stops);
-                        col.setAlphaF(0.5);
-                        break;
-
-                    case 6:
-                        col = getColorFromStops(cumul_val/(maxVal - minVal), temperatureStops);
-                        col.setAlphaF(0.5);
-                        break;
-
-                    case 7:
-                        col = getColorFromStops(cumul_val/(maxVal - minVal), temperatureNuanceStops);
-                        col.setAlphaF(0.5);
-                        break;
-
-                    case 8:
-                        col = getColorFromStops(cumul_val/(maxVal - minVal), temperatureScienceStops);
-                        col.setAlphaF(0.5);
-                        break;
-
-                    default:
-                        break;
-                    }
-                    */
-
-#pragma mark Theme Map
-
-                    const auto& colorStops =  curve.mColorStops;//ColorPalette::TemperatureSoftDensity;//Geophy;//pHScale;//TemperatureSoftDensity; //TemperatureScience; //Inferno;// DataProbability //InfernoDensity
-
-                    col = ColorStops::getColorFromStops(cumul_val/(maxVal - minVal), colorStops);
-                    //col.setAlphaF(0.5);
-
-                    // conditions inversées
-                    /*if (cumul_val > val75)
-                        col = QColor(189, 215, 231); // #bdd7e7 // bleu très clair
-
-                    else if (cumul_val > val50)
-
-                    col = QColor(107, 174, 214); // #6baed6 // bleu moyen
-
-                    else if (cumul_val > val05)
-
-                    col = QColor(Qt::red);// QColor(33, 113, 181); // #2171b5 // bleu foncé
-
-                    else if (cumul_val > val01)
-                        col = QColor(8, 48, 107);   // #08306b // presque noir
-
-
-
-                    else
-
-                    col = QColor(247, 247, 247); // #f7f7f7 // très clair
-                    */
-
-
-
-                } else {
-//#endif
-                    //double alpha = (val - minVal)/ (maxVal - minVal);
-                    //alpha = std::clamp(alpha, 0.0, 1.0); // sécurité
-
-                    //col = QColor(curve.mPen.color());
-                    //col.setAlphaF(sqrt(alp));
-
-
-
-                    if (val > minMax_99)
-                        col = QColor(247, 247, 247); // #f7f7f7 // très clair
-
-                    else if (val > minMax_95)
-                        col = QColor(Qt::red);//QColor(189, 215, 231); // #bdd7e7 // bleu très clair
-
-                    else if (val > minMax_50)
-                        col = QColor(107, 174, 214); // #6baed6 // bleu moyen
-
-                    else if (val > minMax_25)
-                        col = QColor(33, 113, 181); // #2171b5 // bleu foncé
-
-                    else
-                        col = QColor(8, 48, 107);   // #08306b // presque noir
-
-
-                }
-
-                painter.setPen(Qt::NoPen);
-
-                painter.setBrush(col);
-
-                QRectF rectMap(x_left, y_top, x_rigth - x_left, y_bottom - y_top);
-                painter.drawRect(rectMap);
-
-            }
-            y_bottom = y_top; // Nous remonttons d'une ligne. Rappel: La valeur de ybottom est supérieure à ytop
-        }
-        x_left = x_rigth;
+    const CurveMap& map = curve.mMap;
+    const int numCols = static_cast<int>(map.column());
+    const int numRows = static_cast<int>(map.row());
+    if (numCols < 2 || numRows < 2)
+        return;
+
+    const double minX = map.minX(), maxX = map.maxX();
+    const double minY = map.minY(), maxY = map.maxY();
+    const double minVal = map.minValue(), maxVal = map.maxValue();
+    const double span = maxVal - minVal;
+    if (span <= 0.)
+        return;
+
+    // 1. Table de couleurs (256 entrées) calculée une seule fois
+    constexpr int LUT = 256;
+    std::array<QRgb, LUT> lut;
+    for (int k = 0; k < LUT; ++k) {
+        const QColor col = ColorStops::getColorFromStops(double(k) / (LUT - 1), curve.mColorStops);
+        lut[k] = qPremultiply(col.rgba());
     }
-    // Restaurer les paramètres de rendu d'origine
-    painter.setRenderHints(originalRenderHints);
-}
 
+    // 2. Remplissage direct des pixels : 1 pixel = 1 cellule
+    QImage img(numCols, numRows, QImage::Format_ARGB32_Premultiplied);
+    for (int r = 0; r < numRows; ++r) {
+        // la ligne 0 de l'image est en haut ; la ligne 0 de la map est minY (en bas)
+        QRgb* line = reinterpret_cast<QRgb*>(img.scanLine(numRows - 1 - r));
+        for (int c = 0; c < numCols; ++c) {
+            const double val = map(c, r);
+            if (val > minVal) {
+                const int k = std::clamp(int((val - minVal) / span * (LUT - 1) + 0.5), 0, LUT - 1);
+                line[c] = lut[k];
+            } else {
+                line[c] = 0; // transparent
+            }
+        }
+    }
+
+    // 3. Rectangle cible : chaque pixel est centré sur son nœud
+    const double halfX = 0.5 * (maxX - minX) / (numCols - 1);
+    const double halfY = 0.5 * (maxY - minY) / (numRows - 1);
+
+    const QRectF target(QPointF(getXForValue(minX - halfX, false), getYForValue(maxY + halfY, false)),
+                        QPointF(getXForValue(maxX + halfX, false), getYForValue(minY - halfY, false)));
+
+    painter.save();
+    painter.setClipRect(QRectF(mMarginLeft, mMarginTop, mGraphWidth, mGraphHeight));
+    painter.setRenderHint(QPainter::SmoothPixmapTransform, false); // cellules nettes, comme avant
+    painter.setRenderHint(QPainter::Antialiasing, false);
+    painter.drawImage(target, img);
+    painter.restore();
+}
 QPainterPath GraphView::makeSubShape(const QMap<double, double>& mapInf, const QMap<double, double>& mapSup) const
 {
     QPainterPath fillPath;

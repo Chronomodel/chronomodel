@@ -204,7 +204,7 @@ void GraphViewCurve::generateCurves(const graph_t typeGraph, const QList<variabl
                 // we must reflect the map
                 CurveMap displayMap (curveMapChain.mMap.row(), curveMapChain.mMap.column());
 
-                int c  = curveMap.mMap.column() - 1;
+                int c  = curveMapChain.mMap.column() - 1;
                 unsigned i = 0;
                 while ( c >= 0) {
                     for (unsigned r = 0; r < curveMapChain.mMap.row() ; r++) {
