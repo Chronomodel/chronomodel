@@ -4,18 +4,17 @@ PROJECT
 
 ChronoModel Project
 "https://www.chronomodel.com"
-version 3.3.0
-2025-09-19
+version 4.0.0
+2026-09-25
 
 ————————————————————————————————————————————————————————————————————————
 CREDITS
 ————————————————————————————————————————————————————————————————————————
-Copyright ©2025 CNRS
+Copyright © 2014 - 2026 CNRS
 
 Main Software License:
-CeCILL-V2.1 Free Software License Agreement
-"https://cecill.info/licences/Licence_CeCILL_V2.1-en.html"
-(Fully compatible with GPL and compatible with MPL 2.0)
+GNU General Public License v3.0 or later (GPL-3.0-or-later)
+"https://www.gnu.org/licenses/gpl-3.0.html"
 
 Third-Party Libraries:
 

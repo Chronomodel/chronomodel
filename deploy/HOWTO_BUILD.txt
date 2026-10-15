@@ -6,11 +6,11 @@ version 3.3.0
 ——————————————————
 CREDITS
 ——————————————————
-Copyright ©2025 CNRS
+Copyright © 2014 - 2026 CNRS
 used under the terms:
-CeCILL FREE SOFTWARE LICENSE AGREEMENT
-Version 2.1 dated 2013-06-21
-"http://www.cecill.info"
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007, or (at your option) any later version
+"https://www.gnu.org/licenses/gpl-3.0.html"
 
 This software use C subroutine library from the FFTW project
 "http://www.fftw.org/"
