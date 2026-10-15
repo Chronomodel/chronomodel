@@ -287,6 +287,7 @@ public slots:
     void changeXScaleDivision( const Scale& sc );
     void changeXScaleDivision( double major, int minor );
 
+    void rebuildCaches();          // ancien corps de repaintGraph()
 
 protected:
     /*------------------------------------------------------------------
@@ -384,6 +385,8 @@ public:   // ---------- membres publics ----------
     QString mLegendX;
     QString mLegendY;
     std::vector<CurveRefPts> refPoints;
+
+    bool mVectorDirty = true;
 
 private:   // ---------- membres privés ----------
     DateConversion mUnitFunctionX = nullptr;

@@ -654,7 +654,15 @@ void GraphView::updateGraphSize(qreal w, qreal h)
     mAxisToolY.updateValues(int (mGraphHeight), 12, mMinY, mMaxY);
 }
 
+
 void GraphView::repaintGraph()
+{
+    mVectorDirty = true;
+    mCacheValid  = false;
+    update();                  // coalescé : 1 seul paintEvent
+}
+
+void GraphView::rebuildCaches()
 {
     if ((width() <= 0) || (height() <= 0))
         return;
@@ -686,9 +694,9 @@ void GraphView::repaintGraph()
     }
 
     // 2. Créer le cache raster haute résolution
-    updateRasterCache();
+    //updateRasterCache();
     mCacheValid = false;
-    return;
+    mVectorDirty = false;
 
 }
 
@@ -801,6 +809,9 @@ void GraphView::drawTooltip()
 
 void GraphView::paintEvent(QPaintEvent *)
 {
+    if (mVectorDirty)
+        rebuildCaches();
+
     const qint64 sinceLastFast = mLastFastPaint.elapsed();
 
     // Entrée en mode scroll

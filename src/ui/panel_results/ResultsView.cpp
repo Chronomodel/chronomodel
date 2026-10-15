@@ -1590,6 +1590,8 @@ void ResultsView::updateGraphsLayout(QScrollArea* scrollArea, QList<GraphViewRes
 */
 void ResultsView::applyGraphTypeTab()
 {
+    setUpdatesEnabled(false);
+
     mCurrentTypeGraph = (GraphViewResults::graph_t) mGraphTypeTabs->currentIndex();
     updateOptionsWidget();
 
@@ -1606,6 +1608,7 @@ void ResultsView::applyGraphTypeTab()
     }
     generateCurves();
     updateLayout();
+    setUpdatesEnabled(true);
 }
 
 /**
@@ -1863,13 +1866,15 @@ void ResultsView::updateShowList()
 #pragma mark ----- apply UI ---
 void ResultsView::applyUIConfiguration()
 {
+    setUpdatesEnabled(false);
     updateShowList(); // met à jour mMainVariable, mShowList, mShowAllChains, mShowChainList,
     updateOptionsWidget();
-    updateScales();
+    //updateScales();
     createGraphs();
 
     updateGraphsHeight();//follow mZoom do updateLayout
     //updateLayout();
+    setUpdatesEnabled(true);
 }
 
 #pragma mark Chains controls
