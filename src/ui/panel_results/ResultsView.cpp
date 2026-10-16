@@ -5547,7 +5547,10 @@ void ResultsView::applyXRange()
 
         GraphViewCurve* curveView = dynamic_cast<GraphViewCurve*> (graphs[0]);
         if (curveView) {
-            Scale scale (minX, maxX);
+            // Respecter exactement les bornes saisies : findOptimalMark ne calcule que les graduations,
+            // alors que le constructeur Scale(a, b) appelle findOptimal() qui arrondit min/max au multiple de mark.
+            Scale scale;
+            scale.findOptimalMark(minX, maxX, 10);
             curveView->setScale(scale);
             graphs[0]->updateCurves();
             graphs[0]->forceRefresh();
@@ -5578,7 +5581,10 @@ void ResultsView::applyYRange()
         QList<GraphViewResults*> graphs = currentGraphs(false);
         GraphViewCurve* curveView = dynamic_cast<GraphViewCurve*> (graphs[1]);
         if (curveView) {
-            Scale scale (minY, maxY);
+            // Respecter exactement les bornes saisies : findOptimalMark ne calcule que les graduations,
+            // alors que le constructeur Scale(a, b) appelle findOptimal() qui arrondit min/max au multiple de mark.
+            Scale scale;
+            scale.findOptimalMark(minY, maxY, 10);
             curveView->setScale(scale);
             graphs[1]->updateCurves();
             graphs[1]->forceRefresh();
@@ -5608,7 +5614,10 @@ void ResultsView::applyZRange()
         QList<GraphViewResults*> graphs = currentGraphs(false);
         GraphViewCurve* curveView = dynamic_cast<GraphViewCurve*> (graphs[2]);
         if (curveView) {
-            Scale scale (minZ, maxZ);
+            // Respecter exactement les bornes saisies : findOptimalMark ne calcule que les graduations,
+            // alors que le constructeur Scale(a, b) appelle findOptimal() qui arrondit min/max au multiple de mark.
+            Scale scale;
+            scale.findOptimalMark(minZ, maxZ, 10);
             curveView->setScale(scale);
             graphs[2]->updateCurves();
             graphs[2]->forceRefresh();

@@ -1522,7 +1522,7 @@ void MCMCLoop::run()
 
             qint64 now = globalTimer.elapsed();
             if (now - lastUpdateTime > 1000 && iterDone > 10) {
-                //qint64 interTime = estimateGlobalRemainingNs(chain, mState, est, R, annealingEnabled) / 1000000;
+
                 qint64 interTime = estimateGlobalRemainingNs(mLoopChains, mChainIndex, mState, est, R) / 1000000;
                 emit setMessage(tr("Chain %1 / %2").arg(QString::number(mChainIndex+1), QString::number(mLoopChains.size()))
                                 + " : Acquisition\t ; Total Estimated time left " + DHMS(interTime));
