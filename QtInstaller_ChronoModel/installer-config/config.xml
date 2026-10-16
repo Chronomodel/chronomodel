@@ -18,6 +18,10 @@
     <Logo>Chronomodel.png</Logo>
     <MaintenanceToolName>Chronomodel_uninstaller</MaintenanceToolName>
 
+    <!-- Script de controle (installeur + desinstalleur) : force l'affichage HTML
+         du message de la page "Resume de l'installation" lors de la desinstallation. -->
+    <ControlScript>controlscript.qs</ControlScript>
+
     <!-- Fond d'ecran : seul Watermark fonctionne (StyleSheet/Background testes, sans effet) -->
     <Watermark>fond_ecran</Watermark>
     <WizardShowPageList>true</WizardShowPageList>

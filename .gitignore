@@ -73,3 +73,14 @@ QtInstaller_ChronoModel/QtIFW_script_macOS_old.sh
 linux_make_old.sh
 buildCM.sh
 /src/eigen_3.4.0
+/deploy/_to_delete
+/QtInstaller_ChronoModel/ChronoModel_v3.3.8_Qt6.9.3_macOS12_20260506_Installer.app
+/QtInstaller_ChronoModel/ChronoModel_v4.0.0_Qt6.11.1_macOS14_20260924_Installer.app
+/QtInstaller_ChronoModel/ChronoModel_v4.0.0_Qt6.11.1_macOS14_20260925_Installer.app
+/QtInstaller_ChronoModel/staging
+/QtInstaller_ChronoModel/ChronoModel_v4.0.0_Qt6.11.1_macOS14_20261005_Installer.app
+/QtInstaller_ChronoModel/ChronoModel_v4.0.0_Qt6.11.1_macOS14_20261013_Installer.app
+/QtInstaller_ChronoModel/ChronoModel_v4.0.0_Qt6.11.1_macOS14_20261016_Installer.app
+ChronoModel_src_20261015.7z
+QtInstaller_ChronoModel/Ch_copy_library_old.sh
+QtInstaller_ChronoModel/Ch_copy_library_and_signature_2025-08-28.sh
