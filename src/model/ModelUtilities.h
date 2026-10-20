@@ -73,6 +73,7 @@ namespace ModelUtilities
 
     QString curveResultsHTML(const std::shared_ptr<ModelCurve> model = nullptr);
     QString lambdaResultsHTML(const std::shared_ptr<ModelCurve> model = nullptr);
+    QString curveConvergenceHTML(const std::shared_ptr<ModelCurve> model = nullptr);
     QString S02VgResultsHTML(const std::shared_ptr<ModelCurve> model  = nullptr);
 
     short HPDOutsideSudyPeriod(const QMap<double, double> &hpd, const std::shared_ptr<ModelCurve> model);

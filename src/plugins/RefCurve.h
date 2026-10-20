@@ -32,6 +32,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #include <QString>
 #include <QMap>
 
+#include <vector>
+
 class RefCurve
 {
 public:
@@ -59,11 +61,26 @@ public:
     double mDataInfMin;
     double mDataInfMax;
 
+    // Copie "a plat" (tableaux contigus) de mDataMean / mDataError, construite au
+    // chargement (PluginAbstract::loadRefDatas). Vide si les deux QMap n'ont pas
+    // exactement les memes noeuds : les appelants retombent alors sur le chemin QMap.
+    std::vector<double> mFlatT;
+    std::vector<double> mFlatMean;
+    std::vector<double> mFlatError;
+
 public:
     RefCurve();
     virtual ~RefCurve();
     double interpolate_mean(const double t) const;
     double interpolate_error(const double t) const;
+
+    void buildFlat();
+    bool hasFlat() const noexcept { return !mFlatT.empty(); }
+
+    // Valeur et erreur en t, en une seule recherche binaire. Semantique identique a
+    // PluginAbstract::getRefCurveValueAt / getRefCurveErrorAt (hors domaine compris).
+    // Precondition : hasFlat().
+    void meanErrorAt(const double t, double& mean, double& error) const noexcept;
 
 
 };

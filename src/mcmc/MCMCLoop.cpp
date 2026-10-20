@@ -1549,6 +1549,11 @@ void MCMCLoop::run()
 
     mModel->mChains = mLoopChains;
 
+    // Nouveau calcul : aucun filtre de courbe (un masque d'un calcul précédent
+    // ne correspond plus aux nouvelles traces)
+    mModel->setCurveFilterMask({}, {-std::numeric_limits<double>::infinity(), +std::numeric_limits<double>::infinity()});
+    mModel->applyCurveFilterMask();
+
 #pragma mark Finalize
     // ======================================================================
     // 7. Finalize

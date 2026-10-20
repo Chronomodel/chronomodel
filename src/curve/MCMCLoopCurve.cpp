@@ -6008,14 +6008,11 @@ QString MCMCLoopCurve::initialize_339()
                 // e->mVg.mNbValuesAccepted->clear(); //don't clean, avalable for cumulate chain
                 e->mVg.mSamplerProposal = SamplerProposal::eRWAdaptGauss;
 
-               // if (e->mVg.mSamplerProposal != SamplerProposal::eFixe) {
-                    double memoVG = sqrt(e->mVg.value());
-                    e->mVg.recordBurnAdapt(&memoVG);
-                    e->mVg.acquire(&memoVG);
-
-                //} else {
-                //    e->mVg.accept_update(e->mVg.value());
-                //}
+                // Pas de memo ici : MCMCLoop::run() appelle recordBurnAdapt() juste apres initialize()
+                // pour l etat initial (variable non fixe). Un recordBurnAdapt + acquire ici ajoutait
+                // un point en trop par chaine dans mBurnAdaptTrace ET dans mAllAcquiredTrace,
+                // d ou acquiredCountsForTrace() incoherent -> trace vide.
+                e->mVg.accept_update(e->mVg.value());
                 e->updateW();
                 e->mVg.mSigmaMH = 0.1; // default = 1.0
 
@@ -13504,7 +13501,6 @@ bool MCMCLoopCurve::tempering_339_SingleSite_bloc_delta(const double T_in)
     try {
         const int  n_components = mModel->compute_XYZ ? 3 : (mModel->compute_Y ? 2 : 1);
         const int  n_points     = static_cast<int>(mModel->mEvents.size());
-        const bool hot          = (T > 1.0);
 
         std::vector<std::shared_ptr<Event>> initListEvents(mModel->mEvents.size());
         std::copy(mModel->mEvents.begin(), mModel->mEvents.end(), initListEvents.begin());
@@ -13551,9 +13547,97 @@ bool MCMCLoopCurve::tempering_339_SingleSite_bloc_delta(const double T_in)
         //   sum_c f_c' K f_c = v' R_sub^-1 v,  v = (Qt F)_sub   (remplace rate_ftKf dense)
         // Les termes de l'etat courant sont mis en cache et ne changent qu'a l'acceptation.
         // ------------------------------------------------------------------
-        using BandLDLT = Eigen::SimplicialLDLT<SparseMatrixD, Eigen::Lower, Eigen::NaturalOrdering<int>>;
         struct SplineTerms { double logDet = 0.0; double fKf = 0.0; };
 
+        // ------------------------------------------------------------------
+        // splineTermsBand : memes termes que splineTerms(Q, R, F), calcules directement
+        // depuis vecH en O(n), sans matrice creuse ni allocation (tampons reutilises).
+        // Notations (sous-bloc utile j = 1..m, m = n-2), colonne j de Q :
+        //   a_j = 1/h_{j-1} (ligne j-1),  b_j = -(a_j + c_j) (ligne j),  c_j = 1/h_j (ligne j+1)
+        // S = (Q^T Q)_sub pentadiagonale :
+        //   s_j = a_j^2 + b_j^2 + c_j^2,  t_j = S_{j,j+1} = c_j (b_j + b_{j+1}),  u_j = S_{j,j+2} = c_j c_{j+1}
+        // R_sub tridiagonale : r_j = (h_{j-1} + h_j)/3,  rho_j = R_{j,j+1} = h_j/6
+        // LDL^T (= SimplicialLDLT, NaturalOrdering) :
+        //   R : delta_1 = r_1,  l_j = rho_{j-1}/delta_{j-1},  delta_j = r_j - l_j rho_{j-1}
+        //   S : d_j = s_j - e_{j-1}^2 d_{j-1} - g_{j-2}^2 d_{j-2},
+        //       e_j = (t_j - g_{j-1} e_{j-1} d_{j-1}) / d_j,  g_j = u_j / d_j
+        // logDet = sum log d_j - sum log delta_j
+        // fKf    = sum_c v_c^T R_sub^-1 v_c = sum_c sum_j z_j^2 / delta_j,
+        //          v_j = a_j F_{j-1} + b_j F_j + c_j F_{j+1},  z_1 = v_1,  z_j = v_j - l_j z_{j-1}
+        // Pivot nul ou non fini -> NaN (comme info() != Success) ; pivot negatif -> log = NaN.
+        // ------------------------------------------------------------------
+        auto splineTermsBand = [](const std::vector<t_reduceTime>& h, const MatrixD& F) -> SplineTerms {
+            constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
+            SplineTerms res;
+            const int n = static_cast<int>(h.size()) + 1;
+            const int m = n - 2;
+            if (m <= 0)
+                return res;
+
+            // indices 1..m utilises ; m+2 pour les acces j+1 / j+2 sans test
+            thread_local std::vector<double> A, B, C, d, e, g, del, ell;
+            for (auto* vec : {&A, &B, &C, &d, &e, &g, &del, &ell})
+                vec->assign(static_cast<size_t>(m) + 2, 0.0);
+
+            for (int j = 1; j <= m; ++j) {
+                A[j] = 1.0 / static_cast<double>(h[j - 1]);
+                C[j] = 1.0 / static_cast<double>(h[j]);
+                B[j] = -(A[j] + C[j]);
+            }
+
+            // --- LDL^T de S = (Q^T Q)_sub (pentadiagonale)
+            double logDetS = 0.0;
+            for (int j = 1; j <= m; ++j) {
+                double dj = A[j] * A[j] + B[j] * B[j] + C[j] * C[j];
+                if (j >= 2) dj -= e[j - 1] * e[j - 1] * d[j - 1];
+                if (j >= 3) dj -= g[j - 2] * g[j - 2] * d[j - 2];
+                if (!(dj != 0.0) || !std::isfinite(dj))
+                    return {NaN, NaN};
+                d[j] = dj;
+                logDetS += std::log(dj);
+
+                if (j + 1 <= m) {
+                    const double tj = C[j] * (B[j] + B[j + 1]);
+                    e[j] = (tj - (j >= 2 ? g[j - 1] * e[j - 1] * d[j - 1] : 0.0)) / dj;
+                }
+                if (j + 2 <= m)
+                    g[j] = C[j] * C[j + 1] / dj;
+            }
+
+            // --- LDL^T de R_sub (tridiagonale)
+            double logDetR = 0.0;
+            for (int j = 1; j <= m; ++j) {
+                double dj = (static_cast<double>(h[j - 1]) + static_cast<double>(h[j])) / 3.0;
+                if (j >= 2) {
+                    const double rho = static_cast<double>(h[j - 1]) / 6.0;   // R_{j-1,j}
+                    ell[j] = rho / del[j - 1];
+                    dj -= ell[j] * rho;
+                }
+                if (!(dj != 0.0) || !std::isfinite(dj))
+                    return {NaN, NaN};
+                del[j] = dj;
+                logDetR += std::log(dj);
+            }
+            res.logDet = logDetS - logDetR;
+
+            // --- fKf = sum_c v_c^T R_sub^-1 v_c  (descente seule : R = L D L^T)
+            double fKf = 0.0;
+            for (Eigen::Index col = 0; col < F.cols(); ++col) {
+                double z_prev = 0.0;
+                for (int j = 1; j <= m; ++j) {
+                    const double v = A[j] * F(j - 1, col) + B[j] * F(j, col) + C[j] * F(j + 1, col);
+                    const double z = (j >= 2) ? v - ell[j] * z_prev : v;
+                    fKf += z * z / del[j];
+                    z_prev = z;
+                }
+            }
+            res.fKf = fKf;
+            return res;
+        };
+
+#ifdef CM_CHECK_BAND_TERMS
+        // Ancien calcul creux, conserve uniquement pour la validation de splineTermsBand
+        using BandLDLT = Eigen::SimplicialLDLT<SparseMatrixD, Eigen::Lower, Eigen::NaturalOrdering<int>>;
         auto splineTerms = [](const SparseMatrixD& Q, const SparseMatrixD& R, const MatrixD& F) -> SplineTerms {
             constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
             SplineTerms c;
@@ -13581,6 +13665,21 @@ bool MCMCLoopCurve::tempering_339_SingleSite_bloc_delta(const double T_in)
             c.fKf = (v.array() * x.array()).sum();
             return c;
         };
+
+        // ecart relatif max observe entre les deux calculs (affiche toutes les 10000 comparaisons)
+        auto checkBandTerms = [&](const std::vector<t_reduceTime>& h, const MatrixD& F, const SplineTerms& band) {
+            thread_local double maxRelDet = 0.0, maxRelFKf = 0.0;
+            thread_local long long nChk = 0;
+            auto [chkQ, chkR] = calculMatQR_D(h);
+            const SplineTerms ref = splineTerms(chkQ, chkR, F);
+            auto rel = [](double a, double b) { return std::abs(a - b) / std::max(1.0, std::abs(b)); };
+            maxRelDet = std::max(maxRelDet, rel(band.logDet, ref.logDet));
+            maxRelFKf = std::max(maxRelFKf, rel(band.fKf,    ref.fKf));
+            if (++nChk % 10000 == 0)
+                std::cerr << "[CM_CHECK_BAND_TERMS] " << nChk << " comparaisons : ecart relatif max logDet = "
+                          << maxRelDet << " , fKf = " << maxRelFKf << std::endl;
+        };
+#endif
 
         SplineTerms current_terms; // etat courant (cache)
         SplineTerms try_terms;     // dernier etat propose
@@ -13620,17 +13719,21 @@ bool MCMCLoopCurve::tempering_339_SingleSite_bloc_delta(const double T_in)
             try_S02Vg = var_Gasser(try_vect_Theta, try_Y);
 
             try_vecH = calculVecH(mModel->mEvents);
-            auto [tmp_Q, tmp_R] = calculMatQR_D(try_vecH);
-            try_Q = tmp_Q;
-            try_R = tmp_R;
 
-            try_terms = splineTerms(try_Q, try_R, try_G);
+            // Q et R ne sont plus construits ici : seul vecH sert au rapport courbe.
+            // current_Q / current_R sont reconstruits une fois apres le bloc theta.
+            try_terms = splineTermsBand(try_vecH, try_G);
+#ifdef CM_CHECK_BAND_TERMS
+            checkBandTerms(try_vecH, try_G, try_terms);
+#endif
 
             const double log_rate_det = 0.5 * n_components * (try_terms.logDet - current_terms.logDet);
             const double log_rate_fKf = -0.5 * mModel->mLambdaSpline.value() * (try_terms.fKf - current_terms.fKf);
 
 #ifdef CM_CHECK_SPARSE_RATE
             {   // Controle : ancien calcul dense (O(n^3)), a n'activer que pour valider
+                auto [try_Q, try_R]         = calculMatQR_D(try_vecH);       // locaux : plus construits en regime normal
+                auto [current_Q, current_R] = calculMatQR_D(current_vecH);
                 SparseQuadraticFormSolver chk_try(1), chk_cur(1);
                 chk_try.factorize(try_R);
                 chk_cur.factorize(current_R);
@@ -13663,11 +13766,10 @@ bool MCMCLoopCurve::tempering_339_SingleSite_bloc_delta(const double T_in)
             return log_rate_det + log_rate_fKf + log_rate_Vg;
         };
 
+        // Q et R ne sont pas commites : reconstruits une fois depuis current_vecH apres le bloc theta
         auto commitTry = [&]() {
             current_vecH  = std::move(try_vecH);
             current_terms = try_terms;
-            current_R     = std::move(try_R);
-            current_Q     = std::move(try_Q);
             current_Y     = std::move(try_Y);
             current_G     = std::move(try_G);
             mModel->mS02Vg      = try_S02Vg;
@@ -13704,7 +13806,11 @@ bool MCMCLoopCurve::tempering_339_SingleSite_bloc_delta(const double T_in)
             current_R = tmp_R0;
             current_R_solver.factorize(current_R);          // membre (plus de solver local masquant)
             // current_K et current_R_1QT (denses) ne sont plus utilises ici : cache O(n)
-            current_terms = splineTerms(current_Q, current_R, current_G);
+            // meme methode que pour l'etat propose (splineTermsBand) : rapports coherents
+            current_terms = splineTermsBand(current_vecH, current_G);
+#ifdef CM_CHECK_BAND_TERMS
+            checkBandTerms(current_vecH, current_G, current_terms);
+#endif
         }
 
         // ------------------------------------------------------------------
@@ -13890,12 +13996,13 @@ bool MCMCLoopCurve::tempering_339_SingleSite_bloc_delta(const double T_in)
 
                             // --- D. Vraisemblance de calibration
                             if (isvalide) {
-                                const double L_old = date.getLikelihood(ti_old0);
-                                const double L_new = date.getLikelihood(ti_prop);
-                                if (L_new <= 0.0 || L_old <= 0.0)
+                                // log L directement (noyau precompile + cache : L(ti_old0) deja connu)
+                                const double logL_old = date.getLogLikelihoodMemo(ti_old0);
+                                const double logL_new = date.getLogLikelihoodMemo(ti_prop);
+                                if (!std::isfinite(logL_new) || !std::isfinite(logL_old))
                                     isvalide = false;
                                 else
-                                    log_rate_L = std::log(L_new) - std::log(L_old);
+                                    log_rate_L = logL_new - logL_old;
                             }
 
                             // --- E. Marginale jointe + test
@@ -14027,17 +14134,17 @@ bool MCMCLoopCurve::tempering_339_SingleSite_bloc_delta(const double T_in)
 
                             if (shiftValide) {
                                 ti_prop_shift.reserve(N);
-                                for (const auto& date : event->mDates) {
+                                for (auto& date : event->mDates) {   // non const : cache de vraisemblance
                                     const double ti_prop_i = date.mTi.value() + deltaTheta;
                                     ti_prop_shift.push_back(ti_prop_i);
-                                    const double L_old = date.getLikelihood(date.mTi.value());
-                                    const double L_new = date.getLikelihood(ti_prop_i);
-                                    if (!(L_old > 0.0) || !(L_new > 0.0)) {
+                                    const double logL_old = date.getLogLikelihoodMemo(date.mTi.value());
+                                    const double logL_new = date.getLogLikelihoodMemo(ti_prop_i);
+                                    if (!std::isfinite(logL_old) || !std::isfinite(logL_new)) {
                                         shiftValide = false;
                                         break;
                                     }
-                                    log_rate_L_shift += std::log(static_cast<long double>(L_new))
-                                                      - std::log(static_cast<long double>(L_old));
+                                    log_rate_L_shift += static_cast<long double>(logL_new)
+                                                      - static_cast<long double>(logL_old);
                                 }
                             }
 
@@ -14094,6 +14201,14 @@ bool MCMCLoopCurve::tempering_339_SingleSite_bloc_delta(const double T_in)
 
         } catch (...) {
             qDebug() << "[" << __func__ << "] Theta : Caught Exception!\n";
+        }
+
+        // Q et R de l'etat courant : reconstruits une seule fois depuis current_vecH
+        // (utilises par Lambda et samplingSpline_multi2 ; le bloc theta ne s'en sert plus)
+        if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
+            auto [Q_cur, R_cur] = calculMatQR_D(current_vecH);
+            current_Q = std::move(Q_cur);
+            current_R = std::move(R_cur);
         }
 
 #pragma mark CURVE ----

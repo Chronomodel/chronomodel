@@ -2293,6 +2293,99 @@ double S6_fft(const std::vector<double>& x, double h, int M)
                        });
 }
 
+// ─── Optimisation post-traitement : spectre binné pré-calculé ──────────
+//
+// Dans Sn_fft_impl, seul le facteur gaussien exp(-½ ω² h²) dépend de h :
+// le binning linéaire, la FFT, |X̂_k|², la correction sinc⁴ et le poids
+// w_k ω_k^p ne dépendent que de (x, M, padding, power). Or bw_SJ_ste évalue
+// S4 ~75 fois (balayage + raffinement + bissection) sur les mêmes données.
+// On calcule donc ces termes UNE seule fois ; chaque évaluation devient
+// O(M/2) au lieu de O(n + M log M).
+// L'ordre des opérations flottantes est conservé à l'identique
+// ((w·ω^p)·gauss)·mod2 → résultat identique bit à bit à S4_fft().
+struct SnSpectrum {
+    int n = 0;
+    double dOmega = 0.0;
+    std::vector<double> omega;  // ω_k
+    std::vector<double> wpow;   // w_k · ω_k^power
+    std::vector<double> mod2;   // |X̂_k|² / sinc⁴(k/M)
+};
+
+static SnSpectrum Sn_spectrum(const std::vector<double>& x, int M, int power, double padding)
+{
+    SnSpectrum S;
+    const int    n    = static_cast<int>(x.size());
+    S.n = n;
+    const double xmin = *std::min_element(x.begin(), x.end());
+    const double xmax = *std::max_element(x.begin(), x.end());
+
+    const double a     = xmin - padding;
+    const double b     = xmax + padding;
+    const double delta = (b - a) / static_cast<double>(M);
+
+    auto buffers = FFTWThreadCache::get_buffers(M);
+    double* grid = buffers.grid;
+    fftw_complex* spectrum = buffers.spectrum;
+
+    std::fill(grid, grid + M, 0.0);
+
+    for (int i = 0; i < n; ++i) {
+        const double z    = (x[i] - a) / delta;
+        const int    k    = static_cast<int>(std::floor(z));
+        const double frac = z - static_cast<double>(k);
+        if (k < 0 || k >= M) continue;
+
+        if (k < M - 1) {
+            grid[k]     += (1.0 - frac);
+            grid[k + 1] += frac;
+        } else {
+            grid[k] += 1.0;
+        }
+    }
+
+    const int complexSize = M / 2 + 1;
+
+    fftw_plan plan_fwd = FFTWThreadCache::forward(M);
+    fftw_execute_dft_r2c(plan_fwd, grid, spectrum);
+
+    S.dOmega = 2.0 * M_PI / (b - a);
+    S.omega.resize(complexSize);
+    S.wpow.resize(complexSize);
+    S.mod2.resize(complexSize);
+
+    for (int k = 0; k < complexSize; ++k) {
+        const double omega = static_cast<double>(k) * S.dOmega;
+        const double re    = spectrum[k][0];
+        const double im    = spectrum[k][1];
+        double mod2 = (re * re + im * im);
+
+        if (k > 0) {
+            const double arg   = static_cast<double>(k) / static_cast<double>(M);
+            const double sincv = std::sin(M_PI * arg) / (M_PI * arg);
+            mod2 /= (sincv * sincv * sincv * sincv);
+        }
+
+        const double weight = (k == 0 || k == M / 2) ? 1.0 : 2.0;
+        S.omega[k] = omega;
+        S.wpow[k]  = weight * std::pow(omega, power);
+        S.mod2[k]  = mod2;
+    }
+    return S;
+}
+
+// Équivalent exact de S4_fft(x, h, M) à partir du spectre pré-calculé (power = 4, padding = 6)
+static double S4_from_spectrum(const SnSpectrum& S, double h)
+{
+    double sum = 0.0;
+    const std::size_t K = S.omega.size();
+    for (std::size_t k = 0; k < K; ++k) {
+        const double omega = S.omega[k];
+        const double gauss = std::exp(-0.5 * omega * omega * h * h);
+        sum += S.wpow[k] * gauss * S.mod2[k];
+    }
+    return sum * S.dOmega / (2.0 * M_PI * (double)S.n * (double)S.n);
+}
+
 /**
  * @brief Calcule la largeur de bande (bandwidth) optimale par la méthode
  *        Sheather-Jones "solve-the-equation" (SJ-ste) pour l'estimation de
@@ -2358,15 +2451,20 @@ double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
 
     const double h_ref_n = 0.9 * sigma_n * std::pow(nd, -0.2);
 
-    double nrd0 = bw_nrd0(x);
+    // = bw_nrd0(x), sans recalculer scale_factor(x) (un tri de moins) — identique bit à bit
+    const double nrd0 = 0.9 * sigma * std::pow(nd, -0.2);
 
     const int    M       = chooseFFtSize(n);
 
     const double g1 = 1.24 * sigma_n * std::pow(nd, -1.0/7.0);
     const double g2 = 1.23 * sigma_n * std::pow(nd, -1.0/9.0);
 
-    const double t44 = S4_fft(xn, g1, M); // Sera maintenant positif et correct
-    const double t24 = S6_fft(xn, g2, M); // Sera maintenant négatif et correct
+    // Spectre binné de xn (power 4, padding 6) calculé une seule fois,
+    // réutilisé pour t44 et pour toutes les évaluations de l'équation SJ
+    const SnSpectrum spec4 = Sn_spectrum(xn, M, 4, 6.0);
+
+    const double t44 = S4_from_spectrum(spec4, g1); // == S4_fft(xn, g1, M)
+    const double t24 = S6_fft(xn, g2, M); // une seule évaluation : inchangé
 
     if (std::abs(t44) < 1e-15 || std::abs(t24) < 1e-15)
         return nrd0;
@@ -2378,8 +2476,14 @@ double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
     const double RK = 1.0 / (2.0 * std::sqrt(M_PI));
     const double c1 = RK / nd;
 
-    // Instanciation de la fonction lambda
-    auto eq = [&](double h){ return sj_equation(h, xn, alpha2, c1, M); };
+    // Équation SJ-ste : même expression que sj_equation(h, xn, alpha2, c1, M),
+    // mais S4 évalué sur le spectre pré-calculé (O(M/2) au lieu de O(n + M log M))
+    auto eq = [&](double h) {
+        const double gamma = alpha2 * std::pow(h, 5.0 / 7.0);
+        const double s4 = S4_from_spectrum(spec4, gamma);
+        if (s4 <= 0.0) return std::numeric_limits<double>::quiet_NaN();
+        return h - std::pow(c1 / s4, 0.2);
+    };
 
     // Bornes de recherche (identiques à R)
    /* const double hmax   = 1.144 * sigma_n * std::pow(nd, -0.2);
@@ -2481,7 +2585,7 @@ double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
             grid[k] = std::exp(log_lo + k * (log_hi - log_lo) / n_scan);
 
         std::vector<double> evals(n_scan + 1);
-#pragma omp parallel for schedule(dynamic)
+// (omp retiré : une évaluation coûte ~µs désormais ; le parallélisme est au niveau des variables)
         for (int k = 0; k <= n_scan; k++)
             evals[k] = eq(grid[k]);
 
@@ -2527,7 +2631,7 @@ double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
         for (int k = 0; k <= N_FINE; k++)
             fgrid[k] = std::exp(flog_lo + k * (flog_hi - flog_lo) / N_FINE);
 
-#pragma omp parallel for schedule(dynamic)
+// (omp retiré, cf. ci-dessus)
         for (int k = 0; k <= N_FINE; k++)
             fevals[k] = eq(fgrid[k]);
 
@@ -2544,7 +2648,7 @@ double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
     const int nb = static_cast<int>(fine_brackets.size());
     std::vector<double> roots(nb, std::numeric_limits<double>::quiet_NaN());
 
-#pragma omp parallel for schedule(dynamic)
+// (omp retiré, cf. ci-dessus)
     for (int i = 0; i < nb; i++) {
         const double root = bisect(eq, fine_brackets[i].first,
                                    fine_brackets[i].second, tol, max_iter);

@@ -34,6 +34,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #include "StdUtilities.h"
 #include "MainWindow.h"
 #include "version.h"
+#include "ParallelFor.h"
+#include "CurveUtilities.h"
 
 #include <QFile>
 #include <QFileDialog>
@@ -808,8 +810,11 @@ void ModelCurve::generateResultsLog()
     Model::generateResultsLog();
     if (is_curve) {
         QString log;
+        // curveResultsHTML contient le critère de convergence de la courbe ;
+        // les stats de lambda, retirées de la vue courbe, restent dans le journal
         log += ModelUtilities::curveResultsHTML(shared_from_this());
-        log += "<hr>";
+        if (mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe)
+            log += ModelUtilities::lambdaResultsHTML(shared_from_this()) + "<hr>";
 
         mLogResults += log;
     }
@@ -882,6 +887,173 @@ void ModelCurve::generateDensityNumericalResults()
 #endif
     }
 }
+std::vector<MetropolisVariable*> ModelCurve::acquiredVariables()
+{
+    std::vector<MetropolisVariable*> vars = Model::acquiredVariables();
+    if (is_curve) {
+        for (const auto& ev : mEvents)
+            vars.push_back(&ev->mVg);
+        vars.push_back(&mLambdaSpline);
+#ifdef KOMLAN
+        vars.push_back(&mS02Vg);
+#endif
+    }
+    return vars;
+}
+
+/**
+ * @brief Critère de convergence sur la courbe : pour chaque composante calculée et
+ * chaque point t_k d'une grille régulière (milieux de nGrid intervalles de la période
+ * d'étude), on forme les séries G(t_k) itération par itération sur les chaînes brutes
+ * (fenêtre commune : les sizeMin dernières courbes de chaque chaîne), puis :
+ *  - R̂ / ESS bruts (computeRhatAndEss) ;
+ *  - si un filtre est actif : R̂_A / ESS_A (computeFilteredDiagnostics, même masque).
+ * On retient le pire cas sur la grille (max R̂, min ESS).
+ */
+void ModelCurve::generateCurveConvergence(const std::vector<ChainSpecs>& chains, int nGrid)
+{
+    mCurveConvergence = CurveConvergence{};
+    if (!is_curve || chains.empty() || mSplinesTrace.empty() || nGrid < 1)
+        return;
+
+    const int M = static_cast<int>(chains.size());
+    std::size_t sumRaw = 0;
+    int sizeMin = std::numeric_limits<int>::max();
+    for (const auto& ch : chains) {
+        sumRaw += static_cast<std::size_t>(ch.mRealyAccepted);
+        sizeMin = std::min(sizeMin, ch.mRealyAccepted);
+    }
+    if (mSplinesTrace.size() < sumRaw || sizeMin < 4)
+        return;
+
+    const bool filtered = hasCurveFilter() && mCurveFilterMask->size() == sumRaw;
+
+    // Début de la fenêtre commune de chaque chaîne dans mSplinesTrace (= indice dans le masque)
+    std::vector<std::size_t> start(M);
+    std::vector<std::vector<char>> masks(filtered ? M : 0);
+    std::size_t offset = 0;
+    for (int c = 0; c < M; ++c) {
+        const std::size_t end = offset + static_cast<std::size_t>(chains[c].mRealyAccepted);
+        start[c] = end - static_cast<std::size_t>(sizeMin);
+        if (filtered)
+            masks[c] = std::vector<char>(mCurveFilterMask->begin() + start[c], mCurveFilterMask->begin() + end);
+        offset = end;
+    }
+
+    // Grille (temps réel), croissante : valeurG avance i0 de façon monotone
+    const double tmin = mSettings.mTmin;
+    const double tmax = mSettings.mTmax;
+    std::vector<double> tGrid(nGrid);
+    for (int k = 0; k < nGrid; ++k)
+        tGrid[k] = tmin + (k + 0.5) * (tmax - tmin) / nGrid;
+
+    std::vector<MCMCSplineComposante MCMCSpline::*> comps {&MCMCSpline::splineX};
+    if (compute_Y) {
+        comps.push_back(&MCMCSpline::splineY);
+        if (compute_XYZ)
+            comps.push_back(&MCMCSpline::splineZ);
+    }
+
+    struct PointResult {
+        double t = 0.;
+        bool okRaw = false;
+        MCMCDiagnostic::RhatEssResult raw {};
+        MCMCDiagnostic::FilteredDiagResult filt {};
+    };
+    std::vector<PointResult> results;
+    results.reserve(comps.size() * nGrid);
+
+    constexpr int block = 8; // points évalués par passe (mémoire : block x M x sizeMin doubles)
+
+    for (auto comp : comps) {
+        for (int k0 = 0; k0 < nGrid; k0 += block) {
+            const int kb = std::min(block, nGrid - k0);
+            std::vector<std::vector<std::vector<double>>> series(
+                kb, std::vector<std::vector<double>>(M, std::vector<double>(sizeMin)));
+
+            // Évaluation des courbes : une tâche par chaîne
+            std::vector<std::function<void()>> evalTasks;
+            for (int c = 0; c < M; ++c) {
+                evalTasks.emplace_back([&, c] {
+                    for (int t = 0; t < sizeMin; ++t) {
+                        const MCMCSplineComposante& sp = mSplinesTrace[start[c] + t].*comp;
+                        unsigned long i0 = 0;
+                        for (int kk = 0; kk < kb; ++kk)
+                            series[kk][c][t] = valeurG(tGrid[k0 + kk], sp, i0, *this);
+                    }
+                });
+            }
+            parallel_run(evalTasks);
+
+            // Diagnostics : une tâche par point
+            const std::size_t first = results.size();
+            results.resize(first + kb);
+            std::vector<std::function<void()>> diagTasks;
+            for (int kk = 0; kk < kb; ++kk) {
+                diagTasks.emplace_back([&, kk] {
+                    PointResult& pr = results[first + kk];
+                    pr.t = tGrid[k0 + kk];
+                    try {
+                        pr.raw = MCMCDiagnostic::computeRhatAndEss(series[kk]);
+                        pr.okRaw = true;
+                    } catch (const std::invalid_argument&) {}
+                    if (filtered) {
+                        try {
+                            pr.filt = MCMCDiagnostic::computeFilteredDiagnostics(series[kk], masks);
+                        } catch (const std::invalid_argument&) {}
+                    }
+                });
+            }
+            parallel_run(diagTasks);
+        }
+    }
+
+    // Pire cas sur la grille. Une valeur non finie (NaN, inf) est la pire possible
+    // et reste : elle signale un point où le diagnostic échoue.
+    auto isWorseMax = [](double cur, double v) {
+        if (!std::isfinite(cur)) return false;
+        return !std::isfinite(v) || v > cur;
+    };
+    auto isWorseMin = [](double cur, double v) {
+        if (!std::isfinite(cur)) return false;
+        return !std::isfinite(v) || v < cur;
+    };
+
+    CurveConvergence cc;
+    cc.filtered = filtered;
+    cc.nGrid = nGrid;
+    cc.nComponents = static_cast<int>(comps.size());
+    bool first = true, firstA = true;
+    for (const auto& pr : results) {
+        if (!pr.okRaw) continue;
+        ++cc.nPoints;
+        if (first) {
+            cc.maxRhat = pr.raw.rHat; cc.tMaxRhat = pr.t;
+            cc.minBulkESS = pr.raw.bulkESS; cc.minTailESS = pr.raw.tailESS;
+            first = false;
+        } else {
+            if (isWorseMax(cc.maxRhat, pr.raw.rHat))   { cc.maxRhat = pr.raw.rHat; cc.tMaxRhat = pr.t; }
+            if (isWorseMin(cc.minBulkESS, pr.raw.bulkESS)) cc.minBulkESS = pr.raw.bulkESS;
+            if (isWorseMin(cc.minTailESS, pr.raw.tailESS)) cc.minTailESS = pr.raw.tailESS;
+        }
+        if (filtered && pr.filt.valid) {
+            if (firstA) {
+                // p, K_c, nChainsUsed ne dépendent que du masque : identiques en tout point
+                cc.p = pr.filt.p; cc.minExcursions = pr.filt.minExcursions; cc.nChainsInA = pr.filt.nChainsUsed;
+                cc.maxRhatA = pr.filt.rHat; cc.tMaxRhatA = pr.t;
+                cc.minBulkESSA = pr.filt.bulkESS; cc.minTailESSA = pr.filt.tailESS;
+                firstA = false;
+            } else {
+                if (isWorseMax(cc.maxRhatA, pr.filt.rHat))   { cc.maxRhatA = pr.filt.rHat; cc.tMaxRhatA = pr.t; }
+                if (isWorseMin(cc.minBulkESSA, pr.filt.bulkESS)) cc.minBulkESSA = pr.filt.bulkESS;
+                if (isWorseMin(cc.minTailESSA, pr.filt.tailESS)) cc.minTailESSA = pr.filt.tailESS;
+            }
+        }
+    }
+    cc.valid = (cc.nPoints > 0);
+    mCurveConvergence = cc;
+}
+
 void ModelCurve::generateTraceNumericalResults(const std::vector<ChainSpecs> &chains)
 {
     Model::generateTraceNumericalResults(chains);
@@ -899,47 +1071,65 @@ void ModelCurve::generateTraceNumericalResults(const std::vector<ChainSpecs> &ch
 #endif
 
 
+        // Critère sur la courbe elle-même (G(t_k), pire cas sur la grille)
+        generateCurveConvergence(chains);
+
+        const std::size_t M = mChains.size();
+        const double nan = std::numeric_limits<double>::quiet_NaN();
+        auto minESS = [nan](double a, double b) {
+            return (std::isfinite(a) && std::isfinite(b)) ? std::min(a, b) : nan;
+        };
+
+        // Avec un filtre actif, la synthèse porte sur la loi filtrée pi_A
+        // (R̂_A, ESS_A) ; sinon sur l'échantillonneur (R̂, ESS bruts).
         std::vector<double> Rhat;
         std::vector<double> ESS;
+        auto push = [&](const MetropolisVariable& v) {
+            const auto& f = v.mResults.filteredDiag;
+            if (f.valid) {
+                // plusieurs chaînes mais moins de 2 dans A : désaccord sur pi_A -> non convergé
+                Rhat.push_back((M >= 2 && f.nChainsUsed < 2) ? std::numeric_limits<double>::infinity() : f.rHat);
+                ESS.push_back(minESS(f.bulkESS, f.tailESS));
+            } else {
+                Rhat.push_back(v.mResults.RhatESS.rHat);
+                ESS.push_back(minESS(v.mResults.RhatESS.bulkESS, v.mResults.RhatESS.tailESS));
+            }
+        };
+
         for (size_t i = 0; i<mEvents.size(); i++) {
             const auto& event = mEvents[i];
                 if (event->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
-                    Rhat.push_back(event->mTheta.mResults.RhatESS.rHat);
-                    ESS.push_back(std::min(event->mTheta.mResults.RhatESS.bulkESS,
-                                           event->mTheta.mResults.RhatESS.tailESS));
+                    push(event->mTheta);
 
-                    if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe) {
-                        Rhat.push_back( event->mS02Theta.mResults.RhatESS.rHat);
-                        ESS.push_back(std::min(event->mS02Theta.mResults.RhatESS.bulkESS,
-                                               event->mS02Theta.mResults.RhatESS.tailESS));
-                    }
+                    if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe)
+                        push(event->mS02Theta);
+
                     for (auto&& date : event->mDates) {
-                        Rhat.push_back(date.mTi.mResults.RhatESS.rHat);
-                        ESS.push_back(std::min(date.mTi.mResults.RhatESS.bulkESS,
-                                               date.mTi.mResults.RhatESS.tailESS));
-
-                        Rhat.push_back(date.mSigmaTi.mResults.RhatESS.rHat);
-                        ESS.push_back(std::min(date.mSigmaTi.mResults.RhatESS.bulkESS,
-                                               date.mSigmaTi.mResults.RhatESS.tailESS));
+                        push(date.mTi);
+                        push(date.mSigmaTi);
                     }
                 }
 
-            if (event->mVg.mSamplerProposal != SamplerProposal::eFixe) {
-                Rhat.push_back(event->mVg.mResults.RhatESS.rHat);
-                ESS.push_back(std::min(event->mVg.mResults.RhatESS.bulkESS,
-                                       event->mVg.mResults.RhatESS.tailESS));
+            if (event->mVg.mSamplerProposal != SamplerProposal::eFixe)
+                push(event->mVg);
+        }
+
+        if (mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe)
+            push(mLambdaSpline);
+
+        // La courbe : une « variable » de synthèse (pire point de la grille)
+        if (mCurveConvergence.valid) {
+            if (mCurveConvergence.filtered) {
+                Rhat.push_back((M >= 2 && mCurveConvergence.nChainsInA < 2) ? std::numeric_limits<double>::infinity()
+                                                                            : mCurveConvergence.maxRhatA);
+                ESS.push_back(minESS(mCurveConvergence.minBulkESSA, mCurveConvergence.minTailESSA));
+            } else {
+                Rhat.push_back(mCurveConvergence.maxRhat);
+                ESS.push_back(minESS(mCurveConvergence.minBulkESS, mCurveConvergence.minTailESS));
             }
         }
 
-        if (mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe) {
-            Rhat.push_back(mLambdaSpline.mResults.RhatESS.rHat);
-            ESS.push_back(std::min(mLambdaSpline.mResults.RhatESS.bulkESS,
-                                   mLambdaSpline.mResults.RhatESS.tailESS));
-        }
-
         // On écrase l'ancienne valeur produite par Model::generateTraceNumericalResults(chains);
-
-        auto M = mChains.size();
         mConvergenceSummary = MCMCDiagnostic::computeConvergenceSummary(Rhat, ESS, M);
 
     }

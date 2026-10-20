@@ -1056,6 +1056,8 @@ void MainWindow::rebuildExportCurve()
         int last_totalIterDisplay;
         int iter_index = 0;
         std::vector<size_t> index_to_memo ;
+        // Masque I_t du filtre sur toutes les courbes acquises (1 = retenue)
+        std::vector<char> filterMask(fullrunTrace.size(), char(1));
         if (!curveModel->compute_Y) {
             for (auto &splineXYZ : fullrunTrace) {
 #ifdef WITHCURVEFILTER
@@ -1065,6 +1067,8 @@ void MainWindow::rebuildExportCurve()
 
                 if (last_totalIterDisplay == totalIterDisplay) { // increment = courbe acceptée
                     index_to_memo.push_back(iter_index);
+                } else {
+                    filterMask[iter_index] = 0;                  // courbe rejetée par le filtre
                 }
                 ++iter_index;
 
@@ -1180,116 +1184,17 @@ void MainWindow::rebuildExportCurve()
         }
 
 
-        // mise à jour des traces des Events
-        if (index_to_memo.size() < fullrunTrace.size()) {
-
-            auto copyFilteredData = [](auto& source, auto& dest, const std::vector<size_t>& indices) {
-                dest = std::make_shared<std::vector<double>>(indices.size());
-                dest->reserve(indices.size());
-                for (size_t i = 0; i < indices.size(); ++i) {
-                    (*dest)[i] = (*source)[indices[i]];
-                }
-            };
-
-            for (size_t i = 0; i<curveModel->Model::mEvents.size(); ++i) {
-
-                auto& ev = curveModel->mEvents[i];
-
-                // Initialisation et copie pour mTheta
-                ev->mTheta.is_curve_filtering = true;
-                if (ev->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
-
-                    copyFilteredData(ev->mTheta.mAllAcquiredTrace, ev->mTheta.mDisplayAcquiredTrace, index_to_memo);
-
-                    // Initialisation et copie pour mS02Theta
-                    ev->mS02Theta.is_curve_filtering = true;
-                    if (ev->mS02Theta.mSamplerProposal != SamplerProposal::eFixe)
-                        copyFilteredData(ev->mS02Theta.mAllAcquiredTrace, ev->mS02Theta.mDisplayAcquiredTrace, index_to_memo);
-
-                    // mise à jour des dates
-                    for (auto& d : ev->mDates) {
-                        d.mTi.is_curve_filtering = true;
-                        copyFilteredData(d.mTi.mAllAcquiredTrace, d.mTi.mDisplayAcquiredTrace, index_to_memo);
-
-                        d.mSigmaTi.is_curve_filtering = true;
-                        copyFilteredData(d.mSigmaTi.mAllAcquiredTrace, d.mSigmaTi.mDisplayAcquiredTrace, index_to_memo);
-                    }
-                }
-
-            }
-            // Si les Event sont filtrés, il faut recalculer les phases
-            for (auto& p : curveModel->Model::mPhases) {
-                p->mAlpha.is_curve_filtering = true;
-                copyFilteredData(p->mAlpha.mAllAcquiredTrace, p->mAlpha.mDisplayAcquiredTrace, index_to_memo);
-
-                p->mBeta.is_curve_filtering = true;
-                copyFilteredData(p->mBeta.mAllAcquiredTrace, p->mBeta.mDisplayAcquiredTrace, index_to_memo);
-
-                p->mDuration.is_curve_filtering = true;
-                copyFilteredData(p->mDuration.mAllAcquiredTrace, p->mDuration.mDisplayAcquiredTrace, index_to_memo);
-            }
-
-            if (curveModel->is_curve) {
-                for (size_t i = 0; i<curveModel->Model::mEvents.size(); ++i) {
-                    auto& ev = curveModel->mEvents[i];
-                    if (ev->mVg.mSamplerProposal != SamplerProposal::eFixe) {
-                        ev->mVg.is_curve_filtering = true;
-                        copyFilteredData(ev->mVg.mAllAcquiredTrace, ev->mVg.mDisplayAcquiredTrace, index_to_memo);
-                    }
-
-                }
-                if (curveModel->mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe) {
-                    curveModel->mLambdaSpline.is_curve_filtering = true;
-                    copyFilteredData(curveModel->mLambdaSpline.mAllAcquiredTrace, curveModel->mLambdaSpline.mDisplayAcquiredTrace, index_to_memo);
-                }
-            }
-
-        }
-        else {
-            for (size_t i = 0; i<curveModel->Model::mEvents.size(); i++) {
-                auto& ev = curveModel->mEvents[i];
-                ev->mTheta.is_curve_filtering = false;
-                ev->mTheta.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
-
-                ev->mS02Theta.is_curve_filtering = false;
-                ev->mS02Theta.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
-
-                //mise à jour des dates
-                for (auto& d : ev->mDates) {
-                    d.mTi.is_curve_filtering = false;
-                    d.mTi.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
-
-                    d.mSigmaTi.is_curve_filtering = false;
-                    d.mSigmaTi.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
-
-                }
-            }
-            for (auto& p : curveModel->Model::mPhases) {
-                p->mAlpha.is_curve_filtering = false;
-                p->mAlpha.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
-
-                p->mBeta.is_curve_filtering = false;
-                p->mBeta.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
-
-                p->mDuration.is_curve_filtering = false;
-                p->mDuration.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
-            }
-
-            if (curveModel->is_curve) {
-                for (size_t i = 0; i<curveModel->Model::mEvents.size(); ++i) {
-                    auto& ev = curveModel->mEvents[i];
-                    if (ev->mVg.mSamplerProposal != SamplerProposal::eFixe) {
-                        ev->mVg.is_curve_filtering = false;
-                        ev->mVg.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
-                    }
-
-                }
-                if (curveModel->mLambdaSpline.mSamplerProposal != SamplerProposal::eFixe) {
-                    curveModel->mLambdaSpline.is_curve_filtering = false;
-                    curveModel->mLambdaSpline.mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
-                }
-            }
-        }
+        // mise à jour des traces de toutes les variables à partir du masque I_t.
+        // Le masque est la seule information persistante du filtrage (sauvegardé dans
+        // le .res) : mIterDisplay de chaque chaîne et les traces affichées de toutes les
+        // variables (events, dates y compris wiggle, phases, Vg, lambda) en sont déduits
+        // par Model::applyCurveFilterMask. Un masque tout à 1 retire le filtre.
+#ifdef WITHCURVEFILTER
+        curveModel->setCurveFilterMask(std::move(filterMask), minMaxPFilter);
+#else
+        curveModel->setCurveFilterMask({}, {-INFINITY, +INFINITY});
+#endif
+        curveModel->applyCurveFilterMask();
 
         auto& model = mProject->mModel;
         model->updateDensities(model->mFFTLength, model->mBandwidthType, model->mBandwidth, model->mThreshold);

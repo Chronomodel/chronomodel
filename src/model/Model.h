@@ -76,7 +76,33 @@ public:
     std::unordered_map<int, std::vector<double>> mBinomiale_Gx;
 
     MCMCDiagnostic::ConvergenceSummary mConvergenceSummary;
+
+    // ------------------------------------------------------------------
+    // Filtre de courbe (rebuildExportCurve)
+    // Masque I_t sur les itérations acquises, toutes chaînes concaténées
+    // (taille = somme des mRealyAccepted, 1 = itération retenue). Nul = pas de filtre.
+    // C'est la seule information persistante du filtrage : mIterDisplay et les
+    // traces affichées de toutes les variables s'en déduisent (applyCurveFilterMask).
+    // ------------------------------------------------------------------
+    std::shared_ptr<const std::vector<char>> mCurveFilterMask;
+    std::pair<double, double> mCurveFilterGP {-std::numeric_limits<double>::infinity(),
+                                              +std::numeric_limits<double>::infinity()};
+
+    /**
+     * @brief Fixe le masque (vide ou tout à 1 = pas de filtre) ; ne l'applique pas.
+     */
+    void setCurveFilterMask(std::vector<char> mask, std::pair<double, double> gpFilter);
+    /**
+     * @brief Applique mCurveFilterMask : recalcule mIterDisplay de chaque chaîne et
+     * la trace affichée de toutes les variables. À appeler après setCurveFilterMask
+     * et après le chargement d'un .res, avant updateDensities()/initDensities().
+     */
+    virtual void applyCurveFilterMask();
+    inline bool hasCurveFilter() const { return mCurveFilterMask && !mCurveFilterMask->empty(); }
 protected:
+    // Liste de toutes les variables échantillonnées par itération (events, dates, phases)
+    virtual std::vector<MetropolisVariable*> acquiredVariables();
+
     QStringList mCurveName;
     QStringList mCurveLongName;
 
@@ -149,6 +175,9 @@ public:
 
     // Marqueur de format écrit en tête du modèle depuis la v4.0.0 (compteur d'acceptation MH)
     static constexpr quint64 kResFormatTag_v400 = 0x43484D4F44563430ULL; // "CHMODV40"
+    // Bloc optionnel en fin de partie Model : masque du filtre de courbe
+    // (absent des .res v4.0.0 écrits avant son ajout -> détecté par peekResFormatTag)
+    static constexpr quint64 kResFilterTag_v400 = 0x43484D46494C5431ULL; // "CHMFILT1"
     static bool peekResFormatTag(QDataStream* in, quint64 tag);
 
     virtual bool loadFromStream(QDataStream* in) {return loadFromStream_v400(in);};

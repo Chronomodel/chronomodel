@@ -315,12 +315,16 @@ public:
     {
         const QString calibPath = getRefsPath();
         mRefCurves.clear();
+        // le cache pointait dans mRefCurves : il serait pendant apres clear()
+        mLastCurvePtr = nullptr;
+        mLastCurveName.clear();
         QDir calibDir(calibPath);
 
         const QFileInfoList files = calibDir.entryInfoList(QStringList(), QDir::Files);
         for (int i=0; i<files.size(); ++i) {
             if (files.at(i).suffix().toLower() == getRefExt()) {
                 RefCurve curve = loadRefFile(files.at(i));
+                curve.buildFlat();   // tableaux contigus pour la vraisemblance rapide (Date)
                 const QString fileInLower = files.at(i).fileName().toLower();
                 mRefCurves.insert(fileInLower, curve);
             }
@@ -463,6 +467,14 @@ public:
     const RefCurve& getRefCurve(const QString& name)
     {
         return mRefCurves[name.toLower()];
+    }
+
+    // Recherche sans insertion (contrairement a getRefCurve) ; nullptr si absente.
+    // curveName doit etre en minuscules.
+    const RefCurve* findRefCurve(const QString& curveName) const noexcept
+    {
+        const auto it = mRefCurves.constFind(curveName);
+        return (it == mRefCurves.constEnd()) ? nullptr : &it.value();
     }
 
     PluginAbstract &operator=(const PluginAbstract& other)

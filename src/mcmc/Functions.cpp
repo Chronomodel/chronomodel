@@ -534,9 +534,8 @@ std::vector<double> autocorrelation_schoolbook(const std::vector<double> &trace,
         centered[i] = trace[i] - mean;
 
     results[0] = 1.0; // corr(0) = 1
-    // Parallélisation potentielle
-#pragma omp parallel for
-
+    // Pas d'omp ici : generateCorrelations est parallélisé au niveau des variables
+    // (Model::generateCorrelations) ; un omp imbriqué sur-souscrirait les cœurs.
     for (int h = 1; h <= hmax; ++h) {
         double sH = 0.0;
         for (size_t i = 0; i < n - h; ++i)
@@ -861,16 +860,62 @@ QString convergenceToHtml(const PosteriorAnalysis &analysis)
     // ---------------- HTML ----------------
     auto esc = [](const QString &s) { return s.toHtmlEscaped(); };
 
-    if (r.col == cGreen && b.col == cGreen && t.col == cGreen) {
-        return QString("<i><span style='color:%1'>%2 &middot; %3 &middot; %4 ✅</span></i>")
-            .arg(cGreen, esc(r.label), esc(b.label), esc(t.label));
-    }
-
     auto span = [&](const Line &l) {
         return QString("<span style='color:%1'>%2 %3</span>")
         .arg(l.col, esc(l.label), esc(l.stat));
     };
-    return "<i>" + span(r) + "<br>" + span(b) + "<br>" + span(t) + "</i>";
+
+    QString html;
+    if (r.col == cGreen && b.col == cGreen && t.col == cGreen) {
+        html = QString("<i><span style='color:%1'>%2 &middot; %3 &middot; %4 ✅</span></i>")
+            .arg(cGreen, esc(r.label), esc(b.label), esc(t.label));
+    } else {
+        html = "<i>" + span(r) + "<br>" + span(b) + "<br>" + span(t) + "</i>";
+    }
+
+    // ---------------- Après filtrage de courbe : loi conditionnelle pi_A ----------------
+    const FilteredDiagResult &f = analysis.filteredDiag;
+    if (!f.valid)
+        return html;
+
+    // Proportion retenue et excursions dans A
+    Line e;
+    const int Kgood = Threshold::ExcursionsGoodPerChain;
+    const int Kwarn = Threshold::ExcursionsWarningPerChain;
+    if (f.minExcursions < Kwarn) {
+        e.col = cRed;    e.stat = QObject::tr("❌ Too few excursions");
+    } else if (f.minExcursions < Kgood) {
+        e.col = cOrange; e.stat = QObject::tr("⚠️ Few excursions") + " (< " + QString::number(Kgood) + ")";
+    } else {
+        e.col = cGreen;  e.stat = QObject::tr("✅");
+    }
+    e.label = QObject::tr("Retained = %1 % ; min excursions per chain = %2")
+                  .arg(QString::number(f.p * 100., 'f', 2), QString::number(f.minExcursions));
+
+    // R̂_A (plusieurs chaînes mais moins de 2 dans A : désaccord sur pi_A)
+    Line ra;
+    QString raDisp = QString::number(f.rHat, 'f', 4);
+    if (M >= 2 && f.nChainsUsed < 2) {
+        ra.col = cRed;   ra.stat = QObject::tr("❌ Less than 2 chains reach the filtered set"); raDisp = "-";
+    } else if (f.rHat == 0.0) {
+        ra.col = cBlack; ra.stat = QObject::tr("❓ One chain"); raDisp = "-";
+    } else if (!std::isfinite(f.rHat)) {
+        ra.col = cRed;   ra.stat = QObject::tr("❌ Not computable / chains stuck"); raDisp = "-";
+    } else if (f.rHat < Threshold::RhatGood) {
+        ra.col = cGreen; ra.stat = QObject::tr("✅ Satisfactory convergence");
+    } else if (f.rHat < Threshold::RhatWarning) {
+        ra.col = cOrange; ra.stat = QObject::tr("⚠️ Insufficient convergence");
+    } else {
+        ra.col = cRed;   ra.stat = QObject::tr("❌ Not converged");
+    }
+    ra.label = QObject::tr("R\xCC\x82_A = %1").arg(raDisp);
+
+    const Line ba = essLine(f.bulkESS, QObject::tr("ESS_A bulk = %1"));
+    const Line ta = essLine(f.tailESS, QObject::tr("ESS_A tail = %1"));
+
+    html += "<br><i>" + QObject::tr("After curve filtering (conditional distribution)") + "</i><br><i>"
+            + span(e) + "<br>" + span(ra) + "<br>" + span(ba) + "<br>" + span(ta) + "</i>";
+    return html;
 }
 
 
@@ -924,7 +969,7 @@ Quartiles quartilesForTrace(const QList<type_data> &trace)
 
 Quartiles quartilesForTrace(const std::vector<type_data> &trace)
 {
-    Quartiles quartiles = quantilesType(QList<type_data>(trace.begin(), trace.end()), 8, 0.25);
+    Quartiles quartiles = quantilesType(trace, 8, 0.25); // plus de copie intermédiaire en QList
     return quartiles;
 }
 

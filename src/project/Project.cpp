@@ -1274,6 +1274,7 @@ bool Project::load(const QString &path, bool force)
                             //hasResults = false;
 
                         } else {
+                            mModel->applyCurveFilterMask(); // filtre de courbe sauvegardé (ou retiré si absent)
                             mModel->generateCorrelations(mModel->mChains);
                             setWithResults();
                             //hasResults = true;
@@ -1667,6 +1668,7 @@ bool Project::load_old(const QString &path, bool force)
                         clear_and_shrink_model();
 
                     } else {
+                        mModel->applyCurveFilterMask(); // filtre de courbe sauvegardé (ou retiré si absent)
                         mModel->generateCorrelations(mModel->mChains);
                         setWithResults();
                     }

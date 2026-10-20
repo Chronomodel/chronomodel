@@ -108,6 +108,7 @@ MetropolisVariable::MetropolisVariable(const MetropolisVariable& origin):
     mDisplayAcquiredTrace = std::make_shared<std::vector<double>>(*origin.mDisplayAcquiredTrace);
     mFormatedAcquiredTrace = std::make_shared<std::vector<double>>(*origin.mFormatedAcquiredTrace);
     is_curve_filtering = origin.is_curve_filtering;
+    mCurveFilterMask = origin.mCurveFilterMask; // masque partagé (lecture seule)
 
     mSupport = origin.mSupport;
     mFormat = origin.mFormat;
@@ -156,6 +157,7 @@ MetropolisVariable& MetropolisVariable::operator=(const MetropolisVariable& orig
     mDisplayAcquiredTrace = std::make_shared<std::vector<double>>(*origin.mDisplayAcquiredTrace);
     mFormatedAcquiredTrace = std::make_shared<std::vector<double>>(*origin.mFormatedAcquiredTrace);
     is_curve_filtering = origin.is_curve_filtering;
+    mCurveFilterMask = origin.mCurveFilterMask;
 
     mSupport = origin.mSupport;
     mFormat = origin.mFormat;
@@ -201,6 +203,7 @@ MetropolisVariable& MetropolisVariable::operator=(MetropolisVariable&& origin) n
         mDisplayAcquiredTrace = std::move(origin.mDisplayAcquiredTrace);
         mFormatedAcquiredTrace = std::move(origin.mFormatedAcquiredTrace);
         is_curve_filtering = std::move(origin.is_curve_filtering);
+        mCurveFilterMask = std::move(origin.mCurveFilterMask);
 
         mSupport = std::move(origin.mSupport);
         mFormat = std::move(origin.mFormat);
@@ -263,7 +266,65 @@ void MetropolisVariable::clear()
     mExactCredibilityThreshold = 0.0;
 
     is_curve_filtering = false;
+    mCurveFilterMask.reset();
 
+}
+
+std::vector<std::size_t> MetropolisVariable::acquiredCountsForTrace(std::size_t traceSize, const std::vector<ChainSpecs>& chains)
+{
+    std::size_t sumDisplay = 0, sumRaw = 0;
+    for (const auto& ch : chains) {
+        sumDisplay += static_cast<std::size_t>(ch.mIterDisplay);
+        sumRaw     += static_cast<std::size_t>(ch.mRealyAccepted);
+    }
+
+    std::vector<std::size_t> counts(chains.size());
+    if (traceSize == sumDisplay) {          // trace filtrée (ou pas de filtre : sumDisplay == sumRaw)
+        for (std::size_t i = 0; i < chains.size(); ++i)
+            counts[i] = static_cast<std::size_t>(chains[i].mIterDisplay);
+
+    } else if (traceSize == sumRaw) {       // trace brute alors qu'un filtre est actif
+        for (std::size_t i = 0; i < chains.size(); ++i)
+            counts[i] = static_cast<std::size_t>(chains[i].mRealyAccepted);
+
+    } else if (traceSize == chains.size()) { // variable fixe : une valeur par chaîne
+        std::fill(counts.begin(), counts.end(), 1);
+
+    } else {
+        counts.clear();                      // incohérence
+    }
+    return counts;
+}
+
+void MetropolisVariable::applyCurveFilterMask(const std::shared_ptr<const std::vector<char>>& mask)
+{
+    const bool active = mask && !mask->empty()
+                        && mAllAcquiredTrace && mAllAcquiredTrace->size() == mask->size();
+
+    if (active) {
+        const std::vector<char>& m = *mask;
+        auto disp = std::make_shared<std::vector<double>>();
+        disp->reserve(static_cast<std::size_t>(std::count(m.begin(), m.end(), char(1))));
+        for (std::size_t i = 0; i < m.size(); ++i)
+            if (m[i])
+                disp->push_back((*mAllAcquiredTrace)[i]);
+
+        mDisplayAcquiredTrace = std::move(disp);
+        mCurveFilterMask = mask;
+        is_curve_filtering = true;
+
+    } else {
+        mDisplayAcquiredTrace = std::make_shared<std::vector<double>>();
+        mCurveFilterMask.reset();
+        is_curve_filtering = false;
+    }
+
+    // Tout ce qui dépend de la trace affichée doit être recalculé
+    // (updateDensities reconstruit ensuite les traces formatées : remove_smoothed_densities + setFormat)
+    mResults.traceAnalysis.updated = false;
+    mResults.filteredDiag = MCMCDiagnostic::FilteredDiagResult{};
+    mExactCredibilityThreshold = 0.0;
+    mThresholdUsed = -1.0;
 }
 
 void MetropolisVariable::shrink_to_fit() noexcept
@@ -718,11 +779,13 @@ void MetropolisVariable::generateHPD(const double threshold)
 
 void MetropolisVariable::generateCredibility(const double threshold)
 {
-    if (mAllAcquiredTrace == nullptr || mAllAcquiredTrace->size() == 0)  {
+    // Trace affichée (filtrée si filtre de courbe actif), cohérente avec la KDE et le HPD
+    const auto traceDisplay = traceToDisplay();
+    if (traceDisplay == nullptr || traceDisplay->size() == 0)  {
         mRawCredibility = std::pair<double, double>(1, -1);
 
     } else if (mThresholdUsed != threshold || mExactCredibilityThreshold == 0.0) {
-        const std::vector<double>& trace = *mAllAcquiredTrace;
+        const std::vector<double>& trace = *traceDisplay;
         mRawCredibility = credibilityForTrace(trace, threshold, mExactCredibilityThreshold);//, "Compute credibility for "+getName());
     }
     updateFormatedCredibility(mFormat);
@@ -774,56 +837,35 @@ Uilise les chaines brutes, non filtrées pour ESS et RHat
 void MetropolisVariable::generateTraceNumericalResults(const std::vector<ChainSpecs> &chains)
 {
     // ----- Résultats globaux (concatenation de toutes les chaînes) -----
-    const std::vector<double>& trace = *mFormatedAcquiredTrace; // correspond à la trace à afficher si is_curve_filtering
-    if (!mFormatedAcquiredTrace)
+    if (!mFormatedAcquiredTrace || mFormatedAcquiredTrace->empty())
         return;
-
-    if (mFormatedAcquiredTrace->empty())
-        return;
+    const std::vector<double>& trace = *mFormatedAcquiredTrace; // trace affichée (filtrée si is_curve_filtering)
 
     if (mResults.traceAnalysis.updated == true)
         return;
 
     mResults.traceAnalysis.updated = true;
+    mResults.filteredDiag = MCMCDiagnostic::FilteredDiagResult{};
 
     if (mAllAcquiredTrace->size() > chains.size() + 1) {
+        // -----------------------------------------------------------------
+        // 1. R̂/ESS de l'ÉCHANTILLONNEUR : toujours sur les chaînes brutes.
+        //    Une trace filtrée n'est plus une trajectoire de chaîne de Markov
+        //    (la sélection dépend de l'état) : son ESS n'a pas de sens.
+        //    Fenêtre commune : les sizeMin dernières itérations de chaque chaîne.
+        // -----------------------------------------------------------------
+        int sizeMin = std::numeric_limits<int>::max();
+        for (std::size_t chain_index = 0; chain_index < chains.size(); ++chain_index)
+            sizeMin = std::min(sizeMin, chains[chain_index].mRealyAccepted);
+        sizeMin = std::max(sizeMin, 0);
+
         std::vector<std::vector<double>> chainForRhat(chains.size());
-        if (is_curve_filtering) {
-            // -----------------------------------------------------------------
-            // 1. Recherche de la taille d'acquisition la plus petite
-            // -----------------------------------------------------------------
-            int sizeMin = std::numeric_limits<int>::max();
-            for (std::size_t chain_index = 0; chain_index < chains.size(); ++chain_index)
-                sizeMin = std::min(sizeMin, chains[chain_index].mIterDisplay);
-
-            // -----------------------------------------------------------------
-            // 2. Construction du tableau de sous-chaînes à utiliser pour Rhat/ESS
-            // -----------------------------------------------------------------
-             for (std::size_t chain_index = 0; chain_index < chains.size(); ++chain_index) {
-                std::vector<double> trace = extractTraceForChain(mFormatedAcquiredTrace, chains, chain_index);
-                chainForRhat[chain_index] = std::vector<double>(trace.end() - sizeMin, trace.end());
-            }
-        }
-        else {
-            // -----------------------------------------------------------------
-            // 1. Recherche de la taille d'acquisition la plus petite
-            // -----------------------------------------------------------------
-            int sizeMin = std::numeric_limits<int>::max();
-            for (std::size_t chain_index = 0; chain_index < chains.size(); ++chain_index)
-                sizeMin = std::min(sizeMin, chains[chain_index].mRealyAccepted);
-
-            // -----------------------------------------------------------------
-            // 2. Construction du tableau de sous-chaînes à utiliser pour Rhat/ESS
-            // -----------------------------------------------------------------
-
-            for (std::size_t chain_index = 0; chain_index < chains.size(); ++chain_index) {
-                std::vector<double> fullTrace = runRawTraceForChain(chains, chain_index);
+        for (std::size_t chain_index = 0; chain_index < chains.size(); ++chain_index) {
+            const std::vector<double> fullTrace = runRawTraceForChain(chains, chain_index);
+            if (static_cast<int>(fullTrace.size()) >= sizeMin)
                 chainForRhat[chain_index] = std::vector<double>(fullTrace.end() - sizeMin, fullTrace.end());
-            }
         }
-        // -----------------------------------------------------------------
-        // 3. Rhat + ESS
-        // -----------------------------------------------------------------
+
         MCMCDiagnostic::RhatEssResult R_hat_ESS;
         try {
             R_hat_ESS = MCMCDiagnostic::computeRhatAndEss(chainForRhat);
@@ -834,6 +876,29 @@ void MetropolisVariable::generateTraceNumericalResults(const std::vector<ChainSp
             R_hat_ESS.tailESS = std::numeric_limits<double>::quiet_NaN();
         }
         mResults.RhatESS = R_hat_ESS;
+
+        // -----------------------------------------------------------------
+        // 2. Diagnostics de la loi filtrée pi_A (masque sur l'axe du temps brut,
+        //    même fenêtre que ci-dessus)
+        // -----------------------------------------------------------------
+        if (is_curve_filtering && mCurveFilterMask
+            && mCurveFilterMask->size() == mAllAcquiredTrace->size()) {
+
+            const std::vector<char>& mask = *mCurveFilterMask;
+            std::vector<std::vector<char>> maskForChain(chains.size());
+            std::size_t offset = 0;
+            for (std::size_t chain_index = 0; chain_index < chains.size(); ++chain_index) {
+                const std::size_t nRaw = static_cast<std::size_t>(chains[chain_index].mRealyAccepted);
+                const std::size_t end  = offset + nRaw;
+                maskForChain[chain_index] = std::vector<char>(mask.begin() + (end - sizeMin), mask.begin() + end);
+                offset = end;
+            }
+            try {
+                mResults.filteredDiag = MCMCDiagnostic::computeFilteredDiagnostics(chainForRhat, maskForChain);
+            } catch (const std::invalid_argument&) {
+                mResults.filteredDiag = MCMCDiagnostic::FilteredDiagResult{};
+            }
+        }
 
     } else {
         // Variable fixe : Rhat conventionnellement à 1 (rien à comparer), ESS non
@@ -851,7 +916,7 @@ void MetropolisVariable::generateTraceNumericalResults(const std::vector<ChainSp
 
     // 2️⃣  Remplir uniquement le champ traceAnalysis (trace)
     for (size_t i = 0; i < chains.size(); ++i) {
-        auto tracetmp = runFormatedTraceForChain(chains, i);
+        // (suppression de `tracetmp` : copie inutilisée de la trace de la chaîne)
         mChainsResults[i].traceAnalysis = traceStatistic(runFormatedTraceForChain(chains, i));
         // on ne touche pas à densityAnalysis → il garde la valeur déjà présente
     }
@@ -916,14 +981,16 @@ std::vector<double> MetropolisVariable::fullFormatedTraceForChain(
     // -------------------------------------------------------------
     // 2️⃣  Calcul de l’offset dans la trace *acceptée*
     // -------------------------------------------------------------
-    std::size_t acceptOffset = 0;
-    for (std::size_t i = 0; i < index; ++i) {
-        //acceptOffset += chains[i].mRealyAccepted;
-        acceptOffset += chains[i].mIterDisplay;
-    }
+    // Effectifs déduits de la taille de la trace formatée (filtrée ou brute)
+    const std::vector<std::size_t> counts = acquiredCountsForTrace(mFormatedAcquiredTrace->size(), chains);
+    if (counts.empty())
+        return {};
 
-    //const std::size_t acceptSize = chains[index].mRealyAccepted;
-    const std::size_t acceptSize = chains[index].mIterDisplay;
+    std::size_t acceptOffset = 0;
+    for (std::size_t i = 0; i < index; ++i)
+        acceptOffset += counts[i];
+
+    const std::size_t acceptSize = counts[index];
 
     // -------------------------------------------------------------
     // 3️⃣  Construction du vecteur résultat (une seule allocation)
@@ -2248,6 +2315,253 @@ RhatEssResult computeRhatAndEss(const std::vector<std::vector<double>>& chains)
     result.bulkESS = bulkESS;
     result.tailESS = std::min(essQ05, essQ95);
     return result;
+}
+
+// ============================================================================
+//  Diagnostics après filtrage de courbe (loi conditionnelle pi_A)
+// ============================================================================
+namespace detail
+{
+
+// Split-R̂ (formule de rhatFromStats) généralisé à des demi-séquences de longueurs
+// inégales n_j :  W = sum (n_j-1) s_j^2 / sum (n_j-1),  B/n -> var. empirique des
+// moyennes,  var+ = (nbar-1)/nbar W + B/n.  Se réduit exactement à rhatFromStats
+// quand toutes les longueurs sont égales.
+double rhatUnequalLengths(const std::vector<std::vector<double>>& halves)
+{
+    const int J = static_cast<int>(halves.size());
+    if (J < 2)
+        return 0.0;
+
+    double sumSS = 0., sumDf = 0., sumN = 0.;
+    std::vector<double> means(J);
+    for (int j = 0; j < J; ++j) {
+        const auto& h = halves[j];
+        const double n = static_cast<double>(h.size());
+        const double mean = std::accumulate(h.begin(), h.end(), 0.) / n;
+        double ss = 0.;
+        for (double v : h)
+            ss += (v - mean) * (v - mean);
+        means[j] = mean;
+        sumSS += ss;
+        sumDf += n - 1.;
+        sumN  += n;
+    }
+    if (sumDf <= 0.)
+        return 0.0;
+
+    const double W    = sumSS / sumDf;
+    const double nbar = sumN / J;
+    const double grand = std::accumulate(means.begin(), means.end(), 0.) / J;
+    double Bn = 0.;
+    for (double m : means)
+        Bn += (m - grand) * (m - grand);
+    Bn /= (J - 1);
+
+    // mêmes gardes que rhatFromStats (B/n comparé à W)
+    if (W < 1e-15 && Bn < 1e-15) return 1.0;
+    if (W < 1e-15)               return std::numeric_limits<double>::infinity();
+    if (Bn * nbar < 1e-15 * W)   return 1.0;
+
+    const double varPlus = ((nbar - 1.) / nbar) * W + Bn;
+    return std::sqrt(varPlus / W);
+}
+
+// ESS_A de l'estimateur par rapport  mu_A = sum h_t I_t / sum I_t,  par linéarisation :
+//   mu_A_hat - mu_A ≈ (1/(S p)) sum_t Z_t ,   Z_t = I_t (h_t - mu_A)
+//   Var(mu_A_hat) ≈ var+(Z) tau_Z / (S p^2) ,  ESS(Z) = S / tau_Z
+//   => ESS_A = sigma_A^2 / Var(mu_A_hat) = ESS(Z) p^2 sigma_A^2 / var+(Z)
+// Cas i.i.d. : var+(Z) = p sigma_A^2, ESS(Z) = S  =>  ESS_A = S p (nb de tirages retenus).
+// hChains[c][t] n'est lu que si masks[c][t] != 0.
+double essFiltered(const std::vector<std::vector<double>>& hChains,
+                   const std::vector<std::vector<char>>& masks)
+{
+    const int M  = static_cast<int>(hChains.size());
+    const int N  = static_cast<int>(hChains.front().size());
+    const int Nh = N / 2;
+    const double nan = std::numeric_limits<double>::quiet_NaN();
+    if (M < 1 || Nh < 2)
+        return nan;
+
+    // Demi-séquences (mêmes conventions que computeRhatAndEss)
+    std::vector<std::vector<double>> hHalves;
+    std::vector<std::vector<char>>   iHalves;
+    hHalves.reserve(2 * M);
+    iHalves.reserve(2 * M);
+    for (int c = 0; c < M; ++c) {
+        hHalves.emplace_back(hChains[c].begin(), hChains[c].begin() + Nh);
+        hHalves.emplace_back(hChains[c].end() - Nh, hChains[c].end());
+        iHalves.emplace_back(masks[c].begin(), masks[c].begin() + Nh);
+        iHalves.emplace_back(masks[c].end() - Nh, masks[c].end());
+    }
+
+    // Moments de pi_A sur les itérations retenues
+    double nA = 0., sumH = 0.;
+    for (std::size_t j = 0; j < hHalves.size(); ++j)
+        for (int t = 0; t < Nh; ++t)
+            if (iHalves[j][t]) { nA += 1.; sumH += hHalves[j][t]; }
+    if (nA < 2.)
+        return nan;
+
+    const double S   = static_cast<double>(hHalves.size()) * Nh;
+    const double p   = nA / S;
+    const double muA = sumH / nA;
+    double varA = 0.;
+    for (std::size_t j = 0; j < hHalves.size(); ++j)
+        for (int t = 0; t < Nh; ++t)
+            if (iHalves[j][t]) varA += (hHalves[j][t] - muA) * (hHalves[j][t] - muA);
+    varA /= nA;
+    if (!(varA > 0.))
+        return nan;
+
+    // Série Z sur l'axe du temps brut
+    std::vector<std::vector<double>> zHalves(hHalves.size(), std::vector<double>(Nh, 0.));
+    for (std::size_t j = 0; j < hHalves.size(); ++j)
+        for (int t = 0; t < Nh; ++t)
+            if (iHalves[j][t]) zHalves[j][t] = hHalves[j][t] - muA;
+
+    const HalfChainStats stats = computeHalfChainStats(zHalves);
+    const double varPlusZ = varPlusForEss(stats, Nh);
+    const double essZ = essFromHalves(zHalves, stats);
+    if (!std::isfinite(essZ) || !(varPlusZ > 0.))
+        return nan;
+
+    return essZ * p * p * varA / varPlusZ;
+}
+
+} // namespace detail
+
+
+FilteredDiagResult computeFilteredDiagnostics(const std::vector<std::vector<double>>& chains,
+                                              const std::vector<std::vector<char>>& masks)
+{
+    const int M = static_cast<int>(chains.size());
+    if (M == 0 || static_cast<int>(masks.size()) != M)
+        throw std::invalid_argument("computeFilteredDiagnostics : chaînes et masques incohérents");
+
+    const int N = static_cast<int>(chains.front().size());
+    for (int c = 0; c < M; ++c)
+        if (static_cast<int>(chains[c].size()) != N || static_cast<int>(masks[c].size()) != N)
+            throw std::invalid_argument("computeFilteredDiagnostics : longueurs différentes");
+    if (N < 4)
+        throw std::invalid_argument("computeFilteredDiagnostics : N < 4");
+
+    FilteredDiagResult r;
+    r.valid = true;
+    r.pChain.assign(M, 0.);
+    r.excursions.assign(M, 0);
+
+    // --- p_c, K_c et sous-échantillons filtrés par chaîne ---
+    std::vector<std::vector<double>> filtered(M);
+    std::size_t nA = 0;
+    for (int c = 0; c < M; ++c) {
+        bool prev = false;
+        int K = 0;
+        for (int t = 0; t < N; ++t) {
+            const bool in = masks[c][t] != 0;
+            if (in && !prev) ++K;       // entrée dans A (une chaîne qui démarre dans A compte 1)
+            if (in) filtered[c].push_back(chains[c][t]);
+            prev = in;
+        }
+        r.pChain[c]     = static_cast<double>(filtered[c].size()) / N;
+        r.excursions[c] = K;
+        nA += filtered[c].size();
+    }
+    r.p = static_cast<double>(nA) / (static_cast<double>(M) * N);
+    r.minExcursions = *std::min_element(r.excursions.begin(), r.excursions.end());
+
+    if (nA < 4)
+        return r;   // R̂_A et ESS_A restent NaN
+
+    // --- R̂_A : split, rang-normalisé et replié, sur les sous-échantillons filtrés ---
+    {
+        std::vector<std::vector<double>> halves;
+        for (int c = 0; c < M; ++c) {
+            const auto& f = filtered[c];
+            if (f.size() < 4) continue;   // chaîne (quasi) absente de A : exclue et signalée via p_c
+            const std::size_t nh = f.size() / 2;
+            halves.emplace_back(f.begin(), f.begin() + nh);
+            halves.emplace_back(f.end() - nh, f.end());
+            ++r.nChainsUsed;
+        }
+
+        if (r.nChainsUsed >= 2) {
+            std::vector<double> pooled;
+            for (const auto& h : halves)
+                pooled.insert(pooled.end(), h.begin(), h.end());
+
+            auto reshape = [&halves](const std::vector<double>& flat) {
+                std::vector<std::vector<double>> out(halves.size());
+                std::size_t off = 0;
+                for (std::size_t j = 0; j < halves.size(); ++j) {
+                    out[j].assign(flat.begin() + off, flat.begin() + off + halves[j].size());
+                    off += halves[j].size();
+                }
+                return out;
+            };
+
+            const double rhatBulk = detail::rhatUnequalLengths(reshape(rankNormalize(pooled)));
+
+            std::vector<double> sorted = pooled;
+            std::sort(sorted.begin(), sorted.end());
+            const std::size_t S = sorted.size();
+            const double median = (S % 2) ? sorted[S / 2] : 0.5 * (sorted[S / 2 - 1] + sorted[S / 2]);
+            std::vector<double> folded(S);
+            for (std::size_t i = 0; i < S; ++i)
+                folded[i] = std::abs(pooled[i] - median);
+            const double rhatTail = detail::rhatUnequalLengths(reshape(rankNormalize(folded)));
+
+            r.rHat = std::max(rhatBulk, rhatTail);
+        } else {
+            r.rHat = 0.0; // même convention que « une seule chaîne »
+        }
+    }
+
+    // --- ESS_A sur l'axe du temps brut ---
+    {
+        // Pool de tous les tirages retenus (ordre : chaîne puis temps)
+        std::vector<double> poolA;
+        poolA.reserve(nA);
+        for (int c = 0; c < M; ++c)
+            poolA.insert(poolA.end(), filtered[c].begin(), filtered[c].end());
+
+        // Bulk : h = score normal du rang parmi les tirages retenus
+        const std::vector<double> zA = rankNormalize(poolA);
+        std::vector<std::vector<double>> hBulk(M, std::vector<double>(N, 0.));
+        std::size_t k = 0;
+        for (int c = 0; c < M; ++c)
+            for (int t = 0; t < N; ++t)
+                if (masks[c][t]) hBulk[c][t] = zA[k++];
+        r.bulkESS = detail::essFiltered(hBulk, masks);
+
+        // Tail : indicatrices aux quantiles 5 % / 95 % de pi_A
+        std::vector<double> sortedA = poolA;
+        std::sort(sortedA.begin(), sortedA.end());
+        auto quantile = [&sortedA](double q) {
+            const double idx = q * static_cast<double>(sortedA.size() - 1);
+            const std::size_t lo = static_cast<std::size_t>(std::floor(idx));
+            const std::size_t hi = static_cast<std::size_t>(std::ceil(idx));
+            const double frac = idx - static_cast<double>(lo);
+            return sortedA[lo] * (1. - frac) + sortedA[hi] * frac;
+        };
+        const double q05 = quantile(0.05);
+        const double q95 = quantile(0.95);
+
+        std::vector<std::vector<double>> h05(M, std::vector<double>(N, 0.));
+        std::vector<std::vector<double>> h95(M, std::vector<double>(N, 0.));
+        for (int c = 0; c < M; ++c)
+            for (int t = 0; t < N; ++t)
+                if (masks[c][t]) {
+                    h05[c][t] = (chains[c][t] <= q05) ? 1. : 0.;
+                    h95[c][t] = (chains[c][t] <= q95) ? 1. : 0.;
+                }
+        const double e05 = detail::essFiltered(h05, masks);
+        const double e95 = detail::essFiltered(h95, masks);
+        r.tailESS = (std::isfinite(e05) && std::isfinite(e95)) ? std::min(e05, e95)
+                                                               : std::numeric_limits<double>::quiet_NaN();
+    }
+
+    return r;
 }
 
 

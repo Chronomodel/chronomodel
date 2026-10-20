@@ -37,6 +37,9 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #include <QVector>
 #include <cmath>
 #include <numbers>        // std::numbers::sqrt2
+#include <array>
+#include <vector>
+#include <algorithm>
 
 #if PARALLEL
 #include <execution>
@@ -487,13 +490,42 @@ Quartiles quantilesType(const C<T>& trace, const int quartileType, const double 
         Q.Q3 = v;
         return Q;
     }
-    C<T> traceSorted(trace);
+    std::vector<T> traceSorted(trace.begin(), trace.end()); // copie de travail (partiellement ordonnée)
 
     decltype(gammaQuartile(trace, quartileType, p)) parQ1 = gammaQuartile(trace, quartileType, p); // first is j and second is gamma
     decltype(gammaQuartile(trace, quartileType, p)) parQ2 = gammaQuartile(trace, quartileType, 0.5);
     decltype(gammaQuartile(trace, quartileType, p)) parQ3 = gammaQuartile(trace, quartileType, 1-p);
 
-    std::sort(traceSorted.begin(), traceSorted.end());
+    // Optimisation : au lieu d'un tri complet O(n log n), on place uniquement les
+    // statistiques d'ordre utilisées (rangs j-1 et j de chaque quantile, ou 0 / n-1)
+    // par sélections successives std::nth_element sur des plages décroissantes : O(n).
+    // Après nth_element(lo, r, end), traceSorted[r] est exactement la valeur de rang r
+    // du tableau trié et [r+1, end) ne contient que des valeurs >= ; les sélections
+    // suivantes n'agissent que sur [r+1, end) -> les rangs déjà placés restent exacts.
+    // front()/back() ne sont lus que si le rang 0 (resp. n-1) a été demandé, donc placé.
+    // Résultat identique bit à bit au tri complet.
+    {
+        const int n = static_cast<int>(traceSorted.size());
+        std::array<int, 6> ranks {};
+        int nr = 0;
+        for (const auto& par : {parQ1, parQ2, parQ3}) {
+            if (par.first <= 0)
+                ranks[nr++] = 0;
+            else if (par.first < n) {
+                ranks[nr++] = par.first - 1;
+                ranks[nr++] = par.first;
+            } else
+                ranks[nr++] = n - 1;
+        }
+        std::sort(ranks.begin(), ranks.begin() + nr);
+        int lo = 0;
+        for (int i = 0; i < nr; ++i) {
+            const int r = ranks[i];
+            if (r < lo) continue; // rang déjà placé
+            std::nth_element(traceSorted.begin() + lo, traceSorted.begin() + r, traceSorted.end());
+            lo = r + 1;
+        }
+    }
 
     // Q1 determination
     if (parQ1.first <= 0)

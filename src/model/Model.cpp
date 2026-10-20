@@ -38,6 +38,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #include "StateKeys.h"
 #include "StdUtilities.h"
 #include "DateUtils.h"
+#include "ParallelFor.h"
 
 #include <QIODevice>
 
@@ -258,7 +259,74 @@ void Model::clear()
     mLogAdapt.clear();
     mLogResults.clear();
 
+    mCurveFilterMask.reset();
+    mCurveFilterGP = {-std::numeric_limits<double>::infinity(), +std::numeric_limits<double>::infinity()};
+
     MainWindow::getInstance()->setConvergenceStatus(MCMCDiagnostic::ConvergenceStatus::eNone);
+}
+
+#pragma mark Curve filter mask
+
+std::vector<MetropolisVariable*> Model::acquiredVariables()
+{
+    std::vector<MetropolisVariable*> vars;
+    for (const auto& ev : mEvents) {
+        vars.push_back(&ev->mTheta);
+        vars.push_back(&ev->mS02Theta);
+        for (auto&& d : ev->mDates) {
+            vars.push_back(&d.mTi);
+            vars.push_back(&d.mSigmaTi);
+            vars.push_back(&d.mWiggle);
+        }
+    }
+    for (const auto& ph : mPhases) {
+        vars.push_back(&ph->mAlpha);
+        vars.push_back(&ph->mBeta);
+        vars.push_back(&ph->mDuration);
+    }
+    return vars;
+}
+
+void Model::setCurveFilterMask(std::vector<char> mask, std::pair<double, double> gpFilter)
+{
+    const bool allKept = std::all_of(mask.begin(), mask.end(), [](char c) { return c != 0; });
+    if (mask.empty() || allKept) {
+        mCurveFilterMask.reset();
+        mCurveFilterGP = {-std::numeric_limits<double>::infinity(), +std::numeric_limits<double>::infinity()};
+    } else {
+        mCurveFilterMask = std::make_shared<const std::vector<char>>(std::move(mask));
+        mCurveFilterGP = gpFilter;
+    }
+}
+
+void Model::applyCurveFilterMask()
+{
+    std::size_t sumRaw = 0;
+    for (const auto& ch : mChains)
+        sumRaw += static_cast<std::size_t>(ch.mRealyAccepted);
+
+    if (hasCurveFilter() && mCurveFilterMask->size() != sumRaw) {
+        qWarning() << "[Model::applyCurveFilterMask] taille du masque incohérente ("
+                   << mCurveFilterMask->size() << "au lieu de" << sumRaw << ") : filtre ignoré";
+        mCurveFilterMask.reset();
+    }
+
+    // 1) mIterDisplay de chaque chaîne = nombre d'itérations retenues dans son segment
+    std::size_t offset = 0;
+    for (auto& ch : mChains) {
+        const std::size_t n = static_cast<std::size_t>(ch.mRealyAccepted);
+        if (hasCurveFilter()) {
+            const auto first = mCurveFilterMask->begin() + offset;
+            ch.mIterDisplay = static_cast<decltype(ch.mIterDisplay)>(std::count(first, first + n, char(1)));
+        } else {
+            ch.mIterDisplay = ch.mRealyAccepted;
+        }
+        offset += n;
+    }
+
+    // 2) Traces affichées de toutes les variables (mask nul -> filtre retiré)
+    for (MetropolisVariable* v : acquiredVariables())
+        v->applyCurveFilterMask(mCurveFilterMask);
 }
 
 void Model::shrink_to_fit()
@@ -747,12 +815,16 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
     rows << headers;
 
     int shift = 0;
+    std::size_t acqIndex = 0; // indice dans le masque du filtre de courbe
     for (const ChainSpecs& chain : mChains) {
         int burnAdaptSize = 1 + chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
-        //int runSize = chain.mRealyAccepted;
-        const int runSize = chain.mIterDisplay;
+        // on parcourt la trace brute (mRealyAccepted) et on saute les itérations
+        // rejetées par le filtre de courbe (avant : mIterDisplay décalait les chaînes)
+        const int runSize = chain.mRealyAccepted;
 
         for (int j = burnAdaptSize; j<burnAdaptSize + runSize; ++j) {
+            if (hasCurveFilter() && !(*mCurveFilterMask)[acqIndex++])
+                continue;
             QStringList l;
             l << QString::number(shift + j);
             for (const auto& pPhase : mPhases) {
@@ -799,13 +871,16 @@ QList<QStringList> Model::getPhaseTrace(size_t phaseIdx, const QLocale locale, c
     rows << headers;
 
     int shift = 0;
+    std::size_t acqIndex = 0; // indice dans le masque du filtre de courbe
 
     for (const ChainSpecs& chain : mChains) {
         const int burnAdaptSize = 1 + chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
-        //int runSize = chain.mRealyAccepted;
-        const int runSize = chain.mIterDisplay;
+        // trace brute parcourue en entier, itérations filtrées sautées
+        const int runSize = chain.mRealyAccepted;
 
         for (int j = burnAdaptSize; j < (burnAdaptSize + runSize); ++j) {
+            if (hasCurveFilter() && !(*mCurveFilterMask)[acqIndex++])
+                continue;
             QStringList l;
             l << QString::number(shift + j) ;
             double valueAlpha = phase->mAlpha.mBurnAdaptTrace->at(shift + j);
@@ -1118,20 +1193,23 @@ void Model::generateCorrelations(const std::vector<ChainSpecs> &chains)
     t.start();
 #endif
 
+    // Parallélisé par variable (chaque appel n'écrit que dans sa variable)
+    std::vector<std::function<void()>> tasks;
+
     for (const auto& event : mEvents ) {
 
         if (event->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
-            event->mTheta.generateCorrelations(chains);
+            tasks.emplace_back([&chains, ev = event.get()] { ev->mTheta.generateCorrelations(chains); });
         }
 
         if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe) {
-            event->mS02Theta.generateCorrelations(chains);
+            tasks.emplace_back([&chains, ev = event.get()] { ev->mS02Theta.generateCorrelations(chains); });
         }
 
         for (auto&& date : event->mDates ) {
 
-            date.mTi.generateCorrelations(chains);
-            date.mSigmaTi.generateCorrelations(chains);
+            tasks.emplace_back([&chains, d = &date] { d->mTi.generateCorrelations(chains); });
+            tasks.emplace_back([&chains, d = &date] { d->mSigmaTi.generateCorrelations(chains); });
 
         }
 
@@ -1139,11 +1217,13 @@ void Model::generateCorrelations(const std::vector<ChainSpecs> &chains)
 
     for (const auto& phase : mPhases ) {
 
-        phase->mAlpha.generateCorrelations(chains);
-        phase->mBeta.generateCorrelations(chains);
+        tasks.emplace_back([&chains, ph = phase.get()] { ph->mAlpha.generateCorrelations(chains); });
+        tasks.emplace_back([&chains, ph = phase.get()] { ph->mBeta.generateCorrelations(chains); });
 
         //phase->mTau.generateCorrelations(chains); // ??? is it useful?
     }
+
+    parallel_run(tasks);
 
 #ifdef DEBUG
     qDebug() <<  "[Model::generateCorrelations] done in " + DHMS(t.elapsed());
@@ -1439,31 +1519,48 @@ void Model::generatePosteriorDensities(const std::vector<ChainSpecs> &chains, in
     const double tmin = mSettings.getTminFormated();
     const double tmax = mSettings.getTmaxFormated();
 
-    for (const auto& event : mEvents) {
-        event->mTheta.setBandwidth(bwt, bandwidth);
-        event->mTheta.generateFormatedKDE(chains, fftLen, tmin, tmax);
+    // Parallélisé : une tâche par variable d'Event, par Date (mTi, mSigmaTi, mWiggle)
+    // et par Phase (alpha, beta, durée). Mêmes appels, même ordre à l'intérieur d'une tâche.
+    std::vector<std::function<void()>> tasks;
 
-        event->mS02Theta.setBandwidth(bwt, bandwidth);
-        const double S02Min = event->mS02Theta.mResults.traceAnalysis.min;
-        const double S02Max = event->mS02Theta.mResults.traceAnalysis.max;
-        event->mS02Theta.generateFormatedKDE(chains, fftLen, S02Min, S02Max);
+    for (const auto& event : mEvents) {
+        Event* ev = event.get();
+        tasks.emplace_back([=, &chains] {
+            ev->mTheta.setBandwidth(bwt, bandwidth);
+            ev->mTheta.generateFormatedKDE(chains, fftLen, tmin, tmax);
+        });
+
+        tasks.emplace_back([=, &chains] {
+            ev->mS02Theta.setBandwidth(bwt, bandwidth);
+            const double S02Min = ev->mS02Theta.mResults.traceAnalysis.min;
+            const double S02Max = ev->mS02Theta.mResults.traceAnalysis.max;
+            ev->mS02Theta.generateFormatedKDE(chains, fftLen, S02Min, S02Max);
+        });
 
        if (event->type() != Event::eBound) {
-            for (auto&& d : event->mDates) {
-               d.setBandwidth(bwt, bandwidth);
-                const double TiMin = d.mTi.mResults.traceAnalysis.min;
-                const double TiMax = d.mTi.mResults.traceAnalysis.max;
+            for (auto&& date : event->mDates) {
+                Date* d = &date;
+                tasks.emplace_back([=, &chains] {
+                    d->setBandwidth(bwt, bandwidth);
+                    const double TiMin = d->mTi.mResults.traceAnalysis.min;
+                    const double TiMax = d->mTi.mResults.traceAnalysis.max;
 
-               d.generateFormatedKDE(chains, fftLen, TiMin, TiMax);
+                    d->generateFormatedKDE(chains, fftLen, TiMin, TiMax);
+                });
             }
        }
 
     }
 
     for (const auto& phase : mPhases) {
-        phase->setBandwidth(bwt, bandwidth);
-        phase->generateFormatedKDE(chains, fftLen, tmin, tmax);
+        Phase* ph = phase.get();
+        tasks.emplace_back([=, &chains] {
+            ph->setBandwidth(bwt, bandwidth);
+            ph->generateFormatedKDE(chains, fftLen, tmin, tmax);
+        });
     }
+
+    parallel_run(tasks);
 
 #ifdef DEBUG
     qDebug() <<  "=> Model::generatePosteriorDensities done in " + DHMS(t.elapsed());
@@ -1551,7 +1648,11 @@ void Model::generateDensityNumericalResults()
     t.start();
 #endif
 
-    std::ranges::for_each( mEvents, [](std::shared_ptr<Event> event) {
+    // Parallélisé : une tâche par Event (θ, S02, dates) et par Phase
+    std::vector<std::function<void()>> tasks;
+
+    for (const auto& event_sp : mEvents) {
+        tasks.emplace_back([event = event_sp.get()] {
         if (event->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
             event->mTheta.generateDensityNumericalResults();
 
@@ -1568,15 +1669,19 @@ void Model::generateDensityNumericalResults()
         } else {
             event->mTheta.MetropolisVariable::generateDensityNumericalResults();
         }
-    });
+        });
+    }
 
-
-    std::ranges::for_each( mPhases, [](std::shared_ptr<Phase> phase) {
+    for (const auto& phase_sp : mPhases) {
+        tasks.emplace_back([phase = phase_sp.get()] {
         phase->mAlpha.MetropolisVariable::generateDensityNumericalResults();
         phase->mBeta.MetropolisVariable::generateDensityNumericalResults();
         // phase->mTau.generateNumericalResults(chains);
         phase->mDuration.MetropolisVariable::generateDensityNumericalResults();
-    });
+        });
+    }
+
+    parallel_run(tasks);
 
 
 #ifdef DEBUG
@@ -1591,31 +1696,41 @@ void Model::generateTraceNumericalResults(const std::vector<ChainSpecs> &chains)
     t.start();
 #endif
 
-    std::ranges::for_each( mEvents, [chains](std::shared_ptr<Event> event) {
-        if (event->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
-            event->mTheta.generateTraceNumericalResults(chains);
+    // Parallélisé à la granularité de la variable : c'est l'étape la plus coûteuse
+    // (bw_SJ_ste, quartiles, R̂/ESS sur la trace globale + chaque chaîne).
+    // `chains` n'est plus copié (capture par référence).
+    std::vector<std::function<void()>> tasks;
 
-            if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe)
-                event->mS02Theta.generateTraceNumericalResults(chains);
+    for (const auto& event : mEvents) {
+        Event* ev = event.get();
+        if (ev->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
+            tasks.emplace_back([ev, &chains] { ev->mTheta.generateTraceNumericalResults(chains); });
 
-            for (auto&& date : event->mDates) {
-                date.mTi.generateTraceNumericalResults(chains);
-                date.mSigmaTi.generateTraceNumericalResults(chains);
+            if (ev->mS02Theta.mSamplerProposal != SamplerProposal::eFixe)
+                tasks.emplace_back([ev, &chains] { ev->mS02Theta.generateTraceNumericalResults(chains); });
 
-                if (date.mDeltaType != Date::eDeltaNone)
-                    date.mWiggle.generateTraceNumericalResults(chains);
+            for (auto&& date : ev->mDates) {
+                Date* d = &date;
+                tasks.emplace_back([d, &chains] { d->mTi.generateTraceNumericalResults(chains); });
+                tasks.emplace_back([d, &chains] { d->mSigmaTi.generateTraceNumericalResults(chains); });
+
+                if (d->mDeltaType != Date::eDeltaNone)
+                    tasks.emplace_back([d, &chains] { d->mWiggle.generateTraceNumericalResults(chains); });
             }
         } else {
-            event->mTheta.MetropolisVariable::generateTraceNumericalResults(chains);
+            tasks.emplace_back([ev, &chains] { ev->mTheta.MetropolisVariable::generateTraceNumericalResults(chains); });
         }
-    });
+    }
 
-    std::ranges::for_each( mPhases, [chains](std::shared_ptr<Phase> phase) {
-        phase->mAlpha.generateTraceNumericalResults(chains);
-        phase->mBeta.generateTraceNumericalResults(chains);
+    for (const auto& phase : mPhases) {
+        Phase* ph = phase.get();
+        tasks.emplace_back([ph, &chains] { ph->mAlpha.generateTraceNumericalResults(chains); });
+        tasks.emplace_back([ph, &chains] { ph->mBeta.generateTraceNumericalResults(chains); });
         // phase->mTau.generateNumericalResults(chains);
-        phase->mDuration.generateTraceNumericalResults(chains);
-    });
+        tasks.emplace_back([ph, &chains] { ph->mDuration.generateTraceNumericalResults(chains); });
+    }
+
+    parallel_run(tasks);
 
 
     std::vector<double> Rhat;
@@ -1698,7 +1813,11 @@ void Model::generateCredibility(const double thresh)
     QElapsedTimer t;
     t.start();
 #endif
-    for (const auto& ev : mEvents) {
+    // Parallélisé : une tâche par Event et par Phase (tri des traces = coût dominant)
+    std::vector<std::function<void()>> tasks;
+
+    for (const auto& ev_sp : mEvents) {
+        tasks.emplace_back([ev = ev_sp.get(), thresh] {
         if (ev->type() != Event::eBound)//(ev->mTheta.mSamplerProposal != SamplerProposal::eFixe)
             ev->mTheta.generateCredibility(thresh);
 
@@ -1714,27 +1833,32 @@ void Model::generateCredibility(const double thresh)
                     date.mWiggle.generateCredibility(thresh);
             }
         }
-
+        });
     }
 
-    for (const auto& phase :mPhases) {
+    for (const auto& phase_sp : mPhases) {
+        tasks.emplace_back([phase = phase_sp.get(), thresh] {
         // If there is only one Event in the phase, there is no Duration
         phase->mAlpha.generateCredibility(thresh);
         phase->mBeta.generateCredibility(thresh);
         //  phase->mTau.generateCredibility(mChains, thresh);
         phase->mDuration.generateCredibility(thresh);
 
-        const auto& alphaTrace = *phase->mAlpha.mAllAcquiredTrace;
-        const auto& betaTrace = *phase->mBeta.mAllAcquiredTrace;
+        // traces affichées (filtrées si filtre de courbe), appariées itération par itération
+        const auto& alphaTrace = *phase->mAlpha.traceToDisplay();
+        const auto& betaTrace = *phase->mBeta.traceToDisplay();
         phase->mTimeRange = timeRangeFromTraces( alphaTrace, betaTrace, thresh, "Time Range for Phase : " + phase->getQStringName());
+        });
     }
+
+    parallel_run(tasks);
 
 
     for (const auto& phaseConstraint : mPhaseConstraints) {
         const QString str = phaseConstraint->mPhaseFrom->getQStringName() + " to " + phaseConstraint->mPhaseTo->getQStringName();
 
-        const auto& betaTrace = *phaseConstraint->mPhaseFrom->mBeta.mAllAcquiredTrace;
-        const auto& alphaTrace = *phaseConstraint->mPhaseTo->mAlpha.mAllAcquiredTrace;
+        const auto& betaTrace = *phaseConstraint->mPhaseFrom->mBeta.traceToDisplay();
+        const auto& alphaTrace = *phaseConstraint->mPhaseTo->mAlpha.traceToDisplay();
 
         phaseConstraint->mGapRange = gapRangeFromTraces(betaTrace, alphaTrace, thresh, "Gap Range : "+ str);
 
@@ -1759,11 +1883,15 @@ void Model::generateHPD(const double thresh)
     t.start();
 #endif
 
-    for (const auto& event : mEvents
+    // Parallélisé : une tâche par Event et par Phase
+    std::vector<std::function<void()>> tasks;
+
+    for (const auto& event_sp : mEvents
                                  | std::views::filter([](const auto& ev) {
                                        return ev->mTheta.mSamplerProposal != SamplerProposal::eFixe
                                               && ev->type() != Event::eBound;
                                    })) {
+        tasks.emplace_back([event = event_sp.get(), thresh] {
         event->mTheta.generateHPD(thresh);
         if (event->mS02Theta.mSamplerProposal != SamplerProposal::eFixe)
             event->mS02Theta.generateHPD(thresh);
@@ -1774,13 +1902,18 @@ void Model::generateHPD(const double thresh)
             if (date.mDeltaType != Date::eDeltaNone)
                 date.mWiggle.generateHPD(thresh);
         }
+        });
     }
 
-    for (const auto& ph : mPhases) {
+    for (const auto& ph_sp : mPhases) {
+        tasks.emplace_back([ph = ph_sp.get(), thresh] {
         ph->mAlpha.generateHPD(thresh);
         ph->mBeta.generateHPD(thresh);
         ph->mDuration.generateHPD(thresh);
+        });
     }
+
+    parallel_run(tasks);
 
 
 #ifdef DEBUG
@@ -2331,6 +2464,19 @@ void Model::saveToStream(QDataStream *out) const
     *out << mLogInit;
     *out << mLogAdapt;
     *out << mLogResults;
+    // -------------------------------------------------
+    // 4️⃣ bis  Masque du filtre de courbe (bloc optionnel, marqué)
+    //   tag | quint64 taille | octets du masque | bornes G' du filtre
+    //   Écrit seulement si un filtre est actif ; relu par peekResFormatTag.
+    // -------------------------------------------------
+    if (hasCurveFilter()) {
+        *out << kResFilterTag_v400;
+        const std::vector<char>& mask = *mCurveFilterMask;
+        *out << static_cast<quint64>(mask.size());
+        out->writeRawData(mask.data(), static_cast<int>(mask.size()));
+        *out << mCurveFilterGP.first;
+        *out << mCurveFilterGP.second;
+    }
     // -------------------------------------------------
     // 5️⃣  Flush (optionnel mais explicite)
     // -------------------------------------------------
@@ -3206,6 +3352,42 @@ bool Model::loadFromStream_v400(QDataStream *in)
         if (in->status() != QDataStream::Ok) {
             qWarning() << "[Model::loadFromStream_v400] Erreur lecture logs";
             return false;
+        }
+
+        // -------------------------------------------------
+        // 7️⃣ bis  Masque du filtre de courbe (optionnel)
+        // -------------------------------------------------
+        mCurveFilterMask.reset();
+        mCurveFilterGP = {-std::numeric_limits<double>::infinity(), +std::numeric_limits<double>::infinity()};
+
+        if (peekResFormatTag(in, kResFilterTag_v400)) {
+            quint64 tag = 0, maskSize = 0;
+            *in >> tag >> maskSize;
+            std::vector<char> mask(static_cast<std::size_t>(maskSize));
+            if (maskSize > 0 && in->readRawData(mask.data(), static_cast<int>(maskSize)) != static_cast<int>(maskSize)) {
+                qWarning() << "[Model::loadFromStream_v400] Erreur lecture masque du filtre";
+                return false;
+            }
+            std::pair<double, double> gp;
+            *in >> gp.first >> gp.second;
+            if (in->status() != QDataStream::Ok) {
+                qWarning() << "[Model::loadFromStream_v400] Erreur lecture bornes du filtre";
+                return false;
+            }
+            setCurveFilterMask(std::move(mask), gp);
+
+        } else {
+            // .res écrit avant la sauvegarde du masque : les traces filtrées des variables
+            // ont été relues, mais pas les effectifs par chaîne -> le découpage par chaîne
+            // serait faux. On retire le filtre (applyCurveFilterMask, appelé après le
+            // chargement, remet les traces brutes) ; il suffit de relancer le filtrage.
+            bool hadFilter = false;
+            for (MetropolisVariable* v : acquiredVariables())
+                hadFilter = hadFilter || v->is_curve_filtering;
+            if (hadFilter) {
+                qWarning() << "[Model::loadFromStream_v400] filtre de courbe sans masque sauvegardé : filtre retiré";
+                mLogResults += "<br>" + QObject::tr("Warning: the curve filter saved with this file could not be restored; please rebuild the curve to filter again.") + "<br>";
+            }
         }
         return true;
 

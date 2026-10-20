@@ -133,6 +133,12 @@ constexpr double RhatWarning = 1.05; // en dessous : douteuse ; au-dessus : non 
 // ESS PAR CHAÎNE (multiplié par le nombre de chaînes dans computeConvergenceSummary)
 constexpr double EssGoodPerChain    = 500.; // au-dessus : satisfaisant
 constexpr double EssWarningPerChain = 100.; // en dessous : trop faible pour être exploitable
+
+// Après filtrage de courbe : nombre minimal d'excursions dans A par chaîne
+// (seuils heuristiques : avec peu d'excursions, l'information sur pi_A repose
+// sur quelques blocs d'itérations, quel que soit le nombre d'itérations retenues)
+constexpr int ExcursionsGoodPerChain    = 10;
+constexpr int ExcursionsWarningPerChain = 3;
 // Seuils globaux d'ESS pour nChains chaînes (utilisés partout : synthèse ET affichage)
 inline double essGood(size_t nChains)    { return EssGoodPerChain    * static_cast<double>(nChains); }
 inline double essWarning(size_t nChains) { return EssWarningPerChain * static_cast<double>(nChains); }
@@ -217,6 +223,40 @@ struct RhatEssResult
  */
 RhatEssResult computeRhatAndEss(const std::vector<std::vector<double>>& chains);
 
+/**
+ * @brief Diagnostics de la loi conditionnelle pi_A après filtrage de courbe.
+ *
+ * Le filtre (rebuildExportCurve) définit l'événement A = {G'(t) dans [a,b] pour tout t}.
+ * La loi a posteriori est le mélange pi = p pi_A + (1-p) pi_Abar ; les itérations
+ * retenues ciblent pi_A. Les diagnostics sont calculés sur les chaînes BRUTES
+ * (axe du temps de la chaîne de Markov) avec le masque I_t = 1_A(theta_t) :
+ *  - p_c, K_c : proportion retenue et nombre d'excursions dans A par chaîne ;
+ *  - R̂_A : split-R̂ rang-normalisé et replié sur les sous-échantillons filtrés,
+ *          longueurs inégales autorisées ;
+ *  - ESS_A : ESS de l'estimateur par rapport sum(h I) / sum(I), par linéarisation :
+ *          ESS_A = ESS(Z) p² sigma_A² / var+(Z),  avec Z_t = I_t (h_t - mu_A).
+ * Voir la note LaTeX « Diagnostics de convergence après filtrage de courbe ».
+ */
+struct FilteredDiagResult
+{
+    bool   valid   = false;  // filtre actif et calcul effectué
+    double p       = std::numeric_limits<double>::quiet_NaN(); // proportion globale retenue
+    std::vector<double> pChain;     // p_c
+    std::vector<int>    excursions; // K_c
+    int    minExcursions = 0;
+    int    nChainsUsed = 0;  // chaînes avec au moins 4 tirages retenus (utilisées dans R̂_A)
+    double rHat    = std::numeric_limits<double>::quiet_NaN(); // R̂_A
+    double bulkESS = std::numeric_limits<double>::quiet_NaN(); // ESS_A bulk
+    double tailESS = std::numeric_limits<double>::quiet_NaN(); // ESS_A tail
+};
+
+/**
+ * @param chains  M chaînes brutes de même longueur N (N >= 4)
+ * @param masks   M masques (1 = itération retenue par le filtre), mêmes tailles que chains
+ */
+FilteredDiagResult computeFilteredDiagnostics(const std::vector<std::vector<double>>& chains,
+                                              const std::vector<std::vector<char>>& masks);
+
 
 /**
  * @brief Synthétise un ensemble de R-hat (un par variable échantillonnée) en un
@@ -264,7 +304,8 @@ struct PosteriorAnalysis
 {
     DensityStat densityAnalysis{};
     TraceStat   traceAnalysis{};
-    MCMCDiagnostic::RhatEssResult RhatESS {};
+    MCMCDiagnostic::RhatEssResult RhatESS {};          // échantillonneur : chaînes brutes
+    MCMCDiagnostic::FilteredDiagResult filteredDiag {}; // loi filtrée pi_A (si filtre actif)
     // constructeur qui met des NaN pour indiquer « non calculé »
     PosteriorAnalysis()
     {
@@ -317,6 +358,26 @@ public:
         else
             return mAllAcquiredTrace;
     }
+
+    // Masque du filtre de courbe, partagé par toutes les variables du modèle
+    // (taille = somme des mRealyAccepted ; 1 = itération retenue). Non sauvegardé ici :
+    // c'est Model qui le sauvegarde et le réapplique (Model::applyCurveFilterMask).
+    std::shared_ptr<const std::vector<char>> mCurveFilterMask;
+
+    /**
+     * @brief Applique (ou retire, si mask est nul/vide) le filtre de courbe à cette variable.
+     * Une trace d'acquisition n'est filtrée que si sa taille est celle du masque
+     * (les variables fixes stockées avec une valeur par chaîne restent inchangées).
+     * Remet à zéro les résultats dépendant de la trace (stats, crédibilité).
+     */
+    void applyCurveFilterMask(const std::shared_ptr<const std::vector<char>>& mask);
+
+    /**
+     * @brief Effectifs par chaîne d'une trace d'acquisition, déduits de sa taille :
+     * somme des mIterDisplay -> trace filtrée ; somme des mRealyAccepted -> trace brute ;
+     * nombre de chaînes -> variable fixe (1 valeur par chaîne). Vide si incohérent.
+     */
+    static std::vector<std::size_t> acquiredCountsForTrace(std::size_t traceSize, const std::vector<ChainSpecs>& chains);
 
     std::shared_ptr<std::vector<double>> mFormatedBurnAdaptTrace;
     std::shared_ptr<std::vector<double>> mFormatedAcquiredTrace;
@@ -528,18 +589,22 @@ public:
             return trace;
 
         // -------------------------------------------------------------
-        // 3️⃣  Calcul du décalage (shift) – somme pré‑fixe jusqu’à chain_index
+        // 3️⃣  Effectifs par chaîne déduits de la taille de la trace :
+        //     trace filtrée -> mIterDisplay ; trace brute -> mRealyAccepted.
+        //     (avant : toujours mIterDisplay, ce qui découpait une trace brute
+        //      avec les effectifs filtrés, et inversement après rechargement)
         // -------------------------------------------------------------
-        // On ne parcourt que les éléments précédents, pas tout le tableau.
+        const std::vector<std::size_t> counts = acquiredCountsForTrace(trace.size(), chains);
+        if (counts.empty() || chain_index >= counts.size())
+            return {0};
+
         std::size_t shift = 0;
         for (std::size_t i = 0; i < chain_index; ++i)
-            //shift += chains[i].mRealyAccepted;
-            shift += chains[i].mIterDisplay;
+            shift += counts[i];
         // -------------------------------------------------------------
         // 4️⃣  Nombre d’échantillons à extraire pour la chaîne demandée
         // -------------------------------------------------------------
-        //const std::size_t nbValue = chains[chain_index].mRealyAccepted;
-        const std::size_t nbValue = chains[chain_index].mIterDisplay;
+        const std::size_t nbValue = counts[chain_index];
         // Protection contre les incohérences d’index (débordement)
         if (shift + nbValue > trace.size())
             return {0};                     // ou lancer une exception

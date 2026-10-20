@@ -672,6 +672,7 @@ HEADERS += src/utilities/DoubleValidator.h
 HEADERS += src/utilities/QtUtilities.h
 HEADERS += src/utilities/Singleton.h
 HEADERS += src/utilities/StdUtilities.h
+HEADERS += src/utilities/ParallelFor.h
 
 
 #########################################

@@ -70,6 +70,35 @@ public:
     bool compute_Y, compute_XYZ, compute_X_only;
     bool is_curve;
 
+    /**
+     * @brief Critère de convergence sur la courbe elle-même : R̂/ESS de G(t_k) sur une
+     * grille de points t_k, pour chaque composante calculée, en retenant le pire cas.
+     * Brut (échantillonneur) et, si un filtre de courbe est actif, conditionnel à A
+     * (R̂_A, ESS_A, excursions) : montre qu'on cible bien la courbe filtrée.
+     */
+    struct CurveConvergence
+    {
+        bool   valid = false;
+        int    nPoints = 0;               // nombre de points (t_k, composante) évalués
+        int    nGrid = 0;                 // nombre d'instants t_k de la grille
+        int    nComponents = 0;           // nombre de composantes (X, XY ou XYZ)
+        double maxRhat = std::numeric_limits<double>::quiet_NaN();
+        double tMaxRhat = std::numeric_limits<double>::quiet_NaN();
+        double minBulkESS = std::numeric_limits<double>::quiet_NaN();
+        double minTailESS = std::numeric_limits<double>::quiet_NaN();
+
+        bool   filtered = false;
+        double p = std::numeric_limits<double>::quiet_NaN(); // proportion de courbes retenues
+        int    minExcursions = 0;
+        int    nChainsInA = 0;           // chaînes avec au moins 4 courbes retenues
+        double maxRhatA = std::numeric_limits<double>::quiet_NaN();
+        double tMaxRhatA = std::numeric_limits<double>::quiet_NaN();
+        double minBulkESSA = std::numeric_limits<double>::quiet_NaN();
+        double minTailESSA = std::numeric_limits<double>::quiet_NaN();
+    };
+    CurveConvergence mCurveConvergence;
+    void generateCurveConvergence(const std::vector<ChainSpecs>& chains, int nGrid = 32);
+
     ModelCurve();
     explicit ModelCurve(const QJsonObject &json);
     virtual ~ModelCurve();
@@ -208,6 +237,11 @@ public:
 
     std::vector<MCMCSpline> acceptedSplineTraceForAllChain(const std::vector<ChainSpecs> &chains);
     std::vector<MCMCSpline> acceptedSplineTraceForChain(const std::vector<ChainSpecs>& chains, const size_t index);
+
+protected:
+    // Ajoute aux variables de Model : Vg des events, lambda (et S02Vg si KOMLAN)
+    std::vector<MetropolisVariable*> acquiredVariables() override;
+public:
 
 public slots:
     void saveMapToFile(QFile *file, const QString csvSep, const CurveMap &map);

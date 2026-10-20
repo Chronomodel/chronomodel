@@ -39,10 +39,15 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #include <QPixmap>
 #include <QObject>
 
+#include <array>
+#include <limits>
+#include <vector>
+
 class Event;
 class PluginAbstract;
 class CalibrationCurve;
 class Project;
+class RefCurve;
 
 class Date
 {
@@ -145,6 +150,46 @@ public:
 
     double getLikelihoodFromCalib(const double &t) const;
     double getLikelihoodFromWiggleCalib(const double &t) const;
+
+    // ------------------------------------------------------------------
+    // Log-vraisemblance rapide pour les samplers MCMC (tempering_339_...)
+    // Meme fonction que log(getLikelihood(t)), sans approximation :
+    //  - noyau precompile : parametres de mesure figes + courbe de reference a plat
+    //    (aucun acces QJsonObject / QString / QMap par evaluation) ;
+    //    plugin non pris en charge -> repli sur log(getLikelihood(t)) ;
+    //  - cache a 2 entrees indexe par la valeur exacte de t (L(t_courant) n'est
+    //    jamais recalcule).
+    // Etat ecrit uniquement par le thread MCMC ; remis a zero par copie, deplacement
+    // et fromJson (reconstruit a la premiere demande).
+    // ------------------------------------------------------------------
+    // Composante c (c < nComp) : mesure y_c, variance de mesure s2_c, courbe m_c(t), e_c(t)
+    //   v_c(t) = s2_c + e_c(t)^2 ,  q_c(t) = -1/2 (y_c - m_c(t))^2
+    // eGauss   (nComp = 1) : 14C, F14C, Gauss (mode courbe), AM I, D ou F seul
+    //   log L = q_0 / v_0 - 1/2 log v_0
+    // eMixture (nComp = 2 ou 3) : AM ID, IF, IDF (somme sur integration_steps de PluginMag)
+    //   L = sum_i exp( sum_c q_c / (v_c + add_c[i]) ) / sqrt( prod_c (v_c + add_c[i]) )
+    struct LogLikeKernel {
+        enum Kind { eNotBuilt, eGeneric, eGauss, eMixture };
+        Kind                               kind  = eNotBuilt;
+        int                                nComp = 0;
+        std::array<double, 3>              y     {};
+        std::array<double, 3>              s2    {};
+        std::array<const RefCurve*, 3>     curve {};
+        std::array<std::vector<double>, 3> add;     // eMixture : terme ajoute a v_c, par pas i
+    };
+
+    struct LogLikeMemo {
+        std::array<double, 2> t { std::numeric_limits<double>::quiet_NaN(),
+                                  std::numeric_limits<double>::quiet_NaN() };
+        std::array<double, 2> v { -std::numeric_limits<double>::infinity(),
+                                  -std::numeric_limits<double>::infinity() };
+        int slot = 0;
+    };
+
+    void   buildLogLikelihoodKernel();
+    double getLogLikelihoodKernel(const double t) const;   // sans cache ; noyau deja construit
+    double getLogLikelihoodMemo(const double t);           // avec cache ; construit le noyau si besoin
+    void   resetLogLikelihoodCache() noexcept { mLogLikeKernel = LogLikeKernel(); mLogLikeMemo = LogLikeMemo(); }
 
     const std::map<double, double> getFormatedCalibMap() const;
     const std::map<double, double> getFormatedWiggleCalibMap() const;
@@ -326,6 +371,10 @@ private:
 
     std::string mName;
     void moveFrom(Date&& other) noexcept;
+
+    // vraisemblance rapide (voir getLogLikelihoodMemo) : jamais copie
+    LogLikeKernel mLogLikeKernel;
+    LogLikeMemo   mLogLikeMemo;
 
 };
 

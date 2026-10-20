@@ -38,6 +38,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <QObject>
 
+#include <cmath>
 #include <utility>
 #include <regex>
 
@@ -1066,10 +1067,10 @@ QString ModelUtilities::curveResultsHTML(const std::shared_ptr<ModelCurve> model
     } else if (model->mLambdaSpline.mSamplerProposal == SamplerProposal::eFixe && model->mCurveSettings.mLambdaSplineType == CurveSettings::eInterpolation) {
         text += line(textGreen(QObject::tr("- Lambda Spline; Interpolation Fixed value = %1").arg(QString::number(0))));
 
-    }else {
-         text += "<br>";
-        text += lambdaResultsHTML(model);
     }
+
+    // Convergence de la courbe G(t_k), pire cas sur la grille (remplace les stats de lambda)
+    text += curveConvergenceHTML(model);
 
     const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
 
@@ -1131,6 +1132,37 @@ QString ModelUtilities::curveResultsHTML(const std::shared_ptr<ModelCurve> model
     }
 
     text += "<hr>";
+    return text;
+}
+
+/**
+ * @brief Critère de convergence de la courbe (ModelCurve::mCurveConvergence), en vert.
+ * Chaîne vide si le critère n'a pas été calculé.
+ */
+QString ModelUtilities::curveConvergenceHTML(const std::shared_ptr<ModelCurve> model)
+{
+    QString text;
+    if (!model || !model->mCurveConvergence.valid)
+        return text;
+
+    const auto& cc = model->mCurveConvergence;
+    auto num = [](double v, int prec) {
+        return std::isfinite(v) ? QString::number(v, 'f', prec) : QString::fromUtf8("∞ / NaN");
+    };
+    auto tStr = [](double t) { return stringForLocal(DateUtils::convertToAppSettingsFormat(t)); };
+
+    if (cc.nComponents > 1)
+        text += "<br>" + line(textBold(textGreen(QObject::tr("Curve convergence (worst case over %1 grid points \xC3\x97 %2 components)").arg(cc.nGrid).arg(cc.nComponents))));
+    else
+        text += "<br>" + line(textBold(textGreen(QObject::tr("Curve convergence (worst case over %1 grid points)").arg(cc.nGrid))));
+    text += line(textGreen(QObject::tr("Sampler (all iterations): R\xCC\x82 max = %1 (t = %2) ; ESS bulk min = %3 ; ESS tail min = %4")
+                               .arg(num(cc.maxRhat, 4), tStr(cc.tMaxRhat), num(cc.minBulkESS, 0), num(cc.minTailESS, 0))));
+    if (cc.filtered) {
+        text += line(textGreen(QObject::tr("After filtering: retained curves = %1 % ; min excursions per chain = %2 ; chains in the filtered set = %3 / %4")
+                                   .arg(num(cc.p * 100., 2)).arg(cc.minExcursions).arg(cc.nChainsInA).arg(model->mChains.size())));
+        text += line(textGreen(QObject::tr("After filtering: R\xCC\x82_A max = %1 (t = %2) ; ESS_A bulk min = %3 ; ESS_A tail min = %4")
+                                   .arg(num(cc.maxRhatA, 4), tStr(cc.tMaxRhatA), num(cc.minBulkESSA, 0), num(cc.minTailESSA, 0))));
+    }
     return text;
 }
 

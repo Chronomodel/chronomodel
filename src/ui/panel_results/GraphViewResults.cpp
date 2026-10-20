@@ -632,10 +632,7 @@ void GraphViewResults::generateLogTraceCurves(const std::vector<ChainSpecs> &cha
             double valideVal = 1;
             for (const auto& value : v) {
                 double logValue = std::log10(value);
-                if (isnan(logValue)) {
-                    curve.mDataVector.push_back(valideVal);
-                }
-                if (numext::isinf(logValue)) {
+                if (!std::isfinite(logValue)) { // NaN (valeur < 0) ou -inf (valeur nulle)
                     curve.mDataVector.push_back(valideVal);
                 } else {
                     curve.mDataVector.push_back(logValue);

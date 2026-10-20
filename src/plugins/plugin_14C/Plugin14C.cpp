@@ -89,25 +89,6 @@ Plugin14C::~Plugin14C()
  * @see Plugin14C::getRefValueAt()
  * @see Plugin14C::getRefErrorAt()
  */
-/*
-QPair<long double, long double> Plugin14C::getLikelihoodArg(const double t, const QJsonObject &data)
-{
-    double age = data.value(DATE_14C_AGE_STR).toDouble();
-    double error = data.value(DATE_14C_ERROR_STR).toDouble();
-    double delta_r = data.value(DATE_14C_DELTA_R_STR).toDouble();
-    double delta_r_error = data.value(DATE_14C_DELTA_R_ERROR_STR).toDouble();
-
-    // Apply reservoir effect
-    age = (age - delta_r);
-    error = sqrt(error * error + delta_r_error * delta_r_error);
-
-    long double refValue = (long double) getRefValueAt(data, t);
-    long double refError = (long double) getRefErrorAt(data, t);
-
-    long double variance = refError * refError + error * error;
-    long double exponent = -0.5l * powl((long double)(age - refValue), 2.l) / variance;
-    return qMakePair(variance, exponent);
-}*/
 
 std::pair<long double, long double>
 Plugin14C::getLikelihoodArg(double t, const QJsonObject &data) const noexcept

@@ -35,6 +35,13 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #include "StdUtilities.h"
 #include "PluginManager.h"
 #include "PluginUniform.h"
+#include "Plugin14C.h"
+#include "PluginF14C.h"
+#include "PluginGauss.h"
+#include "PluginMag.h"
+#include "RefCurve.h"
+
+#include <cmath>
 
 #include "QtUtilities.h"
 #include "StudyPeriodSettings.h"
@@ -279,6 +286,9 @@ void Date::moveFrom(Date&& other) noexcept
     other.updateti = nullptr;
     other.mId = -1;
 
+    resetLogLikelihoodCache();
+    other.resetLogLikelihoodCache();
+
 }
 
 /** Copy assignment operator */
@@ -327,6 +337,8 @@ void Date::copyFrom(const Date& date)
     mTmaxRefCurve = date.mTmaxRefCurve;
 
     mSettings = date.mSettings;
+
+    resetLogLikelihoodCache();   // noyau et cache de la vraisemblance rapide : jamais copies
 }
 
 Date::~Date()
@@ -356,6 +368,8 @@ QColor Date::getEventColor() const
 
 void Date::fromJson(const QJsonObject& json)
 {
+    resetLogLikelihoodCache();   // les donnees changent : noyau et cache a reconstruire
+
     mId = json.value(STATE_ID).toInt();
     setName(json.value(STATE_NAME).toString());
     mColor = QColor(json.value(STATE_COLOR_RED).toInt(),
@@ -386,7 +400,7 @@ void Date::fromJson(const QJsonObject& json)
     mIsCurrent = false;
     mIsSelected = false;
 
-    auto project = getProject_ptr();// MainWindow::getInstance()->getProject().get();
+    auto project = getProject_ptr();
     mSettings = StudyPeriodSettings::fromJson(project->mState.value(STATE_SETTINGS).toObject()); // StudyPeriodSettings::fromJson is static
     mSubDates = json.value(STATE_DATE_SUB_DATES).toArray();
 
@@ -1683,6 +1697,233 @@ double Date::getLikelihoodFromWiggleCalib(const double &t) const
 
 }
 
+
+
+// ======================================================================
+// Log-vraisemblance rapide (samplers MCMC) : voir Date.h
+// ======================================================================
+
+void Date::buildLogLikelihoodKernel()
+{
+    LogLikeKernel k;
+    k.kind = LogLikeKernel::eGeneric;   // repli : log(getLikelihood(t))
+
+    if (!mPlugin || mOrigin != eSingleDate) {
+        mLogLikeKernel = std::move(k);
+        return;
+    }
+
+    // Courbe de reference du plugin (nom lu dans mData, en minuscules), si elle a sa copie a plat
+    auto flatCurve = [this](const QString& key) -> const RefCurve* {
+        const RefCurve* c = mPlugin->findRefCurve(mData.value(key).toString().toLower());
+        return (c && c->hasFlat()) ? c : nullptr;
+    };
+    auto num = [this](const QString& key) -> long double {
+        return static_cast<long double>(mData.value(key).toDouble());
+    };
+    // Une composante gaussienne ; courbe absente -> reste eGeneric
+    auto setGauss = [&k](const long double y, const long double s2, const RefCurve* c) {
+        if (!c) return;
+        k.kind     = LogLikeKernel::eGauss;
+        k.nComp    = 1;
+        k.y[0]     = static_cast<double>(y);
+        k.s2[0]    = static_cast<double>(s2);
+        k.curve[0] = c;
+    };
+
+#if USE_PLUGIN_14C
+    // Plugin14C::getLikelihoodArg : y = age - deltaR, s2 = sigma^2 + sigma_deltaR^2
+    if (dynamic_cast<const Plugin14C*>(mPlugin)) {
+        const long double eM = num(DATE_14C_ERROR_STR);
+        const long double eR = num(DATE_14C_DELTA_R_ERROR_STR);
+        setGauss(num(DATE_14C_AGE_STR) - num(DATE_14C_DELTA_R_STR),
+                 std::fma(eR, eR, eM * eM),
+                 flatCurve(DATE_14C_REF_CURVE_STR));
+    }
+#endif
+
+#if USE_PLUGIN_F14C
+    // PluginF14C::getLikelihoodArg : y = fraction, s2 = sigma^2 (deltaR non utilise par le plugin)
+    if (dynamic_cast<const PluginF14C*>(mPlugin)) {
+        const long double eM = num(DATE_F14C_ERROR_STR);
+        setGauss(num(DATE_F14C_FRACTION_STR), eM * eM, flatCurve(DATE_F14C_REF_CURVE_STR));
+    }
+#endif
+
+#if USE_PLUGIN_GAUSS
+    // PluginGauss::getLikelihoodArg, mode courbe uniquement (modes equation / aucun : repli)
+    if (dynamic_cast<const PluginGauss*>(mPlugin)
+        && mData.value(DATE_GAUSS_MODE_STR).toString() == DATE_GAUSS_MODE_CURVE) {
+        const double error = mData.value(DATE_GAUSS_ERROR_STR).toDouble();
+        setGauss(num(DATE_GAUSS_AGE_STR), error * error, flatCurve(DATE_GAUSS_CURVE_STR));
+    }
+#endif
+
+#if USE_PLUGIN_AM
+    // PluginMag::Likelihood
+    if (dynamic_cast<const PluginMag*>(mPlugin)) {
+        const long double incl    = num(DATE_AM_INC_STR);
+        const long double decl    = num(DATE_AM_DEC_STR);
+        const long double alpha95 = num(DATE_AM_ALPHA95_STR);
+        const long double field   = num(DATE_AM_FIELD_STR);
+        const long double errorF  = num(DATE_AM_ERROR_F_STR);
+        const double iteration_mcmc = mData.value(DATE_AM_ITERATION_STR).toDouble();
+
+        const long double errorI = alpha95 / 2.448L;
+        const long double errorD = alpha95 / (2.448L * std::cos(incl * rad));
+
+        const RefCurve* cI = flatCurve(DATE_AM_REF_CURVEI_STR);
+        const RefCurve* cD = flatCurve(DATE_AM_REF_CURVED_STR);
+        const RefCurve* cF = flatCurve(DATE_AM_REF_CURVEF_STR);
+
+        // Melange : composantes (y, s2, courbe) et termes ajoutes aux variances, par pas i.
+        // Meme suite w_i que PluginMag (w += 1/iteration_mcmc, en double).
+        auto setMixture = [&](const int nComp,
+                              const std::array<long double, 3>& y,
+                              const std::array<long double, 3>& s2,
+                              const std::array<const RefCurve*, 3>& c,
+                              auto&& addAt) {   // addAt(si) -> std::array<long double,3>
+            for (int j = 0; j < nComp; ++j)
+                if (!c[j]) return;
+            LogLikeKernel m;
+            m.kind  = LogLikeKernel::eMixture;
+            m.nComp = nComp;
+            for (int j = 0; j < nComp; ++j) {
+                m.y[j]     = static_cast<double>(y[j]);
+                m.s2[j]    = static_cast<double>(s2[j]);
+                m.curve[j] = c[j];
+            }
+            double w = 0;
+            for (int i = 0; i < iteration_mcmc; ++i) {
+                w += 1/iteration_mcmc;
+                const std::array<long double, 3> a = addAt(w);
+                for (int j = 0; j < nComp; ++j)
+                    m.add[j].push_back(static_cast<double>(a[j]));
+            }
+            if (!m.add[0].empty())
+                k = std::move(m);
+        };
+
+        switch (static_cast<ProcessTypeAM>(mData.value(DATE_AM_PROCESS_TYPE_STR).toInt())) {
+        case eInc:   setGauss(incl,  errorI * errorI, cI); break;
+        case eDec:   setGauss(decl,  errorD * errorD, cD); break;
+        case eField: setGauss(field, errorF * errorF, cF); break;
+
+        case eID: {
+            const long double rr = std::pow(std::cos(incl * rad), 2.0L);
+            setMixture(2, {incl, decl, 0.0L}, {errorI * errorI, errorD * errorD, 0.0L}, {cI, cD, nullptr},
+                       [&](const double w) {
+                           const long double si = errorI * errorI * ((1. - w) / w);
+                           return std::array<long double, 3>{si, si / rr, 0.0L};
+                       });
+        } break;
+
+        case eIF: {
+            const long double si0 = 0.5 * (errorF * errorF + std::pow(errorI * field * rad, 2.0L));
+            setMixture(2, {incl, field, 0.0L}, {errorI * errorI, errorF * errorF, 0.0L}, {cI, cF, nullptr},
+                       [&](const double w) {
+                           const long double si = si0 * ((1. - w) / w);
+                           return std::array<long double, 3>{si / (field * field), si, 0.0L};
+                       });
+        } break;
+
+        case eIDF: {
+            const long double rr  = std::pow(field * std::cos(incl * rad), 2.0L);
+            const long double si0 = (errorF * errorF + 2.0L * std::pow(errorI * field * rad, 2.0L)) / 3;
+            setMixture(3, {incl, decl, field}, {errorI * errorI, errorD * errorD, errorF * errorF}, {cI, cD, cF},
+                       [&](const double w) {
+                           const long double si = si0 * ((1. - w) / w);
+                           return std::array<long double, 3>{si / (field * field), si / rr, si};
+                       });
+        } break;
+
+        default: break;   // eNone, eCombine : repli
+        }
+    }
+#endif
+
+    mLogLikeKernel = std::move(k);
+}
+
+double Date::getLogLikelihoodKernel(const double t) const
+{
+    const LogLikeKernel& k = mLogLikeKernel;
+
+    switch (k.kind) {
+    case LogLikeKernel::eGauss: {
+        // log L(t) = -1/2 (y - m(t))^2 / v(t) - 1/2 log v(t),   v(t) = s2 + e(t)^2
+        // (plugins : exp(exponent) / sqrt(variance))
+        double refValue, refError;
+        k.curve[0]->meanErrorAt(t, refValue, refError);
+        const double v    = std::fma(refError, refError, k.s2[0]);
+        const double diff = k.y[0] - refValue;
+        return -0.5 * diff * diff / v - 0.5 * std::log(v);
+    }
+
+    case LogLikeKernel::eMixture: {
+        // L(t) = sum_i exp(x_i) / sqrt(p_i),
+        //   x_i = sum_c q_c / (v_c + add_c[i]),  p_i = prod_c (v_c + add_c[i])
+        // log L = M + log sum_i exp(x_i - M) / sqrt(p_i),  M = max_i x_i  (pas d'underflow)
+        std::array<double, 3> v {}, q {};
+        for (int c = 0; c < k.nComp; ++c) {
+            double refValue, refError;
+            k.curve[c]->meanErrorAt(t, refValue, refError);
+            v[c] = std::fma(refError, refError, k.s2[c]);
+            const double diff = k.y[c] - refValue;
+            q[c] = -0.5 * diff * diff;
+        }
+
+        const size_t K = k.add[0].size();
+        thread_local std::vector<double> x, p;
+        x.resize(K);
+        p.resize(K);
+
+        double M = -std::numeric_limits<double>::infinity();
+        for (size_t i = 0; i < K; ++i) {
+            double xi = 0.0, pi = 1.0;
+            for (int c = 0; c < k.nComp; ++c) {
+                const double vc = v[c] + k.add[c][i];
+                xi += q[c] / vc;
+                pi *= vc;
+            }
+            x[i] = xi;
+            p[i] = pi;
+            if (xi > M) M = xi;
+        }
+        if (!std::isfinite(M))
+            return std::isnan(M) ? M : -std::numeric_limits<double>::infinity();
+
+        double s = 0.0;
+        for (size_t i = 0; i < K; ++i)
+            s += std::exp(x[i] - M) / std::sqrt(p[i]);
+        return M + std::log(s);
+    }
+
+    case LogLikeKernel::eGeneric:
+    case LogLikeKernel::eNotBuilt:
+    default: {
+        const long double L = getLikelihood(t);
+        return (L > 0.0L) ? static_cast<double>(std::log(L))      // log en long double : pas d'underflow
+                          : -std::numeric_limits<double>::infinity();
+    }
+    }
+}
+
+double Date::getLogLikelihoodMemo(const double t)
+{
+    LogLikeMemo& c = mLogLikeMemo;
+    if (t == c.t[0]) return c.v[0];
+    if (t == c.t[1]) return c.v[1];
+
+    if (mLogLikeKernel.kind == LogLikeKernel::eNotBuilt)
+        buildLogLikelihoodKernel();
+
+    const double v = getLogLikelihoodKernel(t);
+    c.t[c.slot] = t;
+    c.v[c.slot] = v;
+    c.slot ^= 1;
+    return v;
+}
 
 
 void Date::updateDate_v3(const double theta, const double S02Theta)
