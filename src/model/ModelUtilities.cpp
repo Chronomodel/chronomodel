@@ -333,7 +333,7 @@ QString ModelUtilities::getMCMCSettingsLog(const std::shared_ptr<ModelCurve> mod
 
     log += sectionTitle(QObject::tr("4 - ANNEALING"), annealColor);
     if (s.mAnnealRecurrence == 0) {
-        log += QString(QObject::tr("Disabled"));
+        log += QString("<div style='margin-left:12px;'>%1</div>").arg(QObject::tr("Disabled"));
 
     } else {
         log += textLine(QObject::tr("Init. Temp.:"),
