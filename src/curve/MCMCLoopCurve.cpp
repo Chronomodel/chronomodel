@@ -13543,11 +13543,65 @@ bool MCMCLoopCurve::tempering_339_SingleSite_bloc_delta(const double T_in)
             }
         };
 
+        // ------------------------------------------------------------------
+        // Rapport courbe en O(n)
+        // R (tridiagonale) et QtQ (pentadiagonale) sont factorisees en creux bande,
+        // K = Q R^-1 Qt n'est jamais forme :
+        //   log|QtQ_sub| - log|R_sub|          (remplace ln_rate_determinant_padded_matrix_A_B dense)
+        //   sum_c f_c' K f_c = v' R_sub^-1 v,  v = (Qt F)_sub   (remplace rate_ftKf dense)
+        // Les termes de l'etat courant sont mis en cache et ne changent qu'a l'acceptation.
+        // ------------------------------------------------------------------
+        using BandLDLT = Eigen::SimplicialLDLT<SparseMatrixD, Eigen::Lower, Eigen::NaturalOrdering<int>>;
+        struct SplineTerms { double logDet = 0.0; double fKf = 0.0; };
+
+        auto splineTerms = [](const SparseMatrixD& Q, const SparseMatrixD& R, const MatrixD& F) -> SplineTerms {
+            constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
+            SplineTerms c;
+            const Eigen::Index m = R.rows() - 2;   // padding : sous-bloc utile 1..n-2
+            if (m <= 0)
+                return c;
+
+            const SparseMatrixD Qt   = Q.transpose();
+            const SparseMatrixD QtQ  = Qt * Q;
+            const SparseMatrixD Rsub = R.block(1, 1, m, m);
+            const SparseMatrixD QtQsub = QtQ.block(1, 1, m, m);
+
+            BandLDLT ldltR(Rsub);
+            BandLDLT ldltQtQ(QtQsub);
+            if (ldltR.info() != Eigen::Success || ldltQtQ.info() != Eigen::Success) {
+                c.logDet = NaN;
+                c.fKf    = NaN;
+                return c;
+            }
+            c.logDet = ldltQtQ.vectorD().array().log().sum() - ldltR.vectorD().array().log().sum();
+
+            const MatrixD QtF = Qt * F;
+            const MatrixD v   = QtF.middleRows(1, m);
+            const MatrixD x   = ldltR.solve(v);
+            c.fKf = (v.array() * x.array()).sum();
+            return c;
+        };
+
+        SplineTerms current_terms; // etat courant (cache)
+        SplineTerms try_terms;     // dernier etat propose
+
+        // Reconstruit tous les theta reduits depuis les theta en annees : le spread repart
+        // toujours des vraies dates -> idempotent, plus de derive des cravates (>= 3 points).
+        auto rebuildThetaReduced = [&]() {
+            for (auto& e : mModel->mEvents)
+                e->mThetaReduced = mModel->reduceTime(e->mTheta.value());
+        };
+
+        // Ordre des events avant la proposition : restaure tel quel en cas de rejet, pour que
+        // les lignes de current_Y / current_G restent alignees sur les events (cravates).
+        std::vector<std::shared_ptr<Event>> saved_order;
+
         // Place provisoirement theta_new, reconstruit l'etat "try" de la courbe et renvoie
         // le log-rapport courbe (det + ftKf + Vg), NON tempere. Ne commite rien.
         auto logRateSplineTry = [&](const std::shared_ptr<Event>& ev, double theta_new) -> double {
+            saved_order = mModel->mEvents;
             ev->mTheta.setValue(theta_new);
-            ev->mThetaReduced = mModel->reduceTime(theta_new);
+            rebuildThetaReduced();   // inclut ev->mThetaReduced = reduceTime(theta_new)
 
             const bool ordered = std::is_sorted(mModel->mEvents.begin(), mModel->mEvents.end(),
                                                 [](const std::shared_ptr<Event> a, const std::shared_ptr<Event> b) {
@@ -13570,19 +13624,29 @@ bool MCMCLoopCurve::tempering_339_SingleSite_bloc_delta(const double T_in)
             try_Q = tmp_Q;
             try_R = tmp_R;
 
-            SparseQuadraticFormSolver try_solver(1);
-            try_solver.factorize(try_R);
-            try_R_1QT = try_solver.compute_Rinv_QT(try_Q);
-            try_K = try_Q * try_R_1QT;
+            try_terms = splineTerms(try_Q, try_R, try_G);
 
-            const MatrixD try_QtQ     = try_Q.transpose() * try_Q;
-            const MatrixD current_QtQ = current_Q.transpose() * current_Q;
-            const double log_rate_det = 0.5 * n_components *
-                  (ln_rate_determinant_padded_matrix_A_B(try_QtQ, try_R)
-                 - ln_rate_determinant_padded_matrix_A_B(current_QtQ, current_R));
+            const double log_rate_det = 0.5 * n_components * (try_terms.logDet - current_terms.logDet);
+            const double log_rate_fKf = -0.5 * mModel->mLambdaSpline.value() * (try_terms.fKf - current_terms.fKf);
 
-            const double log_rate_fKf = std::log(rate_ftKf(current_G, current_K, try_G, try_K,
-                                                           mModel->mLambdaSpline.value()));
+#ifdef CM_CHECK_SPARSE_RATE
+            {   // Controle : ancien calcul dense (O(n^3)), a n'activer que pour valider
+                SparseQuadraticFormSolver chk_try(1), chk_cur(1);
+                chk_try.factorize(try_R);
+                chk_cur.factorize(current_R);
+                const MatrixD K_try = try_Q * chk_try.compute_Rinv_QT(try_Q);
+                const MatrixD K_cur = current_Q * chk_cur.compute_Rinv_QT(current_Q);
+                const MatrixD try_QtQ     = try_Q.transpose() * try_Q;
+                const MatrixD current_QtQ = current_Q.transpose() * current_Q;
+                const double old_det = 0.5 * n_components *
+                      (ln_rate_determinant_padded_matrix_A_B(try_QtQ, try_R)
+                     - ln_rate_determinant_padded_matrix_A_B(current_QtQ, current_R));
+                const double old_fKf = std::log(rate_ftKf(current_G, K_cur, try_G, K_try,
+                                                          mModel->mLambdaSpline.value()));
+                qDebug() << "[CM_CHECK_SPARSE_RATE] det old/new" << old_det << log_rate_det
+                         << " fKf old/new" << old_fKf << log_rate_fKf;
+            }
+#endif
 
             double log_rate_Vg = 0.0;
             if (mCurveSettings.mVarianceType != CurveSettings::eModeFixed) {
@@ -13601,8 +13665,7 @@ bool MCMCLoopCurve::tempering_339_SingleSite_bloc_delta(const double T_in)
 
         auto commitTry = [&]() {
             current_vecH  = std::move(try_vecH);
-            current_K     = std::move(try_K);
-            current_R_1QT = std::move(try_R_1QT);
+            current_terms = try_terms;
             current_R     = std::move(try_R);
             current_Q     = std::move(try_Q);
             current_Y     = std::move(try_Y);
@@ -13613,16 +13676,25 @@ bool MCMCLoopCurve::tempering_339_SingleSite_bloc_delta(const double T_in)
 
         auto restoreTheta = [&](const std::shared_ptr<Event>& ev, double theta_back) {
             ev->mTheta.setValue(theta_back);
-            ev->mThetaReduced = mModel->reduceTime(theta_back);
-            orderEventsByThetaReduced(mModel->mEvents);
+            mModel->mEvents = saved_order;   // ordre exact d'avant la proposition (pas de tri)
+            rebuildThetaReduced();
             spreadEventsThetaReduced0(mModel->mEvents);
         };
 
         // ------------------------------------------------------------------
         // Etat courant de la courbe
         // ------------------------------------------------------------------
-        orderEventsByThetaReduced(mModel->mEvents);
-        spreadEventsThetaReduced0(mModel->mEvents);
+        // Temps echantillonnes : reconstruction des theta reduits puis tri stable + spread
+        // (idempotent). Temps fixes : on ne touche a rien, Q et R ne sont construits qu'a
+        // l'initialisation (deja spreadee) ; les modifier ici desynchroniserait les noeuds
+        // de la courbe (vecThetaReduced) de Q/R et ferait exploser la spline a la cravate.
+        if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
+            rebuildThetaReduced();
+            orderEventsByThetaReduced(mModel->mEvents);
+            spreadEventsThetaReduced0(mModel->mEvents);
+        } else {
+            orderEventsByThetaReduced(mModel->mEvents);
+        }
         fillYG(current_Y, current_G);
 
         if (mCurveSettings.mTimeType == CurveSettings::eModeBayesian) {
@@ -13631,8 +13703,8 @@ bool MCMCLoopCurve::tempering_339_SingleSite_bloc_delta(const double T_in)
             current_Q = tmp_Q0;
             current_R = tmp_R0;
             current_R_solver.factorize(current_R);          // membre (plus de solver local masquant)
-            current_R_1QT = current_R_solver.compute_Rinv_QT(current_Q);
-            current_K = current_Q * current_R_1QT;
+            // current_K et current_R_1QT (denses) ne sont plus utilises ici : cache O(n)
+            current_terms = splineTerms(current_Q, current_R, current_G);
         }
 
         // ------------------------------------------------------------------
@@ -19085,7 +19157,9 @@ void MCMCLoopCurve::orderEventsByThetaReduced(std::vector<std::shared_ptr<Event>
     // Ici on peut utiliser event en le déclarant comme copy ??
     std::vector<std::shared_ptr<Event>> &result = event;
 
-    std::sort(result.begin(), result.end(), [](const std::shared_ptr<Event> a, const std::shared_ptr<Event> b) { return (a->mThetaReduced < b->mThetaReduced); });
+    // stable_sort : a theta reduit egal, l'ordre relatif est conserve d'un appel a l'autre
+    // (spread deterministe, pas de permutation parasite des cravates)
+    std::stable_sort(result.begin(), result.end(), [](const std::shared_ptr<Event> a, const std::shared_ptr<Event> b) { return (a->mThetaReduced < b->mThetaReduced); });
 }
 
 
