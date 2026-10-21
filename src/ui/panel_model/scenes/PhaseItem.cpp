@@ -291,15 +291,11 @@ void PhaseItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* , QWidg
         // extract button
         const QRectF exRect = extractRect();
 
-        qreal sx = inRect.width()/inPix->width();
-        qreal sy = inRect.height()/inPix->height();
-        
-        const QTransform mx;
-        mx.fromScale(sx, sy);
-
-        const QPixmap inPix2 = inPix->transformed(mx, Qt::SmoothTransformation);
-        // we suppose, it is the same matrix
-        const QPixmap exPix2 = exPix->transformed(mx, Qt::SmoothTransformation);
+        // [4] l'ancien code (QTransform::fromScale est statique, résultat ignoré) faisait deux
+        // transformed() à l'identité à chaque repaint ; drawPixmap(rect, pix, pix.rect())
+        // met déjà à l'échelle, avec SmoothPixmapTransform activé plus haut.
+        const QPixmap& inPix2 = *inPix;
+        const QPixmap& exPix2 = *exPix;
         painter->setOpacity(1);
         painter->fillRect(inRect, Qt::black);
         painter->fillRect(exRect, Qt::black);

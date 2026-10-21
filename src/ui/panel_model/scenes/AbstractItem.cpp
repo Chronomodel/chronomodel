@@ -142,7 +142,7 @@ void AbstractItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
 
         updateItemPosition(ptBefore);
         setPos(ptBefore);
-        qDebug()<<" AbstractItem"<<ptBefore;
+        // [4] hors chemin chaud : qDebug()<<" AbstractItem"<<ptBefore;
         e->setPos(ptBefore);
     }
     if (mMoving) {

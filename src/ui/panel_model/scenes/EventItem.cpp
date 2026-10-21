@@ -141,7 +141,7 @@ void EventItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 }
 
 
-#pragma mark Event Managment
+// ---- Event Managment ---- [5] (#pragma mark : spécifique Xcode, warning ailleurs)
 
 void EventItem::setEvent(const QJsonObject &event, const QJsonObject &StudyPeriodSettings)
 {
@@ -280,7 +280,8 @@ void EventItem::updateGreyedOut()
             }
         }
     }
-    setOpacity(mGreyedOut ? 0.3 : 1);
+    // [S2] plus de setOpacity() ici : paint() applique déjà 0.35 quand mGreyedOut (0.3*0.35 ≈ 0.1)
+    update();
 
     QList<QGraphicsItem*> dateItems = childItems();
     for (auto&& item : dateItems) {
@@ -298,7 +299,7 @@ void EventItem::setDatesVisible(bool visible)
 
 }
 
-#pragma mark Events
+// ---- Events ---- [5] (#pragma mark : spécifique Xcode, warning ailleurs)
 
 void EventItem::dropEvent(QGraphicsSceneDragDropEvent* e)
 {
@@ -354,7 +355,9 @@ void EventItem::resizeEventItem()
     //qDebug() << "resizeEventItem dates count : " << dates.count();
 
     const QJsonObject &state = getProject_ptr()->mState;
-    const CurveSettings &curveSettings (state.value(STATE_CURVE).toObject());
+    const CurveSettings curveSettings (state.value(STATE_CURVE).toObject());
+    mCurveSettings = curveSettings; // [4] cache utilisé par paint()
+    mIsNode = isCurveNode();
 
     const int nbLines = getNumberCurveLines(curveSettings);
 
@@ -418,8 +421,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     font.setBold(false);
     font.setItalic(false);
     
-    QJsonObject state = getProject_ptr()->mState;
-    CurveSettings curveSettings = CurveSettings::fromJson(state.value(STATE_CURVE).toObject());
+    const CurveSettings& curveSettings = mCurveSettings; // [4] cache (mis à jour dans resizeEventItem)
 
     const qreal vMarge = AbstractItem::mEltsMargin;
     const qreal hMarge = AbstractItem::mEltsMargin;
@@ -456,7 +458,7 @@ void EventItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
     // it's a curve Node
     painter->setBrush(Qt::NoBrush);
-    if (isCurveNode() && curveRect.height()>0) {
+    if (mIsNode && curveRect.height()>0) { // [4] cache au lieu de isCurveNode() (relecture JSON)
         painter->setPen(QPen(Painting::mainColorDark, 2.5));
         painter->drawRoundedRect(rectTotal, 4, 4);
     }
@@ -497,7 +499,7 @@ QJsonArray EventItem::getPhases() const
     return phases;
 }
 
-#pragma mark Geometry
+// ---- Geometry ---- [5] (#pragma mark : spécifique Xcode, warning ailleurs)
 
 int EventItem::getNumberCurveLines(const CurveSettings &cs) const
 {
@@ -635,7 +637,8 @@ void EventItem::paintBoxCurveParameter (QPainter* painter, const QRectF &rectBox
             break;
 
         case CurveSettings::eProcess_Declination :
-            text1 = cs.X_short_name() + " = " + QLocale().toString (mData.value(STATE_EVENT_X_INC_DEPTH).toDouble());
+            // [S2] la déclinaison est stockée dans STATE_EVENT_Y_DEC (X_INC_DEPTH = inclinaison)
+            text1 = cs.X_short_name() + " = " + QLocale().toString (mData.value(STATE_EVENT_Y_DEC).toDouble());
 
             painter->drawText(QRectF(lineX, lineY, lineW, mCurveLineHeight), Qt::AlignCenter, text1);
 

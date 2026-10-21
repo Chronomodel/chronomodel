@@ -96,9 +96,8 @@ void CalibrationDrawing::showMarker()
 
 void CalibrationDrawing::setRefGraph(GraphViewRefAbstract* refGraph)
 {
-    Q_ASSERT(refGraph);
+    mRefGraphView = refGraph;
     if (refGraph) {
-        mRefGraphView = refGraph;
         mRefGraphView->setParent(this);
         mRefGraphView->setMouseTracking(true);
         if (mRefGraphView->mGraph) {
@@ -228,9 +227,9 @@ void CalibrationDrawing::setMouseTracking(bool enable)
 
 void CalibrationDrawing::mouseMoveEvent(QMouseEvent* e)
 {
-    const int x = std::clamp(e->pos().x(), 0, width());
+    const int x = std::clamp(e->position().toPoint().x(), 0, width());
 
-    const int y = std::clamp(e->pos().y(), 0, height());
+    const int y = std::clamp(e->position().toPoint().y(), 0, height());
 
     // draw the red cross lines
     if (( mRefGraphView && mRefGraphView->geometry().contains(x, y))

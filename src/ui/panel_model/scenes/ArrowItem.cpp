@@ -236,6 +236,7 @@ void ArrowItem::hoverMoveEvent(QGraphicsSceneHoverEvent* e)
     if (shouldShowDelete != mShowDelete) {
         prepareGeometryChange();
         mShowDelete = shouldShowDelete;
+        setZValue(mShowDelete ? 1. : -1.); // [4] devant l'événement pour être cliquable
         update();
     }
 
@@ -247,6 +248,7 @@ void ArrowItem::hoverLeaveEvent(QGraphicsSceneHoverEvent* e)
     if (mShowDelete) {
         prepareGeometryChange();
         mShowDelete = false;
+        setZValue(-1.); // [4] sous les événements
         update();
     }
 }
@@ -335,18 +337,13 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
     const int penWidth = 2;
     QColor color = mEditing ? QColor(77, 180, 62) : QColor(0, 0, 0);
-    //set the Arrow under the Event
-    setZValue(-1);
 
     if (mShowDelete) {
         color = Qt::red;
-        //set the Arrow in front of the Event, like this we can click on
-        setZValue(1);
     } else if (mGreyedOut)
         color.setAlphaF(0.05);
 
     painter->setPen(QPen(color, penWidth, mEditing ? Qt::DashLine : Qt::SolidLine));
-    // painter->drawLine(mStart, mEnd); // Line from the center to the center
     painter->drawLine(mStartContact, mEndContact);
 
     // Arrows
@@ -468,7 +465,7 @@ void ArrowItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
 
 
     // Bubble
-    QFont font (qApp->font().family(), 10, 50, false);
+    QFont font (qApp->font().family(), 10);
 
     if (mShowDelete) {
         painter->setPen(Qt::white);

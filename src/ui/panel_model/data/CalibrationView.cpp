@@ -127,7 +127,6 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):
 
     mDisplayStudyBut = new QPushButton(tr("Study Period Display"), this);
     mDisplayStudyBut->setPalette(palette_BW);
-    //mDisplayStudyBut->setStyleSheet("QPushButton { border : 2px; border-radius: 4px; color: black; background-color: white;};//border-radius: 3px; }");
     mDisplayStudyBut->setToolTip(tr("Restore view with the study period span"));
     mDisplayStudyBut->setMinimumWidth(fontMetrics().horizontalAdvance(mDisplayStudyBut->text()) + 10);
 
@@ -159,8 +158,6 @@ CalibrationView::CalibrationView(QWidget* parent, Qt::WindowFlags flags):
     //-------- DrawingView
 
     mCalibGraph = new GraphView(mDrawing);
-
-    //mCalibGraph->setRendering(GraphView::eHD);
 
     mCalibGraph->setXAxisSupport(AxisTool::AxisSupport::eAllTip);
     mCalibGraph->setYAxisSupport(AxisTool::AxisSupport::eAllways_Positive);
@@ -236,16 +233,20 @@ void CalibrationView::setDate(const Date& d)
          if (mDate.mPlugin)
                     mDate.mPlugin->deleteGraphViewRef(mRefGraphView);
         mRefGraphView = nullptr;
+        mDrawing->setRefGraph(nullptr); //le dessin ne doit pas garder le pointeur détruit
     }
 
     try {
         mDate = d;
 
+        if (!mDate.mPlugin) // date sans plugin : rien à afficher
+            return;
+
         mDrawing->setTitle(mDate.getQStringName() + " (" + mDate.mPlugin->getName() + ")");
         qDebug() << "[CalibrationView::setDate] mUUID " << mDate.getQStringName() << mDate.mUUID;
         const double t1 = mSettings.getTminFormated();
         const double t2 = mSettings.getTmaxFormated();
-        if (mDate.mIsValid && !mDate.mCalibration->mMap.empty()) {
+        if (mDate.mIsValid && mDate.mCalibration && !mDate.mCalibration->mMap.empty()) { // [C4]
             const double t3 = mDate.getFormatedTminCalib();
             const double t4 = mDate.getFormatedTmaxCalib();
 
@@ -261,15 +262,15 @@ void CalibrationView::setDate(const Date& d)
         mEndEdit->setText(stringForGraph(mTmaxDisplay));
 
         if (std::isinf(-mTminDisplay) || std::isinf(mTmaxDisplay))
-            throw(tr("CalibrationView::setDate ") + mDate.mPlugin->getName() + mDate.mCalibration->getQStringName() + QLocale().toString(mDate.mCalibration->mTmin) + QLocale().toString(mDate.mCalibration->mTmax));
+            throw(tr("CalibrationView::setDate ") + mDate.mPlugin->getName()
+                  + (mDate.mCalibration ? mDate.mCalibration->getQStringName() + QLocale().toString(mDate.mCalibration->mTmin) + QLocale().toString(mDate.mCalibration->mTmax)
+                                        : QString(" (no calibration)"))); // [C4]
 
         updateScroll();
 
         mDrawing->setRefGraph( mRefGraphView);
         mDrawing->updateLayout();
 
-        //updateScroll();
-       // update();
     }
     catch(QString error) {
         QMessageBox message(QMessageBox::Critical,
@@ -328,9 +329,8 @@ void CalibrationView::updateGraphs()
         // Fill HPD only if not Unif :
         mResultsText->clear();
 
-        if (mDate.mIsValid) {
+        if (mDate.mIsValid && mDate.mCalibration && !mDate.mCalibration->mVector.empty()) { // [C4] calibration absente => zone "non calculable"
             const std::map<double, double> &calibToShow = mDate.getFormatedCalibToShow();
-            //const std::map<double, double> &calibToShow = mDate.getFormatedWiggleCalibMap();// inverdsion
             GraphCurve calibCurve = densityCurve(calibToShow, "Calibration", penColor);
             calibCurve.mVisible = true;
             QFontMetrics fm (mCalibGraph->font());
@@ -341,9 +341,7 @@ void CalibrationView::updateGraphs()
             GraphCurve calibWiggleCurve;
 
             if (mDate.mDeltaType != Date::eDeltaNone) {
-                //const std::map<double, double> &wiggleCalibMap =  mDate.getFormatedWiggleCalibToShow();
                 const std::map<double, double> &wiggleCalibMap =  mDate.getFormatedWiggleCalibMap();
-                //const std::map<double, double> &wiggleCalibMap = mDate.getFormatedCalibToShow(); // inversion
                 const std::map<double, double> &calibWiggle = normalize_map(wiggleCalibMap, map_max(calibCurve.mData).value());
                 calibWiggleCurve = densityCurve(calibWiggle, "Wiggle", Qt::blue, Qt::DashLine, Qt::NoBrush);
                 calibWiggleCurve.mVisible = true;
@@ -361,7 +359,10 @@ void CalibrationView::updateGraphs()
             QList<QPair<double, QPair<double, double> > > formated_intervals;
             const double thresh = std::clamp(QLocale().toDouble(input), 0.0, 100.0);
 
-            if (thresh>(100. - 2*mDate.threshold_limit)) {
+            if (periodCalib.empty()) {
+                // calibration entièrement hors période d'étude : pas de HPD
+
+            } else if (thresh>(100. - 2*mDate.threshold_limit)) {
                 // In the case of uniform, or calibrations with a length of less than 10, there is no reduction in support for the calibrate (see Date::calibrate).
                 hpd = getMapDataInRange(mDate.getFormatedCalibMap(), mSettings.getTminFormated(), mSettings.getTmaxFormated());
 
@@ -423,7 +424,6 @@ void CalibrationView::updateGraphs()
 
                 // formated_intervals is already in the right date format
                 resultsStr += "<br> HPD (" + stringForLocal(real_thresh * 100.) + "%) : " + get_HPD_text(formated_intervals, DateUtils::getAppSettingsFormatStr(), nullptr, false) ;
-                //resultsStr += "<br> Calibrated date step : " + stringForLocal(std::abs(hpd.lastKey() - hpd.firstKey())/hpd.size());
                 mResultsText->setHtml(resultsStr);
             }
 
@@ -656,6 +656,7 @@ void CalibrationView::resizeEvent(QResizeEvent*)
     } else
         setVisible(true);
 
+    updateLayout(); // [4] la mise en page n'est plus faite dans paintEvent()
     update();
 
 }
@@ -676,7 +677,7 @@ void CalibrationView::paintEvent(QPaintEvent* )
 
     // 4 - Behind mResultText, mResultsText is less wide than the remaining space to put a visible space to the left of the text
     p.fillRect(mButtonWidth, mResultsText->y(), graphWidth, height() - mResultsText->y() , mResultsText->palette().base().color());
-    updateLayout();
+    // [4] updateLayout() retiré de paintEvent() : appelé par resizeEvent() et updateGraphs()
 
 }
 

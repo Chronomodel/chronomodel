@@ -41,7 +41,7 @@ public:
     virtual ~PhasesScene();
 
     //void sendUpdateProject(const QString& reason, bool notify, bool async);
-    void sendUpdateProject(const Project::ReasonId id, bool notify, bool async);
+    void sendUpdateProject(const Project::ReasonId id, bool notify, bool async) override;
 
     PhaseItem* currentPhase() const;
      void createSceneFromState();
@@ -52,24 +52,24 @@ signals:
     void phasesAreSelected();
 
 public slots:
-    void clean();
+    void clean() override;
     void updateSceneFromState();
     void updateStateSelectionFromItem();
 
     void noHide();
     void eventsSelected();
 
-   virtual void deleteSelectedItems();
+   void deleteSelectedItems() override;
 
 public:
-    bool itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);
+    bool itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e) override;
 
-    void itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);
+    void itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e) override;
 
-    void itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent*);
+    void itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent*) override;
 
-    void constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent*);
-    void constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent*);
+    void constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent*) override;
+    void constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent*) override;
 
 
     void adaptItemsForZoom(const double prop);
@@ -78,14 +78,14 @@ public:
 
 
 protected:
-    AbstractItem* collidingItem(const QGraphicsItem* item);
-    AbstractItem* currentItem();
+    AbstractItem* collidingItem(const QGraphicsItem* item) override;
+    AbstractItem* currentItem() override;
     void setCurrentItem(QGraphicsItem* item);
 
 
-    bool constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo);
-    void createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo);
-    void mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo);
+    bool constraintAllowed(AbstractItem* itemFrom, AbstractItem* itemTo) override;
+    void createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo) override;
+    void mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo) override;
 
 
 };

@@ -85,7 +85,7 @@ public:
 
     int mEltsHeight;
 
-    bool mMoving; // used in AbstractScene::itemReleased() to merge item like eventItem and phaseItem
+    bool mMoving = false; // [S2] lu dans mouseReleaseEvent() sans avoir été initialisé ; // used in AbstractScene::itemReleased() to merge item like eventItem and phaseItem
     bool mMergeable;
     bool mGreyedOut;
 

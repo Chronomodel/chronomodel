@@ -56,11 +56,9 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
     // set the selection directly to the parent item, here the EventItem
     setFlag(ItemIsSelectable, false);
 
-    mDatesAnimTimer = new QTimeLine(100, this);
-    mDatesAnimTimer->setFrameRange(0, 2);
-
-    mDatesAnim = new QGraphicsItemAnimation(this);
-    mDatesAnim->setTimeLine(mDatesAnimTimer);
+    // [5] animation de retour de la date à sa place (ancien QGraphicsItemAnimation + QTimeLine 100 ms)
+    mDatesAnim = new QPropertyAnimation(this, "pos", this);
+    mDatesAnim->setDuration(100);
 
     // Date::fromJson doesn't create mCalibration
     Date d (date);
@@ -76,7 +74,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
             d.calibrate(s, getProject_ptr(), true);
 
             if (d.mCalibration == nullptr) {
-                date[STATE_DATE_VALID] = false;
+                mDate[STATE_DATE_VALID] = false; // [C4] "date" est const& : l'affectation était sans effet
                 mCalibThumb = QPixmap();
                 QString mes = tr("Calibration curve not find for the Event %1").arg(d.getQStringName());
                 //throw mes;
@@ -94,7 +92,7 @@ DateItem::DateItem(EventsScene* EventsScene, const QJsonObject& date, const QCol
                     d.mWiggleCalibration = nullptr;
                 }
             } else if (d.mCalibration->mVector.size() < 6) {
-                date[STATE_DATE_VALID] = false;
+                mDate[STATE_DATE_VALID] = false; // [C4] "date" est const& : l'affectation était sans effet
                 mCalibThumb = QPixmap();
                 QString mes = tr("Insufficient resolution for the Event %1 ").arg(d.getQStringName());
 
@@ -220,14 +218,12 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
 
     if (!mCalibThumb.isNull()) {
         // using matrix transformation, because antiAliasing don't work with pixmap
-        qreal sx = rct.width()/mCalibThumb.width();
-        qreal sy =  rct.height()/mCalibThumb.height();
-//        QTransform mx;
-//        mx.scale(sx, sy);
+        // [4] mise à l'échelle calculée une seule fois (mCalibThumb ne change que dans le constructeur)
+        const QSize targetSize = rct.size().toSize();
+        if (mScaledThumb.isNull() || mScaledThumb.size() != targetSize)
+            mScaledThumb = mCalibThumb.scaled(targetSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 
-        const QPixmap ct2 = mCalibThumb.transformed(QTransform::fromScale(sx, sy), Qt::SmoothTransformation);
-
-        painter->drawPixmap(int (rct.x()), int (rct.y()), ct2);
+        painter->drawPixmap(int (rct.x()), int (rct.y()), mScaledThumb);
 
     } else {
         painter->fillRect(rct, Qt::white);
@@ -251,7 +247,7 @@ void DateItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
 
 void DateItem::mousePressEvent(QGraphicsSceneMouseEvent* e)
 {
-    qDebug()<<"[DateItem::mousePressEvent]--->"<<e->modifiers();
+    // [4] hors chemin chaud : qDebug()<<"[DateItem::mousePressEvent]--->"<<e->modifiers();
     /* REMARK
      * On macOS Qt::MetaModifier map to the keyboard key "Ctrl"
      * and      Qt::ControlModifier to the keyboard key " cmd" = Command key (⌘)
@@ -285,10 +281,10 @@ void DateItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
 
     } else {
         if (pos() != mOriginalPos) {
-            mDatesAnim->setItem(this);
-            mDatesAnim->setPosAt(0, pos());
-            mDatesAnim->setPosAt(1, mOriginalPos);
-            mDatesAnimTimer->start();
+            mDatesAnim->stop();
+            mDatesAnim->setStartValue(pos());
+            mDatesAnim->setEndValue(mOriginalPos);
+            mDatesAnim->start();
             e->accept();
 
         } else {
@@ -306,7 +302,7 @@ void DateItem::mouseReleaseEvent(QGraphicsSceneMouseEvent* e)
 
 void DateItem::mouseMoveEvent(QGraphicsSceneMouseEvent* e)
 {
-    qDebug()<<"DateItem::mouseMoveEvent()";
+    // [4] hors chemin chaud : qDebug()<<"DateItem::mouseMoveEvent()";
     mEventsScene->dateMoved(this);
     e->accept();
     QGraphicsObject::mouseMoveEvent(e);

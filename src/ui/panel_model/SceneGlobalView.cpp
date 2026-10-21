@@ -37,7 +37,8 @@ SceneGlobalView::SceneGlobalView(QGraphicsScene* scene, QGraphicsView* view, QWi
     mView(view),
     mIsDragging(false)
 {
-    this->setGeometry(parentWidget()->rect());
+    if (parentWidget())
+        setGeometry(parentWidget()->rect());
 }
 
 SceneGlobalView::~SceneGlobalView()
@@ -123,10 +124,14 @@ QRectF SceneGlobalView::getTargetRect()
     sceneRect.setWidth(sceneRect.width() * matrix.m11());
     sceneRect.setHeight(sceneRect.height() * matrix.m22());
 
+    // [C5] division entière w / h (SIGFPE si h == 0) et ratio faux
+    if (w <= 0 || h <= 0 || sceneRect.width() <= 0. || sceneRect.height() <= 0.)
+        return QRectF(0., 0., std::max(w, 0), std::max(h, 0));
+
     const double sceneProp = sceneRect.width() / sceneRect.height();
     QSizeF targetSize;
 
-    if (sceneProp > w / h) {
+    if (sceneProp > double(w) / double(h)) {
         targetSize.setWidth(w);
         targetSize.setHeight(w / sceneProp);
     } else {
@@ -145,7 +150,7 @@ QRectF SceneGlobalView::getTargetRect()
 void SceneGlobalView::mousePressEvent(QMouseEvent* e)
 {
     mIsDragging = true;
-    setPosition(e->pos());
+    setPosition(e->position().toPoint()); // Qt6 : pos() est déprécié
 }
 
 void SceneGlobalView::mouseReleaseEvent(QMouseEvent* e)
@@ -157,7 +162,7 @@ void SceneGlobalView::mouseReleaseEvent(QMouseEvent* e)
 void SceneGlobalView::mouseMoveEvent(QMouseEvent* e)
 {
     if (mIsDragging)
-        setPosition(e->pos());
+        setPosition(e->position().toPoint()); // Qt6 : pos() est déprécié
 }
 
 void SceneGlobalView::setPosition(const QPoint& pos)

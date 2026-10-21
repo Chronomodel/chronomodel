@@ -28,7 +28,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "DatesList.h"
 #include "Date.h"
-#include "Event.h"
 #include "MainWindow.h"
 #include "Project.h"
 #include "PluginAbstract.h"
@@ -50,7 +49,7 @@ DatesList::DatesList(QWidget* parent):QListWidget(parent),
     connect(this, &DatesList::itemClicked, this, &DatesList::handleItemClicked);
     connect(this, &DatesList::itemDoubleClicked, this, &DatesList::handleItemDoubleClicked);
     connect(this, &DatesList::itemSelectionChanged, this, &DatesList::forceAtLeastOneSelected);
-    //connect(this, &DatesList::itemSelectionChanged, this, &DatesList::handleItemIsChanged);
+
 }
 
 DatesList::~DatesList()
@@ -61,7 +60,8 @@ DatesList::~DatesList()
 void DatesList::setEvent(const QJsonObject event)
 {
     mEvent = event;
-
+    // clear() détruit les QListWidgetItem : ne pas garder de pointeurs dessus
+    mSelectedItems.clear();
     clear();
 
     if (!mEvent.isEmpty()) {

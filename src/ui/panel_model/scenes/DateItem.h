@@ -38,6 +38,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 
 
+class QPropertyAnimation;
+
 class DateItem : public QGraphicsObject
 {
     Q_OBJECT
@@ -79,8 +81,10 @@ public:
 
 
 private:
-    QGraphicsItemAnimation* mDatesAnim;
-    QTimeLine* mDatesAnimTimer;
+    // [5] QGraphicsItemAnimation/QTimeLine (obsolètes) remplacés par une QPropertyAnimation sur "pos"
+    QPropertyAnimation* mDatesAnim;
+    // [4] miniature déjà mise à l'échelle (évite un SmoothTransformation à chaque repaint)
+    QPixmap mScaledThumb;
 
 
 };

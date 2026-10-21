@@ -58,6 +58,12 @@ protected:
 private:
     QImage mThumb;
     qreal mThumbH;
+    // [4] paramètres de la miniature en cache : évite de recréer un GraphView (QWidget)
+    // à chaque setEvent(), donc à chaque changement de sélection
+    bool mThumbCached = false;
+    double mThumbTmin = 0.;
+    double mThumbTmax = 0.;
+    double mThumbFixed = 0.;
 
 
 };

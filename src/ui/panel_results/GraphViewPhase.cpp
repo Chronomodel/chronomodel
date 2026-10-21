@@ -505,7 +505,7 @@ void GraphViewPhase::generatePosterior()
 
     QColor color = mPhase->mColor;
 
-    mGraph->setBackgroundColor(QColor(230, 230, 230));
+    mGraph->setBackgroundColor(QColor(210, 210, 210));
     if (mShowList.contains(eBeginEnd)) {
         graph_density();
 

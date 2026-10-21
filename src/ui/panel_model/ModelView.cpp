@@ -71,6 +71,26 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <assert.h>
 
+/**
+ * @brief retargetAnimation
+ * QPropertyAnimation::setTargetObject() refuse de changer la cible d'une animation en cours
+ * ("you can't change the target of a running animation"). Ce cas arrive par réentrance :
+ * p.ex. showProperties() lance le masquage de la vue Courbe puis mButCurve->setChecked(false)
+ * appelle showCurveSettings(false), qui relance les animations.
+ * Une animation en cours est d'abord amenée à sa valeur finale (le panneau termine dans
+ * sa position voulue), puis arrêtée, avant de changer de cible.
+ */
+static void retargetAnimation(QPropertyAnimation* anim, QObject* target)
+{
+    if (!anim)
+        return;
+    if (anim->state() != QAbstractAnimation::Stopped) {
+        anim->setCurrentTime(anim->totalDuration());
+        anim->stop();
+    }
+    anim->setTargetObject(target);
+}
+
 ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):
     QWidget (parent, flags),
     mCurSearchIdx (0),
@@ -144,7 +164,7 @@ ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):
 
    // ---- Windows on the left hand Event scene --------------
     mEventsView = new QGraphicsView(mLeftWrapper);
-    mEventsScene = new EventsScene(mEventsView);
+    mEventsScene = new EventsScene(mEventsView, this); // [3] parent => scène détruite avec la vue modèle (fuite)
     mEventsView->setScene(mEventsScene);
     mEventsView->setAcceptDrops(true);
     mEventsView->setInteractive(true);
@@ -244,7 +264,7 @@ ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):
     // -------- Windows Phase scene ---------------------------
 
     mPhasesView = new QGraphicsView(mRightWrapper);
-    mPhasesScene = new PhasesScene(mPhasesView);
+    mPhasesScene = new PhasesScene(mPhasesView, this); // [3] parent => scène détruite avec la vue modèle (fuite)
     mPhasesView->setScene(mPhasesScene);
     mPhasesView->setInteractive(true);
     mPhasesView->setDragMode(QGraphicsView::RubberBandDrag);
@@ -314,7 +334,7 @@ ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):
     mAnimationHide = new QPropertyAnimation();
     mAnimationHide->setPropertyName("geometry");
     mAnimationHide->setDuration(300);
-    mAnimationHide->setTargetObject(mEventPropertiesView);
+    retargetAnimation(mAnimationHide, mEventPropertiesView);
     mAnimationHide->setEasingCurve(QEasingCurve::OutCubic);//(QEasingCurve::Linear);
 
     mAnimationShow = new QPropertyAnimation();
@@ -512,7 +532,7 @@ void ModelView::disconnectScenes()
 
     // when there is no Event selected we must show all data inside phases
     disconnect(mEventsScene, &EventsScene::noSelection, this, &ModelView::noEventSelected);
-    disconnect(mEventsScene, &EventsScene::eventsAreSelected, mPhasesScene, &PhasesScene::eventsSelected);
+    disconnect(mEventsScene, &EventsScene::eventsAreSelected, this, &ModelView::eventsAreSelected); // [S2] même paire que dans connectScenes()
     disconnect(mEventsScene, &EventsScene::eventDoubleClicked, this, &ModelView::togglePropeties);
     // When one or several phases are selected, we hightLigth the data inside the Event includes in the phases
     disconnect(mPhasesScene, &PhasesScene::noSelection, mEventsScene, &EventsScene::noHide);
@@ -576,12 +596,18 @@ void ModelView::resetInterface()
 
     mEventsScene->clean();
     mPhasesScene->clean();
-    mCalibrationView->setDate(QJsonObject());
+    // [C3] ces vues peuvent avoir été détruites par clearInterface() (fermeture du projet) ;
+    // elles sont recréées par setProject().
+    if (mCalibrationView)
+        mCalibrationView->setDate(QJsonObject());
 
-    mMultiCalibrationView->setVisible(false);
-    mMultiCalibrationView->setProject();
+    if (mMultiCalibrationView) {
+        mMultiCalibrationView->setVisible(false);
+        mMultiCalibrationView->setProject();
+    }
 
-    mEventPropertiesView->resetEvent();
+    if (mEventPropertiesView)
+        mEventPropertiesView->resetEvent();
 
     noEventSelected();
 
@@ -1001,21 +1027,21 @@ void ModelView::showProperties()
         if (mButMultiCalib->isChecked()) {
             // hide mMultiCalibrationView
 
-            mAnimationHide->setTargetObject(mMultiCalibrationView);
+            retargetAnimation(mAnimationHide, mMultiCalibrationView);
             mAnimationHide->start();
 
             mButMultiCalib->setChecked(false);
 
         } else if (mCurveSettingsVisible) {
 
-           mAnimationHide->setTargetObject(mCurveSettingsView);
+           retargetAnimation(mAnimationHide, mCurveSettingsView);
            mAnimationHide->start();
 
            mButCurve->setChecked(false);
 
        } else if (mButCsv->isChecked()) {
 
-           mAnimationHide->setTargetObject(mImportDataView);
+           retargetAnimation(mAnimationHide, mImportDataView);
            mAnimationHide->start();
 
            mButCsv->setChecked(false);
@@ -1023,7 +1049,7 @@ void ModelView::showProperties()
        } else {
            // hide mPhasesView
 
-           mAnimationHide->setTargetObject(mPhasesView);
+           retargetAnimation(mAnimationHide, mPhasesView);
            mAnimationHide->start();
            mPhasesView->hide();
            mPhasesGlobalView->hide();
@@ -1059,14 +1085,14 @@ void ModelView::showProperties()
         mAnimationShow->setStartValue(mRightHiddenRect);
         mAnimationShow->setEndValue(mRightRect);
        // mEventPropertiesView->raise();
-        mAnimationShow->setTargetObject(mEventPropertiesView);
+        retargetAnimation(mAnimationShow, mEventPropertiesView);
         mAnimationShow->start();
 
     } else {
        //mAnimationCalib->setTargetObject(nullptr);
       // delete mCalibrationView;
 
-        mAnimationHide->setTargetObject(mEventPropertiesView);
+        retargetAnimation(mAnimationHide, mEventPropertiesView);
         mAnimationHide->start();
 
         mPhasesView->show();
@@ -1079,7 +1105,7 @@ void ModelView::showProperties()
         mButPhasesGrid    ->show();
         mPhasesGlobalZoom ->show();
 
-        mAnimationShow->setTargetObject(mPhasesView);
+        retargetAnimation(mAnimationShow, mPhasesView);
         mAnimationShow->start();
 
         mEventPropertiesView->hide();
@@ -1096,7 +1122,7 @@ void ModelView::hideProperties()
        mAnimationCalib->start();
     }*/
    if (mEventPropertiesView && (mEventPropertiesView->geometry() == mRightRect) ) {
-       mAnimationHide->setTargetObject(mEventPropertiesView);
+       retargetAnimation(mAnimationHide, mEventPropertiesView);
        mAnimationHide->setStartValue(mRightRect);
        mAnimationHide->setEndValue(mRightHiddenRect);
        mAnimationHide->start();
@@ -1129,7 +1155,7 @@ void ModelView::showMultiCalib()
         if (mButProperties->isChecked()) {
             // hide mEventPropertiesView
             if (showAnim) {
-                mAnimationHide->setTargetObject(mEventPropertiesView);
+                retargetAnimation(mAnimationHide, mEventPropertiesView);
                 mAnimationHide->start();
             }
             mButProperties->setChecked(false);
@@ -1137,7 +1163,7 @@ void ModelView::showMultiCalib()
         }  else  if (mButCurve->isChecked()) {
             // hide mCurveSettingsView
             if (showAnim) {
-                mAnimationHide->setTargetObject(mCurveSettingsView);
+                retargetAnimation(mAnimationHide, mCurveSettingsView);
                 mAnimationHide->start();
             }
 
@@ -1146,7 +1172,7 @@ void ModelView::showMultiCalib()
         } else  if (mButCsv->isChecked()) {
             // hide mCurveSettingsView
             if (showAnim) {
-                mAnimationHide->setTargetObject(mImportDataView);
+                retargetAnimation(mAnimationHide, mImportDataView);
                 mAnimationHide->start();
             }
 
@@ -1172,13 +1198,13 @@ void ModelView::showMultiCalib()
                 mAnimationShow->setStartValue(mRightHiddenRect);
                 mAnimationShow->setEndValue(mRightRect);
 
-                mAnimationShow->setTargetObject(mMultiCalibrationView);
+                retargetAnimation(mAnimationShow, mMultiCalibrationView);
                 mAnimationShow->start();
             }
         }
      } else {
         if (showAnim) {
-            mAnimationHide->setTargetObject(mMultiCalibrationView);
+            retargetAnimation(mAnimationHide, mMultiCalibrationView);
             mAnimationHide->start();
         }
 
@@ -1190,10 +1216,10 @@ void ModelView::showMultiCalib()
 
 void ModelView::updateMultiCalibrationAndEventProperties()
 {
-    if (mButMultiCalib->isChecked())
+    if (mButMultiCalib->isChecked() && mMultiCalibrationView)
         mMultiCalibrationView->updateMultiCalib();
 
-    if (mButProperties->isChecked())
+    if (mButProperties->isChecked() && mEventPropertiesView)
         mEventPropertiesView->updateEvent();
 
 }
@@ -1210,7 +1236,7 @@ void ModelView::showImport()
             mAnimationShow->setEndValue(mRightRect);
             mImportDataView->setHelpVisible(AppSettings::mShowHelp);
             mImportDataView->raise();
-            mAnimationShow->setTargetObject(mImportDataView);
+            retargetAnimation(mAnimationShow, mImportDataView);
             mAnimationShow->start();
         }
 
@@ -1218,7 +1244,7 @@ void ModelView::showImport()
        if (!mButProperties->isChecked()) {
             mAnimationHide->setStartValue(mRightRect);
             mAnimationHide->setEndValue(mRightHiddenRect);
-            mAnimationHide->setTargetObject(mImportDataView);
+            retargetAnimation(mAnimationHide, mImportDataView);
             mAnimationHide->start();
 
         } else
@@ -1303,10 +1329,13 @@ void ModelView::noEventSelected()
 
     mButDeleteEvent->setDisabled(true);
 
-    mCalibrationView->hide();
+    if (mCalibrationView)
+        mCalibrationView->hide();
 
-    mEventPropertiesView->resetEvent();
-    mEventPropertiesView->hide();
+    if (mEventPropertiesView) {
+        mEventPropertiesView->resetEvent();
+        mEventPropertiesView->hide();
+    }
 
     updateLayout();
 
@@ -1347,7 +1376,7 @@ void ModelView::slideRightPanel()
         if (mAnimationShow->state() == QAbstractAnimation::Running) {
             mAnimationShow->stop();
         }
-        mAnimationShow->setTargetObject(target);
+        retargetAnimation(mAnimationShow, target);
         mAnimationHide->start();
     }
     target = nullptr;
@@ -1367,7 +1396,7 @@ void ModelView::prepareNextSlide()
             mAnimationHide->stop();
         }
 
-        mAnimationHide->setTargetObject(target);
+        retargetAnimation(mAnimationHide, target);
     }
 
     target = nullptr;
@@ -1410,9 +1439,11 @@ void ModelView::applyAppSettings()
     }
 
     // ------
-    mCalibrationView->applyAppSettings();
+    if (mCalibrationView) // [C3]
+        mCalibrationView->applyAppSettings();
 
-    mMultiCalibrationView->applyAppSettings();
+    if (mMultiCalibrationView) // [C3]
+        mMultiCalibrationView->applyAppSettings();
 
     adaptStudyPeriodButton(mTmin, mTmax);
 
@@ -1512,7 +1543,7 @@ void ModelView::updateLayout()
 
     // ----------
     if (mCalibrationView && mCalibrationView->isVisible()) {
-        if (mButProperties->isChecked() && mEventPropertiesView->isCalibChecked() )
+        if (mButProperties->isChecked() && mEventPropertiesView && mEventPropertiesView->isCalibChecked() )
             mCalibrationView->setGeometry( mLeftRect );
         else
             mCalibrationView->setGeometry(0, 0, 0, 0);
@@ -1615,7 +1646,7 @@ void ModelView::updateCalibration(const QJsonObject &date)
             d.calibrate(StudyPeriodSettings::fromJson(getProject_ptr()->state().value(STATE_SETTINGS).toObject()), getProject_ptr(), true);
 
         // A date has been double-clicked => update CalibrationView only if the date is not null
-        if (mEventPropertiesView->isVisible() && mEventPropertiesView->isCalibChecked())
+        if (mEventPropertiesView && mCalibrationView && mEventPropertiesView->isVisible() && mEventPropertiesView->isCalibChecked())
            mCalibrationView->setDate(d);
 
     }
@@ -1626,7 +1657,7 @@ void ModelView::updateCalibration(const QJsonObject &date)
 void ModelView::showCalibration(bool show)
 {
    updateLayout();
-   if (show) {
+   if (show && mEventPropertiesView && mCalibrationView) { // [C3]
 
        blockSignals(true);
        mEventPropertiesView->updateEvent(); //emit calibRequested(date);
@@ -1649,7 +1680,7 @@ void ModelView::showCalibration(bool show)
 // Mouse Events
 void ModelView::mousePressEvent(QMouseEvent* e)
 {
-    if (mHandlerRect.contains(e->pos())) {
+    if (mHandlerRect.contains(e->position().toPoint())) { // Qt6 : pos() est déprécié
         mIsSplitting = true;
     }
     //qDebug()<<"[ModelView::mousePressEvent]";
@@ -1670,7 +1701,8 @@ void ModelView::mouseMoveEvent(QMouseEvent* e)
 {
     if (mIsSplitting) {
         setCursor(Qt::ClosedHandCursor);
-        const qreal x = std::clamp(e->pos().x(), 200, width() - 450);
+        // Qt6 : position() ; borne haute >= borne basse (précondition de std::clamp)
+        const qreal x = std::clamp(e->position().toPoint().x(), 200, std::max(200, width() - 450));
 
         mSplitProp = x / (width() - mHandlerW/2);
         mHandlerRect.moveTo(int(x + mHandlerW/2), mTopRect.height());
@@ -1741,7 +1773,7 @@ void ModelView::showCurveSettings(bool show)
             // hide mEventPropertiesView
             mAnimationHide->setStartValue(mRightRect);
             mAnimationHide->setEndValue(mRightHiddenRect);
-            mAnimationHide->setTargetObject(mEventPropertiesView);
+            retargetAnimation(mAnimationHide, mEventPropertiesView);
             mAnimationHide->start();
 
             mButProperties->setChecked(false);
@@ -1750,7 +1782,7 @@ void ModelView::showCurveSettings(bool show)
             // hide mMultiCalibrationView
             mAnimationHide->setStartValue(mRightRect);
             mAnimationHide->setEndValue(mRightHiddenRect);
-            mAnimationHide->setTargetObject(mMultiCalibrationView);
+            retargetAnimation(mAnimationHide, mMultiCalibrationView);
             mAnimationHide->start();
 
             mButMultiCalib->setChecked(false);
@@ -1759,14 +1791,14 @@ void ModelView::showCurveSettings(bool show)
             // hide mImportDataView
             mAnimationHide->setStartValue(mRightRect);
             mAnimationHide->setEndValue(mRightHiddenRect);
-            mAnimationHide->setTargetObject(mImportDataView);
+            retargetAnimation(mAnimationHide, mImportDataView);
             mAnimationHide->start();
 
             mButCsv->setChecked(false);
         }
 
 
-        mAnimationShow->setTargetObject(mCurveSettingsView);
+        retargetAnimation(mAnimationShow, mCurveSettingsView);
 
         mAnimationShow->setStartValue(mRightHiddenRect);
         mAnimationShow->setEndValue(mRightRect);
@@ -1785,14 +1817,14 @@ void ModelView::showCurveSettings(bool show)
     } else {
 
 
-        mAnimationHide->setTargetObject(mCurveSettingsView);
+        retargetAnimation(mAnimationHide, mCurveSettingsView);
 
         mAnimationHide->setStartValue(mRightRect);
         mAnimationHide->setEndValue(mRightHiddenRect);
 
         mAnimationHide->start();
 
-        mAnimationShow->setTargetObject(mPhasesView);
+        retargetAnimation(mAnimationShow, mPhasesView);
 
         mAnimationShow->setStartValue(mRightHiddenRect);
         mAnimationShow->setEndValue(mRightRect);

@@ -72,7 +72,12 @@ void BoundItem::setEvent(const QJsonObject& eventObj, const QJsonObject& setting
 
     const double fixed = eventObj[STATE_EVENT_KNOWN_FIXED].toDouble();
 
-    if ( (tmin<=fixed) && (fixed<=tmax) ) {
+    const bool thumbUpToDate = mThumbCached && (tmin == mThumbTmin) && (tmax == mThumbTmax) && (fixed == mThumbFixed);
+
+    if (thumbUpToDate) {
+        // [4] miniature inchangée
+
+    } else if ( (tmin<=fixed) && (fixed<=tmax) ) {
 
         GraphView* graph = new GraphView(); // AbstractItem::mItemWidth
         //graph->setFixedSize(200, 50);
@@ -108,12 +113,18 @@ void BoundItem::setEvent(const QJsonObject& eventObj, const QJsonObject& setting
 
 
         mThumb = QImage(graph->size(),QImage::Format_ARGB32_Premultiplied);
+        mThumb.fill(Qt::transparent); // [4] QImage non initialisée sinon
         graph->render(&mThumb);
         delete graph;
         graph = nullptr;
 
     } else
         mThumb = QImage();
+
+    mThumbCached = true;
+    mThumbTmin = tmin;
+    mThumbTmax = tmax;
+    mThumbFixed = fixed;
 
     //delete bound;
     // ----------------------------------------------
@@ -122,13 +133,15 @@ void BoundItem::setEvent(const QJsonObject& eventObj, const QJsonObject& setting
     //update(); Done by prepareGeometryChange() at the function start
 
     CurveSettings curveSettings = CurveSettings::fromJson(getState_ptr()->value(STATE_CURVE).toObject());
+    mCurveSettings = curveSettings; // [4] cache utilisé par paint()
+    mIsNode = isCurveNode();        // [4] (et mIsNode n'était jamais initialisé pour un Bound)
 
     const int nbLines = getNumberCurveLines(curveSettings);
     mCurveTextHeight = (nbLines>0 ? nbLines*mCurveLineHeight: 0);
 
-    const qreal h = mTitleHeight + mThumbH + mPhasesHeight + 2*AbstractItem::mEltsMargin + mCurveTextHeight + 55. + (isCurveNode()? 2*mNodeSkin + 4.: 0.);
+    const qreal h = mTitleHeight + mThumbH + mPhasesHeight + 2*AbstractItem::mEltsMargin + mCurveTextHeight + 55. + (mIsNode? 2*mNodeSkin + 4.: 0.);
 
-    mSize = QSize(230 + (isCurveNode()? 2*mNodeSkin + 2.: 0.), h);
+    mSize = QSize(230 + (mIsNode? 2*mNodeSkin + 2.: 0.), h);
 
     update();
 }
@@ -142,8 +155,8 @@ void BoundItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* , QWidg
 {
     painter->setRenderHint(QPainter::Antialiasing);
 
-    const QRectF rectTotal = rectF();//QRectF(-mSize.width()/2, -mSize.height()/2, mSize.width(), mSize.height());
-    const QRectF rect = isCurveNode() ? rectTotal.adjusted(mNodeSkin + 1., mNodeSkin + 1., -mNodeSkin - 1., -mNodeSkin - 1.) : rectTotal;
+    const QRectF rectTotal = rectF();
+    const QRectF rect = mIsNode ? rectTotal.adjusted(mNodeSkin + 1., mNodeSkin + 1., -mNodeSkin - 1., -mNodeSkin - 1.) : rectTotal;
 
     const QColor eventColor = QColor(mData.value(STATE_COLOR_RED).toInt(),
                                mData.value(STATE_COLOR_GREEN).toInt(),
@@ -199,7 +212,7 @@ void BoundItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* , QWidg
         painter->drawImage(thumbRect, mThumb, mThumb.rect());
 
     // Phases
-    CurveSettings curveSettings = CurveSettings::fromJson(getState_ptr()->value(STATE_CURVE).toObject());
+    const CurveSettings& curveSettings = mCurveSettings; // [4] cache
 
     QRectF curveRect(rect.x() + side, rect.y() + top + 3*mEltsMargin + mTitleHeight + mThumbH, rect.width() - 2*side,  mCurveTextHeight);
 
@@ -216,7 +229,7 @@ void BoundItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* , QWidg
 
     // Border
     painter->setBrush(Qt::NoBrush);
-    if (isCurveNode() && curveRect.height()>0) {
+    if (mIsNode && curveRect.height()>0) {
         painter->setPen(QPen(Painting::mainColorDark, 2.5));
         painter->drawEllipse(rectTotal);
     }

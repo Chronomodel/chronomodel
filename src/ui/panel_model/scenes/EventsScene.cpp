@@ -55,15 +55,24 @@ EventsScene::EventsScene(QGraphicsView* view, QObject* parent):AbstractScene(vie
     mHelpTimer = new QTimer(this);
 
     connect(this, &QGraphicsScene::selectionChanged, this, &EventsScene::updateStateSelectionFromItem);
-    connect(mHelpTimer, SIGNAL(timeout()), this, SLOT(updateHelp()));
     connect(this, &EventsScene::eventsAreModified, this, &EventsScene::sendUpdateProject);
 
-    mHelpTimer->start(200);
+    // [4][5] L'aide n'est plus recalculée toutes les 200 ms en permanence : timer mono-coup
+    // (anti-rebond) relancé sur changement de sélection, de touches ou de scène.
+    // Connexion par pointeur de fonction (Qt6) au lieu de SIGNAL/SLOT.
+    mHelpTimer->setSingleShot(true);
+    mHelpTimer->setInterval(50);
+    connect(mHelpTimer, &QTimer::timeout, this, &EventsScene::updateHelp);
+    connect(this, &QGraphicsScene::selectionChanged, mHelpTimer, qOverload<>(&QTimer::start));
+    mHelpTimer->start();
 }
 
 EventsScene::~EventsScene()
 {
-
+    // [3] plus aucun slot de EventsScene ne doit être appelé pendant la destruction des items
+    blockSignals(true);
+    mUpdatingItems = true;
+    mHelpTimer->stop();
 }
 
 
@@ -200,7 +209,7 @@ void EventsScene::showHelp(bool show)
 
 void EventsScene::sendUpdateProject(const Project::ReasonId id, bool notify, bool storeUndoCommand)
 {
-    qDebug()<<"[EventsScene::sendUpdateProject] start";
+    // [4] hors chemin chaud : qDebug()<<"[EventsScene::sendUpdateProject] start";
 
     QJsonObject statePrev = *getState_ptr();
     QJsonObject stateNext = statePrev;
@@ -278,6 +287,7 @@ void EventsScene::setShowAllThumbs(const bool show)
 
 void EventsScene::createSceneFromState()
 {
+    mHelpTimer->start(); // [4] mise à jour différée de l'aide
 
 #ifdef DEBUG
     qDebug()<<"[EventsScene::createSceneFromState] Start";
@@ -310,12 +320,13 @@ void EventsScene::createSceneFromState()
     // ------------------------------------------------------
     if (mItems.size()>0) {
         clearSelection();
-        clear();
+        // [C1/C2] la flèche temporaire est conservée hors du clear()
+        removeItem(mTempArrow);
+        clear();               // détruit aussi les ArrowItem de contraintes
         mItems.clear();
+        mConstraintItems.clear(); // pointeurs déjà libérés par clear()
+        addItem(mTempArrow);
      }
-    // this item is delete with clear, but we need it.
-    mTempArrow = new ArrowTmpItem();
-    addItem(mTempArrow);
     mTempArrow->setVisible(false);
 
 
@@ -390,6 +401,7 @@ void EventsScene::createSceneFromState()
  */
 void EventsScene::updateSceneFromState()
 {
+    mHelpTimer->start(); // [4] mise à jour différée de l'aide
 #ifdef DEBUG
     qDebug()<<"[EventsScene::updateSceneFromState] Start";
     QElapsedTimer startTime;
@@ -413,7 +425,10 @@ void EventsScene::updateSceneFromState()
             if (type == Event::eDefault) {
                         auto eventItem = mItems[i];
 
+                        // [3] removeItem() rend la propriété à l'appelant : il faut détruire l'item (fuite)
+                        static_cast<EventItem*>(eventItem)->remove_dateItems();
                         removeItem(eventItem);
+                        delete eventItem;
                         eventItem = nullptr;
 
             } else if (type == Event::eBound) {
@@ -574,24 +589,8 @@ void EventsScene::updateSceneFromState()
         for (auto&& absItem : mItems) {
             EventItem* oldItem = dynamic_cast<EventItem*> (absItem);
             const QJsonObject oldItem_data = oldItem->getData();
-
-            // -------
-            const QString eventPhasesIdsStr = oldItem_data.value(STATE_EVENT_PHASE_IDS).toString();
-            const QStringList eventPhasesIds = eventPhasesIdsStr.split(",");
-            bool greyOut = true;
-            if (selectedPhasesIds.isEmpty()) {
-                greyOut = false;
-
-            } else {
-                for (auto && ids : selectedPhasesIds) {
-                    if (eventPhasesIds.contains(ids)) {
-                        greyOut = false;
-                        break;
-                    }
-                }
-            }
-            oldItem ->setGreyedOut(greyOut);
-            // -------
+            // [4] le calcul du grisage (split + setGreyedOut()->update()) était fait ici pour
+            // chaque item ET chaque événement (coût N²) : il est fait une seule fois après la boucle.
             if ( oldItem_data.value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
                itemUnkown = false;
                if ((event != oldItem_data) || settingsChanged) {
@@ -646,14 +645,36 @@ void EventsScene::updateSceneFromState()
                     message.exec();
                 }
 
-                mItems.append(newItem);
-                addItem(newItem);
+                if (newItem) { // [3] en cas d'exception newItem reste nul : ne pas l'insérer
+                    mItems.append(newItem);
+                    addItem(newItem);
+                }
                 newItem = nullptr;
               //  hasCreated = true;
 
         }
 
     }
+
+    // [4] grisage des événements selon les phases sélectionnées : une passe unique
+    blockSignals(true);
+    for (auto&& absItem : mItems) {
+        EventItem* evItem = dynamic_cast<EventItem*>(absItem);
+        if (!evItem)
+            continue;
+        bool greyOut = !selectedPhasesIds.isEmpty();
+        if (greyOut) {
+            const QStringList eventPhasesIds = evItem->getData().value(STATE_EVENT_PHASE_IDS).toString().split(",");
+            for (auto && ids : selectedPhasesIds) {
+                if (eventPhasesIds.contains(ids)) {
+                    greyOut = false;
+                    break;
+                }
+            }
+        }
+        evItem->setGreyedOut(greyOut);
+    }
+    blockSignals(false);
 
     // ------------------------------------------------------
     //  Delete constraints not in current state
@@ -669,7 +690,10 @@ void EventsScene::updateSceneFromState()
 #endif
             removeItem(constraintItem);
             mConstraintItems.removeOne(constraintItem);
-            //delete constraintItem;
+            // [3] destruction différée (fuite auparavant) : la suppression peut provenir de
+            // ArrowItem::mousePressEvent -> constraintClicked(), on ne détruit pas l'item
+            // pendant son propre gestionnaire d'événement. ArrowItem n'est pas un QObject.
+            QTimer::singleShot(0, this, [constraintItem]() { delete constraintItem; });
             
         }
         constraintItem = nullptr;
@@ -753,6 +777,7 @@ void EventsScene::updateSceneFromState()
 
 void EventsScene::clean()
 {
+    mHelpTimer->start(); // [4] mise à jour différée de l'aide
     // ------------------------------------------------------
     //  Delete all items
     // ------------------------------------------------------
@@ -781,7 +806,13 @@ void EventsScene::clean()
     // ------------------------------------------------------
     //  Reset scene rect
     // ------------------------------------------------------
+    // [C1] mTempArrow ne doit pas être détruit par clear() : il reste utilisé
+    // par keyPressEvent/keyReleaseEvent même quand la scène est vide.
+    removeItem(mTempArrow);
     clear();
+    addItem(mTempArrow);
+    mTempArrow->setVisible(false);
+    mDrawingArrow = false;
     setSceneRect(QRectF());
     update(sceneRect());
 }
@@ -792,7 +823,7 @@ void EventsScene::clean()
  */
 void EventsScene::updateStateSelectionFromItem()
 {
-    qDebug()<<"[EventsScene::updateStateSelectionFromItem] Start";
+    // [4] hors chemin chaud : qDebug()<<"[EventsScene::updateStateSelectionFromItem] Start";
     int nbOfSelectedEvent = 0;
     QJsonArray updatedEvents = QJsonArray();
 
@@ -933,7 +964,7 @@ void EventsScene::dateMoved(const DateItem* dateItem)
 {
     Q_ASSERT(dateItem);
 
-    qDebug()<<"EventsScene::dateMoved";
+    // [4] hors chemin chaud : qDebug()<<"EventsScene::dateMoved";
     static EventItem* lastEntered = nullptr;
     EventItem* hoveredEventItem = dynamic_cast<EventItem*>(collidingItem(dateItem));
     EventItem* prevEventItem = dynamic_cast<EventItem*>(dateItem->parentItem());
@@ -1152,6 +1183,7 @@ void EventsScene::constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e
  */
 void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
 {
+    mHelpTimer->start(); // [4] mise à jour différée de l'aide
     if (keyEvent->isAutoRepeat())
         keyEvent->ignore();
 
@@ -1227,6 +1259,7 @@ void EventsScene::keyPressEvent(QKeyEvent* keyEvent)
 
 void EventsScene::keyReleaseEvent(QKeyEvent* keyEvent)
 {
+    mHelpTimer->start(); // [4] mise à jour différée de l'aide
     if (keyEvent->key() == Qt::Key_Alt) {
        // qDebug() << "[EventsScene::keyReleaseEvent] You Released: "<<"Qt::Key_Alt";
         mDrawingArrow = false;
@@ -1349,6 +1382,22 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
             constraint = eConstraintNone;
 
     }
+
+    // [4] même test que Project::isEventConstraintAllowed(), mais sur l'état local en cours de
+    // construction : les contraintes ne sont plus poussées une par une dans le projet.
+    auto constraintAllowedInState = [&state](const QJsonObject& eventFrom, const QJsonObject& eventTo) {
+        const QJsonArray cts = state.value(STATE_EVENTS_CONSTRAINTS).toArray();
+        const int fromId = eventFrom.value(STATE_ID).toInt();
+        const int toId = eventTo.value(STATE_ID).toInt();
+        for (const auto ct : cts) {
+            const QJsonObject c = ct.toObject();
+            const int bwd = c.value(STATE_CONSTRAINT_BWD_ID).toInt();
+            const int fwd = c.value(STATE_CONSTRAINT_FWD_ID).toInt();
+            if ((bwd == fromId && fwd == toId) || (bwd == toId && fwd == fromId))
+                return false;
+        }
+        return true;
+    };
 
     QJsonObject previousEvent = QJsonObject();
     QJsonObject currentEvent;
@@ -1487,12 +1536,12 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
             bool addConstraint = false;
             EventConstraint c;
             if (currentEvent.value(STATE_ID).toInt() != previousEvent.value(STATE_ID).toInt()) {
-                if ( constraint == eConstraintStrati && project->isEventConstraintAllowed(currentEvent, previousEvent)) {
+                if ( constraint == eConstraintStrati && constraintAllowedInState(currentEvent, previousEvent)) {
                        c.mFromId = currentEvent.value(STATE_ID).toInt();
                        c.mToId = previousEvent.value(STATE_ID).toInt();
                        addConstraint = true;
 
-                } else if (project->isEventConstraintAllowed(previousEvent, currentEvent)) {
+                } else if ( constraint == eConstraintInvStrati && constraintAllowedInState(previousEvent, currentEvent)) { // [S2] sinon, en mode "le plus jeune en haut", la contrainte inverse était créée
                         c.mFromId = previousEvent.value(STATE_ID).toInt();
                         c.mToId = currentEvent.value(STATE_ID).toInt();
                         addConstraint = true;
@@ -1504,7 +1553,8 @@ void EventsScene::dropEvent(QGraphicsSceneDragDropEvent* e)
                     QJsonObject constraint = c.toJson();
                     eventsConstraints.append(constraint);
                     state[STATE_EVENTS_CONSTRAINTS] = eventsConstraints;
-                    project->pushProjectState(state, Project::ReasonId::EventConstraintCreated, true);
+                    // [4] plus de pushProjectState() par contrainte (N reconstructions + N annulations) :
+                    // l'état complet est poussé une seule fois en fin de drop.
                 }
             }
 

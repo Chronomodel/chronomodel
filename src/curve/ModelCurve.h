@@ -101,14 +101,14 @@ public:
 
     ModelCurve();
     explicit ModelCurve(const QJsonObject &json);
-    virtual ~ModelCurve();
+    ~ModelCurve() override;
 
     void setProject();
     void updateDesignFromJson();
 
-    virtual void saveToStream(QDataStream *out) const;
+    void saveToStream(QDataStream *out) const override;
 
-    virtual bool loadFromStream(QDataStream *in)
+    bool loadFromStream(QDataStream *in) override
     {
         //std::cout << "[ModelCurve::restoreFromFile] entering";
         static const QSet<QString> compatible_version_400 = {
@@ -171,33 +171,33 @@ public:
     bool loadFromStream_v338(QDataStream *in);
     bool loadFromStream_v400(QDataStream *in);
 
-    virtual QJsonObject toJson() const;
-    virtual void fromJson( const QJsonObject &json);
+    QJsonObject toJson() const override;
+    void fromJson( const QJsonObject &json) override;
 
     virtual void generateModelLog();
-    virtual void generateResultsLog();
+    void generateResultsLog() override;
 
-    void generatePosteriorDensities(const std::vector<ChainSpecs> &chains, int fftLen, BandwidthType bwt, double bandwidth = 1.);
-    virtual void generateCorrelations(const std::vector<ChainSpecs> &chains);
+    void generatePosteriorDensities(const std::vector<ChainSpecs> &chains, int fftLen, BandwidthType bwt, double bandwidth = 1.) override;
+    void generateCorrelations(const std::vector<ChainSpecs> &chains) override;
 
-    virtual void generateDensityNumericalResults();
-    virtual void generateTraceNumericalResults(const std::vector<ChainSpecs>& chains);
+    void generateDensityNumericalResults() override;
+    void generateTraceNumericalResults(const std::vector<ChainSpecs>& chains) override;
 
-    virtual void generateCredibility(const double thresh);
-    void generateHPD(const double thresh);
+    void generateCredibility(const double thresh) override;
+    void generateHPD(const double thresh) override;
     
-    virtual void clearThreshold();
-    virtual void remove_smoothed_densities();
-    void clearCredibilityAndHPD();
-    void clearTraces();
+    void clearThreshold() override;
+    void remove_smoothed_densities() override;
+    void clearCredibilityAndHPD() override;
+    void clearTraces() override;
     void clear();
     void shrink_to_fit() noexcept;
     void clear_and_shrink() noexcept;
 
-    virtual void updateFormatSettings();
+    void updateFormatSettings() override;
 
-    virtual void setThreshold(const double threshold);
-    virtual void setThresholdToAllModel(const double threshold);
+    void setThreshold(const double threshold) override;
+    void setThresholdToAllModel(const double threshold) override;
     
     QList<PosteriorMeanGComposante> getChainsMeanGComposanteX();
     QList<PosteriorMeanGComposante> getChainsMeanGComposanteY();
@@ -250,7 +250,7 @@ public slots:
 
 #pragma mark Loop
     //void memo_accepted_state(const unsigned i_chain);
-    void setParametersForChain();
+    void setParametersForChain() override;
 
 private:
     void settings_from_Json( const QJsonObject &json);

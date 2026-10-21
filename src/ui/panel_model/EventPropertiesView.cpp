@@ -287,7 +287,7 @@ EventPropertiesView::~EventPropertiesView()
     mDatesList->clear();
 }
 
-# pragma mark Event Managment
+// ---- Event Managment ---- [5] (#pragma mark : spécifique Xcode, warning ailleurs)
 void EventPropertiesView::setEvent(const QJsonObject& eventObj)
 {
     // if set Event come because we use Project::updateDate(), we are on the same Event
@@ -403,7 +403,7 @@ void EventPropertiesView::updateEvent()
             showXEdit = settings.showX();
             showYEdit = settings.showY() || settings.mProcessType == CurveSettings::eProcess_Declination;
             showZEdit = settings.showZ();
-            showYErr = settings.showYErr();
+            showYErr = settings.showYErr() || (settings.mProcessType == CurveSettings::eProcess_Unknwon_Dec); // [S2] erreur sur F (SZ_SF)
         }
         Event::PointType tyPts = Event::PointType (mEventObj.value(STATE_EVENT_POINT_TYPE).toInt());
         mCurveNodeCB->setVisible(mCurveEnabled);
@@ -437,8 +437,9 @@ void EventPropertiesView::updateEvent()
 
             } else if (settings.mProcessType == CurveSettings::eProcess_Field) {
                 mX_IncLab->setText(settings.XLabel());
-                updateLineEdit(mX_IncEdit, mEventObj.value(STATE_EVENT_X_INC_DEPTH).toDouble());
-                updateLineEdit(mS_X_IncEdit, mEventObj.value(STATE_EVENT_SX_ALPHA95_SDEPTH).toDouble());
+                // [S2] en mode Field, updateEventXInc()/updateEventSXInc() écrivent dans Z_F / SZ_SF
+                updateLineEdit(mX_IncEdit, mEventObj.value(STATE_EVENT_Z_F).toDouble());
+                updateLineEdit(mS_X_IncEdit, mEventObj.value(STATE_EVENT_SZ_SF).toDouble());
 
             } else {
                 mX_IncLab->setText(settings.XLabel());
@@ -458,7 +459,11 @@ void EventPropertiesView::updateEvent()
             } else {
                 mY_DecLab->setText(settings.YLabel());
             }
-            updateLineEdit(mY_DecEdit, mEventObj.value(STATE_EVENT_Y_DEC).toDouble());
+            // [S2] Unknwon_Dec : le champ "Field" correspond à Z_F (lu par le modèle), pas à Y_DEC
+            if (settings.mProcessType == CurveSettings::eProcess_Unknwon_Dec)
+                updateLineEdit(mY_DecEdit, mEventObj.value(STATE_EVENT_Z_F).toDouble());
+            else
+                updateLineEdit(mY_DecEdit, mEventObj.value(STATE_EVENT_Y_DEC).toDouble());
         }
 
         mS_Y_Lab->setVisible(showYErr);
@@ -466,7 +471,10 @@ void EventPropertiesView::updateEvent()
 
         if (showYErr) {
             mS_Y_Lab->setText(tr("Error"));
-            updateLineEdit(mS_Y_Edit, mEventObj.value(STATE_EVENT_SY).toDouble());
+            if (settings.mProcessType == CurveSettings::eProcess_Unknwon_Dec) // [S2] erreur sur F
+                updateLineEdit(mS_Y_Edit, mEventObj.value(STATE_EVENT_SZ_SF).toDouble());
+            else
+                updateLineEdit(mS_Y_Edit, mEventObj.value(STATE_EVENT_SY).toDouble());
         }
 
         mZ_IntLab->setVisible(showZEdit);
@@ -611,7 +619,12 @@ void EventPropertiesView::updateEventXInc()
 
 void EventPropertiesView::updateEventYDec()
 {
-    mEventObj[STATE_EVENT_Y_DEC] = QLocale().toDouble(mY_DecEdit->text());
+    const QJsonObject& state = MainWindow::getInstance()->getState();
+    const auto processType = CurveSettings::processType_fromJson(state.value(STATE_CURVE).toObject());
+    if (processType == CurveSettings::eProcess_Unknwon_Dec) // [S2] champ "Field" -> Z_F (lu par le modèle)
+        mEventObj[STATE_EVENT_Z_F] = QLocale().toDouble(mY_DecEdit->text());
+    else
+        mEventObj[STATE_EVENT_Y_DEC] = QLocale().toDouble(mY_DecEdit->text());
     MainWindow::getInstance()->updateEvent(mEventObj, Project::ReasonId::EventYDecUpdated);
 }
 
@@ -637,7 +650,12 @@ void EventPropertiesView::updateEventSXInc()
 
 void EventPropertiesView::updateEventSYDec()
 {
-    mEventObj[STATE_EVENT_SY] = QLocale().toDouble(mS_Y_Edit->text());
+    const QJsonObject& state = MainWindow::getInstance()->getState();
+    const auto processType = CurveSettings::processType_fromJson(state.value(STATE_CURVE).toObject());
+    if (processType == CurveSettings::eProcess_Unknwon_Dec) // [S2] erreur sur F -> SZ_SF
+        mEventObj[STATE_EVENT_SZ_SF] = QLocale().toDouble(mS_Y_Edit->text());
+    else
+        mEventObj[STATE_EVENT_SY] = QLocale().toDouble(mS_Y_Edit->text());
     MainWindow::getInstance()->updateEvent(mEventObj, Project::ReasonId::EventSYUpdated);
 }
 
@@ -914,6 +932,8 @@ void EventPropertiesView::updateLayout()
     const QJsonObject &state = MainWindow::getInstance()->getState();
     const CurveSettings curveSettings (state.value(STATE_CURVE).toObject());
     const bool withCurve = curveSettings.mProcessType != CurveSettings::eProcess_None;
+    // [S2] Unknwon_Dec : la ligne "Field" a son erreur (SZ_SF) -> même disposition que showYErr()
+    const bool yErrLine = curveSettings.showYErr() || (curveSettings.mProcessType == CurveSettings::eProcess_Unknwon_Dec);
     const bool withNode = (curveSettings.mLambdaSplineType != CurveSettings::eInterpolation)
                           && (curveSettings.mVarianceType == CurveSettings::eModeBayesian);
                          // && (curveSettings.mVarianceType != CurveSettings::eModeFixed)
@@ -948,7 +968,7 @@ void EventPropertiesView::updateLayout()
         auto curveWidgetWidth = mCurveWidget->width()<0 ? width() - 2*margin : mCurveWidget->width();
 
         int lines = 1;
-        if (curveSettings.showYErr()) {
+        if (yErrLine) {
             ++lines;
         }
         if (curveSettings.showZ()) {
@@ -973,7 +993,7 @@ void EventPropertiesView::updateLayout()
 
         int editW;
         if ( curveSettings.showX()) {
-            if ((curveSettings.showY() || curveSettings.mProcessType == CurveSettings::eProcess_Declination) && !curveSettings.showYErr() ) {
+            if ((curveSettings.showY() || curveSettings.mProcessType == CurveSettings::eProcess_Declination) && !yErrLine ) {
                 editW = std::max(0, (curveWidgetWidth - 8*margin - 3*labW - curveNodeCBWidth) / 3);
 
             } else {
@@ -985,7 +1005,7 @@ void EventPropertiesView::updateLayout()
             mS_X_IncLab->setGeometry(dx += editW + margin, dy - YshiftLabel, labW, mLineEditHeight);
             mS_X_IncEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
 
-            if ((curveSettings.showY() || curveSettings.mProcessType == CurveSettings::eProcess_Declination) && !curveSettings.showYErr())  {
+            if ((curveSettings.showY() || curveSettings.mProcessType == CurveSettings::eProcess_Declination) && !yErrLine)  {
                 mY_DecLab->setGeometry(dx += editW + margin, dy - YshiftLabel, labW, mLineEditHeight);
                 mY_DecEdit->setGeometry(dx += labW + margin, dy, editW, mLineEditHeight);
             } 
@@ -996,7 +1016,7 @@ void EventPropertiesView::updateLayout()
             dy += mLineEditHeight + margin;
         }
 
-        if (curveSettings.showYErr()) {
+        if (yErrLine) {
             dx = margin;
             editW = (mCurveWidget->width() - 6*margin - 2*labW - curveNodeCBWidth) / 2;
 

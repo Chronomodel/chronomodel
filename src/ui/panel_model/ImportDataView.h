@@ -75,8 +75,9 @@ private slots:
     void exportDates();
 
 protected:
-    void paintEvent(QPaintEvent*);
-   // void resizeEvent(QResizeEvent*);
+    void paintEvent(QPaintEvent*) override;
+    void resizeEvent(QResizeEvent*) override; // [4] la mise en page n'est plus faite dans paintEvent()
+    void updateLayout();
 
 private:
     Button* mBrowseBut;

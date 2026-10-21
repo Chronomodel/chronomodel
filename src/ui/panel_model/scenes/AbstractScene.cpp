@@ -54,17 +54,16 @@ AbstractScene::AbstractScene(QGraphicsView* view, QObject* parent):
 
 AbstractScene::~AbstractScene()
 {
+    // [3] Destruction ordonnée tant que la partie AbstractScene est encore vivante :
+    // ~EventItem utilise mScene->getItemsList(), ce qui serait indéfini pendant ~QGraphicsScene.
+    blockSignals(true); // pas de selectionChanged vers les slots des classes dérivées déjà détruites
     mItems.clear();
-   /* for (auto* i : mItems) {
-        delete i;
-        i = nullptr;
-    }
-*/
-    for (auto* ci : mConstraintItems) {
+    for (auto* ci : mConstraintItems)
         delete ci;
-        ci = nullptr;
-    }
-    delete mTempArrow;
+    mConstraintItems.clear();
+
+    // mTempArrow est toujours dans la scène : clear() le détruit avec les autres items
+    clear();
     mTempArrow = nullptr;
 }
 
@@ -161,7 +160,7 @@ void AbstractScene::itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEve
 void AbstractScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
 {
     Q_UNUSED(e);
-    qDebug() << "[AbstractScene::itemEntered]";
+    // [4] hors chemin chaud : qDebug() << "[AbstractScene::itemEntered]";
     auto current = currentItem();
 
     if (mDrawingArrow && current && item && (item != current)) {
@@ -171,11 +170,11 @@ void AbstractScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent* e)
         if (constraintAllowed(current, item)) {
             mTempArrow->setState(ArrowTmpItem::eAllowed);
             mTempArrow->setLocked(true);
-            qDebug() << "[AbstractScene::itemEntered] constraintAllowed == true";
+            // [4] hors chemin chaud : qDebug() << "[AbstractScene::itemEntered] constraintAllowed == true";
         } else {
             mTempArrow->setState(ArrowTmpItem::eForbidden);
             mTempArrow->setLocked(true);
-            qDebug() << "[AbstractScene::itemEntered] constraintAllowed == false";
+            // [4] hors chemin chaud : qDebug() << "[AbstractScene::itemEntered] constraintAllowed == false";
         }
     }
 

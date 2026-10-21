@@ -46,7 +46,9 @@ PhasesScene::PhasesScene(QGraphicsView* view, QObject* parent):
 
 PhasesScene::~PhasesScene()
 {
-
+    // [3] plus aucun slot de PhasesScene ne doit être appelé pendant la destruction des items
+    blockSignals(true);
+    mUpdatingItems = true;
 }
 
 /*
@@ -148,7 +150,7 @@ void PhasesScene::setShowAllEvents(const bool show)
  */
 void PhasesScene::sendUpdateProject(const Project::ReasonId id, bool notify, bool async)
 {
-    qDebug()<<"[PhasesScene::sendUpdateProject] "<< Project::reasonToString(id) << notify << async;
+    // [4] hors chemin chaud : qDebug()<<"[PhasesScene::sendUpdateProject] "<< Project::reasonToString(id) << notify << async;
     QJsonObject stateNext = getProject_ptr()->state();
 
     QJsonArray phases = QJsonArray();
@@ -182,13 +184,14 @@ void PhasesScene::createSceneFromState()
      // ------------------------------------------------------
      if (mItems.size()>0) {
          clearSelection();
-         clear();
+         // [C1/C2] la flèche temporaire est conservée hors du clear()
+         removeItem(mTempArrow);
+         clear();                  // détruit aussi les ArrowItem de contraintes
          mItems.clear();
+         mConstraintItems.clear(); // pointeurs déjà libérés par clear()
+         addItem(mTempArrow);
       }
 
-    // this item is delete with clear, but we need it. this is herited from AbstracScene
-    mTempArrow = new ArrowTmpItem();
-    addItem(mTempArrow);
     mTempArrow->setVisible(false);
     mTempArrow->setZValue(0);
 
@@ -384,7 +387,9 @@ void PhasesScene::updateSceneFromState()
         if (!constraints_ids.contains(cData.value(STATE_ID).toInt())) {
             removeItem(cItem);                // retire de la scène
             mConstraintItems.removeAt(i);     // retire du tableau interne
-            delete cItem;                     // destruction immédiate (pas de deleteLater)
+            // [3] destruction différée : la suppression peut venir de ArrowItem::mouse*Event
+            // (constraintClicked / constraintDoubleClicked -> dialogue).
+            QTimer::singleShot(0, this, [cItem]() { delete cItem; });
         }
 
     }
@@ -472,7 +477,12 @@ void PhasesScene::clean()
         constraintItem = nullptr;
     }
 
+    // [C1] mTempArrow ne doit pas être détruit par clear()
+    removeItem(mTempArrow);
     clear();
+    addItem(mTempArrow);
+    mTempArrow->setVisible(false);
+    mDrawingArrow = false;
     setSceneRect(QRectF());
     update(sceneRect());
 }
@@ -483,7 +493,7 @@ void PhasesScene::clean()
  */
 void PhasesScene::updateStateSelectionFromItem()
 {
-    qDebug()<<"[PhasesScene::updateStateSelectionFromItem]";
+    // [4] hors chemin chaud : qDebug()<<"[PhasesScene::updateStateSelectionFromItem]";
     if (!mUpdatingItems) {
         bool modified = false;
         bool oneSelection = false;
@@ -596,13 +606,12 @@ bool PhasesScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent*e)
               }
         }
 
-        //updateStateSelectionFromItem();
-        sendUpdateProject(Project::ReasonId::PhasesSelection, true, false);//  bool notify = true, bool storeUndoCommand = false
+        // [4] plus de sendUpdateProject() ici : la sélection n'est pas encore appliquée à ce stade
+        // (état envoyé périmé) et le changement de sélection déclenche déjà
+        // updateStateSelectionFromItem() -> sendUpdateProject(). Évite 2 reconstructions par clic.
 
     } else {
-        clearSelection();
-        //updateStateSelectionFromItem();
-        sendUpdateProject(Project::ReasonId::NoItemSelection, true, false);//  bool notify = true, bool storeUndoCommand = false
+        clearSelection(); // -> selectionChanged -> updateStateSelectionFromItem()
     }
 
     return true;
@@ -616,7 +625,7 @@ bool PhasesScene::itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent*e)
  */
 void PhasesScene::itemEntered(AbstractItem* item, QGraphicsSceneHoverEvent*)
 {
-    qDebug() << "[PhasesScene::itemEntered]";
+    // [4] hors chemin chaud : qDebug() << "[PhasesScene::itemEntered]";
    // AbstractItem* current = currentItem();
     AbstractItem* current = dynamic_cast<AbstractItem*>(currentPhase());
 

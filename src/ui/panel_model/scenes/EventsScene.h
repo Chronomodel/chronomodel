@@ -51,7 +51,7 @@ public:
     virtual ~EventsScene();
 
     //void sendUpdateProject(const QString& reason, bool notify, bool async);
-    void sendUpdateProject(const Project::ReasonId id, bool notify, bool async);
+    void sendUpdateProject(const Project::ReasonId id, bool notify, bool async) override;
 
     HelpWidget* getHelpView();
     void showHelp(bool show);
@@ -59,7 +59,7 @@ public:
     EventItem* currentEvent() const;
 
 public slots:
-    void clean();
+    void clean() override;
     void phasesSelected();
 
     void createSceneFromState();
@@ -68,15 +68,15 @@ public slots:
     void updateStateSelectionFromItem();
     void updateHelp();
 
-    virtual void deleteSelectedItems();
+    void deleteSelectedItems() override;
 
 public:
-    void itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);
-    bool itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e);
+    void itemDoubleClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e) override;
+    bool itemClicked(AbstractItem* item, QGraphicsSceneMouseEvent* e) override;
 
-    virtual void itemEntered(AbstractItem* eventItem, QGraphicsSceneHoverEvent* e);
-    void constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e);
-    void constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e);
+    void itemEntered(AbstractItem* eventItem, QGraphicsSceneHoverEvent* e) override;
+    void constraintDoubleClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e) override;
+    void constraintClicked(ArrowItem* item, QGraphicsSceneMouseEvent* e) override;
 
     void dateMoved(const DateItem* dateItem);
     EventItem *dateReleased(DateItem* dateItem);
@@ -93,19 +93,19 @@ public:
 
 
 protected:
-    virtual void keyPressEvent(QKeyEvent* keyEvent);
-    virtual void keyReleaseEvent(QKeyEvent* keyEvent);
-    void dropEvent(QGraphicsSceneDragDropEvent* e);
-    void dragMoveEvent(QGraphicsSceneDragDropEvent* e);
+    void keyPressEvent(QKeyEvent* keyEvent) override;
+    void keyReleaseEvent(QKeyEvent* keyEvent) override;
+    void dropEvent(QGraphicsSceneDragDropEvent* e) override;
+    void dragMoveEvent(QGraphicsSceneDragDropEvent* e) override;
 
-    AbstractItem* collidingItem(const QGraphicsItem *item);
-    AbstractItem* currentItem() ;
+    AbstractItem* collidingItem(const QGraphicsItem *item) override;
+    AbstractItem* currentItem() override;
 
     void setCurrentItem(QGraphicsItem* item);
 
-    bool constraintAllowed(AbstractItem *itemFrom, AbstractItem *itemTo);
-    void createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo);
-    void mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo);
+    bool constraintAllowed(AbstractItem *itemFrom, AbstractItem *itemTo) override;
+    void createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo) override;
+    void mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo) override;
     EventItem* findEventItemWithJsonId(const int id);
 
 signals:

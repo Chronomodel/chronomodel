@@ -43,13 +43,16 @@ protected:
     bool mWithSelectedPhase;
     bool mThumbVisible;
 
-    bool mIsNode;
+    bool mIsNode = false; // [S2] non initialisé dans le chemin BoundItem
 
     const qreal mNodeSkin;
 
     qreal mPhasesHeight;
     qreal mCurveLineHeight;
-    qreal mCurveTextHeight;
+    qreal mCurveTextHeight = 0.;
+    // [4] réglages de courbe mis en cache dans setEvent()/resizeEventItem() pour ne pas
+    // relire et reparser le JSON du projet à chaque paint()
+    CurveSettings mCurveSettings;
 
 public:
     EventItem(QGraphicsItem* parent = nullptr);

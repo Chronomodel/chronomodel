@@ -100,10 +100,10 @@ protected:
     qreal mDeltaGrid;
 
 protected:
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* e);
+    void mouseMoveEvent(QGraphicsSceneMouseEvent* e) override;
 
-    virtual void keyPressEvent(QKeyEvent* keyEvent);
-    virtual void keyReleaseEvent(QKeyEvent* keyEvent);
+    void keyPressEvent(QKeyEvent* keyEvent) override;
+    void keyReleaseEvent(QKeyEvent* keyEvent) override;
 
     virtual AbstractItem* currentItem() = 0;
     virtual AbstractItem* collidingItem(const QGraphicsItem* item) = 0;
@@ -113,7 +113,7 @@ protected:
     virtual void createConstraint(AbstractItem* itemFrom, AbstractItem* itemTo) = 0;
     virtual void mergeItems(AbstractItem* itemFrom, AbstractItem* itemTo) = 0;
 
-    void drawBackground(QPainter* painter, const QRectF& rect);
+    void drawBackground(QPainter* painter, const QRectF& rect) override;
 
 
 

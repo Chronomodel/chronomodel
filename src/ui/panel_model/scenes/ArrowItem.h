@@ -60,9 +60,9 @@ public:
                        const QJsonObject& constraint,
                        QGraphicsItem* parent = nullptr);
 
-    ~ArrowItem() override = default;   // QObject s’occupe de la destruction
+    ~ArrowItem() override = default;   // QGraphicsItem (pas un QObject) : détruit par la scène ou explicitement
 
-    enum { Type = UserType + 1 };
+    enum { Type = UserType + 31 }; // [3] distinct de AbstractItem::Type (UserType + 1)
 
     int type() const override
     {

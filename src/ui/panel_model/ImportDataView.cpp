@@ -88,6 +88,7 @@ void ImportDataView::setHelpVisible(const bool visible)
     }
 
     mTable->setGeometry(0, 2*m + butH, width(), height() - 4*m - butH - helpH);*/
+    updateLayout(); // [4] la mise en page n'est plus faite dans paintEvent()
     update();
 }
 
@@ -232,7 +233,7 @@ void ImportDataView::browse()
 
                         QStringList titleText;
                         values.push_front("");
-                        foreach (const QString val, values) {
+                        for (const QString& val : std::as_const(values)) { // [5] foreach (Qt) déprécié
                             if (val.toUpper() != "TITLE")
                                 titleText.append(val);
                         }
@@ -244,7 +245,7 @@ void ImportDataView::browse()
                         headers << "STRUCTURE";
                         QStringList titleText;
                         values.push_front("");
-                        foreach (const QString val, values) {
+                        for (const QString& val : std::as_const(values)) { // [5] foreach (Qt) déprécié
                             if (val.toUpper() != "STRUCTURE")
                                 titleText.append(val);
                         }
@@ -447,6 +448,16 @@ void ImportDataView::paintEvent(QPaintEvent* )
 {
     QPainter p(this);
     p.fillRect(rect(), QColor(200, 200, 200));
+}
+
+void ImportDataView::resizeEvent(QResizeEvent*)
+{
+    updateLayout();
+}
+
+// [4] déplacé hors de paintEvent() : un setGeometry() pendant le paint relance des repaint
+void ImportDataView::updateLayout()
+{
     const int m = 5;
     const int butH = 25;
     int helpH = -2*m;
@@ -454,7 +465,7 @@ void ImportDataView::paintEvent(QPaintEvent* )
     mBrowseBut->setGeometry(m, m, (width() - 3*m)/2, butH);
     mExportBut->setGeometry(2*m + (width() - 3*m)/2, m, (width() - 3*m)/2, butH);
 
-    if (mHelp->isVisible()) {
+    if (!mHelp->isHidden()) { // isHidden : indépendant de la visibilité du parent
         helpH = mHelp->heightForWidth(width() - 2*m);
         mHelp->setGeometry(m, height() - helpH - m, width() - 2*m, helpH);
 
@@ -526,7 +537,7 @@ QMimeData* ImportDataTable::mimeData(const QList<QTableWidgetItem *> &items) con
                 row = item->row();
                 itemStr << QString::number(row);
 
-                const QString evenName = verticalHeaderItem(row)->text();
+                const QString evenName = verticalHeaderItem(row) ? verticalHeaderItem(row)->text() : QString(); // [C6]
                 itemStr << evenName;
 
             }
@@ -547,10 +558,11 @@ void ImportDataTable::updateTableHeaders()
     QString pluginName;
     QString verticalHeader;
     for (QTableWidgetItem* it : items) {
-        const QString &curPluginName = item(it->row(), 0)->text();
+        const QTableWidgetItem* firstCell = item(it->row(), 0); // [C6] peut être nul (ligne "Title" d'une seule cellule)
+        const QString curPluginName = firstCell ? firstCell->text() : QString();
         if (pluginName.isEmpty()) {
             pluginName = curPluginName;
-            verticalHeader = verticalHeaderItem(it->row())->text();
+            verticalHeader = verticalHeaderItem(it->row()) ? verticalHeaderItem(it->row())->text() : QString(); // [C6]
 
         } else if (pluginName != curPluginName) {
             pluginName = QString();

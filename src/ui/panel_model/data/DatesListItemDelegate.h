@@ -29,7 +29,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #ifndef DATESLISTITEMDELEGATE_H
 #define DATESLISTITEMDELEGATE_H
 
-#include "AppSettings.h"
 #include "PluginManager.h"
 #include "PluginAbstract.h"
 #include "Painting.h"
@@ -85,16 +84,13 @@ public:
         QString dateName = index.model()->data(index, 0x0101).toString();
         QString pluginId = index.model()->data(index, 0x0102).toString();
         QString dateDesc = index.model()->data(index, 0x0103).toString();
-        // item->setData(0x0104, d.mId););
+
         QString deltaDesc = index.model()->data(index, 0x0105).toString();
         QString dateMethodStr = index.model()->data(index, 0x0106).toString();
         bool isValid = index.model()->data(index, 0x0107).toBool();
         bool isCombined = index.model()->data(index, 0x0108).toBool();
-        bool dateOrigin = index.model()->data(index, 0x0109).toInt();
-        /*
-         item->setData(0x0110, d.mUUID);
-         item->setData(0x0111, d.getWiggleDesc());
-         */
+        const int dateOrigin = index.model()->data(index, 0x0109).toInt(); // [5] int, comparé à Date::eSingleDate
+
 
         PluginAbstract* plugin = PluginManager::getPluginFromId(pluginId);
 
@@ -108,7 +104,7 @@ public:
             QFont font = qApp->font();
 
             if (isCombined) {
-                font.setPointSize( qApp->font().pixelSize()* 1.5);
+                if (font.pointSizeF() > 0) font.setPointSizeF(font.pointSizeF() * 1.5); else font.setPixelSize(int(font.pixelSize() * 1.5)); // [5] pixelSize() vaut -1 pour une police en points
                 painter->setFont(font);
                 painter->setBrush(Painting::mainColorDark);
                 painter->setPen(Painting::mainColorDark);
