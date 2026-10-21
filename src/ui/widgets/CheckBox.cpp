@@ -49,32 +49,20 @@ CheckBox::~CheckBox()
 
 }
 
-void CheckBox::enterEvent(QEnterEvent *e)
+bool CheckBox::event(QEvent* event)
 {
-    mMouseOver = true;
-    update();
-    QCheckBox::QWidget::enterEvent(e);
-}
-
-void CheckBox::leaveEvent(QEvent * e)
-{
-    mMouseOver = false;
-    update();
-    QCheckBox::QWidget::leaveEvent(e);
-}
-
-/*void CheckBox::paintEvent(QPaintEvent* e)
-{
-    (void) e;
-
-    QPainter p(this);
-    p.setFont(parentWidget()->font());
-    drawCheckbox(p, rect(), text(), checkState());
-    if (mMouseOver && AppSettings::mShowHelp) {
-        QToolTip::showText(mapToGlobal(rect().center()), toolTip());
+    if (event->type() == QEvent::ToolTip) {
+        // Infobulles standard Qt, actives uniquement si l'aide de l'application est activée
+        if (AppSettings::mShowHelp && !toolTip().isEmpty()) {
+            QToolTip::showText(static_cast<QHelpEvent*>(event)->globalPos(), toolTip(), this);
+        } else {
+            QToolTip::hideText();
+            event->ignore();
+        }
+        return true;
     }
-  //  QCheckBox::paintEvent(e);
-}*/
+    return QCheckBox::event(event);
+}
 
 void CheckBox::paintEvent(QPaintEvent* e)
 {

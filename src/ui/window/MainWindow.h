@@ -31,7 +31,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "Project.h"
 #include "Singleton.h"
-#include "SwitchAction.h"
 
 #include <QMainWindow>
 #include <QUndoStack>
@@ -42,6 +41,8 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #include <QPushButton>
 #include <QStackedWidget>
 #include <QWidgetAction>
+#include <QComboBox>   // auparavant inclus via SwitchAction.h
+#include <QLabel>      // idem
 
 
 class ProjectView;
@@ -172,7 +173,6 @@ private:
     QAction* mRunAction;
     // QAction* mResetMCMCAction;
     
-    SwitchAction* mCurveAction;
 
     QActionGroup* mViewGroup;
     QAction* mViewModelAction;

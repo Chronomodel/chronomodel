@@ -37,7 +37,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
 class QMenu;
 class QAction;
 class QActionGroup;
-class SwitchAction;
 class QStackedWidget;
 class QUndoStack;
 class QUndoView;
@@ -154,7 +153,6 @@ private:
     QAction* mRunAction;
     QAction* mResetMCMCAction;
     
-    //SwitchAction* mCurveAction;
 
     QActionGroup* mViewGroup;
     //QAction* mViewModelAction;

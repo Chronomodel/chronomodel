@@ -65,26 +65,6 @@ Button::Button(const QString &text, QWidget* parent):QPushButton(text, parent),
     setAutoRepeat(false);
     setCursor(Qt::PointingHandCursor);
     QPushButton::setFlat(false);
-
-    QIcon ic = icon();
-    bool textOnly = !mIconOnly && !text.isEmpty() && ic.isNull();
-
-    if (!mIconOnly) {
-        mFont = QPushButton::font();
-        if (textOnly)
-            mFont.setBold(true);
-
-        QFontMetricsF fm (mFont);
-        qreal textSize = fm.horizontalAdvance(text);
-
-        while (textSize > (rect().width() - 30. )) {
-            mFont.setPointSizeF(mFont.pointSizeF() - 1);
-            fm = QFontMetricsF(mFont);
-            textSize = fm.horizontalAdvance(text);
-        }
-    }
-
-
 }
 
 Button::Button(const Button &button, QWidget* parent):
@@ -92,8 +72,8 @@ Button::Button(const Button &button, QWidget* parent):
     mFlatVertical (button.mFlatVertical),
     mFlatHorizontal (button.mFlatHorizontal),
     mIsClose (button.mIsClose),
-    mIconOnly(true),
-    mMouseOver (button.mMouseOver),
+    mIconOnly(button.mIconOnly),
+    mMouseOver(false),
     mColorState(button.mColorState),
     mFont(button.mFont),
     mUseMargin(button.mUseMargin)
@@ -147,11 +127,6 @@ Button::~Button()
 {
 }
 
-void Button::keyPressEvent(QKeyEvent* event)
-{
-    QPushButton::keyPressEvent(event);
-}
-
 void Button::setFlatVertical()
 {
     mFlatVertical = true;
@@ -163,6 +138,13 @@ void Button::setFlatHorizontal()
 {
     mFlatHorizontal = true;
     QPushButton::setFlat(true);
+    update();
+}
+
+void Button::setIconOnly(bool iconOnly)
+{
+    mIconOnly = iconOnly;
+    updateFont();
     update();
 }
 
@@ -180,6 +162,16 @@ void Button::setColorState(ColorState state)
 
 bool Button::event(QEvent* event)
 {
+    if (event->type() == QEvent::ToolTip) {
+        // Infobulles standard Qt, actives uniquement si l'aide de l'application est activée
+        if (AppSettings::mShowHelp && !toolTip().isEmpty()) {
+            QToolTip::showText(static_cast<QHelpEvent*>(event)->globalPos(), toolTip(), this);
+        } else {
+            QToolTip::hideText();
+            event->ignore();
+        }
+        return true;
+    }
     return QPushButton::event(event);
 }
 
@@ -187,36 +179,43 @@ void Button::enterEvent(QEnterEvent *e)
 {
     mMouseOver = true;
     update();
-    QPushButton::QWidget::enterEvent(e);
+    QPushButton::enterEvent(e);
 }
 
 void Button::leaveEvent(QEvent * e)
 {
     mMouseOver = false;
     update();
-    QPushButton::QWidget::leaveEvent(e);
+    QPushButton::leaveEvent(e);
 }
 
 void Button::resizeEvent(QResizeEvent* e)
 {
-    const bool textOnly = !mIconOnly && !text().isEmpty() && icon().isNull();
-
-    if (!mIconOnly) {
-        mFont = QPushButton::font();
-        if (textOnly)
-            mFont.setBold(true);
-
-        QFontMetricsF fm (mFont);
-        qreal textSize = fm.horizontalAdvance(text());
-
-        while (textSize > (rect().width() - 5. )) {
-            mFont.setPointSizeF(mFont.pointSizeF() - 1);
-            fm = QFontMetricsF(mFont);
-            textSize = fm.horizontalAdvance(text());
-        }
-    }
-
     QPushButton::resizeEvent(e);
+    updateFont();
+}
+
+void Button::updateFont()
+{
+    if (mIconOnly)
+        return;
+
+    mFont = QPushButton::font();
+    if (!text().isEmpty() && icon().isNull())
+        mFont.setBold(true);
+
+    // Réduction de la taille de police jusqu'à ce que le texte tienne.
+    // Bornes : largeur disponible > 0 et taille mini 4 pt
+    // (sinon boucle infinie si le bouton est très étroit ou si la police est en pixels)
+    const qreal availW = width() - 5.;
+    if (availW <= 0. || mFont.pointSizeF() <= 0.)
+        return;
+
+    qreal textSize = QFontMetricsF(mFont).horizontalAdvance(text());
+    while (textSize > availW && mFont.pointSizeF() > 4.) {
+        mFont.setPointSizeF(mFont.pointSizeF() - 1.);
+        textSize = QFontMetricsF(mFont).horizontalAdvance(text());
+    }
 }
 void Button::setCheckState(const bool checkState)
 {
@@ -238,12 +237,7 @@ void Button::setCheckable(const bool checkable)
         mColorState = eDefault;
 
     QPushButton::setCheckable(checkable);
-
-}
-
-void Button::setText(const QString& text)
-{
-    QPushButton::setText(text);
+    update();
 }
 
 void Button::paintEvent(QPaintEvent* e)
@@ -459,10 +453,6 @@ void Button::paintEvent(QPaintEvent* e)
         painter.setPen(penCol);
         painter.drawText(r, Qt::AlignCenter, text());
 
-    }
-
-    if (mMouseOver && AppSettings::mShowHelp) {
-        QToolTip::showText(mapToGlobal(rect().center()), toolTip());
     }
 
     painter.restore();

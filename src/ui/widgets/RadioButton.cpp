@@ -28,18 +28,20 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "RadioButton.h"
 #include "Painting.h"
+#include "AppSettings.h"
 
 #include <QtWidgets>
 
-RadioButton::RadioButton(QWidget* parent):QRadioButton(parent)
+RadioButton::RadioButton(QWidget* parent):
+    QRadioButton(parent)
 {
     setCursor(Qt::PointingHandCursor);
-    setPalette(qApp->palette());
 }
 
-RadioButton::RadioButton(const QString& text, QWidget* parent):QRadioButton(text, parent)
+RadioButton::RadioButton(const QString& text, QWidget* parent):
+    QRadioButton(text, parent)
 {
-
+    setCursor(Qt::PointingHandCursor);
 }
 
 RadioButton::~RadioButton()
@@ -47,13 +49,21 @@ RadioButton::~RadioButton()
 
 }
 
-/*void RadioButton::paintEvent(QPaintEvent* e)
+bool RadioButton::event(QEvent* event)
 {
-    Q_UNUSED(e);
+    if (event->type() == QEvent::ToolTip) {
+        // Infobulles standard Qt, actives uniquement si l'aide de l'application est activée
+        if (AppSettings::mShowHelp && !toolTip().isEmpty()) {
+            QToolTip::showText(static_cast<QHelpEvent*>(event)->globalPos(), toolTip(), this);
+        } else {
+            QToolTip::hideText();
+            event->ignore();
+        }
+        return true;
+    }
+    return QRadioButton::event(event);
+}
 
-    QPainter p(this);
-    drawRadio(p, rect(), text(), isChecked());
-}*/
 void RadioButton::paintEvent(QPaintEvent* e)
 {
     Q_UNUSED(e);

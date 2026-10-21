@@ -69,5 +69,5 @@ bool ChronoApp::event(QEvent* e)
     }
 
     // Appele la méthode de base pour les autres événements
-    return QGuiApplication::event(e);
+    return QApplication::event(e); // et non QGuiApplication : QApplication::event gère le timer des toolTips
 }

@@ -90,8 +90,8 @@ private:
    int mLineH;
    int mEditW;
 
-   int mButW ;
-   int mButH ; // size of the button OK and Cancel
+   int mButW;
+   int mButH; // size of the button OK and Cancel
    int mMarginW;
    int mMarginH;
 
@@ -129,8 +129,6 @@ private:
     QRectF mBatch1Rect;
     QRectF mBatchInterRect;
     QRectF mBatchNRect;
-
-
 };
 
 #endif

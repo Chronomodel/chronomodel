@@ -42,6 +42,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #include <QStyleFactory>
 #include <QtWidgets/qabstractitemview.h>
 #include <QMessageBox>
+#include <QTimer>
 
 
 CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
@@ -201,6 +202,8 @@ CurveSettingsView::~CurveSettingsView()
 
 void CurveSettingsView::setConnections(const bool doConnections)
 {
+    mConnectionsActive = doConnections;
+    ++mConnectionsGeneration;
     if (doConnections) {
         // updateVisibilities
         connect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
@@ -208,13 +211,13 @@ void CurveSettingsView::setConnections(const bool doConnections)
         connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
 
         // Save
-        connect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
+        connect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::saveDeferred);
         connect(mThresholdInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
         connect(mUseErrMesureInput, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::save);
-        connect(mTimeTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
-        connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
+        connect(mTimeTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::saveDeferred);
+        connect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::saveDeferred);
         connect(mVarianceValueInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
-        connect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
+        connect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::saveDeferred);
         connect(mLambdaSplineInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
 
     } else {
@@ -224,13 +227,13 @@ void CurveSettingsView::setConnections(const bool doConnections)
         disconnect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::updateVisibilities);
 
         // Save
-        disconnect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
+        disconnect(mProcessTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::saveDeferred);
         disconnect(mThresholdInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
         disconnect(mUseErrMesureInput, static_cast<void (QCheckBox::*)(bool)>(&QCheckBox::toggled), this, &CurveSettingsView::save);
-        disconnect(mTimeTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
-        disconnect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
+        disconnect(mTimeTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::saveDeferred);
+        disconnect(mVarianceTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::saveDeferred);
         disconnect(mVarianceValueInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
-        disconnect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::save);
+        disconnect(mLambdaSplineTypeInput, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &CurveSettingsView::saveDeferred);
         disconnect(mLambdaSplineInput, static_cast<void (QLineEdit::*)(const QString&)>(&QLineEdit::textChanged), this, &CurveSettingsView::save);
     }
 }
@@ -390,8 +393,10 @@ CurveSettings CurveSettingsView::getSettings() const
 void CurveSettingsView::setProject()
 {
     auto project = getProject_ptr();
-    if (project != nullptr)
-        setConnections(false);
+    if (project == nullptr)
+        return;
+
+    setConnections(false);
 
     const CurveSettings curveSettings(project->mState.value(STATE_CURVE).toObject());
 
@@ -409,10 +414,25 @@ void CurveSettingsView::reset()
 void CurveSettingsView::save()
 {
     auto project = getProject_ptr();
+    if (project == nullptr)
+        return;
+
     QJsonObject stateNext = project->mState;
     stateNext[STATE_CURVE] = getSettings().toJson();
     project->pushProjectState(stateNext, Project::ReasonId::CurveSettingsUpdated, true);
     emit newProcess(mProcessTypeInput->currentText());
+}
+
+// Les combobox appellent save() via la boucle d'événements : currentIndexChanged est émis pendant
+// la fermeture du popup (animation native sous macOS). Un dialogue modal ouvert à ce moment
+// (validateAndConvertDouble) laisse le popup transparent pour les ouvertures suivantes.
+void CurveSettingsView::saveDeferred()
+{
+    const unsigned generation = mConnectionsGeneration;
+    QTimer::singleShot(0, this, [this, generation]() {
+        if (mConnectionsActive && generation == mConnectionsGeneration)
+            save();
+    });
 }
 
 void CurveSettingsView::updateVisibilities()

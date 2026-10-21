@@ -132,7 +132,8 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent,
         mHelp = new HelpWidget(
             tr("About seeds : Each MCMC chain is different from the others because it uses a different seed. "
                "By default, seeds are picked randomly. However, you can force the chains to use specific seeds "
-               "by entering them below. By doing so, you can replicate exactly the same results using the same seeds."),
+               "by entering them below. By doing so, you can replicate exactly the same results using the same seeds.\n"
+               "About annealing : Simulated annealing can be disabled by setting Recurrence to 0."),
             this);
         mHelp->setLink(
             "https://chronomodel.com/storage/medias/83_chronomodel_v32_user_manual_2024_05_13_min.pdf#page=52");
@@ -178,6 +179,7 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent,
     mAnnealRecurrenceEdit->setValidator(validatorRplus);
     mAnnealRecurrenceEdit->setAlignment(Qt::AlignCenter);
     mAnnealRecurrenceEdit->setPlaceholderText(tr("0 to disable"));
+    mAnnealRecurrenceEdit->setToolTip(tr("Set Recurrence to 0 to disable simulated annealing"));
 
     mAnnealDwellEdit  = new LineEdit(this);
     mAnnealDwellEdit->setFixedSize(mEditW, mButH);
@@ -209,8 +211,15 @@ MCMCSettingsDialog::MCMCSettingsDialog(QWidget* parent,
     connect(mResetBut, &QPushButton::clicked, this, &MCMCSettingsDialog::reset);
     connect(mTestBut, &QPushButton::clicked, this, &MCMCSettingsDialog::setQuickTest);
 
+    /* ---- Recurrence = 0 : annealing désactivé -> Temp. et Dwell grisés ---- */
+    connect(mAnnealRecurrenceEdit, &QLineEdit::textChanged, this, [this](const QString& txt) {
+        const bool annealOn = (txt.toInt() != 0);
+        mAnnealTempEdit->setEnabled(annealOn);
+        mAnnealDwellEdit->setEnabled(annealOn);
+    });
+
     const int fixedHeight = mTop + mColoredBoxHeigth
-                            + (show_help ? mHelp->heightForWidth(mTotalWidth - 2 * mMarginW) : 0)
+                            + (show_help ? mHelp->heightForWidth(mTotalWidth - 2 * mMarginW) + mMarginH : 0)
                             + 5 * mMarginH + 2 * mLineH + mOkBut->height();
     setFixedSize(mTotalWidth, fixedHeight);
 }
@@ -425,6 +434,15 @@ void MCMCSettingsDialog::updateLayout()
     mAnnealDwellEdit->move(
         AnnealEditShift,
         int(mAnnealRect.y() + 7 * mLineH + 7 * alphMargin));
+
+    /* ---- help (entre les boîtes colorées et la partie basse) ---- */
+    if (!mHelp->isHidden()) {
+        const int helpW = width() - 2 * mMarginW;
+        mHelp->setGeometry(mMarginW,
+                           mTop + mColoredBoxHeigth + mMarginH,
+                           helpW,
+                           mHelp->heightForWidth(helpW));
+    }
 
     /* ---- bottom part ---- */
     mSeedsLabel->move(2 * mMarginW, height() - 5 * mMarginH - mButH - mLineH);

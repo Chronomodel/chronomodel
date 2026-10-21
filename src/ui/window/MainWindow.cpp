@@ -263,10 +263,6 @@ void MainWindow::createActions()
     //-----------------------------------------------------------------
     // View Actions
     //-----------------------------------------------------------------
-    mCurveAction = new SwitchAction(this);
-    mCurveAction->setCheckable(true);
-    mCurveAction->setChecked(false);
-
     mViewModelAction = new QAction(QIcon(":model_p.png"), tr("Model"), this);
     mViewModelAction->setCheckable(true);
 
@@ -467,7 +463,6 @@ void MainWindow::createToolBars()
     separator3->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     mToolBar->addWidget(separator3);
 
-    mToolBar->addAction(mCurveAction);
     mToolBar->addAction(mViewModelAction);
     mToolBar->addAction(mMCMCSettingsAction);
     mToolBar->addAction(mRunAction);
@@ -634,6 +629,14 @@ void MainWindow::openProject()
 
             } else
                 mProject->mAutoSaveTimer->stop();
+
+         } else {
+            // Échec du chargement : l'interface a déjà été réinitialisée (resetInterface) mais les vues
+            // (dont CurveSettingsView) restent connectées à l'ancien état. On désactive l'interface
+            // comme dans closeProject().
+            activateInterface(false);
+            mViewResultsAction->setEnabled(false);
+            updateWindowTitle();
          }
 
         mUndoStack->clear();
@@ -1444,7 +1447,6 @@ void MainWindow::clearInterface()
     mProjectSaveAction->setEnabled(false);
     mProjectSaveAsAction->setEnabled(false);
 
-    mCurveAction->setEnabled(false);
     mViewModelAction->setEnabled(false);
     mMCMCSettingsAction->setEnabled(false);
     //mResetMCMCAction->setEnabled(false);
@@ -1479,7 +1481,6 @@ void MainWindow::activateInterface(bool activate)
     mProjectSaveAction->setEnabled(activate);
     mProjectSaveAsAction->setEnabled(activate);
 
-    mCurveAction->setEnabled(activate);
     mViewModelAction->setEnabled(activate);
     mMCMCSettingsAction->setEnabled(activate);
     //mResetMCMCAction->setEnabled(activate);

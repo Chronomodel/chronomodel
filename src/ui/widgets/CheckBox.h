@@ -40,15 +40,13 @@ public:
     ~CheckBox();
 
     QColor mDotColor;
-    bool mHasDot;
+    bool mHasDot = false;
 
     void setDotColor(const QColor& color) { mDotColor = color; mHasDot = true; update(); }
 
 protected:
-    bool mMouseOver;
-    void paintEvent(QPaintEvent* e);
-    void enterEvent(QEnterEvent *e);
-    void leaveEvent(QEvent * e);
+    void paintEvent(QPaintEvent* e) override;
+    bool event(QEvent* event) override; // gestion des toolTips (conditionnés par AppSettings::mShowHelp)
 };
 
 #endif

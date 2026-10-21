@@ -63,6 +63,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #include <QToolTip>
 #include <QGraphicsView>
 #include <QProgressDialog>
+#include <memory>
 #include <QMessageBox>
 #include <QMouseEvent>
 #include <QSettings>
@@ -109,19 +110,22 @@ ModelView::ModelView(QWidget* parent, Qt::WindowFlags flags):
     // ---- Header Top Bar with Study period --------------
     // ----------- on mTopWrapper ------------------
 
-    mButModifyPeriod = new QPushButton(tr("STUDY PERIOD") , mTopWrapper);
+    mButModifyPeriod = new Button(tr("STUDY PERIOD"), mTopWrapper);
+    mButModifyPeriod->setIconOnly(false);
+    mButModifyPeriod->setFocusPolicy(Qt::NoFocus); // évite l'anneau de focus (bleu sur macOS) au premier affichage
     mButModifyPeriod->setToolTip(tr("Define the study Period"));
     mButModifyPeriod->setWhatsThis(tr("Define the study Period"));
 
     mButCurve = new Button(tr("ChronoCurve :"), mTopWrapper);
     mButCurve->setToolTip(tr("Define curve parameters"));
     mButCurve->setWhatsThis(tr("Define curve parameters"));
-    mButCurve->setFlatHorizontal();
+    // pas de setFlatHorizontal() : même rendu clair que mButModifyPeriod
     mButCurve->setCheckable(true);
     mButCurve->setIconOnly(false);
+    mButCurve->setFocusPolicy(Qt::NoFocus);
 
     adaptStudyPeriodButton(mTmin, mTmax);
-    connect(mButModifyPeriod,  &QPushButton::clicked, this, &ModelView::modifyPeriod);
+    connect(mButModifyPeriod, &Button::clicked, this, &ModelView::modifyPeriod);
 
     connect(mButCurve, &Button::toggled, this, &ModelView::showCurveSettings);
 
@@ -610,7 +614,7 @@ bool ModelView::findCalibrateMissing()
         for (auto&& Qev: Qevents)
             events.emplace_back(Qev.toObject());
 
-        QProgressDialog *progress = new QProgressDialog("Calibration curve missing","Wait" , 1, 10);//, qApp->activeWindow(), Qt::Window);
+        std::unique_ptr<QProgressDialog> progress(new QProgressDialog("Calibration curve missing","Wait" , 1, 10)); // détruit en sortie de bloc
         progress->setWindowModality(Qt::WindowModal);
         progress->setCancelButton(nullptr);
         progress->setMinimumDuration(4);
@@ -685,7 +689,7 @@ void ModelView::calibrateAll(StudyPeriodSettings newS)
             events.emplace_back(Qev.toObject());
         }
 
-        QProgressDialog *progress = new QProgressDialog("Calibration in progress...","Wait" , 1, 10);
+        std::unique_ptr<QProgressDialog> progress(new QProgressDialog("Calibration in progress...","Wait" , 1, 10)); // détruit en sortie de bloc
         progress->setWindowModality(Qt::WindowModal);
         progress->setCancelButton(nullptr);
         progress->setMinimumDuration(4);
@@ -1444,7 +1448,7 @@ void ModelView::updateLayout()
     mRightPanelTitle->setGeometry(std::max(0, width() - labw - margin), 0, labw, mTopRect.height());
 
     // Center buttons
-    mButModifyPeriod->setGeometry(width()/2 - 251, 2, 300, mTopRect.height() - 4);
+    mButModifyPeriod->setGeometry(width()/2 - 251, 5, 300, mTopRect.height() - 10); // même taille que mButCurve
     mButCurve->setGeometry(mButModifyPeriod->x() + mButModifyPeriod->width() + 2, 5, 300, mTopRect.height() - 10);
 
 

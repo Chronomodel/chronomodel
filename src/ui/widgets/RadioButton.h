@@ -35,16 +35,17 @@ class RadioButton: public QRadioButton
 {
     Q_OBJECT
 public:
-    explicit RadioButton(QWidget* parent = 0);
-    explicit RadioButton(const QString& text, QWidget* parent = 0);
+    explicit RadioButton(QWidget* parent = nullptr);
+    explicit RadioButton(const QString& text, QWidget* parent = nullptr);
     ~RadioButton();
 
     QColor mDotColor;
-    bool mHasDot;
+    bool mHasDot = false;
     void setDotColor(const QColor& color) { mDotColor = color; mHasDot = true; update(); }
 
 protected:
-    void paintEvent(QPaintEvent* e);
+    void paintEvent(QPaintEvent* e) override;
+    bool event(QEvent* event) override; // gestion des toolTips (conditionnés par AppSettings::mShowHelp)
 };
 
 #endif

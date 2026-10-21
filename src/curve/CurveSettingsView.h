@@ -59,10 +59,13 @@ protected slots:
     void updateVisibilities();
     void reset();
     void save();
+    void saveDeferred();
 
 private:
 
     bool mEnabled;
+    bool mConnectionsActive = false; // vrai entre setConnections(true) et setConnections(false)
+    unsigned mConnectionsGeneration = 0; // invalide les save() différés en attente
     
     QLabel* mTitleLabel;
     QLabel* mDescriptionLabel;
