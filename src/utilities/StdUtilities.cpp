@@ -2784,12 +2784,19 @@ double computeIntraModeVariance(const std::vector<double>& x, const std::vector<
 
 
 std::optional<double> computeIntraModeVarianceMin(const std::vector<double>& x, const std::vector<double>& f,
-                                                  size_t minPointsPerMode)
+                                                  size_t minPointsPerMode, double minMassFraction)
 {
     const double maxVal = *std::max_element(f.begin(), f.end());
-    const double threshold = 0.05 * maxVal; // Seuil à 1% du pic max
+    const double threshold = 0.05 * maxVal; // Seuil à 5% du pic max
+    // Masse totale (pas régulier) : un îlot portant moins de minMassFraction de la masse est ignoré,
+    // sinon un petit pic isolé (ex. 0,2 % de la masse) impose une variance minuscule, donc un β(S02) quasi nul.
+    double totalMass = 0.0;
+    for (const double v : f) totalMass += v;
     double minVariance = std::numeric_limits<double>::max();
     bool foundMode = false;
+    // Repli : îlot de plus grande masse, retenu si aucun îlot n'atteint minMassFraction
+    // (densité très multimodale, ex. plus de 100 pics identiques de moins de 1 % chacun).
+    double largestMass = -1.0, largestMassVariance = 0.0;
     size_t i = 0;
     const size_t n = f.size();
 
@@ -2815,21 +2822,30 @@ std::optional<double> computeIntraModeVarianceMin(const std::vector<double>& x, 
             }
 
             if (w_k > 0.0 && count >= minPointsPerMode) {
-                double var_k = M2 / w_k;
                 // Filet de sécurité : jamais négatif (erreurs d'arrondi résiduelles)
-                var_k = std::max(var_k, 0.0);
+                const double var_k = std::max(M2 / w_k, 0.0);
 
-                if (var_k < minVariance) {
-                    minVariance = var_k;
+                if (w_k > largestMass) {
+                    largestMass = w_k;
+                    largestMassVariance = var_k;
                 }
-                foundMode = true;
+                if (w_k >= minMassFraction * totalMass) {
+                    if (var_k < minVariance) {
+                        minVariance = var_k;
+                    }
+                    foundMode = true;
+                }
             }
         } else {
             ++i;
         }
     }
 
-    return foundMode ? std::optional<double>(minVariance) : std::nullopt;
+    if (foundMode)
+        return std::optional<double>(minVariance);
+    if (largestMass > 0.0)
+        return std::optional<double>(largestMassVariance);
+    return std::nullopt;
 }
 
 

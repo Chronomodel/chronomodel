@@ -1786,7 +1786,9 @@ inline double schedule_power(double sigma, double T,
  * @param f Vecteur des fréquences ou intensités correspondantes (utilisé pour identifier les modes)
  * @return double La variance pondérée intra-mode calculée, ou 1.0 si aucun mode n'est détecté
  *
- * @note Le seuil pour la détection des modes est fixé à 1% de la valeur maximale de f
+ * @note Le seuil pour la détection des modes est fixé à 5% de la valeur maximale de f
+ * @note Un mode portant moins de minMassFraction (défaut 1 %) de la masse totale est ignoré
+ *       (si aucun mode n'atteint ce seuil, la variance du mode de plus grande masse est renvoyée)
  * @note Les modes sont définis comme les régions où f[i] > seuil
  * @note La variance intra-mode est calculée pour chaque mode individuel, puis pondérée
  *       par le poids du mode pour donner une variance globale
@@ -1809,7 +1811,7 @@ double computeIntraModeVariance(const std::vector<double>& x, const std::vector<
  * @note La fonction retourne la variance minimale parmi tous les modes identifiés
  */
 std::optional<double> computeIntraModeVarianceMin(const std::vector<double>& x, const std::vector<double>& f,
-                                                  size_t minPointsPerMode = 1);
+                                                  size_t minPointsPerMode = 1, double minMassFraction = 0.01);
 
 
 double log_diff_cdf(double a, double b);
