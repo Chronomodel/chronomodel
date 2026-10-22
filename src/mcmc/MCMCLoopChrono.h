@@ -49,6 +49,14 @@ protected:
 
     virtual bool update()
     {
+        // Remet à zéro la moitié haute des registres AVX (vzeroupper) avant chaque itération.
+        // Un thread lancé après QApplication peut hériter d'un état AVX « sale » : chaque instruction
+        // SSE de la libm (log, exp, pow, erfc…) paie alors la pénalité de transition AVX→SSE
+        // (×5 à ×30 mesuré sous Linux sur un processeur Intel). Coût : un cycle. Sans effet hors x86.
+#if (defined(__x86_64__) || defined(__i386__)) && (defined(__GNUC__) || defined(__clang__))
+        if (__builtin_cpu_supports("avx"))
+            __asm__ volatile("vzeroupper" ::: "memory");
+#endif
         //return update_v3();
         return update_v3_block_simulated_annealing();
 
@@ -64,7 +72,7 @@ protected:
 
     // Echantillonneur Gibbs sur toutes les variables, comme v2
     bool update_v3();
-    void sampler_Gibbs(std::vector<std::shared_ptr<Event>> &events);
+    void sampler_Gibbs();
 
     //bool update_v4_simulated_annealing(); // avec changement de variable xi
 

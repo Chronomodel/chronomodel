@@ -1237,6 +1237,21 @@ void MCMCLoop::run()
     unsigned estimatedTotalIter = (unsigned)((int)mLoopChains.size() *(1 + mLoopChains.at(0).mIterPerBurn + mLoopChains.at(0).mIterPerBatch*mLoopChains.at(0).mMaxBatchs + mLoopChains.at(0).mIterPerAquisition));
     unsigned iterDone = 0;
 
+    // Barre de progression : au plus une mise à jour toutes les kProgressIntervalMs, plus une en fin de phase.
+    // Émettre stepProgressed à chaque itération poste un événement vers le thread de l'interface (verrou de sa
+    // boucle d'événements + réveil) : sur un petit modèle, c'était un tiers du temps de calcul. Limité par le
+    // temps (et non par un nombre d'itérations), la barre reste vivante sur un gros modèle lent (chaque itération
+    // de plus de 50 ms est affichée) et ne coûte presque rien sur un petit modèle rapide (≤ 20 mises à jour / s).
+    constexpr qint64 kProgressIntervalMs = 50;
+    qint64 lastProgressTime = -kProgressIntervalMs;
+    auto progressDue = [&](const qint64 now) { return now - lastProgressTime >= kProgressIntervalMs; };
+    auto emitProgress = [&](const qint64 now, const bool force = false) {
+        if (force || progressDue(now)) {
+            emit stepProgressed(iterDone);
+            lastProgressTime = now;
+        }
+    };
+
 
     const int annealSubSteps = computeAnnealSubSteps(mModel->mMCMCSettings.mAnnealTemp,
                                                      mModel->mMCMCSettings.mAnnealDwell);
@@ -1350,9 +1365,10 @@ void MCMCLoop::run()
                                 + " : Burn-in\t ; Total Estimated time left " + DHMS(interTime));
                 lastUpdateTime = now;
             }
-            emit stepProgressed(iterDone);
+            emitProgress(now);
             est.tick(AnnealAwareEstimator::eBurn, false);
         }
+        emitProgress(globalTimer.elapsed(), true);
         chain.burnElapsedTime = burningTime.elapsed();
         burningTime.~QElapsedTimer();
 
@@ -1410,8 +1426,10 @@ void MCMCLoop::run()
                     lastUpdateTime = now;
                 }
 
-                emit stepProgressed(iterDone);
-                qApp->processEvents(); //This function is especially useful if you have a long running operation and want to show its progress
+                if (progressDue(now)) {
+                    emitProgress(now);
+                    qApp->processEvents(); //This function is especially useful if you have a long running operation and want to show its progress
+                }
                 est.tick(AnnealAwareEstimator::eAdapt, false); // adapt() de fin de batch compté sur l'itération suivante
             }
             ++chain.mBatchIndex;
@@ -1421,6 +1439,7 @@ void MCMCLoop::run()
 
 
         }
+        emitProgress(globalTimer.elapsed(), true);
         // Fix Total iteration if adaptation break before the end
         estimatedTotalIter -= (chain.mMaxBatchs-chain.mBatchIndex)*chain.mIterPerBatch;
 
@@ -1534,10 +1553,11 @@ void MCMCLoop::run()
               qApp->processEvents();
             }
 
-            emit stepProgressed(iterDone);
+            emitProgress(now);
             est.tick(AnnealAwareEstimator::eAcq, willRegen);
         }
 
+        emitProgress(globalTimer.elapsed(), true);
         chain.mIterDisplay = chain.mRealyAccepted;
 
         chain.mAcquisitionElapsedTime = acquisitionTime.elapsed();

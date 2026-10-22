@@ -168,14 +168,18 @@ public:
     //   log L = q_0 / v_0 - 1/2 log v_0
     // eMixture (nComp = 2 ou 3) : AM ID, IF, IDF (somme sur integration_steps de PluginMag)
     //   L = sum_i exp( sum_c q_c / (v_c + add_c[i]) ) / sqrt( prod_c (v_c + add_c[i]) )
+    // ePoly    (nComp = 1) : Gauss modes « none » et « eq » (PluginGauss::getRefValueAt), sans courbe
+    //   g(t) = a t^2 + b t + c  (none : a = 0, b = 1, c = 0) ,  log L = -1/2 (y_0 - g(t))^2 / s2_0 - 1/2 log s2_0
     struct LogLikeKernel {
-        enum Kind { eNotBuilt, eGeneric, eGauss, eMixture };
+        enum Kind { eNotBuilt, eGeneric, eGauss, eMixture, ePoly };
         Kind                               kind  = eNotBuilt;
         int                                nComp = 0;
         std::array<double, 3>              y     {};
         std::array<double, 3>              s2    {};
         std::array<const RefCurve*, 3>     curve {};
         std::array<std::vector<double>, 3> add;     // eMixture : terme ajoute a v_c, par pas i
+        std::array<double, 3>              poly  {};  // ePoly : coefficients a, b, c de g(t)
+        double                             halfLogS2 = 0.0; // ePoly : 1/2 log s2_0 (constant)
     };
 
     struct LogLikeMemo {

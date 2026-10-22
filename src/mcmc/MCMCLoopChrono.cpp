@@ -201,7 +201,7 @@ QString MCMCLoopChrono::initialize()
 // Gibbs complet comme V2
 bool MCMCLoopChrono::update_v3()
 {
-    sampler_Gibbs(mModel->mEvents);
+    sampler_Gibbs();
 
     std::for_each(mModel->mPhases.begin(),
                   mModel->mPhases.end(),
@@ -218,7 +218,7 @@ bool MCMCLoopChrono::update_v3()
     return true;
 }
 
-void MCMCLoopChrono::sampler_Gibbs(std::vector<std::shared_ptr<Event>> &events)
+void MCMCLoopChrono::sampler_Gibbs()
 {
 
     /* --------------------------------------------------------------
@@ -682,12 +682,12 @@ void MCMCLoopChrono::tempering_339_ti_marg(std::vector<std::shared_ptr<Event>> &
                         const double log_rate_q_t = std::log(q_rev) - std::log(q_fwd);
 
                         // --- Vraisemblance calibration ---
-                        const double L_old = date.getLikelihood(ti_old0);
-                        const double L_new = date.getLikelihood(ti_prop);
-                        if (L_new <= 0.0 || L_old <= 0.0) {
+                        const double logL_old = date.getLogLikelihoodMemo(ti_old0);
+                        const double logL_new = date.getLogLikelihoodMemo(ti_prop);
+                        if (!std::isfinite(logL_new) || !std::isfinite(logL_old)) {
                             continue;
                         }
-                        const double log_rate_L = std::log(L_new) - std::log(L_old);
+                        const double log_rate_L = logL_new - logL_old;
 
                         // --- Recombine avec la nouvelle valeur (P inchangé : seuls mu/S bougent) ---
                         const long double y_new = static_cast<long double>(ti_prop) + delta_old0;
@@ -929,18 +929,18 @@ void MCMCLoopChrono::sampler_339_4v(std::vector<std::shared_ptr<Event>> &events)
 
                     // Vraisemblance (divisée par T si Simulated Annealing)
 
-                    const double L_old = date.getLikelihood(ti_old);
-                    const double L_new = date.getLikelihood(ti_prop);
+                    const double logL_old = date.getLogLikelihoodMemo(ti_old);
+                    const double logL_new = date.getLogLikelihoodMemo(ti_prop);
                     const double q_fwd = date.fProposalDensity(ti_prop, ti_old);
                     const double q_rev = date.fProposalDensity(ti_old, ti_prop);
 
                     // Si une proba est nulle, on flag l'invalidité et on stoppe LA BOUCLE DES DATES (break)
-                    if (L_new <= 0.0 || L_old <= 0.0 || q_fwd <= 0.0 || q_rev <= 0.0) {
+                    if (!std::isfinite(logL_new) || !std::isfinite(logL_old) || q_fwd <= 0.0 || q_rev <= 0.0) {
                         invalid = true;
                         break;
                     }
 
-                    log_rate_L += (std::log(L_new) - std::log(L_old));
+                    log_rate_L += (logL_new - logL_old);
                     log_rate_q += std::log(q_rev) - std::log(q_fwd);
 
 #pragma mark Update Delta
@@ -1260,18 +1260,18 @@ void MCMCLoopChrono::sampler_339_4vXi(std::vector<std::shared_ptr<Event>> &event
 
                     // Vraisemblance (divisée par T si Simulated Annealing)
 
-                    const double L_old = date.getLikelihood(ti_old);
-                    const double L_new = date.getLikelihood(ti_prop);
+                    const double logL_old = date.getLogLikelihoodMemo(ti_old);
+                    const double logL_new = date.getLogLikelihoodMemo(ti_prop);
                     const double q_fwd = date.fProposalDensity(ti_prop, ti_old);
                     const double q_rev = date.fProposalDensity(ti_old, ti_prop);
 
                     // Si une proba est nulle, on flag l'invalidité et on stoppe LA BOUCLE DES DATES (break)
-                    if (L_new <= 0.0 || L_old <= 0.0 || q_fwd <= 0.0 || q_rev <= 0.0) {
+                    if (!std::isfinite(logL_new) || !std::isfinite(logL_old) || q_fwd <= 0.0 || q_rev <= 0.0) {
                         invalid = true;
                         break;
                     }
 
-                    log_rate_L += (std::log(L_new) - std::log(L_old));
+                    log_rate_L += (logL_new - logL_old);
 
                     log_rate_q += std::log(q_rev) - std::log(q_fwd);
 
@@ -1843,10 +1843,10 @@ void MCMCLoopChrono::sampler_339_SingleSite(std::vector<std::shared_ptr<Event>> 
                         }
                     }
 
-                    const double L_old = date.getLikelihood(ti_old0);
-                    const double L_new = date.getLikelihood(ti_prop);
+                    const double logL_old = date.getLogLikelihoodMemo(ti_old0);
+                    const double logL_new = date.getLogLikelihoodMemo(ti_prop);
 
-                    if (L_new <= 0.0 || L_old <= 0.0 ) {
+                    if (!std::isfinite(logL_new) || !std::isfinite(logL_old) ) {
                         date.mTi.reject_update();
                         isvalide = false;
                         // sigma n'est pas concerné : on continue vers l'étape B
@@ -1854,7 +1854,7 @@ void MCMCLoopChrono::sampler_339_SingleSite(std::vector<std::shared_ptr<Event>> 
 
 
                     if (isvalide) {
-                        log_rate_L = std::log(L_new) - std::log(L_old);
+                        log_rate_L = logL_new - logL_old;
 
                         const long double V1      = static_cast<long double>(sigma_cur) * sigma_cur;
                         const long double w_A     = 1.0L / V1;
@@ -2484,13 +2484,13 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc(std::vector<std::shared_ptr<Eve
                     // D. Vraisemblance Calibration (uniquement pour ti)
                     // ----------------------------------------------------------------------
                     if (isvalide) {
-                        const double L_old = date.getLikelihood(ti_old0);
-                        const double L_new = date.getLikelihood(ti_prop);
+                        const double logL_old = date.getLogLikelihoodMemo(ti_old0);
+                        const double logL_new = date.getLogLikelihoodMemo(ti_prop);
 
-                        if (L_new <= 0.0 || L_old <= 0.0 ) {
+                        if (!std::isfinite(logL_new) || !std::isfinite(logL_old) ) {
                             isvalide = false;
                         } else {
-                            log_rate_L = std::log(L_new) - std::log(L_old);
+                            log_rate_L = logL_new - logL_old;
                         }
                     }
 
@@ -2932,13 +2932,13 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc_delta(std::vector<std::shared_p
                     // D. Vraisemblance Calibration (uniquement pour ti)
                     // ----------------------------------------------------------------------
                     if (isvalide) {
-                        const double L_old = date.getLikelihood(ti_old0);
-                        const double L_new = date.getLikelihood(ti_prop);
+                        const double logL_old = date.getLogLikelihoodMemo(ti_old0);
+                        const double logL_new = date.getLogLikelihoodMemo(ti_prop);
 
-                        if (L_new <= 0.0 || L_old <= 0.0 ) {
+                        if (!std::isfinite(logL_new) || !std::isfinite(logL_old) ) {
                             isvalide = false;
                         } else {
-                            log_rate_L = std::log(L_new) - std::log(L_old);
+                            log_rate_L = logL_new - logL_old;
                         }
                     }
 
@@ -3086,18 +3086,18 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc_delta(std::vector<std::shared_p
 
                     if (shiftValide) {
                         ti_prop_shift.reserve(event->mDates.size());
-                        for (const auto& date : event->mDates) {
+                        for (auto& date : event->mDates) {   // non const : cache de getLogLikelihoodMemo
                             const double ti_prop_i = date.mTi.value() + deltaTheta;
                             ti_prop_shift.push_back(ti_prop_i);
 
-                            const double L_old = date.getLikelihood(date.mTi.value());
-                            const double L_new = date.getLikelihood(ti_prop_i);
-                            if (!(L_old > 0.0) || !(L_new > 0.0)) {
+                            const double logL_old = date.getLogLikelihoodMemo(date.mTi.value());
+                            const double logL_new = date.getLogLikelihoodMemo(ti_prop_i);
+                            if (!std::isfinite(logL_old) || !std::isfinite(logL_new)) {
                                 shiftValide = false;
                                 break;
                             }
-                            log_rate_L_shift += std::log(static_cast<long double>(L_new))
-                                              - std::log(static_cast<long double>(L_old));
+                            log_rate_L_shift += static_cast<long double>(logL_new)
+                                              - static_cast<long double>(logL_old);
                         }
                     }
 
@@ -3638,13 +3638,13 @@ void MCMCLoopChrono::sampler_339_SingleSite_bloc_2(std::vector<std::shared_ptr<E
                     // E. Vraisemblance Calibration (uniquement pour ti)
                     // ----------------------------------------------------------------------
                     if (isvalide) {
-                        const double L_old = date.getLikelihood(ti_old0);
-                        const double L_new = date.getLikelihood(ti_prop);
+                        const double logL_old = date.getLogLikelihoodMemo(ti_old0);
+                        const double logL_new = date.getLogLikelihoodMemo(ti_prop);
 
-                        if (L_new <= 0.0 || L_old <= 0.0 ) {
+                        if (!std::isfinite(logL_new) || !std::isfinite(logL_old) ) {
                             isvalide = false;
                         } else {
-                            log_rate_L = std::log(L_new) - std::log(L_old);
+                            log_rate_L = logL_new - logL_old;
                         }
                     }
 
@@ -3909,18 +3909,18 @@ void MCMCLoopChrono::sampler_339_3v(std::vector<std::shared_ptr<Event>> &events)
                     prop_ti.push_back(ti_prop);
 
                     // Vraisemblance
-                    const double L_old = date.getLikelihood(ti_old);
-                    const double L_new = date.getLikelihood(ti_prop);
+                    const double logL_old = date.getLogLikelihoodMemo(ti_old);
+                    const double logL_new = date.getLogLikelihoodMemo(ti_prop);
                     const double q_fwd = date.fProposalDensity(ti_prop, ti_old);
                     const double q_rev = date.fProposalDensity(ti_old, ti_prop);
 
                     // Si une proba est nulle, on flag l'invalidité et on stoppe LA BOUCLE DES DATES (break)
-                    if (L_new <= 0.0 || L_old <= 0.0 || q_fwd <= 0.0 || q_rev <= 0.0) {
+                    if (!std::isfinite(logL_new) || !std::isfinite(logL_old) || q_fwd <= 0.0 || q_rev <= 0.0) {
                         invalid = true;
                         break;
                     }
 
-                    log_rate_L += (std::log(L_new) - std::log(L_old));
+                    log_rate_L += (logL_new - logL_old);
                     log_rate_q += std::log(q_rev) - std::log(q_fwd);
 
 #pragma mark Update Delta
@@ -3980,7 +3980,7 @@ void MCMCLoopChrono::sampler_339_3v(std::vector<std::shared_ptr<Event>> &events)
                     double sum_p_old = 0.0;
                     double sum_t_old = 0.0;
 
-                    double sum_p_prop= 0.0;
+                    //double sum_p_prop= 0.0;
                     double sum_t_prop = 0.0;
 
                     for (size_t i = 0 ; i<event->mDates.size(); i++) {
@@ -4266,8 +4266,8 @@ void MCMCLoopChrono::sampler_naif(std::vector<std::shared_ptr<Event>> &events)
                 double sigma_prop = std::sqrt(V2);
 
 
-                const double L_old = date.getLikelihood(ti_old);
-                const double L_new = date.getLikelihood(ti_prop);
+                const double logL_old = date.getLogLikelihoodMemo(ti_old);
+                const double logL_new = date.getLogLikelihoodMemo(ti_prop);
 
                 const double q_fwd_t = date.fProposalDensity(ti_prop, ti_old);
                 const double q_rev_t = date.fProposalDensity(ti_old, ti_prop);
@@ -4276,8 +4276,8 @@ void MCMCLoopChrono::sampler_naif(std::vector<std::shared_ptr<Event>> &events)
                 //const double q_fwd_sigma = date.mSigmaTi.fProposalDensity(sigmaNew, sigma0);
                 //const double q_rev_sigma = date.mSigmaTi.fProposalDensity(sigma0, sigmaNew);
 
-                //if (L_new <= 0.0 || L_old <= 0.0 || q_fwd_t <= 0.0 || q_rev_t <= 0.0 || q_fwd_sigma <= 0.0 || q_rev_sigma <= 0.0) {
-                if (L_new <= 0.0 || L_old <= 0.0 || q_fwd_t <= 0.0 || q_rev_t <= 0.0) {
+                //if (!std::isfinite(logL_new) || !std::isfinite(logL_old) || q_fwd_t <= 0.0 || q_rev_t <= 0.0 || q_fwd_sigma <= 0.0 || q_rev_sigma <= 0.0) {
+                if (!std::isfinite(logL_new) || !std::isfinite(logL_old) || q_fwd_t <= 0.0 || q_rev_t <= 0.0) {
                     invalid = true;
                     break;
                 }
@@ -4364,7 +4364,7 @@ void MCMCLoopChrono::sampler_naif(std::vector<std::shared_ptr<Event>> &events)
                     const double var = sig * sig;
 
                     // 1. Vraisemblance de la date C14 / calibration : L(ti)
-                    log_post += std::log(date.getLikelihood(ti));
+                    log_post += date.getLogLikelihoodMemo(ti);
 
                     // 2. Vraisemblance conditionnelle du modèle structural : ti ~ N(theta - delta, sig^2)
                     const double diff = ti + date.mDelta - theta_val;
@@ -4901,10 +4901,10 @@ void MCMCLoopChrono::sampler_339_SingleSite_SliceSampling(std::vector<std::share
                     // partout ; le terme de shrinkage S02 ne dépend que de sigma, il
                     // disparaît car constant en t).
                     auto logTargetTi = [&](double t) -> double {
-                        const double L = date.getLikelihood(t);
-                        if (!(L > 0.0))
+                        const double logL_t = date.getLogLikelihoodMemo(t);
+                        if (!std::isfinite(logL_t))
                             return -std::numeric_limits<double>::infinity();
-                        const long double logL = std::log(static_cast<long double>(L));
+                        const long double logL = static_cast<long double>(logL_t);
 
                         const long double y_t = static_cast<long double>(t) + delta_prop;
                         long double logPriorMarginal;
@@ -5430,13 +5430,13 @@ void MCMCLoopChrono::sampler_339_SingleSite_NonCentered(std::vector<std::shared_
                     // E. Vraisemblance Calibration (uniquement pour ti)
                     // ----------------------------------------------------------------------
                     if (isvalide) {
-                        const double L_old = date.getLikelihood(ti_old0);
-                        const double L_new = date.getLikelihood(ti_prop);
+                        const double logL_old = date.getLogLikelihoodMemo(ti_old0);
+                        const double logL_new = date.getLogLikelihoodMemo(ti_prop);
 
-                        if (L_new <= 0.0 || L_old <= 0.0 ) {
+                        if (!std::isfinite(logL_new) || !std::isfinite(logL_old) ) {
                             isvalide = false;
                         } else {
-                            log_rate_L = std::log(L_new) - std::log(L_old);
+                            log_rate_L = logL_new - logL_old;
                         }
                     }
 
@@ -5699,18 +5699,18 @@ void MCMCLoopChrono::sampler_339_SingleSite_NonCentered(std::vector<std::shared_
 
                     if (shiftValide) {
                         ti_prop_shift.reserve(event->mDates.size());
-                        for (const auto& date : event->mDates) {
+                        for (auto& date : event->mDates) {   // non const : cache de getLogLikelihoodMemo
                             const double ti_prop_i = date.mTi.value() + deltaTheta;
                             ti_prop_shift.push_back(ti_prop_i);
 
-                            const double L_old = date.getLikelihood(date.mTi.value());
-                            const double L_new = date.getLikelihood(ti_prop_i);
-                            if (!(L_old > 0.0) || !(L_new > 0.0)) {
+                            const double logL_old = date.getLogLikelihoodMemo(date.mTi.value());
+                            const double logL_new = date.getLogLikelihoodMemo(ti_prop_i);
+                            if (!std::isfinite(logL_old) || !std::isfinite(logL_new)) {
                                 shiftValide = false;
                                 break;
                             }
-                            log_rate_L_shift += std::log(static_cast<long double>(L_new))
-                                              - std::log(static_cast<long double>(L_old));
+                            log_rate_L_shift += static_cast<long double>(logL_new)
+                                              - static_cast<long double>(logL_old);
                         }
                     }
 

@@ -1751,11 +1751,29 @@ void Date::buildLogLikelihoodKernel()
 #endif
 
 #if USE_PLUGIN_GAUSS
-    // PluginGauss::getLikelihoodArg, mode courbe uniquement (modes equation / aucun : repli)
-    if (dynamic_cast<const PluginGauss*>(mPlugin)
-        && mData.value(DATE_GAUSS_MODE_STR).toString() == DATE_GAUSS_MODE_CURVE) {
+    // PluginGauss::getLikelihoodArg
+    //  - mode courbe : composante gaussienne sur la courbe a plat (eGauss) ;
+    //  - modes « none » (g(t) = t) et « eq » (g(t) = a |t|^2 + b t + c) : polynome (ePoly), refError = 0.
+    // Mode inconnu ou erreur nulle : repli eGeneric.
+    if (dynamic_cast<const PluginGauss*>(mPlugin)) {
+        const QString mode = mData.value(DATE_GAUSS_MODE_STR).toString();
         const double error = mData.value(DATE_GAUSS_ERROR_STR).toDouble();
-        setGauss(num(DATE_GAUSS_AGE_STR), error * error, flatCurve(DATE_GAUSS_CURVE_STR));
+        if (mode == DATE_GAUSS_MODE_CURVE) {
+            setGauss(num(DATE_GAUSS_AGE_STR), error * error, flatCurve(DATE_GAUSS_CURVE_STR));
+
+        } else if ((mode == DATE_GAUSS_MODE_NONE || mode == DATE_GAUSS_MODE_EQ) && error > 0.0) {
+            k.kind      = LogLikeKernel::ePoly;
+            k.nComp     = 1;
+            k.y[0]      = mData.value(DATE_GAUSS_AGE_STR).toDouble();
+            k.s2[0]     = error * error;
+            k.halfLogS2 = 0.5 * std::log(k.s2[0]);
+            if (mode == DATE_GAUSS_MODE_NONE)
+                k.poly = { 0.0, 1.0, 0.0 };
+            else
+                k.poly = { mData.value(DATE_GAUSS_A_STR).toDouble(),
+                           mData.value(DATE_GAUSS_B_STR).toDouble(),
+                           mData.value(DATE_GAUSS_C_STR).toDouble() };
+        }
     }
 #endif
 
@@ -1850,6 +1868,14 @@ double Date::getLogLikelihoodKernel(const double t) const
     const LogLikeKernel& k = mLogLikeKernel;
 
     switch (k.kind) {
+    case LogLikeKernel::ePoly: {
+        // PluginGauss sans courbe : refValue = g(t), refError = 0, variance = error^2
+        // (a |t|^2 = a t^2 ; forme de Horner)
+        const double g    = (k.poly[0] * t + k.poly[1]) * t + k.poly[2];
+        const double diff = k.y[0] - g;
+        return -0.5 * diff * diff / k.s2[0] - k.halfLogS2;
+    }
+
     case LogLikeKernel::eGauss: {
         // log L(t) = -1/2 (y - m(t))^2 / v(t) - 1/2 log v(t),   v(t) = s2 + e(t)^2
         // (plugins : exp(exponent) / sqrt(variance))
