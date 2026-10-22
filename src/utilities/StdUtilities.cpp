@@ -931,104 +931,81 @@ const std::map<double, double> create_HPD_by_dichotomy(const std::map<double, do
     }
 
     QList<QPair<double, QPair<double, double>>> final_intervals;
-    //double final_total_area = 0.0;
     double final_current_threshold = 0.0;
-    //double area_total_since_prev_interval = 0;
-    // Recherche dichotomique
-    const int max_iterations = 20;
-    for (int iteration = 0; iteration < max_iterations; ++iteration) {
-        double current_threshold = (v_sup + v_inf) / 2.0;
+    bool has_final = false;
 
-        // Calcul des intervalles HPD
+    // Recherche dichotomique sur le seuil c : l'aire de {f_lin >= c} est continue et décroissante en c
+    const int max_iterations = 40;
+    for (int iteration = 0; iteration < max_iterations; ++iteration) {
+        const double c = (v_sup + v_inf) / 2.0;
+
         QList<QPair<double, QPair<double, double>>> current_intervals;
         double total_area = 0.0;
-        double area_total_since_prev_interval = 0.0;
-
-        auto prev_it = density.begin();
-        bool interval_open = (prev_it->second < current_threshold);//false;
+        double area_since_prev = 0.0;
         QPair<double, double> current_interval;
 
-        if (interval_open){
-            double t = density.begin()->first;
-            current_interval.first = t;
-        }
+        auto prev_it = density.begin();
+        bool interval_open = (prev_it->second >= c && prev_it->second > 0.0);
+        if (interval_open)
+            current_interval.first = prev_it->first;
+
         for (auto it = std::next(density.begin()); it != density.end(); ++it) {
-            // Début d'un intervalle
-            if (prev_it->second < current_threshold && it->second >= current_threshold) {
-                double t = interpolate(current_threshold, prev_it->second, it->second,
-                                       prev_it->first, it->first);
-                current_interval.first = t;
+            const double t0 = prev_it->first, t1 = it->first;
+            const double v0 = prev_it->second, v1 = it->second;
+            const bool gate = (v0 <= 0.0 || v1 <= 0.0);      // cohérent avec map_area()
+            const bool in0 = (v0 >= c && v0 > 0.0);
+            const bool in1 = (v1 >= c && v1 > 0.0);
+
+            if (!in0 && in1) {          // montée : ouverture en t*
+                current_interval.first = gate ? t1 : interpolate(c, v0, v1, t0, t1);
                 interval_open = true;
-            }
+                if (!gate)
+                    total_area += (c + v1) * (t1 - current_interval.first) / 2.0;
 
-            // Intérieur d'un intervalle
-            if (it->second >= current_threshold) {
-                if (!interval_open) {
-                    current_interval.first = prev_it->first;
-                    interval_open = true;
-                }
+            } else if (in0 && in1) {    // intérieur
+                total_area += (v0 + v1) * (t1 - t0) / 2.0;
 
-                // Calcul de l'aire partielle
-                double area = (prev_it->second + it->second) * (it->first - prev_it->first) / 2.0;
-                total_area += area;
-            }
-
-            // Fin d'un intervalle, dans le cas d'une valeur unique supérieur au seuil au debut de l'intervalle, il n'y a pas
-            if (interval_open && prev_it->second >= current_threshold && it->second < current_threshold) {
-                double t = interpolate(current_threshold, prev_it->second, it->second,
-                                       prev_it->first, it->first);
-                current_interval.second = t;
-                current_intervals.append({total_area - area_total_since_prev_interval, current_interval});
-                area_total_since_prev_interval = total_area;
+            } else if (in0 && !in1) {   // descente : fermeture en t*
+                current_interval.second = gate ? t0 : interpolate(c, v0, v1, t0, t1);
+                if (!gate)
+                    total_area += (v0 + c) * (current_interval.second - t0) / 2.0;
+                current_intervals.append({(total_area - area_since_prev) / area_tot, current_interval});
+                area_since_prev = total_area;
                 interval_open = false;
             }
-
             prev_it = it;
         }
 
-        // Gestion du dernier intervalle potentiel
-        if (interval_open) {
+        if (interval_open) {            // fermeture à tmax
             current_interval.second = prev_it->first;
-            current_intervals.append({total_area - area_total_since_prev_interval, current_interval});
+            current_intervals.append({(total_area - area_since_prev) / area_tot, current_interval});
         }
 
-        // Ajustement de la recherche dichotomique
-        if (total_area > area_target) {
-            v_inf = current_threshold;
+        if (total_area >= area_target) { // on ne garde que des solutions de couverture >= cible
+            v_inf = c;
+            final_intervals = current_intervals;
+            final_current_threshold = c;
+            has_final = true;
+            if (total_area - area_target < area_target * 1e-4)
+                break;
         } else {
-            v_sup = current_threshold;
+            v_sup = c;
         }
-
-        // Convergence suffisante
-        if (std::abs(total_area - area_target) < area_target * 0.001) {
-            intervals_hpd = current_intervals;
-
-            // Mise à zéro des densités inférieures au seuil
-            for (auto& point : result_density) {
-                if (point.second < current_threshold) {
-                    point.second = 0.0;
-                }
-            }
-
-            return result_density;
-        }
-        // Stocker les derniers résultats à chaque itération
-        final_intervals = current_intervals;
-        final_current_threshold = current_threshold;
     }
 
-    // Fallback après max_iterations
+    if (!has_final) {                   // sécurité : support complet
+        intervals_hpd.append({1.0, {density.begin()->first, density.rbegin()->first}});
+        return density;
+    }
+
     intervals_hpd = final_intervals;
 
     // Mise à zéro des densités inférieures au seuil
-    for (auto& point : result_density) {
-        if (point.second < final_current_threshold) {
+    for (auto& point : result_density)
+        if (point.second < final_current_threshold)
             point.second = 0.0;
-        }
-    }
 
     return result_density;
-
 }
 
 float map_area(const QMap<float, float> &map)

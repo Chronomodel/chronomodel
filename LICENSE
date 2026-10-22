@@ -1,14 +1,21 @@
 License
-CeCILL-V2.1 Free Software License Agreement
+GNU General Public License, version 3 or (at your option) any later version
 
-Copyright (c) 2025 CNRS
+Copyright (c) 2014 - 2026 CNRS
 
-This software is distributed under the terms of the CeCILL-V2.1 license, a French free software license compatible with the GNU GPL.
+ChronoModel is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.
 
-For the complete license terms, please refer to:
+ChronoModel is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-    Official CeCILL-V2.1 license: https://cecill.info/licences/Licence_CeCILL_V2.1-en.html
-    French version: https://cecill.info/licences/Licence_CeCILL_V2.1-fr.html
+The complete license text is provided in the COPYING file of this distribution.
+Official text: https://www.gnu.org/licenses/gpl-3.0.html
+
+SPDX-License-Identifier: GPL-3.0-or-later
 
 Third-Party Dependencies
 
@@ -32,7 +39,10 @@ Eigen
 
 License Compatibility
 
-The combination of these licenses (CeCILL-V2.1, GPL v2+, and MPL2) is compatible for distribution as they are all copyleft licenses that permit such combinations under the terms of the GPL.
+FFTW is licensed under GPL v2 "or later", which allows its use under GPL v3.
+Eigen is licensed under MPL 2.0, which is explicitly compatible with the GNU GPL
+(MPL 2.0, section 3.3). The combined work is therefore distributed under the
+terms of the GNU GPL v3 or later.
 
 
 Note: This notice must be preserved in all copies or substantial portions of the software.

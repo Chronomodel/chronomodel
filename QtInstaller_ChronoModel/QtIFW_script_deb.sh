@@ -9,7 +9,7 @@ echo This batch file copy files and Build windows installer
 echo Project ChronoModel Team
 echo https://chronomodel.com/
 echo author email:philippe.dufresne@univ-rennes.fr 
-echo date 2024-05-28
+echo date 2026-10-22
 
 echo " 1 - Copy icon"
 cp ~/CM/chronomodel/icon/Chronomodel.ico ~/CM/chronomodel/QtInstaller_ChronoModel/installer-packages-deb/chronomodel_QtIFW.composant1/data
@@ -26,7 +26,7 @@ cp ~/CM/build-Chronomodel-Desktop_Qt_6_5_3_GCC_64bit-Release/build/release/chron
 #copy C:\Users\Lanos\Documents\github\build-chronomodel_bash-Desktop_Qt_6_5_3_MinGW_64_bit-Release\build\release\chronomodel_bash.exe C:\Users\Lanos\Documents\github\chronomodel\QtInstaller_ChronoModel\installer-packages-winOS\chronomodel_QtIFW.composant2\data
 
 
-VERSION=3.2.7
+VERSION=4.0.0
 DATESTR=$(date '+%Y%m%d')
 #DATE_STR = $date:~6,4%$date:~3,2%$date:~0,2%
 

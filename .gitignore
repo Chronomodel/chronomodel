@@ -84,3 +84,9 @@ buildCM.sh
 ChronoModel_src_20261015.7z
 QtInstaller_ChronoModel/Ch_copy_library_old.sh
 QtInstaller_ChronoModel/Ch_copy_library_and_signature_2025-08-28.sh
+/_to_delete
+/src/_to_delete
+/src/Claude outputs
+*.bak
+2026-10-21_src.7z
+.fuse*
