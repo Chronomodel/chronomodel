@@ -113,7 +113,7 @@ public slots:
     void openWebsite();
     void showHelp(bool);
     void setLanguage(QAction* action);
-    void mcmcFinished();
+    void mcmcFinished(bool densitiesReady = false);
     void setConvergenceStatus( MCMCDiagnostic::ConvergenceStatus status);
 
     void noResult();

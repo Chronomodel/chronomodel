@@ -350,7 +350,7 @@ signals:
     void eyedPhasesModified(const QMap<int, bool> &eyedPhases);
 
     void mcmcStarted();
-    void mcmcFinished();
+    void mcmcFinished(bool densitiesReady = false); // densitiesReady : initDensities() déjà fait par finalize()
 
     void projectItemsIsMoved(bool itemsIsMoved);
 

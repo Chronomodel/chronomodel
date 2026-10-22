@@ -1970,11 +1970,11 @@ void Event::applyTheta_v3_block(const double tmin, const double tmax, const doub
 
         try_theta = Generator::truncatedNormal(mTheta.value(), T*mTheta.mSigmaMH, min, max);
         // 1. Calcul du ratio de Hastings pour la troncature
-        double num = normalCDF((max - mTheta.value()) / mTheta.mSigmaMH) - normalCDF((min - mTheta.value()) / mTheta.mSigmaMH);
-        double den = normalCDF((max - try_theta) / mTheta.mSigmaMH) - normalCDF((min - try_theta) / mTheta.mSigmaMH);
+        //double num = normalCDF((max - mTheta.value()) / mTheta.mSigmaMH) - normalCDF((min - mTheta.value()) / mTheta.mSigmaMH);
+        //double den = normalCDF((max - try_theta) / mTheta.mSigmaMH) - normalCDF((min - try_theta) / mTheta.mSigmaMH);
 
         // On passe le ratio de Hastings en log
-        double log_support_ratio = std::log(num) - std::log(den);
+        //double log_support_ratio = std::log(num) - std::log(den);
 
         // 3. Calcul du déplacement global
         epsilon = try_theta - mTheta.value();

@@ -37,6 +37,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #include "StateKeys.h"
 #include "Date.h"
 #include "Project.h"
+#include "ParallelFor.h"
 #include "Matrix.h"
 #include "MainWindow.h"
 #include "QtUtilities.h"
@@ -18480,6 +18481,7 @@ void MCMCLoopCurve::finalize()
 
     // Compute correlations & densities (unchanged)
     emit setMessage(tr("Computing posterior distributions and numerical results"));
+    progressStage(tr("Computing autocorrelations"), 0.00, 0.15); // la suite : Model::initDensities() [0.15, 1]
     mModel->generateCorrelations(mLoopChains);
     mModel->initDensities();
 

@@ -34,6 +34,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #include "AppSettings.h"
 #include "StateKeys.h"
 #include "Project.h"
+#include "ParallelFor.h"
 
 #include <QStackedWidget>
 #include <QScreen>
@@ -320,16 +321,22 @@ void ProjectView::updateMultiCalibrationAndEventProperties()
  *  - The Model densities have to be computed
  *  - The Model Logs have to be generated
  */
-void ProjectView::initResults()
+void ProjectView::initResults(bool densitiesReady)
 {
     const auto& model = getModel_ptr();
+    progressStage(tr("Updating the model design"), 0.00, 0.05);
     model->updateDesignFromJson();
-    model->initDensities(); // affiche le flag vert
+    // Après un calcul MCMC, initDensities() a déjà été fait dans finalize() (thread de calcul) :
+    // le refaire ici doublait le temps mort, interface figée. Reste nécessaire au chargement d'un .res.
+    if (!densitiesReady)
+        model->initDensities(); // affiche le flag vert
 
 MainWindow::getInstance()->setConvergenceStatus(model->mConvergenceSummary.status);
+    progressStage(tr("Generating logs"), 0.05, 0.20);
     model->generateModelLog();
     model->generateResultsLog();
 
+    progressStage(tr("Generating graphs"), 0.20, 1.00);
     mResultsView->initModel();
     // Update log view
     mLogModelEdit->setText(model->getModelLog());

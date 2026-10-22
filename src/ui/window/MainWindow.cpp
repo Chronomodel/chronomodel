@@ -1525,7 +1525,7 @@ void MainWindow::setLogEnabled(bool enabled)
     mViewLogAction->setEnabled(enabled);
 }
 
-void MainWindow::mcmcFinished()
+void MainWindow::mcmcFinished(bool densitiesReady)
 {
     // Set Results and Log tabs enabled
     std::cout << "[MainWindow::mcmcFinished]" << std::endl;
@@ -1540,7 +1540,7 @@ void MainWindow::mcmcFinished()
 
     mRescaleCurveAction->setEnabled(mProject->isCurve());
     // Tell the views to update
-    mProjectView->initResults(); // affiche le flag vert
+    mProjectView->initResults(densitiesReady); // affiche le flag vert
 
 }
 

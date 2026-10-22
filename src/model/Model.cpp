@@ -1444,22 +1444,32 @@ void Model::initDensities()
     if (getProject_ptr()->mLoop)
         emit getProject_ptr()->mLoop->setMessage(QObject::tr("Computing posterior distributions and numerical results"));
 
+    // Étapes de progression : fractions de la phase "calcul" du post-traitement,
+    // [0, 0.15] étant pris par generateCorrelations() dans finalize().
+    // Sans crochet installé (chargement d'un .res, etc.) ces appels sont sans effet.
+    progressStage(QObject::tr("Computing trace statistics (R-hat, ESS, ...)"), 0.15, 0.55);
     updateFormatSettings(); // update mFormat for formatedCredibility and formatedTrace
     generateTraceNumericalResults(mChains); // stats pour formatedTrace
 
+    progressStage(QObject::tr("Computing posterior densities"), 0.55, 0.80);
     generatePosteriorDensities(mChains, mFFTLength, mBandwidthType, mBandwidth);
 
+    progressStage(QObject::tr("Computing HPD regions"), 0.80, 0.84);
     generateHPD(95.);
+    progressStage(QObject::tr("Computing credibility intervals"), 0.84, 0.88);
     generateCredibility(95.);
 
     // memo the new value of the Threshold inside all the part of the model: phases, events and dates
     setThresholdToAllModel(95.);
 
     if (!mPhases.empty()) {
+        progressStage(QObject::tr("Computing tempo"), 0.88, 0.91);
         generateTempo(mFFTLength);
+        progressStage(QObject::tr("Computing activity"), 0.91, 0.94);
         generateActivity(mFFTLength, mHActivity, 95.);
     }
 
+    progressStage(QObject::tr("Computing density statistics"), 0.94, 1.00);
     generateDensityNumericalResults();
 
 }

@@ -29,6 +29,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #include "MCMCLoopChrono.h"
 
 #include "Project.h"
+#include "ParallelFor.h"
 #include "Date.h"
 #include "QtUtilities.h"
 #include "CalibrationCurve.h"
@@ -3885,7 +3886,7 @@ void MCMCLoopChrono::sampler_339_3v(std::vector<std::shared_ptr<Event>> &events)
                     const double ti_old = date.mTi.value();
                     old_ti.push_back(ti_old);
 
-                    const double sigma_old = date.mSigmaTi.value();
+                    //const double sigma_old = date.mSigmaTi.value();
 
                     double ti_prop;
 
@@ -4668,6 +4669,7 @@ void MCMCLoopChrono::finalize()
     // This is very slow : it is for this reason that the results display may be long to appear at the end of MCMC calculation.
 
     emit setMessage(tr("Computing posterior distributions and numerical results"));
+    progressStage(tr("Computing autocorrelations"), 0.00, 0.15); // la suite : Model::initDensities() [0.15, 1]
     mModel->generateCorrelations(mModel->mChains);
 
     mModel->initDensities();

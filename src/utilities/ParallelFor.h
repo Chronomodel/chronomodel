@@ -30,6 +30,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #define PARALLELFOR_H
 
 #include <QThreadPool>
+#include <QString>
 
 #include <algorithm>
 #include <atomic>
@@ -38,6 +39,44 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #include <functional>
 #include <mutex>
 #include <vector>
+
+// ---------------------------------------------------------------------------
+// Crochet de progression du post-traitement (optionnel)
+// ---------------------------------------------------------------------------
+// Installé par MCMCProgressDialog pendant le post-traitement d'un calcul MCMC,
+// nul le reste du temps (recalculs interactifs depuis ResultsView : aucun effet).
+//  - progressStage(label, from, to) : début d'une étape ; [from, to] ⊂ [0, 1] est
+//    la fraction de la phase courante couverte par l'étape.
+//  - progressAdvance(done, total) : avancement interne de l'étape ; appelé par
+//    parallel_run après chaque tâche, depuis n'importe quel thread.
+// ---------------------------------------------------------------------------
+constexpr int kPostProcessRange = 1000; // échelle de la barre de post-traitement
+
+class ProgressHook
+{
+public:
+    virtual ~ProgressHook() = default;
+    virtual void stage(const QString& label, double from, double to) = 0;
+    virtual void advance(std::size_t done, std::size_t total) = 0; // thread-safe
+};
+
+inline std::atomic<ProgressHook*>& progressHook()
+{
+    static std::atomic<ProgressHook*> hook {nullptr};
+    return hook;
+}
+
+inline void progressStage(const QString& label, double from, double to)
+{
+    if (ProgressHook* h = progressHook().load(std::memory_order_acquire))
+        h->stage(label, from, to);
+}
+
+inline void progressAdvance(std::size_t done, std::size_t total)
+{
+    if (ProgressHook* h = progressHook().load(std::memory_order_acquire))
+        h->advance(done, total);
+}
 
 /**
  * @brief Exécute en parallèle une liste de tâches indépendantes (post-traitement).
@@ -66,9 +105,16 @@ inline void parallel_run(std::vector<std::function<void()>>& tasks)
     QThreadPool* pool = QThreadPool::globalInstance();
     const int maxHelpers = std::min<int>(pool->maxThreadCount(), static_cast<int>(N)) - 1;
 
+    std::atomic<std::size_t> nDone {0};
+    auto taskFinished = [&] {
+        progressAdvance(nDone.fetch_add(1, std::memory_order_relaxed) + 1, N);
+    };
+
     if (maxHelpers <= 0) {
-        for (auto& t : tasks)
+        for (auto& t : tasks) {
             t();
+            taskFinished();
+        }
         return;
     }
 
@@ -85,6 +131,7 @@ inline void parallel_run(std::vector<std::function<void()>>& tasks)
                 if (!firstError)
                     firstError = std::current_exception();
             }
+            taskFinished();
         }
     };
 

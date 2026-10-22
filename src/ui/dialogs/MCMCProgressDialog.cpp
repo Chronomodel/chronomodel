@@ -80,7 +80,8 @@ MCMCProgressDialog::MCMCProgressDialog(MCMCLoop* loop, QWidget* parent, Qt::Wind
 
 MCMCProgressDialog::~MCMCProgressDialog()
 {
-
+    ProgressHook* self = this;
+    progressHook().compare_exchange_strong(self, nullptr);
 }
 
 int MCMCProgressDialog::startMCMC()
@@ -88,6 +89,13 @@ int MCMCProgressDialog::startMCMC()
 #ifdef _WIN32
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED); //https://learn.microsoft.com/fr-fr/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate?redirectedfrom=MSDN
 #endif
+    mPhaseFrom.store(0);
+    mPhaseTo.store(kComputeEnd);
+    mStageFrom.store(-1);
+    mLastValue.store(-1);
+    mGuiPhase = false;
+    progressHook().store(this, std::memory_order_release);
+
     mLoop->start(QThread::QThread::NormalPriority);// TimeCriticalPriority);// NormalPriority);HighestPriority
     return exec();
 }
@@ -132,7 +140,100 @@ void MCMCProgressDialog::setProgress2(int value)
 void MCMCProgressDialog::setFinishedState()
 {
     mCancelBut->setEnabled(false);
+
+    if (mLoop->mAbortedReason.isEmpty() && mPostProcess) {
+        // Phase "graphes" : exécutée ici, dans le thread GUI, dialogue toujours affiché.
+        // La barre continue sur [kComputeEnd, kPostProcessRange].
+        mGuiPhase = true;
+        mStageFrom.store(-1);
+        mPhaseFrom.store(std::max(kComputeEnd, mLastValue.load()));
+        mPhaseTo.store(kPostProcessRange);
+        mPumpTimer.invalidate();
+
+        mPostProcess();
+
+        postProgress(kPostProcessRange);
+        mGuiPhase = false;
+    }
+
+    ProgressHook* self = this;
+    progressHook().compare_exchange_strong(self, nullptr);
+
     accept();
+}
+
+// ---------------------------------------------------------------------------
+// ProgressHook
+// ---------------------------------------------------------------------------
+void MCMCProgressDialog::stage(const QString& label, double from, double to)
+{
+    const int a = mPhaseFrom.load();
+    const int b = mPhaseTo.load();
+    const int sFrom = a + qRound((b - a) * std::clamp(from, 0.0, 1.0));
+    const int sTo   = a + qRound((b - a) * std::clamp(to,   0.0, 1.0));
+    mStageFrom.store(sFrom);
+    mStageTo.store(sTo);
+
+    if (QThread::currentThread() == thread())
+        showLabel(label);
+    else
+        QMetaObject::invokeMethod(this, [this, label] { showLabel(label); }, Qt::QueuedConnection);
+
+    postProgress(sFrom);
+}
+
+void MCMCProgressDialog::advance(std::size_t done, std::size_t total)
+{
+    const int sFrom = mStageFrom.load();
+    if (sFrom < 0 || total == 0)
+        return; // aucune étape ouverte (ex. parallel_run hors post-traitement)
+
+    const int sTo = mStageTo.load();
+    const double f = static_cast<double>(std::min(done, total)) / static_cast<double>(total);
+    postProgress(sFrom + static_cast<int>((sTo - sFrom) * f));
+}
+
+void MCMCProgressDialog::postProgress(int value)
+{
+    // Monotone et dédoublonné : au plus kPostProcessRange mises à jour, quel que soit
+    // le nombre de tâches ; un parallel_run imbriqué ne fait jamais reculer la barre.
+    int prev = mLastValue.load();
+    do {
+        if (value <= prev)
+            return;
+    } while (!mLastValue.compare_exchange_weak(prev, value));
+
+    if (QThread::currentThread() == thread())
+        showProgress(value);
+    else
+        QMetaObject::invokeMethod(this, [this, value] { showProgress(value); }, Qt::QueuedConnection);
+}
+
+void MCMCProgressDialog::showLabel(const QString& label)
+{
+    setMessage(label);
+    pumpEvents();
+}
+
+void MCMCProgressDialog::showProgress(int value)
+{
+    if (mProgressBar1->maximum() != kPostProcessRange)
+        mProgressBar1->setRange(0, kPostProcessRange);
+    mProgressBar1->setValue(value);
+    pumpEvents();
+}
+
+void MCMCProgressDialog::pumpEvents()
+{
+    // En phase "graphes", le thread GUI est occupé : sans cela, ni la barre ni le
+    // libellé ne seraient redessinés (et macOS afficherait le curseur d'attente).
+    // Même principe que QProgressDialog::setValue() pour un dialogue modal.
+    if (!mGuiPhase)
+        return;
+    if (mPumpTimer.isValid() && mPumpTimer.elapsed() < 40)
+        return;
+    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+    mPumpTimer.start();
 }
 
 void MCMCProgressDialog::keyPressEvent(QKeyEvent* e)

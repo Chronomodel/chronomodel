@@ -4221,14 +4221,19 @@ void Project::runChronomodel()
           => THE DIALOG IS NEVER REJECTED ! (Escape key also disabled to prevent default behavior)
          -------------------------------------------------------------------- */
 
+        // Génération des résultats et des graphes pendant que le dialogue est encore
+        // affiché (barre de progression continue jusqu'à l'affichage des graphes).
+        dialog.setPostProcess([this] {
+            AppSettings::mIsSaved = false;
+            emit mcmcFinished(true);
+        });
+
         if (dialog.startMCMC() == QDialog::Accepted) {
 
             if (loop.mAbortedReason.isEmpty()) {
                 //Memo of the init variable state to show in Log view
                 //mModel->mLogInit = loop.getChainsLog() + loop.getInitLog();
-                AppSettings::mIsSaved = false;
-                emit mcmcFinished();
-
+                // mcmcFinished(true) déjà émis par le dialogue (setPostProcess)
 
             } else {
                 if (loop.mAbortedReason != ABORTED_BY_USER) {
@@ -4355,11 +4360,16 @@ void Project::runCurve()
           - The run function returns
       => THE DIALOG IS NEVER REJECTED ! (Escape key also disabled to prevent default behavior)
      -------------------------------------------------------------------- */
+    // Génération des résultats et des graphes pendant que le dialogue est encore
+    // affiché (barre de progression continue jusqu'à l'affichage des graphes).
+    dialog.setPostProcess([this] {
+        AppSettings::mIsSaved = false;
+        emit mcmcFinished(true);
+    });
+
     if (dialog.startMCMC() == QDialog::Accepted) {
         if (loop.mAbortedReason.isEmpty()) {
-            AppSettings::mIsSaved = false;
-            dialog.setFinishedState();
-            emit mcmcFinished();
+            // mcmcFinished(true) déjà émis par le dialogue (setPostProcess)
 
         } else {
             if (loop.mAbortedReason != ABORTED_BY_USER) {

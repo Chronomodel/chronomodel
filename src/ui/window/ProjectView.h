@@ -73,7 +73,7 @@ public:
     void setShowAllThumbs(bool show) {mModelView->setShowAllThumbs(show);}
 
 public slots:
-    void initResults();
+    void initResults(bool densitiesReady = false);
     void updateResults();
     void updateProject();
     void showModel();

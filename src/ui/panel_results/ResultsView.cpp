@@ -64,6 +64,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #include "QtUtilities.h"
 #include "ModelUtilities.h"
 #include "AppSettings.h"
+#include "ParallelFor.h"
 
 #include <QFontDialog>
 #include <QScrollBar>
@@ -3555,6 +3556,7 @@ void ResultsView::generateCurves()
    // updateScales(); // regarde l'echelle sur Y avec le Zoom mémorisé// ne contient plus updateCurvesToShow pour les courbes
 
     int i = 0;
+    std::size_t nGraphsDone = 0;
     for (GraphViewResults*& graphView : listGraphs) {
         GraphViewCurve* curve = dynamic_cast<GraphViewCurve*>(graphView);
         if (curve != nullptr) {
@@ -3574,6 +3576,7 @@ void ResultsView::generateCurves()
         graphView->setShowNumericalResults(showStat);
         graphView->updateCurves(mCurrentTypeGraph, mShowList, mShowAllChains, mShowChainList);
 
+        progressAdvance(++nGraphsDone, static_cast<std::size_t>(listGraphs.size())); // sans effet hors post-traitement MCMC
     }
     updateScales(); // regarde l'echelle sur Y avec le Zoom mémorisé// ne contient plus updateCurvesToShow pour les courbes
 

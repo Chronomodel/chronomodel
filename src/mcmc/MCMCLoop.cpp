@@ -36,6 +36,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #include "ModelUtilities.h"
 #include "StdUtilities.h"
 #include "AppSettings.h"
+#include "ParallelFor.h"
 
 
 #include <QDebug>
@@ -1559,7 +1560,7 @@ void MCMCLoop::run()
     // 7. Finalize
     // ======================================================================
 
-    emit stepChanged(tr("Computing posterior distributions and numerical results (HPD, credibility, ...)"), 0, 0);
+    emit stepChanged(tr("Computing posterior distributions and numerical results (HPD, credibility, ...)"), 0, kPostProcessRange);
 #ifdef _WIN32
     SetThreadExecutionState(ES_CONTINUOUS);
 #endif
