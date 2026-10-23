@@ -769,11 +769,11 @@ QString ModelUtilities::wiggleResultsHTML(const Date* date)
     QString text;
     if (date->mDeltaType != Date::eDeltaNone) {
         text = line(textBold(textBlack(QObject::tr("Posterior Wiggle"))));
-        if (date->mDeltaType == Date::eDeltaFixed) {
-           text += line(textBlack(QObject::tr("Fixed value : %1 ").arg(stringForLocal(date->mWiggle.value()))));
+       // if (date->mDeltaType == Date::eDeltaFixed) {
+        //   text += line(textBlack(QObject::tr("Fixed value : %1 ").arg(stringForLocal(date->mWiggle.value()))));
 
-        } else
-            text += line(textBlack(date->mWiggle.resultsString())) ;
+        //} else
+            text += line(textBlack(date->mWiggle.MetropolisVariable::resultsString("", DateUtils::getAppSettingsFormatStr())) );
     }
 
     return text;
