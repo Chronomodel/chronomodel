@@ -872,14 +872,14 @@ QString ModelUtilities::VgResultsHTML(const std::shared_ptr<Event> e)
     QString text;
 
     if (e->mType == Event::eBound) {
-        text += line(textBold(textRed(QObject::tr("Bound : %1").arg(e->getQStringName()))));
+        text += line(textBold(textRed(QObject::tr("Bound: %1").arg(e->getQStringName()))));
 
     } else {
-        text += line(textBold(textBlue(QObject::tr("Event : %1").arg(e->getQStringName()))));
+        text += line(textBold(textBlue(QObject::tr("Event: %1").arg(e->getQStringName()))));
     }
 
     if (e->mVg.mSamplerProposal == SamplerProposal::eFixe) {
-        text += line(textBold(textGreen(QObject::tr("Curve : Std gi"))));
+        text += line(textBold(textGreen(QObject::tr("Curve: Std gi"))));
         text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mBurnAdaptTrace->at(0)))));
 
     } else {
@@ -893,8 +893,8 @@ QString ModelUtilities::VgResultsHTML(const std::shared_ptr<Event> e)
 
 QString ModelUtilities::phaseResultsHTML(const std::shared_ptr<Phase> p)
 {
-    QString text = line(textBold(textOrange(QObject::tr("Phase : %1").arg(p->getQStringName()))));
-    text += line(textOrange(QObject::tr("Number of Events : %1").arg(p->mEvents.size())));
+    QString text = line(textBold(textOrange(QObject::tr("Phase: %1").arg(p->getQStringName()))));
+    text += line(textOrange(QObject::tr("Number of Events: %1").arg(p->mEvents.size())));
 
     text += "<br>";
     text += line(textBold(textOrange(QObject::tr("Begin (posterior distrib.)"))));
@@ -926,8 +926,8 @@ QString ModelUtilities::phaseResultsHTML(const std::shared_ptr<Phase> p)
 
 QString ModelUtilities::durationResultsHTML(const std::shared_ptr<Phase> p)
 {
-    QString text = line(textBold(textOrange(QObject::tr("Phase : %1").arg(p->getQStringName()))));
-    text += line(textOrange(QObject::tr("Number of Events : %1").arg(p->mEvents.size())));
+    QString text = line(textBold(textOrange(QObject::tr("Phase: %1").arg(p->getQStringName()))));
+    text += line(textOrange(QObject::tr("Number of Events: %1").arg(p->mEvents.size())));
 
     text += "<br>";
     text += line(textBold(textOrange(QObject::tr("Duration (posterior distrib.)"))));
@@ -943,7 +943,7 @@ QString ModelUtilities::tempoResultsHTML(const std::shared_ptr<Phase> p)
 {
     Q_ASSERT(p);
     QString text = line(textBold(textOrange(QObject::tr("Phase : %1").arg(p->getQStringName()))));
-    text += line(textOrange(QObject::tr("Number of Events : %1").arg(p->mEvents.size())));
+    text += line(textOrange(QObject::tr("Number of Events: %1").arg(p->mEvents.size())));
 
     return text;
 }
@@ -951,7 +951,7 @@ QString ModelUtilities::tempoResultsHTML(const std::shared_ptr<Phase> p)
 QString ModelUtilities::activityResultsHTML(const std::shared_ptr<Phase> p)
 {
     QString text = line(textBold(textOrange(QObject::tr("Phase : %1").arg(p->getQStringName()))));
-    text += line(textOrange(QObject::tr("Number of Events : %1").arg(p->mEvents.size())));
+    text += line(textOrange(QObject::tr("Number of Events: %1").arg(p->mEvents.size())));
 
     text += "<br>";
 
@@ -1075,8 +1075,8 @@ QString ModelUtilities::curveResultsHTML(const std::shared_ptr<ModelCurve> model
     const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
 
     if (model->mCurveSettings.mProcessType == CurveSettings::eProcess_Depth) {
-        text += "<br>" + line( textBold(textGreen(QObject::tr("Positive curves accepted with Threshold : %1").arg(stringForLocal(model->mCurveSettings.mThreshold)))));
-        //const unsigned requiredCurve = floor(model->mMCMCSettings.mIterPerAquisition / model->mMCMCSettings.mThinningInterval);
+        text += "<br>" + line( textBold(textGreen(QObject::tr("Positive curves accepted with Threshold: %1").arg(stringForLocal(model->mCurveSettings.mThreshold)))));
+
         unsigned totalIterDisplay = 0;
         unsigned totalRequiredCurve = 0;
         float rate;
@@ -1094,7 +1094,7 @@ QString ModelUtilities::curveResultsHTML(const std::shared_ptr<ModelCurve> model
 
         }
         rate  = (double)totalIterDisplay/(double)totalRequiredCurve * 100.;
-        text += line(textGreen( QObject::tr("- Accepted Curves for All Chain : %2 / %3 = %4 % ").
+        text += line(textGreen( QObject::tr("- Accepted Curves for All Chain: %2 / %3 = %4 % ").
                               arg(QString::number(totalIterDisplay),
                                   QString::number(totalRequiredCurve), stringForLocal(rate) ) ));
     } else {
@@ -1125,7 +1125,7 @@ QString ModelUtilities::curveResultsHTML(const std::shared_ptr<ModelCurve> model
 
             }
             rate  = (double)totalIterDisplay/(double)totalRequiredCurve * 100.;
-            text += line(textGreen( QObject::tr("- Display Curves for All Chain : %2 / %3 = %4 % ").
+            text += line(textGreen( QObject::tr("- Display Curves for All Chain: %2 / %3 = %4 % ").
                                    arg(QString::number(totalIterDisplay),
                                        QString::number(totalRequiredCurve), stringForLocal(rate) ) ));
         }
@@ -1171,7 +1171,7 @@ QString ModelUtilities::lambdaResultsHTML(const std::shared_ptr<ModelCurve> mode
     QString text;
     if (model->mLambdaSpline.mSamplerProposal == SamplerProposal::eFixe  && model->mCurveSettings.mLambdaSplineType != CurveSettings::eInterpolation) {
         text = line(textBold(textGreen(QObject::tr("Smoothing"))));
-        text += line(textGreen(QObject::tr("Fixed value : 10E%1").arg(QString::number( model->mCurveSettings.mLambdaSpline))));
+        text += line(textGreen(QObject::tr("Fixed value: 10E%1").arg(QString::number( model->mCurveSettings.mLambdaSpline))));
 
     } else if (model->mLambdaSpline.mSamplerProposal == SamplerProposal::eFixe && model->mCurveSettings.mLambdaSplineType == CurveSettings::eInterpolation) {
         text = line(textBold(textGreen(QObject::tr("Smoothing"))));
@@ -1187,20 +1187,10 @@ QString ModelUtilities::lambdaResultsHTML(const std::shared_ptr<ModelCurve> mode
 QString ModelUtilities::S02VgResultsHTML(const std::shared_ptr<ModelCurve> model)
 {
     QString text;
-#ifdef KOMLAN
-    if (model->mS02Vg.mSamplerProposal == SamplerProposal::eFixe ) {
-        text = line(textBold(textGreen(QObject::tr("S02Vg"))));
-        text += line(textGreen(QObject::tr("Fixed value : 10E%1").arg(QString::number( model->mS02Vg.mBurnAdaptTrace->at(0)))));
 
-    } else {
-        text = line(textBold(textGreen(QObject::tr("Stat. on the sqrt of S02Vg"))));
-        text += line(textGreen(model->mS02Vg.resultsString("", nullptr)));
-    }
-#else
     text = line(textBold(textGreen(QObject::tr("S02Vg"))));
-    text += line(textGreen(QObject::tr("Fixed value : 10E%1").arg(QString::number( model->mS02Vg))));
+    text += line(textGreen(QObject::tr("Fixed value: 10E%1").arg(QString::number( model->mS02Vg))));
 
-#endif
     return text;
 }
 /**
@@ -1339,7 +1329,7 @@ void sampleInCumulatedRepartition_thetaFixe (std::shared_ptr<Event> event, const
 
         // Calcul de l'indice d'interpolation
         const double targetValue = 0.5 * (maxRepartition - minRepartition) + minRepartition;
-        /*const double idx = vector_interpolate_idx_for_value(targetValue, repartition);*/
+
         const double idx = interpolate_index(targetValue, repartition);
         event->mTheta.setValue(t_min_long + idx * step_long);
 
@@ -1373,7 +1363,7 @@ double sample_in_Repartition_date_fixe (const Date& d, const StudyPeriodSettings
 
     // Calcul de l'indice d'interpolation
     const double targetValue = 0.5 * (maxRepartition - minRepartition) + minRepartition;
-    /*const double idx = vector_interpolate_idx_for_value(targetValue, repartition);*/
+
     const double idx = interpolate_index(targetValue, repartition);
     const double sampled = d.mCalibration->mTmin + idx * step_long;
     return std::clamp(sampled, settings.mTmin, settings.mTmax);
