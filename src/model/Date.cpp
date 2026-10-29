@@ -1335,7 +1335,8 @@ const std::map<double, double> Date::getFormatedCalibToShow() const
     if (*mCalibration->mRepartition.crbegin() > 0.0) {
         double tminCal, tmaxCal;
         std::vector<double> curve;
-        const double threshold  = 0.01 * (*std::max_element(mCalibration->mVector.begin(), mCalibration->mVector.end())); // ici
+        // 0.1 % du max : la chute vers 0 aux bords reste sous le pixel (1 % donnait une coupure visible)
+        const double threshold  = 0.001 * (*std::max_element(mCalibration->mVector.begin(), mCalibration->mVector.end()));
 
         int minIdx = 0;
         for (auto& v : mCalibration->mVector) {
@@ -1394,7 +1395,7 @@ const std::map<double, double> Date::getFormatedWiggleCalibToShow() const
 
     double tminCal, tmaxCal;
     std::vector<double> curve;
-    const double threshold  = 0.01 * (*std::max_element(mWiggleCalibration->mVector.begin(), mWiggleCalibration->mVector.end()));
+    const double threshold  = 0.001 * (*std::max_element(mWiggleCalibration->mVector.begin(), mWiggleCalibration->mVector.end()));
 
     int minIdx = 0;
     for (auto& v : mWiggleCalibration->mVector) {

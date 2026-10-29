@@ -2837,7 +2837,69 @@ void ModelCurve::memo_PosteriorG_IDF(PosteriorMeanG &postG, const MCMCSpline &sp
  *  ou Versions >= 4.0.0 (tout numéro majeur > 3)          */
 #if (VERSION_MAJOR > 3)                                   \
 ||  (VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5)
+/**
+ * @brief ModelCurve::eval_PosteriorG_3D_335 évalue G, G' et G'' (convertis en IDF si besoin) sur la grille en t.
+ * Séparé de l'accumulation pour n'évaluer la spline qu'une fois par itération (chaîne + total).
+ */
+void ModelCurve::eval_PosteriorG_3D_335(GGrid &grid, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int nbPtsX) const
+{
+    grid.resize(nbPtsX);
+    const double stepT = (mSettings.mTmax - mSettings.mTmin) / (nbPtsX - 1);
+
+    double t;
+    double gx, gpx, gsx;
+    double gy, gpy, gsy;
+    double gz = 0.0, gpz = 0.0, gsz = 0.0;
+
+    unsigned i0 = 0; // tIdx étant croissant, i0 permet de faire la recherche à l'indice du temps précedent
+    for (int idx_t = 0; idx_t < nbPtsX ; ++idx_t) {
+        t = static_cast<double>(idx_t) * stepT + mSettings.mTmin ;
+        valeurs_G_GP_GS(t, spline.splineX, gx, gpx, gsx, i0, mSettings.mTmin, mSettings.mTmax);
+        // i0 augmente jusqu'à trouver le bon temps dans valeur_G_GP_GS()
+        // ici i0 doit correspondre exactement au bon t
+        valeurs_G_GP_GS(t, spline.splineY, gy, gpy, gsy, i0, mSettings.mTmin, mSettings.mTmax);
+
+        // Conversion IDF
+        if (curveType == CurveSettings::eProcess_Vector ||  curveType == CurveSettings::eProcess_Spherical) {
+            valeurs_G_GP_GS(t, spline.splineZ, gz, gpz, gsz, i0, mSettings.mTmin, mSettings.mTmax);
+
+            double F, Inc, Dec;
+            convertToIDF(gx, gy, gz, Inc, Dec, F);
+
+            double dF, dInc, dDec;
+            computeDerivatives(gx, gy, gz, gpx, gpy, gpz, dInc, dDec, dF);
+
+            double d2Fdt2, d2Incdt2, d2Decdt2;
+            computeSecondDerivatives(gx, gy, gz, gpx, gpy, gpz, gsx, gsy, gsz,
+                                      d2Incdt2, d2Decdt2, d2Fdt2);
+            gx = Inc;
+            gy = Dec;
+            gz = F;
+
+            gpx = dInc;
+            gpy = dDec;
+            gpz = dF;
+
+            gsx = d2Incdt2;
+            gsy = d2Decdt2;
+            gsz = d2Fdt2;
+
+        } else if (compute_XYZ)
+            valeurs_G_GP_GS(t, spline.splineZ, gz, gpz, gsz, i0, mSettings.mTmin, mSettings.mTmax);
+
+        grid.x.g[idx_t] = gx; grid.x.gp[idx_t] = gpx; grid.x.gs[idx_t] = gsx;
+        grid.y.g[idx_t] = gy; grid.y.gp[idx_t] = gpy; grid.y.gs[idx_t] = gsy;
+        grid.z.g[idx_t] = gz; grid.z.gp[idx_t] = gpz; grid.z.gs[idx_t] = gsz;
+    }
+}
+
 void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted)
+{
+    eval_PosteriorG_3D_335(mGGrid, spline, curveType, postG.gx.mapG.column());
+    accumulate_PosteriorG_3D_335(postG, mGGrid, realyAccepted);
+}
+
+void ModelCurve::accumulate_PosteriorG_3D_335(PosteriorMeanG &postG, const GGrid &grid, const int realyAccepted)
 {
 
     CurveMap& curveMap_XInc = postG.gx.mapG;
@@ -2859,7 +2921,6 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
     const double ymin_ZF = curveMap_ZF.minY();
     const double ymax_ZF = curveMap_ZF.maxY();
 
-    const double stepT = (mSettings.mTmax - mSettings.mTmin) / (nbPtsX - 1);
 
     const double stepY_XInc = (ymax_XInc - ymin_XInc) / (nbPtsY_XInc - 1);
     const double stepY_YDec = (ymax_YDec - ymin_YDec) / (nbPtsY_YDec - 1);
@@ -2915,51 +2976,13 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
     double* vecVarGP_YDec = postG.gy.vecVarGP.data();
     double* vecVarGP_ZF = postG.gz.vecVarGP.data();
 
-    double t;
-    double gx, gpx, gsx;
-    double gy, gpy, gsy;
-    double gz, gpz, gsz;
-
     double n = realyAccepted;
 
-    // 3 - Calcul pour la composante
-    unsigned i0 = 0; // tIdx étant croissant, i0 permet de faire la recherche à l'indice du temps précedent
+    // 3 - Calcul pour la composante (valeurs déjà évaluées par eval_PosteriorG_3D_335)
     for (int idx_t = 0; idx_t < nbPtsX ; ++idx_t) {
-        t = static_cast<double>(idx_t) * stepT + mSettings.mTmin ;
-        valeurs_G_GP_GS(t, spline.splineX, gx, gpx, gsx, i0, mSettings.mTmin, mSettings.mTmax);
-        // i0 augmente jusqu'à trouver le bon temps dans valeur_G_GP_GS()
-        // ici i0 doit correspondre exactement au bon t
-        valeurs_G_GP_GS(t, spline.splineY, gy, gpy, gsy, i0, mSettings.mTmin, mSettings.mTmax);
-
-        // Conversion IDF
-        if (curveType == CurveSettings::eProcess_Vector ||  curveType == CurveSettings::eProcess_Spherical) {
-            valeurs_G_GP_GS(t, spline.splineZ, gz, gpz, gsz, i0, mSettings.mTmin, mSettings.mTmax);
-
-            double F, Inc, Dec;
-            convertToIDF(gx, gy, gz, Inc, Dec, F);
-
-            double dF, dInc, dDec;
-            computeDerivatives(gx, gy, gz, gpx, gpy, gpz, dInc, dDec, dF);
-
-            double d2Fdt2, d2Incdt2, d2Decdt2;
-            computeSecondDerivatives(gx, gy, gz, gpx, gpy, gpz, gsx, gsy, gsz,
-                                      d2Incdt2, d2Decdt2, d2Fdt2);
-            gx = Inc;
-            gy = Dec;
-            gz = F;
-
-            gpx = dInc;
-            gpy = dDec;
-            gpz = dF;
-
-
-            gsx = d2Incdt2;
-            gsy = d2Decdt2;
-            gsz = d2Fdt2;
-
-
-        } else if (compute_XYZ)
-            valeurs_G_GP_GS(t, spline.splineZ, gz, gpz, gsz, i0, mSettings.mTmin, mSettings.mTmax);
+        const double gx = grid.x.g[idx_t], gpx = grid.x.gp[idx_t], gsx = grid.x.gs[idx_t];
+        const double gy = grid.y.g[idx_t], gpy = grid.y.gp[idx_t], gsy = grid.y.gs[idx_t];
+        const double gz = grid.z.g[idx_t], gpz = grid.z.gp[idx_t], gsz = grid.z.gs[idx_t];
 
 
         // -- Calcul Mean on XInc
@@ -3129,7 +3152,29 @@ void ModelCurve::memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline 
 
 }
 
+/**
+ * @brief ModelCurve::eval_PosteriorG évalue G, G' et G'' de la composante sur la grille en t.
+ * Séparé de l'accumulation pour n'évaluer la spline qu'une fois par itération (chaîne + total).
+ */
+void ModelCurve::eval_PosteriorG(GGridComposante &grid, const MCMCSplineComposante &splineComposante, const int nbPtsX) const
+{
+    grid.resize(nbPtsX);
+    const double stepT = (mSettings.mTmax - mSettings.mTmin) / (nbPtsX - 1);
+
+    unsigned i0 = 0; // idx_t étant croissant, i0 permet de faire la recherche à l'indice du temps précedent
+    for (int idx_X = 0; idx_X < nbPtsX ; ++idx_X) {
+        const double t = idx_X * stepT + mSettings.mTmin ;
+        valeurs_G_GP_GS(t, splineComposante, grid.g[idx_X], grid.gp[idx_X], grid.gs[idx_X], i0, mSettings.mTmin, mSettings.mTmax);
+    }
+}
+
 void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, const MCMCSplineComposante& splineComposante, const int realyAccepted)
+{
+    eval_PosteriorG(mGGrid.x, splineComposante, postGCompo.mapG.column());
+    accumulate_PosteriorG(postGCompo, mGGrid.x, realyAccepted);
+}
+
+void ModelCurve::accumulate_PosteriorG(PosteriorMeanGComposante& postGCompo, const GGridComposante &grid, const int realyAccepted)
 {
     CurveMap& curveMap = postGCompo.mapG;
     const int nbPtsX = curveMap.column();
@@ -3138,7 +3183,6 @@ void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, const MCM
     const double ymin = curveMap.minY();
     const double ymax = curveMap.maxY();
 
-    const double stepT = (mSettings.mTmax - mSettings.mTmin) / (nbPtsX - 1);
     const double stepY = (ymax - ymin) / (nbPtsY - 1);
 
     CurveMap& curveMapGP = postGCompo.mapGP;
@@ -3159,20 +3203,11 @@ void ModelCurve::memo_PosteriorG(PosteriorMeanGComposante& postGCompo, const MCM
     std::vector<double>::iterator itVecVarG = vecVarG.begin();
     std::vector<double>::iterator itVecVarGP = vecVarGP.begin();
 
-    double t, g, gp, gs;
-    g = 0.0;
-    gp = 0.0;
-
-    gs = 0.0;
-
     const double n = realyAccepted;
 
-    // 3 - calcul pour la composante
-    unsigned i0 = 0; // idx_t étant croissant, i0 permet de faire la recherche à l'indice du temps précedent
+    // 3 - calcul pour la composante (valeurs déjà évaluées par eval_PosteriorG)
     for (int idx_X = 0; idx_X < nbPtsX ; ++idx_X) {
-        t = idx_X * stepT + mSettings.mTmin ;
-
-        valeurs_G_GP_GS(t, splineComposante, g, gp, gs, i0, mSettings.mTmin, mSettings.mTmax);
+        const double g = grid.g[idx_X], gp = grid.gp[idx_X], gs = grid.gs[idx_X];
         //std::cout <<" t="<< t <<  " ; GP=" << gp << std::endl;
 
         *itVecGS +=  (gs - *itVecGS) / n;

@@ -56,6 +56,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #ifdef USE_THREAD
 #include <thread>
 #endif
+#include <unordered_map>
 
 extern QString res_file_version;
 
@@ -643,6 +644,42 @@ QString Model::getResultsLog() const
 void Model::generateResultsLog()
 {
     QString log;
+
+    // ------------------------------------------------------------
+    // Rappel des conditions d'acquisition
+    // ------------------------------------------------------------
+    {
+        const MCMCSettings& s = mMCMCSettings;
+
+        long long totalAccepted = 0;
+        long long totalDisplay  = 0;
+        QStringList perChain;
+        for (const auto& ch : mChains) {
+            totalAccepted += ch.mRealyAccepted;
+            totalDisplay  += ch.mIterDisplay;
+            perChain << QString::number(ch.mRealyAccepted);
+        }
+
+        log += line(textBold(QObject::tr("Acquisition conditions")));
+        log += line(QObject::tr("Number of chains : %1").arg(QString::number(mChains.size())));
+        log += line(QObject::tr("Acquisition iterations per chain : %1").arg(QString::number(s.mIterPerAquisition)));
+        log += line(QObject::tr("Thinning interval : %1").arg(QString::number(s.mThinningInterval)));
+        log += line(QObject::tr("Retained samples : %1 (per chain : %2)")
+                        .arg(QString::number(totalAccepted), perChain.join(" ; ")));
+        if (hasCurveFilter())
+            log += line(QObject::tr("Retained samples after curve filter : %1").arg(QString::number(totalDisplay)));
+
+        if (s.mAnnealRecurrence <= 0) {
+            log += line(QObject::tr("Annealing : disabled"));
+        } else {
+            log += line(QObject::tr("Annealing : Init. Temp. = %1 ; Recurrence = %2 ; Dwell = %3")
+                            .arg(QString::number(s.mAnnealTemp),
+                                 QString::number(s.mAnnealRecurrence),
+                                 QString::number(s.mAnnealDwell)));
+        }
+        log += "<hr>";
+    }
+
     auto totalTime = mChains[0].mAcquisitionElapsedTime
                      + mChains[0].mAdaptElapsedTime
                      + mChains[0].burnElapsedTime
@@ -802,6 +839,26 @@ QList<QStringList> Model::getStats(const QLocale locale, const int precision, co
     return rows;
 }
 
+namespace {
+// Partie acquisition (trace brute, non filtrée) de la chaîne chainIdx, de taille mRealyAccepted.
+// Depuis la séparation des traces, mBurnAdaptTrace ne contient QUE init + burn + adapt :
+// l'acquisition est dans mAllAcquiredTrace (MetropolisVariable::acquire()).
+std::vector<double> acquiredRunForChain(MetropolisVariable& var,
+                                        const std::vector<ChainSpecs>& chains,
+                                        std::size_t chainIdx)
+{
+    const std::size_t n = static_cast<std::size_t>(chains[chainIdx].mRealyAccepted);
+    std::vector<double> tr = var.acquiredTraceforChain(chains, chainIdx);
+    if (tr.size() != n) {
+        qWarning() << "[Model::acquiredRunForChain]" << var.getQStringName()
+                   << ": trace de taille" << tr.size() << "au lieu de" << n
+                   << "(chaîne" << chainIdx << ")";
+        tr.resize(n, std::numeric_limits<double>::quiet_NaN());
+    }
+    return tr;
+}
+} // namespace
+
 QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withDateFormat)
 {
     QList<QStringList> rows;
@@ -816,34 +873,35 @@ QList<QStringList> Model::getPhasesTraces(const QLocale locale, const bool withD
 
     int shift = 0;
     std::size_t acqIndex = 0; // indice dans le masque du filtre de courbe
-    for (const ChainSpecs& chain : mChains) {
-        int burnAdaptSize = 1 + chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
-        // on parcourt la trace brute (mRealyAccepted) et on saute les itérations
-        // rejetées par le filtre de courbe (avant : mIterDisplay décalait les chaînes)
+    for (std::size_t ci = 0; ci < mChains.size(); ++ci) {
+        const ChainSpecs& chain = mChains[ci];
+        const int burnAdaptSize = 1 + chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
         const int runSize = chain.mRealyAccepted;
 
-        for (int j = burnAdaptSize; j<burnAdaptSize + runSize; ++j) {
+        std::vector<std::vector<double>> alphas, betas;
+        alphas.reserve(mPhases.size());
+        betas.reserve(mPhases.size());
+        for (const auto& pPhase : mPhases) {
+            alphas.push_back(acquiredRunForChain(pPhase->mAlpha, mChains, ci));
+            betas.push_back(acquiredRunForChain(pPhase->mBeta, mChains, ci));
+        }
+
+        // on parcourt la trace brute et on saute les itérations rejetées par le filtre de courbe
+        for (int k = 0; k < runSize; ++k) {
             if (hasCurveFilter() && !(*mCurveFilterMask)[acqIndex++])
                 continue;
             QStringList l;
-            l << QString::number(shift + j);
-            for (const auto& pPhase : mPhases) {
-                double valueAlpha = pPhase->mAlpha.mBurnAdaptTrace->at(shift + j);
-
+            l << QString::number(shift + burnAdaptSize + k);
+            for (std::size_t p = 0; p < mPhases.size(); ++p) {
+                double valueAlpha = alphas[p][k];
                 if (withDateFormat)
                     valueAlpha = DateUtils::convertToAppSettingsFormat(valueAlpha);
                 l << locale.toString(valueAlpha, 'g', 15);
 
-                double valueBeta = pPhase->mBeta.mBurnAdaptTrace->at(shift + j);
-
+                double valueBeta = betas[p][k];
                 if (withDateFormat)
                     valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
-
                 l << locale.toString(valueBeta, 'g', 15);
-
-                // double valueTau = pPhase->mTau.mBurnAdaptTrace->at(shift + j);
-                // l << locale.toString(valueTau, 'g', 15);
-
             }
             rows << l;
         }
@@ -856,12 +914,10 @@ QList<QStringList> Model::getPhaseTrace(size_t phaseIdx, const QLocale locale, c
 {
     QList<QStringList> rows;
 
-    std::shared_ptr<Phase> phase = nullptr;
-    if (phaseIdx < mPhases.size())
-        phase = mPhases.at(phaseIdx);
-
-    else
+    if (phaseIdx >= mPhases.size())
         return QList<QStringList>();
+
+    std::shared_ptr<Phase> phase = mPhases.at(phaseIdx);
 
     QStringList headers;
     headers << "iter" << phase->getQStringName() + " Begin" << phase->getQStringName() + " End";
@@ -873,42 +929,48 @@ QList<QStringList> Model::getPhaseTrace(size_t phaseIdx, const QLocale locale, c
     int shift = 0;
     std::size_t acqIndex = 0; // indice dans le masque du filtre de courbe
 
-    for (const ChainSpecs& chain : mChains) {
+    for (std::size_t ci = 0; ci < mChains.size(); ++ci) {
+        const ChainSpecs& chain = mChains[ci];
         const int burnAdaptSize = 1 + chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
-        // trace brute parcourue en entier, itérations filtrées sautées
         const int runSize = chain.mRealyAccepted;
 
-        for (int j = burnAdaptSize; j < (burnAdaptSize + runSize); ++j) {
+        const std::vector<double> alpha = acquiredRunForChain(phase->mAlpha, mChains, ci);
+        const std::vector<double> beta  = acquiredRunForChain(phase->mBeta, mChains, ci);
+
+        // theta des Events : variable fixe (Bound, theta fixé) -> valeur initiale constante
+        std::vector<std::vector<double>> thetas;
+        thetas.reserve(phase->mEvents.size());
+        for (const auto& event : phase->mEvents) {
+            if (event->mType == Event::eBound || event->mTheta.mSamplerProposal == SamplerProposal::eFixe) {
+                const double v0 = (event->mTheta.mBurnAdaptTrace && !event->mTheta.mBurnAdaptTrace->empty())
+                                      ? event->mTheta.mBurnAdaptTrace->front()
+                                      : std::numeric_limits<double>::quiet_NaN();
+                thetas.emplace_back(static_cast<std::size_t>(runSize), v0);
+            } else {
+                thetas.push_back(acquiredRunForChain(event->mTheta, mChains, ci));
+            }
+        }
+
+        for (int k = 0; k < runSize; ++k) {
             if (hasCurveFilter() && !(*mCurveFilterMask)[acqIndex++])
                 continue;
             QStringList l;
-            l << QString::number(shift + j) ;
-            double valueAlpha = phase->mAlpha.mBurnAdaptTrace->at(shift + j);
+            l << QString::number(shift + burnAdaptSize + k);
+
+            double valueAlpha = alpha[k];
             if (withDateFormat)
                 valueAlpha = DateUtils::convertToAppSettingsFormat(valueAlpha);
-
             l << locale.toString(valueAlpha, 'g', 15);
 
-            double valueBeta = phase->mBeta.mBurnAdaptTrace->at(shift + j);
+            double valueBeta = beta[k];
             if (withDateFormat)
                 valueBeta = DateUtils::convertToAppSettingsFormat(valueBeta);
-
             l << locale.toString(valueBeta, 'g', 15);
 
-           /* double valueTau = phase->mTau.mBurnAdaptTrace->at(shift + j);
-            l << locale.toString(valueTau, 'g', 15);
-*/
-            for (const auto& event : phase->mEvents) {
-                double value;;
-                if (event->mType == Event::eBound) {
-                    value = event->mTheta.mBurnAdaptTrace->at(0);
-                } else {
-                   value = event->mTheta.mBurnAdaptTrace->at(shift + j);
-                }
-
+            for (const auto& th : thetas) {
+                double value = th[k];
                 if (withDateFormat)
                     value = DateUtils::convertToAppSettingsFormat(value);
-
                 l << locale.toString(value, 'g', 15);
             }
             rows << l;
@@ -919,48 +981,60 @@ QList<QStringList> Model::getPhaseTrace(size_t phaseIdx, const QLocale locale, c
     return rows;
 }
 
-// créer un tableau avec les valeurs de tous les events, pendant l'aquisition
+// créer un tableau avec les valeurs de tous les events, pendant l'acquisition.
+// Même convention que getPhasesTraces / getPhaseTrace :
+//   - trace brute (mAllAcquiredTrace, en BC/AD), itérations rejetées par le filtre de courbe sautées ;
+//   - conversion au format de l'application seulement si withDateFormat ;
+//   - "iter" = indice global dans la chaîne (init + burn + adapt + acquisition), décalé chaîne par chaîne.
 QList<QStringList> Model::getEventsTraces(const QLocale& locale,
-                                          bool withDateFormat) const noexcept
+                                          bool withDateFormat) const
 {
     QList<QStringList> rows;
 
-    // Header (identique)
-    QStringList header;
-    header << QStringLiteral("iter");
+    QStringList headers;
+    headers << "iter";
     for (const auto& ev : mEvents)
-        header << ev->getQStringName();
-    rows << header;
+        headers << ev->getQStringName();
+    rows << headers;
 
-    qsizetype globalShift = 0;
-    std::size_t chainIdx   = 0;
+    int shift = 0;
+    std::size_t acqIndex = 0; // indice dans le masque du filtre de courbe
 
-    for (const auto& chain : mChains) {
-        //const qsizetype nbAcquisition = static_cast<qsizetype>(chain.mRealyAccepted);
-        const qsizetype nbAcquisition = static_cast<qsizetype>(chain.mIterDisplay);
-        if (nbAcquisition == 0) { ++chainIdx; continue; }
+    for (std::size_t ci = 0; ci < mChains.size(); ++ci) {
+        const ChainSpecs& chain = mChains[ci];
+        const int burnAdaptSize = 1 + chain.mIterPerBurn + (chain.mBatchIndex * chain.mIterPerBatch);
+        const int runSize = chain.mRealyAccepted;
 
-        // Cache des traces
-        std::vector<std::vector<double>> cachedTheta;
-        cachedTheta.reserve(mEvents.size());
-        for (const auto& ev : mEvents)
-            cachedTheta.emplace_back(ev->mTheta.formatedAcquiredTraceforChain(mChains, chainIdx));
-
-        for (qsizetype local = 0; local < nbAcquisition; ++local) {
-            QStringList line;
-            line.reserve(1 + mEvents.size());
-            line << QString::number(globalShift + local);
-
-            for (std::size_t evIdx = 0; evIdx < mEvents.size(); ++evIdx) {
-                double v = cachedTheta[evIdx][local];
-                if (withDateFormat) v = DateUtils::convertToAppSettingsFormat(v);
-                line << locale.toString(v, 'g', 15);
+        std::vector<std::vector<double>> thetas;
+        thetas.reserve(mEvents.size());
+        for (const auto& ev : mEvents) {
+            if (ev->mType == Event::eBound || ev->mTheta.mSamplerProposal == SamplerProposal::eFixe) {
+                // Bound / theta fixe : seule la valeur initiale est mémorisée
+                const double v0 = (ev->mTheta.mBurnAdaptTrace && !ev->mTheta.mBurnAdaptTrace->empty())
+                                      ? ev->mTheta.mBurnAdaptTrace->front()
+                                      : std::numeric_limits<double>::quiet_NaN();
+                thetas.emplace_back(static_cast<std::size_t>(runSize), v0);
+            } else {
+                thetas.push_back(acquiredRunForChain(ev->mTheta, mChains, ci));
             }
-            rows << line;   // Qt 5 copie implicitement, mais la ligne a déjà réservé son espace
         }
 
-        globalShift += nbAcquisition;
-        ++chainIdx;
+        for (int k = 0; k < runSize; ++k) {
+            if (hasCurveFilter() && !(*mCurveFilterMask)[acqIndex++])
+                continue;
+            QStringList l;
+            l.reserve(1 + static_cast<qsizetype>(mEvents.size()));
+            l << QString::number(shift + burnAdaptSize + k);
+
+            for (const auto& th : thetas) {
+                double value = th[k];
+                if (withDateFormat)
+                    value = DateUtils::convertToAppSettingsFormat(value);
+                l << locale.toString(value, 'g', 15);
+            }
+            rows << l;
+        }
+        shift += burnAdaptSize + runSize;
     }
     return rows;
 }
@@ -1002,13 +1076,38 @@ bool Model::isValid()
         }
     }
 
+    // 3b - Un Event ne peut appartenir qu'à UNE SEULE phase à span uniforme (Phase::eZOnly) ;
+    //      il peut en revanche appartenir en plus à d'autres phases sans span uniforme
+    {
+        std::unordered_map<const Event*, std::vector<const Phase*>> spanPhasesOfEvent;
+        for (const auto& ph : mPhases) {
+            if (ph->mTauType != Phase::eZOnly)
+                continue;
+            for (const auto& ev : ph->mEvents)
+                spanPhasesOfEvent[ev.get()].push_back(ph.get());
+        }
+
+        for (const auto& ev : mEvents) { // ordre du modèle -> message reproductible
+            const auto it = spanPhasesOfEvent.find(ev.get());
+            if (it != spanPhasesOfEvent.end() && it->second.size() > 1) {
+                QStringList names;
+                for (const Phase* p : it->second)
+                    names << "\" " + p->getQStringName() + " \"";
+
+                throw QObject::tr("The event \" %1 \" cannot belong to several phases with a Uniform Span (%2)")
+                    .arg(ev->getQStringName(), names.join(", "));
+                return false;
+            }
+        }
+    }
+
     // 4 - Pas de circularité sur les contraintes des Events
     std::vector<std::vector<std::shared_ptr<Event>> > eventBranches;
     try {
         eventBranches = ModelUtilities::getAllEventsBranches(mEvents);
 
     } catch(QString &error){
-        throw &error;
+        throw; // relance le QString attrapé (throw &error lançait un QString*, non attrapé par les appelants)
     }
 
     // 5 - Pas de circularité sur les contraintes de phases
@@ -1018,7 +1117,7 @@ bool Model::isValid()
         phaseBranches = ModelUtilities::getAllPhasesBranches(mPhases, mSettings.mTmax - mSettings.mTmin);
 
     } catch(QString &error){
-        throw &error;
+        throw; // relance le QString attrapé (throw &error lançait un QString*, non attrapé par les appelants)
     }
 
     // 7 - Un Event ne peut pas appartenir à 2 phases en contrainte

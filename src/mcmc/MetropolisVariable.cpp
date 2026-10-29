@@ -1055,6 +1055,8 @@ QString MetropolisVariable::resultsString(const QString &noResultMessage, const 
         if (mFormat == DateUtils::eNumeric) {
 
             for (auto&& interval : intervals) {
+                if (!is_HPD_rate_visible(interval.first))
+                    continue;
                 const QString str_rate = stringForLocal(interval.first * 100.0);
                 const QString str_tmin = stringForLocal(interval.second.first);
                 const QString str_tmax = stringForLocal(interval.second.second);
@@ -1063,6 +1065,8 @@ QString MetropolisVariable::resultsString(const QString &noResultMessage, const 
 
         } else if (DateUtils::is_date(mFormat)) {
             for (auto&& interval : intervals) {
+                if (!is_HPD_rate_visible(interval.first))
+                    continue;
                 const QString str_rate = stringForLocal(interval.first * 100.0);
                 const QString str_tmin = stringForLocal(DateUtils::convertToAppSettingsFormat(interval.second.first));
                 const QString str_tmax = stringForLocal(DateUtils::convertToAppSettingsFormat(interval.second.second));
@@ -1071,6 +1075,8 @@ QString MetropolisVariable::resultsString(const QString &noResultMessage, const 
 
         } else {
             for (auto interval = intervals.crbegin(); interval != intervals.crend(); interval++) {
+                if (!is_HPD_rate_visible(interval->first))
+                    continue;
                 const QString str_rate = stringForLocal(interval->first * 100.0);
                 const QString str_tmin = DateUtils::convertToAppSettingsFormatStr(interval->second.second);
                 const QString str_tmax = DateUtils::convertToAppSettingsFormatStr(interval->second.first);

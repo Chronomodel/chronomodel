@@ -1913,7 +1913,7 @@ double bw_SJ_dpi(const std::vector<double>& x) {
     const double TD = -t6;  // doit être positif comme dans R
 
     if (!std::isfinite(TD) || TD <= 0.0)
-        return 0.9 * sigma * std::pow(nd, -0.2);
+        return bw_nrd0(x); // repli : bw.nrd0 de R
 
     // 4. Formule DPI directe (pas besoin de θ4 pilote ni alpha2)
     // R : res <- (c1 / SDh((2.394/(n*TD))^(1/7)))^(1/5)
@@ -1922,7 +1922,7 @@ double bw_SJ_dpi(const std::vector<double>& x) {
     const double t4_final = S4_fft(xn, h_pilot, 16384);
 
     if (!std::isfinite(t4_final) || t4_final <= 0.0)
-        return 0.9 * sigma * std::pow(nd, -0.2);
+        return bw_nrd0(x); // repli : bw.nrd0 de R
 
     // 5. Retour à l'échelle d'origine
     const double h_n = std::pow(c1 / t4_final, 0.2);
@@ -2364,49 +2364,23 @@ static double S4_from_spectrum(const SnSpectrum& S, double h)
 }
 
 /**
- * @brief Calcule la largeur de bande (bandwidth) optimale par la méthode
- *        Sheather-Jones "solve-the-equation" (SJ-ste) pour l'estimation de
- *        densité par noyau gaussien.
+ * @brief Largeur de bande Sheather-Jones « solve-the-equation » (SJ-ste).
  *
  * @details
- * Implémente l'algorithme de Sheather & Jones (1991), équivalent à
- * `bw.SJ(x, method = "ste")` sous R. Le principe :
- *   -# Normaliser les données par une échelle robuste @c sigma (SJ est
- *      invariant par changement d'échelle : @f$ h(x) = \sigma \cdot h(x/\sigma) @f$),
- *      afin de stabiliser les calculs numériques.
- *   -# Estimer les fonctionnelles de rugosité @f$\hat\psi_4@f$ (via @c S4_fft,
- *      largeur pilote @c g1) et @f$\hat\psi_6@f$ (via @c S6_fft, largeur pilote
- *      @c g2) par convolution FFT.
- *   -# En déduire le coefficient @c alpha2 = 1.357 * (t44 / -t24)^(1/7), qui relie
- *      la largeur pilote de l'étape 2 à la largeur cible @c h dans l'équation
- *      à résoudre (@c sj_equation).
- *   -# Balayer l'intervalle @f$[0.05\,h_{max},\,2\,h_{max}]@f$ (échelle log) pour
- *      détecter tous les changements de signe de l'équation SJ, raffiner
- *      chaque intervalle détecté, puis extraire la racine par bissection
- *      (@c bisect) dans chacun.
- *   -# Parmi les racines trouvées, retenir celle la plus proche (en échelle
- *      log) de la règle du pouce de Silverman @c h_ref_n, puis la dénormaliser
- *      en la multipliant par @c sigma.
+ * Résout l'équation de bw.SJ(method = "ste") de R (mêmes constantes et même intervalle de
+ * recherche), mais estime les fonctionnelles ψ4, ψ6 par FFT (binning linéaire + correction sinc⁴)
+ * au lieu du comptage de paires en 1000 classes de R : résultat à ≤ 0.3 % de R sur des données
+ * régulières, plus proche de l'estimateur exact, et juste là où R échoue (longues queues, groupes
+ * éloignés). Justification détaillée et mesures : voir la documentation de la déclaration
+ * (StdUtilities.h).
  *
- * En cas de rugosité nulle, d'absence de changement de signe détecté, ou
- * d'échec de la bissection, la fonction se replie sur la largeur de bande de
- * Silverman (@f$0.9 \cdot \sigma \cdot n^{-1/5}@f$) comme valeur par défaut.
- *
- * @param x         Échantillon de données (doit contenir au moins 2 valeurs).
- * @param tol       Tolérance de convergence pour la bissection sur chaque
- *                  intervalle raffiné.
- * @param max_iter  Nombre maximal d'itérations de bissection autorisées.
- *
- * @return La largeur de bande SJ-ste estimée, dans l'échelle originale de @p x.
- *         Retourne la largeur de Silverman @f$\sigma \cdot h_{ref,n}@f$ en cas
- *         de repli (données trop clairsemées, pas de racine trouvée, etc.).
- *
- * @note Le calcul est parallélisé (OpenMP) sur l'évaluation de la grille de
- *       balayage, le raffinement des intervalles et la bissection.
- *
- * @see Sheather, S. J. and Jones, M. C. (1991), "A reliable data-based
- *      bandwidth selection method for kernel density estimation",
- *      Journal of the Royal Statistical Society, Series B, 53, 683-690.
+ * Étapes :
+ *   -# normaliser par σ = min(sd, IQR/1.349) (SJ est équivariant d'échelle : h(x) = σ·h(x/σ)) ;
+ *   -# ψ4(g1) et ψ6(g2) par FFT, d'où alpha2 = 1.357·(ψ4 / −ψ6)^(1/7) ;
+ *   -# balayer [0.1·hmax, hmax] (élargi ×1.2 / ÷1.2 comme R) pour encadrer les racines,
+ *      raffiner, bissection ;
+ *   -# garder la racine la plus proche (échelle log) de 0.9·σ·n^(−1/5), dénormaliser.
+ * Repli sur bw_nrd0(x) (= bw.nrd0 de R) si l'équation ne peut pas être résolue.
  */
 double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
 {
@@ -2428,8 +2402,8 @@ double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
 
     const double h_ref_n = 0.9 * sigma_n * std::pow(nd, -0.2);
 
-    // = bw_nrd0(x), sans recalculer scale_factor(x) (un tri de moins) — identique bit à bit
-    const double nrd0 = 0.9 * sigma * std::pow(nd, -0.2);
+    // Repli : bw.nrd0 de R (IQR/1.34), calculé seulement si nécessaire
+    auto nrd0 = [&x]() { return bw_nrd0(x); };
 
     const int    M       = chooseFFtSize(n);
 
@@ -2444,7 +2418,7 @@ double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
     const double t24 = S6_fft(xn, g2, M); // une seule évaluation : inchangé
 
     if (std::abs(t44) < 1e-15 || std::abs(t24) < 1e-15)
-        return nrd0;
+        return nrd0();
 
     constexpr double div1_7 = 1.0 / 7.0;
     // Note : t24 est négatif, -t44 est négatif -> le ratio est positif.
@@ -2536,7 +2510,7 @@ double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
     }
 
     if (brackets.empty())
-        return nrd0;
+        return nrd0();
 */
 
     // Bornes de recherche initiales (identiques à R, mais adaptatives)
@@ -2593,7 +2567,7 @@ double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
     }
 
     if (brackets.empty())
-        return nrd0;
+        return nrd0();
     // -----------------------------------------------------------------
     // Raffinement + bissection
     // -----------------------------------------------------------------
@@ -2620,7 +2594,7 @@ double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
     }
 
     if (fine_brackets.empty())
-        return nrd0;
+        return nrd0();
 
     const int nb = static_cast<int>(fine_brackets.size());
     std::vector<double> roots(nb, std::numeric_limits<double>::quiet_NaN());
@@ -2648,7 +2622,7 @@ double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
 
 
     if (std::isnan(best))
-        return nrd0;
+        return nrd0();
 
     // -----------------------------------------------------------------
     // Dénormalisation : h_réel = sigma * h_normalisé
@@ -2666,19 +2640,23 @@ double bw_SJ_ste(const std::vector<double>& x, double tol, int max_iter)
  * @param x Vecteur de données d'entrée
  * @return La bande passante calculée selon la règle de Silverman
  *
- * @note La formule utilisée est : 0.9 * sigma * n^(-0.2)
- *       où sigma est l'écart-type échelonné (min(sd, IQR/1.349))
- *       et n est le nombre d'observations
+ * @note Reproduit exactement bw.nrd0 de R :
+ *       lo = min(sd, IQR/1.34) ; si lo = 0 : sd, puis |x[0]|, puis 1 ;
+ *       h = 0.9 * lo * n^(-0.2).
+ *       Attention : 1.34 (bw.nrd0) et non 1.349 (échelle de bw.SJ, cf. scale_factor()).
  *
  * @see scale_factor()
  */
 double bw_nrd0(const std::vector<double>& x)
 {
-    const double nd    = static_cast<double>(x.size());
-    const double sigma = scale_factor(x);  // min(sd, IQR/1.349) // ✔️ n-1 comme R sd()
-
-    // Si IQR=0, scale_factor retourne sd — garanti positif
-    return 0.9 * sigma * std::pow(nd, -0.2);
+    const double nd = static_cast<double>(x.size());
+    const double hi = std_unbiais_Knuth(x);              // sd() de R (n-1)
+    const auto   Q  = quantilesType(x, 7, 0.25);          // IQR() de R : quantiles type 7
+    double lo = std::min(hi, (Q.Q3 - Q.Q1) / 1.34);
+    if (!(lo > 0.0)) lo = hi;                             // IQR nul
+    if (!(lo > 0.0)) lo = std::abs(x.front());            // sd nul
+    if (!(lo > 0.0)) lo = 1.0;
+    return 0.9 * lo * std::pow(nd, -0.2);
 }
 
 

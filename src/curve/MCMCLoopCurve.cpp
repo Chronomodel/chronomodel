@@ -17943,58 +17943,6 @@ void MCMCLoopCurve::recordBurnAdapt()
 
     }
 
-    if (mState != State::eAcquisition)
-        return;
-
-    /* --------------------------------------------------------------
-     *  G - Memo  mModel->mSpline
-     * -------------------------------------------------------------- */
-    mModel->mSplinesTrace.push_back(mModel->mSpline);
-
-    //--------------------- Create posteriorGMean and map and memo -----------------------------------------
-
-    // 1 - initialisation à faire dans init()
-
-    int iterAccepted = mLoopChains[mChainIndex].mRealyAccepted + 1;
-    int totalIterAccepted = 1;
-    for (auto& c : mLoopChains)
-        totalIterAccepted += c.mRealyAccepted;
-
-    if (mModel->compute_X_only) {
-        mModel->memo_PosteriorG(mModel->mPosteriorMeanGByChain[mChainIndex].gx, mModel->mSpline.splineX, iterAccepted );
-        if (mLoopChains.size() > 1)
-            mModel->memo_PosteriorG( mModel->mPosteriorMeanG.gx, mModel->mSpline.splineX, totalIterAccepted);
-
-    } else if (!mModel->compute_XYZ) {
-        mModel->memo_PosteriorG( mModel->mPosteriorMeanGByChain[mChainIndex].gx, mModel->mSpline.splineX, iterAccepted );
-        mModel->memo_PosteriorG( mModel->mPosteriorMeanGByChain[mChainIndex].gy, mModel->mSpline.splineY, iterAccepted );
-
-        if (mLoopChains.size() > 1) {
-            mModel->memo_PosteriorG( mModel->mPosteriorMeanG.gx, mModel->mSpline.splineX, totalIterAccepted);
-            mModel->memo_PosteriorG( mModel->mPosteriorMeanG.gy, mModel->mSpline.splineY, totalIterAccepted);
-        }
-
-    }
-    else {
-
-        /*  Versions > 3.3.5
-         *  ou Versions >= 4.0.0 (tout numéro majeur > 3)          */
-#if (VERSION_MAJOR > 3)                                   \
-            ||  (VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5)
-        mModel->memo_PosteriorG_3D_335( mModel->mPosteriorMeanGByChain[mChainIndex], mModel->mSpline, mCurveSettings.mProcessType, iterAccepted);
-
-        if (mLoopChains.size() > 1)
-            mModel->memo_PosteriorG_3D_335( mModel->mPosteriorMeanG, mModel->mSpline, mCurveSettings.mProcessType, totalIterAccepted);
-
-
-
-#else
-        mModel->memo_PosteriorG_3D( mModel->mPosteriorMeanGByChain[mChainIndex], mModel->mSpline, mCurveSettings.mProcessType, iterAccepted);
-
-        if (mLoopChains.size() > 1)
-            mModel->memo_PosteriorG_3D( mModel->mPosteriorMeanG, mModel->mSpline, mCurveSettings.mProcessType, totalIterAccepted);
-#endif
-    }
 
 }
 
@@ -18060,139 +18008,6 @@ void MCMCLoopCurve::acquire()
     }
 
 
-    // Search map size
-    if ( mState == State::eBurning ||
-            ((mState == State::eAdapting && mModel->mChains[mChainIndex].mBatchIndex > mModel->mMCMCSettings.mMaxBatches/3)) ) {
-
-        PosteriorMeanG* meanG = &mModel->mPosteriorMeanG;
-        PosteriorMeanG* chainG = &mModel->mPosteriorMeanGByChain[mChainIndex];
-
-        double minY_GP_X = 0., minY_GP_Y = 0., minY_GP_Z = 0.;
-        double maxY_GP_X = 0., maxY_GP_Y = 0., maxY_GP_Z = 0.;
-
-        if (mModel->mCurveSettings.mProcessType == CurveSettings::eProcess_Depth) {
-            minY_GP_X = mModel->mCurveSettings.mThreshold;
-
-        } else {
-            minY_GP_X = meanG->gx.mapGP.minY();
-        }
-        maxY_GP_X = meanG->gx.mapGP.maxY();
-
-        if (mModel->compute_Y) {
-            minY_GP_Y = meanG->gy.mapGP.minY();
-            maxY_GP_Y = meanG->gy.mapGP.maxY();
-
-            if (mModel->compute_XYZ) {
-                minY_GP_Z = meanG->gz.mapGP.minY();
-                maxY_GP_Z = meanG->gz.mapGP.maxY();
-            }
-        }
-
-
-        // New extrenum of the maps
-
-        const int nbPtsX = 100;
-        const double stepT = (mModel->mSettings.mTmax - mModel->mSettings.mTmin) / (nbPtsX - 1);
-
-        double t;
-        double gx_the, gy_the, gz_the, gpx, gpy, gpz, gs;
-        unsigned i0 = 0;
-
-        // Convertion IDF
-        if (mModel->mCurveSettings.mProcessType == CurveSettings::eProcess_Vector ||  mModel->mCurveSettings.mProcessType == CurveSettings::eProcess_Spherical) {
-
-            for (int idxT = 0; idxT < nbPtsX ; ++idxT) {
-                t = (double)idxT * stepT + mModel->mSettings.mTmin ;
-                // Le premier calcul avec splineX évalue i0, qui est retourné, à la bonne position pour les deux autres splines
-                valeurs_G_GP_GS(t, mModel->mSpline.splineX, gx_the, gpx, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
-                valeurs_G_GP_GS(t, mModel->mSpline.splineY, gy_the, gpy, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
-                valeurs_G_GP_GS(t, mModel->mSpline.splineZ, gz_the, gpz, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
-
-                //double Inc, Dec, F;
-                //convertToIDF(gx_the, gy_the, gz_the, Inc, Dec, F);
-
-                double dIncdt, dDecdt, dFdt;
-                computeDerivatives(gx_the, gy_the, gz_the, gpx, gpy, gpz, dIncdt, dDecdt, dFdt);
-
-                minY_GP_X = std::min(dIncdt, minY_GP_X);
-                maxY_GP_X = std::max(dIncdt, maxY_GP_X);
-
-                minY_GP_Y = std::min(dDecdt, minY_GP_Y);
-                maxY_GP_Y = std::max(dDecdt, maxY_GP_Y);
-
-                minY_GP_Z = std::min(dFdt, minY_GP_Z);
-                maxY_GP_Z = std::max(dFdt, maxY_GP_Z);
-            }
-
-        }  else {
-            for (int idxT = 0; idxT < nbPtsX ; ++idxT) {
-                t = (double)idxT * stepT + mModel->mSettings.mTmin ;
-                valeurs_G_GP_GS(t, mModel->mSpline.splineX, gx_the, gpx, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
-                if (mModel->mCurveSettings.mProcessType != CurveSettings::eProcess_Depth) { // Pour la profondeur on garde: minY_GP_X = mModel->mCurveSettings.mThreshold;
-                    minY_GP_X = std::min(gpx, minY_GP_X);
-                }
-                maxY_GP_X = std::max(gpx, maxY_GP_X);
-
-                if (mModel->compute_Y) {
-                    valeurs_G_GP_GS(t, mModel->mSpline.splineY, gy_the, gpy, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
-                    minY_GP_Y = std::min(gpy, minY_GP_Y);
-                    maxY_GP_Y = std::max(gpy, maxY_GP_Y);
-
-                    if (mModel->compute_XYZ) {
-                        valeurs_G_GP_GS(t, mModel->mSpline.splineZ, gz_the, gpz, gs, i0, mModel->mSettings.mTmin, mModel->mSettings.mTmax);
-                        minY_GP_Z = std::min(gpz, minY_GP_Z);
-                        maxY_GP_Z = std::max(gpz, maxY_GP_Z);
-                    }
-                }
-
-            }
-        }
-
-
-        if (mChainIndex == 0 ) {// do not change the Y range between several chain
-            if (mModel->mCurveSettings.mProcessType != CurveSettings::eProcess_Depth) { // Pour la profondeur on garde: minY_GP_X = mModel->mCurveSettings.mThreshold;
-                minY_GP_X = std::min(gpx, minY_GP_X);
-            }
-            //minY_GP_X = std::min(minY_GP_X, meanG->gx.mapGP.minY());
-            maxY_GP_X = std::max(maxY_GP_X, meanG->gx.mapGP.maxY());
-            meanG->gx.mapGP.setRangeY(minY_GP_X, maxY_GP_X);
-
-        } else {
-            minY_GP_X = std::min(minY_GP_X, chainG->gx.mapGP.minY());
-            maxY_GP_X = std::max(maxY_GP_X, chainG->gx.mapGP.maxY());
-         }
-
-        chainG->gx.mapGP.setRangeY(minY_GP_X, maxY_GP_X);
-
-        if (mModel->compute_Y) {
-            if (mChainIndex == 0 ) {// do not change the Y range between several chain
-                minY_GP_Y = std::min(minY_GP_Y, meanG->gy.mapGP.minY());
-                maxY_GP_Y = std::max(maxY_GP_Y, meanG->gy.mapGP.maxY());
-                meanG->gy.mapGP.setRangeY(minY_GP_Y, maxY_GP_Y);
-
-            } else {
-                minY_GP_Y = std::min(minY_GP_Y, meanG->gy.mapGP.minY());
-                maxY_GP_Y = std::max(maxY_GP_Y, meanG->gy.mapGP.maxY());
-            }
-            chainG->gy.mapGP.setRangeY(minY_GP_Y, maxY_GP_Y);
-
-            if (mModel->compute_XYZ) {
-                if (mChainIndex == 0 ) {// do not change the Y range between several chain
-
-                    minY_GP_Z = std::min(minY_GP_Z, meanG->gz.mapGP.minY());
-                    maxY_GP_Z = std::max(maxY_GP_Z, meanG->gz.mapGP.maxY());
-                    meanG->gz.mapGP.setRangeY(minY_GP_Z, maxY_GP_Z);
-
-                } else {
-                    minY_GP_Z = std::min(minY_GP_Z, meanG->gz.mapGP.minY());
-                    maxY_GP_Z = std::max(maxY_GP_Z, meanG->gz.mapGP.maxY());
-                }
-                chainG->gz.mapGP.setRangeY(minY_GP_Z, maxY_GP_Z);
-            }
-        }
-
-    }
-
     if (mState != State::eAcquisition)
         return;
 
@@ -18210,32 +18025,50 @@ void MCMCLoopCurve::acquire()
     for (auto& c : mLoopChains)
         totalIterAccepted += c.mRealyAccepted;
 
+    // La spline est évaluée une seule fois sur la grille en t, puis accumulée dans la moyenne de la chaîne
+    // et dans la moyenne totale (même grille en t : même clearCompo à l'initialisation)
+    PosteriorMeanG& chainG = mModel->mPosteriorMeanGByChain[mChainIndex];
+    PosteriorMeanG& totalG = mModel->mPosteriorMeanG;
+    const bool withTotal = (mLoopChains.size() > 1);
+    const int nbPtsX = static_cast<int>(chainG.gx.mapG.column());
+    const bool sameGrid = (static_cast<int>(totalG.gx.mapG.column()) == nbPtsX);
+    ModelCurve::GGrid& grid = mModel->mGGrid;
+
+    auto memoCompo = [&](PosteriorMeanGComposante& chainCompo, PosteriorMeanGComposante& totalCompo,
+                         ModelCurve::GGridComposante& gridCompo, const MCMCSplineComposante& splineCompo) {
+        mModel->eval_PosteriorG(gridCompo, splineCompo, nbPtsX);
+        mModel->accumulate_PosteriorG(chainCompo, gridCompo, iterAccepted);
+        if (withTotal) {
+            if (sameGrid)
+                mModel->accumulate_PosteriorG(totalCompo, gridCompo, totalIterAccepted);
+            else
+                mModel->memo_PosteriorG(totalCompo, splineCompo, totalIterAccepted);
+        }
+    };
+
     if (mModel->compute_X_only) {
-        mModel->memo_PosteriorG(mModel->mPosteriorMeanGByChain[mChainIndex].gx, mModel->mSpline.splineX, iterAccepted );
-        if (mLoopChains.size() > 1)
-            mModel->memo_PosteriorG( mModel->mPosteriorMeanG.gx, mModel->mSpline.splineX, totalIterAccepted);
+        memoCompo(chainG.gx, totalG.gx, grid.x, mModel->mSpline.splineX);
 
     } else if (!mModel->compute_XYZ) {
-        mModel->memo_PosteriorG( mModel->mPosteriorMeanGByChain[mChainIndex].gx, mModel->mSpline.splineX, iterAccepted );
-        mModel->memo_PosteriorG( mModel->mPosteriorMeanGByChain[mChainIndex].gy, mModel->mSpline.splineY, iterAccepted );
-
-        if (mLoopChains.size() > 1) {
-            mModel->memo_PosteriorG( mModel->mPosteriorMeanG.gx, mModel->mSpline.splineX, totalIterAccepted);
-            mModel->memo_PosteriorG( mModel->mPosteriorMeanG.gy, mModel->mSpline.splineY, totalIterAccepted);
-        }
+        memoCompo(chainG.gx, totalG.gx, grid.x, mModel->mSpline.splineX);
+        memoCompo(chainG.gy, totalG.gy, grid.y, mModel->mSpline.splineY);
 
     }
     else {
 
-
-// Versions > 3.3.5
-//  ou Versions >= 4.0.0 (tout numéro majeur > 3)
+        /*  Versions > 3.3.5
+         *  ou Versions >= 4.0.0 (tout numéro majeur > 3)          */
 #if (VERSION_MAJOR > 3)                                   \
-    ||  (VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5)
-        mModel->memo_PosteriorG_3D_335( mModel->mPosteriorMeanGByChain[mChainIndex], mModel->mSpline, mCurveSettings.mProcessType, iterAccepted);
+            ||  (VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5)
+        mModel->eval_PosteriorG_3D_335(grid, mModel->mSpline, mCurveSettings.mProcessType, nbPtsX);
+        mModel->accumulate_PosteriorG_3D_335(chainG, grid, iterAccepted);
 
-        if (mLoopChains.size() > 1)
-            mModel->memo_PosteriorG_3D_335( mModel->mPosteriorMeanG, mModel->mSpline, mCurveSettings.mProcessType, totalIterAccepted);
+        if (withTotal) {
+            if (sameGrid)
+                mModel->accumulate_PosteriorG_3D_335(totalG, grid, totalIterAccepted);
+            else
+                mModel->memo_PosteriorG_3D_335(totalG, mModel->mSpline, mCurveSettings.mProcessType, totalIterAccepted);
+        }
 
 
 
@@ -18336,136 +18169,131 @@ void MCMCLoopCurve::finalize()
 
     struct RemovalInfo {
         size_t idx_from_begin; // index dans mLoopChains (depuis begin)
-        int front;             // front_position
-        int back;              // back_position
-        bool remove;
+        int front;             // début de la chaîne dans mBurnAdaptTrace
+        int back;              // fin (exclue) de la chaîne dans mBurnAdaptTrace
+        int histFront;         // début de la chaîne dans mHistoryAcceptRateMH
+        int histBack;          // fin (exclue) de la chaîne dans mHistoryAcceptRateMH
         QString warning;
     };
 
     // ----------------------------------------
     // A - Suppression des traces correspondant au courbe non positives
     // ----------------------------------------
+    // Disposition des traces depuis leur séparation (recordBurnAdapt / acquire) :
+    //   - mBurnAdaptTrace      : par chaîne, burnSize = 1 + burn + batchIndex * iterPerBatch
+    //   - mAllAcquiredTrace    : par chaîne, mRealyAccepted  (= 0 pour une chaîne retirée : rien à effacer)
+    //   - mHistoryAcceptRateMH : par chaîne, burnSize + mRealyAccepted
+    //   - variable fixe        : une valeur par chaîne (mémorisée à l'initialisation)
+    // Les positions sont calculées depuis le DÉBUT à partir des ChainSpecs, et non plus
+    // depuis la fin de mLambdaSpline.mBurnAdaptTrace (qui ne contient plus l'acquisition,
+    // et qui est vide si lambda est fixe).
 
-    // 1) Phase d'analyse (lecture seule) : parcourir en reverse
+    // 1) Phase d'analyse (lecture seule)
     std::vector<RemovalInfo> removals;
-    removals.reserve(mLoopChains.size());
+    int burnOffset = 0;
+    int histOffset = 0;
+    for (size_t i = 0; i < mLoopChains.size(); ++i) {
+        const auto &chain = mLoopChains[i];
+        const int burnSize = 1 + chain.mIterPerBurn + static_cast<int>(chain.mBatchIndex * chain.mIterPerBatch);
+        const int histSize = burnSize + chain.mRealyAccepted;
 
-    int back_position = static_cast<int>(mModel->mLambdaSpline.mBurnAdaptTrace->size());
-    size_t reverse_i = 0;
-
-    for (auto it = mLoopChains.rbegin(); it != mLoopChains.rend(); ++it, ++reverse_i) {
-        const auto &chain = *it;
-        const int initBurnAdaptAcceptSize =
-            1 + chain.mIterPerBurn + static_cast<int>(chain.mBatchIndex * chain.mIterPerBatch) + chain.mRealyAccepted;
-
-        const int front_position = back_position - initBurnAdaptAcceptSize;
-
-        RemovalInfo info;
-        // convert reverse index to forward index
-        info.idx_from_begin = static_cast<size_t>(mLoopChains.size() - 1 - reverse_i);
-        info.front = front_position;
-        info.back = back_position;
-        info.remove = (chain.mRealyAccepted == 0);
-
-        if (info.remove) {
+        if (chain.mRealyAccepted == 0) {
+            RemovalInfo info;
+            info.idx_from_begin = i;
+            info.front     = burnOffset;
+            info.back      = burnOffset + burnSize;
+            info.histFront = histOffset;
+            info.histBack  = histOffset + histSize;
             info.warning = tr("Warning : NO POSITIVE curve available with chain n° %1, current seed to change %2")
-                               .arg(QString::number(reverse_i + 1), QString::number(chain.mSeed));
+                               .arg(QString::number(i + 1), QString::number(chain.mSeed));
+            removals.push_back(std::move(info));
         }
-
-        removals.push_back(std::move(info));
-
-        back_position = front_position;
+        burnOffset += burnSize;
+        histOffset += histSize;
     }
-
-    // 2) Phase de suppression : rassembler indices à supprimer et supprimer par ordre décroissant
-    std::vector<size_t> indices_to_erase;
-    indices_to_erase.reserve(removals.size());
-    for (const auto &r : removals) if (r.remove) indices_to_erase.push_back(r.idx_from_begin);
 
     /* 👉 Sur macOS, toute création de fenêtre (NSWindow, QMessageBox, QDialog, …) doit se faire dans le thread principal GUI.
      * Si tu appelles QMessageBox::warning(...) depuis ton MCMCLoopCurve::finalize() alors que ça tourne dans un thread de calcul MCMC,
      * Qt va tenter de créer une NSWindow depuis un thread secondaire → crash immédiat.
      */
 
-    if (!indices_to_erase.empty()) {
+    if (!removals.empty()) {
 
-        std::sort(indices_to_erase.begin(), indices_to_erase.end(), std::greater<size_t>());
+        // Variable non échantillonnée : au plus une valeur par chaîne (initialisation).
+        // nChains = nombre de chaînes AVANT cet effacement.
+        auto eraseInitOnly = [&](MHVariable &v, const RemovalInfo &r, size_t nChains) {
+            if (v.mBurnAdaptTrace && v.mBurnAdaptTrace->size() == nChains)
+                safe_erase_index(*v.mBurnAdaptTrace, r.idx_from_begin);
+            if (v.mAllAcquiredTrace && v.mAllAcquiredTrace->size() == nChains)
+                safe_erase_index(*v.mAllAcquiredTrace, r.idx_from_begin);
+        };
+        // Efface la chaîne r d'une variable échantillonnée.
+        auto eraseChain = [&](MHVariable &v, const RemovalInfo &r, size_t nChains) {
+            if (v.mSamplerProposal == SamplerProposal::eFixe) {
+                eraseInitOnly(v, r, nChains);
+                return;
+            }
+            if (v.mBurnAdaptTrace) safe_erase_range(*v.mBurnAdaptTrace, r.front, r.back);
+            if (v.mHistoryAcceptRateMH) safe_erase_range(*v.mHistoryAcceptRateMH, r.histFront, r.histBack);
+        };
+        // Variables des phases : toujours mémorisées, pas d'historique MH
+        auto eraseBurn = [&](MetropolisVariable &v, const RemovalInfo &r) {
+            if (v.mBurnAdaptTrace) safe_erase_range(*v.mBurnAdaptTrace, r.front, r.back);
+        };
 
-        // Build map idx -> RemovalInfo for quick lookup
-        std::unordered_map<size_t, RemovalInfo> remap;
-        remap.reserve(removals.size());
-        for (const auto &r : removals) if (r.remove) remap.emplace(r.idx_from_begin, r);
-
-        // For convenience, take references/pointers to commonly used containers
         auto &lambda = mModel->mLambdaSpline;
 #ifdef KOMLAN
         auto &S02Vg = mModel->mS02Vg;
 #endif
         auto &posteriorByChain = mModel->mPosteriorMeanGByChain;
         auto &events = mModel->mEvents;
+        auto &phases = mModel->mPhases;
 
-        for (size_t idx : indices_to_erase) {
-            const auto &r = remap.at(idx);
-            const int front = r.front;
-            const int back = r.back;
+        // ordre décroissant : les positions calculées sur la disposition d'origine restent valides
+        for (auto it = removals.rbegin(); it != removals.rend(); ++it) {
+            const RemovalInfo &r = *it;
+            const size_t nChains = mLoopChains.size();
 
 #ifdef DEBUG
             qDebug()<<tr("[MCMCLoopCurve::finalize] %1").arg(r.warning);
 #endif
-            // 1) erase chain structure
-            safe_erase_index(mLoopChains, idx);
-
-            // 2) erase posterior per-chain
-            safe_erase_index(posteriorByChain, idx);
-
-            // 3) erase global traces (lambda)
-            if (lambda.mSamplerProposal != SamplerProposal::eFixe) {
-                if (lambda.mBurnAdaptTrace) safe_erase_range(*lambda.mBurnAdaptTrace, front, back);
-                if (lambda.mHistoryAcceptRateMH) safe_erase_range(*lambda.mHistoryAcceptRateMH, front, back);
-                //safe_erase_index(lambda.mAllMHAccepts, idx);
-            }
+            // 1) global (lambda)
+            eraseChain(lambda, r, nChains);
 #ifdef KOMLAN
-            // 3) erase global traces (lambda)
-            if (S02Vg.mSamplerProposal != SamplerProposal::eFixe) {
-                if (S02Vg.mBurnAdaptTrace) safe_erase_range(*S02Vg.mBurnAdaptTrace, front, back);
-                if (S02Vg.mHistoryAcceptRateMH) safe_erase_range(*S02Vg.mHistoryAcceptRateMH, front, back);
-                safe_erase_index(S02Vg.mAllMHAccepts, idx);
-            }
+            eraseChain(S02Vg, r, nChains);
 #endif
-            // 4) events
+            // 2) events et dates
             for (const auto &ev : events) {
-                if (ev->mTheta.mSamplerProposal != SamplerProposal::eFixe) {
-                    if (ev->mTheta.mBurnAdaptTrace) safe_erase_range(*ev->mTheta.mBurnAdaptTrace, front, back);
-                    if (ev->mTheta.mHistoryAcceptRateMH) safe_erase_range(*ev->mTheta.mHistoryAcceptRateMH, front, back);
-                    //safe_erase_index(ev->mTheta.mMHAcceptcountSinceAquire, idx);
+                // theta fixe (Bound, theta fixé) : rien n'est mémorisé après l'initialisation,
+                // ni pour l'Event ni pour ses dates (cf. recordBurnAdapt / acquire)
+                const bool thetaFixe = (ev->mTheta.mSamplerProposal == SamplerProposal::eFixe);
+                auto erase = [&](MHVariable &v) {
+                    if (thetaFixe) eraseInitOnly(v, r, nChains);
+                    else           eraseChain(v, r, nChains);
+                };
 
-                    if (!ev->mVg.mBurnAdaptTrace->empty() && ev->mVg.mSamplerProposal != SamplerProposal::eFixe) {
-                        safe_erase_range(*ev->mVg.mBurnAdaptTrace, front, back);
-                        safe_erase_range(*ev->mVg.mHistoryAcceptRateMH, front, back);
-                        //safe_erase_index(*ev->mVg.mAllMHAccepts, idx);
-                    }
+                erase(ev->mTheta);
+                erase(ev->mS02Theta);
+                erase(ev->mVg);
 
-                    if (!ev->mS02Theta.mBurnAdaptTrace->empty() && ev->mS02Theta.mSamplerProposal != SamplerProposal::eFixe) {
-                        safe_erase_range(*ev->mS02Theta.mBurnAdaptTrace, front, back);
-                        safe_erase_range(*ev->mS02Theta.mHistoryAcceptRateMH, front, back);
-                        //safe_erase_index(*ev->mS02Theta.mAllMHAccepts, idx);
-                    }
-
-                    for (auto &d : ev->mDates) {
-                        if (d.mTi.mBurnAdaptTrace) safe_erase_range(*d.mTi.mBurnAdaptTrace, front, back);
-                        if (d.mTi.mHistoryAcceptRateMH) safe_erase_range(*d.mTi.mHistoryAcceptRateMH, front, back);
-                        //safe_erase_index(d.mTi.mAllMHAccepts, idx);
-
-                        if (d.mSigmaTi.mBurnAdaptTrace) safe_erase_range(*d.mSigmaTi.mBurnAdaptTrace, front, back);
-                        if (d.mSigmaTi.mHistoryAcceptRateMH) safe_erase_range(*d.mSigmaTi.mHistoryAcceptRateMH, front, back);
-                        //safe_erase_index(d.mSigmaTi.mAllMHAccepts, idx);
-
-                        if (d.mWiggle.mBurnAdaptTrace) safe_erase_range(*d.mWiggle.mBurnAdaptTrace, front, back);
-                        //safe_erase_index(d.mWiggle.mAllMHAccepts, idx);
-                    }
+                for (auto &d : ev->mDates) {
+                    erase(d.mTi);
+                    erase(d.mSigmaTi);
+                    erase(d.mWiggle);
                 }
             }
-        } // for each idx to erase
+
+            // 3) phases (oubliées auparavant)
+            for (const auto &ph : phases) {
+                eraseBurn(ph->mAlpha, r);
+                eraseBurn(ph->mBeta, r);
+                eraseBurn(ph->mDuration, r);
+            }
+
+            // 4) posterior par chaîne, puis la chaîne elle-même (en dernier : nChains ci-dessus)
+            safe_erase_index(posteriorByChain, r.idx_from_begin);
+            safe_erase_index(mLoopChains, r.idx_from_begin);
+        }
     } // if any to erase
 
     // After deletions check

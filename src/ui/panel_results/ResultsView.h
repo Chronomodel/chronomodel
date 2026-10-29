@@ -279,6 +279,7 @@ private slots:
     // Save tools
     void exportFullImage();
     void exportResults();
+    void exportResults_impl(); // corps de exportResults(), sans gestion d'exception
     void saveAsImage();
     void imageToClipboard();
     void resultsToClipboard();

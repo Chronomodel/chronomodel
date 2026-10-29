@@ -556,10 +556,9 @@ void Project::fillDesignReasons()
                         << ReasonId::EventNameUpdated
                         << ReasonId::PhaseColorUpdated
                         << ReasonId::PhaseNameUpdated
-                        << ReasonId::PhasesSelection
-                        << ReasonId::EventsSelection
-                        << ReasonId::NoItemSelection
                         << ReasonId::FormatDateUpdated;
+    // PhasesSelection, EventsSelection et NoItemSelection ne sont volontairement pas ici :
+    // une sélection ne modifie pas le projet (mIsSaved), checkStateModification() décide.
 }
 // ---------------------------------------------------------------------------
 // 6️⃣  Raisons de **position**
@@ -2701,6 +2700,10 @@ void Project::updateEvent(const QJsonObject& event, const ReasonId id)
     for (int i = 0; i < events.size(); ++i) {
         QJsonObject eventObj = events[i].toObject();
         if (eventObj.value(STATE_ID).toInt() == event.value(STATE_ID).toInt()) {
+            // editingFinished est aussi émis à la perte de focus (ex. changement d'onglet) :
+            // sans changement réel, on ne pousse rien (sinon projet "modifié" et résultats effacés)
+            if (eventObj == event)
+                return;
             events[i] = event; // OK ici, modification directe du QJsonArray
             found = true;
             break;

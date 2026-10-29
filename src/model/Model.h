@@ -124,7 +124,7 @@ public:
     QList<QStringList> getPhasesTraces(QLocale locale, const bool withDateFormat = false);
     QList<QStringList> getPhaseTrace(size_t phaseIdx, const QLocale locale, const bool withDateFormat = false);
     // liste des chaines des Events pendant la partie acquisition.
-    QList<QStringList> getEventsTraces(const QLocale& locale, const bool withDateFormat = false) const noexcept;
+    QList<QStringList> getEventsTraces(const QLocale& locale, const bool withDateFormat = false) const;
 
     inline QStringList getCurvesName () const {return mCurveName;}
     inline QStringList getCurvesLongName () const {return mCurveLongName;}

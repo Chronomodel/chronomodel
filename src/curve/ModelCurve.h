@@ -217,13 +217,30 @@ public:
 
 #endif
 
+    // G, G', G'' de la spline courante sur la grille en t : évalués une seule fois par itération,
+    // puis accumulés dans la moyenne de la chaîne et dans la moyenne totale
+    struct GGridComposante {
+        std::vector<double> g, gp, gs;
+        void resize(const int n) { g.resize(n); gp.resize(n); gs.resize(n); }
+    };
+    struct GGrid {
+        GGridComposante x, y, z;
+        void resize(const int n) { x.resize(n); y.resize(n); z.resize(n); }
+    };
+
 /*  Versions > 3.3.5
  *  ou Versions >= 4.0.0 (tout numéro majeur > 3)          */
 #if (VERSION_MAJOR > 3) || (VERSION_MAJOR == 3 && VERSION_MINOR == 3 && VERSION_PATCH >= 5)
     void memo_PosteriorG_3D_335(PosteriorMeanG &postG, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int realyAccepted);
+    void eval_PosteriorG_3D_335(GGrid &grid, const MCMCSpline &spline, CurveSettings::ProcessType curveType, const int nbPtsX) const;
+    void accumulate_PosteriorG_3D_335(PosteriorMeanG &postG, const GGrid &grid, const int realyAccepted);
 #endif
 
     void memo_PosteriorG(PosteriorMeanGComposante &postGCompo, const MCMCSplineComposante &splineComposante, const int realyAccepted);
+    void eval_PosteriorG(GGridComposante &grid, const MCMCSplineComposante &splineComposante, const int nbPtsX) const;
+    void accumulate_PosteriorG(PosteriorMeanGComposante &postGCompo, const GGridComposante &grid, const int realyAccepted);
+
+    GGrid mGGrid; // tampon réutilisé par memo_PosteriorG*() : pas de réallocation à chaque itération
     void memo_PosteriorG_filtering(PosteriorMeanGComposante &postGCompo, const MCMCSplineComposante &splineComposante, int &realyAccepted_old, const std::pair<double, double> GPfilter);
     bool is_accepted_by_filter(const MCMCSplineComposante& splineComposante, const std::pair<double, double> GPfilter);
 

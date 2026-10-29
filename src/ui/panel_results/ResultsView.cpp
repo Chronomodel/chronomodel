@@ -75,6 +75,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #include <QDir>
 #include <QSvgGenerator>
 #include <QButtonGroup>
+#include <QMessageBox>
 
 constexpr int h_Title = 20;
 constexpr int h_Edit = 20;
@@ -6262,6 +6263,25 @@ static void writeHtmlLog(const QString &filePath,
  *
  */
 void ResultsView::exportResults()
+{
+    // Aucune exception ne doit sortir d'un slot Qt : sinon std::terminate,
+    // et l'application se ferme sans message (macOS).
+    try {
+        exportResults_impl();
+
+    } catch (const std::exception& e) {
+        QMessageBox::critical(qApp->activeWindow(), tr("Export results"),
+                              tr("Export interrupted:\n%1").arg(QString::fromStdString(e.what())));
+    } catch (const QString& e) {
+        QMessageBox::critical(qApp->activeWindow(), tr("Export results"),
+                              tr("Export interrupted:\n%1").arg(e));
+    } catch (...) {
+        QMessageBox::critical(qApp->activeWindow(), tr("Export results"),
+                              tr("Export interrupted: unknown error"));
+    }
+}
+
+void ResultsView::exportResults_impl()
 {
     auto model = getModel_ptr();
 

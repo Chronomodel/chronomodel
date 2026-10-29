@@ -1622,85 +1622,75 @@ double bisect(F f, double a, double b, double tol, int max_iter)
 }
 
 /**
- * @brief Estimates the optimal KDE bandwidth using the Sheather-Jones
- *        Solve-The-Equation (STE) plug-in method.
+ * @brief Largeur de bande de Sheather & Jones (1991), méthode « solve-the-equation » (SJ-ste),
+ *        pour un estimateur de densité à noyau gaussien.
  *
  * @details
- * Implements the Sheather-Jones STE selector as described in:
- *
- * > Sheather, S.J. & Jones, M.C. (1991).
- * > *A reliable data-based bandwidth selection method for kernel density estimation.*
- * > Journal of the Royal Statistical Society, Series B, **53**(3), 683–690.
- *
- * The algorithm proceeds in three stages:
- *
- * **1. Pilot bandwidths (plug-in stage)**
- * Two pilot bandwidths are computed from the data scale factor σ:
+ * **Ce qui est identique à R.** L'estimateur est celui de `bw.SJ(x, method = "ste")` :
+ * mêmes constantes, mêmes largeurs pilotes, même équation, même intervalle de recherche.
+ * Avec @f$\sigma = \min(\mathrm{sd}, \mathrm{IQR}/1.349)@f$ (scale_factor()) :
  * @f[
- *   g_1 = 1.24 \, \sigma \, n^{-1/7}, \qquad
- *   g_2 = 1.23 \, \sigma \, n^{-1/9}
+ *   g_1 = 1.24\,\sigma\,n^{-1/7}, \qquad g_2 = 1.23\,\sigma\,n^{-1/9}, \qquad
+ *   \alpha_2 = 1.357\left(\frac{\hat\psi_4(g_1)}{-\hat\psi_6(g_2)}\right)^{1/7},
  * @f]
- * These are used to estimate the functionals:
  * @f[
- *   \hat\theta_{44} = S_4(x, g_1), \qquad
- *   \hat\theta_{24} = S_6(x, g_2)
+ *   h = \left(\frac{c_1}{\hat\psi_4(\alpha_2\,h^{5/7})}\right)^{1/5}, \qquad c_1 = \frac{1}{2\sqrt\pi\,n},
  * @f]
- * where @f$ S_r @f$ denotes the empirical estimate of the @f$ r @f$-th
- * derivative functional of the density, computed via @f$ \phi^{(r)} @f$.
+ * où @f$\hat\psi_r(g) = \frac{1}{n^2}\sum_{i,j}\phi_g^{(r)}(x_i - x_j)@f$. La racine est cherchée dans
+ * @f$[0.1\,h_{max},\,h_{max}]@f$, @f$h_{max} = 1.144\,\sigma\,n^{-1/5}@f$, élargi alternativement
+ * (×1.2 en haut, ÷1.2 en bas) tant qu'aucun changement de signe n'est trouvé.
  *
- * **2. Intermediate bandwidth α₂**
- * @f[
- *   \alpha_2 = 1.357
- *     \left|\frac{\hat\theta_{24}}{\hat\theta_{44}}\right|^{1/7}
- * @f]
+ * **Ce qui diffère de R (calcul numérique) : le résultat n'est pas identique bit à bit à bw.SJ.**
+ * -# *Fonctionnelles @f$\hat\psi_4, \hat\psi_6@f$.* R compte les distances entre paires dans
+ *    nb = 1000 classes de largeur @f$d = 1.01\,(\max x - \min x)/1000@f$, la distance étant tronquée
+ *    à la classe (erreur d'ordre @f$d@f$). Ici, sur les données normalisées @f$x/\sigma@f$ :
+ *    binning linéaire sur une grille de M points (M = 1024, doublé jusqu'à n/100, plafond 65536 ;
+ *    marge 6 pour @f$\hat\psi_4@f$, 10 pour @f$\hat\psi_6@f$), FFT, correction sinc⁴ du binning linéaire,
+ *    puis @f$\hat\psi_r(g) = \pm\frac{1}{2\pi n^2}\int \omega^r e^{-\omega^2 g^2/2}|\hat X(\omega)|^2 d\omega@f$
+ *    (signe − pour r = 6). Le binning linéaire corrigé est d'ordre 2 : l'erreur de discrétisation est
+ *    bien plus faible que celle des classes tronquées de R.
+ * -# *Normalisation.* @f$1/n^2@f$ (diagonale i = j incluse) au lieu de @f$1/(n(n-1))@f$ dans R :
+ *    facteur @f$(n-1)/n@f$ sur @f$\hat\psi_r@f$, négligeable pour une trace MCMC.
+ * -# *Précision de la racine.* R utilise uniroot avec tol = 0.1·lower ≈ 0.01·h_max : la valeur
+ *    renvoyée par R s'écarte elle-même de sa vraie racine de 0.1 à 0.6 %. Ici : balayage log de
+ *    50 points, raffinement, bissection à tol (échelle normalisée).
+ * -# *Plusieurs racines.* On garde la plus proche, en échelle log, de @f$0.9\,\sigma\,n^{-1/5}@f$ ;
+ *    R garde celle sur laquelle uniroot converge.
+ * -# *Échec* (fonctionnelle nulle, pas de changement de signe après 50 élargissements, bissection
+ *    sans racine) : R s'arrête sur une erreur (« sample is too sparse ») ; ici on renvoie
+ *    bw_nrd0(x), identique à bw.nrd0(x) de R.
  *
- * **3. Fixed-point equation (STE)**
- * The final bandwidth @f$ h @f$ is the solution of:
- * @f[
- *   h = \left(\frac{c_1}{S_4(x,\, \alpha_2 \cdot h^{5/7})}\right)^{1/5},
- *   \qquad c_1 = \frac{1}{2\sqrt{\pi}\, n}
- * @f]
- * solved by bisection over an interval automatically widened if necessary.
+ * **Pourquoi ne pas reproduire R à l'identique.** Banc du 28/10/2026 (R 4.x, @c bw.SJ ; référence
+ * « exacte » = mêmes formules sur toutes les paires, sans binning, racine serrée) :
+ * - échantillons réguliers (normales, mélanges, log-normale, valeurs arrondies, n = 300 à 2000) :
+ *   écart à R (racine serrée) ≤ 0.3 %, et ce code est en général plus proche de l'exact que R
+ *   (normale n = 500 : exact 8.1954, ici 8.2014, R 8.1793) ;
+ * - traces MCMC (n = 3·10⁴ à 10⁵) : écart à R ≤ 0.05 % ;
+ * - grande étendue relativement à la dispersion locale (groupes éloignés, longue queue), où la largeur
+ *   des classes de R dépasse l'échelle du pic : R se trompe nettement, pas ce code.
+ *   Longue queue, n = 3000 : exact 0.2037, ici 0.2079, R 0.00495 (×40 trop petit) ;
+ *   deux groupes à 500 ans d'écart, n = 200 : exact 1.6823, ici 1.6883, R 1.6426.
+ * Reproduire R imposerait de reprendre son comptage de paires, donc ses erreurs sur ces cas, pour un
+ * gain nul sur les traces MCMC usuelles.
  *
- * **Fallback to Silverman's rule of thumb**
- * @f[
- *   h_{\text{Silverman}} = 0.9 \, \sigma \, n^{-1/5}
- * @f]
- * is returned when:
- * - @f$ |\hat\theta_{44}| @f$ or @f$ |\hat\theta_{24}| @f$ is numerically zero,
- * - no sign change is found in the bisection interval after 20 enlargement steps,
- * - @c bisect() returns NaN.
+ * **Coût.** Le spectre binné (indépendant de h) est calculé une fois : chaque évaluation de
+ * l'équation coûte O(M/2), soit O(n + M log M) au total, quelle que soit la taille de la trace.
  *
- * @note Complexity is dominated by @f$ S_4 @f$ and @f$ S_6 @f$,
- *       each @f$ O(n^2) @f$. For large traces (@f$ n > 10^4 @f$),
- *       consider a FFT-based implementation.
+ * @note SeldonH (EventMcmc.cpp, bandwidthSJ) implémente le même algorithme (FFT radix-2 au lieu de
+ *       FFTW) : même h, à l'arrondi près (écart relatif mesuré ≤ 3·10⁻¹³).
  *
- * @param x        Input data sample (run-part of the MCMC trace).
- *                 Must contain at least 2 distinct values.
- * @param tol      Convergence tolerance for the bisection solver.
- *                 Defaults to @c 1e-6.
- * @param max_iter Maximum number of bisection iterations.
- *                 Defaults to @c 100.
+ * @param x        Échantillon (partie acquisition de la trace MCMC), n ≥ 2.
+ * @param tol      Tolérance de la bissection, sur l'échelle normalisée x/σ. Défaut 1e-6.
+ * @param max_iter Nombre maximal d'itérations de bissection. Défaut 100.
  *
- * @return Optimal bandwidth @f$ h > 0 @f$ for Gaussian kernel density estimation,
- *         or Silverman's fallback if the STE equation cannot be solved.
+ * @return h > 0 (échelle d'origine de x), ou bw_nrd0(x) si l'équation n'a pas pu être résolue.
  *
- * @see S4(), S6(), bisect(), sj_equation(), scale_factor()
- * @see Sheather & Jones (1991), JRSS-B 53(3):683–690.
- *   @article {sheather_density_2004,
-    title = {Density {Estimation}},
-    volume = {19},
-    issn = {0883-4237},
-    url = {https://projecteuclid.org/journals/statistical-science/volume-19/issue-4/Density-Estimation/10.1214/088342304000000297.full},
-    doi = {10.1214/088342304000000297},
-    abstract = {This paper provides a practical description of density estimation based on kernel methods. An important aim is to encourage practicing statisticians to apply these methods to data. As such, reference is made to implementations of these methods in R, S-PLUS and SAS},
-    number = {4},
-    urldate = {2023-10-09},
-    journal = {Statistical Science},
-    author = {Sheather, Simon J.},
-    month = nov,
-    year = {2004},
- }
+ * @see scale_factor(), bw_nrd0(), bisect()
+ * @see Sheather, S.J. & Jones, M.C. (1991). A reliable data-based bandwidth selection method for
+ *      kernel density estimation. JRSS-B 53(3), 683–690.
+ * @see Sheather, S.J. (2004). Density Estimation. Statistical Science 19(4), 588–597.
+ *      doi:10.1214/088342304000000297
+ * @see R, stats/R/bandwidths.R (bw.SJ) et stats/src/bandwidths.c (bw_den, bw_den_binned, bw_phi4, bw_phi6).
  */
 
 double bw_SJ_ste(const std::vector<double>& x,
@@ -1718,22 +1708,17 @@ double bw_SJ_ste(const std::vector<double>& x,
  * \f[
  *     h = 0.9 \times \sigma \times n^{-1/5},
  * \f]
- * où :
- * - \f$n\f$ est la taille de l’échantillon \f$|x|\f$,
- * - \f$\sigma = \min\bigl(\text{sd}(x),\; \frac{\text{IQR}(x)}{1.349}\bigr)\f$ est le facteur d’échelle
- *   (calculé par la fonction `scale_factor`),
+ * où :
+ * - \f$n\f$ est la taille de l'échantillon \f$|x|\f$,
+ * - \f$\sigma = \min\bigl(\text{sd}(x),\; \frac{\text{IQR}(x)}{1.34}\bigr)\f$ (bw.nrd0 de R ;
+ *   à ne pas confondre avec le 1.349 de `scale_factor`, échelle de bw.SJ),
  * - le facteur \f$0.9\f$ provient de la règle de Silverman.
  *
- * Si les quartiles coïncident (c’est‑à‑dire que l’IQR = 0), `scale_factor` renvoie
- * simplement l’écart‑type, garantissant ainsi que le résultat soit strictement
- * positif.
+ * Cas dégénérés, comme R : si \f$\sigma = 0\f$ on prend sd, puis \f$|x_0|\f$, puis 1.
  *
- * @param x  Vecteur contenant les observations de l’échantillon.
+ * @param x  Vecteur contenant les observations de l'échantillon.
  *
- * @return La bande passante optimale \f$h\f$ calculée selon la règle de Silverman.
- *
- * @note   La fonction `scale_factor` (non montrée ici) renvoie
- *         \f$\min(\text{sd},\text{IQR}/1.349)\f$ et garantit un résultat positif.
+ * @return La bande passante \f$h\f$ de la règle de Silverman, identique à bw.nrd0(x) de R.
  *
  * @see    Silverman, B. W. (1986). *Density Estimation for Statistics and Data
  *         Analysis*. Chapman & Hall. Equation (3.31), p. 48.

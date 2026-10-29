@@ -795,14 +795,12 @@ MultiCalibrationDrawing* MultiCalibrationView::multiCalibrationPlot(const double
                     std::map<double, double> formatedCalib = d.getFormatedCalibToShow();
                     // Parfois, la partie à voir dans la study period, posséde un niveau trés faible
                     // qui est supprimé par getFormatedCalibToShow()
-                    // hpd is calculate only on the study Period
-                    subData = QMap(getMapDataInRange(formatedCalib, mSettings.getTminFormated(), mSettings.getTmaxFormated()));
+                    // hpd is calculate only on the study Period, sur la calibration complète
+                    // (comme CalibrationView) et non sur la courbe allégée pour l'affichage
+                    subData = QMap(getMapDataInRange(d.getFormatedCalibMap(), mSettings.getTminFormated(), mSettings.getTmaxFormated()));
 
-                    if (subData.empty()) {
-                        formatedCalib = DateUtils::convertMapToAppSettingsFormat(d.getRawCalibMap());
-                        subData = QMap(getMapDataInRange(formatedCalib, mSettings.getTminFormated(), mSettings.getTmaxFormated()));
-
-                    }
+                    if (getMapDataInRange(formatedCalib, mSettings.getTminFormated(), mSettings.getTmaxFormated()).empty())
+                        formatedCalib = d.getFormatedCalibMap();
                     calibCurve = densityCurve(formatedCalib, "Calibration", penColor);
                     calibCurve.mVisible = true;
                     calibGraph->add_curve(calibCurve);
@@ -2413,29 +2411,6 @@ void MultiCalibrationView::updateScroll()
     else
         mTmaxDisplay = mSettings.getTmaxFormated();
 
-    QFont adaptedFont (font());
-
-    qreal textSize = fontMetrics().horizontalAdvance(mStartEdit->text()) + fontMetrics().horizontalAdvance("0");
-    if (textSize > mStartEdit->width()) {
-        const qreal fontRate = textSize / mStartEdit->width();
-        const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
-        adaptedFont.setPointSizeF(ptSiz);
-        mStartEdit->setFont(adaptedFont);
-
-    } else
-        mStartEdit->setFont(font());
-
-    adaptedFont = font();
-
-    textSize = fontMetrics().horizontalAdvance(mEndEdit->text()) + fontMetrics().horizontalAdvance("0");
-    if (textSize > mEndEdit->width() ) {
-        const qreal fontRate = textSize / mEndEdit->width();
-        const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
-        adaptedFont.setPointSizeF(ptSiz);
-        mEndEdit->setFont(adaptedFont);
-    } else
-        mEndEdit->setFont(font());
-
     // Usefull when we set mStartEdit and mEndEdit at the begin of the display,
     // after a call to setDate
     if (std::isinf(-mTminDisplay) || std::isinf(mTmaxDisplay))
@@ -2453,18 +2428,6 @@ void MultiCalibrationView::updateScaleX()
     bool isNumber(true);
     double aNumber = QLocale().toDouble(str, &isNumber);
 
-    QFont adaptedFont (font());
-
-    qreal textSize = fontMetrics().horizontalAdvance(str)  + fontMetrics().horizontalAdvance("0");
-    if (textSize > mMajorScaleEdit->width()) {
-        const qreal fontRate = textSize / mMajorScaleEdit->width();
-        const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
-        adaptedFont.setPointSizeF(ptSiz);
-        mMajorScaleEdit->setFont(adaptedFont);
-
-    } else
-        mMajorScaleEdit->setFont(font());
-
 
     if (!isNumber || aNumber<1)
         return;
@@ -2473,18 +2436,6 @@ void MultiCalibrationView::updateScaleX()
 //----------------------------------------
 
     str = mMinorScaleEdit->text();
-
-    adaptedFont = font();
-
-    textSize = fontMetrics().horizontalAdvance(str)  + fontMetrics().horizontalAdvance("0");
-    if (textSize > mMinorScaleEdit->width()) {
-        const qreal fontRate = textSize / mMinorScaleEdit->width();
-        const qreal ptSiz = std::max(adaptedFont.pointSizeF() / fontRate, 1.);
-        adaptedFont.setPointSizeF(ptSiz);
-        mMinorScaleEdit->setFont(adaptedFont);
-
-    } else
-        mMinorScaleEdit->setFont(font());
 
     aNumber = QLocale().toDouble(str, &isNumber);
 

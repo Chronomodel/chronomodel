@@ -1745,6 +1745,16 @@ std::pair<double, double> gapRangeFromTraces(const std::vector<double> &traceEnd
 }
 
 
+/**
+ * @brief is_HPD_rate_visible
+ * @param rate HPD interval area between [0, 1]
+ * @return false if the rate, in percent, is rounded to 0 with the AppSettings precision
+ */
+bool is_HPD_rate_visible(const double rate)
+{
+    return std::round(rate * 100. * std::pow(10., AppSettings::mPrecision)) > 0.;
+}
+
 const QString interval_to_text(const QPair<double, QPair<double, double> > &interval,  DateConversion conversionFunc, const bool forCSV)
 {
     double inter1 = (conversionFunc ? conversionFunc(interval.second.first) : interval.second.first );
@@ -1773,12 +1783,14 @@ const QString get_HPD_text_from_mapping(const std::map<double, double> &mapping,
 
     if (min_inter <= max_inter) {
         for (auto&& interval : intervals) {
-            results << interval_to_text(interval, conversionFunc, forCSV);
+            if (forCSV || is_HPD_rate_visible(interval.first))
+                results << interval_to_text(interval, conversionFunc, forCSV);
         }
 
     } else {
         for (auto&& interval = intervals.crbegin(); interval != intervals.crend(); interval++) {
-            results << interval_to_text(*interval, conversionFunc, forCSV);
+            if (forCSV || is_HPD_rate_visible(interval->first))
+                results << interval_to_text(*interval, conversionFunc, forCSV);
         }
     }
     //----
@@ -1807,12 +1819,14 @@ const QString get_HPD_text(const QList<QPair<double, QPair<double, double> >> &i
 
     if (min_inter <= max_inter) {
         for (auto&& interval : intervals) {
-            results << interval_to_text(interval, conversionFunc, forCSV);
+            if (forCSV || is_HPD_rate_visible(interval.first))
+                results << interval_to_text(interval, conversionFunc, forCSV);
         }
 
     } else {
         for (auto&& interval = intervals.crbegin(); interval != intervals.crend(); interval++) {
-            results << interval_to_text(*interval, conversionFunc, forCSV);
+            if (forCSV || is_HPD_rate_visible(interval->first))
+                results << interval_to_text(*interval, conversionFunc, forCSV);
         }
     }
     //----
