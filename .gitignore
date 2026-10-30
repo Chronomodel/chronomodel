@@ -91,3 +91,5 @@ QtInstaller_ChronoModel/Ch_copy_library_and_signature_2025-08-28.sh
 2026-10-21_src.7z
 .fuse*
 /QtInstaller_ChronoModel/ChronoModel_v4.0.0_Qt6.11.1_macOS14_20261022_Installer.app
+/lib/fftw-3.3.10/share
+*.zip
