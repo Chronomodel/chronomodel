@@ -2137,8 +2137,8 @@ void GraphView::exportCurrentDensities(const QString& defaultPath, const QLocale
         QStringList list;
 
         list << " X Axis";
-        type_data xMin = std::numeric_limits<type_data>::max();;
-        type_data xMax = std::numeric_limits<type_data>::max();;
+        type_data xMin =  std::numeric_limits<type_data>::infinity();
+        type_data xMax = -std::numeric_limits<type_data>::infinity();
 
         for (const GraphCurve& curve : std::as_const(mCurves)) {
             if (!curve.mData.empty() &&
