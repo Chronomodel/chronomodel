@@ -675,7 +675,7 @@ void ModelCurve::saveMapToFile(QFile *file, const QString csvSep, const CurveMap
 
         for (int r = map.row() - 1; r >-1 ; --r)  {
 
-            output << stringForCSV(map.minY() + r * stepY)  << csvSep;
+            output << stringForCSV(map.minY() + r * stepY, true)  << csvSep;   // pleine précision : les valeurs Y étaient arrondies à l'unité (carte de G′ : toutes « 0 »)
             for (unsigned c = 0; c < map.column(); ++c)  {
                 output << stringForCSV(map(c, r), true) << csvSep;
             }
@@ -690,7 +690,7 @@ void ModelCurve::saveMapToFile(QFile *file, const QString csvSep, const CurveMap
 
         for (int r = map.row() - 1; r >-1 ; --r)  {
 
-            output << stringForCSV(map.minY() + r * stepY)  << csvSep;
+            output << stringForCSV(map.minY() + r * stepY, true)  << csvSep;   // pleine précision : les valeurs Y étaient arrondies à l'unité (carte de G′ : toutes « 0 »)
             for (int c = map.column() - 1; c >-1; --c)   {
                 output << stringForCSV(map(c, r), true) << csvSep;
             }
