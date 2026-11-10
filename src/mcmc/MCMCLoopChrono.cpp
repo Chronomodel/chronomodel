@@ -419,18 +419,11 @@ bool MCMCLoopChrono::update_v3_block_simulated_annealing()
     // sampler_339_SingleSite(mModel->mEvents); // fonctionne
 
     //sampler_339_SingleSite_bloc(mModel->mEvents); // defaut // fonctionne
+
     sampler_339_SingleSite_bloc_delta(mModel->mEvents); // avec shift bloc // Fonctionne bien
 
     // sampler_339_SingleSite_bloc_2(mModel->mEvents); // fonctionne avec A.1, B.2 peu efficace avec une seule date
 
-    // sampler_339_SingleSite_SliceSampling(mModel->mEvents); //fonctionne , et trop lent en calcul
-
-
-  //  sampler_339_SingleSite_NonCentered(mModel->mEvents); // en test
-    //sampler_339_Couple(mModel->mEvents);
-
-    //sampler_339_3v(mModel->mEvents);
-    //sampler_naif(mModel->mEvents);
 
     std::for_each(mModel->mPhases.begin(),
                   mModel->mPhases.end(),

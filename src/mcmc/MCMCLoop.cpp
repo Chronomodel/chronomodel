@@ -493,7 +493,7 @@ QString MCMCLoop::initialize_time()
                     // isfinite : si aucune date n'a de mode détecté, minVarianceIntra_ti reste +INFINITY
                     // et β vaudrait 1.0047 (valeur arbitraire) au lieu du repli sur S02_harmonique.
                     if (std::isfinite(minVarianceIntra_ti) && minVarianceIntra_ti > 0.0) {
-                        uEvent->mBetaS02 = 1.004680139*(1 - exp(- 0.0000847244 * pow(minVarianceIntra_ti, 1.1867742965))); // simplification des puissance 1.1867742965 = 2.373548593 / 2.0
+                        uEvent->mBetaS02 = 1.004680139*(1 - exp(- 0.0000847244 * pow(minVarianceIntra_ti, 1.1867742965))); // simplification des puissances 1.1867742965 = 2.373548593 / 2.0
 
                     } else {
                         uEvent->mBetaS02 = 1.004680139*(1 - exp(- 0.0000847244 * pow(S02_harmonique, 1.1867742965)));

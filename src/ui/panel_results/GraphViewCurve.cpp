@@ -36,6 +36,16 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #include "AppSettings.h"
 #include "Painting.h"
 
+// Convertit les clés (temps BC/AD interne) d'une QMap dans le format de date courant.
+// QMap retrie les clés : le renversement (BP, B2K) est donc géré automatiquement.
+static QMap<type_data, type_data> convertKeysToAppSettingsFormat(const QMap<type_data, type_data>& data)
+{
+    QMap<type_data, type_data> out;
+    for (auto it = data.constBegin(); it != data.constEnd(); ++it)
+        out.insert(DateUtils::convertToAppSettingsFormat(it.key()), it.value());
+    return out;
+}
+
 
 GraphViewCurve::GraphViewCurve(QWidget *parent):GraphViewResults(parent)
 {
@@ -1255,6 +1265,10 @@ void GraphViewCurve::updateCurves(const graph_t typeGraph,
                     const type_data t = it.key();
                     it.value() = (curveHPDInf_Data.value(t) + curveHPDSup_Data.value(t)) / 2.0;
                 }
+                // mapG est en temps interne (BC/AD) : conversion après lissage (h est en années)
+                curveHPDMid_Data = convertKeysToAppSettingsFormat(curveHPDMid_Data);
+                curveHPDInf_Data = convertKeysToAppSettingsFormat(curveHPDInf_Data);
+                curveHPDSup_Data = convertKeysToAppSettingsFormat(curveHPDSup_Data);
                 //---
                 const QColor envHPDColor (162, 47, 52, 200);
 
@@ -1470,6 +1484,11 @@ void GraphViewCurve::updateCurves(const graph_t typeGraph,
             curveHPDMid_Data = gaussian_filter_simple(curveHPDMid_Data, hbwd);
             curveHPDInf_Data = gaussian_filter_simple(curveHPDInf_Data, hbwd);
             curveHPDSup_Data = gaussian_filter_simple(curveHPDSup_Data, hbwd);
+
+            // mapGP est en temps interne (BC/AD) : conversion dans le format courant
+            curveHPDMid_Data = convertKeysToAppSettingsFormat(curveHPDMid_Data);
+            curveHPDInf_Data = convertKeysToAppSettingsFormat(curveHPDInf_Data);
+            curveHPDSup_Data = convertKeysToAppSettingsFormat(curveHPDSup_Data);
 
             const QColor envHPDColor (162, 47, 52, 200);
 
