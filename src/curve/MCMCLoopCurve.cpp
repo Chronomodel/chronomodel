@@ -6036,6 +6036,7 @@ QString MCMCLoopCurve::initialize_339()
                 }
                 e->updateW();
                 double memoVG = sqrt(e->mVg.value());
+                e->mVg.recordBurnAdapt(&memoVG); // utile pour creer FormatedTrace et VgResultsHTML
                 e->mVg.acquire(&memoVG);
                 e->mVg.mSigmaMH = 0.1; // default = 1.0
 

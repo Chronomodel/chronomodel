@@ -836,7 +836,7 @@ QString ModelUtilities::eventResultsHTML(const std::shared_ptr<Event> e, const b
     if (with_curve) {
         if (e->mVg.mSamplerProposal == SamplerProposal::eFixe) {
             text += "<br>" + line(textBold(textGreen(QObject::tr("Curve : Std gi"))));
-            text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.value()))));
+            text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(sqrt(e->mVg.value()))))); // mVg = variance, on affiche Std gi
 
         } else {
             text += "<br>" + line(textBold(textGreen(QObject::tr("Curve : Posterior Std gi"))));
@@ -880,7 +880,10 @@ QString ModelUtilities::VgResultsHTML(const std::shared_ptr<Event> e)
 
     if (e->mVg.mSamplerProposal == SamplerProposal::eFixe) {
         text += line(textBold(textGreen(QObject::tr("Curve: Std gi"))));
-        text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(e->mVg.mBurnAdaptTrace->at(0)))));
+        // Std gi fixe : valeur memorisee dans la trace (sqrt(Vg)), sinon sqrt(Vg) courant (ex. Node, fichiers .res anciens)
+        const double fixedStdGi = (e->mVg.mBurnAdaptTrace && !e->mVg.mBurnAdaptTrace->empty()) ? e->mVg.mBurnAdaptTrace->front()
+                                                                                               : sqrt(e->mVg.value());
+        text += line(textGreen(QObject::tr("Fixed value : %1").arg(QString::number(fixedStdGi))));
 
     } else {
         text += line(textBold(textGreen(QObject::tr("Curve : Posterior Std gi"))));

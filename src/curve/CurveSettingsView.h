@@ -94,7 +94,7 @@ private:
     QLabel* mLambdaSplineLabel;
     QLineEdit* mLambdaSplineInput;
 
-    bool validateAndConvertDouble(const QString& text, double& result, const QString& fieldName) const;
+    bool validateAndConvertDouble(const QString& text, double& result, const QString& fieldName, const bool warn = true) const;
 };
 
 #endif

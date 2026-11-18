@@ -43,7 +43,33 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #include <QtWidgets/qabstractitemview.h>
 #include <QMessageBox>
 #include <QTimer>
+#include <QProxyStyle>
 
+#include <cmath>
+
+
+namespace {
+/**
+ * macOS (style "macos") : QComboBox::hidePopup() fait clignoter l'item choisi dans une boucle
+ * d'événements imbriquée (~60 ms), puis lance un fondu natif de la fenêtre popup.
+ * currentIndexChanged est émis AVANT hidePopup() ; le save() différé (QTimer 0 ms) s'exécute donc
+ * dans cette boucle imbriquée (pushProjectState, noResult, mise à jour des scènes...).
+ * Le fondu est alors perturbé et la fenêtre popup reste transparente pour toute la session.
+ * Sans clignotement ni fondu, hidePopup() est immédiat et save() s'exécute après la fermeture.
+ */
+class NoFadeComboStyle : public QProxyStyle
+{
+public:
+    using QProxyStyle::QProxyStyle;
+    int styleHint(StyleHint hint, const QStyleOption* option = nullptr,
+                  const QWidget* widget = nullptr, QStyleHintReturn* returnData = nullptr) const override
+    {
+        if (hint == QStyle::SH_Menu_FadeOutOnHide || hint == QStyle::SH_Menu_FlashTriggeredItem)
+            return 0;
+        return QProxyStyle::styleHint(hint, option, widget, returnData);
+    }
+};
+}
 
 CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
 {
@@ -136,6 +162,12 @@ CurveSettingsView::CurveSettingsView(QWidget* parent):QWidget(parent)
     mVarianceTypeInput->addItem(tr("Ind. Bayesian"));
     mVarianceTypeInput->addItem(tr("Global Bayesian"));
     mVarianceTypeInput->addItem(tr("Global Fixed"));
+
+    // Style sans fondu ni clignotement à la fermeture du popup (cf. NoFadeComboStyle)
+    QProxyStyle* comboStyle = new NoFadeComboStyle(); // base = style de l'application
+    comboStyle->setParent(this);
+    for (QComboBox* combo : {mProcessTypeInput, mTimeTypeInput, mLambdaSplineTypeInput, mVarianceTypeInput})
+        combo->setStyle(comboStyle);
 
     mVarianceValueLabel = new QLabel(tr("Std gi = Global Value"), this);
     mVarianceValueInput = new QLineEdit(this);
@@ -239,11 +271,12 @@ void CurveSettingsView::setConnections(const bool doConnections)
 }
 
 // Fonction utilitaire pour valider et convertir les valeurs numériques
-bool CurveSettingsView::validateAndConvertDouble(const QString& text, double& result, const QString& fieldName) const
+bool CurveSettingsView::validateAndConvertDouble(const QString& text, double& result, const QString& fieldName, const bool warn) const
 {
     bool ok;
     result = QLocale().toDouble(text, &ok);
-    if (!ok) {
+    ok = ok && std::isfinite(result);
+    if (!ok && warn) { // pas de dialogue modal pour un champ caché (cf. saveDeferred)
         QMessageBox::warning(const_cast<CurveSettingsView*>(this),
                              tr("Invalid Input"),
                              tr("Invalid value for %1: '%2'").arg(fieldName, text));
@@ -285,16 +318,22 @@ void CurveSettingsView::setSettings(const CurveSettings &settings)
     }
     mVarianceTypeInput->setCurrentIndex(varianceTypeIndex);
 
-    mThresholdInput->setText(stringForLocal(settings.mThreshold));
-    mVarianceValueInput->setText(stringForLocal(sqrt(settings.mVarianceFixed)));
+    // Anciens fichiers : clés absentes ou valeurs dégénérées (variance <= 0, alpha = 0 -> log10 = -inf)
+    // donneraient "nan"/"-inf" dans des champs cachés, puis un QMessageBox à chaque changement de combobox.
+    const double threshold = std::isfinite(settings.mThreshold) ? settings.mThreshold : 0.0;
+    const double stdGiFixed = (std::isfinite(settings.mVarianceFixed) && settings.mVarianceFixed > 0.0) ? sqrt(settings.mVarianceFixed) : 1.0;
+    mThresholdInput->setText(stringForLocal(threshold));
+    mVarianceValueInput->setText(stringForLocal(stdGiFixed));
 
     // Mapping pour LambdaSplineType avec valeur par défaut explicite
     int lambdaSplineTypeIndex = 1; // Bayesian par défaut
     if (settings.mLambdaSplineType == CurveSettings::eModeFixed) {
         lambdaSplineTypeIndex = 0;
-        mLambdaSplineInput->setText(stringForLocal(log10(settings.mLambdaSpline)));
+        const bool lambdaOk = std::isfinite(settings.mLambdaSpline) && settings.mLambdaSpline > 0.0;
+        mLambdaSplineInput->setText(lambdaOk ? stringForLocal(log10(settings.mLambdaSpline)) : QString("-6"));
     } else if (settings.mLambdaSplineType == CurveSettings::eModeBayesian) {
         lambdaSplineTypeIndex = 1;
+        mLambdaSplineInput->setText("-6"); // évite de garder un texte invalide du projet précédent
     } else if (settings.mLambdaSplineType == CurveSettings::eInterpolation) {
         lambdaSplineTypeIndex = 2;
         mLambdaSplineInput->setText("0");
@@ -347,14 +386,15 @@ CurveSettings CurveSettingsView::getSettings() const
 
     // Validation des valeurs numériques avec gestion d'erreur
     double thresholdValue = 0.0;
-    if (validateAndConvertDouble(mThresholdInput->text(), thresholdValue, tr("Threshold"))) {
+    const bool isDepth = (settings.mProcessType == CurveSettings::eProcess_Depth);
+    if (validateAndConvertDouble(mThresholdInput->text(), thresholdValue, tr("Threshold"), isDepth)) {
         settings.mThreshold = thresholdValue;
     } else {
         settings.mThreshold = 0.0; // valeur par défaut en cas d'erreur
     }
 
     double varianceValue = 1.0;
-    if (validateAndConvertDouble(mVarianceValueInput->text(), varianceValue, tr("Variance Value"))) {
+    if (validateAndConvertDouble(mVarianceValueInput->text(), varianceValue, tr("Variance Value"), settings.mVarianceType == CurveSettings::eModeFixed)) {
         settings.mVarianceFixed = pow(varianceValue, 2.0);
     } else {
         settings.mVarianceFixed = 1.0; // valeur par défaut en cas d'erreur
