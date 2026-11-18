@@ -1,3 +1,12 @@
+chronomodel (4.0.0-2) unstable; urgency=medium
+
+  * Release 4.0.0, 2026-11-18.
+  * Update README and ABOUT files: GPL-3.0-or-later licence notice,
+    third-party credits (Qt LGPL v3, FFTW GPL v2 or later, Eigen MPL 2.0,
+    Viridis colour maps MIT), citation for version 4.0.
+
+ -- Dufresne Philippe <philippe.dufresne@univ-rennes.fr>  Wed, 18 Nov 2026 15:12:00 +0100
+
 chronomodel (4.0.0-1) unstable; urgency=medium
 
   * Pre-release 4.0.0, 2026-10-22.

@@ -51,8 +51,8 @@ AboutDialog::AboutDialog(QWidget* parent, Qt::WindowFlags flags):QDialog(parent,
     QFile htmlFile(path + "ABOUT.html");
     (void) htmlFile.open(QIODevice::ReadOnly);
 
-    mText = new QTextEdit();
-    mText->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    mText = new QTextBrowser();
+    mText->setOpenExternalLinks(true); // ouvre http(s) et mailto dans le navigateur / client mail
     mText->setHtml(htmlFile.readAll());
     mText->setTextBackgroundColor(Qt::white);
 

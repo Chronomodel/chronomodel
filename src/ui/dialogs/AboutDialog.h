@@ -30,7 +30,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 #define ABOUTDIALOG_H
 
 #include <QDialog>
-#include <QTextEdit>
+#include <QTextBrowser>
 
 class QLabel;
 
@@ -43,7 +43,7 @@ public:
     ~AboutDialog();
 
 public:
-    QTextEdit* mText;
+    QTextBrowser* mText;
 };
 
 #endif
